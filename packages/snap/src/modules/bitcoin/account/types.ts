@@ -1,0 +1,38 @@
+import type { BIP32Interface } from 'bip32';
+import type { Network, Payment } from 'bitcoinjs-lib';
+import type { Buffer } from 'buffer';
+
+import type { IAccount } from '../../keyring';
+import type { ScriptType } from './constants';
+
+export type IBtcAccountDeriver = {
+  getRoot(path: string[]): Promise<BIP32Interface>;
+  getChild(root: BIP32Interface, idx: number): Promise<BIP32Interface>;
+};
+
+export type IAccountSigner = {
+  sign(hash: Buffer): Promise<Buffer>;
+  derivePath(path: string): IAccountSigner;
+  verify(hash: Buffer, signature: Buffer): boolean;
+  publicKey: Buffer;
+  fingerprint: Buffer;
+};
+
+export type IBtcAccount = IAccount & {
+  payment: Payment;
+  signer: IAccountSigner;
+};
+
+export type IStaticBtcAccount = {
+  path: string[];
+  scriptType: ScriptType;
+  new (
+    mfp: string,
+    index: number,
+    hdPath: string,
+    pubkey: string,
+    network: Network,
+    type: ScriptType,
+    signer: IAccountSigner,
+  ): IBtcAccount;
+};

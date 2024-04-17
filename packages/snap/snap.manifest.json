@@ -1,0 +1,64 @@
+{
+  "version": "0.1.0",
+  "description": "A MetaMask snap to manage Bitcoin",
+  "proposedName": "Bitcoin Manager",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MetaMask/bitcoin.git"
+  },
+  "source": {
+    "shasum": "QYsZ8HVb8OmMmPlePs8t9NbV0CIZkt7KucFBw/CkEuQ=",
+    "location": {
+      "npm": {
+        "filePath": "dist/bundle.js",
+        "iconPath": "images/icon.svg",
+        "packageName": "@metamask/bitcoin",
+        "registry": "https://registry.npmjs.org/"
+      }
+    }
+  },
+  "initialPermissions": {
+    "snap_dialog": {},
+    "endowment:rpc": {
+      "dapps": true,
+      "snaps": false
+    },
+    "snap_getBip32Entropy": [
+      {
+        "path": [
+          "m",
+          "49'",
+          "0'"
+        ],
+        "curve": "secp256k1"
+      },
+      {
+        "path": [
+          "m",
+          "49'",
+          "1'"
+        ],
+        "curve": "secp256k1"
+      },
+      {
+        "path": [
+          "m",
+          "84'",
+          "0'"
+        ],
+        "curve": "secp256k1"
+      },
+      {
+        "path": [
+          "m",
+          "84'",
+          "1'"
+        ],
+        "curve": "secp256k1"
+      }
+    ],
+    "endowment:network-access": {},
+    "snap_manageState": {}
+  },
+  "manifestVersion": "0.1"
+}
