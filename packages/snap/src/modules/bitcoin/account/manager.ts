@@ -9,36 +9,36 @@ import type { IStaticBtcAccount, IBtcAccountDeriver } from './types';
 export class BtcAccountMgr implements IAccountMgr {
   protected readonly deriver: IBtcAccountDeriver;
 
-  protected readonly account: IStaticBtcAccount;
+  protected readonly accountCtor: IStaticBtcAccount;
 
   protected readonly network: Network;
 
   constructor(
     deriver: IBtcAccountDeriver,
-    account: IStaticBtcAccount,
+    accountCtor: IStaticBtcAccount,
     network: Network,
   ) {
     this.deriver = deriver;
-    this.account = account;
+    this.accountCtor = accountCtor;
     this.network = network;
   }
 
   async unlock(index: number): Promise<IAccount> {
     try {
       //eslint -disable-next-line @typescript-eslint/naming-convention
-      const AccountContrustor = this.account;
+      const AccountCtor = this.accountCtor;
 
-      const rootNode = await this.deriver.getRoot(AccountContrustor.path);
+      const rootNode = await this.deriver.getRoot(AccountCtor.path);
       const childNode = await this.deriver.getChild(rootNode, index);
       const hdPath = [`m`, `0'`, `0`, `${index}`].join('/');
 
-      return new AccountContrustor(
+      return new AccountCtor(
         rootNode.fingerprint.toString('hex'),
         index,
         hdPath,
         childNode.publicKey.toString('hex'),
         this.network,
-        AccountContrustor.scriptType,
+        AccountCtor.scriptType,
         this.getHdSigner(rootNode),
       );
     } catch (error) {
