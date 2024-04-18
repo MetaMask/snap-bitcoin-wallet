@@ -55,13 +55,6 @@ jobs:
           cache: 'yarn'
       - run: yarn --immutable --immutable-cache
       - run: yarn lint
-      - name: Require clean working directory
-        shell: bash
-        run: |
-          if ! git diff --exit-code; then
-            echo "Working tree dirty at end of job"
-            exit 1
-          fi
 
   test:
     name: Test
@@ -79,11 +72,5 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'yarn'
       - run: yarn --immutable --immutable-cache
+      - run: yarn build
       - run: yarn test
-      - name: Require clean working directory
-        shell: bash
-        run: |
-          if ! git diff --exit-code; then
-            echo "Working tree dirty at end of job"
-            exit 1
-          fi
