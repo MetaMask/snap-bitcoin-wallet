@@ -18,7 +18,7 @@ describe('TransactionService', () => {
   };
 
   describe('getBalance', () => {
-    it('calls transactionMgr.getBalance', async () => {
+    it('calls getBalance with transactionMgr', async () => {
       const { instance, getBalanceSpy } = createMockTxnMgr();
       const accounts = generateAccounts(1);
 
@@ -31,23 +31,19 @@ describe('TransactionService', () => {
       expect(getBalanceSpy).toHaveBeenCalledWith(accounts[0].address);
     });
 
-    it('throws TransactionServiceError if transactionMgr.getBalance failed', async () => {
+    it('throws TransactionServiceError if getBalance failed', async () => {
       const { instance, getBalanceSpy } = createMockTxnMgr();
       getBalanceSpy.mockRejectedValue(new Error('error'));
       const accounts = generateAccounts(1);
 
-      let expectedError;
-      try {
-        const service = new TransactionService(
-          instance,
-          new TransactionStateManager(),
-        );
-        await service.getBalance(accounts[0].address);
-      } catch (error) {
-        expectedError = error;
-      } finally {
-        expect(expectedError).toBeInstanceOf(TransactionServiceError);
-      }
+      const service = new TransactionService(
+        instance,
+        new TransactionStateManager(),
+      );
+
+      await expect(service.getBalance(accounts[0].address)).rejects.toThrow(
+        TransactionServiceError,
+      );
     });
   });
 });

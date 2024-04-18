@@ -76,14 +76,7 @@ describe('BtcKeyring', () => {
       const { instance, getDataSpy } = createMockStateManager();
       getDataSpy.mockRejectedValue(new Error('error'));
 
-      let expectedError;
-      try {
-        await instance.listAccounts();
-      } catch (error) {
-        expectedError = error;
-      } finally {
-        expect(expectedError).toBeInstanceOf(StateError);
-      }
+      await expect(instance.listAccounts()).rejects.toThrow(StateError);
     });
   });
 
@@ -128,14 +121,9 @@ describe('BtcKeyring', () => {
       getDataSpy.mockRejectedValue(new Error('error'));
       const state = createInitState(1);
 
-      let expectedError;
-      try {
-        await instance.saveAccount(state.accountDetails[state.accounts[0]]);
-      } catch (error) {
-        expectedError = error;
-      } finally {
-        expect(expectedError).toBeInstanceOf(StateError);
-      }
+      await expect(
+        instance.saveAccount(state.accountDetails[state.accounts[0]]),
+      ).rejects.toThrow(StateError);
     });
   });
 
@@ -163,18 +151,12 @@ describe('BtcKeyring', () => {
       const nonExistAcc = generateAccounts(1, 'notexist', 'notexist')[0];
       getDataSpy.mockResolvedValue(state);
 
-      let expectedError;
-      try {
-        await instance.removeAccounts([nonExistAcc.id, state.accounts[0]]);
-      } catch (error) {
-        expectedError = error;
-      } finally {
-        expect(expectedError.message).toContain(
-          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-          `Account with id ${nonExistAcc.id} does not exist`,
-        );
-        expect(expectedError).toBeInstanceOf(StateError);
-      }
+      await expect(
+        instance.removeAccounts([nonExistAcc.id, state.accounts[0]]),
+      ).rejects.toThrow(
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+        `Account with id ${nonExistAcc.id} does not exist`,
+      );
     });
 
     it('throw StateError if an error catched', async () => {
@@ -182,14 +164,9 @@ describe('BtcKeyring', () => {
       getDataSpy.mockRejectedValue(new Error('error'));
       const state = createInitState(1);
 
-      let expectedError;
-      try {
-        await instance.removeAccounts(state.accounts[0]);
-      } catch (error) {
-        expectedError = error;
-      } finally {
-        expect(expectedError).toBeInstanceOf(StateError);
-      }
+      await expect(instance.removeAccounts(state.accounts)).rejects.toThrow(
+        StateError,
+      );
     });
   });
 
@@ -223,14 +200,7 @@ describe('BtcKeyring', () => {
       getDataSpy.mockRejectedValue(new Error('error'));
       const { id } = generateAccounts(1)[0];
 
-      let expectedError;
-      try {
-        await instance.getAccount(id);
-      } catch (error) {
-        expectedError = error;
-      } finally {
-        expect(expectedError).toBeInstanceOf(StateError);
-      }
+      await expect(instance.getAccount(id)).rejects.toThrow(StateError);
     });
   });
 
@@ -265,14 +235,9 @@ describe('BtcKeyring', () => {
       getDataSpy.mockRejectedValue(new Error('error'));
       const acc = generateAccounts(1)[0];
 
-      let expectedError;
-      try {
-        await instance.getAccountByAddress(acc.id);
-      } catch (error) {
-        expectedError = error;
-      } finally {
-        expect(expectedError).toBeInstanceOf(StateError);
-      }
+      await expect(instance.getAccountByAddress(acc.id)).rejects.toThrow(
+        StateError,
+      );
     });
   });
 });

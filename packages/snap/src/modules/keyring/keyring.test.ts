@@ -174,33 +174,20 @@ describe('BtcKeyring', () => {
       getAccountByAddressSpy.mockResolvedValue(null);
       unlockSpy.mockRejectedValue(new Error('error'));
 
-      let expectedError;
-      try {
-        await keyring.createAccount();
-      } catch (error) {
-        expectedError = error;
-      } finally {
-        expect(expectedError).toBeInstanceOf(BtcKeyringError);
-      }
+      await expect(keyring.createAccount()).rejects.toThrow(BtcKeyringError);
     });
   });
 
   describe('filterAccountChains', () => {
-    it('throws Method not implemented error', async () => {
+    it('throws `Method not implemented` error', async () => {
       const { instance: accMgr } = createMockAccountMgr();
       const { instance: stateMgr } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(accMgr, stateMgr);
       const account = generateAccounts(1)[0];
 
-      let expectedError;
-      try {
-        await keyring.filterAccountChains(account.id, [Network.Testnet]);
-      } catch (error) {
-        expectedError = error;
-      } finally {
-        expect(expectedError).toBeInstanceOf(BtcKeyringError);
-        expect(expectedError.message).toBe('Method not implemented.');
-      }
+      await expect(
+        keyring.filterAccountChains(account.id, [Network.Testnet]),
+      ).rejects.toThrow('Method not implemented.');
     });
   });
 
@@ -211,22 +198,16 @@ describe('BtcKeyring', () => {
       const { instance: keyring } = createMockKeyring(accMgr, stateMgr);
       const account = generateAccounts(1)[0];
 
-      let expectedError;
-      try {
-        await keyring.submitRequest({
+      await expect(
+        keyring.submitRequest({
           id: account.id,
           scope: Network.Testnet,
           account: account.address,
           request: {
             method: 'signMessage',
           },
-        });
-      } catch (error) {
-        expectedError = error;
-      } finally {
-        expect(expectedError).toBeInstanceOf(BtcKeyringError);
-        expect(expectedError.message).toBe('Method not implemented.');
-      }
+        }),
+      ).rejects.toThrow('Method not implemented.');
     });
   });
 
@@ -250,14 +231,7 @@ describe('BtcKeyring', () => {
       const { instance: keyring } = createMockKeyring(accMgr, stateMgr);
       listAccountsSpy.mockRejectedValue(new Error('error'));
 
-      let expectedError;
-      try {
-        await keyring.listAccounts();
-      } catch (error) {
-        expectedError = error;
-      } finally {
-        expect(expectedError).toBeInstanceOf(BtcKeyringError);
-      }
+      await expect(keyring.listAccounts()).rejects.toThrow(BtcKeyringError);
     });
   });
 
@@ -295,14 +269,9 @@ describe('BtcKeyring', () => {
       getAccountSpy.mockRejectedValue(new Error('error'));
       const accounts = generateAccounts(1);
 
-      let expectedError;
-      try {
-        await keyring.getAccount(accounts[0].id);
-      } catch (error) {
-        expectedError = error;
-      } finally {
-        expect(expectedError).toBeInstanceOf(BtcKeyringError);
-      }
+      await expect(keyring.getAccount(accounts[0].id)).rejects.toThrow(
+        BtcKeyringError,
+      );
     });
   });
 
@@ -326,14 +295,9 @@ describe('BtcKeyring', () => {
       saveAccountSpy.mockRejectedValue(new Error('error'));
       const account = generateAccounts(1)[0];
 
-      let expectedError;
-      try {
-        await keyring.updateAccount(account);
-      } catch (error) {
-        expectedError = error;
-      } finally {
-        expect(expectedError).toBeInstanceOf(BtcKeyringError);
-      }
+      await expect(keyring.updateAccount(account)).rejects.toThrow(
+        BtcKeyringError,
+      );
     });
   });
 
@@ -357,14 +321,9 @@ describe('BtcKeyring', () => {
       removeAccountsSpy.mockRejectedValue(new Error('error'));
       const account = generateAccounts(1)[0];
 
-      let expectedError;
-      try {
-        await keyring.deleteAccount(account.id);
-      } catch (error) {
-        expectedError = error;
-      } finally {
-        expect(expectedError).toBeInstanceOf(BtcKeyringError);
-      }
+      await expect(keyring.deleteAccount(account.id)).rejects.toThrow(
+        BtcKeyringError,
+      );
     });
   });
 });

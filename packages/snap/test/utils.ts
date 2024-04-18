@@ -1,3 +1,7 @@
+import type { BIP32Interface } from 'bip32';
+import type { Network } from 'bitcoinjs-lib';
+import { Buffer } from 'buffer';
+
 /**
  * Method to generate testing account.
  *
@@ -35,3 +39,108 @@ export function generateAccounts(cnt = 1, addressPrefix = '', idPrefix = '') {
 
   return accounts;
 }
+
+/**
+ * Method to generate mock bip32 instance.
+ *
+ * @param network - Bitcoin network.
+ * @param idx - Index of the bip32 instance.
+ * @param depth - Depth of the bip32 instance.
+ * @returns An BIP32Interface instance.
+ */
+export const createMockBip32Instance = (
+  network: Network,
+  idx = 0,
+  depth = 0,
+): {
+  instance: BIP32Interface;
+  isNeuteredSpy: jest.Mock;
+  neuteredSpy: jest.Mock;
+  toBase58Spy: jest.Mock;
+  toWIFSpy: jest.Mock;
+  deriveSpy: jest.Mock;
+  deriveHardenedSpy: jest.Mock;
+  derivePathSpy: jest.Mock;
+  tweakSpy: jest.Mock;
+  signSpy: jest.Mock;
+  verifySpy: jest.Mock;
+} => {
+  const deriveHardenedSpy = jest.fn();
+  const deriveSpy = jest.fn();
+  const derivePathSpy = jest.fn();
+  const tweakSpy = jest.fn();
+  const isNeuteredSpy = jest.fn();
+  const neuteredSpy = jest.fn();
+  const toBase58Spy = jest.fn();
+  const toWIFSpy = jest.fn();
+  const signSpy = jest.fn();
+  const verifySpy = jest.fn();
+
+  class MockBIP32Interface implements BIP32Interface {
+    fingerprint = Buffer.from('dddddddd', 'hex');
+
+    publicKey = Buffer.from('dddddddd', 'hex');
+
+    chainCodeBytes = Buffer.from('dddddddd', 'hex');
+
+    publicKeyBytes = Buffer.from('dddddddd', 'hex');
+
+    privateKey = Buffer.from('dddddddd', 'hex');
+
+    identifier = Buffer.from('dddddddd', 'hex');
+
+    chainCode = Buffer.from('dddddddd', 'hex');
+
+    network = network;
+
+    depth = depth;
+
+    index = idx;
+
+    parentFingerprint = 12345;
+
+    isNeutered = isNeuteredSpy.mockReturnValue(false);
+
+    neutered = neuteredSpy.mockImplementation(() => new MockBIP32Interface());
+
+    toBase58 = toBase58Spy.mockReturnValue('dddddddd');
+
+    toWIF = toWIFSpy.mockReturnValue('dddddddd');
+
+    derive = deriveSpy.mockImplementation(() => new MockBIP32Interface());
+
+    deriveHardened = deriveHardenedSpy.mockImplementation(
+      () => new MockBIP32Interface(),
+    );
+
+    derivePath = derivePathSpy.mockImplementation(
+      () => new MockBIP32Interface(),
+    );
+
+    tweak = tweakSpy;
+
+    lowR = false;
+
+    sign = signSpy;
+
+    verify = verifySpy;
+
+    signSchnorr = jest.fn();
+
+    verifySchnorr = jest.fn();
+  }
+
+  return {
+    instance: new MockBIP32Interface(),
+    isNeuteredSpy,
+    neuteredSpy,
+    toBase58Spy,
+    toWIFSpy,
+    deriveSpy,
+    deriveHardenedSpy,
+    derivePathSpy,
+    tweakSpy,
+    signSpy,
+    verifySpy,
+  };
+};
