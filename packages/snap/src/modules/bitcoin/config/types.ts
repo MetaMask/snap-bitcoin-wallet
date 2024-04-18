@@ -5,9 +5,6 @@ export type BtcTransactionConfig = {
     read: {
       type: DataClient;
     };
-    write: {
-      type: DataClient;
-    };
   };
 };
 

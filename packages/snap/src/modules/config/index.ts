@@ -36,9 +36,6 @@ export const Config: SnapConfig = {
         read: {
           type: DataClient.BlockStream,
         },
-        write: {
-          type: DataClient.BlockStream,
-        },
       },
     },
   },

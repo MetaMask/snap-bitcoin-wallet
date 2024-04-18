@@ -1,6 +1,6 @@
 import type { ITransactionMgr, Balance } from '../../transaction/types';
 import { type IReadDataClient } from '../data-client';
-import { TransactionError } from './exceptions';
+import { TransactionMgrError } from './exceptions';
 import type { BtcTransactionMgrOptions } from './types';
 
 export class BtcTransactionMgr implements ITransactionMgr {
@@ -18,7 +18,7 @@ export class BtcTransactionMgr implements ITransactionMgr {
       const response = await this.readClient.getBalance(address);
       return response;
     } catch (error) {
-      throw new TransactionError(error);
+      throw new TransactionMgrError(error);
     }
   }
 }

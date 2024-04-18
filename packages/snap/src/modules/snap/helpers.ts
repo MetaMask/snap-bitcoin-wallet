@@ -78,7 +78,7 @@ export class SnapHelper {
       method: 'snap_manageState',
       params: {
         operation: 'update',
-        newState: data as Record<string, Json>,
+        newState: data as unknown as Record<string, Json>,
       },
     });
   }

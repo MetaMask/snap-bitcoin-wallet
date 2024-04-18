@@ -32,7 +32,7 @@ export const emptyLog: LoggingFn = (
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   {};
 
-class Logger implements ILogger {
+export class Logger implements ILogger {
   log: LoggingFn;
 
   warn: LoggingFn;
@@ -64,22 +64,22 @@ class Logger implements ILogger {
     this.trace = console.trace.bind(console);
     this.log = console.log.bind(console);
 
-    if (this._logLevel < LogLevel.ERROR) {
+    if (this.#logLevel < LogLevel.ERROR) {
       this.error = emptyLog;
     }
-    if (this._logLevel < LogLevel.WARN) {
+    if (this.#logLevel < LogLevel.WARN) {
       this.warn = emptyLog;
     }
-    if (this._logLevel < LogLevel.INFO) {
+    if (this.#logLevel < LogLevel.INFO) {
       this.info = emptyLog;
     }
-    if (this._logLevel < LogLevel.DEBUG) {
+    if (this.#logLevel < LogLevel.DEBUG) {
       this.debug = emptyLog;
     }
-    if (this._logLevel < LogLevel.TRACE) {
+    if (this.#logLevel < LogLevel.TRACE) {
       this.trace = emptyLog;
     }
-    if (this._logLevel < LogLevel.ALL) {
+    if (this.#logLevel < LogLevel.ALL) {
       this.log = emptyLog;
     }
   }
