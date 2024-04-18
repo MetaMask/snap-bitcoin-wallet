@@ -2744,7 +2744,7 @@ __metadata:
     "@metamask/eslint-config-nodejs": ^12.1.0
     "@metamask/eslint-config-typescript": ^12.1.0
     "@metamask/key-tree": ^9.0.0
-    "@metamask/keyring-api": ^5.1.0
+    "@metamask/keyring-api": ^6.0.0
     "@metamask/snaps-cli": ^6.1.0
     "@metamask/snaps-jest": ^6.0.2
     "@metamask/snaps-sdk": ^4.0.0
@@ -2975,18 +2975,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/keyring-api@npm:^5.1.0":
-  version: 5.1.0
-  resolution: "@metamask/keyring-api@npm:5.1.0"
+"@metamask/keyring-api@npm:^6.0.0":
+  version: 6.0.0
+  resolution: "@metamask/keyring-api@npm:6.0.0"
   dependencies:
-    "@metamask/snaps-sdk": ^3.1.1
+    "@metamask/snaps-sdk": ^4.0.0
     "@metamask/utils": ^8.3.0
     "@types/uuid": ^9.0.1
     superstruct: ^1.0.3
     uuid: ^9.0.0
   peerDependencies:
     "@metamask/providers": ">=15 <17"
-  checksum: 37cc4d35116285762be7167f294a31add9a978eca7652af014355ce691c9b90cfeb52ab8732ebc59d413aeb7ac87e785e4a2a49fd44d3c1563f3796e4ac1bb8f
+  checksum: d3d6d5d27945783ef74e8e1b9626d122a07df58a2a62e12c68ff0bda2894c6c0a16d6add40908159fb92dee0b98425c63fc494c9b86ae0d0a0be7dc74389997a
   languageName: node
   linkType: hard
 
@@ -3279,7 +3279,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/snaps-sdk@npm:^3.0.1, @metamask/snaps-sdk@npm:^3.1.1, @metamask/snaps-sdk@npm:^3.2.0":
+"@metamask/snaps-sdk@npm:^3.0.1, @metamask/snaps-sdk@npm:^3.2.0":
   version: 3.2.0
   resolution: "@metamask/snaps-sdk@npm:3.2.0"
   dependencies:
@@ -9910,7 +9910,7 @@ __metadata:
     "@metamask/eslint-config-jest": ^12.1.0
     "@metamask/eslint-config-nodejs": ^12.1.0
     "@metamask/eslint-config-typescript": ^12.1.0
-    "@metamask/keyring-api": ^5.1.0
+    "@metamask/keyring-api": ^6.0.0
     "@metamask/providers": ^16.0.0
     "@svgr/webpack": ^6.4.0
     "@testing-library/dom": ^8.17.1
