@@ -101,7 +101,7 @@ describe('BtcKeyring', () => {
           index: account.options.index,
           type: account.options.type,
         },
-        methods: [],
+        methods: ['chain_getBalances'],
       });
     });
 
@@ -136,7 +136,7 @@ describe('BtcKeyring', () => {
           index: account.options.index,
           type: account.options.type,
         },
-        methods: [],
+        methods: ['chain_getBalances'],
       });
     });
 

@@ -39,6 +39,7 @@ export class BtcAccountMgr implements IAccountMgr {
         childNode.publicKey.toString('hex'),
         this.network,
         AccountCtor.scriptType,
+        `bip122:${AccountCtor.scriptType.toLowerCase()}`,
         this.getHdSigner(rootNode),
       );
     } catch (error) {

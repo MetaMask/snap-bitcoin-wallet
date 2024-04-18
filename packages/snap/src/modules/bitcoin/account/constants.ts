@@ -1,5 +1,5 @@
 export enum ScriptType {
-  P2pkh = 'P2PKH',
-  P2shP2wkh = 'P2SH-P2WPKH',
-  P2wpkh = 'P2WPKH',
+  P2pkh = 'p2pkh',
+  P2shP2wkh = 'p2sh-p2wpkh',
+  P2wpkh = 'p2wpkh',
 }

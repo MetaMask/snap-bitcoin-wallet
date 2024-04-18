@@ -119,7 +119,7 @@ export class BtcKeyring implements Keyring {
         index: account.index,
         type: account.type,
       },
-      methods: [],
+      methods: ['chain_getBalances'],
     } as unknown as KeyringAccount;
   }
 }

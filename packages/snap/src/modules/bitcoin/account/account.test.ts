@@ -30,6 +30,7 @@ describe('BtcAccount', () => {
       'ddddddddddddd',
       network,
       ScriptType.P2wpkh,
+      `bip122:${ScriptType.P2wpkh.toLowerCase()}`,
       { sign: signerSpy } as unknown as IAccountSigner,
     );
 
