@@ -22,7 +22,7 @@ export function generateAccounts(cnt = 1, addressPrefix = '', idPrefix = '') {
   for (let i = 0; i < cnt; i++) {
     const hdPath = [`m`, `0'`, `0`, `${i}`].join('/');
     accounts.push({
-      type: 'bip32',
+      type: 'bip122:p2wpkh',
       id:
         baseUUID.slice(0, baseUUID.length - i.toString().length) + i.toString(),
       address:
@@ -31,9 +31,8 @@ export function generateAccounts(cnt = 1, addressPrefix = '', idPrefix = '') {
       options: {
         hdPath,
         index: i,
-        type: 'P2WPKH',
       },
-      methods: [],
+      methods: ['chain_getBalances'],
     });
   }
 

@@ -111,13 +111,12 @@ export class BtcKeyring implements Keyring {
 
   protected newKeyringAccount(account: IAccount): KeyringAccount {
     return {
-      type: 'bip32',
+      type: account.type,
       id: uuidv4(),
       address: account.address,
       options: {
         hdPath: account.hdPath,
         index: account.index,
-        type: account.type,
       },
       methods: ['chain_getBalances'],
     } as unknown as KeyringAccount;

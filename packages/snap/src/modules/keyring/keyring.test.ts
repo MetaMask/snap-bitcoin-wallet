@@ -84,7 +84,7 @@ describe('BtcKeyring', () => {
         address: account.address,
         hdPath: account.options.hdPath,
         index: account.options.index,
-        type: account.options.type,
+        type: account.type,
       });
 
       await keyring.createAccount();
@@ -99,9 +99,8 @@ describe('BtcKeyring', () => {
         options: {
           hdPath: account.options.hdPath,
           index: account.options.index,
-          type: account.options.type,
         },
-        methods: ['chain_getBalances'],
+        methods: account.methods,
       });
     });
 
@@ -121,7 +120,7 @@ describe('BtcKeyring', () => {
         address: account.address,
         hdPath: account.options.hdPath,
         index: account.options.index,
-        type: account.options.type,
+        type: account.type,
       });
 
       await keyring.createAccount({ index: 1 });
@@ -134,9 +133,8 @@ describe('BtcKeyring', () => {
         options: {
           hdPath: account.options.hdPath,
           index: account.options.index,
-          type: account.options.type,
         },
-        methods: ['chain_getBalances'],
+        methods: account.methods,
       });
     });
 
@@ -156,7 +154,7 @@ describe('BtcKeyring', () => {
         address: account.address,
         hdPath: account.options.hdPath,
         index: account.options.index,
-        type: account.options.type,
+        type: account.type,
       });
 
       const acc = await keyring.createAccount();
