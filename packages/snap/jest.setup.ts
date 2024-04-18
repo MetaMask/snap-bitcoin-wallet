@@ -4,4 +4,3 @@ import { WalletMock } from './test/wallet.mock.test';
 const globalAny: any = global;
 
 globalAny.snap = new WalletMock();
-globalAny.fetch = jest.fn();
