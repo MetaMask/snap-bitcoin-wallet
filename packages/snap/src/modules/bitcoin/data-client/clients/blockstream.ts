@@ -36,23 +36,28 @@ export class BlockStreamClient implements IReadDataClient {
     this.options = options;
   }
 
-  get baseUrl() {
-    if (this.options.network === networks.bitcoin) {
-      return 'https://blockstream.info/api';
+  get baseUrl(): string {
+    switch (this.options.network) {
+      case networks.bitcoin:
+        return 'https://blockstream.info/api';
+      case networks.testnet:
+        return 'https://blockstream.info/testnet/api';
+      default:
+        throw new DataClientError('Invalid network');
     }
-    return 'https://blockstream.info/testnet/api';
   }
 
   protected async get<Resp>(endpoint: string): Promise<Resp> {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       method: 'GET',
     });
+
     if (!response.ok) {
       throw new DataClientError(
         `Failed to fetch data from blockstream: ${response.statusText}`,
       );
     }
-    return response.json() as Resp;
+    return response.json() as unknown as Resp;
   }
 
   async getBalance(address: string): Promise<Balance> {
