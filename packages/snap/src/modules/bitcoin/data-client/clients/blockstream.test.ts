@@ -13,7 +13,15 @@ jest.mock('../../../logger/logger', () => ({
 
 describe('BlockStreamClient', () => {
   const createMockFetch = () => {
-    const fetchSpy = fetch as jest.Mock;
+    // eslint-disable-next-line no-restricted-globals
+    Object.defineProperty(global, 'fetch', {
+      writable: true,
+    });
+
+    const fetchSpy = jest.fn();
+    // eslint-disable-next-line no-restricted-globals
+    global.fetch = fetchSpy;
+
     return {
       fetchSpy,
     };
