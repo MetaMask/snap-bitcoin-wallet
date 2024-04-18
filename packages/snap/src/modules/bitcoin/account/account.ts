@@ -21,7 +21,9 @@ export class BtcAccount implements IBtcAccount {
 
   readonly network: Network;
 
-  readonly type: ScriptType;
+  readonly scriptType: ScriptType;
+
+  readonly type: string;
 
   readonly signer: IAccountSigner;
 
@@ -31,7 +33,8 @@ export class BtcAccount implements IBtcAccount {
     hdPath: string,
     pubkey: string,
     network: Network,
-    type: ScriptType,
+    scriptType: ScriptType,
+    type: string,
     signer: IAccountSigner,
   ) {
     this.mfp = mfp;
@@ -39,8 +42,9 @@ export class BtcAccount implements IBtcAccount {
     this.hdPath = hdPath;
     this.pubkey = pubkey;
     this.network = network;
-    this.type = type;
+    this.scriptType = scriptType;
     this.signer = signer;
+    this.type = type;
   }
 
   get address() {
@@ -56,7 +60,7 @@ export class BtcAccount implements IBtcAccount {
   get payment() {
     if (!this.#payment) {
       this.#payment = AddressHelper.getPayment(
-        this.type,
+        this.scriptType,
         Buffer.from(this.pubkey, 'hex'),
         this.network,
       );

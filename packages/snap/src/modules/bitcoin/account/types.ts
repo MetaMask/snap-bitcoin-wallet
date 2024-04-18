@@ -32,7 +32,8 @@ export type IStaticBtcAccount = {
     hdPath: string,
     pubkey: string,
     network: Network,
-    type: ScriptType,
+    scriptType: ScriptType,
+    type: string,
     signer: IAccountSigner,
   ): IBtcAccount;
 };

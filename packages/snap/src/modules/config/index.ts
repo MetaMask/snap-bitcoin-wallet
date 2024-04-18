@@ -42,7 +42,7 @@ export const Config: SnapConfig = {
   account: {
     [Chain.Bitcoin]: {
       defaultAccountIndex: 0,
-      defaultAccountType: 'P2WPKH',
+      defaultAccountType: 'p2wpkh',
       deriver: 'BIP32',
     },
   },

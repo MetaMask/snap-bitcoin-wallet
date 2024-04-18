@@ -42,7 +42,7 @@ describe('BtcAccountMgrFactory', () => {
       const instance = BtcAccountMgrFactory.create(
         {
           defaultAccountIndex: 0,
-          defaultAccountType: 'P2WPKH',
+          defaultAccountType: ScriptType.P2wpkh,
           deriver: 'BIP32',
         },
         networks.testnet,
