@@ -1,7 +1,8 @@
 import { type Network, networks } from 'bitcoinjs-lib';
 
+import { AsyncHelper } from '../../../async';
 import { logger } from '../../../logger/logger';
-import { type Balance } from '../../../transaction';
+import { type Balances } from '../../../transaction';
 import { DataClientError } from '../exceptions';
 import type { IReadDataClient } from '../types';
 
@@ -60,27 +61,34 @@ export class BlockStreamClient implements IReadDataClient {
     return response.json() as unknown as Resp;
   }
 
-  async getBalance(address: string): Promise<Balance> {
+  async getBalances(addresses: string[]): Promise<Balances> {
     try {
-      const response = await this.get<GetAddressStatsResponse>(
-        `/address/${address}`,
-      );
+      const responses: Balances = {};
 
-      logger.info(
-        `[BlockStreamClient.getBalance] response: ${JSON.stringify(response)}`,
-      );
+      await AsyncHelper.processBatch(addresses, async (address: string) => {
+        logger.info(`[BlockStreamClient.getBalance] address: ${address}`);
+        let balance = 0;
+        try {
+          const response = await this.get<GetAddressStatsResponse>(
+            `/address/${address}`,
+          );
+          logger.info(
+            `[BlockStreamClient.getBalance] response: ${JSON.stringify(
+              response,
+            )}`,
+          );
+          balance =
+            response.chain_stats.funded_txo_sum -
+            response.chain_stats.spent_txo_sum;
+        } catch (error) {
+          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+          logger.info(`[BlockStreamClient.getBalance] error: ${error.message}`);
+        } finally {
+          responses[address] = balance;
+        }
+      });
 
-      const confirmed =
-        response.chain_stats.funded_txo_sum -
-        response.chain_stats.spent_txo_sum;
-      const unconfirmed =
-        response.mempool_stats.funded_txo_sum -
-        response.mempool_stats.spent_txo_sum;
-      return {
-        confirmed,
-        unconfirmed,
-        total: confirmed + unconfirmed,
-      };
+      return responses;
     } catch (error) {
       if (error instanceof DataClientError) {
         throw error;

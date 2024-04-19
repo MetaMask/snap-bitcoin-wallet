@@ -1,9 +1,9 @@
 import type { Infer } from 'superstruct';
-import { object, string, assign } from 'superstruct';
+import { object, string, assign, array } from 'superstruct';
 
 import { Chain } from '../../modules/config';
 import { Factory } from '../../modules/factory';
-import type { Balance } from '../../modules/transaction';
+import type { AssetBalances } from '../../modules/transaction';
 import {
   TransactionService,
   TransactionStateManager,
@@ -16,34 +16,35 @@ import type {
 } from '../types';
 import { SnapRpcRequestHandlerRequestStruct } from '../types';
 
-export type GetBalanceParams = Infer<typeof GetBalanceHandler.validateStruct>;
+export type GetBalancesParams = Infer<typeof GetBalancesHandler.validateStruct>;
 
-export type GetBalanceResponse = SnapRpcRequestHandlerResponse & Balance;
+export type GetBalancesResponse = SnapRpcRequestHandlerResponse & AssetBalances;
 
-export class GetBalanceHandler
+export class GetBalancesHandler
   extends BaseSnapRpcRequestHandler
   implements
-    StaticImplements<IStaticSnapRpcRequestHandler, typeof GetBalanceHandler>
+    StaticImplements<IStaticSnapRpcRequestHandler, typeof GetBalancesHandler>
 {
   static get validateStruct() {
     return assign(
       object({
-        address: string(),
+        accounts: array(string()),
+        assets: array(string()),
       }),
       SnapRpcRequestHandlerRequestStruct,
     );
   }
 
-  validateStruct = GetBalanceHandler.validateStruct;
+  validateStruct = GetBalancesHandler.validateStruct;
 
-  async handleRequest(params: GetBalanceParams): Promise<GetBalanceResponse> {
-    const { scope, address } = params;
+  async handleRequest(params: GetBalancesParams): Promise<GetBalancesResponse> {
+    const { scope, accounts, assets } = params;
 
     const txService = new TransactionService(
       Factory.createTransactionMgr(Chain.Bitcoin, scope),
       new TransactionStateManager(),
     );
 
-    return await txService.getBalance(address);
+    return await txService.getBalances(accounts, assets);
   }
 }

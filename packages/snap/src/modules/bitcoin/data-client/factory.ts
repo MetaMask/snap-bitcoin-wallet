@@ -1,6 +1,7 @@
 import { type Network } from 'bitcoinjs-lib';
 
 import { DataClient, type BtcTransactionConfig } from '../config';
+import { BlockChairClient } from './clients/blockchair';
 import { BlockStreamClient } from './clients/blockstream';
 import { DataClientError } from './exceptions';
 import type { IReadDataClient } from './types';
@@ -13,8 +14,11 @@ export class DataClientFactory {
     switch (config.dataClient.read.type) {
       case DataClient.BlockStream:
         return new BlockStreamClient({ network });
+      case DataClient.BlockChair:
+        return new BlockChairClient({ network });
       default:
         throw new DataClientError(
+          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
           `Unsupported client type: ${config.dataClient.read.type}`,
         );
     }
