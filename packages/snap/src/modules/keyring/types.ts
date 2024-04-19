@@ -24,7 +24,7 @@ export type IAccountMgr = {
 };
 
 export type CreateAccountOptions = Record<string, Json> & {
-  index: number;
+  scope: string;
 };
 
 export type KeyringOptions = Record<string, Json> & {

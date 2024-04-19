@@ -32,12 +32,15 @@ export class Factory {
     return BtcAccountMgrFactory.create(config, btcNetwork);
   }
 
-  static createBtcKeyring(config: BtcAccountConfig, scope: string): BtcKeyring {
-    const accClient = Factory.createBtcAccountMgr(config, scope);
-
-    return new BtcKeyring(accClient, new KeyringStateManager(), {
+  static createBtcKeyring(config: BtcAccountConfig, scope?: string): BtcKeyring {
+    let accClient: IAccountMgr | undefined = undefined;
+    if (scope) {
+      accClient = Factory.createBtcAccountMgr(config, scope);
+    }
+    
+    return new BtcKeyring({
       defaultIndex: config.defaultAccountIndex,
-    });
+    }, new KeyringStateManager(), accClient  );
   }
 
   static createTransactionMgr(chain: Chain, scope: string): ITransactionMgr {
@@ -48,7 +51,7 @@ export class Factory {
     return Factory.createBtcAccountMgr(Config.account[chain], scope);
   }
 
-  static createKeyring(chain: Chain, scope: string): Keyring {
+  static createKeyring(chain: Chain, scope?: string): Keyring {
     return Factory.createBtcKeyring(Config.account[chain], scope);
   }
 }

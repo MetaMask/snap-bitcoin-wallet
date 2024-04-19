@@ -1,5 +1,7 @@
-import type { OnRpcRequestHandler } from '@metamask/snaps-sdk';
-import { SnapError } from '@metamask/snaps-sdk';
+import {
+  handleKeyringRequest
+} from '@metamask/keyring-api';
+import  { type OnRpcRequestHandler, type OnKeyringRequestHandler, type Json, SnapError, type JsonRpcRequest } from '@metamask/snaps-sdk';
 
 import { LogLevel, logger } from './modules/logger/logger';
 import type {
@@ -7,6 +9,8 @@ import type {
   IStaticSnapRpcRequestHandler,
 } from './rpcs';
 import { CreateAccountHandler, GetBalancesHandler } from './rpcs';
+import { Factory } from './modules/factory';
+import { Chain } from './modules/config';
 
 const validateOrigin = async (origin: string) => {
   // TODO: validate origin
@@ -40,4 +44,12 @@ export const onRpcRequest: OnRpcRequestHandler = async (args) => {
   return await handler
     .getInstance()
     .execute(request.params as SnapRpcRequestHandlerRequest);
+};
+
+export const onKeyringRequest: OnKeyringRequestHandler = async({
+  origin,
+  request,
+}): Promise<Json> => {
+  const keyring = Factory.createKeyring(Chain.Bitcoin, request.params?.['scope']);
+  return handleKeyringRequest(keyring, request) as unknown as Promise<Json>;
 };

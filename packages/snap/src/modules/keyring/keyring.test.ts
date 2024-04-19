@@ -63,6 +63,7 @@ describe('BtcKeyring', () => {
     return {
       instance: new BtcKeyring(accMgr, stateMgr, {
         defaultIndex: 0,
+        scope: Network.Testnet
       }),
     };
   };
