@@ -6,8 +6,7 @@ import type {
   SnapRpcRequestHandlerRequest,
   IStaticSnapRpcRequestHandler,
 } from './rpcs';
-import { CreateAccountHandler } from './rpcs';
-import { GetBalanceHandler } from './rpcs/methods/get-balance';
+import { CreateAccountHandler, GetBalancesHandler } from './rpcs';
 
 const validateOrigin = async (origin: string) => {
   // TODO: validate origin
@@ -20,8 +19,8 @@ const getHandler = (method: string): IStaticSnapRpcRequestHandler => {
   switch (method) {
     case 'bitcoin_createAccount':
       return CreateAccountHandler;
-    case 'bitcoin_getBalance':
-      return GetBalanceHandler;
+    case 'bitcoin_getBalances':
+      return GetBalancesHandler;
     default:
       throw new SnapError(`Method not found`);
   }

@@ -1,5 +1,5 @@
 {
-  "accountInfo": {
+  "getAccountStatsResp": {
     "address": "tb1qt2mpt38wmgw3j0hnr9mp5hsa7kxf2a3ktdxaeu",
     "chain_stats": {
       "funded_txo_count": 12,

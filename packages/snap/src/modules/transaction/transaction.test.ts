@@ -1,4 +1,5 @@
 import { generateAccounts } from '../../../test/utils';
+import { BtcAsset } from '../bitcoin/config';
 import { TransactionServiceError } from './exceptions';
 import { TransactionStateManager } from './state';
 import { TransactionService } from './transaction';
@@ -6,44 +7,46 @@ import type { ITransactionMgr } from './types';
 
 describe('TransactionService', () => {
   const createMockTxnMgr = () => {
-    const getBalanceSpy = jest.fn();
+    const getBalancesSpy = jest.fn();
 
     class MockTxnMgr implements ITransactionMgr {
-      getBalance = getBalanceSpy;
+      getBalances = getBalancesSpy;
     }
     return {
       instance: new MockTxnMgr(),
-      getBalanceSpy,
+      getBalancesSpy,
     };
   };
 
   describe('getBalance', () => {
-    it('calls getBalance with transactionMgr', async () => {
-      const { instance, getBalanceSpy } = createMockTxnMgr();
+    it('calls getBalances with transactionMgr', async () => {
+      const { instance, getBalancesSpy } = createMockTxnMgr();
       const accounts = generateAccounts(1);
+      const addresses = accounts.map((account) => account.address);
 
       const service = new TransactionService(
         instance,
         new TransactionStateManager(),
       );
-      await service.getBalance(accounts[0].address);
+      await service.getBalances(addresses, [BtcAsset.TBtc]);
 
-      expect(getBalanceSpy).toHaveBeenCalledWith(accounts[0].address);
+      expect(getBalancesSpy).toHaveBeenCalledWith(addresses, [BtcAsset.TBtc]);
     });
 
-    it('throws TransactionServiceError if getBalance failed', async () => {
-      const { instance, getBalanceSpy } = createMockTxnMgr();
-      getBalanceSpy.mockRejectedValue(new Error('error'));
+    it('throws TransactionServiceError if getBalances failed', async () => {
+      const { instance, getBalancesSpy } = createMockTxnMgr();
+      getBalancesSpy.mockRejectedValue(new Error('error'));
       const accounts = generateAccounts(1);
+      const addresses = accounts.map((account) => account.address);
 
       const service = new TransactionService(
         instance,
         new TransactionStateManager(),
       );
 
-      await expect(service.getBalance(accounts[0].address)).rejects.toThrow(
-        TransactionServiceError,
-      );
+      await expect(
+        service.getBalances(addresses, [BtcAsset.TBtc]),
+      ).rejects.toThrow(TransactionServiceError);
     });
   });
 });

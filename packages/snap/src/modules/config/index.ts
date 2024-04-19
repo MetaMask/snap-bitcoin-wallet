@@ -34,7 +34,7 @@ export const Config: SnapConfig = {
     [Chain.Bitcoin]: {
       dataClient: {
         read: {
-          type: DataClient.BlockStream,
+          type: DataClient.BlockChair,
         },
       },
     },

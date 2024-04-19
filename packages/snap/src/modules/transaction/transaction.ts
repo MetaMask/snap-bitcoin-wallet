@@ -1,6 +1,6 @@
 import { TransactionServiceError } from './exceptions';
 import type { TransactionStateManager } from './state';
-import type { Balance, ITransactionMgr } from './types';
+import type { AssetBalances, ITransactionMgr } from './types';
 
 export class TransactionService {
   protected readonly transactionMgr: ITransactionMgr;
@@ -15,9 +15,12 @@ export class TransactionService {
     this.transactionStateManager = transactionStateManager;
   }
 
-  async getBalance(address: string): Promise<Balance> {
+  async getBalances(
+    addresses: string[],
+    assets: string[],
+  ): Promise<AssetBalances> {
     try {
-      const result = await this.transactionMgr.getBalance(address);
+      const result = await this.transactionMgr.getBalances(addresses, assets);
       return result;
     } catch (error) {
       throw new TransactionServiceError(error);
