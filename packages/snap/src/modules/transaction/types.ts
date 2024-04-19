@@ -1,9 +1,17 @@
+export type Balances = Record<string, number>;
+
 export type Balance = {
-  confirmed: number;
-  unconfirmed: number;
-  total: number;
+  amount: number;
+};
+
+export type AssetBalances = {
+  balances: {
+    [address: string]: {
+      [asset: string]: Balance;
+    };
+  };
 };
 
 export type ITransactionMgr = {
-  getBalance(address: string): Promise<Balance>;
+  getBalances(addresses: string[], assets: string[]): Promise<AssetBalances>;
 };

@@ -78,6 +78,18 @@ const ErrorMessage = styled.div`
   }
 `;
 
+type Balance = {
+  amount: number;
+};
+
+type AssetBalances = {
+  balances: {
+    [address: string]: {
+      [asset: string]: Balance;
+    };
+  };
+};
+
 const Index = () => {
   const { error } = useMetaMaskContext();
   const { isFlask, snapsDetected, installedSnap } = useMetaMask();
@@ -85,6 +97,9 @@ const Index = () => {
   const invokeSnap = useInvokeSnap();
   const [btcAccount, setBtcAccount] = useState<KeyringAccount>();
   const [balance, setBalance] = useState<number>(0);
+
+  const scope = "bip122:000000000933ea01ad0ee984209779ba"
+  const asset = `${scope}:slip44:0`
 
   const isMetaMaskReady = isLocalSnap(defaultSnapOrigin)
     ? isFlask
@@ -95,23 +110,36 @@ const Index = () => {
       method: 'bitcoin_createAccount',
       params: {
         index: 0,
-        scope:
-          '000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943',
+        scope: scope
       },
     })) as KeyringAccount;
+
+    console.log({
+      account
+    }) 
+
     setBtcAccount(account);
   };
 
   const handleGetBalanceClick = async () => {
+    const address = btcAccount?.address
+    if (!address) {
+      return
+    }
     const accountBalance = (await invokeSnap({
-      method: 'bitcoin_getBalance',
+      method: 'bitcoin_getBalances',
       params: {
-        address: btcAccount?.address,
-        scope:
-          '000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943',
+        accounts: [address],
+        assets: [asset],
+        scope: scope,
       },
-    })) as { confirmed: number; unconfirmed: number; total: number };
-    setBalance(accountBalance.total);
+    })) as unknown as AssetBalances;
+    console.log({
+      accountBalance
+    }) 
+    const total = accountBalance?.balances?.[address]?.[asset];
+
+    setBalance(total?.amount ?? 0);
   };
 
   return (

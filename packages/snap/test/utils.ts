@@ -2,6 +2,9 @@ import type { BIP32Interface } from 'bip32';
 import type { Network } from 'bitcoinjs-lib';
 import { Buffer } from 'buffer';
 
+import blockChairData from './fixtures/blockchair.json';
+import blockStreamData from './fixtures/blockstream.json';
+
 /**
  * Method to generate testing account.
  *
@@ -45,9 +48,9 @@ export function generateAccounts(cnt = 1, addressPrefix = '', idPrefix = '') {
  * @param network - Bitcoin network.
  * @param idx - Index of the bip32 instance.
  * @param depth - Depth of the bip32 instance.
- * @returns An BIP32Interface instance.
+ * @returns An BIP32Interface instance and spys.
  */
-export const createMockBip32Instance = (
+export function createMockBip32Instance(
   network: Network,
   idx = 0,
   depth = 0,
@@ -63,7 +66,7 @@ export const createMockBip32Instance = (
   tweakSpy: jest.Mock;
   signSpy: jest.Mock;
   verifySpy: jest.Mock;
-} => {
+} {
   const deriveHardenedSpy = jest.fn();
   const deriveSpy = jest.fn();
   const derivePathSpy = jest.fn();
@@ -142,4 +145,54 @@ export const createMockBip32Instance = (
     signSpy,
     verifySpy,
   };
-};
+}
+
+const randomNum = (max) => Math.floor(Math.random() * max);
+/**
+ * Method to generate blockstream account stats resp by addresses.
+ *
+ * @param addresses - Array of address in string.
+ * @returns An array of blocksteam stats response.
+ */
+export function generateBlockStreamAccountStats(addresses: string[]) {
+  const template = blockStreamData.getAccountStatsResp;
+  const resp: (typeof template)[] = [];
+  for (const address of addresses) {
+    /* eslint-disable */
+    resp.push({
+      ...template,
+      address,
+      chain_stats: {
+        funded_txo_count: randomNum(100),
+        funded_txo_sum: Math.max(randomNum(1000000), 10000),
+        spent_txo_count: randomNum(100),
+        spent_txo_sum: randomNum(10000),
+        tx_count: randomNum(100),
+      },
+      mempool_stats: {
+        funded_txo_count: randomNum(100),
+        funded_txo_sum: Math.max(randomNum(1000000), 10000),
+        spent_txo_count: randomNum(100),
+        spent_txo_sum: randomNum(10000),
+        tx_count: randomNum(100),
+      },
+    });
+    /* eslint-disable */
+  }
+  return resp;
+}
+
+/**
+ * Method to generate blockchair getBalance resp by addresses.
+ *
+ * @param addresses - Array of address in string.
+ * @returns An array of blockchair getBalance response.
+ */
+export function generateBlockChairGetBalanceResp(addresses: string[]) {
+  const template = blockChairData.getBalanceResp;
+  const resp: typeof template = { ...template, data: {} };
+  for (const address of addresses) {
+    resp.data[address] = randomNum(1000000);
+  }
+  return resp;
+}

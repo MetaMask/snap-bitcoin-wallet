@@ -1,7 +1,10 @@
 import { networks } from 'bitcoinjs-lib';
 
-import blocksteamData from '../../../../../test/fixtures/blockstream.json';
-import { generateAccounts } from '../../../../../test/utils';
+import {
+  generateAccounts,
+  generateBlockStreamAccountStats,
+} from '../../../../../test/utils';
+import { AsyncHelper } from '../../../async';
 import { DataClientError } from '../exceptions';
 import { BlockStreamClient } from './blockstream';
 
@@ -44,58 +47,65 @@ describe('BlockStreamClient', () => {
     });
   });
 
-  describe('getBalance', () => {
+  describe('getBalances', () => {
     it('returns balances', async () => {
       const { fetchSpy } = createMockFetch();
-      fetchSpy.mockResolvedValue({
-        ok: true,
-        json: jest.fn().mockResolvedValue(blocksteamData.accountInfo),
+      const accounts = generateAccounts(60);
+      const addresses = accounts.map((account) => account.address);
+      const mockResponse = generateBlockStreamAccountStats(addresses);
+      const expectedResult = {};
+      mockResponse.forEach((data) => {
+        fetchSpy.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(data),
+        });
+        expectedResult[data.address] =
+          data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum;
       });
-      const account = generateAccounts(1)[0];
 
       const instance = new BlockStreamClient({ network: networks.testnet });
-      const result = await instance.getBalance(account.address);
+      const result = await instance.getBalances(addresses);
 
-      const confirmed =
-        blocksteamData.accountInfo.chain_stats.funded_txo_sum -
-        blocksteamData.accountInfo.chain_stats.spent_txo_sum;
-      const unconfirmed =
-        blocksteamData.accountInfo.mempool_stats.funded_txo_sum -
-        blocksteamData.accountInfo.mempool_stats.spent_txo_sum;
-
-      expect(result).toStrictEqual({
-        confirmed,
-        unconfirmed,
-        total: confirmed + unconfirmed,
-      });
+      expect(result).toStrictEqual(expectedResult);
     });
 
-    it('throws `503` error if fetch status is 503', async () => {
+    it('assigns balance to 0 if it failed to fetch', async () => {
       const { fetchSpy } = createMockFetch();
       fetchSpy.mockResolvedValue({
         ok: false,
         statusText: '503',
       });
-      const account = generateAccounts(1)[0];
+      const accounts = generateAccounts(1);
+      const addresses = accounts.map((account) => account.address);
 
       const instance = new BlockStreamClient({ network: networks.testnet });
+      const result = await instance.getBalances(addresses);
 
-      await expect(instance.getBalance(account.address)).rejects.toThrow(
-        'Failed to fetch data from blockstream: 503',
-      );
+      expect(result).toStrictEqual({ [addresses[0]]: 0 });
     });
 
     it('throws DataClientError error if an non DataClientError catched', async () => {
-      const { fetchSpy } = createMockFetch();
-      fetchSpy.mockResolvedValue({
-        ok: true,
-        json: jest.fn().mockRejectedValue(new Error('error')),
-      });
-      const account = generateAccounts(1)[0];
+      const asyncHelperSpy = jest.spyOn(AsyncHelper, 'processBatch');
+      asyncHelperSpy.mockRejectedValue(new Error('error'));
+      const accounts = generateAccounts(1);
+      const addresses = accounts.map((account) => account.address);
 
       const instance = new BlockStreamClient({ network: networks.testnet });
 
-      await expect(instance.getBalance(account.address)).rejects.toThrow(
+      await expect(instance.getBalances(addresses)).rejects.toThrow(
+        DataClientError,
+      );
+    });
+
+    it('throws DataClientError error if an DataClientError catched', async () => {
+      const asyncHelperSpy = jest.spyOn(AsyncHelper, 'processBatch');
+      asyncHelperSpy.mockRejectedValue(new DataClientError('error'));
+      const accounts = generateAccounts(1);
+      const addresses = accounts.map((account) => account.address);
+
+      const instance = new BlockStreamClient({ network: networks.testnet });
+
+      await expect(instance.getBalances(addresses)).rejects.toThrow(
         DataClientError,
       );
     });

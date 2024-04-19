@@ -1,6 +1,8 @@
+import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 
 import { generateAccounts } from '../../../../test/utils';
+import { BtcAsset } from '../config';
 import type { IReadDataClient } from '../data-client';
 import { BtcTransactionMgr } from './manager';
 
@@ -9,7 +11,7 @@ describe('BtcTransactionMgr', () => {
     const getBalanceSpy = jest.fn();
 
     class MockReadDataClient implements IReadDataClient {
-      getBalance = getBalanceSpy;
+      getBalances = getBalanceSpy;
     }
     return {
       instance: new MockReadDataClient(),
@@ -17,9 +19,12 @@ describe('BtcTransactionMgr', () => {
     };
   };
 
-  const createMockBtcTransactionMgr = (readDataClient: IReadDataClient) => {
+  const createMockBtcTransactionMgr = (
+    readDataClient: IReadDataClient,
+    network: Network = networks.testnet,
+  ) => {
     const instance = new BtcTransactionMgr(readDataClient, {
-      network: networks.bitcoin,
+      network,
     });
 
     return {
@@ -28,23 +33,57 @@ describe('BtcTransactionMgr', () => {
   };
 
   describe('getBalance', () => {
-    it('calls getBalance with readClient', async () => {
+    it('calls getBalances with readClient', async () => {
       const { instance, getBalanceSpy } = createMockReadDataClient();
       const { instance: txnMgr } = createMockBtcTransactionMgr(instance);
-      const account = generateAccounts(1)[0];
+      const accounts = generateAccounts(2);
+      const addresses = accounts.map((account) => account.address);
+      getBalanceSpy.mockResolvedValue(
+        addresses.reduce((acc, address) => {
+          acc[address] = 100;
+          return acc;
+        }, {}),
+      );
 
-      await txnMgr.getBalance(account.address);
+      await txnMgr.getBalances(addresses, [BtcAsset.TBtc]);
 
-      expect(getBalanceSpy).toHaveBeenCalledWith(account.address);
+      expect(getBalanceSpy).toHaveBeenCalledWith(addresses);
     });
 
-    it('throws TransactionMgrError if the getBalance failed', async () => {
-      const { instance, getBalanceSpy } = createMockReadDataClient();
+    it('throws `Only one asset is supported` error if the given assert more than 1', async () => {
+      const { instance } = createMockReadDataClient();
       const { instance: txnMgr } = createMockBtcTransactionMgr(instance);
-      getBalanceSpy.mockRejectedValue(new Error('error'));
-      const account = generateAccounts(1)[0];
+      const accounts = generateAccounts(2);
+      const addresses = accounts.map((account) => account.address);
 
-      await expect(txnMgr.getBalance(account.address)).rejects.toThrow('error');
+      await expect(
+        txnMgr.getBalances(addresses, [BtcAsset.TBtc, BtcAsset.Btc]),
+      ).rejects.toThrow('Only one asset is supported');
+    });
+
+    it('throws `Invalid asset` error if the BTC assert is given and current network is testnet network', async () => {
+      const { instance } = createMockReadDataClient();
+      const { instance: txnMgr } = createMockBtcTransactionMgr(instance);
+      const accounts = generateAccounts(2);
+      const addresses = accounts.map((account) => account.address);
+
+      await expect(
+        txnMgr.getBalances(addresses, [BtcAsset.Btc]),
+      ).rejects.toThrow('Invalid asset');
+    });
+
+    it('throws `Invalid asset` error if the TBTC assert is given and current network is bitcoin network', async () => {
+      const { instance } = createMockReadDataClient();
+      const { instance: txnMgr } = createMockBtcTransactionMgr(
+        instance,
+        networks.bitcoin,
+      );
+      const accounts = generateAccounts(2);
+      const addresses = accounts.map((account) => account.address);
+
+      await expect(
+        txnMgr.getBalances(addresses, [BtcAsset.TBtc]),
+      ).rejects.toThrow('Invalid asset');
     });
   });
 });

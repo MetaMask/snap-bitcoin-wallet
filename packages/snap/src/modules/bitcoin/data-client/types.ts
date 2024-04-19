@@ -1,7 +1,7 @@
-import { type Balance } from '../../transaction';
+import { type Balances } from '../../transaction';
 
 export type IReadDataClient = {
-  getBalance(address: string): Promise<Balance>;
+  getBalances(address: string[]): Promise<Balances>;
 };
 
 export type IWriteDataClient = {
