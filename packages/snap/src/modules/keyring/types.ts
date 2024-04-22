@@ -23,10 +23,8 @@ export type IAccountMgr = {
   unlock(index: number): Promise<IAccount>;
 };
 
-export type CreateAccountOptions = Record<string, Json> & {
-  index: number;
-};
-
 export type KeyringOptions = Record<string, Json> & {
   defaultIndex: number;
+  multiAccount?: boolean;
+  emitEvents?: boolean;
 };

@@ -2,8 +2,8 @@ import type { KeyringAccount } from '@metamask/keyring-api';
 import type { Infer } from 'superstruct';
 import { object, number, assign } from 'superstruct';
 
-import { Chain } from '../../modules/config';
-import { Factory } from '../../modules/factory';
+import { Config } from '../../modules/config';
+import { BtcKeyring, KeyringStateManager } from '../../modules/keyring';
 import type { StaticImplements } from '../../types/static';
 import { BaseSnapRpcRequestHandler } from '../base';
 import type {
@@ -38,10 +38,14 @@ export class CreateAccountHandler
   async handleRequest(
     params: CreateAccountParams,
   ): Promise<CreateAccountResponse> {
-    const keyring = Factory.createKeyring(Chain.Bitcoin, params.scope);
+    const keyring = new BtcKeyring(new KeyringStateManager(), {
+      defaultIndex: Config.account[Config.chain].defaultAccountIndex,
+      multiAccount: Config.account[Config.chain].enableMultiAccounts,
+      emitEvents: false,
+    });
 
     const account = await keyring.createAccount({
-      index: params.index,
+      scope: params.scope,
     });
 
     return account;

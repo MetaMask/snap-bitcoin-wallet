@@ -27,6 +27,8 @@ export type SnapConfig = {
   avaliableNetworks: {
     [key in Chain]: string[];
   };
+  chain: Chain;
+  logLevel: string;
 };
 
 export const Config: SnapConfig = {
@@ -41,6 +43,7 @@ export const Config: SnapConfig = {
   },
   account: {
     [Chain.Bitcoin]: {
+      enableMultiAccounts: false,
       defaultAccountIndex: 0,
       defaultAccountType: 'p2wpkh',
       deriver: 'BIP32',
@@ -50,4 +53,7 @@ export const Config: SnapConfig = {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     [Chain.Bitcoin]: Object.entries(BtcNetwork).map(([_, val]) => val),
   },
+  chain: Chain.Bitcoin,
+  // eslint-disable-next-line no-restricted-globals
+  logLevel: process.env.LOG_LEVEL ?? '6',
 };

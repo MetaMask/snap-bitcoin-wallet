@@ -9,10 +9,14 @@ import {
 import { DataClientFactory } from './bitcoin/data-client/factory';
 import { NetworkHelper } from './bitcoin/network';
 import { BtcTransactionMgr } from './bitcoin/transaction';
-import type { Chain } from './config';
 import { Config } from './config';
+import type { Chain } from './config';
 import { BtcKeyring, KeyringStateManager, type IAccountMgr } from './keyring';
 import type { ITransactionMgr } from './transaction/types';
+
+export type CreateBtcKeyringOptions = {
+  emitEvents: boolean;
+};
 
 export class Factory {
   static createBtcTransactionMgr(
@@ -32,11 +36,14 @@ export class Factory {
     return BtcAccountMgrFactory.create(config, btcNetwork);
   }
 
-  static createBtcKeyring(config: BtcAccountConfig, scope: string): BtcKeyring {
-    const accClient = Factory.createBtcAccountMgr(config, scope);
-
-    return new BtcKeyring(accClient, new KeyringStateManager(), {
+  static createBtcKeyring(
+    config: BtcAccountConfig,
+    options: CreateBtcKeyringOptions,
+  ): BtcKeyring {
+    return new BtcKeyring(new KeyringStateManager(), {
       defaultIndex: config.defaultAccountIndex,
+      multiAccount: config.enableMultiAccounts,
+      emitEvents: options.emitEvents,
     });
   }
 
@@ -48,7 +55,9 @@ export class Factory {
     return Factory.createBtcAccountMgr(Config.account[chain], scope);
   }
 
-  static createKeyring(chain: Chain, scope: string): Keyring {
-    return Factory.createBtcKeyring(Config.account[chain], scope);
+  static createKeyring(chain: Chain): Keyring {
+    return Factory.createBtcKeyring(Config.account[chain], {
+      emitEvents: true,
+    });
   }
 }
