@@ -1,42 +1,46 @@
-import type {
-  Keyring,
-  KeyringAccount,
-  KeyringRequest,
-  KeyringResponse,
+import {
+  KeyringEvent,
+  emitSnapKeyringEvent,
+  type Keyring,
+  type KeyringAccount,
+  type KeyringRequest,
+  type KeyringResponse,
 } from '@metamask/keyring-api';
+import { type Json } from '@metamask/snaps-sdk';
+import type { Infer } from 'superstruct';
+import { assert, object, enums } from 'superstruct';
 import { v4 as uuidv4 } from 'uuid';
 
+import { Config } from '../config';
+import { Factory } from '../factory';
 import { logger } from '../logger/logger';
+import { SnapHelper } from '../snap';
 import { BtcKeyringError } from './exceptions';
 import type { KeyringStateManager } from './state';
-import type {
-  IAccount,
-  IAccountMgr,
-  CreateAccountOptions,
-  KeyringOptions,
-} from './types';
+import type { IAccount, IAccountMgr, KeyringOptions } from './types';
+
+export const CreateAccountOptionsStruct = object({
+  scope: enums(Config.avaliableNetworks[Config.chain]),
+});
+
+export type CreateAccountOptions = Record<string, Json> &
+  Infer<typeof CreateAccountOptionsStruct>;
 
 export class BtcKeyring implements Keyring {
-  protected readonly accountMgr: IAccountMgr;
-
   protected readonly stateMgr: KeyringStateManager;
 
   protected readonly options: KeyringOptions;
 
-  constructor(
-    accountMgr: IAccountMgr,
-    stateMgr: KeyringStateManager,
-    options: KeyringOptions,
-  ) {
-    this.accountMgr = accountMgr;
+  protected readonly keyringMethods = ['chain_getBalances'];
+
+  constructor(options: KeyringOptions, stateMgr: KeyringStateManager) {
     this.stateMgr = stateMgr;
     this.options = options;
   }
 
   async listAccounts(): Promise<KeyringAccount[]> {
     try {
-      const accounts = await this.stateMgr.listAccounts();
-      return accounts;
+      return await this.stateMgr.listAccounts();
     } catch (error) {
       throw new BtcKeyringError(error);
     }
@@ -44,8 +48,7 @@ export class BtcKeyring implements Keyring {
 
   async getAccount(id: string): Promise<KeyringAccount | undefined> {
     try {
-      const account = await this.stateMgr.getAccount(id);
-      return account ?? undefined;
+      return (await this.stateMgr.getAccount(id)) ?? undefined;
     } catch (error) {
       throw new BtcKeyringError(error);
     }
@@ -53,29 +56,43 @@ export class BtcKeyring implements Keyring {
 
   async createAccount(options?: CreateAccountOptions): Promise<KeyringAccount> {
     try {
+      assert(options, CreateAccountOptionsStruct);
+
+      const accountMgr: IAccountMgr = Factory.createAccountMgr(
+        Config.chain,
+        options.scope,
+      );
+
       // TODO: Create account with index 0 for now for phase 1 scope, update to use increment index later
-      const index = options?.index ?? this.options.defaultIndex;
-      const account = await this.accountMgr.unlock(index);
+      const index = this.options.defaultIndex;
+
+      const account = await accountMgr.unlock(index);
       logger.info(
         `[BtcKeyring.createAccount] Account unlocked: ${account.address}`,
       );
 
-      let keyringAccount = await this.stateMgr.getAccountByAddress(
-        account.address,
-      );
+      const keyringAccount = this.newKeyringAccount(account, {
+        ...options,
+        index,
+      });
 
-      if (keyringAccount) {
-        return keyringAccount;
-      }
-
-      keyringAccount = this.newKeyringAccount(account);
       logger.info(
         `[BtcKeyring.createAccount] Keyring account data: ${JSON.stringify(
           keyringAccount,
         )}`,
       );
 
-      await this.stateMgr.saveAccount(keyringAccount);
+      // TODO: Add 2 phase commit
+      await this.stateMgr.addWallet({
+        account: keyringAccount,
+        type: account.type,
+        index,
+        scope: options?.scope,
+      });
+
+      await this.#emitEvent(KeyringEvent.AccountCreated, {
+        account: keyringAccount,
+      });
 
       return keyringAccount;
     } catch (error) {
@@ -90,7 +107,9 @@ export class BtcKeyring implements Keyring {
 
   async updateAccount(account: KeyringAccount): Promise<void> {
     try {
-      await this.stateMgr.saveAccount(account);
+      // TODO: Add 2 phase commit
+      await this.stateMgr.updateAccount(account);
+      await this.#emitEvent(KeyringEvent.AccountUpdated, { account });
     } catch (error) {
       throw new BtcKeyringError(error);
     }
@@ -98,7 +117,9 @@ export class BtcKeyring implements Keyring {
 
   async deleteAccount(id: string): Promise<void> {
     try {
+      // TODO: Add 2 phase commit
       await this.stateMgr.removeAccounts([id]);
+      await this.#emitEvent(KeyringEvent.AccountDeleted, { id });
     } catch (error) {
       throw new BtcKeyringError(error);
     }
@@ -109,16 +130,32 @@ export class BtcKeyring implements Keyring {
     throw new BtcKeyringError('Method not implemented.');
   }
 
-  protected newKeyringAccount(account: IAccount): KeyringAccount {
+  async #emitEvent(
+    event: KeyringEvent,
+    data: Record<string, Json>,
+  ): Promise<void> {
+    try {
+      await emitSnapKeyringEvent(SnapHelper.wallet, event, data);
+    } catch (error) {
+      logger.error(
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+        `[BtcKeyring.emitEvent] Error emitting event ${event}: ${error}`,
+      );
+    }
+  }
+
+  protected newKeyringAccount(
+    account: IAccount,
+    options?: CreateAccountOptions,
+  ): KeyringAccount {
     return {
       type: account.type,
       id: uuidv4(),
       address: account.address,
       options: {
-        hdPath: account.hdPath,
-        index: account.index,
+        ...options,
       },
-      methods: ['chain_getBalances'],
+      methods: this.keyringMethods,
     } as unknown as KeyringAccount;
   }
 }

@@ -7,7 +7,7 @@
     "url": "https://github.com/MetaMask/bitcoin.git"
   },
   "source": {
-    "shasum": "SeWMmXKfuQ7q4TZScQ1ANgp9ssppSHYNzR2csvh9SpU=",
+    "shasum": "2aagAzXrGS6z6HJjwYFNS1lHWzs099t+ZyMD/LX52+g=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
@@ -18,10 +18,16 @@
     }
   },
   "initialPermissions": {
-    "snap_dialog": {},
     "endowment:rpc": {
       "dapps": true,
       "snaps": false
+    },
+    "endowment:keyring": {
+      "allowedOrigins": [
+        "https://metamask.github.io",
+        "https://portfolio.metamask.io",
+        "http://localhost:8000"
+      ]
     },
     "snap_getBip32Entropy": [
       {
@@ -42,7 +48,9 @@
       }
     ],
     "endowment:network-access": {},
-    "snap_manageState": {}
+    "snap_manageAccounts": {},
+    "snap_manageState": {},
+    "snap_dialog": {}
   },
   "manifestVersion": "0.1"
 }

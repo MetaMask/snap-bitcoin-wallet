@@ -44,6 +44,7 @@ describe('BtcAccountMgrFactory', () => {
           defaultAccountIndex: 0,
           defaultAccountType: ScriptType.P2wpkh,
           deriver: 'BIP32',
+          enableMultiAccounts: false,
         },
         networks.testnet,
       ) as unknown as MockBtcAccountMgr;
@@ -61,6 +62,7 @@ describe('BtcAccountMgrFactory', () => {
           defaultAccountIndex: 0,
           defaultAccountType: ScriptType.P2wpkh,
           deriver: 'BIP44',
+          enableMultiAccounts: false,
         },
         networks.testnet,
       ) as unknown as MockBtcAccountMgr;
@@ -77,6 +79,7 @@ describe('BtcAccountMgrFactory', () => {
             defaultAccountIndex: 0,
             defaultAccountType: ScriptType.P2shP2wkh,
             deriver: 'BIP32',
+            enableMultiAccounts: false,
           },
           networks.testnet,
         ),

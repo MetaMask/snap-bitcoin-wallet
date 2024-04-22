@@ -9,6 +9,7 @@ export type BtcTransactionConfig = {
 };
 
 export type BtcAccountConfig = {
+  enableMultiAccounts: boolean;
   defaultAccountIndex: number;
   defaultAccountType: string;
   deriver: string;

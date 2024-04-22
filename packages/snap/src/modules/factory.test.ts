@@ -27,7 +27,7 @@ describe('Factory', () => {
 
   describe('createKeyring', () => {
     it('creates BtcKeyring instance', () => {
-      const instance = Factory.createKeyring(Chain.Bitcoin, Network.Testnet);
+      const instance = Factory.createKeyring(Chain.Bitcoin);
 
       expect(instance).toBeInstanceOf(BtcKeyring);
     });
