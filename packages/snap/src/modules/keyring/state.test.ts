@@ -17,7 +17,7 @@ describe('BtcKeyring', () => {
   const createInitState = (cnt = 1, scope = Network.Testnet) => {
     const generatedAccounts = generateAccounts(cnt);
     return {
-      accounts: generatedAccounts.map((accounts) => accounts.id),
+      walletIds: generatedAccounts.map((accounts) => accounts.id),
       wallets: generatedAccounts.reduce((acc, account) => {
         acc[account.id] = {
           account,
@@ -40,7 +40,7 @@ describe('BtcKeyring', () => {
 
       expect(getDataSpy).toHaveBeenCalledTimes(1);
       expect(result).toStrictEqual(
-        state.accounts.map((id) => state.wallets[id].account),
+        state.walletIds.map((id) => state.wallets[id].account),
       );
     });
 
@@ -54,7 +54,7 @@ describe('BtcKeyring', () => {
       expect(result).toStrictEqual([]);
     });
 
-    it('init keyring state `accounts` if `accounts` does not exist', async () => {
+    it('init keyring state `walletIds` if `walletIds` does not exist', async () => {
       const { instance, getDataSpy } = createMockStateManager();
       getDataSpy.mockResolvedValue({
         wallets: [],
@@ -140,7 +140,7 @@ describe('BtcKeyring', () => {
       const { instance, getDataSpy } = createMockStateManager();
       const state = createInitState(20);
       getDataSpy.mockResolvedValue(state);
-      const accountToSave = state.wallets[state.accounts[0]].account;
+      const accountToSave = state.wallets[state.walletIds[0]].account;
 
       await expect(
         instance.addWallet({
@@ -157,7 +157,7 @@ describe('BtcKeyring', () => {
       const state = createInitState(20);
       getDataSpy.mockResolvedValue(state);
       const accountToSave = generateAccounts(1, 'new')[0];
-      const { address } = state.wallets[state.accounts[0]].account;
+      const { address } = state.wallets[state.walletIds[0]].account;
       accountToSave.address = address;
 
       await expect(
@@ -193,14 +193,14 @@ describe('BtcKeyring', () => {
       const state = createInitState(20);
       getDataSpy.mockResolvedValue(state);
 
-      const lengthB4Remove = state.accounts.length;
-      const testInput = [state.accounts[0], state.accounts[10]];
+      const lengthB4Remove = state.walletIds.length;
+      const testInput = [state.walletIds[0], state.walletIds[10]];
 
       await instance.removeAccounts(testInput);
 
       expect(getDataSpy).toHaveBeenCalledTimes(1);
       expect(setDataSpy).toHaveBeenCalledTimes(1);
-      expect(state.accounts).toHaveLength(lengthB4Remove - testInput.length);
+      expect(state.walletIds).toHaveLength(lengthB4Remove - testInput.length);
       expect(state.wallets).not.toContain(testInput[0]);
       expect(state.wallets).not.toContain(testInput[1]);
     });
@@ -212,7 +212,7 @@ describe('BtcKeyring', () => {
       getDataSpy.mockResolvedValue(state);
 
       await expect(
-        instance.removeAccounts([nonExistAcc.id, state.accounts[0]]),
+        instance.removeAccounts([nonExistAcc.id, state.walletIds[0]]),
       ).rejects.toThrow(
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         `Account id ${nonExistAcc.id} does not exist`,
@@ -224,7 +224,7 @@ describe('BtcKeyring', () => {
       getDataSpy.mockRejectedValue(new Error('error'));
       const state = createInitState(1);
 
-      await expect(instance.removeAccounts(state.accounts)).rejects.toThrow(
+      await expect(instance.removeAccounts(state.walletIds)).rejects.toThrow(
         StateError,
       );
     });
@@ -235,7 +235,7 @@ describe('BtcKeyring', () => {
       const { instance, getDataSpy } = createMockStateManager();
       const state = createInitState(20);
       getDataSpy.mockResolvedValue(state);
-      const id = state.accounts[0];
+      const id = state.walletIds[0];
 
       const result = await instance.getAccount(id);
 
@@ -271,7 +271,7 @@ describe('BtcKeyring', () => {
       getDataSpy.mockResolvedValue(state);
 
       const accToUpdate = {
-        ...state.wallets[state.accounts[0]].account,
+        ...state.wallets[state.walletIds[0]].account,
         methods: ['btc_sendTransactions'],
       };
 
@@ -305,8 +305,8 @@ describe('BtcKeyring', () => {
       const { instance, getDataSpy } = createMockStateManager();
       const state = createInitState(20);
       const accToUpdate = {
-        ...state.wallets[state.accounts[0]].account,
-        address: state.wallets[state.accounts[1]].account.address,
+        ...state.wallets[state.walletIds[0]].account,
+        address: state.wallets[state.walletIds[1]].account.address,
       };
       getDataSpy.mockResolvedValue(state);
 
@@ -320,7 +320,7 @@ describe('BtcKeyring', () => {
       const { instance, getDataSpy } = createMockStateManager();
       const state = createInitState(20);
       const accToUpdate = {
-        ...state.wallets[state.accounts[0]].account,
+        ...state.wallets[state.walletIds[0]].account,
         type: 'someothertype',
       };
       getDataSpy.mockResolvedValue(state);
@@ -336,7 +336,7 @@ describe('BtcKeyring', () => {
       getDataSpy.mockRejectedValue(new Error('error'));
       const state = createInitState(1);
       const accToUpdate = {
-        ...state.wallets[state.accounts[0]].account,
+        ...state.wallets[state.walletIds[0]].account,
       };
 
       await expect(instance.updateAccount(accToUpdate)).rejects.toThrow(

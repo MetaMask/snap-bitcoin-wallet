@@ -35,6 +35,7 @@
     "bip32": "^4.0.0",
     "bitcoinjs-lib": "^6.1.5",
     "buffer": "^6.0.3",
+    "dotenv": "^16.4.5",
     "superstruct": "^1.0.3",
     "uuid": "^9.0.1"
   },

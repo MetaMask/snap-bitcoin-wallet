@@ -10,6 +10,6 @@ export type Wallet = {
 export type Wallets = Record<string, Wallet>;
 
 export type SnapState = {
-  accounts: string[];
+  walletIds: string[];
   wallets: Wallets;
 };

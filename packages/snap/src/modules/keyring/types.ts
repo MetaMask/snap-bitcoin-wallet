@@ -25,5 +25,6 @@ export type IAccountMgr = {
 
 export type KeyringOptions = Record<string, Json> & {
   defaultIndex: number;
-  multiAccount: boolean;
+  multiAccount?: boolean;
+  emitEvents?: boolean;
 };

@@ -14,6 +14,10 @@ import type { Chain } from './config';
 import { BtcKeyring, KeyringStateManager, type IAccountMgr } from './keyring';
 import type { ITransactionMgr } from './transaction/types';
 
+export type CreateBtcKeyringOptions = {
+  emitEvents: boolean;
+};
+
 export class Factory {
   static createBtcTransactionMgr(
     config: BtcTransactionConfig,
@@ -32,14 +36,15 @@ export class Factory {
     return BtcAccountMgrFactory.create(config, btcNetwork);
   }
 
-  static createBtcKeyring(config: BtcAccountConfig): BtcKeyring {
-    return new BtcKeyring(
-      {
-        defaultIndex: config.defaultAccountIndex,
-        multiAccount: config.enableMultiAccounts,
-      },
-      new KeyringStateManager(),
-    );
+  static createBtcKeyring(
+    config: BtcAccountConfig,
+    options: CreateBtcKeyringOptions,
+  ): BtcKeyring {
+    return new BtcKeyring(new KeyringStateManager(), {
+      defaultIndex: config.defaultAccountIndex,
+      multiAccount: config.enableMultiAccounts,
+      emitEvents: options.emitEvents,
+    });
   }
 
   static createTransactionMgr(chain: Chain, scope: string): ITransactionMgr {
@@ -51,6 +56,8 @@ export class Factory {
   }
 
   static createKeyring(chain: Chain): Keyring {
-    return Factory.createBtcKeyring(Config.account[chain]);
+    return Factory.createBtcKeyring(Config.account[chain], {
+      emitEvents: true,
+    });
   }
 }

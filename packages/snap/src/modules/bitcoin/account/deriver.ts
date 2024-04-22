@@ -22,15 +22,43 @@ export abstract class BtcAccountDeriver implements IBtcAccountDeriver {
   abstract getRoot(path: string[]): Promise<BIP32Interface>;
 
   fromSeed(seed: Buffer): BIP32Interface {
-    return this.bip32Api.fromSeed(seed, this.network);
+    try {
+      return this.bip32Api.fromSeed(seed, this.network);
+    } catch (error) {
+      throw new DeriverError('Unable to construct BIP32 node from seed');
+    }
   }
 
   fromPrivateKey(privateKey: Buffer, chainNode: Buffer): BIP32Interface {
-    return this.bip32Api.fromPrivateKey(privateKey, chainNode, this.network);
+    try {
+      return this.bip32Api.fromPrivateKey(privateKey, chainNode, this.network);
+    } catch (error) {
+      throw new DeriverError('Unable to construct BIP32 node from private key');
+    }
   }
 
   async getChild(root: BIP32Interface, idx: number): Promise<BIP32Interface> {
     return Promise.resolve(root.deriveHardened(0).derive(0).derive(idx));
+  }
+
+  protected pkToBuf(pk: string): Buffer {
+    try {
+      return this.#toBuffer(pk);
+    } catch (error) {
+      throw new DeriverError('Private key is invalid');
+    }
+  }
+
+  protected chainCodeToBuf(chainCode: string): Buffer {
+    try {
+      return this.#toBuffer(chainCode);
+    } catch (error) {
+      throw new DeriverError('Chain code is invalid');
+    }
+  }
+
+  #toBuffer(val: string): Buffer {
+    return Buffer.from(AddressHelper.trimHexPrefix(val), 'hex');
   }
 }
 
@@ -42,10 +70,7 @@ export class BtcAccountBip44Deriver extends BtcAccountDeriver {
       if (!deriverNode.privateKey) {
         throw new DeriverError('Deriver private key is missing');
       }
-      const privateKeyBuffer = Buffer.from(
-        AddressHelper.trimHexPrefix(deriverNode.privateKey),
-        'hex',
-      );
+      const privateKeyBuffer = this.pkToBuf(deriverNode.privateKey);
       const root = this.fromSeed(privateKeyBuffer);
       return root
         .deriveHardened(parseInt(path[1].slice(0, -1), 10))
@@ -67,14 +92,8 @@ export class BtcAccountBip32Deriver extends BtcAccountDeriver {
         throw new DeriverError('Deriver private key is missing');
       }
 
-      const privateKeyBuffer = Buffer.from(
-        AddressHelper.trimHexPrefix(deriver.privateKey),
-        'hex',
-      );
-      const chainCodeBuffer = Buffer.from(
-        AddressHelper.trimHexPrefix(deriver.chainCode),
-        'hex',
-      );
+      const privateKeyBuffer = this.pkToBuf(deriver.privateKey);
+      const chainCodeBuffer = this.chainCodeToBuf(deriver.chainCode);
 
       const root = this.fromPrivateKey(privateKeyBuffer, chainCodeBuffer);
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment

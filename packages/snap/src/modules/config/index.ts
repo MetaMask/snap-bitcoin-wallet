@@ -28,6 +28,7 @@ export type SnapConfig = {
     [key in Chain]: string[];
   };
   chain: Chain;
+  logLevel: string;
 };
 
 export const Config: SnapConfig = {
@@ -53,4 +54,6 @@ export const Config: SnapConfig = {
     [Chain.Bitcoin]: Object.entries(BtcNetwork).map(([_, val]) => val),
   },
   chain: Chain.Bitcoin,
+  // eslint-disable-next-line no-restricted-globals
+  logLevel: process.env.LOG_LEVEL ?? '6',
 };
