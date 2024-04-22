@@ -7,7 +7,7 @@
     "url": "https://github.com/MetaMask/bitcoin.git"
   },
   "source": {
-    "shasum": "2aagAzXrGS6z6HJjwYFNS1lHWzs099t+ZyMD/LX52+g=",
+    "shasum": "nQf2nhkUXq9AUDXdOH0gzOBBiNT32CZxxc3lMpu3JMA=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",

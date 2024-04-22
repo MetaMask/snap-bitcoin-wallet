@@ -64,13 +64,10 @@ describe('BtcKeyring', () => {
 
   const createMockKeyring = (stateMgr: KeyringStateManager) => {
     return {
-      instance: new BtcKeyring(
-        {
-          defaultIndex: 0,
-          multiAccount: false,
-        },
-        stateMgr,
-      ),
+      instance: new BtcKeyring(stateMgr, {
+        defaultIndex: 0,
+        multiAccount: false,
+      }),
     };
   };
 

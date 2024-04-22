@@ -10,13 +10,13 @@ export class KeyringStateManager extends SnapStateManager<SnapState> {
       if (!state) {
         // eslint-disable-next-line no-param-reassign
         state = {
-          accounts: [],
+          walletIds: [],
           wallets: {},
         };
       }
 
-      if (!state.accounts) {
-        state.accounts = [];
+      if (!state.walletIds) {
+        state.walletIds = [];
       }
 
       if (!state.wallets) {
@@ -30,7 +30,7 @@ export class KeyringStateManager extends SnapStateManager<SnapState> {
   async listAccounts(): Promise<KeyringAccount[]> {
     try {
       const state = await this.get();
-      return state.accounts.map((id) => state.wallets[id].account);
+      return state.walletIds.map((id) => state.wallets[id].account);
     } catch (error) {
       throw new StateError(error);
     }
@@ -48,7 +48,7 @@ export class KeyringStateManager extends SnapStateManager<SnapState> {
         }
 
         state.wallets[id] = wallet;
-        state.accounts.push(id);
+        state.walletIds.push(id);
       });
     } catch (error) {
       if (error instanceof StateError) {
@@ -99,7 +99,7 @@ export class KeyringStateManager extends SnapStateManager<SnapState> {
         }
 
         removeIds.forEach((id) => delete state.wallets[id]);
-        state.accounts = state.accounts.filter((id) => !removeIds.has(id));
+        state.walletIds = state.walletIds.filter((id) => !removeIds.has(id));
       });
     } catch (error) {
       if (error instanceof StateError) {
@@ -112,12 +112,7 @@ export class KeyringStateManager extends SnapStateManager<SnapState> {
   async getAccount(id: string): Promise<KeyringAccount | null> {
     try {
       const state = await this.get();
-
-      if (!this.isAccountExist(state, id)) {
-        return null;
-      }
-
-      return state.wallets[id].account as unknown as KeyringAccount;
+      return state.wallets[id]?.account ?? null;
     } catch (error) {
       throw new StateError(error);
     }

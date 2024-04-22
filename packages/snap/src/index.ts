@@ -6,9 +6,9 @@ import {
   SnapError,
 } from '@metamask/snaps-sdk';
 
-import { Chain } from './modules/config';
+import { Chain, Config } from './modules/config';
 import { Factory } from './modules/factory';
-import { LogLevel, logger } from './modules/logger/logger';
+import { logger } from './modules/logger/logger';
 import type {
   SnapRpcRequestHandlerRequest,
   IStaticSnapRpcRequestHandler,
@@ -36,7 +36,7 @@ const getHandler = (method: string): IStaticSnapRpcRequestHandler => {
 export const onRpcRequest: OnRpcRequestHandler = async (args) => {
   const { request, origin } = args;
 
-  logger.logLevel = LogLevel.ALL;
+  logger.logLevel = parseInt(Config.logLevel, 10);
 
   await validateOrigin(origin);
 
@@ -52,6 +52,9 @@ export const onRpcRequest: OnRpcRequestHandler = async (args) => {
 export const onKeyringRequest: OnKeyringRequestHandler = async ({
   request,
 }): Promise<Json> => {
+  logger.logLevel = parseInt(Config.logLevel, 10);
+
   const keyring = Factory.createKeyring(Chain.Bitcoin);
+
   return handleKeyringRequest(keyring, request) as unknown as Promise<Json>;
 };

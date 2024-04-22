@@ -33,7 +33,7 @@ export class BtcKeyring implements Keyring {
 
   protected readonly keyringMethods = ['chain_getBalances'];
 
-  constructor(options: KeyringOptions, stateMgr: KeyringStateManager) {
+  constructor(stateMgr: KeyringStateManager, options: KeyringOptions) {
     this.stateMgr = stateMgr;
     this.options = options;
   }
@@ -82,7 +82,7 @@ export class BtcKeyring implements Keyring {
         )}`,
       );
 
-      // TODO: Add 2 phase commit
+      // TODO: Add 2 phases commit
       await this.stateMgr.addWallet({
         account: keyringAccount,
         type: account.type,
@@ -107,7 +107,7 @@ export class BtcKeyring implements Keyring {
 
   async updateAccount(account: KeyringAccount): Promise<void> {
     try {
-      // TODO: Add 2 phase commit
+      // TODO: Add 2 phases commit
       await this.stateMgr.updateAccount(account);
       await this.#emitEvent(KeyringEvent.AccountUpdated, { account });
     } catch (error) {
@@ -117,7 +117,7 @@ export class BtcKeyring implements Keyring {
 
   async deleteAccount(id: string): Promise<void> {
     try {
-      // TODO: Add 2 phase commit
+      // TODO: Add 2 phases commit
       await this.stateMgr.removeAccounts([id]);
       await this.#emitEvent(KeyringEvent.AccountDeleted, { id });
     } catch (error) {
@@ -125,22 +125,32 @@ export class BtcKeyring implements Keyring {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async submitRequest(request: KeyringRequest): Promise<KeyringResponse> {
-    throw new BtcKeyringError('Method not implemented.');
+    return this.syncSubmitRequest(request);
+  }
+
+  protected async syncSubmitRequest(
+    request: KeyringRequest,
+  ): Promise<KeyringResponse> {
+    return {
+      pending: false,
+      result: await this.handleSubmitRequest(request),
+    };
+  }
+
+  protected async handleSubmitRequest(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    request: KeyringRequest,
+  ): Promise<KeyringResponse> {
+    throw new BtcKeyringError(`Method not implemented.`);
   }
 
   async #emitEvent(
     event: KeyringEvent,
     data: Record<string, Json>,
   ): Promise<void> {
-    try {
+    if (this.options.emitEvents) {
       await emitSnapKeyringEvent(SnapHelper.wallet, event, data);
-    } catch (error) {
-      logger.error(
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        `[BtcKeyring.emitEvent] Error emitting event ${event}: ${error}`,
-      );
     }
   }
 
