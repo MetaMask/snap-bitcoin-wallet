@@ -82,6 +82,7 @@ export class BtcKeyring implements Keyring {
         )}`,
       );
 
+      // TODO: Add 2 phase commit
       await this.stateMgr.addWallet({
         account: keyringAccount,
         type: account.type,
@@ -106,6 +107,7 @@ export class BtcKeyring implements Keyring {
 
   async updateAccount(account: KeyringAccount): Promise<void> {
     try {
+      // TODO: Add 2 phase commit
       await this.stateMgr.updateAccount(account);
       await this.#emitEvent(KeyringEvent.AccountUpdated, { account });
     } catch (error) {
@@ -115,6 +117,7 @@ export class BtcKeyring implements Keyring {
 
   async deleteAccount(id: string): Promise<void> {
     try {
+      // TODO: Add 2 phase commit
       await this.stateMgr.removeAccounts([id]);
       await this.#emitEvent(KeyringEvent.AccountDeleted, { id });
     } catch (error) {
