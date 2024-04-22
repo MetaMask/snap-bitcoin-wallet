@@ -1,6 +1,5 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
 
-
 export type Wallet = {
   account: KeyringAccount;
   type: string;

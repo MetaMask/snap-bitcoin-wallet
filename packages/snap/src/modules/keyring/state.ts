@@ -1,6 +1,7 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
 
-import { Wallet, type SnapState } from '../../types/state';
+import type { Wallet } from '../../types/state';
+import { type SnapState } from '../../types/state';
 import { SnapStateManager, StateError } from '../snap';
 
 export class KeyringStateManager extends SnapStateManager<SnapState> {
@@ -40,10 +41,7 @@ export class KeyringStateManager extends SnapStateManager<SnapState> {
       await this.update(async (state: SnapState) => {
         const { id, address } = wallet.account;
         if (
-          this.isAccountExist(
-            state,
-            id,
-          ) ||
+          this.isAccountExist(state, id) ||
           this.getAccountByAddress(state, address)
         ) {
           throw new StateError(`Account address ${address} already exists`);
@@ -63,24 +61,22 @@ export class KeyringStateManager extends SnapStateManager<SnapState> {
   async updateAccount(account: KeyringAccount): Promise<void> {
     try {
       await this.update(async (state: SnapState) => {
-        if (
-          !this.isAccountExist(
-            state,
-            account.id,
-          )
-        ) {
+        if (!this.isAccountExist(state, account.id)) {
           throw new StateError(`Account id ${account.id} does not exist`);
         }
 
-        state.accounts.push(account.id);
-        const wallet = state.wallets[account.id]
-        state.wallets[account.id] = {
-          ...wallet,
-          account: {
-            ...wallet.account,
-            ...account,
-          }
-        };
+        const wallet = state.wallets[account.id];
+        const accountInState = wallet.account;
+
+        if (
+          accountInState.address.toLowerCase() !==
+            account.address.toLowerCase() ||
+          accountInState.type !== account.type
+        ) {
+          throw new StateError(`Account address or type is immutable`);
+        }
+
+        state.wallets[account.id].account = account;
       });
     } catch (error) {
       if (error instanceof StateError) {
@@ -127,14 +123,18 @@ export class KeyringStateManager extends SnapStateManager<SnapState> {
     }
   }
 
-  protected getAccountByAddress(state: SnapState, address:string): KeyringAccount | null  {
-    return Object.values(state.wallets).find((wallet) => wallet.account.address.toString() === address.toLowerCase())?.account ?? null;
+  protected getAccountByAddress(
+    state: SnapState,
+    address: string,
+  ): KeyringAccount | null {
+    return (
+      Object.values(state.wallets).find(
+        (wallet) => wallet.account.address.toString() === address.toLowerCase(),
+      )?.account ?? null
+    );
   }
 
-  protected isAccountExist(state:SnapState, id: string): boolean {
-    return Object.prototype.hasOwnProperty.call(
-      state.wallets,
-      id,
-    );
+  protected isAccountExist(state: SnapState, id: string): boolean {
+    return Object.prototype.hasOwnProperty.call(state.wallets, id);
   }
 }

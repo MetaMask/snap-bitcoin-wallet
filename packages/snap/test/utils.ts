@@ -2,6 +2,7 @@ import type { BIP32Interface } from 'bip32';
 import type { Network } from 'bitcoinjs-lib';
 import { Buffer } from 'buffer';
 
+import { Network as NetworkEnum } from '../src/modules/bitcoin/config';
 import blockChairData from './fixtures/blockchair.json';
 import blockStreamData from './fixtures/blockstream.json';
 
@@ -23,7 +24,6 @@ export function generateAccounts(cnt = 1, addressPrefix = '', idPrefix = '') {
   baseUUID = idPrefix + baseUUID.slice(idPrefix.length, baseUUID.length);
 
   for (let i = 0; i < cnt; i++) {
-    const hdPath = [`m`, `0'`, `0`, `${i}`].join('/');
     accounts.push({
       type: 'bip122:p2wpkh',
       id:
@@ -32,7 +32,7 @@ export function generateAccounts(cnt = 1, addressPrefix = '', idPrefix = '') {
         baseAddress.slice(0, baseAddress.length - i.toString().length) +
         i.toString(),
       options: {
-        hdPath,
+        scope: NetworkEnum.Testnet,
         index: i,
       },
       methods: ['chain_getBalances'],

@@ -1,6 +1,7 @@
 import { generateAccounts } from '../../../test/utils';
 import { Network } from '../bitcoin/config';
 import { Chain, Config } from '../config';
+import { Factory } from '../factory';
 import { BtcKeyringError } from './exceptions';
 import { BtcKeyring } from './keyring';
 import { KeyringStateManager } from './state';
@@ -12,14 +13,22 @@ jest.mock('../logger/logger', () => ({
   },
 }));
 
+jest.mock('@metamask/keyring-api', () => ({
+  ...jest.requireActual('@metamask/keyring-api'),
+  emitSnapKeyringEvent: jest.fn(),
+}));
+
 describe('BtcKeyring', () => {
   const createMockAccountMgr = () => {
     const unlockSpy = jest.fn();
     class AccountMgr implements IAccountMgr {
       unlock = unlockSpy;
     }
+    jest
+      .spyOn(Factory, 'createAccountMgr')
+      .mockImplementation()
+      .mockReturnValue(new AccountMgr());
     return {
-      instance: new AccountMgr(),
       unlockSpy,
     };
   };
@@ -29,9 +38,10 @@ describe('BtcKeyring', () => {
       KeyringStateManager.prototype,
       'listAccounts',
     );
-    const saveAccountSpy = jest.spyOn(
+    const addWalletSpy = jest.spyOn(KeyringStateManager.prototype, 'addWallet');
+    const updateAccountSpy = jest.spyOn(
       KeyringStateManager.prototype,
-      'saveAccount',
+      'updateAccount',
     );
     const removeAccountsSpy = jest.spyOn(
       KeyringStateManager.prototype,
@@ -41,45 +51,36 @@ describe('BtcKeyring', () => {
       KeyringStateManager.prototype,
       'getAccount',
     );
-    const getAccountByAddressSpy = jest.spyOn(
-      KeyringStateManager.prototype,
-      'getAccountByAddress',
-    );
 
     return {
       instance: new KeyringStateManager(),
       listAccountsSpy,
-      saveAccountSpy,
+      addWalletSpy,
       removeAccountsSpy,
       getAccountSpy,
-      getAccountByAddressSpy,
+      updateAccountSpy,
     };
   };
 
-  const createMockKeyring = (
-    accMgr: IAccountMgr,
-    stateMgr: KeyringStateManager,
-  ) => {
+  const createMockKeyring = (stateMgr: KeyringStateManager) => {
     return {
-      instance: new BtcKeyring(accMgr, stateMgr, {
-        defaultIndex: 0,
-        scope: Network.Testnet
-      }),
+      instance: new BtcKeyring(
+        {
+          defaultIndex: 0,
+          multiAccount: false,
+        },
+        stateMgr,
+      ),
     };
   };
 
   describe('createAccount', () => {
     it('creates account', async () => {
-      const { instance: accMgr, unlockSpy } = createMockAccountMgr();
-      const {
-        instance: stateMgr,
-        saveAccountSpy,
-        getAccountByAddressSpy,
-      } = createMockStateMgr();
-      const { instance: keyring } = createMockKeyring(accMgr, stateMgr);
+      const { unlockSpy } = createMockAccountMgr();
+      const { instance: stateMgr, addWalletSpy } = createMockStateMgr();
+      const { instance: keyring } = createMockKeyring(stateMgr);
+      const scope = Network.Testnet;
       const account = generateAccounts(1)[0];
-
-      getAccountByAddressSpy.mockResolvedValue(null);
 
       unlockSpy.mockResolvedValue({
         address: account.address,
@@ -88,100 +89,49 @@ describe('BtcKeyring', () => {
         type: account.type,
       });
 
-      await keyring.createAccount();
+      await keyring.createAccount({
+        scope,
+      });
 
       expect(unlockSpy).toHaveBeenCalledWith(
         Config.account[Chain.Bitcoin].defaultAccountIndex,
       );
-      expect(saveAccountSpy).toHaveBeenCalledWith({
-        type: account.type,
-        id: expect.any(String),
-        address: account.address,
-        options: {
-          hdPath: account.options.hdPath,
-          index: account.options.index,
+      expect(addWalletSpy).toHaveBeenCalledWith({
+        account: {
+          type: account.type,
+          id: expect.any(String),
+          address: account.address,
+          options: {
+            scope,
+            index: account.options.index,
+          },
+          methods: account.methods,
         },
-        methods: account.methods,
-      });
-    });
-
-    it('creates account with options', async () => {
-      const { instance: accMgr, unlockSpy } = createMockAccountMgr();
-      const {
-        instance: stateMgr,
-        saveAccountSpy,
-        getAccountByAddressSpy,
-      } = createMockStateMgr();
-      const { instance: keyring } = createMockKeyring(accMgr, stateMgr);
-      const account = generateAccounts(1)[0];
-
-      getAccountByAddressSpy.mockResolvedValue(null);
-
-      unlockSpy.mockResolvedValue({
-        address: account.address,
-        hdPath: account.options.hdPath,
+        type: account.type,
         index: account.options.index,
-        type: account.type,
+        scope,
       });
-
-      await keyring.createAccount({ index: 1 });
-
-      expect(unlockSpy).toHaveBeenCalledWith(1);
-      expect(saveAccountSpy).toHaveBeenCalledWith({
-        type: account.type,
-        id: expect.any(String),
-        address: account.address,
-        options: {
-          hdPath: account.options.hdPath,
-          index: account.options.index,
-        },
-        methods: account.methods,
-      });
-    });
-
-    it('does not create account if the account is exist', async () => {
-      const { instance: accMgr, unlockSpy } = createMockAccountMgr();
-      const {
-        instance: stateMgr,
-        saveAccountSpy,
-        getAccountByAddressSpy,
-      } = createMockStateMgr();
-      const { instance: keyring } = createMockKeyring(accMgr, stateMgr);
-      const account = generateAccounts(1)[0];
-
-      getAccountByAddressSpy.mockResolvedValue(account);
-
-      unlockSpy.mockResolvedValue({
-        address: account.address,
-        hdPath: account.options.hdPath,
-        index: account.options.index,
-        type: account.type,
-      });
-
-      const acc = await keyring.createAccount();
-
-      expect(unlockSpy).toHaveBeenCalledWith(0);
-      expect(saveAccountSpy).toHaveBeenCalledTimes(0);
-      expect(acc).toStrictEqual(account);
     });
 
     it('throws BtcKeyringError if an error catched', async () => {
-      const { instance: accMgr, unlockSpy } = createMockAccountMgr();
-      const { instance: stateMgr, getAccountByAddressSpy } =
-        createMockStateMgr();
-      const { instance: keyring } = createMockKeyring(accMgr, stateMgr);
-      getAccountByAddressSpy.mockResolvedValue(null);
+      const { unlockSpy } = createMockAccountMgr();
+      const { instance: stateMgr } = createMockStateMgr();
+      const { instance: keyring } = createMockKeyring(stateMgr);
       unlockSpy.mockRejectedValue(new Error('error'));
+      const scope = Network.Testnet;
 
-      await expect(keyring.createAccount()).rejects.toThrow(BtcKeyringError);
+      await expect(
+        keyring.createAccount({
+          scope,
+        }),
+      ).rejects.toThrow(BtcKeyringError);
     });
   });
 
   describe('filterAccountChains', () => {
     it('throws `Method not implemented` error', async () => {
-      const { instance: accMgr } = createMockAccountMgr();
       const { instance: stateMgr } = createMockStateMgr();
-      const { instance: keyring } = createMockKeyring(accMgr, stateMgr);
+      const { instance: keyring } = createMockKeyring(stateMgr);
       const account = generateAccounts(1)[0];
 
       await expect(
@@ -192,9 +142,8 @@ describe('BtcKeyring', () => {
 
   describe('submitRequest', () => {
     it('throws Method not implemented error', async () => {
-      const { instance: accMgr } = createMockAccountMgr();
       const { instance: stateMgr } = createMockStateMgr();
-      const { instance: keyring } = createMockKeyring(accMgr, stateMgr);
+      const { instance: keyring } = createMockKeyring(stateMgr);
       const account = generateAccounts(1)[0];
 
       await expect(
@@ -212,9 +161,8 @@ describe('BtcKeyring', () => {
 
   describe('listAccounts', () => {
     it('returns result', async () => {
-      const { instance: accMgr } = createMockAccountMgr();
       const { instance: stateMgr, listAccountsSpy } = createMockStateMgr();
-      const { instance: keyring } = createMockKeyring(accMgr, stateMgr);
+      const { instance: keyring } = createMockKeyring(stateMgr);
       const accounts = generateAccounts(10);
       listAccountsSpy.mockResolvedValue(accounts);
 
@@ -225,9 +173,8 @@ describe('BtcKeyring', () => {
     });
 
     it('throws BtcKeyringError if an error catched', async () => {
-      const { instance: accMgr } = createMockAccountMgr();
       const { instance: stateMgr, listAccountsSpy } = createMockStateMgr();
-      const { instance: keyring } = createMockKeyring(accMgr, stateMgr);
+      const { instance: keyring } = createMockKeyring(stateMgr);
       listAccountsSpy.mockRejectedValue(new Error('error'));
 
       await expect(keyring.listAccounts()).rejects.toThrow(BtcKeyringError);
@@ -236,9 +183,8 @@ describe('BtcKeyring', () => {
 
   describe('getAccount', () => {
     it('returns result', async () => {
-      const { instance: accMgr } = createMockAccountMgr();
       const { instance: stateMgr, getAccountSpy } = createMockStateMgr();
-      const { instance: keyring } = createMockKeyring(accMgr, stateMgr);
+      const { instance: keyring } = createMockKeyring(stateMgr);
       const account = generateAccounts(1)[0];
       getAccountSpy.mockResolvedValue(account);
 
@@ -249,9 +195,8 @@ describe('BtcKeyring', () => {
     });
 
     it('returns undefined if the account is not exist', async () => {
-      const { instance: accMgr } = createMockAccountMgr();
       const { instance: stateMgr, getAccountSpy } = createMockStateMgr();
-      const { instance: keyring } = createMockKeyring(accMgr, stateMgr);
+      const { instance: keyring } = createMockKeyring(stateMgr);
       const account = generateAccounts(1)[0];
       getAccountSpy.mockResolvedValue(null);
 
@@ -262,9 +207,8 @@ describe('BtcKeyring', () => {
     });
 
     it('throws BtcKeyringError if an error catched', async () => {
-      const { instance: accMgr } = createMockAccountMgr();
       const { instance: stateMgr, getAccountSpy } = createMockStateMgr();
-      const { instance: keyring } = createMockKeyring(accMgr, stateMgr);
+      const { instance: keyring } = createMockKeyring(stateMgr);
       getAccountSpy.mockRejectedValue(new Error('error'));
       const accounts = generateAccounts(1);
 
@@ -276,22 +220,20 @@ describe('BtcKeyring', () => {
 
   describe('updateAccount', () => {
     it('updates account', async () => {
-      const { instance: accMgr } = createMockAccountMgr();
-      const { instance: stateMgr, saveAccountSpy } = createMockStateMgr();
-      const { instance: keyring } = createMockKeyring(accMgr, stateMgr);
+      const { instance: stateMgr, updateAccountSpy } = createMockStateMgr();
+      const { instance: keyring } = createMockKeyring(stateMgr);
       const account = generateAccounts(1)[0];
-      saveAccountSpy.mockReturnThis();
+      updateAccountSpy.mockReturnThis();
 
       await keyring.updateAccount(account);
 
-      expect(saveAccountSpy).toHaveBeenCalledWith(account);
+      expect(updateAccountSpy).toHaveBeenCalledWith(account);
     });
 
     it('throws BtcKeyringError if an error catched', async () => {
-      const { instance: accMgr } = createMockAccountMgr();
-      const { instance: stateMgr, saveAccountSpy } = createMockStateMgr();
-      const { instance: keyring } = createMockKeyring(accMgr, stateMgr);
-      saveAccountSpy.mockRejectedValue(new Error('error'));
+      const { instance: stateMgr, updateAccountSpy } = createMockStateMgr();
+      const { instance: keyring } = createMockKeyring(stateMgr);
+      updateAccountSpy.mockRejectedValue(new Error('error'));
       const account = generateAccounts(1)[0];
 
       await expect(keyring.updateAccount(account)).rejects.toThrow(
@@ -302,9 +244,8 @@ describe('BtcKeyring', () => {
 
   describe('deleteAccount', () => {
     it('remove account', async () => {
-      const { instance: accMgr } = createMockAccountMgr();
       const { instance: stateMgr, removeAccountsSpy } = createMockStateMgr();
-      const { instance: keyring } = createMockKeyring(accMgr, stateMgr);
+      const { instance: keyring } = createMockKeyring(stateMgr);
       const account = generateAccounts(1)[0];
       removeAccountsSpy.mockReturnThis();
 
@@ -314,9 +255,8 @@ describe('BtcKeyring', () => {
     });
 
     it('throws BtcKeyringError if an error catched', async () => {
-      const { instance: accMgr } = createMockAccountMgr();
       const { instance: stateMgr, removeAccountsSpy } = createMockStateMgr();
-      const { instance: keyring } = createMockKeyring(accMgr, stateMgr);
+      const { instance: keyring } = createMockKeyring(stateMgr);
       removeAccountsSpy.mockRejectedValue(new Error('error'));
       const account = generateAccounts(1)[0];
 

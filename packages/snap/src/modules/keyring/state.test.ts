@@ -1,4 +1,5 @@
 import { generateAccounts } from '../../../test/utils';
+import { Network } from '../bitcoin/config';
 import { SnapHelper, StateError } from '../snap';
 import { KeyringStateManager } from './state';
 
@@ -13,12 +14,17 @@ describe('BtcKeyring', () => {
     };
   };
 
-  const createInitState = (cnt = 1) => {
+  const createInitState = (cnt = 1, scope = Network.Testnet) => {
     const generatedAccounts = generateAccounts(cnt);
     return {
       accounts: generatedAccounts.map((accounts) => accounts.id),
-      accountDetails: generatedAccounts.reduce((acc, account) => {
-        acc[account.id] = account;
+      wallets: generatedAccounts.reduce((acc, account) => {
+        acc[account.id] = {
+          account,
+          type: account.type,
+          index: account.options.index,
+          scope,
+        };
         return acc;
       }, {}),
     };
@@ -34,7 +40,7 @@ describe('BtcKeyring', () => {
 
       expect(getDataSpy).toHaveBeenCalledTimes(1);
       expect(result).toStrictEqual(
-        state.accounts.map((id) => state.accountDetails[id]),
+        state.accounts.map((id) => state.wallets[id].account),
       );
     });
 
@@ -51,7 +57,7 @@ describe('BtcKeyring', () => {
     it('init keyring state `accounts` if `accounts` does not exist', async () => {
       const { instance, getDataSpy } = createMockStateManager();
       getDataSpy.mockResolvedValue({
-        accounts: [],
+        wallets: [],
       });
 
       const result = await instance.listAccounts();
@@ -60,10 +66,10 @@ describe('BtcKeyring', () => {
       expect(result).toStrictEqual([]);
     });
 
-    it('init keyring state `accountDetails` if `accountDetails` does not exist', async () => {
+    it('init keyring state `wallets` if `wallets` does not exist', async () => {
       const { instance, getDataSpy } = createMockStateManager();
       getDataSpy.mockResolvedValue({
-        accountDetails: {},
+        account: {},
       });
 
       const result = await instance.listAccounts();
@@ -80,49 +86,103 @@ describe('BtcKeyring', () => {
     });
   });
 
-  describe('saveAccount', () => {
-    it('updates account if the account exist', async () => {
-      const { instance, getDataSpy, setDataSpy } = createMockStateManager();
-      const state = createInitState(20);
-      getDataSpy.mockResolvedValue(state);
-      const accountToSave = { ...state.accountDetails[state.accounts[0]] };
-      accountToSave.options.hdPath = 'm/1/0/0';
-
-      await instance.saveAccount(accountToSave);
-
-      expect(getDataSpy).toHaveBeenCalledTimes(1);
-      expect(setDataSpy).toHaveBeenCalledTimes(1);
-      expect(state.accountDetails[state.accounts[0]]).toStrictEqual(
-        accountToSave,
-      );
-    });
-
-    it('adds account if the account not exist', async () => {
+  describe('addWallet', () => {
+    it('adds an new wallet when state is empty', async () => {
       const { instance, getDataSpy, setDataSpy } = createMockStateManager();
       const accountToSave = generateAccounts(1)[0];
       const state = {
         accounts: [],
-        accountDetails: {},
+        wallets: {},
       };
       getDataSpy.mockResolvedValue(state);
 
-      await instance.saveAccount(accountToSave);
+      await instance.addWallet({
+        account: accountToSave,
+        type: accountToSave.type,
+        index: accountToSave.index,
+        scope: accountToSave.scope,
+      });
 
       expect(getDataSpy).toHaveBeenCalledTimes(1);
       expect(setDataSpy).toHaveBeenCalledTimes(1);
-      expect(state.accounts).toHaveLength(1);
-      expect(state.accountDetails).toStrictEqual({
-        [accountToSave.id]: accountToSave,
+      expect(state.wallets[accountToSave.id]).toStrictEqual({
+        account: accountToSave,
+        type: accountToSave.type,
+        index: accountToSave.index,
+        scope: accountToSave.scope,
       });
+    });
+
+    it('adds an new wallet when state is not empty', async () => {
+      const { instance, getDataSpy, setDataSpy } = createMockStateManager();
+      const state = createInitState(5);
+      const accountToSave = generateAccounts(1, 'new', 'new')[0];
+      getDataSpy.mockResolvedValue(state);
+
+      await instance.addWallet({
+        account: accountToSave,
+        type: accountToSave.type,
+        index: accountToSave.index,
+        scope: accountToSave.scope,
+      });
+
+      expect(getDataSpy).toHaveBeenCalledTimes(1);
+      expect(setDataSpy).toHaveBeenCalledTimes(1);
+      expect(state.wallets[accountToSave.id]).toStrictEqual({
+        account: accountToSave,
+        type: accountToSave.type,
+        index: accountToSave.index,
+        scope: accountToSave.scope,
+      });
+    });
+
+    it('throw StateError if the given account id exist', async () => {
+      const { instance, getDataSpy } = createMockStateManager();
+      const state = createInitState(20);
+      getDataSpy.mockResolvedValue(state);
+      const accountToSave = state.wallets[state.accounts[0]].account;
+
+      await expect(
+        instance.addWallet({
+          account: accountToSave,
+          type: accountToSave.type,
+          index: accountToSave.index,
+          scope: accountToSave.scope,
+        }),
+      ).rejects.toThrow(StateError);
+    });
+
+    it('throw StateError if the given account address exist', async () => {
+      const { instance, getDataSpy } = createMockStateManager();
+      const state = createInitState(20);
+      getDataSpy.mockResolvedValue(state);
+      const accountToSave = generateAccounts(1, 'new')[0];
+      const { address } = state.wallets[state.accounts[0]].account;
+      accountToSave.address = address;
+
+      await expect(
+        instance.addWallet({
+          account: accountToSave,
+          type: accountToSave.type,
+          index: accountToSave.index,
+          scope: accountToSave.scope,
+        }),
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      ).rejects.toThrow(`Account address ${address} already exists`);
     });
 
     it('throw StateError if an error catched', async () => {
       const { instance, getDataSpy } = createMockStateManager();
+      const accountToSave = generateAccounts(1)[0];
       getDataSpy.mockRejectedValue(new Error('error'));
-      const state = createInitState(1);
 
       await expect(
-        instance.saveAccount(state.accountDetails[state.accounts[0]]),
+        instance.addWallet({
+          account: accountToSave,
+          type: accountToSave.type,
+          index: accountToSave.index,
+          scope: accountToSave.scope,
+        }),
       ).rejects.toThrow(StateError);
     });
   });
@@ -141,8 +201,8 @@ describe('BtcKeyring', () => {
       expect(getDataSpy).toHaveBeenCalledTimes(1);
       expect(setDataSpy).toHaveBeenCalledTimes(1);
       expect(state.accounts).toHaveLength(lengthB4Remove - testInput.length);
-      expect(state.accountDetails).not.toContain(testInput[0]);
-      expect(state.accountDetails).not.toContain(testInput[1]);
+      expect(state.wallets).not.toContain(testInput[0]);
+      expect(state.wallets).not.toContain(testInput[1]);
     });
 
     it('throw StateError if the account does not exist', async () => {
@@ -155,7 +215,7 @@ describe('BtcKeyring', () => {
         instance.removeAccounts([nonExistAcc.id, state.accounts[0]]),
       ).rejects.toThrow(
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        `Account with id ${nonExistAcc.id} does not exist`,
+        `Account id ${nonExistAcc.id} does not exist`,
       );
     });
 
@@ -180,7 +240,7 @@ describe('BtcKeyring', () => {
       const result = await instance.getAccount(id);
 
       expect(getDataSpy).toHaveBeenCalledTimes(1);
-      expect(result).toStrictEqual(state.accountDetails[id]);
+      expect(result).toStrictEqual(state.wallets[id].account);
     });
 
     it('returns null if the account does not exist', async () => {
@@ -204,38 +264,82 @@ describe('BtcKeyring', () => {
     });
   });
 
-  describe('getAccountByAddress', () => {
-    it('returns result', async () => {
-      const { instance, getDataSpy } = createMockStateManager();
+  describe('updateAccount', () => {
+    it('update account if the account exist', async () => {
+      const { instance, getDataSpy, setDataSpy } = createMockStateManager();
       const state = createInitState(20);
       getDataSpy.mockResolvedValue(state);
-      const id = state.accounts[0];
-      const { address } = state.accountDetails[id];
 
-      const result = await instance.getAccountByAddress(address);
+      const accToUpdate = {
+        ...state.wallets[state.accounts[0]].account,
+        methods: ['btc_sendTransactions'],
+      };
+
+      await instance.updateAccount(accToUpdate);
 
       expect(getDataSpy).toHaveBeenCalledTimes(1);
-      expect(result).toStrictEqual(state.accountDetails[id]);
+      expect(setDataSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          wallets: expect.objectContaining({
+            [accToUpdate.id]: expect.objectContaining({
+              account: accToUpdate,
+            }),
+          }),
+        }),
+      );
     });
 
-    it('returns null if the account does not exist', async () => {
+    it('throw StateError if the account does not exist', async () => {
       const { instance, getDataSpy } = createMockStateManager();
       const state = createInitState(20);
+      const accToUpdate = generateAccounts(1, 'notexist', 'notexist')[0];
       getDataSpy.mockResolvedValue(state);
-      const nonExistAcc = generateAccounts(1, 'notexist', 'notexist')[0];
 
-      const result = await instance.getAccountByAddress(nonExistAcc.address);
+      await expect(instance.updateAccount(accToUpdate)).rejects.toThrow(
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+        `Account id ${accToUpdate.id} does not exist`,
+      );
+    });
 
-      expect(getDataSpy).toHaveBeenCalledTimes(1);
-      expect(result).toBeNull();
+    it('throw `immutable` error if the update value is address', async () => {
+      const { instance, getDataSpy } = createMockStateManager();
+      const state = createInitState(20);
+      const accToUpdate = {
+        ...state.wallets[state.accounts[0]].account,
+        address: state.wallets[state.accounts[1]].account.address,
+      };
+      getDataSpy.mockResolvedValue(state);
+
+      await expect(instance.updateAccount(accToUpdate)).rejects.toThrow(
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+        `Account address or type is immutable`,
+      );
+    });
+
+    it('throw `immutable` error if the update value is type', async () => {
+      const { instance, getDataSpy } = createMockStateManager();
+      const state = createInitState(20);
+      const accToUpdate = {
+        ...state.wallets[state.accounts[0]].account,
+        type: 'someothertype',
+      };
+      getDataSpy.mockResolvedValue(state);
+
+      await expect(instance.updateAccount(accToUpdate)).rejects.toThrow(
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+        `Account address or type is immutable`,
+      );
     });
 
     it('throw StateError if an error catched', async () => {
       const { instance, getDataSpy } = createMockStateManager();
       getDataSpy.mockRejectedValue(new Error('error'));
-      const acc = generateAccounts(1)[0];
+      const state = createInitState(1);
+      const accToUpdate = {
+        ...state.wallets[state.accounts[0]].account,
+      };
 
-      await expect(instance.getAccountByAddress(acc.id)).rejects.toThrow(
+      await expect(instance.updateAccount(accToUpdate)).rejects.toThrow(
         StateError,
       );
     });

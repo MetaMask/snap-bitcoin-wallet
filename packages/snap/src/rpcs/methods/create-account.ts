@@ -38,7 +38,7 @@ export class CreateAccountHandler
   async handleRequest(
     params: CreateAccountParams,
   ): Promise<CreateAccountResponse> {
-    const keyring = Factory.createKeyring(Chain.Bitcoin, params.scope);
+    const keyring = Factory.createKeyring(Chain.Bitcoin);
 
     const account = await keyring.createAccount({
       scope: params.scope,
