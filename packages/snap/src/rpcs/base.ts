@@ -12,19 +12,40 @@ import {
   SnapRpcHandlerRequestStruct,
 } from './types';
 
+abstract class Parent {
+  static readonly staticMemeber: string;
+
+  protected myProtectedMethod() {
+    console.log((this.constructor as typeof Parent).staticMemeber);
+  }
+}
+
+class Child extends Parent {
+  static readonly staticMemeber = 'Hello, world!';
+
+  public doSomething() {
+    this.myProtectedMethod();
+  }
+}
+new Child().doSomething();
+
 export abstract class BaseSnapRpcHandler implements ISnapRpcExecutable {
   static instance: ISnapRpcHandler | null = null;
 
-  static requestStruct: Struct = SnapRpcHandlerRequestStruct;
+  static readonly requestStruct: Struct = SnapRpcHandlerRequestStruct;
+
+  static readonly responseStruct?: Struct;
 
   abstract handleRequest(
     params: SnapRpcHandlerRequest,
   ): Promise<SnapRpcHandlerResponse>;
 
-  abstract requestStruct: Struct;
+  protected get requestStruct(): Struct {
+    return (this.constructor as typeof BaseSnapRpcHandler).requestStruct;
+  }
 
-  protected async validate(params: SnapRpcHandlerRequest): Promise<void> {
-    assert(params, this.requestStruct);
+  protected get responseStruct(): Struct | undefined {
+    return (this.constructor as typeof BaseSnapRpcHandler).responseStruct;
   }
 
   protected async preExecute(params: SnapRpcHandlerRequest): Promise<void> {
@@ -32,7 +53,7 @@ export abstract class BaseSnapRpcHandler implements ISnapRpcExecutable {
       `[SnapRpcHandler.preExecute] Request: ${JSON.stringify(params)}`,
     );
     try {
-      await this.validate(params);
+      assert(params, this.requestStruct);
     } catch (error) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       logger.info(`[SnapRpcHandler.preExecute] Error: ${error.message}`);
@@ -41,6 +62,16 @@ export abstract class BaseSnapRpcHandler implements ISnapRpcExecutable {
   }
 
   protected async postExecute(response: SnapRpcHandlerResponse): Promise<void> {
+    try {
+      if (this.responseStruct) {
+        assert(response, this.responseStruct);
+      }
+    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      logger.info(`[SnapRpcHandler.postExecute] Error: ${error.message}`);
+      throw new SnapRpcValidationError('Response is invalid');
+    }
+
     logger.info(
       `[SnapRpcHandler.postExecute] Response: ${JSON.stringify(response)}`,
     );

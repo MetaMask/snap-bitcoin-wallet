@@ -17,6 +17,7 @@ export type SnapRpcHandlerOptions = Record<string, Json> | null;
 
 export type IStaticSnapRpcHandler = {
   requestStruct: Struct;
+  reponseStruct?: Struct;
   instance: ISnapRpcHandler | null;
   new (options?: SnapRpcHandlerOptions): ISnapRpcHandler;
   getInstance(

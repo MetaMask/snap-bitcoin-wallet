@@ -13,6 +13,8 @@ const config: SnapConfig = {
   environment: {
     // eslint-disable-next-line n/no-process-env
     LOG_LEVEL: process.env.LOG_LEVEL,
+    // eslint-disable-next-line n/no-process-env
+    DATA_CLIENT_READ_TYPE: process.env.DATA_CLIENT_READ_TYPE,
   },
   polyfills: true,
 };

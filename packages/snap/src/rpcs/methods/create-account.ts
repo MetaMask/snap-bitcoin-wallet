@@ -30,14 +30,12 @@ export class CreateAccountHandler
     );
   }
 
-  requestStruct = CreateAccountHandler.requestStruct;
-
   async handleRequest(
     params: CreateAccountParams,
   ): Promise<CreateAccountResponse> {
     const keyring = new BtcKeyring(
       new KeyringStateManager(),
-      Factory.createBtcChainRpcMapping(),
+      Factory.createBtcKeyringRpcMapping(),
       {
         defaultIndex: Config.account[Config.chain].defaultAccountIndex,
         multiAccount: Config.account[Config.chain].enableMultiAccounts,

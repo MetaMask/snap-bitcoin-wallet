@@ -36,7 +36,10 @@ export const Config: SnapConfig = {
     [Chain.Bitcoin]: {
       dataClient: {
         read: {
-          type: DataClient.BlockChair,
+          type:
+            // eslint-disable-next-line no-restricted-globals
+            (process.env.DATA_CLIENT_READ_TYPE as DataClient) ??
+            DataClient.BlockChair,
         },
       },
     },

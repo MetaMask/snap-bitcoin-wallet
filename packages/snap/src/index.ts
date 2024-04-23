@@ -21,9 +21,9 @@ const validateOrigin = async (origin: string) => {
 
 const getHandler = (method: string): IStaticSnapRpcHandler => {
   switch (method) {
-    case 'bitcoin_createAccount':
+    case 'chain_createAccount':
       return CreateAccountHandler;
-    case 'bitcoin_getBalances':
+    case 'chain_getBalances':
       return GetBalancesHandler;
     default:
       throw new SnapError(`Method not found`);

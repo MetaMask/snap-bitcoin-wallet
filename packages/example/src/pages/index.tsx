@@ -79,7 +79,7 @@ const ErrorMessage = styled.div`
 `;
 
 type Balance = {
-  amount: number;
+  amount: string;
 };
 
 type AssetBalances = {
@@ -107,7 +107,7 @@ const Index = () => {
 
   const handleCreateAccountClick = async () => {
     const account = (await invokeSnap({
-      method: 'bitcoin_createAccount',
+      method: 'chain_createAccount',
       params: {
         index: 0,
         scope: scope
@@ -127,7 +127,7 @@ const Index = () => {
       return
     }
     const accountBalance = (await invokeSnap({
-      method: 'bitcoin_getBalances',
+      method: 'chain_getBalances',
       params: {
         accounts: [address],
         assets: [asset],
@@ -139,7 +139,7 @@ const Index = () => {
     }) 
     const total = accountBalance?.balances?.[address]?.[asset];
 
-    setBalance(total?.amount ?? 0);
+    setBalance(total?.amount ? parseInt(total?.amount, 10) : 0);
   };
 
   return (
