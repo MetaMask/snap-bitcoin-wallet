@@ -78,8 +78,6 @@ describe('BtcKeyring', () => {
         return unknown();
       }
 
-      requestStruct = MockChainRpcHandler.requestStruct;
-
       handleRequest = handleRequestSpy;
     }
     return {
@@ -93,7 +91,7 @@ describe('BtcKeyring', () => {
       createMockChainRPCHandler();
     const chainRPCHanlers = {
       // eslint-disable-next-line @typescript-eslint/naming-convention
-      chain_getBalances: RpcHandler,
+      btc_sendTransaction: RpcHandler,
     };
 
     return {
@@ -201,7 +199,7 @@ describe('BtcKeyring', () => {
         scope: Network.Testnet,
         account: account.address,
         request: {
-          method: 'chain_getBalances',
+          method: 'btc_sendTransaction',
           params,
         },
       });
@@ -220,10 +218,10 @@ describe('BtcKeyring', () => {
           scope: Network.Testnet,
           account: account.address,
           request: {
-            method: 'signMessage',
+            method: 'btc_doesNotExist',
           },
         }),
-      ).rejects.toThrow('Method not found: signMessage');
+      ).rejects.toThrow('Method not found: btc_doesNotExist');
     });
   });
 
