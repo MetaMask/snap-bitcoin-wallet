@@ -1,6 +1,7 @@
 import type { Infer } from 'superstruct';
-import { object, string, assign, array } from 'superstruct';
+import { object, string, assign, array, enums } from 'superstruct';
 
+import { BtcAsset } from '../../modules/bitcoin/config';
 import { Chain } from '../../modules/config';
 import { Factory } from '../../modules/factory';
 import type { AssetBalances } from '../../modules/transaction';
@@ -9,33 +10,29 @@ import {
   TransactionStateManager,
 } from '../../modules/transaction';
 import type { StaticImplements } from '../../types/static';
-import { BaseSnapRpcRequestHandler } from '../base';
-import type {
-  IStaticSnapRpcRequestHandler,
-  SnapRpcRequestHandlerResponse,
-} from '../types';
-import { SnapRpcRequestHandlerRequestStruct } from '../types';
+import { BaseSnapRpcHandler } from '../base';
+import type { IStaticSnapRpcHandler, SnapRpcHandlerResponse } from '../types';
+import { SnapRpcHandlerRequestStruct } from '../types';
 
-export type GetBalancesParams = Infer<typeof GetBalancesHandler.validateStruct>;
+export type GetBalancesParams = Infer<typeof GetBalancesHandler.requestStruct>;
 
-export type GetBalancesResponse = SnapRpcRequestHandlerResponse & AssetBalances;
+export type GetBalancesResponse = SnapRpcHandlerResponse & AssetBalances;
 
 export class GetBalancesHandler
-  extends BaseSnapRpcRequestHandler
-  implements
-    StaticImplements<IStaticSnapRpcRequestHandler, typeof GetBalancesHandler>
+  extends BaseSnapRpcHandler
+  implements StaticImplements<IStaticSnapRpcHandler, typeof GetBalancesHandler>
 {
-  static get validateStruct() {
+  static override get requestStruct() {
     return assign(
       object({
         accounts: array(string()),
-        assets: array(string()),
+        assets: array(enums(Object.values(BtcAsset))),
       }),
-      SnapRpcRequestHandlerRequestStruct,
+      SnapRpcHandlerRequestStruct,
     );
   }
 
-  validateStruct = GetBalancesHandler.validateStruct;
+  requestStruct = GetBalancesHandler.requestStruct;
 
   async handleRequest(params: GetBalancesParams): Promise<GetBalancesResponse> {
     const { scope, accounts, assets } = params;
