@@ -1,4 +1,9 @@
+import { unknown } from 'superstruct';
+
 import { generateAccounts } from '../../../test/utils';
+import type { IStaticSnapRpcHandler } from '../../rpcs';
+import { BaseSnapRpcHandler } from '../../rpcs';
+import type { StaticImplements } from '../../types/static';
 import { Network } from '../bitcoin/config';
 import { Chain, Config } from '../config';
 import { Factory } from '../factory';
@@ -62,12 +67,41 @@ describe('BtcKeyring', () => {
     };
   };
 
-  const createMockKeyring = (stateMgr: KeyringStateManager) => {
+  const createMockChainRPCHandler = () => {
+    const handleRequestSpy = jest.fn();
+    class MockChainRpcHandler
+      extends BaseSnapRpcHandler
+      implements
+        StaticImplements<IStaticSnapRpcHandler, typeof MockChainRpcHandler>
+    {
+      static override get requestStruct() {
+        return unknown();
+      }
+
+      requestStruct = MockChainRpcHandler.requestStruct;
+
+      handleRequest = handleRequestSpy;
+    }
     return {
-      instance: new BtcKeyring(stateMgr, {
+      instance: MockChainRpcHandler,
+      handleRequestSpy,
+    };
+  };
+
+  const createMockKeyring = (stateMgr: KeyringStateManager) => {
+    const { instance: RpcHandler, handleRequestSpy } =
+      createMockChainRPCHandler();
+    const chainRPCHanlers = {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      chain_getBalances: RpcHandler,
+    };
+
+    return {
+      instance: new BtcKeyring(stateMgr, chainRPCHanlers, {
         defaultIndex: 0,
         multiAccount: false,
       }),
+      handleRequestSpy,
     };
   };
 
@@ -123,6 +157,17 @@ describe('BtcKeyring', () => {
         }),
       ).rejects.toThrow(BtcKeyringError);
     });
+
+    it('throws `Invalid params to create account` if the create options is invalid', async () => {
+      const { instance: stateMgr } = createMockStateMgr();
+      const { instance: keyring } = createMockKeyring(stateMgr);
+
+      await expect(
+        keyring.createAccount({
+          scope: 'invalid',
+        }),
+      ).rejects.toThrow(`Invalid params to create account`);
+    });
   });
 
   describe('filterAccountChains', () => {
@@ -138,7 +183,33 @@ describe('BtcKeyring', () => {
   });
 
   describe('submitRequest', () => {
-    it('throws Method not implemented error', async () => {
+    it('calls SnapRpcHandler if the method support', async () => {
+      const { instance: stateMgr } = createMockStateMgr();
+      const { instance: keyring, handleRequestSpy } =
+        createMockKeyring(stateMgr);
+      const account = generateAccounts(1)[0];
+      const params = {
+        scope: 'bip122:000000000019d6689c085ae165831e93',
+        accounts: [
+          'bc1qrp0yzgkf8rawkuvdlhnjfj2fnjwm0m8727kgah',
+          'bc1qf5n2h6mgelkls4497pkpemew55xpew90td2qae',
+        ],
+        assets: ['bip122:000000000019d6689c085ae165831e93/asset:0'],
+      };
+      await keyring.submitRequest({
+        id: account.id,
+        scope: Network.Testnet,
+        account: account.address,
+        request: {
+          method: 'chain_getBalances',
+          params,
+        },
+      });
+
+      expect(handleRequestSpy).toHaveBeenCalledWith(params);
+    });
+
+    it('throws `Method not found` if the method not support', async () => {
       const { instance: stateMgr } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);
       const account = generateAccounts(1)[0];
@@ -152,7 +223,7 @@ describe('BtcKeyring', () => {
             method: 'signMessage',
           },
         }),
-      ).rejects.toThrow('Method not implemented.');
+      ).rejects.toThrow('Method not found: signMessage');
     });
   });
 

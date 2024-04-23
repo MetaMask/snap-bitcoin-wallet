@@ -1,64 +1,73 @@
 import { type Struct, assert } from 'superstruct';
 
 import { logger } from '../modules/logger/logger';
-import { SnapRpcRequestValidationError } from './exceptions';
-import type {
-  ISnapRpcValidator,
-  ISnapRpcExecutable,
-  SnapRpcRequestHandlerOptions,
-  ISnapRpcRequestHandler,
-  IStaticSnapRpcRequestHandler,
-  SnapRpcRequestHandlerResponse,
-  SnapRpcRequestHandlerRequest,
+import { SnapRpcError, SnapRpcValidationError } from './exceptions';
+import {
+  type ISnapRpcExecutable,
+  type SnapRpcHandlerOptions,
+  type ISnapRpcHandler,
+  type IStaticSnapRpcHandler,
+  type SnapRpcHandlerResponse,
+  type SnapRpcHandlerRequest,
+  SnapRpcHandlerRequestStruct,
 } from './types';
 
-export abstract class BaseSnapRpcRequestHandler
-  implements ISnapRpcValidator, ISnapRpcExecutable
-{
-  static instance: ISnapRpcRequestHandler | null = null;
+export abstract class BaseSnapRpcHandler implements ISnapRpcExecutable {
+  static instance: ISnapRpcHandler | null = null;
 
-  static validateStruct: Struct;
+  static requestStruct: Struct = SnapRpcHandlerRequestStruct;
 
   abstract handleRequest(
-    params: SnapRpcRequestHandlerRequest,
-  ): Promise<SnapRpcRequestHandlerResponse>;
+    params: SnapRpcHandlerRequest,
+  ): Promise<SnapRpcHandlerResponse>;
 
-  abstract validateStruct: Struct;
+  abstract requestStruct: Struct;
 
-  async validate(params: SnapRpcRequestHandlerRequest): Promise<void> {
-    assert(params, this.validateStruct);
+  protected async validate(params: SnapRpcHandlerRequest): Promise<void> {
+    assert(params, this.requestStruct);
   }
 
-  async preExecute(params: SnapRpcRequestHandlerRequest): Promise<void> {
-    logger.info(`Request: ${JSON.stringify(params)}`);
+  protected async preExecute(params: SnapRpcHandlerRequest): Promise<void> {
+    logger.info(
+      `[SnapRpcHandler.preExecute] Request: ${JSON.stringify(params)}`,
+    );
     try {
       await this.validate(params);
     } catch (error) {
-      throw new SnapRpcRequestValidationError(error);
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      logger.info(`[SnapRpcHandler.preExecute] Error: ${error.message}`);
+      throw new SnapRpcValidationError('Request params is invalid');
     }
   }
 
-  async postExecute(response: SnapRpcRequestHandlerResponse): Promise<void> {
-    logger.info(`Response: ${JSON.stringify(response)}`);
+  protected async postExecute(response: SnapRpcHandlerResponse): Promise<void> {
+    logger.info(
+      `[SnapRpcHandler.postExecute] Response: ${JSON.stringify(response)}`,
+    );
   }
 
   async execute(
-    params: SnapRpcRequestHandlerRequest,
-  ): Promise<SnapRpcRequestHandlerResponse> {
+    params: SnapRpcHandlerRequest,
+  ): Promise<SnapRpcHandlerResponse> {
     try {
       await this.preExecute(params);
       const result = await this.handleRequest(params);
       await this.postExecute(result);
       return result;
     } catch (error) {
-      throw new SnapRpcRequestValidationError(error);
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      logger.info(`[SnapRpcHandler.execute] Error: ${error.message}`);
+      if (error instanceof SnapRpcValidationError) {
+        throw error;
+      }
+      throw new SnapRpcError(error.message);
     }
   }
 
   static getInstance(
-    this: IStaticSnapRpcRequestHandler,
-    options?: SnapRpcRequestHandlerOptions,
-  ): ISnapRpcRequestHandler {
+    this: IStaticSnapRpcHandler,
+    options?: SnapRpcHandlerOptions,
+  ): ISnapRpcHandler {
     if (this.instance === null) {
       this.instance = new this(options);
     }

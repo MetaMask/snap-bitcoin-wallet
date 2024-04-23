@@ -1,5 +1,7 @@
 import { type Keyring } from '@metamask/keyring-api';
 
+import type { IStaticSnapRpcHandler } from '../rpcs';
+import { GetBalancesHandler } from '../rpcs';
 import { BtcAccountMgrFactory } from './bitcoin/account';
 import type { Network } from './bitcoin/config';
 import {
@@ -36,15 +38,26 @@ export class Factory {
     return BtcAccountMgrFactory.create(config, btcNetwork);
   }
 
+  static createBtcChainRpcMapping(): Record<string, IStaticSnapRpcHandler> {
+    return {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      chain_getBalances: GetBalancesHandler,
+    };
+  }
+
   static createBtcKeyring(
     config: BtcAccountConfig,
     options: CreateBtcKeyringOptions,
   ): BtcKeyring {
-    return new BtcKeyring(new KeyringStateManager(), {
-      defaultIndex: config.defaultAccountIndex,
-      multiAccount: config.enableMultiAccounts,
-      emitEvents: options.emitEvents,
-    });
+    return new BtcKeyring(
+      new KeyringStateManager(),
+      Factory.createBtcChainRpcMapping(),
+      {
+        defaultIndex: config.defaultAccountIndex,
+        multiAccount: config.enableMultiAccounts,
+        emitEvents: options.emitEvents,
+      },
+    );
   }
 
   static createTransactionMgr(chain: Chain, scope: string): ITransactionMgr {

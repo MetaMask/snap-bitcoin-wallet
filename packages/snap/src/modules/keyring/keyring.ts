@@ -7,35 +7,43 @@ import {
   type KeyringResponse,
 } from '@metamask/keyring-api';
 import { type Json } from '@metamask/snaps-sdk';
-import type { Infer } from 'superstruct';
-import { assert, object, enums } from 'superstruct';
+import { assert, StructError } from 'superstruct';
 import { v4 as uuidv4 } from 'uuid';
 
+import type { SnapRpcHandlerRequest } from '../../rpcs';
 import { Config } from '../config';
 import { Factory } from '../factory';
 import { logger } from '../logger/logger';
 import { SnapHelper } from '../snap';
 import { BtcKeyringError } from './exceptions';
 import type { KeyringStateManager } from './state';
-import type { IAccount, IAccountMgr, KeyringOptions } from './types';
-
-export const CreateAccountOptionsStruct = object({
-  scope: enums(Config.avaliableNetworks[Config.chain]),
-});
-
-export type CreateAccountOptions = Record<string, Json> &
-  Infer<typeof CreateAccountOptionsStruct>;
+import {
+  CreateAccountOptionsStruct,
+  type ChainRPCHandlers,
+  type CreateAccountOptions,
+  type IAccount,
+  type IAccountMgr,
+  type KeyringOptions,
+} from './types';
 
 export class BtcKeyring implements Keyring {
   protected readonly stateMgr: KeyringStateManager;
 
   protected readonly options: KeyringOptions;
 
-  protected readonly keyringMethods = ['chain_getBalances'];
+  protected readonly keyringMethods: string[];
 
-  constructor(stateMgr: KeyringStateManager, options: KeyringOptions) {
+  protected readonly handlers: ChainRPCHandlers;
+
+  constructor(
+    stateMgr: KeyringStateManager,
+    chainRPCHanlers: ChainRPCHandlers,
+    options: KeyringOptions,
+  ) {
     this.stateMgr = stateMgr;
     this.options = options;
+    this.keyringMethods = Object.keys(chainRPCHanlers);
+    this.handlers = chainRPCHanlers;
   }
 
   async listAccounts(): Promise<KeyringAccount[]> {
@@ -96,6 +104,11 @@ export class BtcKeyring implements Keyring {
 
       return keyringAccount;
     } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      logger.info(`[BtcKeyring.createAccount] Error: ${error.message}`);
+      if (error instanceof StructError) {
+        throw new BtcKeyringError('Invalid params to create account');
+      }
       throw new BtcKeyringError(error);
     }
   }
@@ -111,6 +124,8 @@ export class BtcKeyring implements Keyring {
       await this.stateMgr.updateAccount(account);
       await this.#emitEvent(KeyringEvent.AccountUpdated, { account });
     } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      logger.info(`[BtcKeyring.updateAccount] Error: ${error.message}`);
       throw new BtcKeyringError(error);
     }
   }
@@ -121,6 +136,8 @@ export class BtcKeyring implements Keyring {
       await this.stateMgr.removeAccounts([id]);
       await this.#emitEvent(KeyringEvent.AccountDeleted, { id });
     } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      logger.info(`[BtcKeyring.deleteAccount] Error: ${error.message}`);
       throw new BtcKeyringError(error);
     }
   }
@@ -138,11 +155,15 @@ export class BtcKeyring implements Keyring {
     };
   }
 
-  protected async handleSubmitRequest(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    request: KeyringRequest,
-  ): Promise<KeyringResponse> {
-    throw new BtcKeyringError(`Method not implemented.`);
+  protected async handleSubmitRequest(request: KeyringRequest): Promise<Json> {
+    const { method, params } = request.request;
+    if (!Object.prototype.hasOwnProperty.call(this.handlers, method)) {
+      throw new BtcKeyringError(`Method not found: ${method}`);
+    }
+
+    return this.handlers[method]
+      .getInstance()
+      .execute(params as unknown as SnapRpcHandlerRequest);
   }
 
   async #emitEvent(

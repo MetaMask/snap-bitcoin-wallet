@@ -2,42 +2,37 @@ import type { Json } from '@metamask/snaps-sdk';
 import type { Infer } from 'superstruct';
 import { enums, object, type Struct } from 'superstruct';
 
-import { Chain, Config } from '../modules/config';
+import { Config } from '../modules/config';
 
-export const SnapRpcRequestHandlerRequestStruct = object({
-  scope: enums(Config.avaliableNetworks[Chain.Bitcoin]),
+export const SnapRpcHandlerRequestStruct = object({
+  scope: enums(Config.avaliableNetworks[Config.chain]),
 });
 
-export type SnapRpcRequestHandlerRequest = Infer<
-  typeof SnapRpcRequestHandlerRequestStruct
->;
+export type SnapRpcHandlerRequest = Json &
+  Infer<typeof SnapRpcHandlerRequestStruct>;
 
-export type SnapRpcRequestHandlerResponse = Json;
+export type SnapRpcHandlerResponse = Json;
 
-export type SnapRpcRequestHandlerOptions = Json | null;
+export type SnapRpcHandlerOptions = Record<string, Json> | null;
 
-export type IStaticSnapRpcRequestHandler = {
-  validateStruct: Struct;
-  instance: ISnapRpcRequestHandler | null;
-  new (options?: SnapRpcRequestHandlerOptions): ISnapRpcRequestHandler;
+export type IStaticSnapRpcHandler = {
+  requestStruct: Struct;
+  instance: ISnapRpcHandler | null;
+  new (options?: SnapRpcHandlerOptions): ISnapRpcHandler;
   getInstance(
-    this: IStaticSnapRpcRequestHandler,
-    options?: SnapRpcRequestHandlerOptions,
-  ): ISnapRpcRequestHandler;
+    this: IStaticSnapRpcHandler,
+    options?: SnapRpcHandlerOptions,
+  ): ISnapRpcHandler;
 };
 
 export type ISnapRpcValidator = {
-  validate(params: SnapRpcRequestHandlerRequest): void;
+  validate(params: SnapRpcHandlerRequest): void;
 };
 
 export type ISnapRpcExecutable = {
-  execute(
-    params: SnapRpcRequestHandlerRequest,
-  ): Promise<SnapRpcRequestHandlerResponse>;
+  execute(params: SnapRpcHandlerRequest): Promise<SnapRpcHandlerResponse>;
 };
 
-export type ISnapRpcRequestHandler = {
-  handleRequest(
-    params: SnapRpcRequestHandlerRequest,
-  ): Promise<SnapRpcRequestHandlerResponse>;
+export type ISnapRpcHandler = {
+  handleRequest(params: SnapRpcHandlerRequest): Promise<SnapRpcHandlerResponse>;
 } & ISnapRpcExecutable;

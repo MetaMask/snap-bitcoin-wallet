@@ -9,10 +9,7 @@ import {
 import { Chain, Config } from './modules/config';
 import { Factory } from './modules/factory';
 import { logger } from './modules/logger/logger';
-import type {
-  SnapRpcRequestHandlerRequest,
-  IStaticSnapRpcRequestHandler,
-} from './rpcs';
+import type { SnapRpcHandlerRequest, IStaticSnapRpcHandler } from './rpcs';
 import { CreateAccountHandler, GetBalancesHandler } from './rpcs';
 
 const validateOrigin = async (origin: string) => {
@@ -22,7 +19,7 @@ const validateOrigin = async (origin: string) => {
   }
 };
 
-const getHandler = (method: string): IStaticSnapRpcRequestHandler => {
+const getHandler = (method: string): IStaticSnapRpcHandler => {
   switch (method) {
     case 'bitcoin_createAccount':
       return CreateAccountHandler;
@@ -34,27 +31,37 @@ const getHandler = (method: string): IStaticSnapRpcRequestHandler => {
 };
 
 export const onRpcRequest: OnRpcRequestHandler = async (args) => {
-  const { request, origin } = args;
+  try {
+    logger.logLevel = parseInt(Config.logLevel, 10);
+    const { request, origin } = args;
+    const { method } = request;
+    await validateOrigin(origin);
 
-  logger.logLevel = parseInt(Config.logLevel, 10);
-
-  await validateOrigin(origin);
-
-  const { method } = request;
-
-  const handler = getHandler(method);
-
-  return await handler
-    .getInstance()
-    .execute(request.params as SnapRpcRequestHandlerRequest);
+    return await getHandler(method)
+      .getInstance()
+      .execute(request.params as SnapRpcHandlerRequest);
+  } catch (error) {
+    if (error instanceof SnapError) {
+      throw error;
+    }
+    throw new SnapError(error.message);
+  }
 };
 
 export const onKeyringRequest: OnKeyringRequestHandler = async ({
   request,
 }): Promise<Json> => {
-  logger.logLevel = parseInt(Config.logLevel, 10);
-
-  const keyring = Factory.createKeyring(Chain.Bitcoin);
-
-  return handleKeyringRequest(keyring, request) as unknown as Promise<Json>;
+  try {
+    logger.logLevel = parseInt(Config.logLevel, 10);
+    const keyring = Factory.createKeyring(Chain.Bitcoin);
+    return (await handleKeyringRequest(
+      keyring,
+      request,
+    )) as unknown as Promise<Json>;
+  } catch (error) {
+    if (error instanceof SnapError) {
+      throw error;
+    }
+    throw new SnapError(error.message);
+  }
 };
