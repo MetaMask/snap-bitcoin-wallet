@@ -1,11 +1,11 @@
 import type { Json } from '@metamask/snaps-sdk';
 import type { Infer } from 'superstruct';
-import { enums, object, type Struct } from 'superstruct';
+import { object, type Struct } from 'superstruct';
 
-import { Config } from '../modules/config';
+import { scopeStruct } from '../types/superstruct';
 
 export const SnapRpcHandlerRequestStruct = object({
-  scope: enums(Config.avaliableNetworks[Config.chain]),
+  scope: scopeStruct,
 });
 
 export type SnapRpcHandlerRequest = Json &

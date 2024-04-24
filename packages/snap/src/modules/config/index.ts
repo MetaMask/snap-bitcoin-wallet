@@ -3,6 +3,7 @@ import {
   type BtcTransactionConfig,
   Network as BtcNetwork,
   DataClient,
+  BtcAsset,
 } from '../bitcoin/config';
 
 export enum Chain {
@@ -25,6 +26,9 @@ export type SnapConfig = {
   transaction: TransactionConfig;
   account: AccountConfig;
   avaliableNetworks: {
+    [key in Chain]: string[];
+  };
+  avaliableAssets: {
     [key in Chain]: string[];
   };
   chain: Chain;
@@ -53,8 +57,10 @@ export const Config: SnapConfig = {
     },
   },
   avaliableNetworks: {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    [Chain.Bitcoin]: Object.entries(BtcNetwork).map(([_, val]) => val),
+    [Chain.Bitcoin]: Object.values(BtcNetwork),
+  },
+  avaliableAssets: {
+    [Chain.Bitcoin]: Object.values(BtcAsset),
   },
   chain: Chain.Bitcoin,
   // eslint-disable-next-line no-restricted-globals

@@ -1,10 +1,10 @@
 import { type Json } from '@metamask/snaps-sdk';
 import type { Buffer } from 'buffer';
 import type { Infer } from 'superstruct';
-import { object, enums } from 'superstruct';
+import { object } from 'superstruct';
 
 import type { IStaticSnapRpcHandler } from '../../rpcs';
-import { Config } from '../config';
+import { scopeStruct } from '../../types/superstruct';
 
 export type IAccountSigner = {
   sign(hash: Buffer): Promise<Buffer>;
@@ -37,7 +37,7 @@ export type KeyringOptions = Record<string, Json> & {
 export type ChainRPCHandlers = Record<string, IStaticSnapRpcHandler>;
 
 export const CreateAccountOptionsStruct = object({
-  scope: enums(Config.avaliableNetworks[Config.chain]),
+  scope: scopeStruct,
 });
 
 export type CreateAccountOptions = Record<string, Json> &
