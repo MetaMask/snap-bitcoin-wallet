@@ -1,7 +1,6 @@
 import type { Infer } from 'superstruct';
-import { object, string, assign, array, enums, record } from 'superstruct';
+import { object, string, assign, array, record } from 'superstruct';
 
-import { BtcAsset } from '../../modules/bitcoin/config';
 import { Chain } from '../../modules/config';
 import { Factory } from '../../modules/factory';
 import {
@@ -9,6 +8,7 @@ import {
   TransactionStateManager,
 } from '../../modules/transaction';
 import type { StaticImplements } from '../../types/static';
+import { assetsStruct, numberStringStruct } from '../../types/superstruct';
 import { BaseSnapRpcHandler } from '../base';
 import type { IStaticSnapRpcHandler, SnapRpcHandlerResponse } from '../types';
 import { SnapRpcHandlerRequestStruct } from '../types';
@@ -26,7 +26,7 @@ export class GetBalancesHandler
     return assign(
       object({
         accounts: array(string()),
-        assets: array(enums(Object.values(BtcAsset))),
+        assets: array(assetsStruct),
       }),
       SnapRpcHandlerRequestStruct,
     );
@@ -37,9 +37,9 @@ export class GetBalancesHandler
       balances: record(
         string(),
         record(
-          string(),
+          assetsStruct,
           object({
-            amount: string(),
+            amount: numberStringStruct,
           }),
         ),
       ),
