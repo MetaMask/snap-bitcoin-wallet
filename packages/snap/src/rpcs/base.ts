@@ -62,6 +62,9 @@ export abstract class BaseSnapRpcHandler implements ISnapRpcExecutable {
   }
 
   protected async postExecute(response: SnapRpcHandlerResponse): Promise<void> {
+    logger.info(
+      `[SnapRpcHandler.postExecute] Response: ${JSON.stringify(response)}`,
+    );
     try {
       if (this.responseStruct) {
         assert(response, this.responseStruct);
@@ -71,10 +74,6 @@ export abstract class BaseSnapRpcHandler implements ISnapRpcExecutable {
       logger.info(`[SnapRpcHandler.postExecute] Error: ${error.message}`);
       throw new SnapRpcValidationError('Response is invalid');
     }
-
-    logger.info(
-      `[SnapRpcHandler.postExecute] Response: ${JSON.stringify(response)}`,
-    );
   }
 
   async execute(

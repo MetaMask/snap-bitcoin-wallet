@@ -142,6 +142,21 @@ const Index = () => {
     setBalance(total?.amount ? parseInt(total?.amount, 10) : 0);
   };
 
+  const handledEstimateFeeClick = async () => {
+    const address = btcAccount?.address
+    if (!address) {
+      return
+    }
+    const resp = (await invokeSnap({
+      method: 'chain_estimateFees',
+      params: {
+        scope: scope,
+      },
+    }));
+    console.log({
+      resp
+    }) 
+  };
   return (
     <Container>
       <Heading>
@@ -221,6 +236,25 @@ const Index = () => {
             button: (
               <GetBTCAccountBalanceButton
                 onClick={handleGetBalanceClick}
+                disabled={!installedSnap}
+              />
+            ),
+          }}
+          disabled={!installedSnap || !btcAccount}
+          fullWidth={
+            isMetaMaskReady &&
+            Boolean(installedSnap) &&
+            !shouldDisplayReconnectButton(installedSnap)
+          }
+        />
+
+<Card
+          content={{
+            title: 'Estimate Fee',
+            description: `Estimate Fee`,
+            button: (
+              <GetBTCAccountBalanceButton
+                onClick={handledEstimateFeeClick}
                 disabled={!installedSnap}
               />
             ),

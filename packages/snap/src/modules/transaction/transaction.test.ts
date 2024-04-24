@@ -8,13 +8,16 @@ import type { ITransactionMgr } from './types';
 describe('TransactionService', () => {
   const createMockTxnMgr = () => {
     const getBalancesSpy = jest.fn();
-
+    const getFeeRatesSpy = jest.fn();
     class MockTxnMgr implements ITransactionMgr {
       getBalances = getBalancesSpy;
+
+      getFeeRates = getFeeRatesSpy;
     }
     return {
       instance: new MockTxnMgr(),
       getBalancesSpy,
+      getFeeRatesSpy,
     };
   };
 
@@ -47,6 +50,34 @@ describe('TransactionService', () => {
       await expect(
         service.getBalances(addresses, [BtcAsset.TBtc]),
       ).rejects.toThrow(TransactionServiceError);
+    });
+  });
+
+  describe('estimateFees', () => {
+    it('calls estimateFees with transactionMgr', async () => {
+      const { instance, getFeeRatesSpy } = createMockTxnMgr();
+
+      const service = new TransactionService(
+        instance,
+        new TransactionStateManager(),
+      );
+      await service.estimateFees();
+
+      expect(getFeeRatesSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('throws TransactionServiceError if estimateFees failed', async () => {
+      const { instance, getFeeRatesSpy } = createMockTxnMgr();
+      getFeeRatesSpy.mockRejectedValue(new Error('error'));
+
+      const service = new TransactionService(
+        instance,
+        new TransactionStateManager(),
+      );
+
+      await expect(service.estimateFees()).rejects.toThrow(
+        TransactionServiceError,
+      );
     });
   });
 });

@@ -69,4 +69,15 @@ describe('superstruct', () => {
       );
     });
   });
+
+  describe('feeRatioStruct', () => {
+    it('validates correctly', () => {
+      expect(() => assert('fast', superstruct.feeRatioStruct)).not.toThrow(
+        Error,
+      );
+      expect(() => assert('very-fast', superstruct.feeRatioStruct)).toThrow(
+        Error,
+      );
+    });
+  });
 });

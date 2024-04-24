@@ -1,6 +1,9 @@
 import { enums, string, pattern } from 'superstruct';
 
 import { Config } from '../modules/config';
+import { FeeRatio } from '../modules/transaction';
+
+export const feeRatioStruct = enums(Object.values(FeeRatio));
 
 export const assetsStruct = enums(Config.avaliableAssets[Config.chain]);
 

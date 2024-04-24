@@ -2,20 +2,25 @@ import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 
 import { generateAccounts } from '../../../../test/utils';
+import { FeeRatio } from '../../transaction';
 import { BtcAsset } from '../config';
 import type { IReadDataClient } from '../data-client';
+import { TransactionMgrError } from './exceptions';
 import { BtcTransactionMgr } from './manager';
 
 describe('BtcTransactionMgr', () => {
   const createMockReadDataClient = () => {
     const getBalanceSpy = jest.fn();
-
+    const getFeeRatesSpy = jest.fn();
     class MockReadDataClient implements IReadDataClient {
       getBalances = getBalanceSpy;
+
+      getFeeRates = getFeeRatesSpy;
     }
     return {
       instance: new MockReadDataClient(),
       getBalanceSpy,
+      getFeeRatesSpy,
     };
   };
 
@@ -84,6 +89,45 @@ describe('BtcTransactionMgr', () => {
       await expect(
         txnMgr.getBalances(addresses, [BtcAsset.TBtc]),
       ).rejects.toThrow('Invalid asset');
+    });
+  });
+
+  describe('getFeeRates', () => {
+    it('return getFeeRates result', async () => {
+      const { instance, getFeeRatesSpy } = createMockReadDataClient();
+      const { instance: txnMgr } = createMockBtcTransactionMgr(instance);
+      getFeeRatesSpy.mockResolvedValue({
+        [FeeRatio.Fast]: 1.1,
+        [FeeRatio.Medium]: 1.2,
+      });
+
+      const result = await txnMgr.getFeeRates();
+
+      expect(getFeeRatesSpy).toHaveBeenCalledTimes(1);
+      expect(result).toStrictEqual({
+        fees: [
+          {
+            type: FeeRatio.Fast,
+            rate: 1.1,
+          },
+          {
+            type: FeeRatio.Medium,
+            rate: 1.2,
+          },
+        ],
+      });
+    });
+
+    it('throws TransactionMgrError error if an error catched', async () => {
+      const { instance, getFeeRatesSpy } = createMockReadDataClient();
+      const { instance: txnMgr } = createMockBtcTransactionMgr(
+        instance,
+        networks.bitcoin,
+      );
+
+      getFeeRatesSpy.mockRejectedValue(new Error('error'));
+
+      await expect(txnMgr.getFeeRates()).rejects.toThrow(TransactionMgrError);
     });
   });
 });

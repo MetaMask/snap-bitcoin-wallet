@@ -10,7 +10,11 @@ import { Chain, Config } from './modules/config';
 import { Factory } from './modules/factory';
 import { logger } from './modules/logger/logger';
 import type { SnapRpcHandlerRequest, IStaticSnapRpcHandler } from './rpcs';
-import { CreateAccountHandler, GetBalancesHandler } from './rpcs';
+import {
+  CreateAccountHandler,
+  EstimateFeesHandler,
+  GetBalancesHandler,
+} from './rpcs';
 
 const validateOrigin = async (origin: string) => {
   // TODO: validate origin
@@ -25,6 +29,8 @@ const getHandler = (method: string): IStaticSnapRpcHandler => {
       return CreateAccountHandler;
     case 'chain_getBalances':
       return GetBalancesHandler;
+    case 'chain_estimateFees':
+      return EstimateFeesHandler;
     default:
       throw new SnapError(`Method not found`);
   }

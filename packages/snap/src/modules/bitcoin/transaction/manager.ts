@@ -1,10 +1,12 @@
 import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 
+import type { FeeRatio } from '../../transaction';
 import type {
   ITransactionMgr,
   Balances,
   AssetBalances,
+  Fees,
 } from '../../transaction/types';
 import { BtcAsset } from '../config';
 import { type IReadDataClient } from '../data-client';
@@ -34,9 +36,7 @@ export class BtcTransactionMgr implements ITransactionMgr {
         throw new TransactionMgrError('Only one asset is supported');
       }
 
-      const allowedAssets = new Set<string>(
-        Object.entries(BtcAsset).map(([_, value]) => value.toString()),
-      );
+      const allowedAssets = new Set<string>(Object.values(BtcAsset));
 
       if (
         !allowedAssets.has(assets[0]) ||
@@ -59,6 +59,23 @@ export class BtcTransactionMgr implements ITransactionMgr {
         },
         { balances: {} },
       );
+    } catch (error) {
+      throw new TransactionMgrError(error);
+    }
+  }
+
+  async getFeeRates(): Promise<Fees> {
+    try {
+      const result = await this.readClient.getFeeRates();
+
+      return {
+        fees: Object.entries(result).map(
+          ([key, value]: [key: FeeRatio, value: number]) => ({
+            type: key,
+            rate: value,
+          }),
+        ),
+      };
     } catch (error) {
       throw new TransactionMgrError(error);
     }
