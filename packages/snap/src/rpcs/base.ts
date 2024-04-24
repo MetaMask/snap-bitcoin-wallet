@@ -12,23 +12,6 @@ import {
   SnapRpcHandlerRequestStruct,
 } from './types';
 
-abstract class Parent {
-  static readonly staticMemeber: string;
-
-  protected myProtectedMethod() {
-    console.log((this.constructor as typeof Parent).staticMemeber);
-  }
-}
-
-class Child extends Parent {
-  static readonly staticMemeber = 'Hello, world!';
-
-  public doSomething() {
-    this.myProtectedMethod();
-  }
-}
-new Child().doSomething();
-
 export abstract class BaseSnapRpcHandler implements ISnapRpcExecutable {
   static instance: ISnapRpcHandler | null = null;
 
@@ -62,6 +45,10 @@ export abstract class BaseSnapRpcHandler implements ISnapRpcExecutable {
   }
 
   protected async postExecute(response: SnapRpcHandlerResponse): Promise<void> {
+    logger.info(
+      `[SnapRpcHandler.postExecute] Response: ${JSON.stringify(response)}`,
+    );
+
     try {
       if (this.responseStruct) {
         assert(response, this.responseStruct);
@@ -71,10 +58,6 @@ export abstract class BaseSnapRpcHandler implements ISnapRpcExecutable {
       logger.info(`[SnapRpcHandler.postExecute] Error: ${error.message}`);
       throw new SnapRpcValidationError('Response is invalid');
     }
-
-    logger.info(
-      `[SnapRpcHandler.postExecute] Response: ${JSON.stringify(response)}`,
-    );
   }
 
   async execute(
