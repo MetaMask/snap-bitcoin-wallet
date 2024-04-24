@@ -72,7 +72,9 @@ export class BtcKeyring implements Keyring {
       );
 
       // TODO: Create account with index 0 for now for phase 1 scope, update to use increment index later
-      const index = this.options.defaultIndex;
+      const index = await this.listAccounts().then(
+        (accounts) => accounts.length,
+      );
 
       const account = await accountMgr.unlock(index);
       logger.info(
@@ -90,17 +92,18 @@ export class BtcKeyring implements Keyring {
         )}`,
       );
 
-      // TODO: Add 2 phases commit
-      await this.stateMgr.addWallet({
-        account: keyringAccount,
-        type: account.type,
-        index,
-        scope: options?.scope,
-      });
+      await this.stateMgr.withTransaction(async () => {
+        await this.stateMgr.addWallet({
+          account: keyringAccount,
+          type: account.type,
+          index,
+          scope: options?.scope,
+        });
 
-      await this.#emitEvent(KeyringEvent.AccountCreated, {
-        account: keyringAccount,
-      });
+        await this.#emitEvent(KeyringEvent.AccountCreated, {
+          account: keyringAccount,
+        });
+      }, true);
 
       return keyringAccount;
     } catch (error) {
@@ -120,9 +123,10 @@ export class BtcKeyring implements Keyring {
 
   async updateAccount(account: KeyringAccount): Promise<void> {
     try {
-      // TODO: Add 2 phases commit
-      await this.stateMgr.updateAccount(account);
-      await this.#emitEvent(KeyringEvent.AccountUpdated, { account });
+      await this.stateMgr.withTransaction(async () => {
+        await this.stateMgr.updateAccount(account);
+        await this.#emitEvent(KeyringEvent.AccountUpdated, { account });
+      }, true);
     } catch (error) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       logger.info(`[BtcKeyring.updateAccount] Error: ${error.message}`);
@@ -132,9 +136,10 @@ export class BtcKeyring implements Keyring {
 
   async deleteAccount(id: string): Promise<void> {
     try {
-      // TODO: Add 2 phases commit
-      await this.stateMgr.removeAccounts([id]);
-      await this.#emitEvent(KeyringEvent.AccountDeleted, { id });
+      await this.stateMgr.withTransaction(async () => {
+        await this.stateMgr.removeAccounts([id]);
+        await this.#emitEvent(KeyringEvent.AccountDeleted, { id });
+      }, true);
     } catch (error) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       logger.info(`[BtcKeyring.deleteAccount] Error: ${error.message}`);
