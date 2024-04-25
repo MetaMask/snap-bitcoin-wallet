@@ -6,38 +6,31 @@ import {
   SnapError,
 } from '@metamask/snaps-sdk';
 
-import { Chain, Config } from './modules/config';
+import { Config } from './modules/config';
+import { originPermissions } from './modules/config/permissions';
 import { Factory } from './modules/factory';
 import { logger } from './modules/logger/logger';
-import type { SnapRpcHandlerRequest, IStaticSnapRpcHandler } from './rpcs';
-import { CreateAccountHandler, GetBalancesHandler } from './rpcs';
+import type { SnapRpcHandlerRequest } from './rpcs';
+import { RpcHelper } from './rpcs/helpers';
 
-const validateOrigin = async (origin: string) => {
-  // TODO: validate origin
-  if (origin === '') {
+export const validateOrigin = (origin: string, method: string) => {
+  if (!origin) {
     throw new SnapError('Origin not found');
   }
-};
-
-const getHandler = (method: string): IStaticSnapRpcHandler => {
-  switch (method) {
-    case 'chain_createAccount':
-      return CreateAccountHandler;
-    case 'chain_getBalances':
-      return GetBalancesHandler;
-    default:
-      throw new SnapError(`Method not found`);
+  if (!originPermissions.get(origin)?.has(method)) {
+    throw new SnapError(`Permission denied`);
   }
 };
 
 export const onRpcRequest: OnRpcRequestHandler = async (args) => {
   try {
-    logger.logLevel = parseInt(Config.logLevel, 10);
     const { request, origin } = args;
     const { method } = request;
-    await validateOrigin(origin);
+    validateOrigin(origin, method);
 
-    return await getHandler(method)
+    logger.logLevel = parseInt(Config.logLevel, 10);
+
+    return await RpcHelper.getChainApiHandler(method)
       .getInstance()
       .execute(request.params as SnapRpcHandlerRequest);
   } catch (error) {
@@ -49,11 +42,15 @@ export const onRpcRequest: OnRpcRequestHandler = async (args) => {
 };
 
 export const onKeyringRequest: OnKeyringRequestHandler = async ({
+  origin,
   request,
 }): Promise<Json> => {
   try {
+    validateOrigin(origin, request.method);
+
     logger.logLevel = parseInt(Config.logLevel, 10);
-    const keyring = Factory.createKeyring(Chain.Bitcoin);
+
+    const keyring = Factory.createKeyring(Config.chain);
     return (await handleKeyringRequest(
       keyring,
       request,

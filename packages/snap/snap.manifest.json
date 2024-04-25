@@ -7,7 +7,7 @@
     "url": "https://github.com/MetaMask/bitcoin.git"
   },
   "source": {
-    "shasum": "2H9m1vxA34muuv0VtIBV9dU8k20kWHI9g5Ym3sVm2K0=",
+    "shasum": "aXC8zXKNhQ8UphNuJ62OLWRnVZ0YiAsksEJH1zK+mKg=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
@@ -25,25 +25,25 @@
     "endowment:keyring": {
       "allowedOrigins": [
         "https://metamask.github.io",
-        "https://portfolio.metamask.io",
-        "http://localhost:8000"
+        "http://localhost:8000",
+        "https://portfolio.metamask.io"
       ]
     },
     "snap_getBip32Entropy": [
       {
-        "path": ["m", "49'", "0'"],
+        "path": [
+          "m",
+          "84'",
+          "0'"
+        ],
         "curve": "secp256k1"
       },
       {
-        "path": ["m", "49'", "1'"],
-        "curve": "secp256k1"
-      },
-      {
-        "path": ["m", "84'", "0'"],
-        "curve": "secp256k1"
-      },
-      {
-        "path": ["m", "84'", "1'"],
+        "path": [
+          "m",
+          "84'",
+          "1'"
+        ],
         "curve": "secp256k1"
       }
     ],

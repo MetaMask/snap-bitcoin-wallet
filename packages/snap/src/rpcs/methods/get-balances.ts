@@ -1,7 +1,7 @@
 import type { Infer } from 'superstruct';
 import { object, string, assign, array, record } from 'superstruct';
 
-import { Chain } from '../../modules/config';
+import { Config } from '../../modules/config';
 import { Factory } from '../../modules/factory';
 import {
   TransactionService,
@@ -50,7 +50,7 @@ export class GetBalancesHandler
     const { scope, accounts, assets } = params;
 
     const txService = new TransactionService(
-      Factory.createTransactionMgr(Chain.Bitcoin, scope),
+      Factory.createTransactionMgr(Config.chain, scope),
       new TransactionStateManager(),
     );
 
