@@ -101,7 +101,10 @@ export abstract class SnapStateManager<State> {
             this.#transactionId
           }]: error : ${JSON.stringify(error)}`,
         );
-        await this.#rollback();
+        if (this.#transaction.isForceCommit) {
+          // we only need to rollback if the transaction is committed
+          await this.#rollback();
+        }
         if (error instanceof StateError) {
           throw error;
         }

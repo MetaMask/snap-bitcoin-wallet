@@ -72,11 +72,9 @@ export class BtcKeyring implements Keyring {
       );
 
       // TODO: Create account with index 0 for now for phase 1 scope, update to use increment index later
-      const index = await this.listAccounts().then(
-        (accounts) => accounts.length,
-      );
-
+      const index = Config.account[Config.chain].defaultAccountIndex;
       const account = await accountMgr.unlock(index);
+
       logger.info(
         `[BtcKeyring.createAccount] Account unlocked: ${account.address}`,
       );
@@ -103,7 +101,7 @@ export class BtcKeyring implements Keyring {
         await this.#emitEvent(KeyringEvent.AccountCreated, {
           account: keyringAccount,
         });
-      }, true);
+      });
 
       return keyringAccount;
     } catch (error) {

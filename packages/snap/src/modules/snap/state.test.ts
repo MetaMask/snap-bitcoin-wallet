@@ -300,7 +300,7 @@ describe('SnapStateManager', () => {
       expect(updateDataSpy).toHaveBeenCalledTimes(promiseArr.length);
     });
 
-    it('does rollback if an error catched in callback code', async () => {
+    it('does rollback if an error catched and force commit is true', async () => {
       const initState = {
         transaction: ['id'],
         trasansactionDetails: {
@@ -362,7 +362,7 @@ describe('SnapStateManager', () => {
       expect(updateDataSpy).toHaveBeenCalledTimes(promiseArr.length);
     });
 
-    it('does rollback if force commit is false', async () => {
+    it('does not trigger rollback if an error catched but force commit is false', async () => {
       const isForceCommit = false;
       const initState: MockState = {
         transaction: ['id'],
@@ -373,17 +373,11 @@ describe('SnapStateManager', () => {
           },
         },
       };
-      const { setStateDataSpy, updateDataFn, setStateDataFn } =
-        createMockState(initState);
+      const { setStateDataSpy, updateDataFn } = createMockState(initState);
       const { updateDataSpy, executeTransationFn } = createMockStateManager<
         MockState,
         MockExecuteTransactionInput
       >();
-      setStateDataSpy
-        .mockImplementationOnce(setStateDataFn)
-        .mockImplementationOnce(() => {
-          throw new Error('rollback error');
-        });
       updateDataSpy.mockImplementation(updateDataFn);
 
       let expectedError;
@@ -403,6 +397,7 @@ describe('SnapStateManager', () => {
       } finally {
         expect(expectedError).toBeInstanceOf(Error);
         expect(initState.transaction).toStrictEqual(['id']);
+        expect(setStateDataSpy).toHaveBeenCalledTimes(0);
         expect(initState.trasansactionDetails).toStrictEqual({
           id: {
             txnHash: 'hash',
