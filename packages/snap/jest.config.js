@@ -14,6 +14,8 @@ module.exports = {
     './src/**/*.ts',
     '!./src/**/*.d.ts',
     '!./src/**/index.ts',
+    '!./src/modules/config/config.ts',
+    '!./src/modules/config/permissions.ts',
     '!./src/**/type?(s).ts',
     '!./src/**/exception?(s).ts',
     '!./test/**',
