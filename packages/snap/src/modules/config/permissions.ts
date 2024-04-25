@@ -35,22 +35,22 @@ export const originPermissions = new Map<string, Set<string>>([
       'chain_getBalances',
     ]),
   ],
-  // [
-  //   'https://metamask.github.io',
-  //   [
-  //     // Keyring methods
-  //     KeyringRpcMethod.ListAccounts,
-  //     KeyringRpcMethod.GetAccount,
-  //     KeyringRpcMethod.CreateAccount,
-  //     KeyringRpcMethod.FilterAccountChains,
-  //     KeyringRpcMethod.UpdateAccount,
-  //     KeyringRpcMethod.DeleteAccount,
-  //     KeyringRpcMethod.ListRequests,
-  //     KeyringRpcMethod.GetRequest,
-  //     KeyringRpcMethod.ApproveRequest,
-  //     KeyringRpcMethod.RejectRequest,
-  //     // Chain API methods
-  //     "chain_getBalances"
-  //   ],
-  // ],
+  [
+    'https://metamask.github.io',
+    new Set([
+      // Keyring methods
+      KeyringRpcMethod.ListAccounts,
+      KeyringRpcMethod.GetAccount,
+      KeyringRpcMethod.CreateAccount,
+      KeyringRpcMethod.FilterAccountChains,
+      KeyringRpcMethod.UpdateAccount,
+      KeyringRpcMethod.DeleteAccount,
+      KeyringRpcMethod.ListRequests,
+      KeyringRpcMethod.GetRequest,
+      KeyringRpcMethod.ApproveRequest,
+      KeyringRpcMethod.RejectRequest,
+      // Chain API methods
+      'chain_getBalances',
+    ]),
+  ],
 ]);
