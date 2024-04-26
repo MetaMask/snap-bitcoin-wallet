@@ -1,9 +1,10 @@
 import type { Network, Payment } from 'bitcoinjs-lib';
-import { Buffer } from 'buffer';
+import type { Buffer } from 'buffer';
 
 import type { StaticImplements } from '../../../types/static';
-import { ScriptType } from './constants';
-import { AddressHelper } from './helpers';
+import { hexToBuffer } from '../../../utils';
+import { ScriptType } from '../constants';
+import { getBtcPaymentInst } from '../utils/payment';
 import type { IBtcAccount, IStaticBtcAccount, IAccountSigner } from './types';
 
 export class BtcAccount implements IBtcAccount {
@@ -59,13 +60,21 @@ export class BtcAccount implements IBtcAccount {
 
   get payment() {
     if (!this.#payment) {
-      this.#payment = AddressHelper.getPayment(
+      this.#payment = getBtcPaymentInst(
         this.scriptType,
-        Buffer.from(this.pubkey, 'hex'),
+        this.pubkeyToBuf(this.pubkey),
         this.network,
       );
     }
     return this.#payment;
+  }
+
+  protected pubkeyToBuf(pubkey: string): Buffer {
+    try {
+      return hexToBuffer(pubkey, false);
+    } catch (error) {
+      throw new Error('Public key is invalid');
+    }
   }
 
   async sign(signMessage: Buffer): Promise<Buffer> {

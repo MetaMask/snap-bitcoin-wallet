@@ -395,7 +395,7 @@ describe('SnapStateManager', () => {
       } catch (error) {
         expectedError = error;
       } finally {
-        expect(expectedError).toBeInstanceOf(Error);
+        expect(expectedError).toBeInstanceOf(StateError);
         expect(initState.transaction).toStrictEqual(['id']);
         expect(setStateDataSpy).toHaveBeenCalledTimes(0);
         expect(initState.trasansactionDetails).toStrictEqual({

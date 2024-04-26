@@ -1,4 +1,4 @@
-import type { DataClient } from './constants';
+import type { DataClient } from '../constants';
 
 export type BtcTransactionConfig = {
   dataClient: {

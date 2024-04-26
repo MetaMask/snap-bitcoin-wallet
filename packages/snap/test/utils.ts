@@ -2,7 +2,7 @@ import type { BIP32Interface } from 'bip32';
 import type { Network } from 'bitcoinjs-lib';
 import { Buffer } from 'buffer';
 
-import { Network as NetworkEnum } from '../src/modules/bitcoin/config';
+import { Network as NetworkEnum } from '../src/modules/bitcoin/constants';
 import blockChairData from './fixtures/blockchair.json';
 import blockStreamData from './fixtures/blockstream.json';
 

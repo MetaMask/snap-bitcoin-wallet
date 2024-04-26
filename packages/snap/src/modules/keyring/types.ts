@@ -4,7 +4,7 @@ import type { Infer } from 'superstruct';
 import { object } from 'superstruct';
 
 import type { IStaticSnapRpcHandler } from '../../rpcs';
-import { scopeStruct } from '../../types/superstruct';
+import { scopeStruct } from '../../utils';
 
 export type IAccountSigner = {
   sign(hash: Buffer): Promise<Buffer>;
@@ -31,6 +31,7 @@ export type IAccountMgr = {
 export type KeyringOptions = Record<string, Json> & {
   defaultIndex: number;
   multiAccount?: boolean;
+  // TODO: Temp solutio to support keyring in snap without keyring API
   emitEvents?: boolean;
 };
 

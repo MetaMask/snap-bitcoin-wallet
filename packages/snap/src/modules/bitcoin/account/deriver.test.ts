@@ -7,10 +7,9 @@ import { networks } from 'bitcoinjs-lib';
 import { Buffer } from 'buffer';
 
 import { createMockBip32Instance } from '../../../../test/utils';
+import * as strUtils from '../../../utils/string';
 import { SnapHelper } from '../../snap';
 import { BtcAccountBip32Deriver, BtcAccountBip44Deriver } from './deriver';
-import { DeriverError } from './exceptions';
-import { AddressHelper } from './helpers';
 
 jest.mock('bip32', () => {
   return {
@@ -65,7 +64,7 @@ describe('BtcAccountBip32Deriver', () => {
     };
   };
 
-  describe('fromSeed', () => {
+  describe('createBip32FromSeed', () => {
     it('returns an BIP32Interface', () => {
       const network = networks.testnet;
       const { fromSeedSpy } = createMockBip32Factory();
@@ -75,7 +74,7 @@ describe('BtcAccountBip32Deriver', () => {
       );
 
       const deriver = new BtcAccountBip32Deriver(network);
-      deriver.fromSeed(seed);
+      deriver.createBip32FromSeed(seed);
 
       expect(fromSeedSpy).toHaveBeenCalledWith(seed, network);
     });
@@ -94,13 +93,13 @@ describe('BtcAccountBip32Deriver', () => {
 
       const deriver = new BtcAccountBip32Deriver(network);
 
-      expect(() => deriver.fromSeed(seed)).toThrow(
+      expect(() => deriver.createBip32FromSeed(seed)).toThrow(
         'Unable to construct BIP32 node from seed',
       );
     });
   });
 
-  describe('fromPrivateKey', () => {
+  describe('createBip32FromPrivateKey', () => {
     it('returns an BIP32Interface', () => {
       const network = networks.testnet;
       const { fromPrivateKeySpy } = createMockBip32Factory();
@@ -114,7 +113,7 @@ describe('BtcAccountBip32Deriver', () => {
       );
 
       const deriver = new BtcAccountBip32Deriver(network);
-      deriver.fromPrivateKey(privateKey, chainCode);
+      deriver.createBip32FromPrivateKey(privateKey, chainCode);
 
       expect(fromPrivateKeySpy).toHaveBeenCalledWith(
         privateKey,
@@ -141,9 +140,9 @@ describe('BtcAccountBip32Deriver', () => {
 
       const deriver = new BtcAccountBip32Deriver(network);
 
-      expect(() => deriver.fromPrivateKey(privateKey, chainCode)).toThrow(
-        'Unable to construct BIP32 node from private key',
-      );
+      expect(() =>
+        deriver.createBip32FromPrivateKey(privateKey, chainCode),
+      ).toThrow('Unable to construct BIP32 node from private key');
     });
   });
 
@@ -192,8 +191,8 @@ describe('BtcAccountBip32Deriver', () => {
       const network = networks.testnet;
       const path = ['m', "84'", "0'"];
       createMockBip32Entropy();
-      const addressHelperSpy = jest.spyOn(AddressHelper, 'trimHexPrefix');
-      addressHelperSpy.mockImplementation(() => {
+      const spy = jest.spyOn(strUtils, 'hexToBuffer');
+      spy.mockImplementation(() => {
         throw new Error('error');
       });
       const deriver = new BtcAccountBip32Deriver(network);
@@ -207,9 +206,9 @@ describe('BtcAccountBip32Deriver', () => {
       const network = networks.testnet;
       const path = ['m', "84'", "0'"];
       createMockBip32Entropy();
-      const addressHelperSpy = jest.spyOn(AddressHelper, 'trimHexPrefix');
-      addressHelperSpy
-        .mockImplementationOnce((val: string) => val)
+      const spy = jest.spyOn(strUtils, 'hexToBuffer');
+      spy
+        .mockImplementationOnce((val: string) => Buffer.from(val, 'hex'))
         .mockImplementationOnce(() => {
           throw new Error('error');
         });
@@ -243,17 +242,6 @@ describe('BtcAccountBip32Deriver', () => {
       await expect(deriver.getRoot(path)).rejects.toThrow(
         'Deriver private key is missing',
       );
-    });
-
-    it('throws DeriverError if an error catched', async () => {
-      const network = networks.testnet;
-      const path = ['m', "84'", "0'"];
-      const { getBip32DeriverSpy } = createMockBip32Entropy();
-      getBip32DeriverSpy.mockRejectedValue(new Error('error'));
-
-      const deriver = new BtcAccountBip32Deriver(network);
-
-      await expect(deriver.getRoot(path)).rejects.toThrow(DeriverError);
     });
   });
 });
@@ -302,7 +290,7 @@ describe('BtcAccountBip44Deriver', () => {
       expect(deriveHardenedSpy).toHaveBeenCalledTimes(2);
     });
 
-    it('throws DeriverError if the private key is missing', async () => {
+    it('throws `Deriver private key is missing` error if the private key is missing', async () => {
       const network = networks.testnet;
       const path = ['m', "84'", "0'"];
       const { deriverSpy } = createMockBip44Entropy();
@@ -315,17 +303,6 @@ describe('BtcAccountBip44Deriver', () => {
       await expect(deriver.getRoot(path)).rejects.toThrow(
         'Deriver private key is missing',
       );
-    });
-
-    it('throws DeriverError if an error catched', async () => {
-      const network = networks.testnet;
-      const path = ['m', "84'", "0'"];
-      const { deriverSpy } = createMockBip44Entropy();
-      deriverSpy.mockRejectedValue(new Error('error'));
-
-      const deriver = new BtcAccountBip44Deriver(network);
-
-      await expect(deriver.getRoot(path)).rejects.toThrow(DeriverError);
     });
   });
 });

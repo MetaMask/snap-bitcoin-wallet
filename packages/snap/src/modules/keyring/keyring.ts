@@ -6,12 +6,12 @@ import {
   type KeyringRequest,
   type KeyringResponse,
 } from '@metamask/keyring-api';
-import { type Json } from '@metamask/snaps-sdk';
+import { MethodNotFoundError, type Json } from '@metamask/snaps-sdk';
 import { assert, StructError } from 'superstruct';
 import { v4 as uuidv4 } from 'uuid';
 
+import { Config } from '../../config';
 import type { SnapRpcHandlerRequest } from '../../rpcs';
-import { Config } from '../config';
 import { Factory } from '../factory';
 import { logger } from '../logger/logger';
 import { SnapHelper } from '../snap';
@@ -161,7 +161,7 @@ export class BtcKeyring implements Keyring {
   protected async handleSubmitRequest(request: KeyringRequest): Promise<Json> {
     const { method, params } = request.request;
     if (!Object.prototype.hasOwnProperty.call(this.handlers, method)) {
-      throw new BtcKeyringError(`Method not found: ${method}`);
+      throw new MethodNotFoundError() as unknown as Error;
     }
 
     return this.handlers[method]
@@ -173,6 +173,7 @@ export class BtcKeyring implements Keyring {
     event: KeyringEvent,
     data: Record<string, Json>,
   ): Promise<void> {
+    // TODO: Temp solutio to support keyring in snap without keyring API
     if (this.options.emitEvents) {
       await emitSnapKeyringEvent(SnapHelper.wallet, event, data);
     }

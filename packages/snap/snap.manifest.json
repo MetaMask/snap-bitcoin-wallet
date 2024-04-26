@@ -7,7 +7,7 @@
     "url": "https://github.com/MetaMask/bitcoin.git"
   },
   "source": {
-    "shasum": "aXC8zXKNhQ8UphNuJ62OLWRnVZ0YiAsksEJH1zK+mKg=",
+    "shasum": "t+8Rza9mVDHvTcW+yXved6QxBSZk1Nhmk7nqIHmgXfg=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
@@ -31,11 +31,19 @@
     },
     "snap_getBip32Entropy": [
       {
-        "path": ["m", "84'", "0'"],
+        "path": [
+          "m",
+          "84'",
+          "0'"
+        ],
         "curve": "secp256k1"
       },
       {
-        "path": ["m", "84'", "1'"],
+        "path": [
+          "m",
+          "84'",
+          "1'"
+        ],
         "curve": "secp256k1"
       }
     ],

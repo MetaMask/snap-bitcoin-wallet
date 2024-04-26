@@ -2,14 +2,14 @@ import type { Network, Payment } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 import { Buffer } from 'buffer';
 
+import { ScriptType } from '../constants';
+import * as utils from '../utils/payment';
 import { P2WPKHAccount } from './account';
-import { ScriptType } from './constants';
-import { AddressHelper } from './helpers';
 import type { IAccountSigner } from './types';
 
 describe('BtcAccount', () => {
   const createMockPaymentInstance = (address: string | undefined) => {
-    const getPaymentSpy = jest.spyOn(AddressHelper, 'getPayment');
+    const getPaymentSpy = jest.spyOn(utils, 'getBtcPaymentInst');
     getPaymentSpy.mockReturnValue({
       address,
     } as unknown as Payment);

@@ -1,4 +1,5 @@
-import { SnapRpcError } from './exceptions';
+import { MethodNotFoundError } from '@metamask/snaps-sdk';
+
 import { CreateAccountHandler, GetBalancesHandler } from './methods';
 import type { IStaticSnapRpcHandler } from './types';
 
@@ -10,7 +11,7 @@ export class RpcHelper {
       case 'chain_getBalances':
         return GetBalancesHandler;
       default:
-        throw new SnapRpcError(`Method not found`);
+        throw new MethodNotFoundError() as unknown as Error;
     }
   }
 }

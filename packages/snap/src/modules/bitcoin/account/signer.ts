@@ -34,7 +34,7 @@ export class AccountSigner implements HDSignerAsync, IAccountSigner {
       }, this.node);
       return new AccountSigner(childNode, this.fingerprint);
     } catch (error) {
-      throw new Error('invalid path');
+      throw new Error('Unable to derive path');
     }
   }
 

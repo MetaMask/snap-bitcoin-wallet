@@ -1,8 +1,7 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
 import type { Infer } from 'superstruct';
-import { object, number, assign } from 'superstruct';
 
-import { Config } from '../../modules/config';
+import { Config } from '../../config';
 import { Factory } from '../../modules/factory';
 import { BtcKeyring, KeyringStateManager } from '../../modules/keyring';
 import type { StaticImplements } from '../../types/static';
@@ -22,12 +21,7 @@ export class CreateAccountHandler
     StaticImplements<IStaticSnapRpcHandler, typeof CreateAccountHandler>
 {
   static override get requestStruct() {
-    return assign(
-      object({
-        index: number(),
-      }),
-      SnapRpcHandlerRequestStruct,
-    );
+    return SnapRpcHandlerRequestStruct;
   }
 
   async handleRequest(

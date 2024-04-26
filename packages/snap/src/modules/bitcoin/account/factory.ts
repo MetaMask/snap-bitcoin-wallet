@@ -2,8 +2,8 @@ import { type Network } from 'bitcoinjs-lib';
 
 import { type IAccountMgr } from '../../keyring';
 import { type BtcAccountConfig } from '../config';
+import { ScriptType } from '../constants';
 import { P2WPKHAccount } from './account';
-import { ScriptType } from './constants';
 import { BtcAccountBip32Deriver, BtcAccountBip44Deriver } from './deriver';
 import { AccountMgrFactoryError } from './exceptions';
 import { BtcAccountMgr } from './manager';

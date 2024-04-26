@@ -2,7 +2,7 @@ import * as keyringApi from '@metamask/keyring-api';
 import { type Json, type JsonRpcRequest, SnapError } from '@metamask/snaps-sdk';
 
 import { onRpcRequest, validateOrigin, onKeyringRequest } from '.';
-import { Config, originPermissions } from './modules/config';
+import { Config, originPermissions } from './config';
 import { BtcKeyring } from './modules/keyring';
 import type { IStaticSnapRpcHandler } from './rpcs';
 import { BaseSnapRpcHandler, RpcHelper } from './rpcs';
@@ -16,6 +16,7 @@ jest.mock('@metamask/keyring-api', () => ({
 jest.mock('./modules/logger/logger', () => ({
   logger: {
     info: jest.fn(),
+    error: jest.fn(),
   },
 }));
 
