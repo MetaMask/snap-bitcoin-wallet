@@ -4,10 +4,11 @@ import {
   type OnKeyringRequestHandler,
   type Json,
   SnapError,
+  MethodNotFoundError,
 } from '@metamask/snaps-sdk';
 
-import { Config } from './modules/config';
-import { originPermissions } from './modules/config/permissions';
+import { Config } from './config';
+import { originPermissions } from './config/permissions';
 import { Factory } from './modules/factory';
 import { logger } from './modules/logger/logger';
 import type { SnapRpcHandlerRequest } from './rpcs';
@@ -34,10 +35,16 @@ export const onRpcRequest: OnRpcRequestHandler = async (args) => {
       .getInstance()
       .execute(request.params as SnapRpcHandlerRequest);
   } catch (error) {
-    if (error instanceof SnapError) {
-      throw error;
+    let snapError = error;
+    if (
+      !(snapError instanceof MethodNotFoundError || error instanceof SnapError)
+    ) {
+      snapError = new SnapError(error);
     }
-    throw new SnapError(error.message);
+    logger.error(
+      `onRpcRequest error: ${JSON.stringify(snapError.toJSON(), null, 2)}`,
+    );
+    throw snapError;
   }
 };
 
@@ -56,9 +63,15 @@ export const onKeyringRequest: OnKeyringRequestHandler = async ({
       request,
     )) as unknown as Promise<Json>;
   } catch (error) {
-    if (error instanceof SnapError) {
-      throw error;
+    let snapError = error;
+    if (
+      !(snapError instanceof MethodNotFoundError || error instanceof SnapError)
+    ) {
+      snapError = new SnapError(error);
     }
-    throw new SnapError(error.message);
+    logger.error(
+      `onKeyringRequest error: ${JSON.stringify(snapError.toJSON(), null, 2)}`,
+    );
+    throw snapError;
   }
 };

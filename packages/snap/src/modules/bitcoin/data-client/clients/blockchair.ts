@@ -1,5 +1,6 @@
 import { type Network, networks } from 'bitcoinjs-lib';
 
+import { compactError } from '../../../../utils';
 import { logger } from '../../../logger/logger';
 import { type Balances } from '../../../transaction';
 import { DataClientError } from '../exceptions';
@@ -89,10 +90,7 @@ export class BlockChairClient implements IReadDataClient {
         return data;
       }, {});
     } catch (error) {
-      if (error instanceof DataClientError) {
-        throw error;
-      }
-      throw new DataClientError(error);
+      throw compactError(error, DataClientError);
     }
   }
 }

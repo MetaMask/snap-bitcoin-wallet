@@ -30,11 +30,13 @@ describe('AccountSigner', () => {
       const network = networks.testnet;
       const { instance: node, deriveHardenedSpy } =
         createMockBip32Instance(network);
-      deriveHardenedSpy.mockReturnValue(new Error('invalid path'));
+      deriveHardenedSpy.mockReturnValue(new Error('error'));
 
       const instance = new AccountSigner(node);
 
-      expect(() => instance.derivePath("m/0'/0")).toThrow('invalid path');
+      expect(() => instance.derivePath("m/0'/0")).toThrow(
+        'Unable to derive path',
+      );
     });
   });
 

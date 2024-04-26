@@ -1,6 +1,7 @@
 import type { MutexInterface } from 'async-mutex';
 import { v4 as uuidv4 } from 'uuid';
 
+import { compactError } from '../../utils';
 import { logger } from '../logger/logger';
 import { StateError } from './exceptions';
 import { SnapHelper } from './helpers';
@@ -99,16 +100,13 @@ export abstract class SnapStateManager<State> {
         logger.info(
           `SnapStateManager.withTransaction [${
             this.#transactionId
-          }]: error : ${JSON.stringify(error)}`,
+          }]: error : ${JSON.stringify(error.message)}`,
         );
         if (this.#transaction.isForceCommit) {
           // we only need to rollback if the transaction is committed
           await this.#rollback();
         }
-        if (error instanceof StateError) {
-          throw error;
-        }
-        throw new StateError(error);
+        throw compactError(error, StateError);
       } finally {
         this.#cleanUpTransaction();
       }

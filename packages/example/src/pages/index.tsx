@@ -109,7 +109,6 @@ const Index = () => {
     const account = (await invokeSnap({
       method: 'chain_createAccount',
       params: {
-        index: 0,
         scope: scope
       },
     })) as KeyringAccount;

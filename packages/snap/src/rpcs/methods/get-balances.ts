@@ -1,14 +1,14 @@
 import type { Infer } from 'superstruct';
 import { object, string, assign, array, record } from 'superstruct';
 
-import { Config } from '../../modules/config';
+import { Config } from '../../config';
 import { Factory } from '../../modules/factory';
 import {
   TransactionService,
   TransactionStateManager,
 } from '../../modules/transaction';
 import type { StaticImplements } from '../../types/static';
-import { assetsStruct, numberStringStruct } from '../../types/superstruct';
+import { assetsStruct, numberStringStruct } from '../../utils/superstruct';
 import { BaseSnapRpcHandler } from '../base';
 import type { IStaticSnapRpcHandler, SnapRpcHandlerResponse } from '../types';
 import { SnapRpcHandlerRequestStruct } from '../types';

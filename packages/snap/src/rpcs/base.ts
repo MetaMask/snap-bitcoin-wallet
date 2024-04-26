@@ -1,7 +1,8 @@
 import { type Struct, assert } from 'superstruct';
 
 import { logger } from '../modules/logger/logger';
-import { SnapRpcError, SnapRpcValidationError } from './exceptions';
+import { compactError } from '../utils';
+import { SnapRpcValidationError } from './exceptions';
 import {
   type ISnapRpcExecutable,
   type SnapRpcHandlerOptions,
@@ -69,12 +70,7 @@ export abstract class BaseSnapRpcHandler implements ISnapRpcExecutable {
       await this.postExecute(result);
       return result;
     } catch (error) {
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      logger.info(`[SnapRpcHandler.execute] Error: ${error.message}`);
-      if (error instanceof SnapRpcValidationError) {
-        throw error;
-      }
-      throw new SnapRpcError(error.message);
+      throw compactError(error, SnapRpcValidationError);
     }
   }
 

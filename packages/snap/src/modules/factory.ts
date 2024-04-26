@@ -1,19 +1,19 @@
 import { type Keyring } from '@metamask/keyring-api';
 
+import { type Chain, Config } from '../config';
 import { type IStaticSnapRpcHandler, SendTransactionHandler } from '../rpcs';
 import { BtcAccountMgrFactory } from './bitcoin/account';
 import {
-  type Network,
   type BtcAccountConfig,
   type BtcTransactionConfig,
 } from './bitcoin/config';
 import { DataClientFactory } from './bitcoin/data-client/factory';
-import { NetworkHelper } from './bitcoin/network';
 import { BtcTransactionMgr } from './bitcoin/transaction';
-import { type Chain, Config } from './config';
+import { getBtcNetwork } from './bitcoin/utils';
 import { BtcKeyring, KeyringStateManager, type IAccountMgr } from './keyring';
 import type { ITransactionMgr } from './transaction';
 
+// TODO: Temp solutio to support keyring in snap without keyring API
 export type CreateBtcKeyringOptions = {
   emitEvents: boolean;
 };
@@ -23,7 +23,7 @@ export class Factory {
     config: BtcTransactionConfig,
     network: string,
   ) {
-    const btcNetwork = NetworkHelper.getNetwork(network as Network);
+    const btcNetwork = getBtcNetwork(network);
     const readClient = DataClientFactory.createReadClient(config, btcNetwork);
 
     return new BtcTransactionMgr(readClient, {
@@ -32,7 +32,7 @@ export class Factory {
   }
 
   static createBtcAccountMgr(config: BtcAccountConfig, network: string) {
-    const btcNetwork = NetworkHelper.getNetwork(network as Network);
+    const btcNetwork = getBtcNetwork(network);
     return BtcAccountMgrFactory.create(config, btcNetwork);
   }
 
@@ -53,6 +53,7 @@ export class Factory {
       {
         defaultIndex: config.defaultAccountIndex,
         multiAccount: config.enableMultiAccounts,
+        // TODO: Temp solutio to support keyring in snap without keyring API
         emitEvents: options.emitEvents,
       },
     );

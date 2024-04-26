@@ -1,7 +1,7 @@
+import { Chain } from '../config';
 import { BtcAccountMgr } from './bitcoin/account';
-import { Network } from './bitcoin/config';
+import { Network } from './bitcoin/constants';
 import { BtcTransactionMgr } from './bitcoin/transaction';
-import { Chain } from './config';
 import { Factory } from './factory';
 import { BtcKeyring } from './keyring';
 

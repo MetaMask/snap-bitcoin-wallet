@@ -1,6 +1,6 @@
 import { enums, string, pattern } from 'superstruct';
 
-import { Config } from '../modules/config';
+import { Config } from '../config';
 
 export const assetsStruct = enums(Config.avaliableAssets[Config.chain]);
 

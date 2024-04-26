@@ -1,6 +1,6 @@
 import { type Network, networks } from 'bitcoinjs-lib';
 
-import { AsyncHelper } from '../../../async';
+import { compactError, processBatch } from '../../../../utils';
 import { logger } from '../../../logger/logger';
 import { type Balances } from '../../../transaction';
 import { DataClientError } from '../exceptions';
@@ -65,7 +65,7 @@ export class BlockStreamClient implements IReadDataClient {
     try {
       const responses: Balances = {};
 
-      await AsyncHelper.processBatch(addresses, async (address: string) => {
+      await processBatch(addresses, async (address: string) => {
         logger.info(`[BlockStreamClient.getBalance] address: ${address}`);
         let balance = 0;
         try {
@@ -90,10 +90,7 @@ export class BlockStreamClient implements IReadDataClient {
 
       return responses;
     } catch (error) {
-      if (error instanceof DataClientError) {
-        throw error;
-      }
-      throw new DataClientError(error);
+      throw compactError(error, DataClientError);
     }
   }
 }

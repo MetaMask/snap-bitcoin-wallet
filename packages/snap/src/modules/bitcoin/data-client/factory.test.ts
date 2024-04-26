@@ -1,6 +1,6 @@
 import { networks } from 'bitcoinjs-lib';
 
-import { DataClient } from '../config';
+import { DataClient } from '../constants';
 import { BlockChairClient } from './clients/blockchair';
 import { BlockStreamClient } from './clients/blockstream';
 import { DataClientFactory } from './factory';

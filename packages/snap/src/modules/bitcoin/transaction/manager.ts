@@ -1,12 +1,13 @@
 import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 
+import { compactError } from '../../../utils';
 import type {
   ITransactionMgr,
   Balances,
   AssetBalances,
 } from '../../transaction/types';
-import { BtcAsset } from '../config';
+import { BtcAsset } from '../constants';
 import { type IReadDataClient } from '../data-client';
 import { TransactionMgrError } from './exceptions';
 import type { BtcTransactionMgrOptions } from './types';
@@ -60,7 +61,7 @@ export class BtcTransactionMgr implements ITransactionMgr {
         { balances: {} },
       );
     } catch (error) {
-      throw new TransactionMgrError(error);
+      throw compactError(error, TransactionMgrError);
     }
   }
 }

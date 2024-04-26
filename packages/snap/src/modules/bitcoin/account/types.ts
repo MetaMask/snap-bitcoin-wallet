@@ -3,7 +3,7 @@ import type { Network, Payment } from 'bitcoinjs-lib';
 import type { Buffer } from 'buffer';
 
 import type { IAccount } from '../../keyring';
-import type { ScriptType } from './constants';
+import type { ScriptType } from '../constants';
 
 export type IBtcAccountDeriver = {
   getRoot(path: string[]): Promise<BIP32Interface>;

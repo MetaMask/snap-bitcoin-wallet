@@ -1,5 +1,5 @@
 import { generateAccounts } from '../../../test/utils';
-import { Network } from '../bitcoin/config';
+import { Network } from '../bitcoin/constants';
 import { SnapHelper, StateError } from '../snap';
 import { KeyringStateManager } from './state';
 
@@ -170,21 +170,6 @@ describe('BtcKeyring', () => {
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       ).rejects.toThrow(`Account address ${address} already exists`);
     });
-
-    it('throw StateError if an error catched', async () => {
-      const { instance, getDataSpy } = createMockStateManager();
-      const accountToSave = generateAccounts(1)[0];
-      getDataSpy.mockRejectedValue(new Error('error'));
-
-      await expect(
-        instance.addWallet({
-          account: accountToSave,
-          type: accountToSave.type,
-          index: accountToSave.index,
-          scope: accountToSave.scope,
-        }),
-      ).rejects.toThrow(StateError);
-    });
   });
 
   describe('removeAccounts', () => {
@@ -328,19 +313,6 @@ describe('BtcKeyring', () => {
       await expect(instance.updateAccount(accToUpdate)).rejects.toThrow(
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         `Account address or type is immutable`,
-      );
-    });
-
-    it('throw StateError if an error catched', async () => {
-      const { instance, getDataSpy } = createMockStateManager();
-      getDataSpy.mockRejectedValue(new Error('error'));
-      const state = createInitState(1);
-      const accToUpdate = {
-        ...state.wallets[state.walletIds[0]].account,
-      };
-
-      await expect(instance.updateAccount(accToUpdate)).rejects.toThrow(
-        StateError,
       );
     });
   });

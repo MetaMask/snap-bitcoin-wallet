@@ -1,7 +1,7 @@
 import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 
-import { ScriptType } from './constants';
+import { ScriptType } from '../constants';
 import { BtcAccountBip32Deriver, BtcAccountBip44Deriver } from './deriver';
 import { BtcAccountMgrFactory } from './factory';
 import * as manager from './manager';

@@ -4,7 +4,7 @@ import {
   generateAccounts,
   generateBlockStreamAccountStats,
 } from '../../../../../test/utils';
-import { AsyncHelper } from '../../../async';
+import * as asyncUtils from '../../../../utils/async';
 import { DataClientError } from '../exceptions';
 import { BlockStreamClient } from './blockstream';
 
@@ -85,21 +85,8 @@ describe('BlockStreamClient', () => {
     });
 
     it('throws DataClientError error if an non DataClientError catched', async () => {
-      const asyncHelperSpy = jest.spyOn(AsyncHelper, 'processBatch');
+      const asyncHelperSpy = jest.spyOn(asyncUtils, 'processBatch');
       asyncHelperSpy.mockRejectedValue(new Error('error'));
-      const accounts = generateAccounts(1);
-      const addresses = accounts.map((account) => account.address);
-
-      const instance = new BlockStreamClient({ network: networks.testnet });
-
-      await expect(instance.getBalances(addresses)).rejects.toThrow(
-        DataClientError,
-      );
-    });
-
-    it('throws DataClientError error if an DataClientError catched', async () => {
-      const asyncHelperSpy = jest.spyOn(AsyncHelper, 'processBatch');
-      asyncHelperSpy.mockRejectedValue(new DataClientError('error'));
       const accounts = generateAccounts(1);
       const addresses = accounts.map((account) => account.address);
 

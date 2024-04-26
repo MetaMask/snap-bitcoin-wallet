@@ -3,6 +3,7 @@ import { networks } from 'bitcoinjs-lib';
 import { createMockBip32Instance } from '../../../../test/utils';
 import { P2WPKHAccount } from './account';
 import { BtcAccountBip32Deriver } from './deriver';
+import { AccountMgrError } from './exceptions';
 import { BtcAccountMgr } from './manager';
 
 describe('BtcAccountMgr', () => {
@@ -42,7 +43,7 @@ describe('BtcAccountMgr', () => {
         network,
       );
 
-      await expect(instance.unlock(0)).rejects.toThrow('Error');
+      await expect(instance.unlock(0)).rejects.toThrow(AccountMgrError);
     });
   });
 });
