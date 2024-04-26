@@ -2,6 +2,7 @@ import { TransactionServiceError } from './exceptions';
 import type { TransactionStateManager } from './state';
 import type { AssetBalances, Fees, ITransactionMgr } from './types';
 
+// Keep this class until we dont need to using state to manage transaction
 export class TransactionService {
   protected readonly transactionMgr: ITransactionMgr;
 

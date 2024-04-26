@@ -1,6 +1,7 @@
 import type { BIP32Interface } from 'bip32';
 import { type Network } from 'bitcoinjs-lib';
 
+import { compactError } from '../../../utils';
 import { type IAccount, type IAccountMgr } from '../../keyring';
 import { AccountMgrError } from './exceptions';
 import { AccountSigner } from './signer';
@@ -25,7 +26,6 @@ export class BtcAccountMgr implements IAccountMgr {
 
   async unlock(index: number): Promise<IAccount> {
     try {
-      //eslint -disable-next-line @typescript-eslint/naming-convention
       const AccountCtor = this.accountCtor;
 
       const rootNode = await this.deriver.getRoot(AccountCtor.path);
@@ -43,7 +43,23 @@ export class BtcAccountMgr implements IAccountMgr {
         this.getHdSigner(rootNode),
       );
     } catch (error) {
-      throw new AccountMgrError(error);
+      throw compactError(error, AccountMgrError);
+    }
+  }
+
+  protected getFingerPrintInHex(rootNode: BIP32Interface) {
+    try {
+      return rootNode.fingerprint.toString('hex');
+    } catch (error) {
+      throw new Error('Unable to get fingerprint in hex');
+    }
+  }
+
+  protected getPublicKeyInHex(rootNode: BIP32Interface) {
+    try {
+      return rootNode.publicKey.toString('hex');
+    } catch (error) {
+      throw new Error('Unable to get public key in hex');
     }
   }
 

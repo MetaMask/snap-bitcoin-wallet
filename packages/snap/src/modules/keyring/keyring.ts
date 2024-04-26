@@ -6,12 +6,12 @@ import {
   type KeyringRequest,
   type KeyringResponse,
 } from '@metamask/keyring-api';
-import { type Json } from '@metamask/snaps-sdk';
+import { MethodNotFoundError, type Json } from '@metamask/snaps-sdk';
 import { assert, StructError } from 'superstruct';
 import { v4 as uuidv4 } from 'uuid';
 
+import { Config } from '../../config';
 import type { SnapRpcHandlerRequest } from '../../rpcs';
-import { Config } from '../config';
 import { Factory } from '../factory';
 import { logger } from '../logger/logger';
 import { SnapHelper } from '../snap';
@@ -72,9 +72,9 @@ export class BtcKeyring implements Keyring {
       );
 
       // TODO: Create account with index 0 for now for phase 1 scope, update to use increment index later
-      const index = this.options.defaultIndex;
-
+      const index = Config.account[Config.chain].defaultAccountIndex;
       const account = await accountMgr.unlock(index);
+
       logger.info(
         `[BtcKeyring.createAccount] Account unlocked: ${account.address}`,
       );
@@ -90,16 +90,17 @@ export class BtcKeyring implements Keyring {
         )}`,
       );
 
-      // TODO: Add 2 phases commit
-      await this.stateMgr.addWallet({
-        account: keyringAccount,
-        type: account.type,
-        index,
-        scope: options?.scope,
-      });
+      await this.stateMgr.withTransaction(async () => {
+        await this.stateMgr.addWallet({
+          account: keyringAccount,
+          type: account.type,
+          index,
+          scope: options?.scope,
+        });
 
-      await this.#emitEvent(KeyringEvent.AccountCreated, {
-        account: keyringAccount,
+        await this.#emitEvent(KeyringEvent.AccountCreated, {
+          account: keyringAccount,
+        });
       });
 
       return keyringAccount;
@@ -120,9 +121,10 @@ export class BtcKeyring implements Keyring {
 
   async updateAccount(account: KeyringAccount): Promise<void> {
     try {
-      // TODO: Add 2 phases commit
-      await this.stateMgr.updateAccount(account);
-      await this.#emitEvent(KeyringEvent.AccountUpdated, { account });
+      await this.stateMgr.withTransaction(async () => {
+        await this.stateMgr.updateAccount(account);
+        await this.#emitEvent(KeyringEvent.AccountUpdated, { account });
+      }, true);
     } catch (error) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       logger.info(`[BtcKeyring.updateAccount] Error: ${error.message}`);
@@ -132,9 +134,10 @@ export class BtcKeyring implements Keyring {
 
   async deleteAccount(id: string): Promise<void> {
     try {
-      // TODO: Add 2 phases commit
-      await this.stateMgr.removeAccounts([id]);
-      await this.#emitEvent(KeyringEvent.AccountDeleted, { id });
+      await this.stateMgr.withTransaction(async () => {
+        await this.stateMgr.removeAccounts([id]);
+        await this.#emitEvent(KeyringEvent.AccountDeleted, { id });
+      }, true);
     } catch (error) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       logger.info(`[BtcKeyring.deleteAccount] Error: ${error.message}`);
@@ -158,7 +161,7 @@ export class BtcKeyring implements Keyring {
   protected async handleSubmitRequest(request: KeyringRequest): Promise<Json> {
     const { method, params } = request.request;
     if (!Object.prototype.hasOwnProperty.call(this.handlers, method)) {
-      throw new BtcKeyringError(`Method not found: ${method}`);
+      throw new MethodNotFoundError() as unknown as Error;
     }
 
     return this.handlers[method]
@@ -170,6 +173,7 @@ export class BtcKeyring implements Keyring {
     event: KeyringEvent,
     data: Record<string, Json>,
   ): Promise<void> {
+    // TODO: Temp solutio to support keyring in snap without keyring API
     if (this.options.emitEvents) {
       await emitSnapKeyringEvent(SnapHelper.wallet, event, data);
     }

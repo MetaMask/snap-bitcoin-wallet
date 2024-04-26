@@ -1,11 +1,12 @@
+import { MethodNotFoundError } from '@metamask/snaps-sdk';
 import { unknown } from 'superstruct';
 
 import { generateAccounts } from '../../../test/utils';
+import { Chain, Config } from '../../config';
 import type { IStaticSnapRpcHandler } from '../../rpcs';
 import { BaseSnapRpcHandler } from '../../rpcs';
 import type { StaticImplements } from '../../types/static';
-import { Network } from '../bitcoin/config';
-import { Chain, Config } from '../config';
+import { Network } from '../bitcoin/constants';
 import { Factory } from '../factory';
 import { BtcKeyringError } from './exceptions';
 import { BtcKeyring } from './keyring';
@@ -207,7 +208,7 @@ describe('BtcKeyring', () => {
       expect(handleRequestSpy).toHaveBeenCalledWith(params);
     });
 
-    it('throws `Method not found` if the method not support', async () => {
+    it('throws MethodNotFoundError if the method not support', async () => {
       const { instance: stateMgr } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);
       const account = generateAccounts(1)[0];
@@ -221,7 +222,7 @@ describe('BtcKeyring', () => {
             method: 'btc_doesNotExist',
           },
         }),
-      ).rejects.toThrow('Method not found: btc_doesNotExist');
+      ).rejects.toThrow(MethodNotFoundError);
     });
   });
 

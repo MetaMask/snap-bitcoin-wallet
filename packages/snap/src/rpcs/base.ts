@@ -1,7 +1,8 @@
 import { type Struct, assert } from 'superstruct';
 
 import { logger } from '../modules/logger/logger';
-import { SnapRpcError, SnapRpcValidationError } from './exceptions';
+import { compactError } from '../utils';
+import { SnapRpcValidationError } from './exceptions';
 import {
   type ISnapRpcExecutable,
   type SnapRpcHandlerOptions,
@@ -11,23 +12,6 @@ import {
   type SnapRpcHandlerRequest,
   SnapRpcHandlerRequestStruct,
 } from './types';
-
-abstract class Parent {
-  static readonly staticMemeber: string;
-
-  protected myProtectedMethod() {
-    console.log((this.constructor as typeof Parent).staticMemeber);
-  }
-}
-
-class Child extends Parent {
-  static readonly staticMemeber = 'Hello, world!';
-
-  public doSomething() {
-    this.myProtectedMethod();
-  }
-}
-new Child().doSomething();
 
 export abstract class BaseSnapRpcHandler implements ISnapRpcExecutable {
   static instance: ISnapRpcHandler | null = null;
@@ -85,12 +69,7 @@ export abstract class BaseSnapRpcHandler implements ISnapRpcExecutable {
       await this.postExecute(result);
       return result;
     } catch (error) {
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      logger.info(`[SnapRpcHandler.execute] Error: ${error.message}`);
-      if (error instanceof SnapRpcValidationError) {
-        throw error;
-      }
-      throw new SnapRpcError(error.message);
+      throw compactError(error, SnapRpcValidationError);
     }
   }
 

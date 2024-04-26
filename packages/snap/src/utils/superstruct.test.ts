@@ -1,6 +1,6 @@
 import { assert } from 'superstruct';
 
-import { Config } from '../modules/config';
+import { Config } from '../config';
 import * as superstruct from './superstruct';
 
 describe('superstruct', () => {

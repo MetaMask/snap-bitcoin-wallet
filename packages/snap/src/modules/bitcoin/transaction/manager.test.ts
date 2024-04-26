@@ -3,7 +3,7 @@ import { networks } from 'bitcoinjs-lib';
 
 import { generateAccounts } from '../../../../test/utils';
 import { FeeRatio } from '../../transaction';
-import { BtcAsset } from '../config';
+import { BtcAsset } from '../constants';
 import type { IReadDataClient } from '../data-client';
 import { TransactionMgrError } from './exceptions';
 import { BtcTransactionMgr } from './manager';
@@ -55,7 +55,7 @@ describe('BtcTransactionMgr', () => {
       expect(getBalanceSpy).toHaveBeenCalledWith(addresses);
     });
 
-    it('throws `Only one asset is supported` error if the given assert more than 1', async () => {
+    it('throws `Only one asset is supported` error if the given asset more than 1', async () => {
       const { instance } = createMockReadDataClient();
       const { instance: txnMgr } = createMockBtcTransactionMgr(instance);
       const accounts = generateAccounts(2);
@@ -66,7 +66,7 @@ describe('BtcTransactionMgr', () => {
       ).rejects.toThrow('Only one asset is supported');
     });
 
-    it('throws `Invalid asset` error if the BTC assert is given and current network is testnet network', async () => {
+    it('throws `Invalid asset` error if the BTC asset is given and current network is testnet network', async () => {
       const { instance } = createMockReadDataClient();
       const { instance: txnMgr } = createMockBtcTransactionMgr(instance);
       const accounts = generateAccounts(2);
@@ -77,7 +77,7 @@ describe('BtcTransactionMgr', () => {
       ).rejects.toThrow('Invalid asset');
     });
 
-    it('throws `Invalid asset` error if the TBTC assert is given and current network is bitcoin network', async () => {
+    it('throws `Invalid asset` error if the TBTC asset is given and current network is bitcoin network', async () => {
       const { instance } = createMockReadDataClient();
       const { instance: txnMgr } = createMockBtcTransactionMgr(
         instance,

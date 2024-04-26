@@ -112,7 +112,7 @@ describe('BlockChairClient', () => {
       );
     });
 
-    it('throws DataClientError error if an DataClientError catched', async () => {
+    it('throws DataClientError error if an fetch response is falsely', async () => {
       const { fetchSpy } = createMockFetch();
 
       fetchSpy.mockResolvedValueOnce({

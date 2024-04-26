@@ -2,7 +2,7 @@ import type { Json } from '@metamask/snaps-sdk';
 import type { Infer } from 'superstruct';
 import { object, type Struct } from 'superstruct';
 
-import { scopeStruct } from '../types/superstruct';
+import { scopeStruct } from '../utils';
 
 export const SnapRpcHandlerRequestStruct = object({
   scope: scopeStruct,

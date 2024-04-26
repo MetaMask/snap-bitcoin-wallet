@@ -2,6 +2,7 @@ import type { KeyringAccount } from '@metamask/keyring-api';
 
 import type { Wallet } from '../../types/state';
 import { type SnapState } from '../../types/state';
+import { compactError } from '../../utils';
 import { SnapStateManager, StateError } from '../snap';
 
 export class KeyringStateManager extends SnapStateManager<SnapState> {
@@ -32,7 +33,7 @@ export class KeyringStateManager extends SnapStateManager<SnapState> {
       const state = await this.get();
       return state.walletIds.map((id) => state.wallets[id].account);
     } catch (error) {
-      throw new StateError(error);
+      throw compactError(error, StateError);
     }
   }
 
@@ -51,10 +52,7 @@ export class KeyringStateManager extends SnapStateManager<SnapState> {
         state.walletIds.push(id);
       });
     } catch (error) {
-      if (error instanceof StateError) {
-        throw error;
-      }
-      throw new StateError(error);
+      throw compactError(error, StateError);
     }
   }
 
@@ -79,10 +77,7 @@ export class KeyringStateManager extends SnapStateManager<SnapState> {
         state.wallets[account.id].account = account;
       });
     } catch (error) {
-      if (error instanceof StateError) {
-        throw error;
-      }
-      throw new StateError(error);
+      throw compactError(error, StateError);
     }
   }
 
@@ -102,10 +97,7 @@ export class KeyringStateManager extends SnapStateManager<SnapState> {
         state.walletIds = state.walletIds.filter((id) => !removeIds.has(id));
       });
     } catch (error) {
-      if (error instanceof StateError) {
-        throw error;
-      }
-      throw new StateError(error);
+      throw compactError(error, StateError);
     }
   }
 
@@ -114,7 +106,7 @@ export class KeyringStateManager extends SnapStateManager<SnapState> {
       const state = await this.get();
       return state.wallets[id]?.account ?? null;
     } catch (error) {
-      throw new StateError(error);
+      throw compactError(error, StateError);
     }
   }
 

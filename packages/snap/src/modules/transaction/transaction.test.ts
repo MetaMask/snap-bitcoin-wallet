@@ -1,5 +1,5 @@
 import { generateAccounts } from '../../../test/utils';
-import { BtcAsset } from '../bitcoin/config';
+import { BtcAsset } from '../bitcoin/constants';
 import { TransactionServiceError } from './exceptions';
 import { TransactionStateManager } from './state';
 import { TransactionService } from './transaction';

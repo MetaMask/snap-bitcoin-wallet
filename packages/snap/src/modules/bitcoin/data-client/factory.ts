@@ -1,6 +1,7 @@
 import { type Network } from 'bitcoinjs-lib';
 
-import { DataClient, type BtcTransactionConfig } from '../config';
+import { type BtcTransactionConfig } from '../config';
+import { DataClient } from '../constants';
 import { BlockChairClient } from './clients/blockchair';
 import { BlockStreamClient } from './clients/blockstream';
 import { DataClientError } from './exceptions';
