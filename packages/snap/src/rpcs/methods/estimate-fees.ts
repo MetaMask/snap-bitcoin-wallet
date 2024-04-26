@@ -1,14 +1,15 @@
 import type { Infer } from 'superstruct';
-import { object, array } from 'superstruct';
+import { object, array, enums } from 'superstruct';
 
-import { Config } from '../../modules/config';
+import { Config } from '../../config';
 import { Factory } from '../../modules/factory';
 import {
   TransactionService,
   TransactionStateManager,
+  FeeRatio,
 } from '../../modules/transaction';
 import type { StaticImplements } from '../../types/static';
-import { feeRatioStruct, numberStringStruct } from '../../types/superstruct';
+import { numberStringStruct } from '../../utils';
 import { BaseSnapRpcHandler } from '../base';
 import {
   type IStaticSnapRpcHandler,
@@ -36,7 +37,7 @@ export class EstimateFeesHandler
     return object({
       fees: array(
         object({
-          type: feeRatioStruct,
+          type: enums(Object.values(FeeRatio)),
           rate: numberStringStruct,
         }),
       ),

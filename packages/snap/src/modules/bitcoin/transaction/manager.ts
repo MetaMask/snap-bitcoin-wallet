@@ -1,8 +1,8 @@
 import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 
-import type { FeeRatio } from '../../transaction';
 import { compactError } from '../../../utils';
+import type { FeeRatio } from '../../transaction';
 import type {
   ITransactionMgr,
   Balances,
