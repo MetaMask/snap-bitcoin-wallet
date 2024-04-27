@@ -2,12 +2,8 @@ import type { Infer } from 'superstruct';
 import { object, array, enums } from 'superstruct';
 
 import { Config } from '../../config';
+import { FeeRatio } from '../../modules/chain';
 import { Factory } from '../../modules/factory';
-import {
-  TransactionService,
-  TransactionStateManager,
-  FeeRatio,
-} from '../../modules/transaction';
 import type { StaticImplements } from '../../types/static';
 import { numberStringStruct } from '../../utils';
 import { BaseSnapRpcHandler } from '../base';
@@ -49,12 +45,9 @@ export class EstimateFeesHandler
   ): Promise<EstimateFeesResponse> {
     const { scope } = params;
 
-    const txService = new TransactionService(
-      Factory.createTransactionMgr(Config.chain, scope),
-      new TransactionStateManager(),
-    );
+    const chainApi = Factory.createTransactionMgr(Config.chain, scope);
 
-    const fees = await txService.estimateFees();
+    const fees = await chainApi.estimateFees();
 
     const response = {
       fees: fees.fees.map((fee) => ({

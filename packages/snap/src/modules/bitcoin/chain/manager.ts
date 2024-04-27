@@ -2,7 +2,6 @@ import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 
 import { compactError } from '../../../utils';
-import type { FeeRatio } from '../../transaction';
 import type {
   ITransactionMgr,
   Balances,
@@ -10,7 +9,8 @@ import type {
   TransactionIntent,
   Pagination,
   Fees,
-} from '../../chain/types';
+  FeeRatio,
+} from '../../chain';
 import { BtcAsset } from '../constants';
 import { type IReadDataClient } from '../data-client';
 import { TransactionMgrError } from './exceptions';

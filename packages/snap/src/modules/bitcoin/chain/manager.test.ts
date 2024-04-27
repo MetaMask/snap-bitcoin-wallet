@@ -2,7 +2,7 @@ import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 
 import { generateAccounts } from '../../../../test/utils';
-import { FeeRatio } from '../../transaction';
+import { FeeRatio } from '../../chain';
 import { BtcAsset } from '../constants';
 import type { IReadDataClient } from '../data-client';
 import { TransactionMgrError } from './exceptions';
@@ -92,8 +92,8 @@ describe('BtcTransactionMgr', () => {
     });
   });
 
-  describe('getFeeRates', () => {
-    it('return getFeeRates result', async () => {
+  describe('estimateFees', () => {
+    it('return estimateFees result', async () => {
       const { instance, getFeeRatesSpy } = createMockReadDataClient();
       const { instance: txnMgr } = createMockBtcTransactionMgr(instance);
       getFeeRatesSpy.mockResolvedValue({
@@ -101,7 +101,7 @@ describe('BtcTransactionMgr', () => {
         [FeeRatio.Medium]: 1.2,
       });
 
-      const result = await txnMgr.getFeeRates();
+      const result = await txnMgr.estimateFees();
 
       expect(getFeeRatesSpy).toHaveBeenCalledTimes(1);
       expect(result).toStrictEqual({
@@ -127,7 +127,7 @@ describe('BtcTransactionMgr', () => {
 
       getFeeRatesSpy.mockRejectedValue(new Error('error'));
 
-      await expect(txnMgr.getFeeRates()).rejects.toThrow(TransactionMgrError);
+      await expect(txnMgr.estimateFees()).rejects.toThrow(TransactionMgrError);
     });
   });
 });

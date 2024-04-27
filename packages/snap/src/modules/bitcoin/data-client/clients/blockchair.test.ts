@@ -5,7 +5,7 @@ import {
   generateBlockChairGetBalanceResp,
   generateBlockChairGetStatsResp,
 } from '../../../../../test/utils';
-import { FeeRatio } from '../../../transaction';
+import { FeeRatio } from '../../../chain';
 import { DataClientError } from '../exceptions';
 import { BlockChairClient } from './blockchair';
 

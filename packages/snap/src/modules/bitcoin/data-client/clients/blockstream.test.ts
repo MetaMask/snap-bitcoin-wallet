@@ -6,7 +6,7 @@ import {
   generateBlockStreamEstFeeResp,
 } from '../../../../../test/utils';
 import * as asyncUtils from '../../../../utils/async';
-import { FeeRatio } from '../../../transaction';
+import { FeeRatio } from '../../../chain';
 import { DataClientError } from '../exceptions';
 import { BlockStreamClient } from './blockstream';
 
