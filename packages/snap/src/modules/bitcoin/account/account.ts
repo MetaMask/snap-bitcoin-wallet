@@ -77,8 +77,13 @@ export class BtcAccount implements IBtcAccount {
     }
   }
 
-  async sign(signMessage: Buffer): Promise<Buffer> {
-    return await this.signer.sign(signMessage);
+  async sign(message: Buffer): Promise<Buffer> {
+    return await this.signer.sign(message);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async signTransaction<Txn>(tx: Txn): Promise<string> {
+    throw new Error('Method not implemented.');
   }
 }
 

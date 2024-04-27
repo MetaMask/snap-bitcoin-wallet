@@ -3,10 +3,6 @@ import { object, string, assign, array, record } from 'superstruct';
 
 import { Config } from '../../config';
 import { Factory } from '../../modules/factory';
-import {
-  TransactionService,
-  TransactionStateManager,
-} from '../../modules/transaction';
 import type { StaticImplements } from '../../types/static';
 import { assetsStruct, numberStringStruct } from '../../utils/superstruct';
 import { BaseSnapRpcHandler } from '../base';
@@ -49,12 +45,9 @@ export class GetBalancesHandler
   async handleRequest(params: GetBalancesParams): Promise<GetBalancesResponse> {
     const { scope, accounts, assets } = params;
 
-    const txService = new TransactionService(
-      Factory.createTransactionMgr(Config.chain, scope),
-      new TransactionStateManager(),
-    );
+    const chainApi = Factory.createTransactionMgr(Config.chain, scope);
 
-    const balances = await txService.getBalances(accounts, assets);
+    const balances = await chainApi.getBalances(accounts, assets);
 
     const response = {
       balances: Object.entries(balances.balances).reduce(

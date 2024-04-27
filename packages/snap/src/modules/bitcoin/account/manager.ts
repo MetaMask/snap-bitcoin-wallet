@@ -1,7 +1,9 @@
+import type { Json } from '@metamask/snaps-sdk';
 import type { BIP32Interface } from 'bip32';
 import { type Network } from 'bitcoinjs-lib';
 
 import { compactError } from '../../../utils';
+import type { TransactionIntent } from '../../chain/types';
 import { type IAccount, type IAccountMgr } from '../../keyring';
 import { AccountMgrError } from './exceptions';
 import { AccountSigner } from './signer';
@@ -46,6 +48,22 @@ export class BtcAccountMgr implements IAccountMgr {
       throw compactError(error, AccountMgrError);
     }
   }
+
+  /* eslint-disable */
+  async createTransaction(
+    acount: IAccount,
+    txn: TransactionIntent,
+    options: {
+      metadata: Record<string, Json>;
+      fee: number;
+    },
+  ): Promise<{
+    txn: Buffer;
+    txnJson: Record<string, Json>;
+  }> {
+    throw new Error('Method not implemented.');
+  }
+  /* eslint-disable */
 
   protected getFingerPrintInHex(rootNode: BIP32Interface) {
     try {
