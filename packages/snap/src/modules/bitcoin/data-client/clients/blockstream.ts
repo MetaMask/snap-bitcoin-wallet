@@ -1,8 +1,8 @@
 import { type Network, networks } from 'bitcoinjs-lib';
 
 import { compactError, processBatch } from '../../../../utils';
+import { type Balances, FeeRatio } from '../../../chain';
 import { logger } from '../../../logger/logger';
-import { FeeRatio, type Balances } from '../../../transaction';
 import { DataClientError } from '../exceptions';
 import type { GetFeeRatesResp, IReadDataClient } from '../types';
 

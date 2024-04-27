@@ -1,9 +1,8 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
 
-import type { Wallet } from '../../types/state';
-import { type SnapState } from '../../types/state';
 import { compactError } from '../../utils';
 import { SnapStateManager, StateError } from '../snap';
+import type { Wallet, SnapState } from './types';
 
 export class KeyringStateManager extends SnapStateManager<SnapState> {
   protected override async get(): Promise<SnapState> {
