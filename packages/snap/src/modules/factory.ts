@@ -3,15 +3,15 @@ import { type Keyring } from '@metamask/keyring-api';
 import { type Chain, Config } from '../config';
 import { type IStaticSnapRpcHandler, SendTransactionHandler } from '../rpcs';
 import { BtcAccountMgrFactory } from './bitcoin/account';
+import { BtcTransactionMgr } from './bitcoin/chain';
 import {
   type BtcAccountConfig,
   type BtcTransactionConfig,
 } from './bitcoin/config';
 import { DataClientFactory } from './bitcoin/data-client/factory';
-import { BtcTransactionMgr } from './bitcoin/transaction';
 import { getBtcNetwork } from './bitcoin/utils';
+import type { ITransactionMgr } from './chain/types';
 import { BtcKeyring, KeyringStateManager, type IAccountMgr } from './keyring';
-import type { ITransactionMgr } from './transaction';
 
 // TODO: Temp solutio to support keyring in snap without keyring API
 export type CreateBtcKeyringOptions = {

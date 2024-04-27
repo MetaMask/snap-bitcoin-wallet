@@ -1,3 +1,4 @@
+import type { KeyringAccount } from '@metamask/keyring-api';
 import { type Json } from '@metamask/snaps-sdk';
 import type { Buffer } from 'buffer';
 import type { Infer } from 'superstruct';
@@ -5,6 +6,21 @@ import { object } from 'superstruct';
 
 import type { IStaticSnapRpcHandler } from '../../rpcs';
 import { scopeStruct } from '../../utils';
+import type { TransactionIntent } from '../chain';
+
+export type Wallet = {
+  account: KeyringAccount;
+  type: string;
+  index: number;
+  scope: string;
+};
+
+export type Wallets = Record<string, Wallet>;
+
+export type SnapState = {
+  walletIds: string[];
+  wallets: Wallets;
+};
 
 export type IAccountSigner = {
   sign(hash: Buffer): Promise<Buffer>;
@@ -22,10 +38,23 @@ export type IAccount = {
   pubkey: string;
   type: string;
   signer: IAccountSigner;
+  signTransaction<Txn>(tx: Txn): Promise<string>;
+  sign(message: Buffer): Promise<Buffer>;
 };
 
 export type IAccountMgr = {
   unlock(index: number): Promise<IAccount>;
+  createTransaction(
+    acount: IAccount,
+    txn: TransactionIntent,
+    options: {
+      metadata: Record<string, Json>;
+      fee: number;
+    },
+  ): Promise<{
+    txn: Buffer;
+    txnJson: Record<string, Json>;
+  }>;
 };
 
 export type KeyringOptions = Record<string, Json> & {

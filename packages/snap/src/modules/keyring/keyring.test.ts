@@ -29,6 +29,8 @@ describe('BtcKeyring', () => {
     const unlockSpy = jest.fn();
     class AccountMgr implements IAccountMgr {
       unlock = unlockSpy;
+
+      createTransaction = jest.fn();
     }
     jest
       .spyOn(Factory, 'createAccountMgr')

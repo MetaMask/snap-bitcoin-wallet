@@ -6,7 +6,10 @@ import type {
   ITransactionMgr,
   Balances,
   AssetBalances,
-} from '../../transaction/types';
+  TransactionIntent,
+  Pagination,
+  Fees,
+} from '../../chain/types';
 import { BtcAsset } from '../constants';
 import { type IReadDataClient } from '../data-client';
 import { TransactionMgrError } from './exceptions';
@@ -64,4 +67,25 @@ export class BtcTransactionMgr implements ITransactionMgr {
       throw compactError(error, TransactionMgrError);
     }
   }
+  /* eslint-disable */
+  async estimateFees(): Promise<Fees> {
+    throw new Error('Method not implemented.');
+  }
+
+  boardcastTransaction(txn: string) {
+    throw new Error('Method not implemented.');
+  }
+
+  listTransactions(address: string, pagination: Pagination) {
+    throw new Error('Method not implemented.');
+  }
+
+  getTransaction(txnHash: string) {
+    throw new Error('Method not implemented.');
+  }
+
+  getDataForTransaction(address: string, transactionIntent: TransactionIntent) {
+    throw new Error('Method not implemented.');
+  }
+  /* eslint-disable */
 }
