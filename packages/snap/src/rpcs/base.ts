@@ -49,6 +49,7 @@ export abstract class BaseSnapRpcHandler implements ISnapRpcExecutable {
     logger.info(
       `[SnapRpcHandler.postExecute] Response: ${JSON.stringify(response)}`,
     );
+
     try {
       if (this.responseStruct) {
         assert(response, this.responseStruct);
