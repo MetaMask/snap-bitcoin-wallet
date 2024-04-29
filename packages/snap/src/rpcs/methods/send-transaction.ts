@@ -1,11 +1,5 @@
 import { object, string, assign, type Infer, record } from 'superstruct';
-/* eslint-disable */
-import { Json, UserRejectedRequestError } from '@metamask/snaps-sdk';
 
-import { Config } from '../../config';
-import type { Fee, Fees, TransactionIntent } from '../../modules/chain/types';
-import { Factory } from '../../modules/factory';
-/* eslint-disable */
 import type { StaticImplements } from '../../types/static';
 import { numberStringStruct } from '../../utils';
 import { BaseSnapRpcHandler } from '../base';
@@ -14,7 +8,6 @@ import {
   type IStaticSnapRpcHandler,
   type SnapRpcHandlerResponse,
 } from '../types';
-
 
 export type SendTransactionParams = Infer<
   typeof SendTransactionHandler.requestStruct
@@ -39,9 +32,10 @@ export class SendTransactionHandler
     );
   }
 
-  /* eslint-disable */
   async handleRequest(
+    /* eslint-disable */
     params: SendTransactionParams,
+    /* eslint-disable */
   ): Promise<SendTransactionResponse> {
     throw new Error('Method not implemented');
     // const { scope, account: address, intent } = params;
@@ -102,5 +96,4 @@ export class SendTransactionHandler
   //   // TODO: Ask user to confirm txn
   //   return true;
   // }
-  /* eslint-disable */
 }
