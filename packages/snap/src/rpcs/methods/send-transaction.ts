@@ -1,6 +1,7 @@
 import { object, string, assign, type Infer, record } from 'superstruct';
-
 /* eslint-disable */
+import { Json, UserRejectedRequestError } from '@metamask/snaps-sdk';
+
 import { Config } from '../../config';
 import type { Fee, Fees, TransactionIntent } from '../../modules/chain/types';
 import { Factory } from '../../modules/factory';
@@ -13,7 +14,7 @@ import {
   type IStaticSnapRpcHandler,
   type SnapRpcHandlerResponse,
 } from '../types';
-import { Json, UserRejectedRequestError } from '@metamask/snaps-sdk';
+
 
 export type SendTransactionParams = Infer<
   typeof SendTransactionHandler.requestStruct
