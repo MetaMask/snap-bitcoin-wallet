@@ -46,6 +46,10 @@ export const Config: SnapConfig = {
             // eslint-disable-next-line no-restricted-globals
             (process.env.DATA_CLIENT_READ_TYPE as DataClient) ??
             DataClient.BlockChair,
+          options: {
+            // eslint-disable-next-line no-restricted-globals
+            apiKey: process.env.BLOCKCHAIR_API_KEY,
+          },
         },
       },
     },

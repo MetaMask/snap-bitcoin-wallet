@@ -8,6 +8,7 @@ import type { IReadDataClient } from '../types';
 
 export type BlockChairClientOptions = {
   network: Network;
+  apiKey?: string;
 };
 
 /* eslint-disable */
@@ -63,7 +64,13 @@ export class BlockChairClient implements IReadDataClient {
   }
 
   protected async get<Resp>(endpoint: string): Promise<Resp> {
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+    const url = new URL(`${this.baseUrl}${endpoint}`);
+    // TODO: Update to proxy
+    if (this.options.apiKey) {
+      url.searchParams.append('key', this.options.apiKey);
+    }
+
+    const response = await fetch(url.toString(), {
       method: 'GET',
     });
 

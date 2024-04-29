@@ -5,6 +5,8 @@ on:
     secrets:
       NPM_TOKEN:
         required: true
+      BLOCKCHAIR_API_KEY:
+        required: false
 
 jobs:
   publish-release:
@@ -26,6 +28,8 @@ jobs:
         run: |
           yarn install
           yarn build
+        env:
+          BLOCKCHAIR_API_KEY: ${{ secrets.BLOCKCHAIR_API_KEY }}
       - uses: actions/cache@v3
         id: restore-build
         with:
