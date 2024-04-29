@@ -42,7 +42,7 @@ export type IAccount = {
   sign(message: Buffer): Promise<Buffer>;
 };
 
-export type IAccountMgr = {
+export type IWallet = {
   unlock(index: number): Promise<IAccount>;
   createTransaction(
     acount: IAccount,

@@ -1,3 +1,3 @@
 import { CustomError } from '../../exceptions';
 
-export class TransactionMgrError extends CustomError {}
+export class BtcOnChainServiceError extends CustomError {}

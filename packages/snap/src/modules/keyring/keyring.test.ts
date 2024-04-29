@@ -11,7 +11,7 @@ import { Factory } from '../factory';
 import { BtcKeyringError } from './exceptions';
 import { BtcKeyring } from './keyring';
 import { KeyringStateManager } from './state';
-import type { IAccountMgr } from './types';
+import type { IWallet } from './types';
 
 jest.mock('../logger/logger', () => ({
   logger: {
@@ -25,17 +25,17 @@ jest.mock('@metamask/keyring-api', () => ({
 }));
 
 describe('BtcKeyring', () => {
-  const createMockAccountMgr = () => {
+  const createMockWallet = () => {
     const unlockSpy = jest.fn();
-    class AccountMgr implements IAccountMgr {
+    class Wallet implements IWallet {
       unlock = unlockSpy;
 
       createTransaction = jest.fn();
     }
     jest
-      .spyOn(Factory, 'createAccountMgr')
+      .spyOn(Factory, 'createWallet')
       .mockImplementation()
-      .mockReturnValue(new AccountMgr());
+      .mockReturnValue(new Wallet());
     return {
       unlockSpy,
     };
@@ -108,7 +108,7 @@ describe('BtcKeyring', () => {
 
   describe('createAccount', () => {
     it('creates account', async () => {
-      const { unlockSpy } = createMockAccountMgr();
+      const { unlockSpy } = createMockWallet();
       const { instance: stateMgr, addWalletSpy } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);
       const scope = Network.Testnet;
@@ -126,7 +126,7 @@ describe('BtcKeyring', () => {
       });
 
       expect(unlockSpy).toHaveBeenCalledWith(
-        Config.account[Chain.Bitcoin].defaultAccountIndex,
+        Config.wallet[Chain.Bitcoin].defaultAccountIndex,
       );
       expect(addWalletSpy).toHaveBeenCalledWith({
         account: {
@@ -146,7 +146,7 @@ describe('BtcKeyring', () => {
     });
 
     it('throws BtcKeyringError if an error catched', async () => {
-      const { unlockSpy } = createMockAccountMgr();
+      const { unlockSpy } = createMockWallet();
       const { instance: stateMgr } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);
       unlockSpy.mockRejectedValue(new Error('error'));

@@ -3,7 +3,7 @@ import { networks } from 'bitcoinjs-lib';
 
 import { compactError } from '../../../utils';
 import type {
-  ITransactionMgr,
+  IOnChainService,
   Balances,
   AssetBalances,
   TransactionIntent,
@@ -12,15 +12,15 @@ import type {
 } from '../../chain/types';
 import { BtcAsset } from '../constants';
 import { type IReadDataClient } from '../data-client';
-import { TransactionMgrError } from './exceptions';
-import type { BtcTransactionMgrOptions } from './types';
+import { BtcOnChainServiceError } from './exceptions';
+import type { BtcOnChainServiceOptions } from './types';
 
-export class BtcTransactionMgr implements ITransactionMgr {
+export class BtcOnChainService implements IOnChainService {
   protected readonly readClient: IReadDataClient;
 
-  protected readonly options: BtcTransactionMgrOptions;
+  protected readonly options: BtcOnChainServiceOptions;
 
-  constructor(readClient: IReadDataClient, options: BtcTransactionMgrOptions) {
+  constructor(readClient: IReadDataClient, options: BtcOnChainServiceOptions) {
     this.readClient = readClient;
     this.options = options;
   }
@@ -35,7 +35,7 @@ export class BtcTransactionMgr implements ITransactionMgr {
   ): Promise<AssetBalances> {
     try {
       if (assets.length > 1) {
-        throw new TransactionMgrError('Only one asset is supported');
+        throw new BtcOnChainServiceError('Only one asset is supported');
       }
 
       const allowedAssets = new Set<string>(
@@ -47,7 +47,7 @@ export class BtcTransactionMgr implements ITransactionMgr {
         (this.network === networks.testnet && assets[0] !== BtcAsset.TBtc) ||
         (this.network === networks.bitcoin && assets[0] !== BtcAsset.Btc)
       ) {
-        throw new TransactionMgrError('Invalid asset');
+        throw new BtcOnChainServiceError('Invalid asset');
       }
 
       const balance: Balances = await this.readClient.getBalances(addresses);
@@ -64,7 +64,7 @@ export class BtcTransactionMgr implements ITransactionMgr {
         { balances: {} },
       );
     } catch (error) {
-      throw compactError(error, TransactionMgrError);
+      throw compactError(error, BtcOnChainServiceError);
     }
   }
   /* eslint-disable */

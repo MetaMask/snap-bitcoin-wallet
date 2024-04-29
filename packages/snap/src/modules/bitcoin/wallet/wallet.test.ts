@@ -3,10 +3,10 @@ import { networks } from 'bitcoinjs-lib';
 import { createMockBip32Instance } from '../../../../test/utils';
 import { P2WPKHAccount } from './account';
 import { BtcAccountBip32Deriver } from './deriver';
-import { AccountMgrError } from './exceptions';
-import { BtcAccountMgr } from './manager';
+import { WalletError } from './exceptions';
+import { BtcWallet } from './wallet';
 
-describe('BtcAccountMgr', () => {
+describe('BtcWallet', () => {
   describe('unlock', () => {
     it('returns an `Account` object', async () => {
       const network = networks.testnet;
@@ -19,7 +19,7 @@ describe('BtcAccountMgr', () => {
       rootSpy.mockResolvedValue(rootNode);
       childSpy.mockResolvedValue(childNode);
 
-      const instance = new BtcAccountMgr(
+      const instance = new BtcWallet(
         new BtcAccountBip32Deriver(network),
         P2WPKHAccount,
         network,
@@ -37,13 +37,13 @@ describe('BtcAccountMgr', () => {
       const rootSpy = jest.spyOn(BtcAccountBip32Deriver.prototype, 'getRoot');
       rootSpy.mockRejectedValue(new Error('Error'));
 
-      const instance = new BtcAccountMgr(
+      const instance = new BtcWallet(
         new BtcAccountBip32Deriver(network),
         P2WPKHAccount,
         network,
       );
 
-      await expect(instance.unlock(0)).rejects.toThrow(AccountMgrError);
+      await expect(instance.unlock(0)).rejects.toThrow(WalletError);
     });
   });
 });

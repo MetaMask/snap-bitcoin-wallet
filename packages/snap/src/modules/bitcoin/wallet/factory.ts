@@ -1,19 +1,19 @@
 import { type Network } from 'bitcoinjs-lib';
 
-import { type IAccountMgr } from '../../keyring';
-import { type BtcAccountConfig } from '../config';
+import { type IWallet } from '../../keyring';
+import { type BtcWalletConfig } from '../config';
 import { ScriptType } from '../constants';
 import { P2WPKHAccount } from './account';
 import { BtcAccountBip32Deriver, BtcAccountBip44Deriver } from './deriver';
-import { AccountMgrFactoryError } from './exceptions';
-import { BtcAccountMgr } from './manager';
+import { WalletFactoryError } from './exceptions';
+import { BtcWallet } from './wallet';
 
-export class BtcAccountMgrFactory {
-  static create(config: BtcAccountConfig, network: Network): IAccountMgr {
+export class BtcWalletFactory {
+  static create(config: BtcWalletConfig, network: Network): IWallet {
     const type = config.defaultAccountType as ScriptType;
     switch (type) {
       case ScriptType.P2wpkh:
-        return new BtcAccountMgr(
+        return new BtcWallet(
           config.deriver === 'BIP44'
             ? new BtcAccountBip44Deriver(network)
             : new BtcAccountBip32Deriver(network),
@@ -21,7 +21,7 @@ export class BtcAccountMgrFactory {
           network,
         );
       default:
-        throw new AccountMgrFactoryError('Invalid script type');
+        throw new WalletFactoryError('Invalid script type');
     }
   }
 }

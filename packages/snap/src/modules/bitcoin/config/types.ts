@@ -2,7 +2,7 @@ import type { Json } from '@metamask/snaps-sdk';
 
 import type { DataClient } from '../constants';
 
-export type BtcTransactionConfig = {
+export type BtcOnChainServiceConfig = {
   dataClient: {
     read: {
       type: DataClient;
@@ -11,7 +11,7 @@ export type BtcTransactionConfig = {
   };
 };
 
-export type BtcAccountConfig = {
+export type BtcWalletConfig = {
   enableMultiAccounts: boolean;
   defaultAccountIndex: number;
   defaultAccountType: string;

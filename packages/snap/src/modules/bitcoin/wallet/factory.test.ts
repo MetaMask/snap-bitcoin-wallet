@@ -3,12 +3,12 @@ import { networks } from 'bitcoinjs-lib';
 
 import { ScriptType } from '../constants';
 import { BtcAccountBip32Deriver, BtcAccountBip44Deriver } from './deriver';
-import { BtcAccountMgrFactory } from './factory';
-import * as manager from './manager';
+import { BtcWalletFactory } from './factory';
 import type { IBtcAccountDeriver, IStaticBtcAccount } from './types';
+import * as manager from './wallet';
 
-describe('BtcAccountMgrFactory', () => {
-  class MockBtcAccountMgr extends manager.BtcAccountMgr {
+describe('BtcWalletFactory', () => {
+  class MockBtcWallet extends manager.BtcWallet {
     getDeriver() {
       return this.deriver;
     }
@@ -18,16 +18,16 @@ describe('BtcAccountMgrFactory', () => {
     }
   }
 
-  const createMockBtcAccountMgr = () => {
+  const createMockBtcWallet = () => {
     const spy = jest
-      .spyOn(manager, 'BtcAccountMgr')
+      .spyOn(manager, 'BtcWallet')
       .mockImplementation(
         (
           deriver: IBtcAccountDeriver,
           account: IStaticBtcAccount,
           network: Network,
         ) => {
-          return new MockBtcAccountMgr(deriver, account, network);
+          return new MockBtcWallet(deriver, account, network);
         },
       );
     return {
@@ -36,10 +36,10 @@ describe('BtcAccountMgrFactory', () => {
   };
 
   describe('create', () => {
-    it('creates BtcAccountMgr instance with `BtcAccountBip32Deriver` and `P2WPKHAccount`', () => {
-      const { spy } = createMockBtcAccountMgr();
+    it('creates BtcWallet instance with `BtcAccountBip32Deriver` and `P2WPKHAccount`', () => {
+      const { spy } = createMockBtcWallet();
 
-      const instance = BtcAccountMgrFactory.create(
+      const instance = BtcWalletFactory.create(
         {
           defaultAccountIndex: 0,
           defaultAccountType: ScriptType.P2wpkh,
@@ -47,17 +47,17 @@ describe('BtcAccountMgrFactory', () => {
           enableMultiAccounts: false,
         },
         networks.testnet,
-      ) as unknown as MockBtcAccountMgr;
+      ) as unknown as MockBtcWallet;
 
       expect(spy).toHaveBeenCalled();
       expect(instance.getDeriver()).toBeInstanceOf(BtcAccountBip32Deriver);
       expect(instance.getAccountCtor().name).toBe('P2WPKHAccount');
     });
 
-    it('creates BtcAccountMgr instance with `BtcAccountBip44Deriver` and `P2WPKHAccount`', () => {
-      const { spy } = createMockBtcAccountMgr();
+    it('creates BtcWallet instance with `BtcAccountBip44Deriver` and `P2WPKHAccount`', () => {
+      const { spy } = createMockBtcWallet();
 
-      const instance = BtcAccountMgrFactory.create(
+      const instance = BtcWalletFactory.create(
         {
           defaultAccountIndex: 0,
           defaultAccountType: ScriptType.P2wpkh,
@@ -65,7 +65,7 @@ describe('BtcAccountMgrFactory', () => {
           enableMultiAccounts: false,
         },
         networks.testnet,
-      ) as unknown as MockBtcAccountMgr;
+      ) as unknown as MockBtcWallet;
 
       expect(spy).toHaveBeenCalled();
       expect(instance.getDeriver()).toBeInstanceOf(BtcAccountBip44Deriver);
@@ -74,7 +74,7 @@ describe('BtcAccountMgrFactory', () => {
 
     it('throws `Invalid script type` if the given account type is not supported', () => {
       expect(() =>
-        BtcAccountMgrFactory.create(
+        BtcWalletFactory.create(
           {
             defaultAccountIndex: 0,
             defaultAccountType: ScriptType.P2shP2wkh,

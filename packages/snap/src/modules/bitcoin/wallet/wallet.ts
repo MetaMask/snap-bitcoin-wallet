@@ -4,12 +4,12 @@ import { type Network } from 'bitcoinjs-lib';
 
 import { compactError } from '../../../utils';
 import type { TransactionIntent } from '../../chain/types';
-import { type IAccount, type IAccountMgr } from '../../keyring';
-import { AccountMgrError } from './exceptions';
+import { type IAccount, type IWallet } from '../../keyring';
+import { WalletError } from './exceptions';
 import { AccountSigner } from './signer';
 import type { IStaticBtcAccount, IBtcAccountDeriver } from './types';
 
-export class BtcAccountMgr implements IAccountMgr {
+export class BtcWallet implements IWallet {
   protected readonly deriver: IBtcAccountDeriver;
 
   protected readonly accountCtor: IStaticBtcAccount;
@@ -45,7 +45,7 @@ export class BtcAccountMgr implements IAccountMgr {
         this.getHdSigner(rootNode),
       );
     } catch (error) {
-      throw compactError(error, AccountMgrError);
+      throw compactError(error, WalletError);
     }
   }
 

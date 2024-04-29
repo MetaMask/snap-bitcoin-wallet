@@ -1,6 +1,6 @@
 import { type Network } from 'bitcoinjs-lib';
 
-import { type BtcTransactionConfig } from '../config';
+import { type BtcOnChainServiceConfig } from '../config';
 import { DataClient } from '../constants';
 import { BlockChairClient } from './clients/blockchair';
 import { BlockStreamClient } from './clients/blockstream';
@@ -9,7 +9,7 @@ import type { IReadDataClient } from './types';
 
 export class DataClientFactory {
   static createReadClient(
-    config: BtcTransactionConfig,
+    config: BtcOnChainServiceConfig,
     network: Network,
   ): IReadDataClient {
     const { type, options } = config.dataClient.read;

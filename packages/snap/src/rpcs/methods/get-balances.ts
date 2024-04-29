@@ -45,7 +45,7 @@ export class GetBalancesHandler
   async handleRequest(params: GetBalancesParams): Promise<GetBalancesResponse> {
     const { scope, accounts, assets } = params;
 
-    const chainApi = Factory.createTransactionMgr(Config.chain, scope);
+    const chainApi = Factory.createOnChainServiceProvider(Config.chain, scope);
 
     const balances = await chainApi.getBalances(accounts, assets);
 
