@@ -1,7 +1,6 @@
 import { type Struct, assert } from 'superstruct';
 
 import { logger } from '../modules/logger/logger';
-import { compactError } from '../utils';
 import { SnapRpcValidationError } from './exceptions';
 import {
   type ISnapRpcExecutable,
@@ -64,14 +63,10 @@ export abstract class BaseSnapRpcHandler implements ISnapRpcExecutable {
   async execute(
     params: SnapRpcHandlerRequest,
   ): Promise<SnapRpcHandlerResponse> {
-    try {
-      await this.preExecute(params);
-      const result = await this.handleRequest(params);
-      await this.postExecute(result);
-      return result;
-    } catch (error) {
-      throw compactError(error, SnapRpcValidationError);
-    }
+    await this.preExecute(params);
+    const result = await this.handleRequest(params);
+    await this.postExecute(result);
+    return result;
   }
 
   static getInstance(
