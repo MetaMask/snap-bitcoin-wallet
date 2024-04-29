@@ -12,11 +12,15 @@ export class DataClientFactory {
     config: BtcTransactionConfig,
     network: Network,
   ): IReadDataClient {
-    switch (config.dataClient.read.type) {
+    const { type, options } = config.dataClient.read;
+    switch (type) {
       case DataClient.BlockStream:
         return new BlockStreamClient({ network });
       case DataClient.BlockChair:
-        return new BlockChairClient({ network });
+        return new BlockChairClient({
+          network,
+          apiKey: options?.apiKey?.toString(),
+        });
       default:
         throw new DataClientError(
           // eslint-disable-next-line @typescript-eslint/restrict-template-expressions

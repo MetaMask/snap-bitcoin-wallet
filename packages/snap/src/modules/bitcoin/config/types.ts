@@ -1,9 +1,12 @@
+import type { Json } from '@metamask/snaps-sdk';
+
 import type { DataClient } from '../constants';
 
 export type BtcTransactionConfig = {
   dataClient: {
     read: {
       type: DataClient;
+      options?: Record<string, Json | undefined>;
     };
   };
 };

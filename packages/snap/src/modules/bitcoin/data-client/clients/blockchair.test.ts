@@ -48,6 +48,53 @@ describe('BlockChairClient', () => {
     });
   });
 
+  describe('get', () => {
+    it('append api key to query url if option `apiKey` is present', async () => {
+      const { fetchSpy } = createMockFetch();
+      const accounts = generateAccounts(1);
+      const addresses = accounts.map((account) => account.address);
+      const mockResponse = generateBlockChairGetBalanceResp(addresses);
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue(mockResponse),
+      });
+
+      const instance = new BlockChairClient({
+        network: networks.testnet,
+        apiKey: 'key',
+      });
+      await instance.getBalances(addresses);
+
+      expect(fetchSpy).toHaveBeenCalledWith(
+        `https://api.blockchair.com/bitcoin/testnet/addresses/balances?addresses=${addresses.join(
+          ',',
+        )}&key=key`,
+        { method: 'GET' },
+      );
+    });
+
+    it('does not append api key if option `apiKey` is absent', async () => {
+      const { fetchSpy } = createMockFetch();
+      const accounts = generateAccounts(1);
+      const addresses = accounts.map((account) => account.address);
+      const mockResponse = generateBlockChairGetBalanceResp(addresses);
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue(mockResponse),
+      });
+
+      const instance = new BlockChairClient({ network: networks.testnet });
+      await instance.getBalances(addresses);
+
+      expect(fetchSpy).toHaveBeenCalledWith(
+        `https://api.blockchair.com/bitcoin/testnet/addresses/balances?addresses=${addresses.join(
+          ',',
+        )}`,
+        { method: 'GET' },
+      );
+    });
+  });
+
   describe('getBalances', () => {
     it('returns balances', async () => {
       const { fetchSpy } = createMockFetch();

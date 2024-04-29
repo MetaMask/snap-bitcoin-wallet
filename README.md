@@ -2,40 +2,57 @@
 
 ## Getting Started
 
-Clone the template-snap repository [using this template](https://github.com/MetaMask/template-snap-monorepo/generate)
-and set up the development environment:
+The Bitcoin Manager Snap allows MetaMask and dapp to manage account with Bitcoin network through the new Keyring API SDK to support an non-evm network integration.
 
-```shell
-yarn install && yarn start
+### Prerequisites
+
+- [MetaMask Flask](https://metamask.io/flask/)
+- Nodejs `18`. We **strongly** recommend you install via [NVM](https://github.com/creationix/nvm) to avoid incompatibility issues between different node projects.
+  - Once installed, you should also install [Yarn](http://yarnpkg.com/) with `npm i -g yarn` to make working with this repository easiest.
+
+## Installing
+
+```bash
+nvm use 18
+yarn install
 ```
 
-## Cloning
+## Configuration
 
-This repository contains GitHub Actions that you may find useful, see
-`.github/workflows` and [Releasing & Publishing](https://github.com/MetaMask/template-snap-monorepo/edit/main/README.md#releasing--publishing)
-below for more information.
+please see `./src/packages/.env.example` for reference
 
-If you clone or create this repository outside the MetaMask GitHub organization,
-you probably want to run `./scripts/cleanup.sh` to remove some files that will
-not work properly outside the MetaMask GitHub organization.
+## Running
 
-If you don't wish to use any of the existing GitHub actions in this repository,
-simply delete the `.github/workflows` directory.
+### Quick Start
 
-## Contributing
+```bash
+yarn start
+```
 
-### Testing and Linting
+- Snap server and debug page: http://localhost:8080/
+- Example UI dapp: http://localhost:3000/
 
-Run `yarn test` to run the tests once.
+### Snap
 
-Run `yarn lint` to run the linter, or run `yarn lint:fix` to run the linter and
-fix any automatically fixable issues.
+⚠️ When snap updates you will need to still reconnect from the dapp to see changes
 
-### Using NPM packages with scripts
+```bash
+# Running Snap via watch mode
+yarn workspace @metamask/bitcoin start
+```
 
-Scripts are disabled by default for security reasons. If you need to use NPM
-packages with scripts, you can run `yarn allow-scripts auto`, and enable the
-script in the `lavamoat.allowScripts` section of `package.json`.
+Alternatively you can build and serve the snap manually. This can sometimes be more stable than watch mode but requires
+a manual rebuild and serve anytime there is a change on the snap.
 
-See the documentation for [@lavamoat/allow-scripts](https://github.com/LavaMoat/LavaMoat/tree/main/packages/allow-scripts)
-for more information.
+```bash
+# Building and serving snap manually
+yarn workspace @metamask/bitcoin build
+yarn workspace @metamask/bitcoin serve
+```
+
+### Example UI
+
+```bash
+# Running example UI
+yarn workspace example start
+```

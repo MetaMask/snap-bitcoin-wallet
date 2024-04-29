@@ -11,10 +11,11 @@ const config: SnapConfig = {
     port: 8080,
   },
   environment: {
-    // eslint-disable-next-line n/no-process-env
+    /* eslint-disable */
     LOG_LEVEL: process.env.LOG_LEVEL,
-    // eslint-disable-next-line n/no-process-env
     DATA_CLIENT_READ_TYPE: process.env.DATA_CLIENT_READ_TYPE,
+    BLOCKCHAIR_API_KEY: process.env.BLOCKCHAIR_API_KEY,
+    /* eslint-disable */
   },
   polyfills: true,
 };
