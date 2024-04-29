@@ -77,16 +77,4 @@ describe('BtcAccount', () => {
       expect(() => instance.address).toThrow('Payment address is missing');
     });
   });
-
-  describe('sign', () => {
-    it('signs a message with signer', async () => {
-      const network = networks.testnet;
-      const { instance, signerSpy } = await createMockAccount(network);
-
-      const message = Buffer.from('test');
-      await instance.sign(message);
-
-      expect(signerSpy).toHaveBeenCalledWith(message);
-    });
-  });
 });

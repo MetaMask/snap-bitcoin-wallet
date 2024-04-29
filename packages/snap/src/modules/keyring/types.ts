@@ -38,8 +38,6 @@ export type IAccount = {
   pubkey: string;
   type: string;
   signer: IAccountSigner;
-  signTransaction<Txn>(tx: Txn): Promise<string>;
-  sign(message: Buffer): Promise<Buffer>;
 };
 
 export type IWallet = {
