@@ -45,7 +45,7 @@ export class EstimateFeesHandler
   ): Promise<EstimateFeesResponse> {
     const { scope } = params;
 
-    const chainApi = Factory.createTransactionMgr(Config.chain, scope);
+    const chainApi = Factory.createOnChainServiceProvider(Config.chain, scope);
 
     const fees = await chainApi.estimateFees();
 

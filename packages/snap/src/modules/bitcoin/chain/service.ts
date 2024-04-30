@@ -66,7 +66,7 @@ export class BtcOnChainService implements IOnChainService {
       throw compactError(error, BtcOnChainServiceError);
     }
   }
-  /* eslint-disable */
+
   async estimateFees(): Promise<Fees> {
     try {
       const result = await this.readClient.getFeeRates();
@@ -80,10 +80,11 @@ export class BtcOnChainService implements IOnChainService {
         ),
       };
     } catch (error) {
-      throw new TransactionMgrError(error);
+      throw new BtcOnChainServiceError(error);
     }
   }
 
+  /* eslint-disable */
   boardcastTransaction(txn: string) {
     throw new Error('Method not implemented.');
   }
