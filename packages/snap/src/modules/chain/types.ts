@@ -32,7 +32,7 @@ export type Pagination = {
   offset: number;
 };
 
-export type ITransactionMgr = {
+export type IOnChainService = {
   getBalances(addresses: string[], assets: string[]): Promise<AssetBalances>;
   estimateFees(): Promise<Fees>;
   boardcastTransaction(txn: string);

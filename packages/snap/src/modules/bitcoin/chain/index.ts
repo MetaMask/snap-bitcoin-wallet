@@ -1,3 +1,3 @@
 export * from './exceptions';
-export * from './manager';
+export * from './service';
 export * from './types';

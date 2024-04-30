@@ -76,17 +76,28 @@ describe('BtcAccount', () => {
 
       expect(() => instance.address).toThrow('Payment address is missing');
     });
-  });
 
-  describe('sign', () => {
-    it('signs a message with signer', async () => {
+    it('throws `Public key is invalid` error if the public key is invalid', async () => {
       const network = networks.testnet;
-      const { instance, signerSpy } = await createMockAccount(network);
+      const address = 'tb1qt2mpt38wmgw3j0hnr9mp5hsa7kxf2a3ktdxaeu';
+      createMockPaymentInstance(address);
 
-      const message = Buffer.from('test');
-      await instance.sign(message);
+      const signerSpy = jest.fn();
+      const index = 0;
+      const hdPath = [`m`, `0'`, `0`, `${index}`].join('/');
 
-      expect(signerSpy).toHaveBeenCalledWith(message);
+      const instance = new P2WPKHAccount(
+        'ddddddddddddd',
+        index,
+        hdPath,
+        undefined as unknown as string,
+        network,
+        P2WPKHAccount.scriptType,
+        `bip122:${P2WPKHAccount.scriptType.toLowerCase()}`,
+        { sign: signerSpy } as unknown as IAccountSigner,
+      );
+
+      expect(() => instance.address).toThrow('Public key is invalid');
     });
   });
 });

@@ -1,6 +1,6 @@
 import type {
-  BtcAccountConfig,
-  BtcTransactionConfig,
+  BtcWalletConfig,
+  BtcOnChainServiceConfig,
 } from '../modules/bitcoin/config';
 import {
   Network as BtcNetwork,
@@ -16,17 +16,17 @@ export type NetworkConfig = {
   [key in string]: string;
 };
 
-export type TransactionConfig = {
-  [Chain.Bitcoin]: BtcTransactionConfig;
+export type OnChainServiceConfig = {
+  [Chain.Bitcoin]: BtcOnChainServiceConfig;
 };
 
-export type AccountConfig = {
-  [Chain.Bitcoin]: BtcAccountConfig;
+export type WalletConfig = {
+  [Chain.Bitcoin]: BtcWalletConfig;
 };
 
 export type SnapConfig = {
-  transaction: TransactionConfig;
-  account: AccountConfig;
+  onChainService: OnChainServiceConfig;
+  wallet: WalletConfig;
   avaliableNetworks: {
     [key in Chain]: string[];
   };
@@ -38,7 +38,7 @@ export type SnapConfig = {
 };
 
 export const Config: SnapConfig = {
-  transaction: {
+  onChainService: {
     [Chain.Bitcoin]: {
       dataClient: {
         read: {
@@ -46,11 +46,15 @@ export const Config: SnapConfig = {
             // eslint-disable-next-line no-restricted-globals
             (process.env.DATA_CLIENT_READ_TYPE as DataClient) ??
             DataClient.BlockChair,
+          options: {
+            // eslint-disable-next-line no-restricted-globals
+            apiKey: process.env.BLOCKCHAIR_API_KEY,
+          },
         },
       },
     },
   },
-  account: {
+  wallet: {
     [Chain.Bitcoin]: {
       enableMultiAccounts: false,
       defaultAccountIndex: 0,

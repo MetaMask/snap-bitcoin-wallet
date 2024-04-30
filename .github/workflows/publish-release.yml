@@ -5,6 +5,8 @@ on:
     secrets:
       NPM_TOKEN:
         required: true
+      BLOCKCHAIR_API_KEY:
+        required: false
 
 jobs:
   publish-release:
@@ -26,11 +28,15 @@ jobs:
         run: |
           yarn install
           yarn build
+        env:
+          BLOCKCHAIR_API_KEY: ${{ secrets.BLOCKCHAIR_API_KEY }}
       - uses: actions/cache@v3
         id: restore-build
         with:
+          # add /packages/snap/snap.manifest.json to include an updated shasum from build due to version update in auto PR
           path: |
             ./packages/*/dist
+            ./packages/snap/snap.manifest.json
             ./node_modules/.yarn-state.yml
           key: ${{ github.sha }}
 
@@ -44,8 +50,10 @@ jobs:
       - uses: actions/cache@v3
         id: restore-build
         with:
+          # add /packages/snap/snap.manifest.json to include an updated shasum from build due to version update in auto PR
           path: |
             ./packages/*/dist
+            ./packages/snap/snap.manifest.json
             ./node_modules/.yarn-state.yml
           key: ${{ github.sha }}
       - name: Dry Run Publish
@@ -65,8 +73,10 @@ jobs:
       - uses: actions/cache@v3
         id: restore-build
         with:
+          # add /packages/snap/snap.manifest.json to include an updated shasum from build due to version update in auto PR
           path: |
             ./packages/*/dist
+            ./packages/snap/snap.manifest.json
             ./node_modules/.yarn-state.yml
           key: ${{ github.sha }}
       - name: Publish
