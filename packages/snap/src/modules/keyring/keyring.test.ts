@@ -30,6 +30,8 @@ describe('BtcKeyring', () => {
     class Wallet implements IWallet {
       unlock = unlockSpy;
 
+      signTransaction = jest.fn();
+
       createTransaction = jest.fn();
     }
     jest
@@ -106,6 +108,10 @@ describe('BtcKeyring', () => {
     };
   };
 
+  const getHdPath = (index: number) => {
+    return [`m`, `0'`, `0`, `${index}`].join('/');
+  };
+
   describe('createAccount', () => {
     it('creates account', async () => {
       const { unlockSpy } = createMockWallet();
@@ -116,7 +122,7 @@ describe('BtcKeyring', () => {
 
       unlockSpy.mockResolvedValue({
         address: account.address,
-        hdPath: account.options.hdPath,
+        hdPath: getHdPath(account.options.index),
         index: account.options.index,
         type: account.type,
       });
@@ -127,6 +133,7 @@ describe('BtcKeyring', () => {
 
       expect(unlockSpy).toHaveBeenCalledWith(
         Config.wallet[Chain.Bitcoin].defaultAccountIndex,
+        Config.wallet[Chain.Bitcoin].defaultAccountType,
       );
       expect(addWalletSpy).toHaveBeenCalledWith({
         account: {
@@ -139,7 +146,7 @@ describe('BtcKeyring', () => {
           },
           methods: account.methods,
         },
-        type: account.type,
+        hdPath: getHdPath(account.options.index),
         index: account.options.index,
         scope,
       });
