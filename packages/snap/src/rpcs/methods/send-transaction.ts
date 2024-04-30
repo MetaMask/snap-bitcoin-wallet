@@ -50,13 +50,13 @@ export class SendTransactionHandler
     // );
 
     // // TODO: Get account by address or pass account object from Keyring
-    // const wallet = Factory.createWallet(Config.chain, scope);
+    // const wallet = Factory.createWallet(scope);
     // const account = await wallet.unlock(0);
     // if (!account || account.address !== address) {
     //   throw new Error('Account not found');
     // }
 
-    // const chainApi = Factory.createOnChainServiceProvider(Config.chain, scope);
+    // const chainApi = Factory.createOnChainServiceProvider(scope);
 
     // const feesResp = await chainApi.estimateFees();
 
