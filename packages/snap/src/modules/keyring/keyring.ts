@@ -124,7 +124,7 @@ export class BtcKeyring implements Keyring {
       await this.stateMgr.withTransaction(async () => {
         await this.stateMgr.updateAccount(account);
         await this.#emitEvent(KeyringEvent.AccountUpdated, { account });
-      }, true);
+      });
     } catch (error) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       logger.info(`[BtcKeyring.updateAccount] Error: ${error.message}`);
@@ -137,7 +137,7 @@ export class BtcKeyring implements Keyring {
       await this.stateMgr.withTransaction(async () => {
         await this.stateMgr.removeAccounts([id]);
         await this.#emitEvent(KeyringEvent.AccountDeleted, { id });
-      }, true);
+      });
     } catch (error) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       logger.info(`[BtcKeyring.deleteAccount] Error: ${error.message}`);

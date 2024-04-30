@@ -1,4 +1,4 @@
-import type { MutexInterface } from 'async-mutex';
+import { type MutexInterface } from 'async-mutex';
 import { v4 as uuidv4 } from 'uuid';
 
 import { compactError } from '../../utils';
@@ -12,7 +12,7 @@ export type Transaction<State> = {
   orgState?: State;
   current?: State;
   isRollingBack: boolean;
-  isForceCommit: boolean;
+  hasCommited: boolean;
 };
 
 export abstract class SnapStateManager<State> {
@@ -27,7 +27,7 @@ export abstract class SnapStateManager<State> {
       orgState: undefined,
       current: undefined,
       isRollingBack: false,
-      isForceCommit: false,
+      hasCommited: false,
     };
   }
 
@@ -50,7 +50,7 @@ export abstract class SnapStateManager<State> {
           }]: transaction is processing, use existing state`,
         );
         await callback(this.#transaction.current);
-        if (this.#transaction.isForceCommit) {
+        if (this.#transaction.hasCommited) {
           await this.set(this.#transaction.current);
         }
         return;
@@ -70,14 +70,12 @@ export abstract class SnapStateManager<State> {
    * This method executes the callback code in a transaction-like format. It creates a lock to ensure the state is not intercepted during the transaction and initializes a transaction with the current state, original state, and transaction ID. If there is an error during the transaction, the state is rolled back to the original state. However, if the lock has no time limit, it might cause a deadlock if the transaction is not completed.
    *
    * @param callback - A Promise function that takes the state as an argument.
-   * @param isForceCommit - The flag to enable the transaction committed if any internal commit has execute.
    */
   public async withTransaction(
     callback: (state: State) => Promise<void>,
-    isForceCommit = false,
   ): Promise<void> {
     await this.mtx.runExclusive(async () => {
-      await this.#beginTransaction(isForceCommit);
+      await this.#beginTransaction();
 
       if (
         !this.#transaction.current ||
@@ -102,7 +100,7 @@ export abstract class SnapStateManager<State> {
             this.#transactionId
           }]: error : ${JSON.stringify(error.message)}`,
         );
-        if (this.#transaction.isForceCommit) {
+        if (this.#transaction.hasCommited) {
           // we only need to rollback if the transaction is committed
           await this.#rollback();
         }
@@ -113,13 +111,21 @@ export abstract class SnapStateManager<State> {
     });
   }
 
-  async #beginTransaction(isForceCommit: boolean): Promise<void> {
+  async commit() {
+    if (!this.#transaction.current || !this.#transaction.orgState) {
+      throw new StateError('Failed to commit transaction');
+    }
+    this.#transaction.hasCommited = true;
+    await this.set(this.#transaction.current);
+  }
+
+  async #beginTransaction(): Promise<void> {
     this.#transaction = {
       id: uuidv4(),
       orgState: await this.get(),
       current: await this.get(), // make sure the current is not referenced to orgState
       isRollingBack: false,
-      isForceCommit,
+      hasCommited: false,
     };
   }
 
@@ -152,7 +158,7 @@ export abstract class SnapStateManager<State> {
     this.#transaction.current = undefined;
     this.#transaction.id = undefined;
     this.#transaction.isRollingBack = false;
-    this.#transaction.isForceCommit = false;
+    this.#transaction.hasCommited = false;
   }
 
   get #transactionId(): string {
