@@ -1,7 +1,6 @@
 import type { Infer } from 'superstruct';
 import { object, array, enums } from 'superstruct';
 
-import { Config } from '../../config';
 import { FeeRatio } from '../../modules/chain';
 import { Factory } from '../../modules/factory';
 import type { StaticImplements } from '../../types/static';
@@ -45,7 +44,7 @@ export class EstimateFeesHandler
   ): Promise<EstimateFeesResponse> {
     const { scope } = params;
 
-    const chainApi = Factory.createOnChainServiceProvider(Config.chain, scope);
+    const chainApi = Factory.createOnChainServiceProvider(scope);
 
     const fees = await chainApi.estimateFees();
 
