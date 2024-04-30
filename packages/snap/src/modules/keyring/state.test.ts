@@ -3,7 +3,7 @@ import { Network } from '../bitcoin/constants';
 import { SnapHelper, StateError } from '../snap';
 import { KeyringStateManager } from './state';
 
-describe('BtcKeyring', () => {
+describe('KeyringStateManager', () => {
   const createMockStateManager = () => {
     const getDataSpy = jest.spyOn(SnapHelper, 'getStateData');
     const setDataSpy = jest.spyOn(SnapHelper, 'setStateData');
@@ -14,6 +14,10 @@ describe('BtcKeyring', () => {
     };
   };
 
+  const getHdPath = (index: number) => {
+    return [`m`, `0'`, `0`, `${index}`].join('/');
+  };
+
   const createInitState = (cnt = 1, scope = Network.Testnet) => {
     const generatedAccounts = generateAccounts(cnt);
     return {
@@ -21,7 +25,7 @@ describe('BtcKeyring', () => {
       wallets: generatedAccounts.reduce((acc, account) => {
         acc[account.id] = {
           account,
-          type: account.type,
+          hdPath: getHdPath(account.options.index),
           index: account.options.index,
           scope,
         };
@@ -98,7 +102,7 @@ describe('BtcKeyring', () => {
 
       await instance.addWallet({
         account: accountToSave,
-        type: accountToSave.type,
+        hdPath: getHdPath(accountToSave.index),
         index: accountToSave.index,
         scope: accountToSave.scope,
       });
@@ -107,7 +111,7 @@ describe('BtcKeyring', () => {
       expect(setDataSpy).toHaveBeenCalledTimes(1);
       expect(state.wallets[accountToSave.id]).toStrictEqual({
         account: accountToSave,
-        type: accountToSave.type,
+        hdPath: getHdPath(accountToSave.index),
         index: accountToSave.index,
         scope: accountToSave.scope,
       });
@@ -121,7 +125,7 @@ describe('BtcKeyring', () => {
 
       await instance.addWallet({
         account: accountToSave,
-        type: accountToSave.type,
+        hdPath: getHdPath(accountToSave.index),
         index: accountToSave.index,
         scope: accountToSave.scope,
       });
@@ -130,7 +134,7 @@ describe('BtcKeyring', () => {
       expect(setDataSpy).toHaveBeenCalledTimes(1);
       expect(state.wallets[accountToSave.id]).toStrictEqual({
         account: accountToSave,
-        type: accountToSave.type,
+        hdPath: getHdPath(accountToSave.index),
         index: accountToSave.index,
         scope: accountToSave.scope,
       });
@@ -145,7 +149,7 @@ describe('BtcKeyring', () => {
       await expect(
         instance.addWallet({
           account: accountToSave,
-          type: accountToSave.type,
+          hdPath: getHdPath(accountToSave.index),
           index: accountToSave.index,
           scope: accountToSave.scope,
         }),
@@ -163,7 +167,7 @@ describe('BtcKeyring', () => {
       await expect(
         instance.addWallet({
           account: accountToSave,
-          type: accountToSave.type,
+          hdPath: getHdPath(accountToSave.index),
           index: accountToSave.index,
           scope: accountToSave.scope,
         }),

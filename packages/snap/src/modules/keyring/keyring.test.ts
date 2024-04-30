@@ -11,7 +11,7 @@ import { Factory } from '../factory';
 import { BtcKeyringError } from './exceptions';
 import { BtcKeyring } from './keyring';
 import { KeyringStateManager } from './state';
-import type { IAccountMgr } from './types';
+import type { IWallet } from './types';
 
 jest.mock('../logger/logger', () => ({
   logger: {
@@ -25,17 +25,19 @@ jest.mock('@metamask/keyring-api', () => ({
 }));
 
 describe('BtcKeyring', () => {
-  const createMockAccountMgr = () => {
+  const createMockWallet = () => {
     const unlockSpy = jest.fn();
-    class AccountMgr implements IAccountMgr {
+    class Wallet implements IWallet {
       unlock = unlockSpy;
+
+      signTransaction = jest.fn();
 
       createTransaction = jest.fn();
     }
     jest
-      .spyOn(Factory, 'createAccountMgr')
+      .spyOn(Factory, 'createWallet')
       .mockImplementation()
-      .mockReturnValue(new AccountMgr());
+      .mockReturnValue(new Wallet());
     return {
       unlockSpy,
     };
@@ -106,9 +108,13 @@ describe('BtcKeyring', () => {
     };
   };
 
+  const getHdPath = (index: number) => {
+    return [`m`, `0'`, `0`, `${index}`].join('/');
+  };
+
   describe('createAccount', () => {
     it('creates account', async () => {
-      const { unlockSpy } = createMockAccountMgr();
+      const { unlockSpy } = createMockWallet();
       const { instance: stateMgr, addWalletSpy } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);
       const scope = Network.Testnet;
@@ -116,7 +122,7 @@ describe('BtcKeyring', () => {
 
       unlockSpy.mockResolvedValue({
         address: account.address,
-        hdPath: account.options.hdPath,
+        hdPath: getHdPath(account.options.index),
         index: account.options.index,
         type: account.type,
       });
@@ -126,7 +132,8 @@ describe('BtcKeyring', () => {
       });
 
       expect(unlockSpy).toHaveBeenCalledWith(
-        Config.account[Chain.Bitcoin].defaultAccountIndex,
+        Config.wallet[Chain.Bitcoin].defaultAccountIndex,
+        Config.wallet[Chain.Bitcoin].defaultAccountType,
       );
       expect(addWalletSpy).toHaveBeenCalledWith({
         account: {
@@ -139,14 +146,14 @@ describe('BtcKeyring', () => {
           },
           methods: account.methods,
         },
-        type: account.type,
+        hdPath: getHdPath(account.options.index),
         index: account.options.index,
         scope,
       });
     });
 
     it('throws BtcKeyringError if an error catched', async () => {
-      const { unlockSpy } = createMockAccountMgr();
+      const { unlockSpy } = createMockWallet();
       const { instance: stateMgr } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);
       unlockSpy.mockRejectedValue(new Error('error'));

@@ -1,5 +1,5 @@
 import type { Network } from 'bitcoinjs-lib';
 
-export type BtcTransactionMgrOptions = {
+export type BtcOnChainServiceOptions = {
   network: Network;
 };

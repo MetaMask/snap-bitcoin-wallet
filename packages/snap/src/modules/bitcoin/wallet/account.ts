@@ -76,15 +76,6 @@ export class BtcAccount implements IBtcAccount {
       throw new Error('Public key is invalid');
     }
   }
-
-  async sign(message: Buffer): Promise<Buffer> {
-    return await this.signer.sign(message);
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async signTransaction<Txn>(tx: Txn): Promise<string> {
-    throw new Error('Method not implemented.');
-  }
 }
 
 export class P2WPKHAccount

@@ -20,7 +20,6 @@ export type IAccountSigner = {
 
 export type IBtcAccount = IAccount & {
   payment: Payment;
-  signer: IAccountSigner;
 };
 
 export type IStaticBtcAccount = {

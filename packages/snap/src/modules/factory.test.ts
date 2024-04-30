@@ -1,27 +1,27 @@
 import { Chain } from '../config';
-import { BtcAccountMgr } from './bitcoin/account';
-import { BtcTransactionMgr } from './bitcoin/chain';
+import { BtcOnChainService } from './bitcoin/chain';
 import { Network } from './bitcoin/constants';
+import { BtcWallet } from './bitcoin/wallet';
 import { Factory } from './factory';
 import { BtcKeyring } from './keyring';
 
 describe('Factory', () => {
-  describe('createTransactionMgr', () => {
-    it('creates BtcTransactionMgr instance', () => {
-      const instance = Factory.createTransactionMgr(
+  describe('createOnChainServiceProvider', () => {
+    it('creates BtcOnChainService instance', () => {
+      const instance = Factory.createOnChainServiceProvider(
         Chain.Bitcoin,
         Network.Testnet,
       );
 
-      expect(instance).toBeInstanceOf(BtcTransactionMgr);
+      expect(instance).toBeInstanceOf(BtcOnChainService);
     });
   });
 
-  describe('createAccountMgr', () => {
-    it('creates BtcAccountMgr instance', () => {
-      const instance = Factory.createAccountMgr(Chain.Bitcoin, Network.Testnet);
+  describe('createWallet', () => {
+    it('creates BtcWallet instance', () => {
+      const instance = Factory.createWallet(Chain.Bitcoin, Network.Testnet);
 
-      expect(instance).toBeInstanceOf(BtcAccountMgr);
+      expect(instance).toBeInstanceOf(BtcWallet);
     });
   });
 
