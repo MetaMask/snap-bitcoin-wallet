@@ -59,7 +59,7 @@ export const onKeyringRequest: OnKeyringRequestHandler = async ({
   try {
     validateOrigin(origin, request.method);
 
-    const keyring = Factory.createKeyring(Config.chain);
+    const keyring = Factory.createKeyring();
     return (await handleKeyringRequest(
       keyring,
       request,

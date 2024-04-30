@@ -66,7 +66,7 @@ export class BtcKeyring implements Keyring {
     try {
       assert(options, CreateAccountOptionsStruct);
 
-      const wallet: IWallet = Factory.createWallet(Config.chain, options.scope);
+      const wallet: IWallet = Factory.createWallet(options.scope);
 
       // TODO: Create account with index 0 for now for phase 1 scope, update to use increment index later
       const index = Config.wallet[Config.chain].defaultAccountIndex;

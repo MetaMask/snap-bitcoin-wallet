@@ -1,7 +1,6 @@
 import type { Infer } from 'superstruct';
 import { object, string, assign, array, record } from 'superstruct';
 
-import { Config } from '../../config';
 import { satsToBtc } from '../../modules/bitcoin/utils/unit';
 import { Factory } from '../../modules/factory';
 import type { StaticImplements } from '../../types/static';
@@ -46,7 +45,7 @@ export class GetBalancesHandler
   async handleRequest(params: GetBalancesParams): Promise<GetBalancesResponse> {
     const { scope, accounts, assets } = params;
 
-    const chainApi = Factory.createOnChainServiceProvider(Config.chain, scope);
+    const chainApi = Factory.createOnChainServiceProvider(scope);
 
     const balances = await chainApi.getBalances(accounts, assets);
 
