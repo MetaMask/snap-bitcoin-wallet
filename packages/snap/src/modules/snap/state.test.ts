@@ -58,27 +58,19 @@ describe('SnapStateManager', () => {
       data: StateDataInput,
       delay: number,
       isThrowError?: boolean,
-      isForceCommit?: boolean,
+      isCommit?: boolean,
     ) => {
-      if (isForceCommit === false || isForceCommit === true) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        await instance.withTransaction(async (state) => {
-          await instance.updateData(data);
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          if (isThrowError) {
-            throw new Error('executeTransationFn error');
-          }
-        }, isForceCommit);
-      } else {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        await instance.withTransaction(async (state) => {
-          await instance.updateData(data);
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          if (isThrowError) {
-            throw new Error('executeTransationFn error');
-          }
-        });
-      }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      await instance.withTransaction(async (state) => {
+        await instance.updateData(data);
+        if (isCommit === true) {
+          await instance.commit();
+        }
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        if (isThrowError) {
+          throw new Error('executeTransationFn error');
+        }
+      });
     };
 
     const executeFn = async (data, delay, isThrowError = false) => {
@@ -300,7 +292,7 @@ describe('SnapStateManager', () => {
       expect(updateDataSpy).toHaveBeenCalledTimes(promiseArr.length);
     });
 
-    it('does rollback if an error catched and force commit is true', async () => {
+    it('does rollback if an error catched and has committed', async () => {
       const initState = {
         transaction: ['id'],
         trasansactionDetails: {
@@ -334,6 +326,7 @@ describe('SnapStateManager', () => {
           },
           30,
           true,
+          true,
         ),
         executeTransationFn(
           {
@@ -362,8 +355,8 @@ describe('SnapStateManager', () => {
       expect(updateDataSpy).toHaveBeenCalledTimes(promiseArr.length);
     });
 
-    it('does not trigger rollback if an error catched but force commit is false', async () => {
-      const isForceCommit = false;
+    it('does not trigger rollback if an error catched and has not committed', async () => {
+      const hasCommited = false;
       const initState: MockState = {
         transaction: ['id'],
         trasansactionDetails: {
@@ -390,7 +383,7 @@ describe('SnapStateManager', () => {
           },
           30,
           true,
-          isForceCommit,
+          hasCommited,
         );
       } catch (error) {
         expectedError = error;
@@ -407,8 +400,8 @@ describe('SnapStateManager', () => {
       }
     });
 
-    it('does not rollback if rollback failed and force commit is true', async () => {
-      const isForceCommit = true;
+    it('does not rollback if rollback failed and has committed', async () => {
+      const committed = true;
       const initState: MockState = {
         transaction: ['id'],
         trasansactionDetails: {
@@ -440,7 +433,7 @@ describe('SnapStateManager', () => {
           },
           30,
           true,
-          isForceCommit,
+          committed,
         ),
         executeTransationFn(
           {
