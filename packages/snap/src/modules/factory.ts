@@ -1,6 +1,6 @@
 import { type Keyring } from '@metamask/keyring-api';
 
-import { type Chain, Config } from '../config';
+import { Config } from '../config';
 import { type IStaticSnapRpcHandler, SendTransactionHandler } from '../rpcs';
 import { BtcOnChainService } from './bitcoin/chain';
 import {
@@ -59,22 +59,19 @@ export class Factory {
     );
   }
 
-  static createOnChainServiceProvider(
-    chain: Chain,
-    scope: string,
-  ): IOnChainService {
+  static createOnChainServiceProvider(scope: string): IOnChainService {
     return Factory.createBtcOnChainServiceProvider(
-      Config.onChainService[chain],
+      Config.onChainService[Config.chain],
       scope,
     );
   }
 
-  static createWallet(chain: Chain, scope: string): IWallet {
-    return Factory.createBtcWallet(Config.wallet[chain], scope);
+  static createWallet(scope: string): IWallet {
+    return Factory.createBtcWallet(Config.wallet[Config.chain], scope);
   }
 
-  static createKeyring(chain: Chain): Keyring {
-    return Factory.createBtcKeyring(Config.wallet[chain], {
+  static createKeyring(): Keyring {
+    return Factory.createBtcKeyring(Config.wallet[Config.chain], {
       emitEvents: true,
     });
   }
