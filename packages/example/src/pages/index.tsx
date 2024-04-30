@@ -96,7 +96,7 @@ const Index = () => {
   const requestSnap = useRequestSnap();
   const invokeSnap = useInvokeSnap();
   const [btcAccount, setBtcAccount] = useState<KeyringAccount>();
-  const [balance, setBalance] = useState<number>(0);
+  const [balance, setBalance] = useState<string>('');
 
   const scope = "bip122:000000000933ea01ad0ee984209779ba"
   const asset = `${scope}:slip44:0`
@@ -138,7 +138,7 @@ const Index = () => {
     }) 
     const total = accountBalance?.balances?.[address]?.[asset];
 
-    setBalance(total?.amount ? parseInt(total?.amount, 10) : 0);
+    setBalance(total?.amount);
   };
 
   return (
