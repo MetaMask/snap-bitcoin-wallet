@@ -1,6 +1,6 @@
 import type {
-  BtcAccountConfig,
-  BtcTransactionConfig,
+  BtcWalletConfig,
+  BtcOnChainServiceConfig,
 } from '../modules/bitcoin/config';
 import {
   Network as BtcNetwork,
@@ -16,17 +16,17 @@ export type NetworkConfig = {
   [key in string]: string;
 };
 
-export type TransactionConfig = {
-  [Chain.Bitcoin]: BtcTransactionConfig;
+export type OnChainServiceConfig = {
+  [Chain.Bitcoin]: BtcOnChainServiceConfig;
 };
 
-export type AccountConfig = {
-  [Chain.Bitcoin]: BtcAccountConfig;
+export type WalletConfig = {
+  [Chain.Bitcoin]: BtcWalletConfig;
 };
 
 export type SnapConfig = {
-  transaction: TransactionConfig;
-  account: AccountConfig;
+  onChainService: OnChainServiceConfig;
+  wallet: WalletConfig;
   avaliableNetworks: {
     [key in Chain]: string[];
   };
@@ -38,7 +38,7 @@ export type SnapConfig = {
 };
 
 export const Config: SnapConfig = {
-  transaction: {
+  onChainService: {
     [Chain.Bitcoin]: {
       dataClient: {
         read: {
@@ -54,7 +54,7 @@ export const Config: SnapConfig = {
       },
     },
   },
-  account: {
+  wallet: {
     [Chain.Bitcoin]: {
       enableMultiAccounts: false,
       defaultAccountIndex: 0,

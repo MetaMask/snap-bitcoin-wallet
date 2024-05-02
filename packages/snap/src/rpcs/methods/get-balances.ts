@@ -1,7 +1,7 @@
 import type { Infer } from 'superstruct';
 import { object, string, assign, array, record } from 'superstruct';
 
-import { Config } from '../../config';
+import { satsToBtc } from '../../modules/bitcoin/utils/unit';
 import { Factory } from '../../modules/factory';
 import type { StaticImplements } from '../../types/static';
 import { assetsStruct, numberStringStruct } from '../../utils/superstruct';
@@ -45,7 +45,7 @@ export class GetBalancesHandler
   async handleRequest(params: GetBalancesParams): Promise<GetBalancesResponse> {
     const { scope, accounts, assets } = params;
 
-    const chainApi = Factory.createTransactionMgr(Config.chain, scope);
+    const chainApi = Factory.createOnChainServiceProvider(scope);
 
     const balances = await chainApi.getBalances(accounts, assets);
 
@@ -55,7 +55,7 @@ export class GetBalancesHandler
           balancesObj[address] = Object.entries(assetBalances).reduce(
             (assetBalanceObj, [asset, balance]) => {
               assetBalanceObj[asset] = {
-                amount: balance.amount.toString(),
+                amount: satsToBtc(balance.amount),
               };
               return assetBalanceObj;
             },

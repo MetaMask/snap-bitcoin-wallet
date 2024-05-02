@@ -1,17 +1,17 @@
 import { type Keyring } from '@metamask/keyring-api';
 
-import { type Chain, Config } from '../config';
+import { Config } from '../config';
 import { type IStaticSnapRpcHandler, SendTransactionHandler } from '../rpcs';
-import { BtcAccountMgrFactory } from './bitcoin/account';
-import { BtcTransactionMgr } from './bitcoin/chain';
+import { BtcOnChainService } from './bitcoin/chain';
 import {
-  type BtcAccountConfig,
-  type BtcTransactionConfig,
+  type BtcWalletConfig,
+  type BtcOnChainServiceConfig,
 } from './bitcoin/config';
 import { DataClientFactory } from './bitcoin/data-client/factory';
 import { getBtcNetwork } from './bitcoin/utils';
-import type { ITransactionMgr } from './chain/types';
-import { BtcKeyring, KeyringStateManager, type IAccountMgr } from './keyring';
+import { BtcWalletFactory } from './bitcoin/wallet';
+import type { IOnChainService } from './chain/types';
+import { BtcKeyring, KeyringStateManager, type IWallet } from './keyring';
 
 // TODO: Temp solutio to support keyring in snap without keyring API
 export type CreateBtcKeyringOptions = {
@@ -19,21 +19,21 @@ export type CreateBtcKeyringOptions = {
 };
 
 export class Factory {
-  static createBtcTransactionMgr(
-    config: BtcTransactionConfig,
+  static createBtcOnChainServiceProvider(
+    config: BtcOnChainServiceConfig,
     network: string,
   ) {
     const btcNetwork = getBtcNetwork(network);
     const readClient = DataClientFactory.createReadClient(config, btcNetwork);
 
-    return new BtcTransactionMgr(readClient, {
+    return new BtcOnChainService(readClient, {
       network: btcNetwork,
     });
   }
 
-  static createBtcAccountMgr(config: BtcAccountConfig, network: string) {
+  static createBtcWallet(config: BtcWalletConfig, network: string) {
     const btcNetwork = getBtcNetwork(network);
-    return BtcAccountMgrFactory.create(config, btcNetwork);
+    return BtcWalletFactory.create(config, btcNetwork);
   }
 
   static createBtcKeyringRpcMapping(): Record<string, IStaticSnapRpcHandler> {
@@ -44,7 +44,7 @@ export class Factory {
   }
 
   static createBtcKeyring(
-    config: BtcAccountConfig,
+    config: BtcWalletConfig,
     options: CreateBtcKeyringOptions,
   ): BtcKeyring {
     return new BtcKeyring(
@@ -59,16 +59,19 @@ export class Factory {
     );
   }
 
-  static createTransactionMgr(chain: Chain, scope: string): ITransactionMgr {
-    return Factory.createBtcTransactionMgr(Config.transaction[chain], scope);
+  static createOnChainServiceProvider(scope: string): IOnChainService {
+    return Factory.createBtcOnChainServiceProvider(
+      Config.onChainService[Config.chain],
+      scope,
+    );
   }
 
-  static createAccountMgr(chain: Chain, scope: string): IAccountMgr {
-    return Factory.createBtcAccountMgr(Config.account[chain], scope);
+  static createWallet(scope: string): IWallet {
+    return Factory.createBtcWallet(Config.wallet[Config.chain], scope);
   }
 
-  static createKeyring(chain: Chain): Keyring {
-    return Factory.createBtcKeyring(Config.account[chain], {
+  static createKeyring(): Keyring {
+    return Factory.createBtcKeyring(Config.wallet[Config.chain], {
       emitEvents: true,
     });
   }

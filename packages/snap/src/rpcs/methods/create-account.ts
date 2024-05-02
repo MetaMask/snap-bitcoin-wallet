@@ -31,8 +31,8 @@ export class CreateAccountHandler
       new KeyringStateManager(),
       Factory.createBtcKeyringRpcMapping(),
       {
-        defaultIndex: Config.account[Config.chain].defaultAccountIndex,
-        multiAccount: Config.account[Config.chain].enableMultiAccounts,
+        defaultIndex: Config.wallet[Config.chain].defaultAccountIndex,
+        multiAccount: Config.wallet[Config.chain].enableMultiAccounts,
         emitEvents: false,
       },
     );

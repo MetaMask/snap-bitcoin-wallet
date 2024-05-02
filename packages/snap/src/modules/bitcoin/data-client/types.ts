@@ -1,4 +1,4 @@
-import { type Balances } from '../../transaction';
+import { type Balances } from '../../chain';
 
 export type IReadDataClient = {
   getBalances(address: string[]): Promise<Balances>;

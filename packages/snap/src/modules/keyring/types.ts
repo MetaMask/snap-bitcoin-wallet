@@ -10,7 +10,7 @@ import type { TransactionIntent } from '../chain';
 
 export type Wallet = {
   account: KeyringAccount;
-  type: string;
+  hdPath: string;
   index: number;
   scope: string;
 };
@@ -38,12 +38,11 @@ export type IAccount = {
   pubkey: string;
   type: string;
   signer: IAccountSigner;
-  signTransaction<Txn>(tx: Txn): Promise<string>;
-  sign(message: Buffer): Promise<Buffer>;
 };
 
-export type IAccountMgr = {
-  unlock(index: number): Promise<IAccount>;
+export type IWallet = {
+  unlock(index: number, type: string): Promise<IAccount>;
+  signTransaction(signer: IAccountSigner, txn: Buffer): Promise<string>;
   createTransaction(
     acount: IAccount,
     txn: TransactionIntent,
