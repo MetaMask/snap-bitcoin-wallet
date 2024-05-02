@@ -2785,7 +2785,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@metamask/controller-utils@npm:^9.0.1":
+"@metamask/controller-utils@npm:^9.0.1, @metamask/controller-utils@npm:^9.1.0":
   version: 9.1.0
   resolution: "@metamask/controller-utils@npm:9.1.0"
   dependencies:
@@ -3029,15 +3029,15 @@ __metadata:
   linkType: hard
 
 "@metamask/phishing-controller@npm:^9.0.1":
-  version: 9.0.1
-  resolution: "@metamask/phishing-controller@npm:9.0.1"
+  version: 9.0.2
+  resolution: "@metamask/phishing-controller@npm:9.0.2"
   dependencies:
-    "@metamask/base-controller": ^5.0.1
-    "@metamask/controller-utils": ^9.0.1
+    "@metamask/base-controller": ^5.0.2
+    "@metamask/controller-utils": ^9.1.0
     "@types/punycode": ^2.1.0
     eth-phishing-detect: ^1.2.0
     punycode: ^2.1.1
-  checksum: f8770b94d9d4e7f7daa5619d9bf32bc0909b6947dd72172ba76f085ca6e29bafa9d728f57e6ed296355f589ec6d267ee537587a7a70ccc2b2b971604e3ad0c8b
+  checksum: 546838ca49a5e98eefc88c86ac703bf0b41d75496752b3eda4048abcc61bab8ff4b9fed3f5c45aaa89b708eabf2ce442e041f2b42c4acdc8e85d856085311aad
   languageName: node
   linkType: hard
 
