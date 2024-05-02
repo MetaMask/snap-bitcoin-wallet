@@ -73,9 +73,6 @@ export abstract class BaseSnapRpcHandler implements ISnapRpcExecutable {
     this: IStaticSnapRpcHandler,
     options?: SnapRpcHandlerOptions,
   ): ISnapRpcHandler {
-    if (this.instance === null) {
-      this.instance = new this(options);
-    }
-    return this.instance;
+    return new this(options);
   }
 }

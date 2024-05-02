@@ -159,13 +159,23 @@ export class BtcKeyring implements Keyring {
   }
 
   protected async handleSubmitRequest(request: KeyringRequest): Promise<Json> {
+    const { scope, account } = request;
     const { method, params } = request.request;
     if (!Object.prototype.hasOwnProperty.call(this.handlers, method)) {
       throw new MethodNotFoundError() as unknown as Error;
     }
 
+    const walletData = await this.stateMgr.getWalletByAddressNScope(
+      account,
+      scope,
+    );
+
+    if (!walletData) {
+      throw new Error('Account not found');
+    }
+
     return this.handlers[method]
-      .getInstance()
+      .getInstance(walletData)
       .execute(params as unknown as SnapRpcHandlerRequest);
   }
 

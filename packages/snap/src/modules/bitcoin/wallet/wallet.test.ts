@@ -33,7 +33,20 @@ describe('BtcWallet', () => {
   };
 
   describe('unlock', () => {
-    it('returns an `Account` objec with P2wpkh type', async () => {
+    it('returns an `Account` objec with type bip122:p2wpkh', async () => {
+      const network = networks.testnet;
+      const { rootSpy, childSpy, instance, rootNode } =
+        createMockWallet(network);
+      const idx = 0;
+
+      const result = await instance.unlock(idx, `bip122:p2wpkh`);
+
+      expect(result).toBeInstanceOf(P2WPKHAccount);
+      expect(rootSpy).toHaveBeenCalledWith(P2WPKHAccount.path);
+      expect(childSpy).toHaveBeenCalledWith(rootNode, idx);
+    });
+
+    it('returns an `Account` objec with type `p2wpkh`', async () => {
       const network = networks.testnet;
       const { rootSpy, childSpy, instance, rootNode } =
         createMockWallet(network);
@@ -46,7 +59,7 @@ describe('BtcWallet', () => {
       expect(childSpy).toHaveBeenCalledWith(rootNode, idx);
     });
 
-    it('returns an `Account` object with P2shP2wkh type', async () => {
+    it('returns an `Account` object with type `p2shp2wkh`', async () => {
       const network = networks.testnet;
       const { rootSpy, childSpy, instance, rootNode } =
         createMockWallet(network);

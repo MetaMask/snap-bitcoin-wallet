@@ -24,7 +24,11 @@ export class BtcWallet implements IWallet {
   }
 
   protected getAccountCtor(type: string): IStaticBtcAccount {
-    switch (type.toLowerCase()) {
+    let scriptType = type;
+    if (type.includes('bip122:')) {
+      scriptType = type.split(':')[1];
+    }
+    switch (scriptType.toLowerCase()) {
       case ScriptType.P2wpkh.toLowerCase():
         return P2WPKHAccount;
       case ScriptType.P2shP2wkh.toLowerCase():

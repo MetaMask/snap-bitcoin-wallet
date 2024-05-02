@@ -1,7 +1,7 @@
 import { type Keyring } from '@metamask/keyring-api';
 
 import { Config } from '../config';
-import { type IStaticSnapRpcHandler, SendTransactionHandler } from '../rpcs';
+import { type IStaticSnapRpcHandler, SendManyHandler } from '../rpcs';
 import { BtcOnChainService } from './bitcoin/chain';
 import {
   type BtcWalletConfig,
@@ -39,7 +39,7 @@ export class Factory {
   static createBtcKeyringRpcMapping(): Record<string, IStaticSnapRpcHandler> {
     return {
       // eslint-disable-next-line @typescript-eslint/naming-convention
-      btc_sendTransaction: SendTransactionHandler,
+      btc_sendmany: SendManyHandler,
     };
   }
 

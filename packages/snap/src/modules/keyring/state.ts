@@ -109,6 +109,24 @@ export class KeyringStateManager extends SnapStateManager<SnapState> {
     }
   }
 
+  async getWalletByAddressNScope(
+    address: string,
+    scope: string,
+  ): Promise<Wallet | null> {
+    try {
+      const state = await this.get();
+      return (
+        Object.values(state.wallets).find(
+          (wallet) =>
+            wallet.account.address.toString() === address.toLowerCase() &&
+            wallet.scope.toLowerCase() === scope.toLowerCase(),
+        ) ?? null
+      );
+    } catch (error) {
+      throw compactError(error, StateError);
+    }
+  }
+
   protected getAccountByAddress(
     state: SnapState,
     address: string,

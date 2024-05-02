@@ -261,7 +261,7 @@ describe('KeyringStateManager', () => {
 
       const accToUpdate = {
         ...state.wallets[state.walletIds[0]].account,
-        methods: ['btc_sendTransactions'],
+        methods: ['btc_sendmanys'],
       };
 
       await instance.updateAccount(accToUpdate);
@@ -318,6 +318,48 @@ describe('KeyringStateManager', () => {
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         `Account address or type is immutable`,
       );
+    });
+  });
+
+  describe('getWalletByAddressNScope', () => {
+    it('returns result', async () => {
+      const { instance, getDataSpy } = createMockStateManager();
+      const state = createInitState(20);
+      getDataSpy.mockResolvedValue(state);
+      const { address } = state.wallets[state.walletIds[0]].account;
+      const { scope } = state.wallets[state.walletIds[0]];
+
+      const result = await instance.getWalletByAddressNScope(address, scope);
+
+      expect(getDataSpy).toHaveBeenCalledTimes(1);
+      expect(result).toStrictEqual(state.wallets[state.walletIds[0]]);
+    });
+
+    it('returns null if the address does not exist', async () => {
+      const { instance, getDataSpy } = createMockStateManager();
+      const state = createInitState(20);
+      getDataSpy.mockResolvedValue(state);
+      const { address } = generateAccounts(1, 'notexist', 'notexist')[0];
+
+      const result = await instance.getWalletByAddressNScope(
+        address,
+        Network.Testnet,
+      );
+
+      expect(getDataSpy).toHaveBeenCalledTimes(1);
+      expect(result).toBeNull();
+    });
+
+    it('throw StateError if an error catched', async () => {
+      const { instance, getDataSpy } = createMockStateManager();
+      getDataSpy.mockRejectedValue(new Error('error'));
+      const state = createInitState(20);
+      const { address } = state.wallets[state.walletIds[0]].account;
+      const { scope } = state.wallets[state.walletIds[0]];
+
+      await expect(
+        instance.getWalletByAddressNScope(address, scope),
+      ).rejects.toThrow(StateError);
     });
   });
 });
