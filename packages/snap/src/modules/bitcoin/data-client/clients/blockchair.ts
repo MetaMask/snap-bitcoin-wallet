@@ -4,7 +4,7 @@ import { compactError } from '../../../../utils';
 import { type Balances } from '../../../chain';
 import { logger } from '../../../logger/logger';
 import { DataClientError } from '../exceptions';
-import type { IReadDataClient } from '../types';
+import type { IReadDataClient, Utxo } from '../types';
 
 export type BlockChairClientOptions = {
   network: Network;
@@ -41,6 +41,37 @@ export type GetBalanceResponse = {
     render_time: number;
     full_time: number;
     request_cost: number;
+  };
+};
+export type GetUtxosResponse = {
+  data: {
+    [address: string]: {
+      address: {
+        type: string;
+        script_hex: string;
+        balance: number;
+        balance_usd: number;
+        received: number;
+        received_usd: number;
+        spent: number;
+        spent_usd: number;
+        output_count: number;
+        unspent_output_count: number;
+        first_seen_receiving: string;
+        last_seen_receiving: string;
+        first_seen_spending: string;
+        last_seen_spending: string;
+        scripthash_type: null;
+        transaction_count: null;
+      };
+      transactions: any[];
+      utxo: {
+        block_id: number;
+        transaction_hash: string;
+        index: number;
+        value: number;
+      }[];
+    };
   };
 };
 /* eslint-disable */
@@ -96,6 +127,47 @@ export class BlockChairClient implements IReadDataClient {
         data[address] = response.data[address] ?? 0;
         return data;
       }, {});
+    } catch (error) {
+      throw compactError(error, DataClientError);
+    }
+  }
+
+  async getUtxos(address: string): Promise<Utxo[]> {
+    try {
+      let process = true;
+      let offset = 0;
+      const limit = 1000;
+      const data: Utxo[] = []
+      while (process) {
+        const response = await this.get<GetUtxosResponse>(
+          `/dashboards/address/${address}?limit=0,${limit}&offset=0,${offset}&state=latest`,
+        );
+
+        logger.info(
+          `[BlockChairClient.getUtxos] response: ${JSON.stringify(response)}`,
+        );
+
+        if (!response.data[address]) {
+          throw new DataClientError(`No data avaiable for address ${address}`);
+        }
+
+        if (response.data[address].utxo.length < limit) {
+          break;
+        }
+
+        response.data[address].utxo.forEach((utxo) => {
+          data.push({
+            block: utxo.block_id,
+            txnHash: utxo.transaction_hash,
+            index: utxo.index,
+            value: utxo.value,
+          })
+        });
+        
+        offset += 1
+      }
+
+      return data;
     } catch (error) {
       throw compactError(error, DataClientError);
     }

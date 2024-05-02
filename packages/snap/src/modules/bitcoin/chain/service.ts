@@ -1,3 +1,4 @@
+import type { Json } from '@metamask/snaps-sdk';
 import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 
@@ -84,8 +85,10 @@ export class BtcOnChainService implements IOnChainService {
     throw new Error('Method not implemented.');
   }
 
-  getDataForTransaction(address: string, transactionIntent: TransactionIntent) {
-    throw new Error('Method not implemented.');
+  async getDataForTransaction(address: string, transactionIntent: TransactionIntent): Promise<Record<string, Json>> {
+    return {
+      data: await this.readClient.getUtxos(address)
+    }
   }
   /* eslint-disable */
 }

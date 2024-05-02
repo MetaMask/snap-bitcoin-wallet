@@ -4,7 +4,7 @@ import { compactError, processBatch } from '../../../../utils';
 import { type Balances } from '../../../chain';
 import { logger } from '../../../logger/logger';
 import { DataClientError } from '../exceptions';
-import type { IReadDataClient } from '../types';
+import type { IReadDataClient, Utxo } from '../types';
 
 export type BlockStreamClientOptions = {
   network: Network;
@@ -28,6 +28,18 @@ export type GetAddressStatsResponse = {
     tx_count: number;
   };
 };
+
+export type GetUtxosResponse = {
+  txid: string,
+  vout: number,
+  status: {
+    confirmed: boolean,
+    block_height: number,
+    block_hash: string,
+    block_time: number,
+  },
+  value: number,
+}[]
 /* eslint-enable */
 
 export class BlockStreamClient implements IReadDataClient {
@@ -89,6 +101,33 @@ export class BlockStreamClient implements IReadDataClient {
       });
 
       return responses;
+    } catch (error) {
+      throw compactError(error, DataClientError);
+    }
+  }
+
+  async getUtxos(address: string): Promise<Utxo[]> {
+    try {
+      const response = await this.get<GetUtxosResponse>(`/address/${address}`);
+
+      logger.info(
+        `[BlockStreamClient.getUtxos] response: ${JSON.stringify(response)}`,
+      );
+
+      const data: Utxo[] = [];
+
+      for (const utxo of response) {
+        if (!utxo.status.confirmed) {
+          continue;
+        }
+        data.push({
+          block: utxo.status.block_height,
+          txnHash: utxo.txid,
+          index: utxo.vout,
+          value: utxo.value,
+        });
+      }
+      return data;
     } catch (error) {
       throw compactError(error, DataClientError);
     }
