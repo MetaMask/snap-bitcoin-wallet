@@ -99,7 +99,7 @@ const Index = () => {
   const [balance, setBalance] = useState<string>('');
 
   const scope = "bip122:000000000933ea01ad0ee984209779ba"
-  const asset = `${scope}:slip44/0`
+  const asset = `${scope}/slip44:0`
 
   const isMetaMaskReady = isLocalSnap(defaultSnapOrigin)
     ? isFlask
