@@ -10,7 +10,7 @@ export class RpcHelper {
       chain_createAccount: CreateAccountHandler,
       // eslint-disable-next-line @typescript-eslint/naming-convention
       chain_getBalances: GetBalancesHandler,
-    // eslint-disable-next-line @typescript-eslint/naming-convention
+      // eslint-disable-next-line @typescript-eslint/naming-convention
       chain_estimateFees: EstimateFeesHandler,
     };
   }

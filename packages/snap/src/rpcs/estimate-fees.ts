@@ -1,16 +1,16 @@
 import type { Infer } from 'superstruct';
 import { object, array, enums } from 'superstruct';
 
-import { FeeRatio } from '../../modules/chain';
-import { Factory } from '../../modules/factory';
-import type { StaticImplements } from '../../types/static';
-import { numberStringStruct } from '../../utils';
-import { BaseSnapRpcHandler } from '../base';
+import { Factory } from '../factory';
+import { FeeRatio } from '../modules/chain';
 import {
   type IStaticSnapRpcHandler,
   type SnapRpcHandlerResponse,
   SnapRpcHandlerRequestStruct,
-} from '../types';
+  BaseSnapRpcHandler,
+} from '../modules/rpc';
+import type { StaticImplements } from '../types/static';
+import { numberStringStruct } from '../utils';
 
 export type EstimateFeesParams = Infer<
   typeof EstimateFeesHandler.requestStruct
