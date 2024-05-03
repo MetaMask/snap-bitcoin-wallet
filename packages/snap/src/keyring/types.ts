@@ -4,9 +4,9 @@ import type { Buffer } from 'buffer';
 import type { Infer } from 'superstruct';
 import { object } from 'superstruct';
 
-import type { IStaticSnapRpcHandler } from '../../rpcs';
-import { scopeStruct } from '../../utils';
-import type { TransactionIntent } from '../chain';
+import type { TransactionIntent } from '../modules/chain';
+import type { IStaticSnapRpcHandler } from '../modules/rpc';
+import { scopeStruct } from '../utils';
 
 export type Wallet = {
   account: KeyringAccount;

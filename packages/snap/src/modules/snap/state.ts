@@ -50,9 +50,6 @@ export abstract class SnapStateManager<State> {
           }]: transaction is processing, use existing state`,
         );
         await callback(this.#transaction.current);
-        if (this.#transaction.hasCommited) {
-          await this.set(this.#transaction.current);
-        }
         return;
       }
       logger.info(

@@ -25,6 +25,8 @@ export type Fees = {
 
 export type TransactionIntent = {
   amounts: Record<string, number>;
+  subtractFeeFrom: string[];
+  replaceable: boolean;
 };
 
 export type Pagination = {

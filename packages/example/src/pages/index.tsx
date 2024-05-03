@@ -10,12 +10,14 @@ import {
   Card,
   CreateBTCAccountButton,
   GetBTCAccountBalanceButton,
+  ListAccountsButton,
 } from '../components';
 import { defaultSnapOrigin } from '../config';
 import { defaultSnapOrigin as snapId } from '../config/snap';
 import {
   useMetaMask,
   useInvokeSnap,
+  useInvokeKeyring,
   useMetaMaskContext,
   useRequestSnap,
 } from '../hooks';
@@ -95,11 +97,12 @@ const Index = () => {
   const { isFlask, snapsDetected, installedSnap } = useMetaMask();
   const requestSnap = useRequestSnap();
   const invokeSnap = useInvokeSnap();
+  const invokeKeyring = useInvokeKeyring();
   const [btcAccount, setBtcAccount] = useState<KeyringAccount>();
   const [balance, setBalance] = useState<string>('');
 
   const scope = "bip122:000000000933ea01ad0ee984209779ba"
-  const asset = `${scope}:slip44:0`
+  const asset = `${scope}/slip44:0`
 
   const isMetaMaskReady = isLocalSnap(defaultSnapOrigin)
     ? isFlask
@@ -156,6 +159,16 @@ const Index = () => {
       resp
     }) 
   };
+  const handleListAccountClick = async () => {
+    const accounts = (await invokeKeyring({
+      method: 'keyring_listAccounts',
+    })) as KeyringAccount[];
+
+    if (accounts.length) {
+      setBtcAccount(accounts[0]);
+    }
+  };
+
   return (
     <Container>
       <Heading>
@@ -217,6 +230,24 @@ const Index = () => {
             button: (
               <CreateBTCAccountButton
                 onClick={handleCreateAccountClick}
+                disabled={!installedSnap}
+              />
+            ),
+          }}
+          disabled={!installedSnap}
+          fullWidth={
+            isMetaMaskReady &&
+            Boolean(installedSnap) &&
+            !shouldDisplayReconnectButton(installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'List Account',
+            description: `List BTC Account from Snap state`,
+            button: (
+              <ListAccountsButton
+                onClick={handleListAccountClick}
                 disabled={!installedSnap}
               />
             ),

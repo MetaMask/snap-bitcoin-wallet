@@ -2695,14 +2695,14 @@ __metadata:
   linkType: hard
 
 "@metamask/approval-controller@npm:^6.0.1":
-  version: 6.0.1
-  resolution: "@metamask/approval-controller@npm:6.0.1"
+  version: 6.0.2
+  resolution: "@metamask/approval-controller@npm:6.0.2"
   dependencies:
-    "@metamask/base-controller": ^5.0.1
+    "@metamask/base-controller": ^5.0.2
     "@metamask/rpc-errors": ^6.2.1
     "@metamask/utils": ^8.3.0
     nanoid: ^3.1.31
-  checksum: 743a06a11fe10f413631696a5ef74f225092ca5c1bef979b656215eccaffb5ad6eb31fc738d948e4668a62788175de246e692674886c397aa15587dc6667889c
+  checksum: 662365ec460edc1e3839c2f9f427d44a707350ecca7fa3524d75da3652306b61fc69f7336154142b4a38657c272624232ea40bf218427ba15b11fd89c5a5ae42
   languageName: node
   linkType: hard
 
@@ -2721,13 +2721,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/base-controller@npm:^5.0.1":
-  version: 5.0.1
-  resolution: "@metamask/base-controller@npm:5.0.1"
+"@metamask/base-controller@npm:^5.0.1, @metamask/base-controller@npm:^5.0.2":
+  version: 5.0.2
+  resolution: "@metamask/base-controller@npm:5.0.2"
   dependencies:
     "@metamask/utils": ^8.3.0
     immer: ^9.0.6
-  checksum: 97ccf900377b06f72db7ee1c167448de80dfec6b02b3aeda715d498974ffffbb5a8cc82f44aabc58f7b6afb693d85f504515cec97bf385efa0377975b4019c7b
+  checksum: 22c43c3147c7da1c1b87de4d41948e275f8e0adcdb1210a55a62aa497db4fa82399750901729d9dc6285d89e68f18e5bd15095ee4d4c6cfc169035173e69a1d2
   languageName: node
   linkType: hard
 
@@ -2775,7 +2775,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@metamask/controller-utils@npm:^9.0.1":
+"@metamask/controller-utils@npm:^9.0.1, @metamask/controller-utils@npm:^9.1.0":
   version: 9.1.0
   resolution: "@metamask/controller-utils@npm:9.1.0"
   dependencies:
@@ -2891,16 +2891,16 @@ __metadata:
   linkType: hard
 
 "@metamask/eth-sig-util@npm:^7.0.0":
-  version: 7.0.1
-  resolution: "@metamask/eth-sig-util@npm:7.0.1"
+  version: 7.0.2
+  resolution: "@metamask/eth-sig-util@npm:7.0.2"
   dependencies:
     "@ethereumjs/util": ^8.1.0
     "@metamask/abi-utils": ^2.0.2
     "@metamask/utils": ^8.1.0
+    "@scure/base": ~1.1.3
     ethereum-cryptography: ^2.1.2
     tweetnacl: ^1.0.3
-    tweetnacl-util: ^0.15.1
-  checksum: 98d056bd83aeb2d29ec3de09cd18e67d97ea295a59d405a9ce3fe274badd2d4f18da1fe530a266b4c777650855ed75ecd3577decd607a561e938dd7a808c5839
+  checksum: f4aa8bf3dcfee0f99911e8e540cc3f6681e5d4b6d279ee2280062481492f45d57b0e4ce29165177b724ca75187dbb98471a679c6ba5f5244a14065596e45e255
   languageName: node
   linkType: hard
 
@@ -2965,17 +2965,18 @@ __metadata:
   linkType: hard
 
 "@metamask/keyring-api@npm:^6.0.0":
-  version: 6.0.0
-  resolution: "@metamask/keyring-api@npm:6.0.0"
+  version: 6.1.0
+  resolution: "@metamask/keyring-api@npm:6.1.0"
   dependencies:
     "@metamask/snaps-sdk": ^4.0.0
     "@metamask/utils": ^8.3.0
     "@types/uuid": ^9.0.1
+    bech32: ^2.0.0
     superstruct: ^1.0.3
     uuid: ^9.0.0
   peerDependencies:
     "@metamask/providers": ">=15 <17"
-  checksum: d3d6d5d27945783ef74e8e1b9626d122a07df58a2a62e12c68ff0bda2894c6c0a16d6add40908159fb92dee0b98425c63fc494c9b86ae0d0a0be7dc74389997a
+  checksum: 493aff0569b2f62a9cbbda82e5b9df709562f5f11d32f5d97224a7d29be1bbd7139e23f1384d9d888e2e90d3858e64ff499c03780b3664d31724a054722b4e0a
   languageName: node
   linkType: hard
 
@@ -3019,15 +3020,15 @@ __metadata:
   linkType: hard
 
 "@metamask/phishing-controller@npm:^9.0.1":
-  version: 9.0.1
-  resolution: "@metamask/phishing-controller@npm:9.0.1"
+  version: 9.0.2
+  resolution: "@metamask/phishing-controller@npm:9.0.2"
   dependencies:
-    "@metamask/base-controller": ^5.0.1
-    "@metamask/controller-utils": ^9.0.1
+    "@metamask/base-controller": ^5.0.2
+    "@metamask/controller-utils": ^9.1.0
     "@types/punycode": ^2.1.0
     eth-phishing-detect: ^1.2.0
     punycode: ^2.1.1
-  checksum: f8770b94d9d4e7f7daa5619d9bf32bc0909b6947dd72172ba76f085ca6e29bafa9d728f57e6ed296355f589ec6d267ee537587a7a70ccc2b2b971604e3ad0c8b
+  checksum: 546838ca49a5e98eefc88c86ac703bf0b41d75496752b3eda4048abcc61bab8ff4b9fed3f5c45aaa89b708eabf2ce442e041f2b42c4acdc8e85d856085311aad
   languageName: node
   linkType: hard
 
@@ -3096,8 +3097,8 @@ __metadata:
   linkType: hard
 
 "@metamask/snaps-cli@npm:^6.1.0":
-  version: 6.1.0
-  resolution: "@metamask/snaps-cli@npm:6.1.0"
+  version: 6.1.1
+  resolution: "@metamask/snaps-cli@npm:6.1.1"
   dependencies:
     "@babel/core": ^7.23.2
     "@babel/plugin-transform-class-properties": ^7.22.5
@@ -3107,8 +3108,8 @@ __metadata:
     "@babel/plugin-transform-runtime": ^7.13.2
     "@babel/preset-env": ^7.23.2
     "@babel/preset-typescript": ^7.23.2
-    "@metamask/snaps-sdk": ^3.2.0
-    "@metamask/snaps-utils": ^7.0.4
+    "@metamask/snaps-sdk": ^4.0.1
+    "@metamask/snaps-utils": ^7.2.0
     "@metamask/snaps-webpack-plugin": ^4.0.1
     "@metamask/utils": ^8.3.0
     "@swc/core": 1.3.78
@@ -3150,7 +3151,7 @@ __metadata:
     yargs: ^17.7.1
   bin:
     mm-snap: ./dist/main.js
-  checksum: 0b8e32e442118d7bc29b566d3f0f8834cc6ec6d73471d5719969f97b102a41c78be3232f92ac0cda8c068c58c83aaba8f10959b60000cdd65d111c0968ecdb8a
+  checksum: b2a26e64fac34ffe2c24c6b19734bbbe93b6a8d6a353e4515d58938702f0ba1ef84930da4eec24867962115bfac989f0e0bb3caf74905b872d6e343192ddf1db
   languageName: node
   linkType: hard
 
@@ -3191,8 +3192,8 @@ __metadata:
   linkType: hard
 
 "@metamask/snaps-execution-environments@npm:^6.0.1":
-  version: 6.0.1
-  resolution: "@metamask/snaps-execution-environments@npm:6.0.1"
+  version: 6.0.2
+  resolution: "@metamask/snaps-execution-environments@npm:6.0.2"
   dependencies:
     "@metamask/json-rpc-engine": ^8.0.1
     "@metamask/object-multiplex": ^2.0.0
@@ -3200,12 +3201,12 @@ __metadata:
     "@metamask/providers": ^16.0.0
     "@metamask/rpc-errors": ^6.2.1
     "@metamask/snaps-sdk": ^4.0.1
-    "@metamask/snaps-utils": ^7.1.0
+    "@metamask/snaps-utils": ^7.2.0
     "@metamask/utils": ^8.3.0
     nanoid: ^3.1.31
     readable-stream: ^3.6.2
     superstruct: ^1.0.3
-  checksum: 47e24c70f9d98c178f7a21467fdd5bc3f65b8d587155a742d61ad9d0b36cdc6d0332e37852274d66f7c556424b92d076f0ee9a90ca9b197a5ef96fef37667277
+  checksum: ebacfbf39376c3329be0c859fb538fc79176a88697c4e3860c1be09e58d031aa6ad8da02612562f62715532145c477fda98379114332f9a394a5c5047c961319
   languageName: node
   linkType: hard
 
@@ -3268,7 +3269,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/snaps-sdk@npm:^3.0.1, @metamask/snaps-sdk@npm:^3.2.0":
+"@metamask/snaps-sdk@npm:^3.0.1":
   version: 3.2.0
   resolution: "@metamask/snaps-sdk@npm:3.2.0"
   dependencies:
@@ -3296,9 +3297,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/snaps-utils@npm:^7.0.1, @metamask/snaps-utils@npm:^7.0.4, @metamask/snaps-utils@npm:^7.1.0":
-  version: 7.1.0
-  resolution: "@metamask/snaps-utils@npm:7.1.0"
+"@metamask/snaps-utils@npm:^7.0.1, @metamask/snaps-utils@npm:^7.1.0, @metamask/snaps-utils@npm:^7.2.0":
+  version: 7.2.0
+  resolution: "@metamask/snaps-utils@npm:7.2.0"
   dependencies:
     "@babel/core": ^7.23.2
     "@babel/types": ^7.23.0
@@ -3308,7 +3309,7 @@ __metadata:
     "@metamask/rpc-errors": ^6.2.1
     "@metamask/slip44": ^3.1.0
     "@metamask/snaps-registry": ^3.1.0
-    "@metamask/snaps-sdk": ^4.0.0
+    "@metamask/snaps-sdk": ^4.0.1
     "@metamask/utils": ^8.3.0
     "@noble/hashes": ^1.3.1
     "@scure/base": ^1.1.1
@@ -3322,7 +3323,7 @@ __metadata:
     ses: ^1.1.0
     superstruct: ^1.0.3
     validate-npm-package-name: ^5.0.0
-  checksum: ecd081596930d8337b9f054e2612f04bfdab1c4d46fb395a8ad8cb7263d0f5ebb6e7a1988168a46a794ca065fe3537959b68cb7b07a80346ff372be160d68601
+  checksum: 52f63e3ee9e0986d7b1b8d8928c12cf3030b1ad7b8acd4a38cc721e65bf92a8dd6d2f2447b4ad0dcd4d17f064437a6161712bec9e833422878a437748c0bc3d1
   languageName: node
   linkType: hard
 
@@ -18252,13 +18253,6 @@ __metadata:
   dependencies:
     safe-buffer: ^5.0.1
   checksum: 05f6510358f8afc62a057b8b692f05d70c1782b70db86d6a1e0d5e28a32389e52fa6e7707b6c5ecccacc031462e4bc35af85ecfe4bbc341767917b7cf6965711
-  languageName: node
-  linkType: hard
-
-"tweetnacl-util@npm:^0.15.1":
-  version: 0.15.1
-  resolution: "tweetnacl-util@npm:0.15.1"
-  checksum: ae6aa8a52cdd21a95103a4cc10657d6a2040b36c7a6da7b9d3ab811c6750a2d5db77e8c36969e75fdee11f511aa2b91c552496c6e8e989b6e490e54aca2864fc
   languageName: node
   linkType: hard
 
