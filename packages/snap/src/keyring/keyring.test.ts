@@ -1,19 +1,20 @@
 import { MethodNotFoundError } from '@metamask/snaps-sdk';
 import { unknown } from 'superstruct';
 
-import { generateAccounts } from '../../../test/utils';
-import { Chain, Config } from '../../config';
-import type { IStaticSnapRpcHandler } from '../../rpcs';
-import { BaseSnapRpcHandler } from '../../rpcs';
-import type { StaticImplements } from '../../types/static';
-import { Network } from '../bitcoin/constants';
+import { generateAccounts } from '../../test/utils';
+import { Chain, Config } from '../config';
 import { Factory } from '../factory';
+import { Network } from '../modules/bitcoin/constants';
+import type { IStaticSnapRpcHandler } from '../rpc';
+import { BaseSnapRpcHandler } from '../rpc';
+import type { StaticImplements } from '../types/static';
 import { BtcKeyringError } from './exceptions';
+import { KeyringHelper } from './helpers';
 import { BtcKeyring } from './keyring';
 import { KeyringStateManager } from './state';
 import type { IWallet } from './types';
 
-jest.mock('../logger/logger', () => ({
+jest.mock('../modules/logger/logger', () => ({
   logger: {
     info: jest.fn(),
   },
@@ -99,13 +100,14 @@ describe('BtcKeyring', () => {
   const createMockKeyring = (stateMgr: KeyringStateManager) => {
     const { instance: RpcHandler, handleRequestSpy } =
       createMockChainRPCHandler();
-    const chainRPCHanlers = {
+
+    jest.spyOn(KeyringHelper, 'getRpcApiHandlers').mockReturnValue({
       // eslint-disable-next-line @typescript-eslint/naming-convention
       btc_sendmany: RpcHandler,
-    };
+    });
 
     return {
-      instance: new BtcKeyring(stateMgr, chainRPCHanlers, {
+      instance: new BtcKeyring(stateMgr, {
         defaultIndex: 0,
         multiAccount: false,
       }),

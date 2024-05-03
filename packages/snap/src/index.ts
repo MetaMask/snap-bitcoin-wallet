@@ -9,10 +9,10 @@ import {
 
 import { Config } from './config';
 import { originPermissions } from './config/permissions';
-import { Factory } from './modules/factory';
+import { Factory } from './factory';
 import { logger } from './modules/logger/logger';
-import type { SnapRpcHandlerRequest } from './rpcs';
-import { RpcHelper } from './rpcs/helpers';
+import type { SnapRpcHandlerRequest } from './rpc';
+import { RpcHelper } from './rpc/helpers';
 import { isSnapRpcError } from './utils';
 
 export const validateOrigin = (origin: string, method: string): void => {
@@ -34,7 +34,7 @@ export const onRpcRequest: OnRpcRequestHandler = async (args) => {
     const { method } = request;
     validateOrigin(origin, method);
 
-    return await RpcHelper.getChainApiHandler(method)
+    return await RpcHelper.getRpcApiHandler(method)
       .getInstance()
       .execute(request.params as SnapRpcHandlerRequest);
   } catch (error) {

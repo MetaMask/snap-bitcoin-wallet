@@ -9,10 +9,10 @@ import {
   boolean,
 } from 'superstruct';
 
+import { Factory } from '../../factory';
+import type { IAccount, IWallet } from '../../keyring';
+import { type Wallet as WalletData } from '../../keyring';
 import type { Fees, TransactionIntent } from '../../modules/chain';
-import { Factory } from '../../modules/factory';
-import type { IAccount, IWallet } from '../../modules/keyring';
-import { type Wallet as WalletData } from '../../modules/keyring';
 import type { StaticImplements } from '../../types/static';
 import { numberStringStruct } from '../../utils';
 import { BaseSnapRpcHandler } from '../base';

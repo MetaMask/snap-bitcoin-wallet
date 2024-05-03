@@ -4,7 +4,7 @@ import { CreateAccountHandler, GetBalancesHandler } from './methods';
 import type { IStaticSnapRpcHandler } from './types';
 
 export class RpcHelper {
-  static getChainApiHandler(method: string): IStaticSnapRpcHandler {
+  static getRpcApiHandler(method: string): IStaticSnapRpcHandler {
     switch (method) {
       case 'chain_createAccount':
         return CreateAccountHandler;

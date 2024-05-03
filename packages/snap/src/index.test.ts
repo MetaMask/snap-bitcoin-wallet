@@ -3,9 +3,9 @@ import { type Json, type JsonRpcRequest, SnapError } from '@metamask/snaps-sdk';
 
 import { onRpcRequest, validateOrigin, onKeyringRequest } from '.';
 import { Config, originPermissions } from './config';
-import { BtcKeyring } from './modules/keyring';
-import type { IStaticSnapRpcHandler } from './rpcs';
-import { BaseSnapRpcHandler, RpcHelper } from './rpcs';
+import { BtcKeyring } from './keyring';
+import type { IStaticSnapRpcHandler } from './rpc';
+import { BaseSnapRpcHandler, RpcHelper } from './rpc';
 import type { StaticImplements } from './types/static';
 
 jest.mock('@metamask/keyring-api', () => ({
@@ -76,7 +76,7 @@ describe('onRpcRequest', () => {
 
   it('executes the rpc request', async () => {
     const { handler, handleRequestSpy } = createMockChainApiHandler();
-    jest.spyOn(RpcHelper, 'getChainApiHandler').mockReturnValue(handler);
+    jest.spyOn(RpcHelper, 'getRpcApiHandler').mockReturnValue(handler);
     handleRequestSpy.mockResolvedValueOnce({
       data: 1,
     } as Json);
@@ -88,7 +88,7 @@ describe('onRpcRequest', () => {
 
   it('throws SnapError if an error catched', async () => {
     const { handler, handleRequestSpy } = createMockChainApiHandler();
-    jest.spyOn(RpcHelper, 'getChainApiHandler').mockReturnValue(handler);
+    jest.spyOn(RpcHelper, 'getRpcApiHandler').mockReturnValue(handler);
     handleRequestSpy.mockRejectedValue(new Error('error'));
 
     await expect(executeRequest()).rejects.toThrow(SnapError);
@@ -96,7 +96,7 @@ describe('onRpcRequest', () => {
 
   it('throws SnapError if an SnapError catched', async () => {
     const { handler, handleRequestSpy } = createMockChainApiHandler();
-    jest.spyOn(RpcHelper, 'getChainApiHandler').mockReturnValue(handler);
+    jest.spyOn(RpcHelper, 'getRpcApiHandler').mockReturnValue(handler);
     handleRequestSpy.mockRejectedValue(new SnapError('error'));
 
     await expect(executeRequest()).rejects.toThrow(SnapError);

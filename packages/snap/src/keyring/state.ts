@@ -1,7 +1,7 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
 
-import { compactError } from '../../utils';
-import { SnapStateManager, StateError } from '../snap';
+import { SnapStateManager, StateError } from '../modules/snap';
+import { compactError } from '../utils';
 import type { Wallet, SnapState } from './types';
 
 export class KeyringStateManager extends SnapStateManager<SnapState> {

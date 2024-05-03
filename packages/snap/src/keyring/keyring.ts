@@ -10,12 +10,13 @@ import { MethodNotFoundError, type Json } from '@metamask/snaps-sdk';
 import { assert, StructError } from 'superstruct';
 import { v4 as uuidv4 } from 'uuid';
 
-import { Config } from '../../config';
-import type { SnapRpcHandlerRequest } from '../../rpcs';
+import { Config } from '../config';
 import { Factory } from '../factory';
-import { logger } from '../logger/logger';
-import { SnapHelper } from '../snap';
+import { logger } from '../modules/logger/logger';
+import { SnapHelper } from '../modules/snap';
+import type { SnapRpcHandlerRequest } from '../rpc';
 import { BtcKeyringError } from './exceptions';
+import { KeyringHelper } from './helpers';
 import type { KeyringStateManager } from './state';
 import {
   CreateAccountOptionsStruct,
@@ -35,15 +36,12 @@ export class BtcKeyring implements Keyring {
 
   protected readonly handlers: ChainRPCHandlers;
 
-  constructor(
-    stateMgr: KeyringStateManager,
-    chainRPCHanlers: ChainRPCHandlers,
-    options: KeyringOptions,
-  ) {
+  constructor(stateMgr: KeyringStateManager, options: KeyringOptions) {
     this.stateMgr = stateMgr;
     this.options = options;
-    this.keyringMethods = Object.keys(chainRPCHanlers);
-    this.handlers = chainRPCHanlers;
+    const mapping = KeyringHelper.getRpcApiHandlers();
+    this.keyringMethods = Object.keys(mapping);
+    this.handlers = mapping;
   }
 
   async listAccounts(): Promise<KeyringAccount[]> {
