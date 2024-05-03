@@ -3,10 +3,10 @@ import type { BIP32Interface } from 'bip32';
 import { type Network } from 'bitcoinjs-lib';
 import { type Buffer } from 'buffer';
 
+import type { IAccountSigner } from '../../../keyring';
+import { type IAccount, type IWallet } from '../../../keyring';
 import { compactError } from '../../../utils';
 import type { TransactionIntent } from '../../chain/types';
-import type { IAccountSigner } from '../../keyring';
-import { type IAccount, type IWallet } from '../../keyring';
 import { ScriptType } from '../constants';
 import { P2WPKHAccount, P2SHP2WPKHAccount } from './account';
 import { WalletError } from './exceptions';
@@ -24,7 +24,11 @@ export class BtcWallet implements IWallet {
   }
 
   protected getAccountCtor(type: string): IStaticBtcAccount {
-    switch (type.toLowerCase()) {
+    let scriptType = type;
+    if (type.includes('bip122:')) {
+      scriptType = type.split(':')[1];
+    }
+    switch (scriptType.toLowerCase()) {
       case ScriptType.P2wpkh.toLowerCase():
         return P2WPKHAccount;
       case ScriptType.P2shP2wkh.toLowerCase():

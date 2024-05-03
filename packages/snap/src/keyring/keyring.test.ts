@@ -1,19 +1,19 @@
 import { MethodNotFoundError } from '@metamask/snaps-sdk';
 import { unknown } from 'superstruct';
 
-import { generateAccounts } from '../../../test/utils';
-import { Chain, Config } from '../../config';
-import type { IStaticSnapRpcHandler } from '../../rpcs';
-import { BaseSnapRpcHandler } from '../../rpcs';
-import type { StaticImplements } from '../../types/static';
-import { Network } from '../bitcoin/constants';
+import { generateAccounts } from '../../test/utils';
+import { Chain, Config } from '../config';
 import { Factory } from '../factory';
+import { Network } from '../modules/bitcoin/constants';
+import { type IStaticSnapRpcHandler, BaseSnapRpcHandler } from '../modules/rpc';
+import { RpcHelper } from '../rpcs/helpers';
+import type { StaticImplements } from '../types/static';
 import { BtcKeyringError } from './exceptions';
 import { BtcKeyring } from './keyring';
 import { KeyringStateManager } from './state';
 import type { IWallet } from './types';
 
-jest.mock('../logger/logger', () => ({
+jest.mock('../modules/logger/logger', () => ({
   logger: {
     info: jest.fn(),
   },
@@ -61,6 +61,10 @@ describe('BtcKeyring', () => {
       KeyringStateManager.prototype,
       'getAccount',
     );
+    const getWalletByAddressNScopeSpy = jest.spyOn(
+      KeyringStateManager.prototype,
+      'getWalletByAddressNScope',
+    );
 
     return {
       instance: new KeyringStateManager(),
@@ -69,6 +73,7 @@ describe('BtcKeyring', () => {
       removeAccountsSpy,
       getAccountSpy,
       updateAccountSpy,
+      getWalletByAddressNScopeSpy,
     };
   };
 
@@ -94,13 +99,14 @@ describe('BtcKeyring', () => {
   const createMockKeyring = (stateMgr: KeyringStateManager) => {
     const { instance: RpcHandler, handleRequestSpy } =
       createMockChainRPCHandler();
-    const chainRPCHanlers = {
+
+    jest.spyOn(RpcHelper, 'getKeyringRpcApiHandlers').mockReturnValue({
       // eslint-disable-next-line @typescript-eslint/naming-convention
-      btc_sendTransaction: RpcHandler,
-    };
+      btc_sendmany: RpcHandler,
+    });
 
     return {
-      instance: new BtcKeyring(stateMgr, chainRPCHanlers, {
+      instance: new BtcKeyring(stateMgr, {
         defaultIndex: 0,
         multiAccount: false,
       }),
@@ -192,29 +198,56 @@ describe('BtcKeyring', () => {
 
   describe('submitRequest', () => {
     it('calls SnapRpcHandler if the method support', async () => {
-      const { instance: stateMgr } = createMockStateMgr();
+      const { instance: stateMgr, getWalletByAddressNScopeSpy } =
+        createMockStateMgr();
       const { instance: keyring, handleRequestSpy } =
         createMockKeyring(stateMgr);
       const account = generateAccounts(1)[0];
       const params = {
         scope: 'bip122:000000000019d6689c085ae165831e93',
-        accounts: [
-          'bc1qrp0yzgkf8rawkuvdlhnjfj2fnjwm0m8727kgah',
-          'bc1qf5n2h6mgelkls4497pkpemew55xpew90td2qae',
-        ],
-        assets: ['bip122:000000000019d6689c085ae165831e93/asset:0'],
+        amounts: {
+          bc1qrp0yzgkf8rawkuvdlhnjfj2fnjwm0m8727kgah: '0.01',
+          bc1qf5n2h6mgelkls4497pkpemew55xpew90td2qae: '0.01',
+        },
+        comment: 'testing',
+        subtractFeeFrom: ['bc1qrp0yzgkf8rawkuvdlhnjfj2fnjwm0m8727kgah'],
+        replaceable: false,
       };
+      getWalletByAddressNScopeSpy.mockResolvedValue({
+        account,
+        index: account.options.index,
+        scope: account.options.scope,
+        hdPath: getHdPath(account.options.index),
+      });
+
       await keyring.submitRequest({
         id: account.id,
         scope: Network.Testnet,
         account: account.address,
         request: {
-          method: 'btc_sendTransaction',
+          method: 'btc_sendmany',
           params,
         },
       });
 
       expect(handleRequestSpy).toHaveBeenCalledWith(params);
+    });
+
+    it('throws `Account not found` error if the account address not found', async () => {
+      const { instance: stateMgr } = createMockStateMgr();
+      const { instance: keyring } = createMockKeyring(stateMgr);
+      const account = generateAccounts(1)[0];
+
+      await expect(
+        keyring.submitRequest({
+          id: account.id,
+          scope: Network.Testnet,
+          account: account.address,
+          request: {
+            method: 'btc_sendmany',
+          },
+        }),
+      ).rejects.toThrow('Account not found');
     });
 
     it('throws MethodNotFoundError if the method not support', async () => {

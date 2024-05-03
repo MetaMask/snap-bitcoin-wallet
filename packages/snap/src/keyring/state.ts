@@ -1,7 +1,7 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
 
-import { compactError } from '../../utils';
-import { SnapStateManager, StateError } from '../snap';
+import { SnapStateManager, StateError } from '../modules/snap';
+import { compactError } from '../utils';
 import type { Wallet, SnapState } from './types';
 
 export class KeyringStateManager extends SnapStateManager<SnapState> {
@@ -104,6 +104,24 @@ export class KeyringStateManager extends SnapStateManager<SnapState> {
     try {
       const state = await this.get();
       return state.wallets[id]?.account ?? null;
+    } catch (error) {
+      throw compactError(error, StateError);
+    }
+  }
+
+  async getWalletByAddressNScope(
+    address: string,
+    scope: string,
+  ): Promise<Wallet | null> {
+    try {
+      const state = await this.get();
+      return (
+        Object.values(state.wallets).find(
+          (wallet) =>
+            wallet.account.address.toString() === address.toLowerCase() &&
+            wallet.scope.toLowerCase() === scope.toLowerCase(),
+        ) ?? null
+      );
     } catch (error) {
       throw compactError(error, StateError);
     }

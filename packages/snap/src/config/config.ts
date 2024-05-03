@@ -58,7 +58,7 @@ export const Config: SnapConfig = {
     [Chain.Bitcoin]: {
       enableMultiAccounts: false,
       defaultAccountIndex: 0,
-      defaultAccountType: 'p2wpkh',
+      defaultAccountType: 'bip122:p2wpkh',
       deriver: 'BIP32',
     },
   },

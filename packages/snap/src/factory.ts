@@ -1,19 +1,18 @@
 import { type Keyring } from '@metamask/keyring-api';
 
-import { Config } from '../config';
-import { type IStaticSnapRpcHandler, SendTransactionHandler } from '../rpcs';
-import { BtcOnChainService } from './bitcoin/chain';
+import { Config } from './config';
+import { BtcKeyring, KeyringStateManager, type IWallet } from './keyring';
+import { BtcOnChainService } from './modules/bitcoin/chain';
 import {
   type BtcWalletConfig,
   type BtcOnChainServiceConfig,
-} from './bitcoin/config';
-import { DataClientFactory } from './bitcoin/data-client/factory';
-import { getBtcNetwork } from './bitcoin/utils';
-import { BtcWalletFactory } from './bitcoin/wallet';
-import type { IOnChainService } from './chain/types';
-import { BtcKeyring, KeyringStateManager, type IWallet } from './keyring';
+} from './modules/bitcoin/config';
+import { DataClientFactory } from './modules/bitcoin/data-client/factory';
+import { getBtcNetwork } from './modules/bitcoin/utils';
+import { BtcWalletFactory } from './modules/bitcoin/wallet';
+import type { IOnChainService } from './modules/chain/types';
 
-// TODO: Temp solutio to support keyring in snap without keyring API
+// TODO: Temp solution to support keyring in snap without keyring API
 export type CreateBtcKeyringOptions = {
   emitEvents: boolean;
 };
@@ -36,27 +35,16 @@ export class Factory {
     return BtcWalletFactory.create(config, btcNetwork);
   }
 
-  static createBtcKeyringRpcMapping(): Record<string, IStaticSnapRpcHandler> {
-    return {
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      btc_sendTransaction: SendTransactionHandler,
-    };
-  }
-
   static createBtcKeyring(
     config: BtcWalletConfig,
     options: CreateBtcKeyringOptions,
   ): BtcKeyring {
-    return new BtcKeyring(
-      new KeyringStateManager(),
-      Factory.createBtcKeyringRpcMapping(),
-      {
-        defaultIndex: config.defaultAccountIndex,
-        multiAccount: config.enableMultiAccounts,
-        // TODO: Temp solutio to support keyring in snap without keyring API
-        emitEvents: options.emitEvents,
-      },
-    );
+    return new BtcKeyring(new KeyringStateManager(), {
+      defaultIndex: config.defaultAccountIndex,
+      multiAccount: config.enableMultiAccounts,
+      // TODO: Temp solutio to support keyring in snap without keyring API
+      emitEvents: options.emitEvents,
+    });
   }
 
   static createOnChainServiceProvider(scope: string): IOnChainService {

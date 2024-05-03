@@ -1,13 +1,18 @@
 import type { Infer } from 'superstruct';
 import { object, string, assign, array, record } from 'superstruct';
 
-import { satsToBtc } from '../../modules/bitcoin/utils/unit';
-import { Factory } from '../../modules/factory';
-import type { StaticImplements } from '../../types/static';
-import { assetsStruct, numberStringStruct } from '../../utils/superstruct';
-import { BaseSnapRpcHandler } from '../base';
-import type { IStaticSnapRpcHandler, SnapRpcHandlerResponse } from '../types';
-import { SnapRpcHandlerRequestStruct } from '../types';
+import { Factory } from '../factory';
+import { satsToBtc } from '../modules/bitcoin/utils/unit';
+import {
+  SnapRpcHandlerRequestStruct,
+  BaseSnapRpcHandler,
+} from '../modules/rpc';
+import type {
+  IStaticSnapRpcHandler,
+  SnapRpcHandlerResponse,
+} from '../modules/rpc';
+import type { StaticImplements } from '../types/static';
+import { assetsStruct, numberStringStruct } from '../utils/superstruct';
 
 export type GetBalancesParams = Infer<typeof GetBalancesHandler.requestStruct>;
 
