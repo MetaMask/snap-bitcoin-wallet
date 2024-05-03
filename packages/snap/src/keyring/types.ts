@@ -5,7 +5,7 @@ import type { Infer } from 'superstruct';
 import { object } from 'superstruct';
 
 import type { TransactionIntent } from '../modules/chain';
-import type { IStaticSnapRpcHandler } from '../rpc';
+import type { IStaticSnapRpcHandler } from '../modules/rpc';
 import { scopeStruct } from '../utils';
 
 export type Wallet = {

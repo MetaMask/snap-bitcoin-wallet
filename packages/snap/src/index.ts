@@ -5,14 +5,15 @@ import {
   type Json,
   UnauthorizedError,
   SnapError,
+  MethodNotFoundError,
 } from '@metamask/snaps-sdk';
 
 import { Config } from './config';
 import { originPermissions } from './config/permissions';
 import { Factory } from './factory';
 import { logger } from './modules/logger/logger';
-import type { SnapRpcHandlerRequest } from './rpc';
-import { RpcHelper } from './rpc/helpers';
+import type { SnapRpcHandlerRequest } from './modules/rpc';
+import { RpcHelper } from './rpcs/helpers';
 import { isSnapRpcError } from './utils';
 
 export const validateOrigin = (origin: string, method: string): void => {
@@ -34,7 +35,13 @@ export const onRpcRequest: OnRpcRequestHandler = async (args) => {
     const { method } = request;
     validateOrigin(origin, method);
 
-    return await RpcHelper.getRpcApiHandler(method)
+    const methodHanlders = RpcHelper.getChainRpcApiHandlers();
+
+    if (!Object.prototype.hasOwnProperty.call(methodHanlders, method)) {
+      throw new MethodNotFoundError() as unknown as Error;
+    }
+
+    return await methodHanlders[method]
       .getInstance()
       .execute(request.params as SnapRpcHandlerRequest);
   } catch (error) {

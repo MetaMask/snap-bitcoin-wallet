@@ -13,10 +13,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { Config } from '../config';
 import { Factory } from '../factory';
 import { logger } from '../modules/logger/logger';
+import type { SnapRpcHandlerRequest } from '../modules/rpc';
 import { SnapHelper } from '../modules/snap';
-import type { SnapRpcHandlerRequest } from '../rpc';
+import { RpcHelper } from '../rpcs/helpers';
 import { BtcKeyringError } from './exceptions';
-import { KeyringHelper } from './helpers';
 import type { KeyringStateManager } from './state';
 import {
   CreateAccountOptionsStruct,
@@ -39,7 +39,7 @@ export class BtcKeyring implements Keyring {
   constructor(stateMgr: KeyringStateManager, options: KeyringOptions) {
     this.stateMgr = stateMgr;
     this.options = options;
-    const mapping = KeyringHelper.getRpcApiHandlers();
+    const mapping = RpcHelper.getKeyringRpcApiHandlers();
     this.keyringMethods = Object.keys(mapping);
     this.handlers = mapping;
   }

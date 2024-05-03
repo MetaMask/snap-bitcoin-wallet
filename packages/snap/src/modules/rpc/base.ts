@@ -1,6 +1,6 @@
 import { type Struct, assert } from 'superstruct';
 
-import { logger } from '../modules/logger/logger';
+import { logger } from '../logger/logger';
 import { SnapRpcValidationError } from './exceptions';
 import {
   type ISnapRpcExecutable,

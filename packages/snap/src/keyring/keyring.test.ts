@@ -5,11 +5,10 @@ import { generateAccounts } from '../../test/utils';
 import { Chain, Config } from '../config';
 import { Factory } from '../factory';
 import { Network } from '../modules/bitcoin/constants';
-import type { IStaticSnapRpcHandler } from '../rpc';
-import { BaseSnapRpcHandler } from '../rpc';
+import { type IStaticSnapRpcHandler, BaseSnapRpcHandler } from '../modules/rpc';
+import { RpcHelper } from '../rpcs/helpers';
 import type { StaticImplements } from '../types/static';
 import { BtcKeyringError } from './exceptions';
-import { KeyringHelper } from './helpers';
 import { BtcKeyring } from './keyring';
 import { KeyringStateManager } from './state';
 import type { IWallet } from './types';
@@ -101,7 +100,7 @@ describe('BtcKeyring', () => {
     const { instance: RpcHandler, handleRequestSpy } =
       createMockChainRPCHandler();
 
-    jest.spyOn(KeyringHelper, 'getRpcApiHandlers').mockReturnValue({
+    jest.spyOn(RpcHelper, 'getKeyringRpcApiHandlers').mockReturnValue({
       // eslint-disable-next-line @typescript-eslint/naming-convention
       btc_sendmany: RpcHandler,
     });

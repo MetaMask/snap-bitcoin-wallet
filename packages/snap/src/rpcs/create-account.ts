@@ -1,12 +1,17 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
 import type { Infer } from 'superstruct';
 
-import { Config } from '../../config';
-import { BtcKeyring, KeyringStateManager } from '../../keyring';
-import type { StaticImplements } from '../../types/static';
-import { BaseSnapRpcHandler } from '../base';
-import type { IStaticSnapRpcHandler, SnapRpcHandlerResponse } from '../types';
-import { SnapRpcHandlerRequestStruct } from '../types';
+import { Config } from '../config';
+import { BtcKeyring, KeyringStateManager } from '../keyring';
+import {
+  SnapRpcHandlerRequestStruct,
+  BaseSnapRpcHandler,
+} from '../modules/rpc';
+import type {
+  IStaticSnapRpcHandler,
+  SnapRpcHandlerResponse,
+} from '../modules/rpc';
+import type { StaticImplements } from '../types/static';
 
 export type CreateAccountParams = Infer<
   typeof CreateAccountHandler.requestStruct

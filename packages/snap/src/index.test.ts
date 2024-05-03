@@ -1,11 +1,16 @@
 import * as keyringApi from '@metamask/keyring-api';
-import { type Json, type JsonRpcRequest, SnapError } from '@metamask/snaps-sdk';
+import {
+  type Json,
+  type JsonRpcRequest,
+  SnapError,
+  MethodNotFoundError,
+} from '@metamask/snaps-sdk';
 
 import { onRpcRequest, validateOrigin, onKeyringRequest } from '.';
 import { Config, originPermissions } from './config';
 import { BtcKeyring } from './keyring';
-import type { IStaticSnapRpcHandler } from './rpc';
-import { BaseSnapRpcHandler, RpcHelper } from './rpc';
+import { BaseSnapRpcHandler, type IStaticSnapRpcHandler } from './modules/rpc';
+import { RpcHelper } from './rpcs';
 import type { StaticImplements } from './types/static';
 
 jest.mock('@metamask/keyring-api', () => ({
@@ -76,7 +81,10 @@ describe('onRpcRequest', () => {
 
   it('executes the rpc request', async () => {
     const { handler, handleRequestSpy } = createMockChainApiHandler();
-    jest.spyOn(RpcHelper, 'getRpcApiHandler').mockReturnValue(handler);
+    jest.spyOn(RpcHelper, 'getChainRpcApiHandlers').mockReturnValue({
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      chain_getBalances: handler,
+    });
     handleRequestSpy.mockResolvedValueOnce({
       data: 1,
     } as Json);
@@ -87,16 +95,21 @@ describe('onRpcRequest', () => {
   });
 
   it('throws SnapError if an error catched', async () => {
-    const { handler, handleRequestSpy } = createMockChainApiHandler();
-    jest.spyOn(RpcHelper, 'getRpcApiHandler').mockReturnValue(handler);
-    handleRequestSpy.mockRejectedValue(new Error('error'));
+    const { handler } = createMockChainApiHandler();
+    jest.spyOn(RpcHelper, 'getChainRpcApiHandlers').mockReturnValue({
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      chain_createAccount: handler,
+    });
 
-    await expect(executeRequest()).rejects.toThrow(SnapError);
+    await expect(executeRequest()).rejects.toThrow(MethodNotFoundError);
   });
 
   it('throws SnapError if an SnapError catched', async () => {
     const { handler, handleRequestSpy } = createMockChainApiHandler();
-    jest.spyOn(RpcHelper, 'getRpcApiHandler').mockReturnValue(handler);
+    jest.spyOn(RpcHelper, 'getChainRpcApiHandlers').mockReturnValue({
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      chain_getBalances: handler,
+    });
     handleRequestSpy.mockRejectedValue(new SnapError('error'));
 
     await expect(executeRequest()).rejects.toThrow(SnapError);

@@ -11,7 +11,6 @@ import { DataClientFactory } from './modules/bitcoin/data-client/factory';
 import { getBtcNetwork } from './modules/bitcoin/utils';
 import { BtcWalletFactory } from './modules/bitcoin/wallet';
 import type { IOnChainService } from './modules/chain/types';
-import { type IStaticSnapRpcHandler, SendManyHandler } from './rpc';
 
 // TODO: Temp solution to support keyring in snap without keyring API
 export type CreateBtcKeyringOptions = {
@@ -34,13 +33,6 @@ export class Factory {
   static createBtcWallet(config: BtcWalletConfig, network: string) {
     const btcNetwork = getBtcNetwork(network);
     return BtcWalletFactory.create(config, btcNetwork);
-  }
-
-  static createBtcKeyringRpcMapping(): Record<string, IStaticSnapRpcHandler> {
-    return {
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      btc_sendmany: SendManyHandler,
-    };
   }
 
   static createBtcKeyring(
