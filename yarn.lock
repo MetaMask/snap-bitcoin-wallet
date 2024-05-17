@@ -3205,21 +3205,21 @@ __metadata:
   linkType: hard
 
 "@metamask/snaps-execution-environments@npm:^6.0.1":
-  version: 6.0.2
-  resolution: "@metamask/snaps-execution-environments@npm:6.0.2"
+  version: 6.1.0
+  resolution: "@metamask/snaps-execution-environments@npm:6.1.0"
   dependencies:
     "@metamask/json-rpc-engine": ^8.0.1
     "@metamask/object-multiplex": ^2.0.0
     "@metamask/post-message-stream": ^8.0.0
-    "@metamask/providers": ^16.0.0
+    "@metamask/providers": ^16.1.0
     "@metamask/rpc-errors": ^6.2.1
-    "@metamask/snaps-sdk": ^4.0.1
-    "@metamask/snaps-utils": ^7.2.0
+    "@metamask/snaps-sdk": ^4.1.0
+    "@metamask/snaps-utils": ^7.3.0
     "@metamask/utils": ^8.3.0
     nanoid: ^3.1.31
     readable-stream: ^3.6.2
     superstruct: ^1.0.3
-  checksum: ebacfbf39376c3329be0c859fb538fc79176a88697c4e3860c1be09e58d031aa6ad8da02612562f62715532145c477fda98379114332f9a394a5c5047c961319
+  checksum: 7e9a3e7fcea6bc411b7af4bf7ccb65878a630671f990d605ef3bf1ab3347bd3674b8769fcf5c075a00f1c9a37375d43a7d2af3b4eccfd62e618299756d1f0f78
   languageName: node
   linkType: hard
 
