@@ -1,17 +1,21 @@
-import { MethodNotFoundError } from '@metamask/snaps-sdk';
-
-import { CreateAccountHandler, GetBalancesHandler } from './methods';
-import type { IStaticSnapRpcHandler } from './types';
+import { CreateAccountHandler, GetBalancesHandler } from '.';
+import type { IStaticSnapRpcHandler } from '../modules/rpc';
+import { SendManyHandler } from './sendmany';
 
 export class RpcHelper {
-  static getChainApiHandler(method: string): IStaticSnapRpcHandler {
-    switch (method) {
-      case 'chain_createAccount':
-        return CreateAccountHandler;
-      case 'chain_getBalances':
-        return GetBalancesHandler;
-      default:
-        throw new MethodNotFoundError() as unknown as Error;
-    }
+  static getChainRpcApiHandlers(): Record<string, IStaticSnapRpcHandler> {
+    return {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      chain_createAccount: CreateAccountHandler,
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      chain_getBalances: GetBalancesHandler,
+    };
+  }
+
+  static getKeyringRpcApiHandlers(): Record<string, IStaticSnapRpcHandler> {
+    return {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      btc_sendmany: SendManyHandler,
+    };
   }
 }

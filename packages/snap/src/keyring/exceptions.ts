@@ -1,4 +1,4 @@
-import { CustomError } from '../exceptions';
+import { CustomError } from '../modules/exception';
 
 export class BtcKeyringError extends CustomError {}
 

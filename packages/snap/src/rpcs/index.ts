@@ -1,5 +1,3 @@
-export * from './methods';
-export * from './types';
-export * from './base';
+export * from './create-account';
+export * from './get-balances';
 export * from './helpers';
-export * from './exceptions';

@@ -1,6 +1,6 @@
 import { type Struct, assert } from 'superstruct';
 
-import { logger } from '../modules/logger/logger';
+import { logger } from '../logger/logger';
 import { SnapRpcValidationError } from './exceptions';
 import {
   type ISnapRpcExecutable,
@@ -73,9 +73,6 @@ export abstract class BaseSnapRpcHandler implements ISnapRpcExecutable {
     this: IStaticSnapRpcHandler,
     options?: SnapRpcHandlerOptions,
   ): ISnapRpcHandler {
-    if (this.instance === null) {
-      this.instance = new this(options);
-    }
-    return this.instance;
+    return new this(options);
   }
 }

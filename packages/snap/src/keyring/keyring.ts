@@ -10,11 +10,12 @@ import { MethodNotFoundError, type Json } from '@metamask/snaps-sdk';
 import { assert, StructError } from 'superstruct';
 import { v4 as uuidv4 } from 'uuid';
 
-import { Config } from '../../config';
-import type { SnapRpcHandlerRequest } from '../../rpcs';
+import { Config } from '../config';
 import { Factory } from '../factory';
-import { logger } from '../logger/logger';
-import { SnapHelper } from '../snap';
+import { logger } from '../modules/logger/logger';
+import type { SnapRpcHandlerRequest } from '../modules/rpc';
+import { SnapHelper } from '../modules/snap';
+import { RpcHelper } from '../rpcs/helpers';
 import { BtcKeyringError } from './exceptions';
 import type { KeyringStateManager } from './state';
 import {
@@ -35,15 +36,12 @@ export class BtcKeyring implements Keyring {
 
   protected readonly handlers: ChainRPCHandlers;
 
-  constructor(
-    stateMgr: KeyringStateManager,
-    chainRPCHanlers: ChainRPCHandlers,
-    options: KeyringOptions,
-  ) {
+  constructor(stateMgr: KeyringStateManager, options: KeyringOptions) {
     this.stateMgr = stateMgr;
     this.options = options;
-    this.keyringMethods = Object.keys(chainRPCHanlers);
-    this.handlers = chainRPCHanlers;
+    const mapping = RpcHelper.getKeyringRpcApiHandlers();
+    this.keyringMethods = Object.keys(mapping);
+    this.handlers = mapping;
   }
 
   async listAccounts(): Promise<KeyringAccount[]> {
@@ -159,13 +157,23 @@ export class BtcKeyring implements Keyring {
   }
 
   protected async handleSubmitRequest(request: KeyringRequest): Promise<Json> {
+    const { scope, account } = request;
     const { method, params } = request.request;
     if (!Object.prototype.hasOwnProperty.call(this.handlers, method)) {
       throw new MethodNotFoundError() as unknown as Error;
     }
 
+    const walletData = await this.stateMgr.getWalletByAddressNScope(
+      account,
+      scope,
+    );
+
+    if (!walletData) {
+      throw new Error('Account not found');
+    }
+
     return this.handlers[method]
-      .getInstance()
+      .getInstance(walletData)
       .execute(params as unknown as SnapRpcHandlerRequest);
   }
 

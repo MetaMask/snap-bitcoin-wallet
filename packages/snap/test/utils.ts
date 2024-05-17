@@ -35,7 +35,7 @@ export function generateAccounts(cnt = 1, addressPrefix = '', idPrefix = '') {
         scope: NetworkEnum.Testnet,
         index: i,
       },
-      methods: ['btc_sendTransaction'],
+      methods: ['btc_sendmany'],
     });
   }
 
