@@ -2978,10 +2978,10 @@ __metadata:
   linkType: hard
 
 "@metamask/keyring-api@npm:^6.0.0":
-  version: 6.1.0
-  resolution: "@metamask/keyring-api@npm:6.1.0"
+  version: 6.1.1
+  resolution: "@metamask/keyring-api@npm:6.1.1"
   dependencies:
-    "@metamask/snaps-sdk": ^4.0.0
+    "@metamask/snaps-sdk": ^4.2.0
     "@metamask/utils": ^8.3.0
     "@types/uuid": ^9.0.1
     bech32: ^2.0.0
@@ -2989,7 +2989,7 @@ __metadata:
     uuid: ^9.0.0
   peerDependencies:
     "@metamask/providers": ">=15 <17"
-  checksum: 493aff0569b2f62a9cbbda82e5b9df709562f5f11d32f5d97224a7d29be1bbd7139e23f1384d9d888e2e90d3858e64ff499c03780b3664d31724a054722b4e0a
+  checksum: 5a9ed008e19062c84ec8fd019ad29f9ebb7d8d8464bbe5da70ad26e6aceb57e4d98a9762e7cd9fea4ac7de0cdc08bfc0a5bf598770749aa9abdbe6d1840fb627
   languageName: node
   linkType: hard
 
@@ -3296,7 +3296,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/snaps-sdk@npm:^4.0.0, @metamask/snaps-sdk@npm:^4.0.1, @metamask/snaps-sdk@npm:^4.1.0":
+"@metamask/snaps-sdk@npm:^4.0.0, @metamask/snaps-sdk@npm:^4.0.1, @metamask/snaps-sdk@npm:^4.1.0, @metamask/snaps-sdk@npm:^4.2.0":
   version: 4.2.0
   resolution: "@metamask/snaps-sdk@npm:4.2.0"
   dependencies:
