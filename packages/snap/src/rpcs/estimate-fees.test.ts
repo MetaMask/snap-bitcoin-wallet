@@ -1,5 +1,6 @@
 import { Factory } from '../factory';
 import { Network } from '../modules/bitcoin/constants';
+import { satsToBtc } from '../modules/bitcoin/utils/unit';
 import { FeeRatio } from '../modules/chain';
 import { EstimateFeesHandler } from './estimate-fees';
 
@@ -56,15 +57,15 @@ describe('EstimateFeesHandler', () => {
         fees: [
           {
             type: FeeRatio.Fast,
-            rate: '10',
+            rate: satsToBtc(10),
           },
           {
             type: FeeRatio.Medium,
-            rate: '5',
+            rate: satsToBtc(5),
           },
           {
             type: FeeRatio.Slow,
-            rate: '1',
+            rate: satsToBtc(1),
           },
         ],
       });

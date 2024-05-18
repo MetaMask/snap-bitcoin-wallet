@@ -11,6 +11,7 @@ import {
   CreateBTCAccountButton,
   GetBTCAccountBalanceButton,
   ListAccountsButton,
+  EstimateFeesCard
 } from '../components';
 import { defaultSnapOrigin } from '../config';
 import { defaultSnapOrigin as snapId } from '../config/snap';
@@ -144,21 +145,6 @@ const Index = () => {
     setBalance(total?.amount);
   };
 
-  const handledEstimateFeeClick = async () => {
-    const address = btcAccount?.address
-    if (!address) {
-      return
-    }
-    const resp = (await invokeSnap({
-      method: 'chain_estimateFees',
-      params: {
-        scope: scope,
-      },
-    }));
-    console.log({
-      resp
-    }) 
-  };
   const handleListAccountClick = async () => {
     const accounts = (await invokeKeyring({
       method: 'keyring_listAccounts',
@@ -278,18 +264,9 @@ const Index = () => {
           }
         />
 
-<Card
-          content={{
-            title: 'Estimate Fee',
-            description: `Estimate Fee`,
-            button: (
-              <GetBTCAccountBalanceButton
-                onClick={handledEstimateFeeClick}
-                disabled={!installedSnap}
-              />
-            ),
-          }}
-          disabled={!installedSnap || !btcAccount}
+        <EstimateFeesCard
+          scope={scope}
+          enabled={!(!installedSnap || !btcAccount)}
           fullWidth={
             isMetaMaskReady &&
             Boolean(installedSnap) &&

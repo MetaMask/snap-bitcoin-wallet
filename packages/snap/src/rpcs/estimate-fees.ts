@@ -2,6 +2,7 @@ import type { Infer } from 'superstruct';
 import { object, array, enums } from 'superstruct';
 
 import { Factory } from '../factory';
+import { satsToBtc } from '../modules/bitcoin/utils/unit';
 import { FeeRatio } from '../modules/chain';
 import {
   type IStaticSnapRpcHandler,
@@ -51,7 +52,7 @@ export class EstimateFeesHandler
     const response = {
       fees: fees.fees.map((fee) => ({
         type: fee.type,
-        rate: fee.rate.toString(),
+        rate: satsToBtc(fee.rate),
       })),
     };
 
