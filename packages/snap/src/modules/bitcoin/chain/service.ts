@@ -88,13 +88,16 @@ export class BtcOnChainService implements IOnChainService {
   /* eslint-disable */
 
   //eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async getDataForTransaction(address: string, transactionIntent?: TransactionIntent): Promise<TransactionData> {
+  async getDataForTransaction(
+    address: string,
+    transactionIntent?: TransactionIntent,
+  ): Promise<TransactionData> {
     try {
       const data = await this.readClient.getUtxos(address);
       return {
         data: {
-          utxos: data
-        }
+          utxos: data,
+        },
       };
     } catch (error) {
       throw compactError(error, BtcOnChainServiceError);

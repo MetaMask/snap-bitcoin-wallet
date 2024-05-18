@@ -197,7 +197,6 @@ export function generateBlockChairGetBalanceResp(addresses: string[]) {
   return resp;
 }
 
-
 /**
  * Method to generate blockchair getUtxos resp by address.
  *
@@ -205,26 +204,36 @@ export function generateBlockChairGetBalanceResp(addresses: string[]) {
  * @param utxosCount - utxos count.
  * @returns An array of blockchair getUtxos response.
  */
-export function generateBlockChairGetUtxosResp(address: string, utxosCount: number) {
+export function generateBlockChairGetUtxosResp(
+  address: string,
+  utxosCount: number,
+) {
   const template = blockChairData.getUtxoResp;
-  const data = {...template.data.tb1qlq94vt9uh07fwunsgdyycpkv24uev05ywjua0r }
-  let idx = -1
-  const resp = { 
+  const data = { ...template.data.tb1qlq94vt9uh07fwunsgdyycpkv24uev05ywjua0r };
+  let idx = -1;
+  const resp = {
     data: {
-      [address] : {
+      [address]: {
         ...data,
         utxo: Array.from({ length: utxosCount }, () => {
-          idx += 1
-          return ({
+          idx += 1;
+          return {
             block_id: randomNum(1000000),
-            transaction_hash: randomNum(1000000).toString(16).padStart(template.data.tb1qlq94vt9uh07fwunsgdyycpkv24uev05ywjua0r.utxo[0].transaction_hash.length, '0'),
+            transaction_hash: randomNum(1000000)
+              .toString(16)
+              .padStart(
+                template.data.tb1qlq94vt9uh07fwunsgdyycpkv24uev05ywjua0r.utxo[0]
+                  .transaction_hash.length,
+                '0',
+              ),
             index: idx,
             value: randomNum(1000000),
-          })
-        })
-      }
-  }};
- 
+          };
+        }),
+      },
+    },
+  };
+
   return resp;
 }
 
@@ -234,22 +243,29 @@ export function generateBlockChairGetUtxosResp(address: string, utxosCount: numb
  * @param utxosCount - utxos count.
  * @returns An array of blockstream getUtxos response.
  */
-export function generateBlockStreamGetUtxosResp(utxosCount: number, confirmed: boolean = true) {
+export function generateBlockStreamGetUtxosResp(
+  utxosCount: number,
+  confirmed: boolean = true,
+) {
   const template = blockStreamData.getUtxoResp;
-  let idx = -1
+  let idx = -1;
   const resp = Array.from({ length: utxosCount }, () => {
-    idx += 1
-    return ({
-      "txid": randomNum(1000000).toString(16).padStart(template[0].txid.length, '0'),
-      "vout": idx,
-      "status": {
-        "confirmed": confirmed,
-        "block_height": randomNum(1000000),
-        "block_hash": randomNum(1000000).toString(16).padStart(template[0].status.block_hash.length, '0'),
-        "block_time": 1710329183
+    idx += 1;
+    return {
+      txid: randomNum(1000000)
+        .toString(16)
+        .padStart(template[0].txid.length, '0'),
+      vout: idx,
+      status: {
+        confirmed: confirmed,
+        block_height: randomNum(1000000),
+        block_hash: randomNum(1000000)
+          .toString(16)
+          .padStart(template[0].status.block_hash.length, '0'),
+        block_time: 1710329183,
       },
-      "value": randomNum(1000000),
-    })
-  })
+      value: randomNum(1000000),
+    };
+  });
   return resp;
 }

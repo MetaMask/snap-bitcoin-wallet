@@ -30,16 +30,16 @@ export type GetAddressStatsResponse = {
 };
 
 export type GetUtxosResponse = {
-  txid: string,
-  vout: number,
+  txid: string;
+  vout: number;
   status: {
-    confirmed: boolean,
-    block_height: number,
-    block_hash: string,
-    block_time: number,
-  },
-  value: number,
-}[]
+    confirmed: boolean;
+    block_height: number;
+    block_hash: string;
+    block_time: number;
+  };
+  value: number;
+}[];
 /* eslint-enable */
 
 export class BlockStreamClient implements IReadDataClient {

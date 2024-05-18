@@ -133,12 +133,15 @@ export class BlockChairClient implements IReadDataClient {
   }
 
   // TODO: add logic to get UTXOs that sufficiently cover the amount, to reduce the number of requests
-  async getUtxos(address: string, includeUnconfirmed?: boolean): Promise<Utxo[]> {
+  async getUtxos(
+    address: string,
+    includeUnconfirmed?: boolean,
+  ): Promise<Utxo[]> {
     try {
       let process = true;
       let offset = 0;
       const limit = 1000;
-      const data: Utxo[] = []
+      const data: Utxo[] = [];
 
       while (process) {
         let url = `/dashboards/address/${address}?limit=0,${limit}&offset=0,${offset}`;
@@ -162,14 +165,14 @@ export class BlockChairClient implements IReadDataClient {
             txnHash: utxo.transaction_hash,
             index: utxo.index,
             value: utxo.value,
-          })
+          });
         });
-        
-        offset += 1
+
+        offset += 1;
 
         if (response.data[address].utxo.length < limit) {
           process = false;
-        } 
+        }
       }
 
       return data;
