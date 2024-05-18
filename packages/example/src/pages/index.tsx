@@ -11,6 +11,7 @@ import {
   CreateBTCAccountButton,
   GetBTCAccountBalanceButton,
   ListAccountsButton,
+  GetDataForTransactionCard,
 } from '../components';
 import { defaultSnapOrigin } from '../config';
 import { defaultSnapOrigin as snapId } from '../config/snap';
@@ -144,6 +145,7 @@ const Index = () => {
     setBalance(total?.amount);
   };
 
+  
   const handleListAccountClick = async () => {
     const accounts = (await invokeKeyring({
       method: 'keyring_listAccounts',
@@ -262,6 +264,17 @@ const Index = () => {
             !shouldDisplayReconnectButton(installedSnap)
           }
         />
+
+        <GetDataForTransactionCard 
+          account={btcAccount?.address || ''}
+          scope={scope}
+          enabled={!(!installedSnap || !btcAccount)} 
+          fullWidth={
+            isMetaMaskReady &&
+            Boolean(installedSnap) &&
+            !shouldDisplayReconnectButton(installedSnap)
+          } />
+
       </CardContainer>
     </Container>
   );

@@ -1,10 +1,10 @@
 import { type Network, networks } from 'bitcoinjs-lib';
 
 import { compactError } from '../../../../utils';
-import { type Balances } from '../../../chain';
+import { type Balances, type Utxo } from '../../../chain';
 import { logger } from '../../../logger/logger';
 import { DataClientError } from '../exceptions';
-import type { IReadDataClient, Utxo } from '../types';
+import type { IReadDataClient } from '../types';
 
 export type BlockChairClientOptions = {
   network: Network;
@@ -132,27 +132,28 @@ export class BlockChairClient implements IReadDataClient {
     }
   }
 
-  async getUtxos(address: string): Promise<Utxo[]> {
+  // TODO: add logic to get UTXOs that sufficiently cover the amount, to reduce the number of requests
+  async getUtxos(address: string, includeUnconfirmed?: boolean): Promise<Utxo[]> {
     try {
       let process = true;
       let offset = 0;
       const limit = 1000;
       const data: Utxo[] = []
+
       while (process) {
-        const response = await this.get<GetUtxosResponse>(
-          `/dashboards/address/${address}?limit=0,${limit}&offset=0,${offset}&state=latest`,
-        );
+        let url = `/dashboards/address/${address}?limit=0,${limit}&offset=0,${offset}`;
+        if (!includeUnconfirmed) {
+          url += '&state=latest';
+        }
+
+        const response = await this.get<GetUtxosResponse>(url);
 
         logger.info(
           `[BlockChairClient.getUtxos] response: ${JSON.stringify(response)}`,
         );
 
-        if (!response.data[address]) {
-          throw new DataClientError(`No data avaiable for address ${address}`);
-        }
-
-        if (response.data[address].utxo.length < limit) {
-          break;
+        if (!Object.prototype.hasOwnProperty.call(response.data, address)) {
+          throw new DataClientError(`Data not avaiable`);
         }
 
         response.data[address].utxo.forEach((utxo) => {
@@ -165,6 +166,10 @@ export class BlockChairClient implements IReadDataClient {
         });
         
         offset += 1
+
+        if (response.data[address].utxo.length < limit) {
+          process = false;
+        } 
       }
 
       return data;

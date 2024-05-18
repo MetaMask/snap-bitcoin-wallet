@@ -1,10 +1,10 @@
 import { type Network, networks } from 'bitcoinjs-lib';
 
 import { compactError, processBatch } from '../../../../utils';
-import { type Balances } from '../../../chain';
+import { type Balances, type Utxo } from '../../../chain';
 import { logger } from '../../../logger/logger';
 import { DataClientError } from '../exceptions';
-import type { IReadDataClient, Utxo } from '../types';
+import type { IReadDataClient } from '../types';
 
 export type BlockStreamClientOptions = {
   network: Network;
@@ -106,9 +106,14 @@ export class BlockStreamClient implements IReadDataClient {
     }
   }
 
-  async getUtxos(address: string): Promise<Utxo[]> {
+  async getUtxos(
+    address: string,
+    includeUnconfirmed?: boolean,
+  ): Promise<Utxo[]> {
     try {
-      const response = await this.get<GetUtxosResponse>(`/address/${address}`);
+      const response = await this.get<GetUtxosResponse>(
+        `/address/${address}/utxo`,
+      );
 
       logger.info(
         `[BlockStreamClient.getUtxos] response: ${JSON.stringify(response)}`,
@@ -117,7 +122,7 @@ export class BlockStreamClient implements IReadDataClient {
       const data: Utxo[] = [];
 
       for (const utxo of response) {
-        if (!utxo.status.confirmed) {
+        if (!includeUnconfirmed && !utxo.status.confirmed) {
           continue;
         }
         data.push({
@@ -127,6 +132,7 @@ export class BlockStreamClient implements IReadDataClient {
           value: utxo.value,
         });
       }
+
       return data;
     } catch (error) {
       throw compactError(error, DataClientError);

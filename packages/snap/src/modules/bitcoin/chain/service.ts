@@ -1,4 +1,3 @@
-import type { Json } from '@metamask/snaps-sdk';
 import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 
@@ -10,6 +9,7 @@ import type {
   TransactionIntent,
   Pagination,
   Fees,
+  TransactionData,
 } from '../../chain/types';
 import { BtcAsset } from '../constants';
 import { type IReadDataClient } from '../data-client';
@@ -68,6 +68,7 @@ export class BtcOnChainService implements IOnChainService {
       throw compactError(error, BtcOnChainServiceError);
     }
   }
+
   /* eslint-disable */
   async estimateFees(): Promise<Fees> {
     throw new Error('Method not implemented.');
@@ -84,11 +85,19 @@ export class BtcOnChainService implements IOnChainService {
   getTransaction(txnHash: string) {
     throw new Error('Method not implemented.');
   }
+  /* eslint-disable */
 
-  async getDataForTransaction(address: string, transactionIntent: TransactionIntent): Promise<Record<string, Json>> {
-    return {
-      data: await this.readClient.getUtxos(address)
+  //eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async getDataForTransaction(address: string, transactionIntent?: TransactionIntent): Promise<TransactionData> {
+    try {
+      const data = await this.readClient.getUtxos(address);
+      return {
+        data: {
+          utxos: data
+        }
+      };
+    } catch (error) {
+      throw compactError(error, BtcOnChainServiceError);
     }
   }
-  /* eslint-disable */
 }

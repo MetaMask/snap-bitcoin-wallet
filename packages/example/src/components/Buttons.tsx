@@ -111,6 +111,12 @@ export const GetBTCAccountBalanceButton = (
   return <Button {...props}>Get BTC Account balance</Button>;
 };
 
+export const GetDataForTransactionButton = (
+  props: ComponentProps<typeof Button>,
+) => {
+  return <Button {...props}>Get Data for Transaction</Button>;
+};
+
 export const ListAccountsButton = (props: ComponentProps<typeof Button>) => {
   return <Button {...props}>List Accounts</Button>;
 };

@@ -1,9 +1,16 @@
 import type { Infer } from 'superstruct';
-import { unknown } from 'superstruct';
+import { array, assign, number, object, string } from 'superstruct';
 
-import type { StaticImplements } from '../../types/static';
-import { BaseSnapRpcHandler } from '../base';
-import type { IStaticSnapRpcHandler, SnapRpcHandlerResponse } from '../types';
+import { Factory } from '../factory';
+import {
+  BaseSnapRpcHandler,
+  SnapRpcHandlerRequestStruct,
+} from '../modules/rpc';
+import type {
+  IStaticSnapRpcHandler,
+  SnapRpcHandlerResponse,
+} from '../modules/rpc';
+import type { StaticImplements } from '../types/static';
 
 export type GetTransactionDataParams = Infer<
   typeof GetTransactionDataHandler.requestStruct
@@ -18,17 +25,45 @@ export class GetTransactionDataHandler
     StaticImplements<IStaticSnapRpcHandler, typeof GetTransactionDataHandler>
 {
   static override get requestStruct() {
-    return unknown();
+    return assign(
+      object({
+        account: string(),
+      }),
+      SnapRpcHandlerRequestStruct,
+    );
   }
 
   static override get responseStruct() {
-    return unknown();
+    return object({
+      data: object({
+        utxos: array(
+          object({
+            block: number(),
+            txnHash: string(),
+            index: number(),
+            value: string(),
+          }),
+        ),
+      }),
+    });
   }
 
   async handleRequest(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     params: GetTransactionDataParams,
   ): Promise<GetTransactionDataResponse> {
-    return {};
+    const chainApi = Factory.createOnChainServiceProvider(params.scope);
+
+    const result = await chainApi.getDataForTransaction(params.account);
+
+    return {
+      data: {
+        utxos: result.data.utxos.map((utxo) => ({
+          block: utxo.block,
+          txnHash: utxo.txnHash,
+          index: utxo.index,
+          value: utxo.value.toString(),
+        })),
+      },
+    };
   }
 }
