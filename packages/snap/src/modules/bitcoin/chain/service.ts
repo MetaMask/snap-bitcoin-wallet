@@ -2,6 +2,7 @@ import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 
 import { compactError } from '../../../utils';
+import type { FeeRatio } from '../../chain';
 import type {
   IOnChainService,
   Balances,
@@ -9,8 +10,8 @@ import type {
   TransactionIntent,
   Pagination,
   Fees,
-  FeeRatio,
-} from '../../chain';
+  TransactionData,
+} from '../../chain/types';
 import { BtcAsset } from '../constants';
 import { type IReadDataClient } from '../data-client';
 import { BtcOnChainServiceError } from './exceptions';
@@ -96,9 +97,22 @@ export class BtcOnChainService implements IOnChainService {
   getTransaction(txnHash: string) {
     throw new Error('Method not implemented.');
   }
-
-  getDataForTransaction(address: string, transactionIntent: TransactionIntent) {
-    throw new Error('Method not implemented.');
-  }
   /* eslint-disable */
+
+  //eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async getDataForTransaction(
+    address: string,
+    transactionIntent?: TransactionIntent,
+  ): Promise<TransactionData> {
+    try {
+      const data = await this.readClient.getUtxos(address);
+      return {
+        data: {
+          utxos: data,
+        },
+      };
+    } catch (error) {
+      throw compactError(error, BtcOnChainServiceError);
+    }
+  }
 }

@@ -3,6 +3,7 @@ import { networks } from 'bitcoinjs-lib';
 import {
   generateAccounts,
   generateBlockChairGetBalanceResp,
+  generateBlockChairGetUtxosResp,
   generateBlockChairGetStatsResp,
 } from '../../../../../test/utils';
 import { FeeRatio } from '../../../chain';
@@ -221,6 +222,85 @@ describe('BlockChairClient', () => {
       const instance = new BlockChairClient({ network: networks.testnet });
 
       await expect(instance.getFeeRates()).rejects.toThrow(DataClientError);
+    });
+  });
+
+  describe('getUtxos', () => {
+    it('returns utxos', async () => {
+      const { fetchSpy } = createMockFetch();
+      const accounts = generateAccounts(1);
+      const { address } = accounts[0];
+      const mockResponse = generateBlockChairGetUtxosResp(address, 10);
+      const expectedResult = mockResponse.data[address].utxo.map((utxo) => ({
+        block: utxo.block_id,
+        txnHash: utxo.transaction_hash,
+        index: utxo.index,
+        value: utxo.value,
+      }));
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue(mockResponse),
+      });
+
+      const instance = new BlockChairClient({ network: networks.testnet });
+      const result = await instance.getUtxos(address);
+
+      expect(result).toStrictEqual(expectedResult);
+    });
+
+    it('fetchs with pagination if utxos more than limit', async () => {
+      const { fetchSpy } = createMockFetch();
+      const accounts = generateAccounts(1);
+      const { address } = accounts[0];
+
+      const pagesToTest = 3;
+      const limit = 1000;
+      let expectedResult: unknown[] = [];
+
+      for (let i = 0; i < pagesToTest; i++) {
+        const mockResponse = generateBlockChairGetUtxosResp(
+          address,
+          i === pagesToTest - 1 ? 0 : limit,
+        );
+        fetchSpy.mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockResponse),
+        });
+        expectedResult = expectedResult.concat(
+          mockResponse.data[address].utxo.map((utxo) => ({
+            block: utxo.block_id,
+            txnHash: utxo.transaction_hash,
+            index: utxo.index,
+            value: utxo.value,
+          })),
+        );
+      }
+
+      const instance = new BlockChairClient({ network: networks.testnet });
+      const result = await instance.getUtxos(address);
+
+      expect(result).toStrictEqual(expectedResult);
+      expect(fetchSpy).toHaveBeenCalledTimes(3);
+    });
+
+    it('throws `Data not avaiable` error if given address not found from the result', async () => {
+      const { fetchSpy } = createMockFetch();
+      const accounts = generateAccounts(2);
+      const requestAddress = accounts[0].address;
+      const actualRespAddress = accounts[1].address;
+      const mockResponse = generateBlockChairGetUtxosResp(actualRespAddress, 1);
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue(mockResponse),
+      });
+
+      const instance = new BlockChairClient({ network: networks.testnet });
+
+      await expect(instance.getUtxos(requestAddress)).rejects.toThrow(
+        `Data not avaiable`,
+      );
     });
   });
 });

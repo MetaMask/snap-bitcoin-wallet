@@ -16,6 +16,19 @@
       "tx_count": 0
     }
   },
+  "getUtxoResp": [
+    {
+      "txid": "bf9955de6df6d2b35aa301142ddeb85259f62dbdb5a5382ac7199b91bf6aa165",
+      "vout": 1,
+      "status": {
+        "confirmed": true,
+        "block_height": 2581760,
+        "block_hash": "000000000000000eba4e476fd2e7985221a2ae28ea2696c97bde455a4d40ec81",
+        "block_time": 1710329183
+      },
+      "value": 28019
+    }
+  ],
   "feeEstimateResp": {
     "22": 52.373999999999995,
     "6": 52.373999999999995,
