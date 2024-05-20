@@ -2,6 +2,7 @@ import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 
 import { compactError } from '../../../utils';
+import type { FeeRatio } from '../../chain';
 import type {
   IOnChainService,
   Balances,
@@ -39,9 +40,7 @@ export class BtcOnChainService implements IOnChainService {
         throw new BtcOnChainServiceError('Only one asset is supported');
       }
 
-      const allowedAssets = new Set<string>(
-        Object.entries(BtcAsset).map(([_, value]) => value.toString()),
-      );
+      const allowedAssets = new Set<string>(Object.values(BtcAsset));
 
       if (
         !allowedAssets.has(assets[0]) ||
@@ -69,11 +68,24 @@ export class BtcOnChainService implements IOnChainService {
     }
   }
 
-  /* eslint-disable */
   async estimateFees(): Promise<Fees> {
-    throw new Error('Method not implemented.');
+    try {
+      const result = await this.readClient.getFeeRates();
+
+      return {
+        fees: Object.entries(result).map(
+          ([key, value]: [key: FeeRatio, value: number]) => ({
+            type: key,
+            rate: value,
+          }),
+        ),
+      };
+    } catch (error) {
+      throw new BtcOnChainServiceError(error);
+    }
   }
 
+  /* eslint-disable */
   boardcastTransaction(txn: string) {
     throw new Error('Method not implemented.');
   }

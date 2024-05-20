@@ -4,8 +4,10 @@ import {
   generateAccounts,
   generateBlockStreamAccountStats,
   generateBlockStreamGetUtxosResp,
+  generateBlockStreamEstFeeResp,
 } from '../../../../../test/utils';
 import * as asyncUtils from '../../../../utils/async';
+import { FeeRatio } from '../../../chain';
 import { DataClientError } from '../exceptions';
 import { BlockStreamClient } from './blockstream';
 
@@ -96,6 +98,53 @@ describe('BlockStreamClient', () => {
       await expect(instance.getBalances(addresses)).rejects.toThrow(
         DataClientError,
       );
+    });
+  });
+
+  describe('getFeeRates', () => {
+    it('returns fee rate', async () => {
+      const { fetchSpy } = createMockFetch();
+      const mockResponse = generateBlockStreamEstFeeResp();
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue(mockResponse),
+      });
+
+      const instance = new BlockStreamClient({ network: networks.testnet });
+      const result = await instance.getFeeRates();
+
+      expect(result).toStrictEqual({
+        [FeeRatio.Fast]: mockResponse['1'],
+        [FeeRatio.Medium]: mockResponse['25'],
+        [FeeRatio.Slow]: mockResponse['144'],
+      });
+    });
+
+    it('throws DataClientError error if an non DataClientError catched', async () => {
+      const { fetchSpy } = createMockFetch();
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockRejectedValue(new Error('error')),
+      });
+
+      const instance = new BlockStreamClient({ network: networks.testnet });
+
+      await expect(instance.getFeeRates()).rejects.toThrow(DataClientError);
+    });
+
+    it('throws DataClientError error if an DataClientError catched', async () => {
+      const { fetchSpy } = createMockFetch();
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        json: jest.fn().mockResolvedValue(null),
+      });
+
+      const instance = new BlockStreamClient({ network: networks.testnet });
+
+      await expect(instance.getFeeRates()).rejects.toThrow(DataClientError);
     });
   });
 

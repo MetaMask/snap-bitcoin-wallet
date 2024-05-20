@@ -5,6 +5,7 @@ import {
   generateAccounts,
   generateBlockChairGetUtxosResp,
 } from '../../../../test/utils';
+import { FeeRatio } from '../../chain';
 import { BtcAsset } from '../constants';
 import type { IReadDataClient } from '../data-client';
 import { BtcOnChainServiceError } from './exceptions';
@@ -20,16 +21,20 @@ describe('BtcOnChainService', () => {
   const createMockReadDataClient = () => {
     const getBalanceSpy = jest.fn();
     const getUtxosSpy = jest.fn();
-
+    const getFeeRatesSpy = jest.fn();
     class MockReadDataClient implements IReadDataClient {
       getBalances = getBalanceSpy;
 
       getUtxos = getUtxosSpy;
+
+      getFeeRates = getFeeRatesSpy;
     }
+
     return {
       instance: new MockReadDataClient(),
       getBalanceSpy,
       getUtxosSpy,
+      getFeeRatesSpy,
     };
   };
 
@@ -155,6 +160,47 @@ describe('BtcOnChainService', () => {
           replaceable: true,
         }),
       ).rejects.toThrow(BtcOnChainServiceError);
+    });
+  });
+
+  describe('estimateFees', () => {
+    it('return estimateFees result', async () => {
+      const { instance, getFeeRatesSpy } = createMockReadDataClient();
+      const { instance: txnMgr } = createMockBtcService(instance);
+      getFeeRatesSpy.mockResolvedValue({
+        [FeeRatio.Fast]: 1.1,
+        [FeeRatio.Medium]: 1.2,
+      });
+
+      const result = await txnMgr.estimateFees();
+
+      expect(getFeeRatesSpy).toHaveBeenCalledTimes(1);
+      expect(result).toStrictEqual({
+        fees: [
+          {
+            type: FeeRatio.Fast,
+            rate: 1.1,
+          },
+          {
+            type: FeeRatio.Medium,
+            rate: 1.2,
+          },
+        ],
+      });
+    });
+
+    it('throws BtcOnChainServiceError error if an error catched', async () => {
+      const { instance, getFeeRatesSpy } = createMockReadDataClient();
+      const { instance: txnMgr } = createMockBtcService(
+        instance,
+        networks.bitcoin,
+      );
+
+      getFeeRatesSpy.mockRejectedValue(new Error('error'));
+
+      await expect(txnMgr.estimateFees()).rejects.toThrow(
+        BtcOnChainServiceError,
+      );
     });
   });
 });

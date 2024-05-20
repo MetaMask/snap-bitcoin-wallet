@@ -1,16 +1,18 @@
 import { type Network, networks } from 'bitcoinjs-lib';
 
 import { compactError, processBatch } from '../../../../utils';
-import { type Balances, type Utxo } from '../../../chain';
+import { type Balances, type Utxo, FeeRatio } from '../../../chain';
 import { logger } from '../../../logger/logger';
 import { DataClientError } from '../exceptions';
-import type { IReadDataClient } from '../types';
+import type { GetFeeRatesResp, IReadDataClient } from '../types';
 
 export type BlockStreamClientOptions = {
   network: Network;
 };
 
 /* eslint-disable */
+export type GetFeeEstimateResponse = Record<string, number>;
+
 export type GetAddressStatsResponse = {
   address: string;
   chain_stats: {
@@ -43,10 +45,17 @@ export type GetUtxosResponse = {
 /* eslint-enable */
 
 export class BlockStreamClient implements IReadDataClient {
-  options: BlockStreamClientOptions;
+  protected readonly options: BlockStreamClientOptions;
+
+  protected readonly feeRateRatioMap: Record<FeeRatio, string>;
 
   constructor(options: BlockStreamClientOptions) {
     this.options = options;
+    this.feeRateRatioMap = {
+      [FeeRatio.Fast]: '1',
+      [FeeRatio.Medium]: '25',
+      [FeeRatio.Slow]: '144',
+    };
   }
 
   get baseUrl(): string {
@@ -136,6 +145,29 @@ export class BlockStreamClient implements IReadDataClient {
       return data;
     } catch (error) {
       throw compactError(error, DataClientError);
+    }
+  }
+
+  async getFeeRates(): Promise<GetFeeRatesResp> {
+    try {
+      logger.info(`[BlockStreamClient.getFeeRates] start:`);
+      const response = await this.get<GetFeeEstimateResponse>(`/fee-estimates`);
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      logger.info(
+        `[BlockStreamClient.getFeeRates] response: ${JSON.stringify(response)}`,
+      );
+      return {
+        [FeeRatio.Fast]: response[this.feeRateRatioMap[FeeRatio.Fast]],
+        [FeeRatio.Medium]: response[this.feeRateRatioMap[FeeRatio.Medium]],
+        [FeeRatio.Slow]: response[this.feeRateRatioMap[FeeRatio.Slow]],
+      };
+    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      logger.info(`[BlockStreamClient.getFeeRates] error: ${error.message}`);
+      if (error instanceof DataClientError) {
+        throw error;
+      }
+      throw new DataClientError(error);
     }
   }
 }
