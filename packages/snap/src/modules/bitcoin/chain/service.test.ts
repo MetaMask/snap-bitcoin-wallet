@@ -160,9 +160,7 @@ describe('BtcOnChainService', () => {
 
     it('throws error if readClient fail', async () => {
       const { instance, getUtxosSpy } = createMockReadDataClient();
-      const { instance: txnService } = createMockBtcService(
-        instance
-      );
+      const { instance: txnService } = createMockBtcService(instance);
       const accounts = generateAccounts(2);
       const sender = accounts[0].address;
       const receiver = accounts[1].address;
@@ -209,9 +207,7 @@ describe('BtcOnChainService', () => {
 
     it('throws BtcOnChainServiceError error if an error catched', async () => {
       const { instance, getFeeRatesSpy } = createMockReadDataClient();
-      const { instance: txnMgr } = createMockBtcService(
-        instance
-      );
+      const { instance: txnMgr } = createMockBtcService(instance);
 
       getFeeRatesSpy.mockRejectedValue(new Error('error'));
 
