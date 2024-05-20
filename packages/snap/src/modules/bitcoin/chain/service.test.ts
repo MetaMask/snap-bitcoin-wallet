@@ -4,22 +4,38 @@ import { networks } from 'bitcoinjs-lib';
 import {
   generateAccounts,
   generateBlockChairBroadcastTransactionResp,
+  generateBlockChairGetUtxosResp,
 } from '../../../../test/utils';
+import { FeeRatio } from '../../chain';
 import { BtcAsset } from '../constants';
 import type { IReadDataClient, IWriteDataClient } from '../data-client';
 import { BtcOnChainServiceError } from './exceptions';
 import { BtcOnChainService } from './service';
 
+jest.mock('../../logger/logger', () => ({
+  logger: {
+    info: jest.fn(),
+  },
+}));
+
 describe('BtcOnChainService', () => {
   const createMockReadDataClient = () => {
     const getBalanceSpy = jest.fn();
-
+    const getUtxosSpy = jest.fn();
+    const getFeeRatesSpy = jest.fn();
     class MockReadDataClient implements IReadDataClient {
       getBalances = getBalanceSpy;
+
+      getUtxos = getUtxosSpy;
+
+      getFeeRates = getFeeRatesSpy;
     }
+
     return {
       instance: new MockReadDataClient(),
       getBalanceSpy,
+      getUtxosSpy,
+      getFeeRatesSpy,
     };
   };
 
@@ -106,6 +122,106 @@ describe('BtcOnChainService', () => {
       await expect(
         txnService.getBalances(addresses, [BtcAsset.TBtc]),
       ).rejects.toThrow('Invalid asset');
+    });
+  });
+
+  describe('getUtxos', () => {
+    it('calls getUtxos with readClient', async () => {
+      const { instance, getUtxosSpy } = createMockReadDataClient();
+      const { instance: txnService } = createMockBtcService(instance);
+      const accounts = generateAccounts(2);
+      const sender = accounts[0].address;
+      const receiver = accounts[1].address;
+      const mockResponse = generateBlockChairGetUtxosResp(sender, 10);
+      const utxos = mockResponse.data[sender].utxo.map((utxo) => ({
+        block: utxo.block_id,
+        txnHash: utxo.transaction_hash,
+        index: utxo.index,
+        value: utxo.value,
+      }));
+
+      getUtxosSpy.mockResolvedValue(utxos);
+
+      const result = await txnService.getDataForTransaction(sender, {
+        amounts: {
+          [receiver]: 100,
+        },
+        subtractFeeFrom: [],
+        replaceable: true,
+      });
+
+      expect(getUtxosSpy).toHaveBeenCalledWith(sender);
+      expect(result).toStrictEqual({
+        data: {
+          utxos,
+        },
+      });
+    });
+
+    it('throws error if readClient fail', async () => {
+      const { instance, getUtxosSpy } = createMockReadDataClient();
+      const { instance: txnService } = createMockBtcService(
+        instance,
+        undefined,
+        networks.bitcoin,
+      );
+      const accounts = generateAccounts(2);
+      const sender = accounts[0].address;
+      const receiver = accounts[1].address;
+
+      getUtxosSpy.mockRejectedValue(new Error('error'));
+
+      await expect(
+        txnService.getDataForTransaction(sender, {
+          amounts: {
+            [receiver]: 100,
+          },
+          subtractFeeFrom: [],
+          replaceable: true,
+        }),
+      ).rejects.toThrow(BtcOnChainServiceError);
+    });
+  });
+
+  describe('estimateFees', () => {
+    it('return estimateFees result', async () => {
+      const { instance, getFeeRatesSpy } = createMockReadDataClient();
+      const { instance: txnMgr } = createMockBtcService(instance);
+      getFeeRatesSpy.mockResolvedValue({
+        [FeeRatio.Fast]: 1.1,
+        [FeeRatio.Medium]: 1.2,
+      });
+
+      const result = await txnMgr.estimateFees();
+
+      expect(getFeeRatesSpy).toHaveBeenCalledTimes(1);
+      expect(result).toStrictEqual({
+        fees: [
+          {
+            type: FeeRatio.Fast,
+            rate: 1.1,
+          },
+          {
+            type: FeeRatio.Medium,
+            rate: 1.2,
+          },
+        ],
+      });
+    });
+
+    it('throws BtcOnChainServiceError error if an error catched', async () => {
+      const { instance, getFeeRatesSpy } = createMockReadDataClient();
+      const { instance: txnMgr } = createMockBtcService(
+        instance,
+        undefined,
+        networks.bitcoin,
+      );
+
+      getFeeRatesSpy.mockRejectedValue(new Error('error'));
+
+      await expect(txnMgr.estimateFees()).rejects.toThrow(
+        BtcOnChainServiceError,
+      );
     });
   });
 

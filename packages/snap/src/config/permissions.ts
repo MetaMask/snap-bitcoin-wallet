@@ -16,6 +16,8 @@ export const originPermissions = new Map<string, Set<string>>([
       // Chain API methods
       'chain_getBalances',
       'chain_broadcastTransaction',
+      'chain_getDataForTransaction',
+      'chain_estimateFees',
     ]),
   ],
   [
@@ -36,6 +38,8 @@ export const originPermissions = new Map<string, Set<string>>([
       'chain_getBalances',
       'chain_createAccount',
       'chain_broadcastTransaction',
+      'chain_getDataForTransaction',
+      'chain_estimateFees',
     ]),
   ],
   [
@@ -55,6 +59,8 @@ export const originPermissions = new Map<string, Set<string>>([
       // Chain API methods
       'chain_getBalances',
       'chain_broadcastTransaction',
+      'chain_getDataForTransaction',
+      'chain_estimateFees',
     ]),
   ],
 ]);

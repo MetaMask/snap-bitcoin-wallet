@@ -198,6 +198,112 @@ export function generateBlockChairGetBalanceResp(addresses: string[]) {
 }
 
 /**
+ * Method to generate blockchair getUtxos resp by address.
+ *
+ * @param address - address in string.
+ * @param utxosCount - utxos count.
+ * @returns An array of blockchair getUtxos response.
+ */
+export function generateBlockChairGetUtxosResp(
+  address: string,
+  utxosCount: number,
+) {
+  const template = blockChairData.getUtxoResp;
+  const data = { ...template.data.tb1qlq94vt9uh07fwunsgdyycpkv24uev05ywjua0r };
+  let idx = -1;
+  const resp = {
+    data: {
+      [address]: {
+        ...data,
+        utxo: Array.from({ length: utxosCount }, () => {
+          idx += 1;
+          return {
+            block_id: randomNum(1000000),
+            transaction_hash: randomNum(1000000)
+              .toString(16)
+              .padStart(
+                template.data.tb1qlq94vt9uh07fwunsgdyycpkv24uev05ywjua0r.utxo[0]
+                  .transaction_hash.length,
+                '0',
+              ),
+            index: idx,
+            value: randomNum(1000000),
+          };
+        }),
+      },
+    },
+  };
+  return resp;
+}
+
+/**
+ * Method to generate blockchair getStats resp.
+ *
+ * @returns A blockchair getStats resp.
+ */
+export function generateBlockChairGetStatsResp() {
+  const template = blockChairData.getStatsResp;
+  const resp: typeof template = { ...template };
+  Object.entries(template.data).forEach(([key, value]) => {
+    if (typeof value === 'number') {
+      if (value === 0) {
+        resp.data[key] = randomNum(100);
+      }
+      resp.data[key] = randomNum(value);
+    }
+  });
+  resp.data['suggested_transaction_fee_per_byte_sat'] = randomNum(20);
+  return resp;
+}
+
+/**
+ * Method to generate blockstream getUtxos resp.
+ *
+ * @param utxosCount - utxos count.
+ * @returns An array of blockstream getUtxos response.
+ */
+export function generateBlockStreamGetUtxosResp(
+  utxosCount: number,
+  confirmed: boolean = true,
+) {
+  const template = blockStreamData.getUtxoResp;
+  let idx = -1;
+  const resp = Array.from({ length: utxosCount }, () => {
+    idx += 1;
+    return {
+      txid: randomNum(1000000)
+        .toString(16)
+        .padStart(template[0].txid.length, '0'),
+      vout: idx,
+      status: {
+        confirmed: confirmed,
+        block_height: randomNum(1000000),
+        block_hash: randomNum(1000000)
+          .toString(16)
+          .padStart(template[0].status.block_hash.length, '0'),
+        block_time: 1710329183,
+      },
+      value: randomNum(1000000),
+    };
+  });
+  return resp;
+}
+
+/**
+ * Method to generate blockstream estimate fee resp.
+ *
+ * @returns A blockstream estimate fee resp.
+ */
+export function generateBlockStreamEstFeeResp() {
+  const template = blockStreamData.feeEstimateResp;
+  const resp: typeof template = { ...template };
+  Object.keys(template).forEach((key) => {
+    resp[key] = Math.min(0.1, randomNum(40));
+  });
+  return resp;
+}
+
+/**
  * Method to generate blockchair BroadcastTransaction resp.
  *
  * @returns An txn id of blockchair BroadcastTransaction response.

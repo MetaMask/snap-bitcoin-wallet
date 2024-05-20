@@ -29,6 +29,19 @@ export type TransactionIntent = {
   replaceable: boolean;
 };
 
+export type Utxo = {
+  block: number;
+  txnHash: string;
+  index: number;
+  value: number;
+};
+
+export type TransactionData = {
+  data: {
+    utxos: Utxo[];
+  };
+};
+
 export type Pagination = {
   limit: number;
   offset: number;
@@ -40,5 +53,8 @@ export type IOnChainService = {
   boardcastTransaction(signedTransaction: string): Promise<string>;
   listTransactions(address: string, pagination: Pagination);
   getTransaction(txnHash: string);
-  getDataForTransaction(address: string, transactionIntent: TransactionIntent);
+  getDataForTransaction(
+    address: string,
+    transactionIntent?: TransactionIntent,
+  ): Promise<TransactionData>;
 };
