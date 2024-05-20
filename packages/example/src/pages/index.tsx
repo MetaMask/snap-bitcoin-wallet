@@ -11,6 +11,7 @@ import {
   CreateBTCAccountButton,
   GetBTCAccountBalanceButton,
   ListAccountsButton,
+  EstimateFeesCard
 } from '../components';
 import { defaultSnapOrigin } from '../config';
 import { defaultSnapOrigin as snapId } from '../config/snap';
@@ -256,6 +257,16 @@ const Index = () => {
             ),
           }}
           disabled={!installedSnap || !btcAccount}
+          fullWidth={
+            isMetaMaskReady &&
+            Boolean(installedSnap) &&
+            !shouldDisplayReconnectButton(installedSnap)
+          }
+        />
+
+        <EstimateFeesCard
+          scope={scope}
+          enabled={!(!installedSnap || !btcAccount)}
           fullWidth={
             isMetaMaskReady &&
             Boolean(installedSnap) &&

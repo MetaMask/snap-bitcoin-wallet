@@ -196,3 +196,37 @@ export function generateBlockChairGetBalanceResp(addresses: string[]) {
   }
   return resp;
 }
+
+/**
+ * Method to generate blockchair getStats resp.
+ *
+ * @returns A blockchair getStats resp.
+ */
+export function generateBlockChairGetStatsResp() {
+  const template = blockChairData.getStatsResp;
+  const resp: typeof template = { ...template };
+  Object.entries(template.data).forEach(([key, value]) => {
+    if (typeof value === 'number') {
+      if (value === 0) {
+        resp.data[key] = randomNum(100);
+      }
+      resp.data[key] = randomNum(value);
+    }
+  });
+  resp.data['suggested_transaction_fee_per_byte_sat'] = randomNum(20);
+  return resp;
+}
+
+/**
+ * Method to generate blockstream estimate fee resp.
+ *
+ * @returns A blockstream estimate fee resp.
+ */
+export function generateBlockStreamEstFeeResp() {
+  const template = blockStreamData.feeEstimateResp;
+  const resp: typeof template = { ...template };
+  Object.keys(template).forEach((key) => {
+    resp[key] = Math.min(0.1, randomNum(40));
+  });
+  return resp;
+}

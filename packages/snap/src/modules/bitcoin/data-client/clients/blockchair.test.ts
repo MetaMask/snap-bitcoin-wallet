@@ -3,7 +3,9 @@ import { networks } from 'bitcoinjs-lib';
 import {
   generateAccounts,
   generateBlockChairGetBalanceResp,
+  generateBlockChairGetStatsResp,
 } from '../../../../../test/utils';
+import { FeeRatio } from '../../../chain';
 import { DataClientError } from '../exceptions';
 import { BlockChairClient } from './blockchair';
 
@@ -173,6 +175,52 @@ describe('BlockChairClient', () => {
       await expect(instance.getBalances(addresses)).rejects.toThrow(
         DataClientError,
       );
+    });
+  });
+
+  describe('getFeeRates', () => {
+    it('returns fee rate', async () => {
+      const { fetchSpy } = createMockFetch();
+      const mockResponse = generateBlockChairGetStatsResp();
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue(mockResponse),
+      });
+
+      const instance = new BlockChairClient({ network: networks.testnet });
+      const result = await instance.getFeeRates();
+
+      expect(result).toStrictEqual({
+        [FeeRatio.Fast]:
+          mockResponse.data.suggested_transaction_fee_per_byte_sat,
+      });
+    });
+
+    it('throws DataClientError error if an non DataClientError catched', async () => {
+      const { fetchSpy } = createMockFetch();
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockRejectedValue(new Error('error')),
+      });
+
+      const instance = new BlockChairClient({ network: networks.testnet });
+
+      await expect(instance.getFeeRates()).rejects.toThrow(DataClientError);
+    });
+
+    it('throws DataClientError error if an DataClientError catched', async () => {
+      const { fetchSpy } = createMockFetch();
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        json: jest.fn().mockResolvedValue(null),
+      });
+
+      const instance = new BlockChairClient({ network: networks.testnet });
+
+      await expect(instance.getFeeRates()).rejects.toThrow(DataClientError);
     });
   });
 });

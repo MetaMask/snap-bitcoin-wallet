@@ -1,4 +1,5 @@
 import { CreateAccountHandler } from './create-account';
+import { EstimateFeesHandler } from './estimate-fees';
 import { GetBalancesHandler } from './get-balances';
 import { RpcHelper } from './helpers';
 import { SendManyHandler } from './sendmany';
@@ -11,6 +12,8 @@ describe('RpcHelper', () => {
         chain_createAccount: CreateAccountHandler,
         // eslint-disable-next-line @typescript-eslint/naming-convention
         chain_getBalances: GetBalancesHandler,
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        chain_estimateFees: EstimateFeesHandler,
       });
     });
   });

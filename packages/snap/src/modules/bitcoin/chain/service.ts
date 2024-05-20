@@ -9,7 +9,8 @@ import type {
   TransactionIntent,
   Pagination,
   Fees,
-} from '../../chain/types';
+  FeeRatio,
+} from '../../chain';
 import { BtcAsset } from '../constants';
 import { type IReadDataClient } from '../data-client';
 import { BtcOnChainServiceError } from './exceptions';
@@ -38,9 +39,7 @@ export class BtcOnChainService implements IOnChainService {
         throw new BtcOnChainServiceError('Only one asset is supported');
       }
 
-      const allowedAssets = new Set<string>(
-        Object.entries(BtcAsset).map(([_, value]) => value.toString()),
-      );
+      const allowedAssets = new Set<string>(Object.values(BtcAsset));
 
       if (
         !allowedAssets.has(assets[0]) ||
@@ -67,11 +66,25 @@ export class BtcOnChainService implements IOnChainService {
       throw compactError(error, BtcOnChainServiceError);
     }
   }
-  /* eslint-disable */
+
   async estimateFees(): Promise<Fees> {
-    throw new Error('Method not implemented.');
+    try {
+      const result = await this.readClient.getFeeRates();
+
+      return {
+        fees: Object.entries(result).map(
+          ([key, value]: [key: FeeRatio, value: number]) => ({
+            type: key,
+            rate: value,
+          }),
+        ),
+      };
+    } catch (error) {
+      throw new BtcOnChainServiceError(error);
+    }
   }
 
+  /* eslint-disable */
   boardcastTransaction(txn: string) {
     throw new Error('Method not implemented.');
   }
