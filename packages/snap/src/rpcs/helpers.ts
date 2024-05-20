@@ -1,5 +1,6 @@
 import { CreateAccountHandler, GetBalancesHandler } from '.';
 import type { IStaticSnapRpcHandler } from '../modules/rpc';
+import { BroadcastTransactionHandler } from './broadcast-transaction';
 import { SendManyHandler } from './sendmany';
 
 export class RpcHelper {
@@ -9,6 +10,8 @@ export class RpcHelper {
       chain_createAccount: CreateAccountHandler,
       // eslint-disable-next-line @typescript-eslint/naming-convention
       chain_getBalances: GetBalancesHandler,
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      chain_broadcastTransaction: BroadcastTransactionHandler,
     };
   }
 

@@ -11,6 +11,7 @@ import type {
   Fees,
 } from '../../chain/types';
 import { BtcAsset } from '../constants';
+import type { IWriteDataClient } from '../data-client';
 import { type IReadDataClient } from '../data-client';
 import { BtcOnChainServiceError } from './exceptions';
 import type { BtcOnChainServiceOptions } from './types';
@@ -18,10 +19,17 @@ import type { BtcOnChainServiceOptions } from './types';
 export class BtcOnChainService implements IOnChainService {
   protected readonly readClient: IReadDataClient;
 
+  protected readonly writeClient: IWriteDataClient;
+
   protected readonly options: BtcOnChainServiceOptions;
 
-  constructor(readClient: IReadDataClient, options: BtcOnChainServiceOptions) {
+  constructor(
+    readClient: IReadDataClient,
+    writeClient: IWriteDataClient,
+    options: BtcOnChainServiceOptions,
+  ) {
     this.readClient = readClient;
+    this.writeClient = writeClient;
     this.options = options;
   }
 
@@ -72,10 +80,6 @@ export class BtcOnChainService implements IOnChainService {
     throw new Error('Method not implemented.');
   }
 
-  boardcastTransaction(txn: string) {
-    throw new Error('Method not implemented.');
-  }
-
   listTransactions(address: string, pagination: Pagination) {
     throw new Error('Method not implemented.');
   }
@@ -88,4 +92,12 @@ export class BtcOnChainService implements IOnChainService {
     throw new Error('Method not implemented.');
   }
   /* eslint-disable */
+
+  async boardcastTransaction(signedTransaction: string): Promise<string> {
+    try {
+      return await this.writeClient.sendTransaction(signedTransaction);
+    } catch (error) {
+      throw compactError(error, BtcOnChainServiceError);
+    }
+  }
 }

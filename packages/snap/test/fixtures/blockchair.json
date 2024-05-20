@@ -27,5 +27,10 @@
       "full_time": 0.41744303703308105,
       "request_cost": 1.003
     }
+  },
+  "broadcastTransactionResp": {
+    "data": {
+      "transaction_hash": "0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098"
+    }
   }
 }

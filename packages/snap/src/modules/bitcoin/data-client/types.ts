@@ -5,7 +5,7 @@ export type IReadDataClient = {
 };
 
 export type IWriteDataClient = {
-  sendTransaction(tx: string): Promise<void>;
+  sendTransaction(tx: string): Promise<string>;
 };
 
 export type IDataClient = IReadDataClient & IWriteDataClient;

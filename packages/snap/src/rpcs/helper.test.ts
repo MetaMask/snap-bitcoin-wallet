@@ -1,3 +1,4 @@
+import { BroadcastTransactionHandler } from './broadcast-transaction';
 import { CreateAccountHandler } from './create-account';
 import { GetBalancesHandler } from './get-balances';
 import { RpcHelper } from './helpers';
@@ -11,6 +12,8 @@ describe('RpcHelper', () => {
         chain_createAccount: CreateAccountHandler,
         // eslint-disable-next-line @typescript-eslint/naming-convention
         chain_getBalances: GetBalancesHandler,
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        chain_broadcastTransaction: BroadcastTransactionHandler,
       });
     });
   });
