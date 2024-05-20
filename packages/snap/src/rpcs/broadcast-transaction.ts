@@ -50,7 +50,6 @@ export class BroadcastTransactionHandler
       signedTransaction,
     );
 
-    console.log('transactionId', transactionId);
     return {
       transactionId,
     };
