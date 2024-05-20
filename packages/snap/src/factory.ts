@@ -24,8 +24,8 @@ export class Factory {
   ) {
     const btcNetwork = getBtcNetwork(network);
     const readClient = DataClientFactory.createReadClient(config, btcNetwork);
-
-    return new BtcOnChainService(readClient, {
+    const writeClient = DataClientFactory.createWriteClient(config, btcNetwork);
+    return new BtcOnChainService(readClient, writeClient, {
       network: btcNetwork,
     });
   }

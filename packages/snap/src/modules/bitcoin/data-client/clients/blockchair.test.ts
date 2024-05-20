@@ -2,6 +2,7 @@ import { networks } from 'bitcoinjs-lib';
 
 import {
   generateAccounts,
+  generateBlockChairBroadcastTransactionResp,
   generateBlockChairGetBalanceResp,
   generateBlockChairGetUtxosResp,
   generateBlockChairGetStatsResp,
@@ -51,7 +52,7 @@ describe('BlockChairClient', () => {
     });
   });
 
-  describe('get', () => {
+  describe('getApiUrl', () => {
     it('append api key to query url if option `apiKey` is present', async () => {
       const { fetchSpy } = createMockFetch();
       const accounts = generateAccounts(1);
@@ -300,6 +301,64 @@ describe('BlockChairClient', () => {
 
       await expect(instance.getUtxos(requestAddress)).rejects.toThrow(
         `Data not avaiable`,
+      );
+    });
+  });
+
+  describe('sendTransaction', () => {
+    const signedTransaction =
+      '02000000000101ec81faa8b57add4c8fb3958dd8f04667f5cd829a7b94199f4400be9e52cda0760000000000ffffffff015802000000000000160014f80b562cbcbbfc97727043484c06cc5579963e8402473044022011ec3f7ea7a7cac7cb891a1ea498d94ca3cd082339b9b2620ba5421ca7cbdf3d022062f34411d6aa5335c2bd7ff4c940adb962e9509133b86a2d97996552fd811f2c012102ceea82614fdb14871ef881498c55c5dbdc24b4633d29b42040dd18b4285540f500000000';
+
+    it('broadcasts an transaction', async () => {
+      const { fetchSpy } = createMockFetch();
+      const mockResponse = generateBlockChairBroadcastTransactionResp();
+      const expectedResult = mockResponse.data;
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue(mockResponse),
+      });
+
+      const instance = new BlockChairClient({ network: networks.testnet });
+      const result = await instance.sendTransaction(signedTransaction);
+
+      expect(result).toStrictEqual(expectedResult.transaction_hash);
+    });
+
+    it('throws DataClientError error if an fetch response is falsely', async () => {
+      const { fetchSpy } = createMockFetch();
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        json: jest.fn().mockResolvedValue(null),
+      });
+
+      const instance = new BlockChairClient({ network: networks.testnet });
+
+      await expect(instance.sendTransaction(signedTransaction)).rejects.toThrow(
+        DataClientError,
+      );
+    });
+
+    it('conducts error message with response`s context if status is 400', async () => {
+      const { fetchSpy } = createMockFetch();
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        json: jest.fn().mockResolvedValue({
+          data: null,
+          context: {
+            code: 400,
+            error:
+              'Invalid transaction. Error: Transaction already in block chain',
+          },
+        }),
+      });
+
+      const instance = new BlockChairClient({ network: networks.testnet });
+      await expect(instance.sendTransaction(signedTransaction)).rejects.toThrow(
+        'Failed to post data from blockchair: Invalid transaction. Error: Transaction already in block chain',
       );
     });
   });

@@ -5,7 +5,7 @@ import { DataClient } from '../constants';
 import { BlockChairClient } from './clients/blockchair';
 import { BlockStreamClient } from './clients/blockstream';
 import { DataClientError } from './exceptions';
-import type { IReadDataClient } from './types';
+import type { IReadDataClient, IWriteDataClient } from './types';
 
 export class DataClientFactory {
   static createReadClient(
@@ -25,6 +25,25 @@ export class DataClientFactory {
         throw new DataClientError(
           // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
           `Unsupported client type: ${config.dataClient.read.type}`,
+        );
+    }
+  }
+
+  static createWriteClient(
+    config: BtcOnChainServiceConfig,
+    network: Network,
+  ): IWriteDataClient {
+    const { type, options } = config.dataClient.write;
+    switch (type) {
+      case DataClient.BlockChair:
+        return new BlockChairClient({
+          network,
+          apiKey: options?.apiKey?.toString(),
+        });
+      default:
+        throw new DataClientError(
+          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+          `Unsupported client type: ${config.dataClient.write.type}`,
         );
     }
   }

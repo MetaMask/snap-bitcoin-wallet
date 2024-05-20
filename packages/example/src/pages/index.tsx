@@ -11,6 +11,7 @@ import {
   CreateBTCAccountButton,
   GetBTCAccountBalanceButton,
   ListAccountsButton,
+  BroadcastTxnCard,
   GetDataForTransactionCard,
   EstimateFeesCard,
 } from '../components';
@@ -279,6 +280,16 @@ const Index = () => {
         <EstimateFeesCard
           scope={scope}
           enabled={!(!installedSnap || !btcAccount)}
+          fullWidth={
+            isMetaMaskReady &&
+            Boolean(installedSnap) &&
+            !shouldDisplayReconnectButton(installedSnap)
+          }
+        />
+
+        <BroadcastTxnCard
+          enabled={!(!installedSnap || !btcAccount)}
+          scope={scope}
           fullWidth={
             isMetaMaskReady &&
             Boolean(installedSnap) &&

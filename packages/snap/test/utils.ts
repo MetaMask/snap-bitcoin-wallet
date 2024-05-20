@@ -302,3 +302,14 @@ export function generateBlockStreamEstFeeResp() {
   });
   return resp;
 }
+
+/**
+ * Method to generate blockchair BroadcastTransaction resp.
+ *
+ * @returns An txn id of blockchair BroadcastTransaction response.
+ */
+export function generateBlockChairBroadcastTransactionResp() {
+  const template = blockChairData.broadcastTransactionResp;
+  const resp: typeof template = { ...template };
+  return resp;
+}

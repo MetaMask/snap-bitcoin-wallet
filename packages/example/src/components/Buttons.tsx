@@ -125,6 +125,10 @@ export const ListAccountsButton = (props: ComponentProps<typeof Button>) => {
   return <Button {...props}>List Accounts</Button>;
 };
 
+export const BroadcastTxnButton = (props: ComponentProps<typeof Button>) => {
+  return <Button {...props}>Broadcast txn</Button>;
+};
+
 export const SellBTCButton = (props: ComponentProps<typeof Button>) => {
   return <Button {...props}>Sell your BTC</Button>;
 };

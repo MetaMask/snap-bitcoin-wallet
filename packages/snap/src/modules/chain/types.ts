@@ -50,7 +50,7 @@ export type Pagination = {
 export type IOnChainService = {
   getBalances(addresses: string[], assets: string[]): Promise<AssetBalances>;
   estimateFees(): Promise<Fees>;
-  boardcastTransaction(txn: string);
+  boardcastTransaction(signedTransaction: string): Promise<string>;
   listTransactions(address: string, pagination: Pagination);
   getTransaction(txnHash: string);
   getDataForTransaction(

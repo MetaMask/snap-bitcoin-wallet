@@ -1,10 +1,15 @@
+import type { Json } from '@metamask/snaps-sdk';
 import { type Network, networks } from 'bitcoinjs-lib';
 
 import { compactError } from '../../../../utils';
 import { type Balances, type Utxo, FeeRatio } from '../../../chain';
 import { logger } from '../../../logger/logger';
 import { DataClientError } from '../exceptions';
-import type { GetFeeRatesResp, IReadDataClient } from '../types';
+import type {
+  GetFeeRatesResp,
+  IReadDataClient,
+  IWriteDataClient,
+} from '../types';
 
 export type BlockChairClientOptions = {
   network: Network;
@@ -95,9 +100,15 @@ export type GetUtxosResponse = {
     };
   };
 };
+
+export type PostTransactionResponse = {
+  data: {
+    transaction_hash: string;
+  };
+};
 /* eslint-disable */
 
-export class BlockChairClient implements IReadDataClient {
+export class BlockChairClient implements IReadDataClient, IWriteDataClient {
   options: BlockChairClientOptions;
 
   constructor(options: BlockChairClientOptions) {
@@ -115,20 +126,47 @@ export class BlockChairClient implements IReadDataClient {
     }
   }
 
-  protected async get<Resp>(endpoint: string): Promise<Resp> {
+  protected getApiUrl(endpoint: string): string {
     const url = new URL(`${this.baseUrl}${endpoint}`);
     // TODO: Update to proxy
     if (this.options.apiKey) {
       url.searchParams.append('key', this.options.apiKey);
     }
+    return url.toString();
+  }
 
-    const response = await fetch(url.toString(), {
+  protected async get<Resp>(endpoint: string): Promise<Resp> {
+    const response = await fetch(this.getApiUrl(endpoint), {
       method: 'GET',
     });
 
     if (!response.ok) {
       throw new DataClientError(
         `Failed to fetch data from blockchair: ${response.statusText}`,
+      );
+    }
+    return response.json() as unknown as Resp;
+  }
+
+  protected async post<Resp>(endpoint: string, body: Json): Promise<Resp> {
+    const response = await fetch(this.getApiUrl(endpoint), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (response.status == 400) {
+      const res = await response.json();
+      throw new DataClientError(
+        `Failed to post data from blockchair: ${res.context.error}`,
+      );
+    }
+
+    if (!response.ok) {
+      throw new DataClientError(
+        `Failed to post data from blockchair: ${response.statusText}`,
       );
     }
     return response.json() as unknown as Resp;
@@ -219,10 +257,28 @@ export class BlockChairClient implements IReadDataClient {
         [FeeRatio.Fast]: response.data.suggested_transaction_fee_per_byte_sat,
       };
     } catch (error) {
-      if (error instanceof DataClientError) {
-        throw error;
-      }
-      throw new DataClientError(error);
+      throw compactError(error, DataClientError);
+    }
+  }
+
+  async sendTransaction(signedTransaction: string): Promise<string> {
+    try {
+      const response = await this.post<PostTransactionResponse>(
+        `/push/transaction`,
+        {
+          data: signedTransaction,
+        },
+      );
+
+      logger.info(
+        `[BlockChairClient.sendTransaction] response: ${JSON.stringify(
+          response,
+        )}`,
+      );
+
+      return response.data.transaction_hash;
+    } catch (error) {
+      throw compactError(error, DataClientError);
     }
   }
 }
