@@ -10,7 +10,6 @@ import {
 } from 'superstruct';
 
 import { Factory } from '../factory';
-import type { IAccount, IWallet } from '../keyring';
 import { type Wallet as WalletData } from '../keyring';
 import type { Fees, TransactionIntent } from '../modules/chain';
 import {
@@ -22,6 +21,7 @@ import type {
   SnapRpcHandlerRequest,
   SnapRpcHandlerResponse,
 } from '../modules/rpc';
+import type { IAccount, IWallet } from '../modules/wallet';
 import type { StaticImplements } from '../types/static';
 import { numberStringStruct } from '../utils';
 

@@ -1,17 +1,19 @@
 import type { Json } from '@metamask/snaps-sdk';
 import type { BIP32Interface } from 'bip32';
 import { type Network } from 'bitcoinjs-lib';
-import { type Buffer } from 'buffer';
 
-import type { IAccountSigner } from '../../../keyring';
-import { type IAccount, type IWallet } from '../../../keyring';
 import { bufferToString, compactError } from '../../../utils';
 import type { TransactionIntent } from '../../chain/types';
+import type { IAccount, IWallet } from '../../wallet';
 import { ScriptType } from '../constants';
 import { P2WPKHAccount, P2SHP2WPKHAccount } from './account';
 import { WalletError } from './exceptions';
 import { AccountSigner } from './signer';
-import type { IStaticBtcAccount, IBtcAccountDeriver } from './types';
+import type {
+  IStaticBtcAccount,
+  IBtcAccountDeriver,
+  IAccountSigner,
+} from './types';
 
 export class BtcWallet implements IWallet {
   protected readonly deriver: IBtcAccountDeriver;
@@ -71,7 +73,7 @@ export class BtcWallet implements IWallet {
       fee: number;
     },
   ): Promise<{
-    txn: Buffer;
+    txn: string;
     txnJson: Record<string, Json>;
   }> {
     // create PSBT
@@ -82,7 +84,7 @@ export class BtcWallet implements IWallet {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async signTransaction(signer: IAccountSigner, txn: Buffer): Promise<string> {
+  async signTransaction(signer: IAccountSigner, txn: string): Promise<string> {
     // convert txn to PSBT
     // validate PSBT
     // finalize PSBT
