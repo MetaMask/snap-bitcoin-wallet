@@ -2,7 +2,7 @@ import type { BIP32Interface } from 'bip32';
 import type { Network, Payment } from 'bitcoinjs-lib';
 import type { Buffer } from 'buffer';
 
-import type { IAccount } from '../../../keyring';
+import type { IAccount } from '../../wallet';
 import type { ScriptType } from '../constants';
 
 export type IBtcAccountDeriver = {

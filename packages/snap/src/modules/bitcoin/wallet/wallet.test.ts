@@ -1,5 +1,4 @@
 import { networks } from 'bitcoinjs-lib';
-import { Buffer } from 'buffer';
 
 import { createMockBip32Instance } from '../../../../test/utils';
 import { ScriptType } from '../constants';
@@ -106,10 +105,7 @@ describe('BtcWallet', () => {
       const account = await instance.unlock(idx, ScriptType.P2wpkh);
 
       await expect(
-        instance.signTransaction(
-          account.signer,
-          Buffer.from('0x12312313', 'hex'),
-        ),
+        instance.signTransaction(account.signer, '0x12312313'),
       ).rejects.toThrow('Method not implemented.');
     });
   });

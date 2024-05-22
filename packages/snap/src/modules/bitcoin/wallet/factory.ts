@@ -1,6 +1,6 @@
 import { type Network } from 'bitcoinjs-lib';
 
-import { type IWallet } from '../../../keyring';
+import type { IWallet } from '../../wallet';
 import { type BtcWalletConfig } from '../config';
 import { BtcAccountBip32Deriver, BtcAccountBip44Deriver } from './deriver';
 import { BtcWallet } from './wallet';
