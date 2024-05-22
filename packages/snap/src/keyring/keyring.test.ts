@@ -6,12 +6,12 @@ import { Chain, Config } from '../config';
 import { Factory } from '../factory';
 import { Network } from '../modules/bitcoin/constants';
 import { type IStaticSnapRpcHandler, BaseSnapRpcHandler } from '../modules/rpc';
+import type { IWallet } from '../modules/wallet';
 import { RpcHelper } from '../rpcs/helpers';
 import type { StaticImplements } from '../types/static';
 import { BtcKeyringError } from './exceptions';
 import { BtcKeyring } from './keyring';
 import { KeyringStateManager } from './state';
-import type { IWallet } from './types';
 
 jest.mock('../modules/logger/logger', () => ({
   logger: {
@@ -61,10 +61,7 @@ describe('BtcKeyring', () => {
       KeyringStateManager.prototype,
       'getAccount',
     );
-    const getWalletByAddressNScopeSpy = jest.spyOn(
-      KeyringStateManager.prototype,
-      'getWalletByAddressNScope',
-    );
+    const getWalletSpy = jest.spyOn(KeyringStateManager.prototype, 'getWallet');
 
     return {
       instance: new KeyringStateManager(),
@@ -73,7 +70,7 @@ describe('BtcKeyring', () => {
       removeAccountsSpy,
       getAccountSpy,
       updateAccountSpy,
-      getWalletByAddressNScopeSpy,
+      getWalletSpy,
     };
   };
 
@@ -198,13 +195,12 @@ describe('BtcKeyring', () => {
 
   describe('submitRequest', () => {
     it('calls SnapRpcHandler if the method support', async () => {
-      const { instance: stateMgr, getWalletByAddressNScopeSpy } =
-        createMockStateMgr();
+      const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
       const { instance: keyring, handleRequestSpy } =
         createMockKeyring(stateMgr);
       const account = generateAccounts(1)[0];
       const params = {
-        scope: 'bip122:000000000019d6689c085ae165831e93',
+        scope: 'bip122:000000000933ea01ad0ee984209779ba',
         amounts: {
           bc1qrp0yzgkf8rawkuvdlhnjfj2fnjwm0m8727kgah: '0.01',
           bc1qf5n2h6mgelkls4497pkpemew55xpew90td2qae: '0.01',
@@ -213,7 +209,7 @@ describe('BtcKeyring', () => {
         subtractFeeFrom: ['bc1qrp0yzgkf8rawkuvdlhnjfj2fnjwm0m8727kgah'],
         replaceable: false,
       };
-      getWalletByAddressNScopeSpy.mockResolvedValue({
+      getWalletSpy.mockResolvedValue({
         account,
         index: account.options.index,
         scope: account.options.scope,

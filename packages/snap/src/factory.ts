@@ -1,7 +1,7 @@
 import { type Keyring } from '@metamask/keyring-api';
 
 import { Config } from './config';
-import { BtcKeyring, KeyringStateManager, type IWallet } from './keyring';
+import { BtcKeyring, KeyringStateManager } from './keyring';
 import { BtcOnChainService } from './modules/bitcoin/chain';
 import {
   type BtcWalletConfig,
@@ -10,7 +10,8 @@ import {
 import { DataClientFactory } from './modules/bitcoin/data-client/factory';
 import { getBtcNetwork } from './modules/bitcoin/utils';
 import { BtcWalletFactory } from './modules/bitcoin/wallet';
-import type { IOnChainService } from './modules/chain/types';
+import type { IOnChainService } from './modules/chain';
+import type { IWallet } from './modules/wallet';
 
 // TODO: Temp solution to support keyring in snap without keyring API
 export type CreateBtcKeyringOptions = {

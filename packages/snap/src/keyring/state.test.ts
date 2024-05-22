@@ -321,30 +321,26 @@ describe('KeyringStateManager', () => {
     });
   });
 
-  describe('getWalletByAddressNScope', () => {
+  describe('getWallet', () => {
     it('returns result', async () => {
       const { instance, getDataSpy } = createMockStateManager();
       const state = createInitState(20);
       getDataSpy.mockResolvedValue(state);
-      const { address } = state.wallets[state.walletIds[0]].account;
-      const { scope } = state.wallets[state.walletIds[0]];
+      const { id } = state.wallets[state.walletIds[0]].account;
 
-      const result = await instance.getWalletByAddressNScope(address, scope);
+      const result = await instance.getWallet(id);
 
       expect(getDataSpy).toHaveBeenCalledTimes(1);
       expect(result).toStrictEqual(state.wallets[state.walletIds[0]]);
     });
 
-    it('returns null if the address does not exist', async () => {
+    it('returns null if the id does not exist', async () => {
       const { instance, getDataSpy } = createMockStateManager();
       const state = createInitState(20);
       getDataSpy.mockResolvedValue(state);
-      const { address } = generateAccounts(1, 'notexist', 'notexist')[0];
+      const { id } = generateAccounts(1, 'notexist', 'notexist')[0];
 
-      const result = await instance.getWalletByAddressNScope(
-        address,
-        Network.Testnet,
-      );
+      const result = await instance.getWallet(id);
 
       expect(getDataSpy).toHaveBeenCalledTimes(1);
       expect(result).toBeNull();
@@ -354,12 +350,9 @@ describe('KeyringStateManager', () => {
       const { instance, getDataSpy } = createMockStateManager();
       getDataSpy.mockRejectedValue(new Error('error'));
       const state = createInitState(20);
-      const { address } = state.wallets[state.walletIds[0]].account;
-      const { scope } = state.wallets[state.walletIds[0]];
+      const { id } = state.wallets[state.walletIds[0]].account;
 
-      await expect(
-        instance.getWalletByAddressNScope(address, scope),
-      ).rejects.toThrow(StateError);
+      await expect(instance.getWallet(id)).rejects.toThrow(StateError);
     });
   });
 });
