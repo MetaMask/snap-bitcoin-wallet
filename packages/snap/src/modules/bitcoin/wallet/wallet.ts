@@ -5,7 +5,7 @@ import { type Buffer } from 'buffer';
 
 import type { IAccountSigner } from '../../../keyring';
 import { type IAccount, type IWallet } from '../../../keyring';
-import { compactError } from '../../../utils';
+import { bufferToString, compactError } from '../../../utils';
 import type { TransactionIntent } from '../../chain/types';
 import { ScriptType } from '../constants';
 import { P2WPKHAccount, P2SHP2WPKHAccount } from './account';
@@ -46,10 +46,10 @@ export class BtcWallet implements IWallet {
       const hdPath = [`m`, `0'`, `0`, `${index}`].join('/');
 
       return new AccountCtor(
-        this.getFingerPrintInHex(rootNode),
+        bufferToString(rootNode.fingerprint, 'hex'),
         index,
         hdPath,
-        this.getPublicKeyInHex(childNode),
+        bufferToString(childNode.publicKey, 'hex'),
         this.network,
         AccountCtor.scriptType,
         `bip122:${AccountCtor.scriptType.toLowerCase()}`,

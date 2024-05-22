@@ -72,28 +72,6 @@ describe('BtcWallet', () => {
       expect(childSpy).toHaveBeenCalledWith(rootNode, idx);
     });
 
-    it('throws `Unable to get fingerprint in hex` error if the fingerprint can not toString', async () => {
-      const network = networks.testnet;
-      const idx = 0;
-      const { instance, rootNode } = createMockWallet(network);
-      rootNode.fingerprint = undefined as unknown as Buffer;
-
-      await expect(instance.unlock(idx, ScriptType.P2wpkh)).rejects.toThrow(
-        `Unable to get fingerprint in hex`,
-      );
-    });
-
-    it('throws `Unable to get public key in hex` error if the fingerprint can not toString', async () => {
-      const network = networks.testnet;
-      const idx = 0;
-      const { instance, childNode } = createMockWallet(network);
-      childNode.publicKey = undefined as unknown as Buffer;
-
-      await expect(instance.unlock(idx, ScriptType.P2wpkh)).rejects.toThrow(
-        `Unable to get public key in hex`,
-      );
-    });
-
     it('throws error if the account cannot be unlocked', async () => {
       const network = networks.testnet;
       const idx = 0;
