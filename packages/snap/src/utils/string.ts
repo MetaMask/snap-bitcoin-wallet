@@ -27,13 +27,13 @@ export function hexToBuffer(hexStr: string, trimPrefix = true) {
 /**
  * Method to convert a buffer to a string safely.
  *
- * @param buf - Hex string.
+ * @param buffer - Hex string.
  * @param encoding - Buffer encoding.
  * @returns Converted String.
  */
-export function bufferToString(buf:Buffer, encoding:BufferEncoding) {
+export function bufferToString(buffer: Buffer, encoding: BufferEncoding) {
   try {
-    return buf.toString(encoding);
+    return buffer.toString(encoding);
   } catch (error) {
     throw new Error('Unable to convert buffer to string');
   }

@@ -34,18 +34,21 @@ describe('hexToBuffer', () => {
   });
 
   it('throws `Unable to convert hexStr to buffer` error if the execution fail', () => {
-    expect(() => hexToBuffer(null as unknown as string)).toThrow('Unable to convert hexStr to buffer')
+    expect(() => hexToBuffer(null as unknown as string)).toThrow(
+      'Unable to convert hexStr to buffer',
+    );
   });
 });
 
 describe('bufferToString', () => {
   it('converts a buffer to string with encoding', () => {
-    const result = bufferToString(Buffer.from('1234', 'hex'), "hex");
-    expect(result).toStrictEqual('1234');
+    const result = bufferToString(Buffer.from('1234', 'hex'), 'hex');
+    expect(result).toBe('1234');
   });
 
   it('throws `Unable to convert buffer to string` error if the execution fail', () => {
-    expect(() => bufferToString(undefined as unknown as Buffer, "hex")).toThrow('Unable to convert buffer to string')
+    expect(() => bufferToString(undefined as unknown as Buffer, 'hex')).toThrow(
+      'Unable to convert buffer to string',
+    );
   });
 });
-

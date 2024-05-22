@@ -1,5 +1,4 @@
 import type { Network, Payment } from 'bitcoinjs-lib';
-import type { Buffer } from 'buffer';
 
 import type { StaticImplements } from '../../../types/static';
 import { hexToBuffer } from '../../../utils';
