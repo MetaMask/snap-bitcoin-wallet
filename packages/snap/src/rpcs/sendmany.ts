@@ -12,7 +12,9 @@ import {
 import { Factory } from '../factory';
 import type { IAccount, IWallet } from '../keyring';
 import { type Wallet as WalletData } from '../keyring';
-import type { Fees, TransactionIntent } from '../modules/chain';
+import { btcToSats } from '../modules/bitcoin/utils/unit';
+import type { Fees } from '../modules/chain';
+import { type TransactionIntent } from '../modules/chain';
 import {
   SnapRpcHandlerRequestStruct,
   BaseSnapRpcHandler,
@@ -51,6 +53,7 @@ export class SendManyHandler
         comment: string(),
         subtractFeeFrom: array(string()),
         replaceable: boolean(),
+        dryrun: boolean(),
       }),
       SnapRpcHandlerRequestStruct,
     );
@@ -74,6 +77,7 @@ export class SendManyHandler
 
   async handleRequest(params: SendManyParams): Promise<SendManyResponse> {
     const { scope } = this.walletData;
+    const { dryrun } = params;
     const chainApi = Factory.createOnChainServiceProvider(scope);
     const transactionIntent = this.formatTxnIndents(params);
 
@@ -90,7 +94,7 @@ export class SendManyHandler
       this.walletAccount,
       transactionIntent,
       {
-        metadata,
+        utxos: metadata.data.utxos,
         fee,
       },
     );
@@ -104,33 +108,35 @@ export class SendManyHandler
       txn,
     );
 
+    if (dryrun) {
+      return { txnHash };
+    }
     return await chainApi.boardcastTransaction(txnHash);
   }
 
   protected formatTxnIndents(params: SendManyParams): TransactionIntent {
     const { amounts, subtractFeeFrom, replaceable } = params;
-    return Object.entries(amounts).reduce(
-      (acc, [account, amount]) => {
-        acc[account] = parseInt(amount, 10); // assume satoshi
+    return {
+      amounts: Object.entries(amounts).reduce((acc, [address, amount]) => {
+        acc[address] = parseInt(btcToSats(parseFloat(amount)), 10);
         return acc;
-      },
-      {
-        amounts: {},
-        subtractFeeFrom,
-        replaceable,
-      },
-    );
+      }, {}),
+      subtractFeeFrom,
+      replaceable,
+    };
   }
 
   protected async getFeeConsensus(fees: Fees): Promise<number> {
     // TODO: Ask user to confirm fee
-    return fees.fees[0].rate;
+    console.log(fees);
+    return 1.6; // fees.fees[fees.fees.length-1].rate;
   }
 
   protected async getTxnConsensus(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     txnJson: Record<string, Json>,
   ): Promise<boolean> {
+    console.log(txnJson);
     // TODO: Ask user to confirm txn
     return true;
   }

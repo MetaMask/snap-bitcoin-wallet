@@ -14,6 +14,7 @@ import {
   BroadcastTxnCard,
   GetDataForTransactionCard,
   EstimateFeesCard,
+  SendManyCard,
 } from '../components';
 import { defaultSnapOrigin } from '../config';
 import { defaultSnapOrigin as snapId } from '../config/snap';
@@ -296,6 +297,19 @@ const Index = () => {
             !shouldDisplayReconnectButton(installedSnap)
           }
         />
+
+        <SendManyCard 
+          enabled={!(!installedSnap || !btcAccount)}
+          account={btcAccount?.id || ''}
+          address={btcAccount?.address || ''}
+          scope={scope}
+          fullWidth={
+            isMetaMaskReady &&
+            Boolean(installedSnap) &&
+            !shouldDisplayReconnectButton(installedSnap)
+          }
+        />
+
       </CardContainer>
     </Container>
   );

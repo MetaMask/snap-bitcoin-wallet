@@ -1,3 +1,5 @@
+import type { Json } from '@metamask/snaps-sdk';
+
 import type { FeeRatio } from './constants';
 
 export type Balances = Record<string, number>;
@@ -37,9 +39,7 @@ export type Utxo = {
 };
 
 export type TransactionData = {
-  data: {
-    utxos: Utxo[];
-  };
+  data: Record<string, Json>;
 };
 
 export type Pagination = {

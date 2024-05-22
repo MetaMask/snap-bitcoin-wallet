@@ -13,6 +13,7 @@ export const originPermissions = new Map<string, Set<string>>([
       KeyringRpcMethod.GetRequest,
       KeyringRpcMethod.SubmitRequest,
       KeyringRpcMethod.RejectRequest,
+      KeyringRpcMethod.SubmitRequest,
       // Chain API methods
       'chain_getBalances',
       'chain_broadcastTransaction',
@@ -34,6 +35,7 @@ export const originPermissions = new Map<string, Set<string>>([
       KeyringRpcMethod.GetRequest,
       KeyringRpcMethod.ApproveRequest,
       KeyringRpcMethod.RejectRequest,
+      KeyringRpcMethod.SubmitRequest,
       // Chain API methods
       'chain_getBalances',
       'chain_createAccount',
@@ -56,6 +58,7 @@ export const originPermissions = new Map<string, Set<string>>([
       KeyringRpcMethod.GetRequest,
       KeyringRpcMethod.ApproveRequest,
       KeyringRpcMethod.RejectRequest,
+      KeyringRpcMethod.SubmitRequest,
       // Chain API methods
       'chain_getBalances',
       'chain_broadcastTransaction',

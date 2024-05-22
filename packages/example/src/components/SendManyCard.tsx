@@ -1,0 +1,59 @@
+import { v4 as uuidv4 } from 'uuid';
+
+import { Card, SendManyButton } from '.';
+import { useInvokeKeyring } from '../hooks';
+
+export const SendManyCard = ({
+  enabled,
+  fullWidth,
+  scope,
+  account,
+  address,
+}: {
+  enabled: boolean;
+  fullWidth: boolean;
+  scope: string;
+  account: string;
+  address: string;
+}) => {
+  const invokeKeyring = useInvokeKeyring();
+
+  const handleClick = async () => {
+    const resp = await invokeKeyring({
+      method: 'keyring_submitRequest',
+
+      params: {
+        account: account,
+        id: uuidv4(),
+        scope: scope,
+        request: {
+          method: 'btc_sendmany',
+          params: {
+            amounts: {
+              [address]: '0.00000500',
+            },
+            comment: '',
+            subtractFeeFrom: [],
+            replaceable: false,
+            dryrun: true
+          },
+        },
+      },
+    });
+    console.log({
+      resp,
+    });
+  };
+
+  return (
+    <Card
+      content={{
+        title: 'Send Btc',
+        description: `Send Btc`,
+        button: <SendManyButton onClick={handleClick} disabled={!enabled} />,
+      }}
+      disabled={!enabled}
+      fullWidth={fullWidth}
+    />
+  );
+};
