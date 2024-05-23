@@ -2,18 +2,20 @@ import type { Json } from '@metamask/snaps-sdk';
 import type { BIP32Interface } from 'bip32';
 import { type Network } from 'bitcoinjs-lib';
 
-import { bufferToString, compactError } from '../../../utils';
-import type { TransactionIntent } from '../../chain/types';
-import type { IAccount, IWallet } from '../../wallet';
+import { bufferToString, compactError, hexToBuffer } from '../../../utils';
+import type { TransactionIntent, Utxo } from '../../chain/types';
+import type { IAccountSigner, IWallet } from '../../wallet';
 import { ScriptType } from '../constants';
 import { P2WPKHAccount, P2SHP2WPKHAccount } from './account';
 import { WalletError } from './exceptions';
+import { PsbtService } from './psbt';
 import { AccountSigner } from './signer';
 import type {
   IStaticBtcAccount,
   IBtcAccountDeriver,
-  IAccountSigner,
+  IBtcAccount,
 } from './types';
+import { UtxoService } from './utxo';
 
 export class BtcWallet implements IWallet {
   protected readonly deriver: IBtcAccountDeriver;
@@ -40,7 +42,7 @@ export class BtcWallet implements IWallet {
     }
   }
 
-  async unlock(index: number, type: string): Promise<IAccount> {
+  async unlock(index: number, type: string): Promise<IBtcAccount> {
     try {
       const AccountCtor = this.getAccountCtor(type);
       const rootNode = await this.deriver.getRoot(AccountCtor.path);
@@ -63,51 +65,63 @@ export class BtcWallet implements IWallet {
   }
 
   async createTransaction(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    acount: IAccount,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    account: IBtcAccount,
     txn: TransactionIntent,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     options: {
-      metadata: Record<string, Json>;
+      utxos: Utxo[];
       fee: number;
     },
   ): Promise<{
     txn: string;
     txnJson: Record<string, Json>;
   }> {
-    // create PSBT
-    // add PSBT input
-    // add PSBT output
-    // out PSBT base64 buffer
-    throw new Error('Method not implemented.');
+    const utxosService = new UtxoService();
+    const spendTos = Object.entries(txn.amounts).map(([address, value]) => ({
+      address,
+      value,
+    }));
+
+    const { inputs, outputs, fee } = utxosService.selectUtxosToSpend(
+      options.utxos,
+      spendTos,
+      options.fee,
+    );
+
+    const psbtService = new PsbtService(this.network);
+
+    const scriptOutput = account.payment.output;
+
+    if (!scriptOutput) {
+      throw new WalletError('Unable to get account script hash');
+    }
+
+    psbtService.addInputs(
+      inputs,
+      hexToBuffer(account.mfp, false),
+      hexToBuffer(account.pubkey, false),
+      scriptOutput,
+      account.hdPath,
+    );
+
+    psbtService.addOutputs(
+      outputs.map((output) => ({
+        address: output.address ?? account.address,
+        value: output.value,
+      })),
+    );
+
+    return {
+      txn: psbtService.toBase64(),
+      txnJson: {
+        fee,
+      },
+    };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async signTransaction(signer: IAccountSigner, txn: string): Promise<string> {
-    // convert txn to PSBT
-    // validate PSBT
-    // finalize PSBT
-    // sign PSBT
-    // verify sign
-    // out txn hex
-    throw new Error('Method not implemented.');
-  }
-
-  protected getFingerPrintInHex(rootNode: BIP32Interface) {
-    try {
-      return rootNode.fingerprint.toString('hex');
-    } catch (error) {
-      throw new Error('Unable to get fingerprint in hex');
-    }
-  }
-
-  protected getPublicKeyInHex(rootNode: BIP32Interface) {
-    try {
-      return rootNode.publicKey.toString('hex');
-    } catch (error) {
-      throw new Error('Unable to get public key in hex');
-    }
+    const psbtService = PsbtService.fromBase64(this.network, txn);
+    await psbtService.signNVerify(signer);
+    return psbtService.finalize();
   }
 
   protected getHdSigner(rootNode: BIP32Interface) {

@@ -23,6 +23,7 @@ import type {
   SnapRpcHandlerRequest,
   SnapRpcHandlerResponse,
 } from '../modules/rpc';
+import { SnapHelper } from '../modules/snap';
 import type { IAccount, IWallet } from '../modules/wallet';
 import type { StaticImplements } from '../types/static';
 import { numberStringStruct } from '../utils';
@@ -128,8 +129,11 @@ export class SendManyHandler
 
   protected async getFeeConsensus(fees: Fees): Promise<number> {
     // TODO: Ask user to confirm fee
-    console.log(fees);
-    return 1.6; // fees.fees[fees.fees.length-1].rate;
+    const result = await SnapHelper.createInteractiveDialog();
+    console.log({
+      result,
+    });
+    return fees.fees[fees.fees.length - 1].rate;
   }
 
   protected async getTxnConsensus(

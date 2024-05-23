@@ -10,6 +10,10 @@ import {
   text,
   divider,
   type SnapsProvider,
+  button,
+  input,
+  form,
+  ButtonType,
 } from '@metamask/snaps-sdk';
 
 declare const snap: SnapsProvider;
@@ -60,6 +64,41 @@ export class SnapHelper {
             text(`**${key}**:\n ${value}`),
           ),
         ]),
+      },
+    });
+  }
+
+  static async createInteractiveDialog(): Promise<Json> {
+    const interfaceId = await snap.request({
+      method: 'snap_createInterface',
+      params: {
+        ui: panel([
+          heading('Interactive UI Example Snap'),
+          // A top-level input.
+          input({
+            name: 'top-level-input',
+            placeholder: 'Enter something',
+          }),
+          // A top-level form...
+          form({
+            name: 'example-form',
+            children: [
+              // ...with a nested input.
+              input({
+                name: 'nested-input',
+                placeholder: 'Enter something',
+              }),
+              button('Submit', ButtonType.Submit, 'submit'),
+            ],
+          }),
+        ]),
+      },
+    });
+
+    return await snap.request({
+      method: 'snap_getInterfaceState',
+      params: {
+        id: interfaceId,
       },
     });
   }

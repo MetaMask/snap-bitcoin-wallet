@@ -7,9 +7,8 @@ import ECPairFactory from 'ecpair';
 import { compactError } from '../../../utils';
 import type { Utxo } from '../../chain';
 import { logger } from '../../logger/logger';
-import type { SpendTo } from '../utxo';
-import type { IAccountSigner } from '../wallet';
 import { PsbtServiceError } from './exceptions';
+import type { IAccountSigner, SpendTo } from './types';
 // import { PsbtData } from "./psbt-data";
 
 const ECPair = ECPairFactory(ecc);
@@ -18,21 +17,24 @@ export class PsbtService {
   // protected readonly psbtData: PsbtData;
   protected readonly network: Network;
 
-  protected readonly psbt: Psbt;
+  protected readonly _psbt: Psbt;
+
+  get psbt() {
+    return this._psbt;
+  }
 
   constructor(network: Network, psbt?: Psbt) {
     if (psbt === undefined) {
-      this.psbt = new Psbt({ network });
+      this._psbt = new Psbt({ network });
     } else {
-      this.psbt = psbt;
+      this._psbt = psbt;
     }
-    // this.validator = new PsbtValidator(this.psbt, network);
-    // this.psbtData = new PsbtData(this.psbt, network);
+    // this.validator = new PsbtValidator(this._psbt, network);
+    // this._psbtData = new PsbtData(this._psbt, network);
   }
 
-  static fromBase64(base64Psbt: string, network: Network): PsbtService {
+  static fromBase64(network: Network, base64Psbt: string): PsbtService {
     const psbt = Psbt.fromBase64(base64Psbt, { network });
-    console.log('psbt updated');
     const service = new PsbtService(network, psbt);
 
     // To make sure the psbt is created from the PSBT creator's server (The Snap)
@@ -50,7 +52,7 @@ export class PsbtService {
   ) {
     try {
       for (const input of inputs) {
-        this.psbt.addInput({
+        this._psbt.addInput({
           hash: input.txnHash,
           index: input.index,
           witnessUtxo: {
@@ -78,7 +80,7 @@ export class PsbtService {
 
   addOutputs(outputs: SpendTo[]) {
     try {
-      this.psbt.addOutputs(outputs);
+      this._psbt.addOutputs(outputs);
     } catch (error) {
       logger.error('Failed to add outputs', error);
       throw new PsbtServiceError('Failed to add outputs in PSBT');
@@ -87,35 +89,40 @@ export class PsbtService {
 
   toBase64(): string {
     try {
-      return this.psbt.toBase64();
+      return this._psbt.toBase64();
     } catch (error) {
       logger.error('Failed to convert to base64', error);
-      throw new PsbtServiceError('Failed to convert PSBT instance to string');
+      throw new PsbtServiceError('Failed to output PSBT string');
     }
   }
 
   async signNVerify(signer: IAccountSigner) {
     try {
-      await this.psbt.signAllInputsHDAsync(signer);
+      // This function signAllInputsHDAsync is used to sign all inputs with the signer.
+      // When using the method signAllInputsHDAsync, it is important to note that the signer must derive from the root node as well as the finderprint.
+      // For further reference, please see the getHdSigner method in BtcWallet.
+      await this._psbt.signAllInputsHDAsync(signer);
 
       if (
-        !this.psbt.validateSignaturesOfAllInputs(
+        !this._psbt.validateSignaturesOfAllInputs(
           (pubkey: Buffer, msghash: Buffer, signature: Buffer) =>
             this.validateInputs(pubkey, msghash, signature),
         )
       ) {
-        throw new Error("Invalid signature to sign the PSBT's inputs");
+        throw new PsbtServiceError(
+          "Invalid signature to sign the PSBT's inputs",
+        );
       }
     } catch (error) {
       throw compactError(error, PsbtServiceError);
     }
   }
 
-  async finalize(): Promise<string> {
+  finalize(): string {
     try {
-      this.psbt.finalizeAllInputs();
+      this._psbt.finalizeAllInputs();
 
-      const txHex = this.psbt.extractTransaction().toHex();
+      const txHex = this._psbt.extractTransaction().toHex();
 
       return txHex;
     } catch (error) {

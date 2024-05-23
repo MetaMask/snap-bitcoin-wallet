@@ -5,6 +5,13 @@ import { UtxoServiceError } from './exceptions';
 import type { SpendTo, SelectedUtxos } from './types';
 
 export class UtxoService {
+  /**
+   * Selects UTXOs to spend.
+   * @param utxos - Array of UTXOs.
+   * @param spendTos - Array of SpendTo objects.
+   * @param feeRate - Fee rate.
+   * @returns Selected UTXOs.
+   */
   selectUtxosToSpend(
     utxos: Utxo[],
     spendTos: SpendTo[],

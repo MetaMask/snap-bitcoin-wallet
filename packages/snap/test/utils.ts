@@ -1,6 +1,7 @@
 import type { BIP32Interface } from 'bip32';
 import type { Network } from 'bitcoinjs-lib';
 import { Buffer } from 'buffer';
+import { v4 as uuidv4 } from 'uuid';
 
 import { Network as NetworkEnum } from '../src/modules/bitcoin/constants';
 import blockChairData from './fixtures/blockchair.json';
@@ -11,23 +12,19 @@ import blockStreamData from './fixtures/blockstream.json';
  *
  * @param cnt - Number of accounts to generate.
  * @param addressPrefix - Prefix for the address.
- * @param idPrefix - Prefix for the id.
  * @returns Array of generated accounts.
  */
-export function generateAccounts(cnt = 1, addressPrefix = '', idPrefix = '') {
+export function generateAccounts(cnt = 1, addressPrefix = '') {
   const accounts: any[] = [];
   let baseAddress = 'tb1qt2mpt38wmgw3j0hnr9mp5hsa7kxf2a3ktdxaeu';
-  let baseUUID = '1b9d6bcd-bbfd-4b2d-9b5d-abadfbbdcbed';
 
   baseAddress =
     addressPrefix + baseAddress.slice(addressPrefix.length, baseAddress.length);
-  baseUUID = idPrefix + baseUUID.slice(idPrefix.length, baseUUID.length);
 
   for (let i = 0; i < cnt; i++) {
     accounts.push({
       type: 'bip122:p2wpkh',
-      id:
-        baseUUID.slice(0, baseUUID.length - i.toString().length) + i.toString(),
+      id: uuidv4(),
       address:
         baseAddress.slice(0, baseAddress.length - i.toString().length) +
         i.toString(),
@@ -207,6 +204,8 @@ export function generateBlockChairGetBalanceResp(addresses: string[]) {
 export function generateBlockChairGetUtxosResp(
   address: string,
   utxosCount: number,
+  minAmount: number = 0,
+  maxAmount: number = 1000000,
 ) {
   const template = blockChairData.getUtxoResp;
   const data = { ...template.data.tb1qlq94vt9uh07fwunsgdyycpkv24uev05ywjua0r };
@@ -227,7 +226,7 @@ export function generateBlockChairGetUtxosResp(
                 '0',
               ),
             index: idx,
-            value: randomNum(1000000),
+            value: Math.max(randomNum(maxAmount), minAmount),
           };
         }),
       },
@@ -312,4 +311,34 @@ export function generateBlockChairBroadcastTransactionResp() {
   const template = blockChairData.broadcastTransactionResp;
   const resp: typeof template = { ...template };
   return resp;
+}
+
+/**
+ * Method to generate formated utxos with blockchair resp.
+ *
+ * @param address - the utxos owner address.
+ * @param utxoCnt - count of the utox to be generated.
+ * @param minAmount - min amount of each utxo value.
+ * @param maxAmount - max amount of each utxo value.
+ * @returns An formatted utxo array.
+ */
+export function generateFormatedUtxos(
+  address: string,
+  utxoCnt: number,
+  minAmt?: number,
+  maxAmt?: number,
+) {
+  const rawUtxos = generateBlockChairGetUtxosResp(
+    address,
+    utxoCnt,
+    minAmt,
+    maxAmt,
+  );
+  const formattedUtxos = rawUtxos.data[address].utxo.map((utxo) => ({
+    block: utxo.block_id,
+    txnHash: utxo.transaction_hash,
+    index: utxo.index,
+    value: utxo.value,
+  }));
+  return formattedUtxos;
 }
