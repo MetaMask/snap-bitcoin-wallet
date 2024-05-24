@@ -6,7 +6,7 @@ import {
   generateBlockChairBroadcastTransactionResp,
   generateBlockChairGetUtxosResp,
 } from '../../../../test/utils';
-import { FeeRatio } from '../../chain';
+import { FeeRatio } from '../../../chain';
 import { BtcAsset } from '../constants';
 import type { IReadDataClient, IWriteDataClient } from '../data-client';
 import { BtcOnChainServiceError } from './exceptions';

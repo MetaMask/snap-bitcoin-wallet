@@ -1,9 +1,8 @@
 import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 
-import { compactError } from '../../../utils';
-import type { FeeRatio } from '../../chain';
 import type {
+  FeeRatio,
   IOnChainService,
   Balances,
   AssetBalances,
@@ -11,10 +10,10 @@ import type {
   Pagination,
   Fees,
   TransactionData,
-} from '../../chain/types';
+} from '../../../chain';
+import { compactError } from '../../../utils';
 import { BtcAsset } from '../constants';
-import type { IWriteDataClient } from '../data-client';
-import { type IReadDataClient } from '../data-client';
+import type { IWriteDataClient, IReadDataClient } from '../data-client';
 import { BtcOnChainServiceError } from './exceptions';
 import type { BtcOnChainServiceOptions } from './types';
 

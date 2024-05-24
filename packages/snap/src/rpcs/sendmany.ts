@@ -9,9 +9,9 @@ import {
   boolean,
 } from 'superstruct';
 
+import type { Fees, TransactionIntent } from '../chain';
 import { Factory } from '../factory';
 import { type Wallet as WalletData } from '../keyring';
-import type { Fees, TransactionIntent } from '../modules/chain';
 import {
   SnapRpcHandlerRequestStruct,
   BaseSnapRpcHandler,
@@ -21,9 +21,9 @@ import type {
   SnapRpcHandlerRequest,
   SnapRpcHandlerResponse,
 } from '../modules/rpc';
-import type { IAccount, IWallet } from '../modules/wallet';
 import type { StaticImplements } from '../types/static';
 import { numberStringStruct } from '../utils';
+import type { IAccount, IWallet } from '../wallet';
 
 export type SendManyParams = Infer<typeof SendManyHandler.requestStruct>;
 

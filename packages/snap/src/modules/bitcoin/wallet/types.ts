@@ -1,21 +1,12 @@
 import type { BIP32Interface } from 'bip32';
 import type { Network, Payment } from 'bitcoinjs-lib';
-import type { Buffer } from 'buffer';
 
-import type { IAccount } from '../../wallet';
+import type { IAccount, IAccountSigner } from '../../../wallet';
 import type { ScriptType } from '../constants';
 
 export type IBtcAccountDeriver = {
   getRoot(path: string[]): Promise<BIP32Interface>;
   getChild(root: BIP32Interface, idx: number): Promise<BIP32Interface>;
-};
-
-export type IAccountSigner = {
-  sign(hash: Buffer): Promise<Buffer>;
-  derivePath(path: string): IAccountSigner;
-  verify(hash: Buffer, signature: Buffer): boolean;
-  publicKey: Buffer;
-  fingerprint: Buffer;
 };
 
 export type IBtcAccount = IAccount & {
@@ -35,4 +26,11 @@ export type IStaticBtcAccount = {
     type: string,
     signer: IAccountSigner,
   ): IBtcAccount;
+};
+
+export type Utxo = {
+  block: number;
+  txnHash: string;
+  index: number;
+  value: number;
 };

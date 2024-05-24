@@ -1,4 +1,10 @@
-import type { FeeRatio } from './constants';
+import type { Json } from '@metamask/snaps-sdk';
+
+export enum FeeRatio {
+  Fast = 'fast',
+  Medium = 'medium',
+  Slow = 'slow',
+}
 
 export type Balances = Record<string, number>;
 
@@ -29,17 +35,8 @@ export type TransactionIntent = {
   replaceable: boolean;
 };
 
-export type Utxo = {
-  block: number;
-  txnHash: string;
-  index: number;
-  value: number;
-};
-
 export type TransactionData = {
-  data: {
-    utxos: Utxo[];
-  };
+  data: Record<string, Json>;
 };
 
 export type Pagination = {

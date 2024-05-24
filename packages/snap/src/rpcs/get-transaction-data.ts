@@ -2,6 +2,7 @@ import type { Infer } from 'superstruct';
 import { array, assign, number, object, string } from 'superstruct';
 
 import { Factory } from '../factory';
+import type { Utxo } from '../modules/bitcoin/wallet';
 import {
   BaseSnapRpcHandler,
   SnapRpcHandlerRequestStruct,
@@ -55,9 +56,11 @@ export class GetTransactionDataHandler
 
     const result = await chainApi.getDataForTransaction(params.account);
 
+    const utoxs = result.data.utxos as unknown as Utxo[];
+
     return {
       data: {
-        utxos: result.data.utxos.map((utxo) => ({
+        utxos: utoxs.map((utxo) => ({
           block: utxo.block,
           txnHash: utxo.txnHash,
           index: utxo.index,

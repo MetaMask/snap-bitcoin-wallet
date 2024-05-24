@@ -7,7 +7,7 @@ import {
   generateBlockChairGetUtxosResp,
   generateBlockChairGetStatsResp,
 } from '../../../../../test/utils';
-import { FeeRatio } from '../../../chain';
+import { FeeRatio } from '../../../../chain';
 import { DataClientError } from '../exceptions';
 import { BlockChairClient } from './blockchair';
 

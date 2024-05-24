@@ -2,18 +2,14 @@ import type { Json } from '@metamask/snaps-sdk';
 import type { BIP32Interface } from 'bip32';
 import { type Network } from 'bitcoinjs-lib';
 
+import type { TransactionIntent } from '../../../chain';
 import { bufferToString, compactError } from '../../../utils';
-import type { TransactionIntent } from '../../chain/types';
-import type { IAccount, IWallet } from '../../wallet';
+import type { IAccount, IAccountSigner, IWallet } from '../../../wallet';
 import { ScriptType } from '../constants';
 import { P2WPKHAccount, P2SHP2WPKHAccount } from './account';
 import { WalletError } from './exceptions';
 import { AccountSigner } from './signer';
-import type {
-  IStaticBtcAccount,
-  IBtcAccountDeriver,
-  IAccountSigner,
-} from './types';
+import type { IStaticBtcAccount, IBtcAccountDeriver } from './types';
 
 export class BtcWallet implements IWallet {
   protected readonly deriver: IBtcAccountDeriver;
