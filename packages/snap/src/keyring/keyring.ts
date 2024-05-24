@@ -15,8 +15,8 @@ import { Factory } from '../factory';
 import { logger } from '../modules/logger/logger';
 import type { SnapRpcHandlerRequest } from '../modules/rpc';
 import { SnapHelper } from '../modules/snap';
-import type { IAccount, IWallet } from '../modules/wallet';
 import { RpcHelper } from '../rpcs/helpers';
+import type { IAccount, IWallet } from '../wallet';
 import { BtcKeyringError } from './exceptions';
 import type { KeyringStateManager } from './state';
 import {

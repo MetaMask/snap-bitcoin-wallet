@@ -1,9 +1,9 @@
 import type { Infer } from 'superstruct';
 import { object, array, enums } from 'superstruct';
 
+import { FeeRatio } from '../chain';
 import { Factory } from '../factory';
 import { satsToBtc } from '../modules/bitcoin/utils/unit';
-import { FeeRatio } from '../modules/chain';
 import {
   type IStaticSnapRpcHandler,
   type SnapRpcHandlerResponse,

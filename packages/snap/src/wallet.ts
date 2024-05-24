@@ -1,7 +1,7 @@
 import type { Json } from '@metamask/snaps-sdk';
 import type { Buffer } from 'buffer';
 
-import type { TransactionIntent } from '../chain';
+import type { TransactionIntent } from './chain';
 
 export type IAccount = {
   mfp: string;

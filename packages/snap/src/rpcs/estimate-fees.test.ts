@@ -1,7 +1,7 @@
+import { FeeRatio } from '../chain';
 import { Factory } from '../factory';
 import { Network } from '../modules/bitcoin/constants';
 import { satsToBtc } from '../modules/bitcoin/utils/unit';
-import { FeeRatio } from '../modules/chain';
 import { EstimateFeesHandler } from './estimate-fees';
 
 jest.mock('../modules/logger/logger', () => ({

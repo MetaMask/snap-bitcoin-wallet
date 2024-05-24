@@ -1,4 +1,5 @@
-import type { Balances, FeeRatio, Utxo } from '../../chain';
+import type { Balances, FeeRatio } from '../../../chain';
+import type { Utxo } from '../wallet';
 
 export type GetFeeRatesResp = {
   [key in FeeRatio]?: number;
