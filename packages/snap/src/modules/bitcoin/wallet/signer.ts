@@ -2,7 +2,7 @@ import type { BIP32Interface } from 'bip32';
 import type { HDSignerAsync } from 'bitcoinjs-lib';
 import type { Buffer } from 'buffer';
 
-import type { IAccountSigner } from '../../wallet';
+import type { IAccountSigner } from '../../../wallet';
 
 export class AccountSigner implements HDSignerAsync, IAccountSigner {
   readonly publicKey: Buffer;

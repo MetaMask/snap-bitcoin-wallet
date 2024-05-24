@@ -8,11 +8,10 @@ import {
   boolean,
 } from 'superstruct';
 
+import type { Fees, IOnChainService, TransactionIntent } from '../chain';
 import { Factory } from '../factory';
 import { type Wallet as WalletData } from '../keyring';
-import { btcToSats, satsToBtc } from '../modules/bitcoin/utils/unit';
-import type { Fees, IOnChainService } from '../modules/chain';
-import { type TransactionIntent } from '../modules/chain';
+import { btcToSats, satsToBtc } from '../modules/bitcoin/utils';
 import { logger } from '../modules/logger/logger';
 import {
   SnapRpcHandlerRequestStruct,
@@ -24,9 +23,9 @@ import type {
   SnapRpcHandlerResponse,
 } from '../modules/rpc';
 import { SnapHelper } from '../modules/snap';
-import type { IAccount, IWallet } from '../modules/wallet';
 import type { StaticImplements } from '../types/static';
 import { numberStringStruct } from '../utils';
+import type { IAccount, IWallet } from '../wallet';
 
 export type SendManyParams = Infer<typeof SendManyHandler.requestStruct>;
 
@@ -139,7 +138,7 @@ export class SendManyHandler
       return { txnHash };
     }
 
-    return await chainApi.boardcastTransaction(txnHash);
+    return await this.boardcastTransaction(chainApi, txnHash);
   }
 
   protected formatTxnIndents(params: SendManyParams): TransactionIntent {
@@ -201,6 +200,7 @@ export class SendManyHandler
     try {
       return await chainApi.boardcastTransaction(txnHash);
     } catch (error) {
+      console.log('fail message', error.message);
       logger.error('Failed to broadcast transaction', error);
       throw new Error('Failed to commit transaction on chain');
     }

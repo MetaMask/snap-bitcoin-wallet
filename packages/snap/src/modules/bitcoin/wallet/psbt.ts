@@ -5,11 +5,10 @@ import type { Buffer } from 'buffer';
 import ECPairFactory from 'ecpair';
 
 import { compactError } from '../../../utils';
-import type { Utxo } from '../../chain';
+import type { IAccountSigner } from '../../../wallet';
 import { logger } from '../../logger/logger';
-import type { IAccountSigner } from '../../wallet';
 import { PsbtServiceError } from './exceptions';
-import type { SpendTo } from './types';
+import type { SpendTo, Utxo } from './types';
 // import { PsbtData } from "./psbt-data";
 
 const ECPair = ECPairFactory(ecc);

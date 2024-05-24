@@ -2,7 +2,7 @@ import type { Network, Payment } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 import { Buffer } from 'buffer';
 
-import type { IAccountSigner } from '../../wallet';
+import type { IAccountSigner } from '../../../wallet';
 import { ScriptType } from '../constants';
 import * as utils from '../utils/payment';
 import { P2WPKHAccount } from './account';

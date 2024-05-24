@@ -1,8 +1,7 @@
 import type { BIP32Interface } from 'bip32';
 import type { Network, Payment } from 'bitcoinjs-lib';
 
-import type { Utxo } from '../../chain';
-import type { IAccount, IAccountSigner } from '../../wallet';
+import type { IAccount, IAccountSigner } from '../../../wallet';
 import type { ScriptType } from '../constants';
 
 export type IBtcAccountDeriver = {
@@ -44,4 +43,11 @@ export type SelectedUtxos = {
   inputs: Utxo[];
   outputs: SelectedOutput[];
   fee: number;
+};
+
+export type Utxo = {
+  block: number;
+  txnHash: string;
+  index: number;
+  value: number;
 };

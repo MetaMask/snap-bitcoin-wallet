@@ -1,6 +1,10 @@
 import type { Json } from '@metamask/snaps-sdk';
 
-import type { FeeRatio } from './constants';
+export enum FeeRatio {
+  Fast = 'fast',
+  Medium = 'medium',
+  Slow = 'slow',
+}
 
 export type Balances = Record<string, number>;
 
@@ -29,13 +33,6 @@ export type TransactionIntent = {
   amounts: Record<string, number>;
   subtractFeeFrom: string[];
   replaceable: boolean;
-};
-
-export type Utxo = {
-  block: number;
-  txnHash: string;
-  index: number;
-  value: number;
 };
 
 export type TransactionData = {

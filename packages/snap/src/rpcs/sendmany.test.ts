@@ -9,14 +9,14 @@ import {
   generateBlockChairBroadcastTransactionResp,
   generateBlockChairGetUtxosResp,
 } from '../../test/utils';
+import { FeeRatio } from '../chain';
 import { Factory } from '../factory';
 import { DustLimit, Network, ScriptType } from '../modules/bitcoin/constants';
 import { satsToBtc } from '../modules/bitcoin/utils/unit';
 import type { IBtcAccount } from '../modules/bitcoin/wallet';
 import { BtcAccountBip32Deriver, BtcWallet } from '../modules/bitcoin/wallet';
-import { FeeRatio } from '../modules/chain';
 import { SnapHelper } from '../modules/snap';
-import type { IAccount } from '../modules/wallet';
+import type { IAccount } from '../wallet';
 import { SendManyHandler } from './sendmany';
 import type { SendManyParams } from './sendmany';
 
@@ -300,7 +300,7 @@ describe('SendManyHandler', () => {
       ).rejects.toThrow('Invalid amount for send');
     });
 
-    it('throws `User denied transaction request` error if user denied thetransaction', async () => {
+    it('throws `User denied transaction request` error if user denied the transaction', async () => {
       const network = networks.testnet;
       const caip2Network = Network.Testnet;
       const {
@@ -342,20 +342,50 @@ describe('SendManyHandler', () => {
           scope: caip2Network,
           index: 0,
           account: keyringAccount,
-        }).execute({
-          amounts: receipents.reduce((acc, receipent: IBtcAccount) => {
-            acc[receipent.address] = satsToBtc(
-              DustLimit[receipent.scriptType] + 1,
-            );
-            return acc;
-          }, {}),
-          comment: '',
-          subtractFeeFrom: [],
-          replaceable: false,
-          dryrun: false,
-          scope: caip2Network,
-        } as unknown as SendManyParams),
+        }).execute(createSendManyParams(receipents, caip2Network, false)),
       ).rejects.toThrow('User denied transaction request');
+    });
+
+    it('throws `Failed to commit transaction on chain` error if the transaction is fail to commit', async () => {
+      const network = networks.testnet;
+      const caip2Network = Network.Testnet;
+      const {
+        getDataForTransactionSpy,
+        estimatedFeeSpy,
+        boardcastTransactionSpy,
+      } = createMockChainApiFactory();
+      const { sender, keyringAccount, receipents } =
+        await createSenderNReceipents(network, caip2Network, 2);
+      const mockResponse = generateBlockChairGetUtxosResp(sender.address, 10);
+      const utxos = mockResponse.data[sender.address].utxo.map((utxo) => ({
+        block: utxo.block_id,
+        txnHash: utxo.transaction_hash,
+        index: utxo.index,
+        value: utxo.value,
+      }));
+      getDataForTransactionSpy.mockResolvedValue({
+        data: {
+          utxos,
+        },
+      });
+      estimatedFeeSpy.mockResolvedValue({
+        fees: [
+          {
+            type: FeeRatio.Fast,
+            rate: 1,
+          },
+        ],
+      });
+      boardcastTransactionSpy.mockRejectedValue(new Error('error'));
+      jest.spyOn(SnapHelper, 'confirmDialog').mockResolvedValue(true);
+
+      await expect(
+        SendManyHandler.getInstance({
+          scope: caip2Network,
+          index: 0,
+          account: keyringAccount,
+        }).execute(createSendManyParams(receipents, caip2Network, false)),
+      ).rejects.toThrow('Failed to commit transaction on chain');
     });
   });
 });

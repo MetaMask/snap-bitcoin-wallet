@@ -6,8 +6,8 @@ import {
   generateBlockStreamGetUtxosResp,
   generateBlockStreamEstFeeResp,
 } from '../../../../../test/utils';
+import { FeeRatio } from '../../../../chain';
 import * as asyncUtils from '../../../../utils/async';
-import { FeeRatio } from '../../../chain';
 import { DataClientError } from '../exceptions';
 import { BlockStreamClient } from './blockstream';
 

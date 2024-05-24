@@ -1,8 +1,7 @@
 import coinSelect from 'coinselect';
 
-import type { Utxo } from '../../chain';
 import { UtxoServiceError } from './exceptions';
-import type { SpendTo, SelectedUtxos } from './types';
+import type { SpendTo, SelectedUtxos, Utxo } from './types';
 
 export class UtxoService {
   /**

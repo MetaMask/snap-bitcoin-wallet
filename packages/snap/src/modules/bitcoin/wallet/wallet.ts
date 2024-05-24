@@ -2,9 +2,9 @@ import type { Json } from '@metamask/snaps-sdk';
 import type { BIP32Interface } from 'bip32';
 import { type Network } from 'bitcoinjs-lib';
 
+import type { TransactionIntent } from '../../../chain';
 import { bufferToString, compactError, hexToBuffer } from '../../../utils';
-import type { TransactionIntent, Utxo } from '../../chain/types';
-import type { IAccountSigner, IWallet } from '../../wallet';
+import type { IAccountSigner, IWallet } from '../../../wallet';
 import { ScriptType } from '../constants';
 import { isDust } from '../utils/unit';
 import { P2WPKHAccount, P2SHP2WPKHAccount } from './account';
@@ -16,6 +16,7 @@ import type {
   IBtcAccountDeriver,
   IBtcAccount,
   SpendTo,
+  Utxo,
 } from './types';
 import { UtxoService } from './utxo';
 

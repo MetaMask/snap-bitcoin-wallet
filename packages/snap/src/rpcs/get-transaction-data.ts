@@ -2,7 +2,7 @@ import type { Infer } from 'superstruct';
 import { array, assign, number, object, string } from 'superstruct';
 
 import { Factory } from '../factory';
-import type { Utxo } from '../modules/chain';
+import type { Utxo } from '../modules/bitcoin/wallet';
 import {
   BaseSnapRpcHandler,
   SnapRpcHandlerRequestStruct,
