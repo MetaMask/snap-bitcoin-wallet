@@ -5,7 +5,7 @@ import {
 import { UtxoService } from './utxo';
 
 describe('UtxoService', () => {
-  describe('selectUtxosToSpend', () => {
+  describe('selectCoins', () => {
     it('selects utxos', async () => {
       const accounts = generateAccounts(2);
       const { address } = accounts[0];
@@ -13,7 +13,7 @@ describe('UtxoService', () => {
 
       const utxoService = new UtxoService();
 
-      const result = utxoService.selectUtxosToSpend(
+      const result = utxoService.selectCoins(
         utxos,
         [{ address: accounts[1].address, value: 1000 }],
         1,
@@ -32,7 +32,7 @@ describe('UtxoService', () => {
       const utxoService = new UtxoService();
 
       expect(() =>
-        utxoService.selectUtxosToSpend(
+        utxoService.selectCoins(
           utxos,
           [{ address: accounts[1].address, value: 1000 }],
           100,

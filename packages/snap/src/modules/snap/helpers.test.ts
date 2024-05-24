@@ -1,5 +1,5 @@
 import { expect } from '@jest/globals';
-import { heading, panel, text, divider } from '@metamask/snaps-sdk';
+import { heading, panel, text, divider, row } from '@metamask/snaps-sdk';
 
 import { SnapHelper } from './helpers';
 
@@ -10,7 +10,7 @@ jest.mock('@metamask/key-tree', () => ({
 describe('SnapHelper', () => {
   describe('getBip44Deriver', () => {
     it('gets bip44 deriver', async () => {
-      const spy = jest.spyOn(SnapHelper.wallet, 'request');
+      const spy = jest.spyOn(SnapHelper.provider, 'request');
       const coinType = 1001;
 
       await SnapHelper.getBip44Deriver(coinType);
@@ -26,7 +26,7 @@ describe('SnapHelper', () => {
 
   describe('getBip32Deriver', () => {
     it('gets bip32 deriver', async () => {
-      const spy = jest.spyOn(SnapHelper.wallet, 'request');
+      const spy = jest.spyOn(SnapHelper.provider, 'request');
       const path = ['m', "84'", "0'"];
       const curve = 'secp256k1';
 
@@ -44,13 +44,25 @@ describe('SnapHelper', () => {
 
   describe('confirmDialog', () => {
     it('calls snap_dialog', async () => {
-      const spy = jest.spyOn(SnapHelper.wallet, 'request');
+      const spy = jest.spyOn(SnapHelper.provider, 'request');
       const testcase = {
         header: 'header',
         subHeader: 'subHeader',
-        body: {
-          content: 'content',
-        },
+        body: [
+          {
+            label: 'Label1',
+            value: 'Value1',
+          },
+          {
+            label: 'Label2',
+            value: [
+              {
+                label: 'SubLabel1',
+                value: 'SubValue1',
+              },
+            ],
+          },
+        ],
       };
 
       await SnapHelper.confirmDialog(
@@ -67,8 +79,26 @@ describe('SnapHelper', () => {
             heading(testcase.header),
             text(testcase.subHeader),
             divider(),
-            ...Object.entries(testcase.body).map(([key, value]) =>
-              text(`**${key}**:\n ${value}`),
+            row(
+              testcase.body[0].label,
+              text(testcase.body[0].value as unknown as string),
+            ),
+            text(`**${testcase.body[1].label}**:`),
+            row(
+              (
+                testcase.body[1].value[0] as unknown as {
+                  label: string;
+                  value: string;
+                }
+              ).label,
+              text(
+                (
+                  testcase.body[1].value[0] as unknown as {
+                    label: string;
+                    value: string;
+                  }
+                ).value,
+              ),
             ),
           ]),
         },
@@ -78,7 +108,7 @@ describe('SnapHelper', () => {
 
   describe('getStateData', () => {
     it('gets state data', async () => {
-      const spy = jest.spyOn(SnapHelper.wallet, 'request');
+      const spy = jest.spyOn(SnapHelper.provider, 'request');
       const testcase = {
         state: {
           transaction: [
@@ -106,7 +136,7 @@ describe('SnapHelper', () => {
 
   describe('setStateData', () => {
     it('sets state data', async () => {
-      const spy = jest.spyOn(SnapHelper.wallet, 'request');
+      const spy = jest.spyOn(SnapHelper.provider, 'request');
       const testcase = {
         state: {
           transaction: [

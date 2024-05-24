@@ -12,7 +12,7 @@ export class UtxoService {
    * @param feeRate - Fee rate.
    * @returns Selected UTXOs.
    */
-  selectUtxosToSpend(
+  selectCoins(
     utxos: Utxo[],
     spendTos: SpendTo[],
     feeRate: number,

@@ -1,4 +1,3 @@
-import type { Json } from '@metamask/snaps-sdk';
 import {
   object,
   string,
@@ -11,9 +10,10 @@ import {
 
 import { Factory } from '../factory';
 import { type Wallet as WalletData } from '../keyring';
-import { btcToSats } from '../modules/bitcoin/utils/unit';
-import type { Fees } from '../modules/chain';
+import { btcToSats, satsToBtc } from '../modules/bitcoin/utils/unit';
+import type { Fees, IOnChainService } from '../modules/chain';
 import { type TransactionIntent } from '../modules/chain';
+import { logger } from '../modules/logger/logger';
 import {
   SnapRpcHandlerRequestStruct,
   BaseSnapRpcHandler,
@@ -31,6 +31,20 @@ import { numberStringStruct } from '../utils';
 export type SendManyParams = Infer<typeof SendManyHandler.requestStruct>;
 
 export type SendManyResponse = SnapRpcHandlerResponse;
+
+export type TxnJson = {
+  feeRate: number;
+  estimatedFee: number;
+  sender: string;
+  recipients: {
+    address: string;
+    value: number;
+  }[];
+  changes: {
+    address: string;
+    value: number;
+  }[];
+};
 
 export class SendManyHandler
   extends BaseSnapRpcHandler
@@ -82,6 +96,18 @@ export class SendManyHandler
     const chainApi = Factory.createOnChainServiceProvider(scope);
     const transactionIntent = this.formatTxnIndents(params);
 
+    const amountsToSend = Object.values(transactionIntent.amounts);
+
+    if (amountsToSend.length === 0) {
+      throw new Error('Transaction must have at least one recipient');
+    }
+
+    for (const amount of amountsToSend) {
+      if (amount <= 0) {
+        throw new Error('Invalid amount for send');
+      }
+    }
+
     const feesResp = await chainApi.estimateFees();
 
     const fee = await this.getFeeConsensus(feesResp);
@@ -91,7 +117,7 @@ export class SendManyHandler
       transactionIntent,
     );
 
-    const { txn, txnJson } = await this.wallet.createTransaction(
+    const { txn, txnJson } = await this.wallet.createTransaction<TxnJson>(
       this.walletAccount,
       transactionIntent,
       {
@@ -112,6 +138,7 @@ export class SendManyHandler
     if (dryrun) {
       return { txnHash };
     }
+
     return await chainApi.boardcastTransaction(txnHash);
   }
 
@@ -129,19 +156,53 @@ export class SendManyHandler
 
   protected async getFeeConsensus(fees: Fees): Promise<number> {
     // TODO: Ask user to confirm fee
-    const result = await SnapHelper.createInteractiveDialog();
-    console.log({
-      result,
-    });
     return fees.fees[fees.fees.length - 1].rate;
   }
 
-  protected async getTxnConsensus(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    txnJson: Record<string, Json>,
-  ): Promise<boolean> {
-    console.log(txnJson);
-    // TODO: Ask user to confirm txn
-    return true;
+  protected async getTxnConsensus(txnJson: TxnJson): Promise<boolean> {
+    return (await SnapHelper.confirmDialog(
+      'Do you want to send this transaction?',
+      'Transaction details',
+      [
+        {
+          label: 'Fee Rate',
+          value: satsToBtc(txnJson.feeRate),
+        },
+        {
+          label: 'Estimated Fee',
+          value: satsToBtc(txnJson.estimatedFee),
+        },
+        {
+          label: 'Sender',
+          value: txnJson.sender,
+        },
+        {
+          label: 'Recipients',
+          value: txnJson.recipients.map(({ address, value }) => ({
+            label: address,
+            value: satsToBtc(value),
+          })),
+        },
+        {
+          label: 'Changes',
+          value: txnJson.changes.map(({ address, value }) => ({
+            label: address,
+            value: satsToBtc(value),
+          })),
+        },
+      ],
+    )) as boolean;
+  }
+
+  protected async boardcastTransaction(
+    chainApi: IOnChainService,
+    txnHash: string,
+  ): Promise<SendManyResponse> {
+    try {
+      return await chainApi.boardcastTransaction(txnHash);
+    } catch (error) {
+      logger.error('Failed to broadcast transaction', error);
+      throw new Error('Failed to commit transaction on chain');
+    }
   }
 }

@@ -6,6 +6,7 @@ import { bufferToString, compactError, hexToBuffer } from '../../../utils';
 import type { TransactionIntent, Utxo } from '../../chain/types';
 import type { IAccountSigner, IWallet } from '../../wallet';
 import { ScriptType } from '../constants';
+import { isDust } from '../utils/unit';
 import { P2WPKHAccount, P2SHP2WPKHAccount } from './account';
 import { WalletError } from './exceptions';
 import { PsbtService } from './psbt';
@@ -14,6 +15,7 @@ import type {
   IStaticBtcAccount,
   IBtcAccountDeriver,
   IBtcAccount,
+  SpendTo,
 } from './types';
 import { UtxoService } from './utxo';
 
@@ -64,7 +66,7 @@ export class BtcWallet implements IWallet {
     }
   }
 
-  async createTransaction(
+  async createTransaction<TxnJson extends Record<string, Json>>(
     account: IBtcAccount,
     txn: TransactionIntent,
     options: {
@@ -73,15 +75,20 @@ export class BtcWallet implements IWallet {
     },
   ): Promise<{
     txn: string;
-    txnJson: Record<string, Json>;
+    txnJson: TxnJson;
   }> {
     const utxosService = new UtxoService();
-    const spendTos = Object.entries(txn.amounts).map(([address, value]) => ({
-      address,
-      value,
-    }));
+    const spendTos = Object.entries(txn.amounts).map(([address, value]) => {
+      if (isDust(value, account.scriptType)) {
+        throw new WalletError('Transaction amount too small');
+      }
+      return {
+        address,
+        value,
+      };
+    });
 
-    const { inputs, outputs, fee } = utxosService.selectUtxosToSpend(
+    const { inputs, outputs, fee } = utxosService.selectCoins(
       options.utxos,
       spendTos,
       options.fee,
@@ -95,6 +102,27 @@ export class BtcWallet implements IWallet {
       throw new WalletError('Unable to get account script hash');
     }
 
+    const changes: SpendTo[] = [];
+    const recipients: SpendTo[] = [];
+    const formattedOutputs: SpendTo[] = [];
+    for (const output of outputs) {
+      if (output.address === undefined) {
+        changes.push({
+          address: account.address,
+          value: output.value,
+        });
+      } else {
+        recipients.push({
+          address: output.address,
+          value: output.value,
+        });
+      }
+      formattedOutputs.push({
+        address: output.address ?? account.address,
+        value: output.value,
+      });
+    }
+
     psbtService.addInputs(
       inputs,
       hexToBuffer(account.mfp, false),
@@ -103,18 +131,17 @@ export class BtcWallet implements IWallet {
       account.hdPath,
     );
 
-    psbtService.addOutputs(
-      outputs.map((output) => ({
-        address: output.address ?? account.address,
-        value: output.value,
-      })),
-    );
+    psbtService.addOutputs(formattedOutputs);
 
     return {
       txn: psbtService.toBase64(),
       txnJson: {
-        fee,
-      },
+        feeRate: options.fee,
+        estimatedFee: fee,
+        sender: account.address,
+        recipients,
+        changes,
+      } as unknown as TxnJson,
     };
   }
 

@@ -7,8 +7,9 @@ import ECPairFactory from 'ecpair';
 import { compactError } from '../../../utils';
 import type { Utxo } from '../../chain';
 import { logger } from '../../logger/logger';
+import type { IAccountSigner } from '../../wallet';
 import { PsbtServiceError } from './exceptions';
-import type { IAccountSigner, SpendTo } from './types';
+import type { SpendTo } from './types';
 // import { PsbtData } from "./psbt-data";
 
 const ECPair = ECPairFactory(ecc);

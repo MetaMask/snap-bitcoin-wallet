@@ -6,7 +6,7 @@ import ECPairFactory from 'ecpair';
 
 import { generateFormatedUtxos } from '../../../../test/utils';
 import { SnapHelper } from '../../snap';
-import { ScriptType } from '../constants';
+import { DustLimit, ScriptType } from '../constants';
 import { P2SHP2WPKHAccount, P2WPKHAccount } from './account';
 import { BtcAccountBip32Deriver } from './deriver';
 import { WalletError } from './exceptions';
@@ -132,7 +132,7 @@ describe('BtcWallet', () => {
 
       const result = await wallet.createTransaction(
         account,
-        createMockTxnIndent(account.address, 200),
+        createMockTxnIndent(account.address, DustLimit[account.scriptType] + 1),
         {
           utxos,
           fee: 1,
@@ -141,7 +141,13 @@ describe('BtcWallet', () => {
 
       expect(result).toStrictEqual({
         txn: expect.any(String),
-        txnJson: { fee: 226 },
+        txnJson: {
+          feeRate: 1,
+          estimatedFee: 226,
+          sender: account.address,
+          recipients: expect.any(Array),
+          changes: expect.any(Array),
+        },
       });
     });
 
@@ -151,14 +157,11 @@ describe('BtcWallet', () => {
       const wallet = new BtcWallet(instance, network);
       const account = await wallet.unlock(0, ScriptType.P2wpkh);
       const utxos = generateFormatedUtxos(account.address, 2);
-      const utxoServiceSpy = jest.spyOn(
-        UtxoService.prototype,
-        'selectUtxosToSpend',
-      );
+      const utxoServiceSpy = jest.spyOn(UtxoService.prototype, 'selectCoins');
 
       await wallet.createTransaction(
         account,
-        createMockTxnIndent(account.address, 200),
+        createMockTxnIndent(account.address, DustLimit[account.scriptType] + 1),
         {
           utxos,
           fee: 1,
@@ -170,7 +173,7 @@ describe('BtcWallet', () => {
         [
           {
             address: account.address,
-            value: 200,
+            value: DustLimit[account.scriptType] + 1,
           },
         ],
         1,
@@ -188,13 +191,34 @@ describe('BtcWallet', () => {
       await expect(
         wallet.createTransaction(
           account,
-          createMockTxnIndent(account.address, 200),
+          createMockTxnIndent(
+            account.address,
+            DustLimit[account.scriptType] + 1,
+          ),
           {
             utxos,
             fee: 1,
           },
         ),
       ).rejects.toThrow('Unable to get account script hash');
+    });
+
+    it('throws `Transaction amount too small` error if the output amount is dust', async () => {
+      const network = networks.testnet;
+      const { instance } = createMockBip32Instance(network);
+      const wallet = new BtcWallet(instance, network);
+      const account = await wallet.unlock(0, ScriptType.P2wpkh);
+
+      await expect(
+        wallet.createTransaction(
+          account,
+          createMockTxnIndent(account.address, 1),
+          {
+            utxos: [],
+            fee: 1,
+          },
+        ),
+      ).rejects.toThrow('Transaction amount too small');
     });
   });
 
@@ -208,7 +232,7 @@ describe('BtcWallet', () => {
 
       const { txn } = await wallet.createTransaction(
         account,
-        createMockTxnIndent(account.address, 200),
+        createMockTxnIndent(account.address, DustLimit[account.scriptType] + 1),
         {
           utxos,
           fee: 1,
