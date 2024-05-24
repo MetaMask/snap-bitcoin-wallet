@@ -8,6 +8,10 @@ export type BtcOnChainServiceConfig = {
       type: DataClient;
       options?: Record<string, Json | undefined>;
     };
+    write: {
+      type: DataClient;
+      options?: Record<string, Json | undefined>;
+    };
   };
 };
 

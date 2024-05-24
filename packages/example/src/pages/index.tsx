@@ -11,6 +11,9 @@ import {
   CreateBTCAccountButton,
   GetBTCAccountBalanceButton,
   ListAccountsButton,
+  BroadcastTxnCard,
+  GetDataForTransactionCard,
+  EstimateFeesCard,
 } from '../components';
 import { defaultSnapOrigin } from '../config';
 import { defaultSnapOrigin as snapId } from '../config/snap';
@@ -101,8 +104,8 @@ const Index = () => {
   const [btcAccount, setBtcAccount] = useState<KeyringAccount>();
   const [balance, setBalance] = useState<string>('');
 
-  const scope = "bip122:000000000933ea01ad0ee984209779ba"
-  const asset = `${scope}/slip44:0`
+  const scope = 'bip122:000000000933ea01ad0ee984209779ba';
+  const asset = `${scope}/slip44:0`;
 
   const isMetaMaskReady = isLocalSnap(defaultSnapOrigin)
     ? isFlask
@@ -112,21 +115,21 @@ const Index = () => {
     const account = (await invokeSnap({
       method: 'chain_createAccount',
       params: {
-        scope: scope
+        scope: scope,
       },
     })) as KeyringAccount;
 
     console.log({
-      account
-    }) 
+      account,
+    });
 
     setBtcAccount(account);
   };
 
   const handleGetBalanceClick = async () => {
-    const address = btcAccount?.address
+    const address = btcAccount?.address;
     if (!address) {
-      return
+      return;
     }
     const accountBalance = (await invokeSnap({
       method: 'chain_getBalances',
@@ -137,8 +140,8 @@ const Index = () => {
       },
     })) as unknown as AssetBalances;
     console.log({
-      accountBalance
-    }) 
+      accountBalance,
+    });
     const total = accountBalance?.balances?.[address]?.[asset];
 
     setBalance(total?.amount);
@@ -256,6 +259,37 @@ const Index = () => {
             ),
           }}
           disabled={!installedSnap || !btcAccount}
+          fullWidth={
+            isMetaMaskReady &&
+            Boolean(installedSnap) &&
+            !shouldDisplayReconnectButton(installedSnap)
+          }
+        />
+
+        <GetDataForTransactionCard
+          account={btcAccount?.address || ''}
+          scope={scope}
+          enabled={!(!installedSnap || !btcAccount)}
+          fullWidth={
+            isMetaMaskReady &&
+            Boolean(installedSnap) &&
+            !shouldDisplayReconnectButton(installedSnap)
+          }
+        />
+
+        <EstimateFeesCard
+          scope={scope}
+          enabled={!(!installedSnap || !btcAccount)}
+          fullWidth={
+            isMetaMaskReady &&
+            Boolean(installedSnap) &&
+            !shouldDisplayReconnectButton(installedSnap)
+          }
+        />
+
+        <BroadcastTxnCard
+          enabled={!(!installedSnap || !btcAccount)}
+          scope={scope}
           fullWidth={
             isMetaMaskReady &&
             Boolean(installedSnap) &&

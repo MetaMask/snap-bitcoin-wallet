@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer';
 
-import { trimHexPrefix, hexToBuffer } from './string';
+import { trimHexPrefix, hexToBuffer, bufferToString } from './string';
 
 describe('trimHexPrefix', () => {
   it('trims hex prefix', () => {
@@ -19,17 +19,36 @@ describe('trimHexPrefix', () => {
 });
 
 describe('hexToBuffer', () => {
-  it('conver a hex string to buffer with trimed prefix', () => {
+  it('converts a hex string to buffer with trimed prefix', () => {
     const key = '0x1234';
     const result = hexToBuffer(key);
 
     expect(result).toStrictEqual(Buffer.from('1234', 'hex'));
   });
 
-  it('conver a hex string to buffer without trimed prefix', () => {
+  it('converts a hex string to buffer without trimed prefix', () => {
     const key = '0x1234';
     const result = hexToBuffer(key, false);
 
     expect(result).toStrictEqual(Buffer.from('0x1234', 'hex'));
+  });
+
+  it('throws `Unable to convert hexStr to buffer` error if the execution fail', () => {
+    expect(() => hexToBuffer(null as unknown as string)).toThrow(
+      'Unable to convert hexStr to buffer',
+    );
+  });
+});
+
+describe('bufferToString', () => {
+  it('converts a buffer to string with encoding', () => {
+    const result = bufferToString(Buffer.from('1234', 'hex'), 'hex');
+    expect(result).toBe('1234');
+  });
+
+  it('throws `Unable to convert buffer to string` error if the execution fail', () => {
+    expect(() => bufferToString(undefined as unknown as Buffer, 'hex')).toThrow(
+      'Unable to convert buffer to string',
+    );
   });
 });

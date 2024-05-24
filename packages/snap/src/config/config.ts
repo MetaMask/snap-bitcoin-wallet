@@ -51,6 +51,17 @@ export const Config: SnapConfig = {
             apiKey: process.env.BLOCKCHAIR_API_KEY,
           },
         },
+
+        write: {
+          type:
+            // eslint-disable-next-line no-restricted-globals
+            (process.env.DATA_CLIENT_WRITE_TYPE as DataClient) ??
+            DataClient.BlockChair,
+          options: {
+            // eslint-disable-next-line no-restricted-globals
+            apiKey: process.env.BLOCKCHAIR_API_KEY,
+          },
+        },
       },
     },
   },

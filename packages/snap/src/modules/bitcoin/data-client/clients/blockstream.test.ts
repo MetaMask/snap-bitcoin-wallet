@@ -3,8 +3,11 @@ import { networks } from 'bitcoinjs-lib';
 import {
   generateAccounts,
   generateBlockStreamAccountStats,
+  generateBlockStreamGetUtxosResp,
+  generateBlockStreamEstFeeResp,
 } from '../../../../../test/utils';
 import * as asyncUtils from '../../../../utils/async';
+import { FeeRatio } from '../../../chain';
 import { DataClientError } from '../exceptions';
 import { BlockStreamClient } from './blockstream';
 
@@ -95,6 +98,149 @@ describe('BlockStreamClient', () => {
       await expect(instance.getBalances(addresses)).rejects.toThrow(
         DataClientError,
       );
+    });
+  });
+
+  describe('getFeeRates', () => {
+    it('returns fee rate', async () => {
+      const { fetchSpy } = createMockFetch();
+      const mockResponse = generateBlockStreamEstFeeResp();
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue(mockResponse),
+      });
+
+      const instance = new BlockStreamClient({ network: networks.testnet });
+      const result = await instance.getFeeRates();
+
+      expect(result).toStrictEqual({
+        [FeeRatio.Fast]: mockResponse['1'],
+        [FeeRatio.Medium]: mockResponse['25'],
+        [FeeRatio.Slow]: mockResponse['144'],
+      });
+    });
+
+    it('throws DataClientError error if an non DataClientError catched', async () => {
+      const { fetchSpy } = createMockFetch();
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockRejectedValue(new Error('error')),
+      });
+
+      const instance = new BlockStreamClient({ network: networks.testnet });
+
+      await expect(instance.getFeeRates()).rejects.toThrow(DataClientError);
+    });
+
+    it('throws DataClientError error if an DataClientError catched', async () => {
+      const { fetchSpy } = createMockFetch();
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        json: jest.fn().mockResolvedValue(null),
+      });
+
+      const instance = new BlockStreamClient({ network: networks.testnet });
+
+      await expect(instance.getFeeRates()).rejects.toThrow(DataClientError);
+    });
+  });
+
+  describe('getUtxos', () => {
+    it('returns utxos', async () => {
+      const { fetchSpy } = createMockFetch();
+      const accounts = generateAccounts(1);
+      const { address } = accounts[0];
+      const mockResponse = generateBlockStreamGetUtxosResp(100);
+      const expectedResult = mockResponse.map((utxo) => ({
+        block: utxo.status.block_height,
+        txnHash: utxo.txid,
+        index: utxo.vout,
+        value: utxo.value,
+      }));
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue(mockResponse),
+      });
+
+      const instance = new BlockStreamClient({ network: networks.testnet });
+      const result = await instance.getUtxos(address);
+
+      expect(result).toStrictEqual(expectedResult);
+    });
+
+    it('includes unconfirmed if includeUnconfirmed is true', async () => {
+      const { fetchSpy } = createMockFetch();
+      const accounts = generateAccounts(1);
+      const { address } = accounts[0];
+      const mockConfirmedResponse = generateBlockStreamGetUtxosResp(100);
+      const mockUnconfirmedResponse = generateBlockStreamGetUtxosResp(
+        100,
+        false,
+      );
+      const combinedResponse = mockConfirmedResponse.concat(
+        mockUnconfirmedResponse,
+      );
+      const expectedResult = combinedResponse.map((utxo) => ({
+        block: utxo.status.block_height,
+        txnHash: utxo.txid,
+        index: utxo.vout,
+        value: utxo.value,
+      }));
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue(combinedResponse),
+      });
+
+      const instance = new BlockStreamClient({ network: networks.testnet });
+      const result = await instance.getUtxos(address, true);
+
+      expect(result).toStrictEqual(expectedResult);
+    });
+
+    it('filters unconfirmed utxos if includeUnconfirmed is true', async () => {
+      const { fetchSpy } = createMockFetch();
+      const accounts = generateAccounts(1);
+      const { address } = accounts[0];
+      const mockConfirmedResponse = generateBlockStreamGetUtxosResp(100);
+      const mockUnconfirmedResponse = generateBlockStreamGetUtxosResp(
+        100,
+        false,
+      );
+      const combinedResponse = mockConfirmedResponse.concat(
+        mockUnconfirmedResponse,
+      );
+      const expectedResult = mockConfirmedResponse.map((utxo) => ({
+        block: utxo.status.block_height,
+        txnHash: utxo.txid,
+        index: utxo.vout,
+        value: utxo.value,
+      }));
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue(combinedResponse),
+      });
+
+      const instance = new BlockStreamClient({ network: networks.testnet });
+      const result = await instance.getUtxos(address, false);
+
+      expect(result).toStrictEqual(expectedResult);
+    });
+
+    it('throws DataClientError error if an non DataClientError catched', async () => {
+      const { fetchSpy } = createMockFetch();
+      fetchSpy.mockRejectedValue(new Error('error'));
+      const accounts = generateAccounts(1);
+      const { address } = accounts[0];
+
+      const instance = new BlockStreamClient({ network: networks.testnet });
+
+      await expect(instance.getUtxos(address)).rejects.toThrow(DataClientError);
     });
   });
 });

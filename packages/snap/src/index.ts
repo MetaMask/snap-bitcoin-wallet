@@ -51,7 +51,7 @@ export const onRpcRequest: OnRpcRequestHandler = async (args) => {
       snapError = new SnapError(error);
     }
     logger.error(
-      `onKeyringRequest error: ${JSON.stringify(snapError.toJSON(), null, 2)}`,
+      `onRpcRequest error: ${JSON.stringify(snapError.toJSON(), null, 2)}`,
     );
     throw snapError;
   }

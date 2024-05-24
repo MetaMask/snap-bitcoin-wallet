@@ -15,6 +15,7 @@ import { Factory } from '../factory';
 import { logger } from '../modules/logger/logger';
 import type { SnapRpcHandlerRequest } from '../modules/rpc';
 import { SnapHelper } from '../modules/snap';
+import type { IAccount, IWallet } from '../modules/wallet';
 import { RpcHelper } from '../rpcs/helpers';
 import { BtcKeyringError } from './exceptions';
 import type { KeyringStateManager } from './state';
@@ -22,8 +23,6 @@ import {
   CreateAccountOptionsStruct,
   type ChainRPCHandlers,
   type CreateAccountOptions,
-  type IAccount,
-  type IWallet,
   type KeyringOptions,
 } from './types';
 
@@ -163,18 +162,22 @@ export class BtcKeyring implements Keyring {
       throw new MethodNotFoundError() as unknown as Error;
     }
 
-    const walletData = await this.stateMgr.getWalletByAddressNScope(
-      account,
-      scope,
-    );
+    const walletData = await this.stateMgr.getWallet(account);
 
     if (!walletData) {
       throw new Error('Account not found');
     }
 
-    return this.handlers[method]
-      .getInstance(walletData)
-      .execute(params as unknown as SnapRpcHandlerRequest);
+    if (walletData.scope !== scope) {
+      throw new Error(
+        `Account's scope does not match with the request's scope`,
+      );
+    }
+
+    return this.handlers[method].getInstance(walletData).execute({
+      ...params,
+      scope,
+    } as unknown as SnapRpcHandlerRequest);
   }
 
   async #emitEvent(

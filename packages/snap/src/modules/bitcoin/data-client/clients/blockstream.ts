@@ -1,16 +1,18 @@
 import { type Network, networks } from 'bitcoinjs-lib';
 
 import { compactError, processBatch } from '../../../../utils';
-import { type Balances } from '../../../chain';
+import { type Balances, type Utxo, FeeRatio } from '../../../chain';
 import { logger } from '../../../logger/logger';
 import { DataClientError } from '../exceptions';
-import type { IReadDataClient } from '../types';
+import type { GetFeeRatesResp, IReadDataClient } from '../types';
 
 export type BlockStreamClientOptions = {
   network: Network;
 };
 
 /* eslint-disable */
+export type GetFeeEstimateResponse = Record<string, number>;
+
 export type GetAddressStatsResponse = {
   address: string;
   chain_stats: {
@@ -28,13 +30,32 @@ export type GetAddressStatsResponse = {
     tx_count: number;
   };
 };
+
+export type GetUtxosResponse = {
+  txid: string;
+  vout: number;
+  status: {
+    confirmed: boolean;
+    block_height: number;
+    block_hash: string;
+    block_time: number;
+  };
+  value: number;
+}[];
 /* eslint-enable */
 
 export class BlockStreamClient implements IReadDataClient {
-  options: BlockStreamClientOptions;
+  protected readonly options: BlockStreamClientOptions;
+
+  protected readonly feeRateRatioMap: Record<FeeRatio, string>;
 
   constructor(options: BlockStreamClientOptions) {
     this.options = options;
+    this.feeRateRatioMap = {
+      [FeeRatio.Fast]: '1',
+      [FeeRatio.Medium]: '25',
+      [FeeRatio.Slow]: '144',
+    };
   }
 
   get baseUrl(): string {
@@ -91,6 +112,62 @@ export class BlockStreamClient implements IReadDataClient {
       return responses;
     } catch (error) {
       throw compactError(error, DataClientError);
+    }
+  }
+
+  async getUtxos(
+    address: string,
+    includeUnconfirmed?: boolean,
+  ): Promise<Utxo[]> {
+    try {
+      const response = await this.get<GetUtxosResponse>(
+        `/address/${address}/utxo`,
+      );
+
+      logger.info(
+        `[BlockStreamClient.getUtxos] response: ${JSON.stringify(response)}`,
+      );
+
+      const data: Utxo[] = [];
+
+      for (const utxo of response) {
+        if (!includeUnconfirmed && !utxo.status.confirmed) {
+          continue;
+        }
+        data.push({
+          block: utxo.status.block_height,
+          txnHash: utxo.txid,
+          index: utxo.vout,
+          value: utxo.value,
+        });
+      }
+
+      return data;
+    } catch (error) {
+      throw compactError(error, DataClientError);
+    }
+  }
+
+  async getFeeRates(): Promise<GetFeeRatesResp> {
+    try {
+      logger.info(`[BlockStreamClient.getFeeRates] start:`);
+      const response = await this.get<GetFeeEstimateResponse>(`/fee-estimates`);
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      logger.info(
+        `[BlockStreamClient.getFeeRates] response: ${JSON.stringify(response)}`,
+      );
+      return {
+        [FeeRatio.Fast]: response[this.feeRateRatioMap[FeeRatio.Fast]],
+        [FeeRatio.Medium]: response[this.feeRateRatioMap[FeeRatio.Medium]],
+        [FeeRatio.Slow]: response[this.feeRateRatioMap[FeeRatio.Slow]],
+      };
+    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      logger.info(`[BlockStreamClient.getFeeRates] error: ${error.message}`);
+      if (error instanceof DataClientError) {
+        throw error;
+      }
+      throw new DataClientError(error);
     }
   }
 }

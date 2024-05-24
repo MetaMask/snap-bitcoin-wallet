@@ -1,5 +1,4 @@
 import type { Network, Payment } from 'bitcoinjs-lib';
-import type { Buffer } from 'buffer';
 
 import type { StaticImplements } from '../../../types/static';
 import { hexToBuffer } from '../../../utils';
@@ -62,19 +61,11 @@ export class BtcAccount implements IBtcAccount {
     if (!this.#payment) {
       this.#payment = getBtcPaymentInst(
         this.scriptType,
-        this.pubkeyToBuf(this.pubkey),
+        hexToBuffer(this.pubkey),
         this.network,
       );
     }
     return this.#payment;
-  }
-
-  protected pubkeyToBuf(pubkey: string): Buffer {
-    try {
-      return hexToBuffer(pubkey, false);
-    } catch (error) {
-      throw new Error('Public key is invalid');
-    }
   }
 }
 
