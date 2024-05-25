@@ -10,7 +10,7 @@ jest.mock('@metamask/key-tree', () => ({
 describe('SnapHelper', () => {
   describe('getBip44Deriver', () => {
     it('gets bip44 deriver', async () => {
-      const spy = jest.spyOn(SnapHelper.wallet, 'request');
+      const spy = jest.spyOn(SnapHelper.provider, 'request');
       const coinType = 1001;
 
       await SnapHelper.getBip44Deriver(coinType);
@@ -26,7 +26,7 @@ describe('SnapHelper', () => {
 
   describe('getBip32Deriver', () => {
     it('gets bip32 deriver', async () => {
-      const spy = jest.spyOn(SnapHelper.wallet, 'request');
+      const spy = jest.spyOn(SnapHelper.provider, 'request');
       const path = ['m', "84'", "0'"];
       const curve = 'secp256k1';
 
@@ -44,7 +44,7 @@ describe('SnapHelper', () => {
 
   describe('confirmDialog', () => {
     it('calls snap_dialog', async () => {
-      const spy = jest.spyOn(SnapHelper.wallet, 'request');
+      const spy = jest.spyOn(SnapHelper.provider, 'request');
       const testcase = {
         header: 'header',
         subHeader: 'subHeader',
@@ -78,7 +78,7 @@ describe('SnapHelper', () => {
 
   describe('getStateData', () => {
     it('gets state data', async () => {
-      const spy = jest.spyOn(SnapHelper.wallet, 'request');
+      const spy = jest.spyOn(SnapHelper.provider, 'request');
       const testcase = {
         state: {
           transaction: [
@@ -106,7 +106,7 @@ describe('SnapHelper', () => {
 
   describe('setStateData', () => {
     it('sets state data', async () => {
-      const spy = jest.spyOn(SnapHelper.wallet, 'request');
+      const spy = jest.spyOn(SnapHelper.provider, 'request');
       const testcase = {
         state: {
           transaction: [

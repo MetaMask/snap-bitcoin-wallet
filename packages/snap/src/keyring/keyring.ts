@@ -186,7 +186,7 @@ export class BtcKeyring implements Keyring {
   ): Promise<void> {
     // TODO: Temp solutio to support keyring in snap without keyring API
     if (this.options.emitEvents) {
-      await emitSnapKeyringEvent(SnapHelper.wallet, event, data);
+      await emitSnapKeyringEvent(SnapHelper.provider, event, data);
     }
   }
 
