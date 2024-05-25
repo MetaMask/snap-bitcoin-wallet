@@ -46,12 +46,6 @@ export class BroadcastTransactionHandler
 
     const chainApi = Factory.createOnChainServiceProvider(scope);
 
-    const transactionId = await chainApi.boardcastTransaction(
-      signedTransaction,
-    );
-
-    return {
-      transactionId,
-    };
+    return await chainApi.boardcastTransaction(signedTransaction);
   }
 }
