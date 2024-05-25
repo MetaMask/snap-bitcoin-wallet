@@ -72,9 +72,13 @@ export class PsbtService {
               pubkey: changeAddressPubkey,
             },
           ],
+
+          // reference : https://en.bitcoin.it/wiki/BIP_0125
+          // A transaction is considered to have opted in to allowing replacement of itself if any of its inputs have an nSequence number less than (0xffffffff - 1).
+          // we use max sequence number - 2 to void conflicting with other possible uses of nSequence
           sequence: replaceable
-            ? Transaction.DEFAULT_SEQUENCE
-            : Transaction.DEFAULT_SEQUENCE - 2,
+            ? Transaction.DEFAULT_SEQUENCE - 2
+            : Transaction.DEFAULT_SEQUENCE,
         });
       }
     } catch (error) {

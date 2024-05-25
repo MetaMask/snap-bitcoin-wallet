@@ -162,7 +162,7 @@ describe('PsbtService', () => {
               pubkey: pubkeyBuf,
             },
           ],
-          sequence: Transaction.DEFAULT_SEQUENCE - 2,
+          sequence: Transaction.DEFAULT_SEQUENCE,
         });
       }
     });
@@ -202,7 +202,7 @@ describe('PsbtService', () => {
               pubkey: pubkeyBuf,
             },
           ],
-          sequence: Transaction.DEFAULT_SEQUENCE,
+          sequence: Transaction.DEFAULT_SEQUENCE - 2,
         });
       }
     });
