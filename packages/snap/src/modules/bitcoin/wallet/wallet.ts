@@ -67,13 +67,13 @@ export class BtcWallet implements IWallet {
     }
   }
 
-  async createTransaction<TxnJson extends Record<string, Json>>(
+  async createTransaction(
     account: IBtcAccount,
     txn: TransactionIntent,
     options: CreateTransactionOptions,
   ): Promise<{
     txn: string;
-    txnJson: TxnJson;
+    txnJson: Record<string, Json>;
   }> {
     const scriptOutput = account.payment.output;
     const { scriptType } = account;
@@ -142,7 +142,7 @@ export class BtcWallet implements IWallet {
         sender: account.address,
         recipients,
         changes,
-      } as unknown as TxnJson,
+      },
     };
   }
 

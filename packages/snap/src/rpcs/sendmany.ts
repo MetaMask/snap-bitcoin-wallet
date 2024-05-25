@@ -135,7 +135,7 @@ export class SendManyHandler
       this.transactionIntent,
     );
 
-    const { txn, txnJson } = await this.wallet.createTransaction<TxnJson>(
+    const { txn, txnJson } = await this.wallet.createTransaction(
       this.walletAccount,
       this.transactionIntent,
       {
@@ -146,7 +146,7 @@ export class SendManyHandler
       },
     );
 
-    if (!(await this.getTxnConsensus(txnJson))) {
+    if (!(await this.getTxnConsensus(txnJson as unknown as TxnJson))) {
       throw new UserRejectedRequestError() as unknown as Error;
     }
 

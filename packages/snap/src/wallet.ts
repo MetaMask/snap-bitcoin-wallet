@@ -61,13 +61,13 @@ export type IWallet = {
    * @param options - The options to create the transaction.
    * @returns A promise that resolves to an object contains txnHash and txnJson.
    */
-  createTransaction<TxnJson extends Record<string, Json>>(
+  createTransaction(
     acount: IAccount,
     txnIntent: TransactionIntent,
     options: Record<string, Json>,
   ): Promise<{
     txn: string;
-    txnJson: TxnJson;
+    txnJson: Record<string, Json>;
   }>;
 };
 
