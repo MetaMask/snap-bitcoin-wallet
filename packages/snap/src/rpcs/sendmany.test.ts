@@ -1,5 +1,9 @@
 import ecc from '@bitcoinerlab/secp256k1';
 import type { SLIP10NodeInterface } from '@metamask/key-tree';
+import {
+  InvalidParamsError,
+  UserRejectedRequestError,
+} from '@metamask/snaps-sdk';
 import { BIP32Factory } from 'bip32';
 import { networks } from 'bitcoinjs-lib';
 import ECPairFactory from 'ecpair';
@@ -167,7 +171,7 @@ describe('SendManyHandler', () => {
         ],
       });
       boardcastTransactionSpy.mockResolvedValue({
-        txnHash: boardcastResp,
+        transactionId: boardcastResp,
       });
       jest.spyOn(SnapHelper, 'confirmDialog').mockResolvedValue(true);
 
@@ -177,7 +181,7 @@ describe('SendManyHandler', () => {
         account: keyringAccount,
       }).execute(createSendManyParams(receipents, caip2Network, false));
 
-      expect(result).toStrictEqual({ txnHash: boardcastResp });
+      expect(result).toStrictEqual({ txId: boardcastResp });
       expect(estimatedFeeSpy).toHaveBeenCalledTimes(1);
       expect(getDataForTransactionSpy).toHaveBeenCalledTimes(1);
       expect(boardcastTransactionSpy).toHaveBeenCalledTimes(1);
@@ -216,7 +220,7 @@ describe('SendManyHandler', () => {
         ],
       });
       boardcastTransactionSpy.mockResolvedValue({
-        txnHash: boardcastResp,
+        transactionId: boardcastResp,
       });
       jest.spyOn(SnapHelper, 'confirmDialog').mockResolvedValue(true);
 
@@ -236,7 +240,7 @@ describe('SendManyHandler', () => {
         SendManyHandler.getInstance().execute({
           scope: Network.Testnet,
         }),
-      ).rejects.toThrow('Request params is invalid');
+      ).rejects.toThrow(InvalidParamsError);
     });
 
     it('throws `Account not found` error when given address not match', async () => {
@@ -300,7 +304,7 @@ describe('SendManyHandler', () => {
       ).rejects.toThrow('Invalid amount for send');
     });
 
-    it('throws `User denied transaction request` error if user denied the transaction', async () => {
+    it('throws UserRejectedRequestError error if user denied the transaction', async () => {
       const network = networks.testnet;
       const caip2Network = Network.Testnet;
       const {
@@ -333,7 +337,7 @@ describe('SendManyHandler', () => {
         ],
       });
       boardcastTransactionSpy.mockResolvedValue({
-        txnHash: boardcastResp,
+        transactionId: boardcastResp,
       });
       jest.spyOn(SnapHelper, 'confirmDialog').mockResolvedValue(false);
 
@@ -343,7 +347,7 @@ describe('SendManyHandler', () => {
           index: 0,
           account: keyringAccount,
         }).execute(createSendManyParams(receipents, caip2Network, false)),
-      ).rejects.toThrow('User denied transaction request');
+      ).rejects.toThrow(UserRejectedRequestError);
     });
 
     it('throws `Failed to commit transaction on chain` error if the transaction is fail to commit', async () => {

@@ -1,3 +1,5 @@
+import { InvalidParamsError } from '@metamask/snaps-sdk';
+
 import { generateAccounts } from '../../test/utils';
 import { Factory } from '../factory';
 import { BtcAsset, Network } from '../modules/bitcoin/constants';
@@ -77,7 +79,7 @@ describe('GetBalancesHandler', () => {
           accounts: addresses,
           assets: ['some-asset'],
         }),
-      ).rejects.toThrow('Request params is invalid');
+      ).rejects.toThrow(InvalidParamsError);
     });
   });
 });

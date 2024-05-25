@@ -1,3 +1,5 @@
+import { InvalidParamsError } from '@metamask/snaps-sdk';
+
 import { generateBlockChairBroadcastTransactionResp } from '../../test/utils';
 import { Factory } from '../factory';
 import { Network } from '../modules/bitcoin/constants';
@@ -53,7 +55,7 @@ describe('BroadcastTransactionHandler', () => {
         BroadcastTransactionHandler.getInstance().execute({
           scope: 'some invalid value',
         }),
-      ).rejects.toThrow('Request params is invalid');
+      ).rejects.toThrow(InvalidParamsError);
     });
   });
 });

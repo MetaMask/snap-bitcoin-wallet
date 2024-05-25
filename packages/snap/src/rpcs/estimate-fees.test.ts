@@ -1,3 +1,5 @@
+import { InvalidParamsError } from '@metamask/snaps-sdk';
+
 import { FeeRatio } from '../chain';
 import { Factory } from '../factory';
 import { Network } from '../modules/bitcoin/constants';
@@ -78,7 +80,7 @@ describe('EstimateFeesHandler', () => {
         EstimateFeesHandler.getInstance().execute({
           scope: 'some invalid value',
         }),
-      ).rejects.toThrow('Request params is invalid');
+      ).rejects.toThrow(InvalidParamsError);
     });
   });
 });

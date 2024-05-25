@@ -1,3 +1,5 @@
+import { InvalidParamsError } from '@metamask/snaps-sdk';
+
 import {
   generateAccounts,
   generateBlockChairGetUtxosResp,
@@ -71,7 +73,7 @@ describe('GetTransactionDataHandler', () => {
         GetTransactionDataHandler.getInstance().execute({
           scope: Network.Testnet,
         }),
-      ).rejects.toThrow('Request params is invalid');
+      ).rejects.toThrow(InvalidParamsError);
     });
   });
 });

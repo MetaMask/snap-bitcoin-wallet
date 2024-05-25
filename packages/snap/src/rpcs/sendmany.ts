@@ -1,4 +1,8 @@
 import {
+  InvalidParamsError,
+  UserRejectedRequestError,
+} from '@metamask/snaps-sdk';
+import {
   object,
   string,
   assign,
@@ -20,7 +24,6 @@ import {
 import type {
   IStaticSnapRpcHandler,
   SnapRpcHandlerRequest,
-  SnapRpcHandlerResponse,
 } from '../modules/rpc';
 import { SnapHelper } from '../modules/snap';
 import type { StaticImplements } from '../types/static';
@@ -29,7 +32,7 @@ import type { IAccount, IWallet } from '../wallet';
 
 export type SendManyParams = Infer<typeof SendManyHandler.requestStruct>;
 
-export type SendManyResponse = SnapRpcHandlerResponse;
+export type SendManyResponse = Infer<typeof SendManyHandler.responseStruct>;
 
 export type TxnJson = {
   feeRate: number;
@@ -73,6 +76,12 @@ export class SendManyHandler
     );
   }
 
+  static override get responseStruct() {
+    return object({
+      txId: string(),
+    });
+  }
+
   protected override async preExecute(
     params: SnapRpcHandlerRequest,
   ): Promise<void> {
@@ -98,12 +107,16 @@ export class SendManyHandler
     const amountsToSend = Object.values(transactionIntent.amounts);
 
     if (amountsToSend.length === 0) {
-      throw new Error('Transaction must have at least one recipient');
+      throw new InvalidParamsError(
+        'Transaction must have at least one recipient',
+      ) as unknown as Error;
     }
 
     for (const amount of amountsToSend) {
       if (amount <= 0) {
-        throw new Error('Invalid amount for send');
+        throw new InvalidParamsError(
+          'Invalid amount for send',
+        ) as unknown as Error;
       }
     }
 
@@ -126,7 +139,7 @@ export class SendManyHandler
     );
 
     if (!(await this.getTxnConsensus(txnJson))) {
-      throw new Error('User denied transaction request');
+      throw new UserRejectedRequestError() as unknown as Error;
     }
 
     const txnHash = await this.wallet.signTransaction(
@@ -135,10 +148,14 @@ export class SendManyHandler
     );
 
     if (dryrun) {
-      return { txnHash };
+      return {
+        txId: txnHash,
+      };
     }
 
-    return await this.boardcastTransaction(chainApi, txnHash);
+    return {
+      txId: await this.boardcastTransaction(chainApi, txnHash),
+    };
   }
 
   protected formatTxnIndents(params: SendManyParams): TransactionIntent {
@@ -196,9 +213,9 @@ export class SendManyHandler
   protected async boardcastTransaction(
     chainApi: IOnChainService,
     txnHash: string,
-  ): Promise<SendManyResponse> {
+  ): Promise<string> {
     try {
-      return await chainApi.boardcastTransaction(txnHash);
+      return (await chainApi.boardcastTransaction(txnHash)).transactionId;
     } catch (error) {
       console.log('fail message', error.message);
       logger.error('Failed to broadcast transaction', error);

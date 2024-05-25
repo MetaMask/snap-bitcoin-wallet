@@ -1,3 +1,4 @@
+import { InvalidParamsError } from '@metamask/snaps-sdk';
 import { type Struct, assert } from 'superstruct';
 
 import { logger } from '../logger/logger';
@@ -40,7 +41,7 @@ export abstract class BaseSnapRpcHandler implements ISnapRpcExecutable {
     } catch (error) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       logger.info(`[SnapRpcHandler.preExecute] Error: ${error.message}`);
-      throw new SnapRpcValidationError('Request params is invalid');
+      throw new InvalidParamsError() as unknown as Error;
     }
   }
 
