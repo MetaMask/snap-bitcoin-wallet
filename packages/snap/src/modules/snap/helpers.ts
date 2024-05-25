@@ -15,12 +15,12 @@ import {
 declare const snap: SnapsProvider;
 
 export class SnapHelper {
-  static wallet: SnapsProvider = snap;
+  static provider: SnapsProvider = snap;
 
   static async getBip44Deriver(
     coinType: number,
   ): Promise<BIP44AddressKeyDeriver> {
-    const bip44Node = await SnapHelper.wallet.request({
+    const bip44Node = await SnapHelper.provider.request({
       method: 'snap_getBip44Entropy',
       params: {
         coinType,
@@ -33,7 +33,7 @@ export class SnapHelper {
     path: string[],
     curve: 'secp256k1' | 'ed25519',
   ): Promise<SLIP10NodeInterface> {
-    const node = await SnapHelper.wallet.request({
+    const node = await SnapHelper.provider.request({
       method: 'snap_getBip32Entropy',
       params: {
         path,
@@ -48,7 +48,7 @@ export class SnapHelper {
     subHeader: string,
     body: Record<string, string>,
   ): Promise<DialogResult> {
-    return SnapHelper.wallet.request({
+    return SnapHelper.provider.request({
       method: 'snap_dialog',
       params: {
         type: 'confirmation',
@@ -65,7 +65,7 @@ export class SnapHelper {
   }
 
   static async getStateData<State>(): Promise<State> {
-    return (await SnapHelper.wallet.request({
+    return (await SnapHelper.provider.request({
       method: 'snap_manageState',
       params: {
         operation: 'get',
@@ -74,7 +74,7 @@ export class SnapHelper {
   }
 
   static async setStateData<State>(data: State) {
-    await SnapHelper.wallet.request({
+    await SnapHelper.provider.request({
       method: 'snap_manageState',
       params: {
         operation: 'update',
