@@ -44,14 +44,10 @@ export type Pagination = {
   offset: number;
 };
 
-export type CommitedTransaction = {
-  transactionId: string;
-};
-
 export type IOnChainService = {
   getBalances(addresses: string[], assets: string[]): Promise<AssetBalances>;
   estimateFees(): Promise<Fees>;
-  boardcastTransaction(signedTransaction: string): Promise<CommitedTransaction>;
+  boardcastTransaction(signedTransaction: string): Promise<string>;
   listTransactions(address: string, pagination: Pagination);
   getTransaction(txnHash: string);
   getDataForTransaction(

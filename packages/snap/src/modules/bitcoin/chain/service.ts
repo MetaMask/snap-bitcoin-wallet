@@ -10,7 +10,6 @@ import type {
   Pagination,
   Fees,
   TransactionData,
-  CommitedTransaction,
 } from '../../../chain';
 import { compactError } from '../../../utils';
 import { BtcAsset } from '../constants';
@@ -120,16 +119,9 @@ export class BtcOnChainService implements IOnChainService {
     }
   }
 
-  async boardcastTransaction(
-    signedTransaction: string,
-  ): Promise<CommitedTransaction> {
+  async boardcastTransaction(signedTransaction: string): Promise<string> {
     try {
-      const transactionId = await this.writeClient.sendTransaction(
-        signedTransaction,
-      );
-      return {
-        transactionId,
-      };
+      return await this.writeClient.sendTransaction(signedTransaction);
     } catch (error) {
       throw compactError(error, BtcOnChainServiceError);
     }
