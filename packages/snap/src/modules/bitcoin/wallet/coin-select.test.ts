@@ -1,22 +1,24 @@
+import { Buffer } from 'buffer';
+
 import {
   generateAccounts,
   generateFormatedUtxos,
 } from '../../../../test/utils';
-import { UtxoService } from './utxo';
+import { CoinSelectService } from './coin-select';
 
-describe('UtxoService', () => {
+describe('CoinSelectService', () => {
   describe('selectCoins', () => {
     it('selects utxos', async () => {
       const accounts = generateAccounts(2);
       const { address } = accounts[0];
       const utxos = generateFormatedUtxos(address, 2, 2000, 1000000);
 
-      const utxoService = new UtxoService();
+      const coinSelectService = new CoinSelectService(1);
 
-      const result = utxoService.selectCoins(
+      const result = coinSelectService.selectCoins(
         utxos,
         [{ address: accounts[1].address, value: 1000 }],
-        1,
+        Buffer.from('scriptOutput'),
       );
 
       expect(result).toHaveProperty('inputs', expect.any(Array));
@@ -29,13 +31,13 @@ describe('UtxoService', () => {
       const { address } = accounts[0];
       const utxos = generateFormatedUtxos(address, 1, 1, 1);
 
-      const utxoService = new UtxoService();
+      const coinSelectService = new CoinSelectService(100);
 
       expect(() =>
-        utxoService.selectCoins(
+        coinSelectService.selectCoins(
           utxos,
           [{ address: accounts[1].address, value: 1000 }],
-          100,
+          Buffer.from('scriptOutput'),
         ),
       ).toThrow('Not enough funds');
     });

@@ -15,16 +15,14 @@ import {
 import type { Fees, IOnChainService, TransactionIntent } from '../chain';
 import { Factory } from '../factory';
 import { type Wallet as WalletData } from '../keyring';
-import { btcToSats, satsToBtc } from '../modules/bitcoin/utils';
+import { btcToSats, isDust, satsToBtc } from '../modules/bitcoin/utils';
+import type { IBtcAccount } from '../modules/bitcoin/wallet';
 import { logger } from '../modules/logger/logger';
 import {
   SnapRpcHandlerRequestStruct,
   BaseSnapRpcHandler,
 } from '../modules/rpc';
-import type {
-  IStaticSnapRpcHandler,
-  SnapRpcHandlerRequest,
-} from '../modules/rpc';
+import type { IStaticSnapRpcHandler } from '../modules/rpc';
 import { SnapHelper } from '../modules/snap';
 import type { StaticImplements } from '../types/static';
 import { numberStringStruct } from '../utils';
@@ -58,6 +56,8 @@ export class SendManyHandler
 
   walletAccount: IAccount;
 
+  transactionIntent: TransactionIntent;
+
   constructor(walletData: WalletData) {
     super();
     this.walletData = walletData;
@@ -82,28 +82,19 @@ export class SendManyHandler
     });
   }
 
-  protected override async preExecute(
-    params: SnapRpcHandlerRequest,
-  ): Promise<void> {
+  protected override async preExecute(params: SendManyParams): Promise<void> {
     await super.preExecute(params);
 
     const { scope, index, account } = this.walletData;
     const wallet = Factory.createWallet(scope);
     const unlocked = await wallet.unlock(index, account.type);
+
     if (!unlocked || unlocked.address !== account.address) {
       throw new Error('Account not found');
     }
 
-    this.walletAccount = unlocked;
-    this.wallet = wallet;
-  }
-
-  async handleRequest(params: SendManyParams): Promise<SendManyResponse> {
-    const { scope } = this.walletData;
-    const { dryrun } = params;
-    const chainApi = Factory.createOnChainServiceProvider(scope);
+    const accountScriptType = (unlocked as IBtcAccount).scriptType;
     const transactionIntent = this.formatTxnIndents(params);
-
     const amountsToSend = Object.values(transactionIntent.amounts);
 
     if (amountsToSend.length === 0) {
@@ -118,7 +109,22 @@ export class SendManyHandler
           'Invalid amount for send',
         ) as unknown as Error;
       }
+      if (isDust(amount, accountScriptType)) {
+        throw new InvalidParamsError(
+          'Transaction amount too small',
+        ) as unknown as Error;
+      }
     }
+
+    this.transactionIntent = transactionIntent;
+    this.walletAccount = unlocked;
+    this.wallet = wallet;
+  }
+
+  async handleRequest(params: SendManyParams): Promise<SendManyResponse> {
+    const { scope } = this.walletData;
+    const { dryrun } = params;
+    const chainApi = Factory.createOnChainServiceProvider(scope);
 
     const feesResp = await chainApi.estimateFees();
 
@@ -126,15 +132,17 @@ export class SendManyHandler
 
     const metadata = await chainApi.getDataForTransaction(
       this.walletAccount.address,
-      transactionIntent,
+      this.transactionIntent,
     );
 
     const { txn, txnJson } = await this.wallet.createTransaction<TxnJson>(
       this.walletAccount,
-      transactionIntent,
+      this.transactionIntent,
       {
         utxos: metadata.data.utxos,
         fee,
+        subtractFeeFrom: params.subtractFeeFrom,
+        replaceable: params.replaceable,
       },
     );
 
@@ -154,7 +162,7 @@ export class SendManyHandler
     }
 
     return {
-      txId: await this.boardcastTransaction(chainApi, txnHash),
+      txId: await this.broadcastTransaction(chainApi, txnHash),
     };
   }
 
@@ -210,12 +218,12 @@ export class SendManyHandler
     )) as boolean;
   }
 
-  protected async boardcastTransaction(
+  protected async broadcastTransaction(
     chainApi: IOnChainService,
     txnHash: string,
   ): Promise<string> {
     try {
-      return (await chainApi.boardcastTransaction(txnHash)).transactionId;
+      return (await chainApi.broadcastTransaction(txnHash)).transactionId;
     } catch (error) {
       console.log('fail message', error.message);
       logger.error('Failed to broadcast transaction', error);

@@ -6,8 +6,9 @@ import type { TransactionIntent } from '../../../chain';
 import { bufferToString, compactError, hexToBuffer } from '../../../utils';
 import type { IAccountSigner, IWallet } from '../../../wallet';
 import { ScriptType } from '../constants';
-import { isDust } from '../utils/unit';
+import { isDust } from '../utils';
 import { P2WPKHAccount, P2SHP2WPKHAccount } from './account';
+import { CoinSelectService } from './coin-select';
 import { WalletError } from './exceptions';
 import { PsbtService } from './psbt';
 import { AccountSigner } from './signer';
@@ -16,9 +17,8 @@ import type {
   IBtcAccountDeriver,
   IBtcAccount,
   SpendTo,
-  Utxo,
+  CreateTransactionOptions,
 } from './types';
-import { UtxoService } from './utxo';
 
 export class BtcWallet implements IWallet {
   protected readonly deriver: IBtcAccountDeriver;
@@ -70,44 +70,41 @@ export class BtcWallet implements IWallet {
   async createTransaction<TxnJson extends Record<string, Json>>(
     account: IBtcAccount,
     txn: TransactionIntent,
-    options: {
-      utxos: Utxo[];
-      fee: number;
-    },
+    options: CreateTransactionOptions,
   ): Promise<{
     txn: string;
     txnJson: TxnJson;
   }> {
-    const utxosService = new UtxoService();
+    const scriptOutput = account.payment.output;
+    const { scriptType } = account;
+
+    if (!scriptOutput) {
+      throw new WalletError('Unable to get account script hash');
+    }
+
+    const coinSelectService = new CoinSelectService(options.fee);
     const spendTos = Object.entries(txn.amounts).map(([address, value]) => {
-      if (isDust(value, account.scriptType)) {
-        throw new WalletError('Transaction amount too small');
-      }
       return {
         address,
         value,
       };
     });
 
-    const { inputs, outputs, fee } = utxosService.selectCoins(
+    const { inputs, outputs, fee } = coinSelectService.selectCoins(
       options.utxos,
       spendTos,
-      options.fee,
+      scriptOutput,
     );
-
-    const psbtService = new PsbtService(this.network);
-
-    const scriptOutput = account.payment.output;
-
-    if (!scriptOutput) {
-      throw new WalletError('Unable to get account script hash');
-    }
 
     const changes: SpendTo[] = [];
     const recipients: SpendTo[] = [];
     const formattedOutputs: SpendTo[] = [];
     for (const output of outputs) {
       if (output.address === undefined) {
+        // discard dust outputs and add to fees
+        if (isDust(output.value, scriptType)) {
+          continue;
+        }
         changes.push({
           address: account.address,
           value: output.value,
@@ -124,12 +121,15 @@ export class BtcWallet implements IWallet {
       });
     }
 
+    const psbtService = new PsbtService(this.network);
+
     psbtService.addInputs(
       inputs,
       hexToBuffer(account.mfp, false),
       hexToBuffer(account.pubkey, false),
       scriptOutput,
       account.hdPath,
+      options.replaceable,
     );
 
     psbtService.addOutputs(formattedOutputs);

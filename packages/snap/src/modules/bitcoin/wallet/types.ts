@@ -29,6 +29,16 @@ export type IStaticBtcAccount = {
   ): IBtcAccount;
 };
 
+export type CreateTransactionOptions = {
+  utxos: Utxo[];
+  fee: number;
+  subtractFeeFrom: string[];
+  //
+  // BIP125 opt-in RBF flag,
+  //
+  replaceable: boolean;
+};
+
 export type SpendTo = {
   address: string;
   value: number;

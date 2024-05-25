@@ -27,3 +27,5 @@ export const DustLimit = {
   p2wpkh: 294,
   /* eslint-disable */
 };
+
+export const MaxStandardTxWeight = 400000;

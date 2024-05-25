@@ -1,12 +1,13 @@
 import ecc from '@bitcoinerlab/secp256k1';
 import type { Network } from 'bitcoinjs-lib';
-import { Psbt } from 'bitcoinjs-lib';
+import { Psbt, Transaction } from 'bitcoinjs-lib';
 import type { Buffer } from 'buffer';
 import ECPairFactory from 'ecpair';
 
 import { compactError } from '../../../utils';
 import type { IAccountSigner } from '../../../wallet';
 import { logger } from '../../logger/logger';
+import { MaxStandardTxWeight } from '../constants';
 import { PsbtServiceError } from './exceptions';
 import type { SpendTo, Utxo } from './types';
 // import { PsbtData } from "./psbt-data";
@@ -49,6 +50,7 @@ export class PsbtService {
     changeAddressPubkey: Buffer,
     changeAddressScriptHash: Buffer,
     changeAddressHdPath: string,
+    replaceable: boolean,
   ) {
     try {
       for (const input of inputs) {
@@ -70,6 +72,9 @@ export class PsbtService {
               pubkey: changeAddressPubkey,
             },
           ],
+          sequence: replaceable
+            ? Transaction.DEFAULT_SEQUENCE
+            : Transaction.DEFAULT_SEQUENCE - 2,
         });
       }
     } catch (error) {
@@ -123,6 +128,12 @@ export class PsbtService {
       this._psbt.finalizeAllInputs();
 
       const txHex = this._psbt.extractTransaction().toHex();
+
+      const weight = this._psbt.extractTransaction().weight();
+
+      if (weight > MaxStandardTxWeight) {
+        throw new PsbtServiceError('Transaction is too large');
+      }
 
       return txHex;
     } catch (error) {

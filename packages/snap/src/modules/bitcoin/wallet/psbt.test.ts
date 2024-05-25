@@ -1,13 +1,13 @@
 import ecc from '@bitcoinerlab/secp256k1';
 import type { SLIP10NodeInterface } from '@metamask/key-tree';
 import { BIP32Factory } from 'bip32';
-import { networks } from 'bitcoinjs-lib';
+import { Transaction, networks } from 'bitcoinjs-lib';
 import ECPairFactory from 'ecpair';
 
 import { generateFormatedUtxos } from '../../../../test/utils';
 import { hexToBuffer } from '../../../utils';
 import { SnapHelper } from '../../snap';
-import { ScriptType } from '../constants';
+import { MaxStandardTxWeight, ScriptType } from '../constants';
 import { BtcAccountBip32Deriver } from './deriver';
 import { PsbtServiceError } from './exceptions';
 import { PsbtService } from './psbt';
@@ -95,6 +95,7 @@ describe('PsbtService', () => {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         sender.payment.output!,
         sender.hdPath,
+        true,
       );
 
       return {
@@ -132,6 +133,7 @@ describe('PsbtService', () => {
       const inputs = generateFormatedUtxos(account.address, 2);
       const mfpBuf = hexToBuffer(account.mfp, false);
       const pubkeyBuf = hexToBuffer(account.pubkey, false);
+      const psbtSpy = jest.spyOn(service.psbt, 'addInput');
 
       service.addInputs(
         inputs,
@@ -140,22 +142,68 @@ describe('PsbtService', () => {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         account.payment.output!,
         account.hdPath,
+        false,
       );
 
       expect(service.psbt.txInputs).toHaveLength(2);
 
-      for (let i = 0; i < service.psbt.data.inputs.length; i++) {
-        expect(service.psbt.data.inputs[i]).toHaveProperty('witnessUtxo', {
-          script: account.payment.output,
-          value: inputs[i].value,
-        });
-        expect(service.psbt.data.inputs[i]).toHaveProperty('bip32Derivation', [
-          {
-            masterFingerprint: mfpBuf,
-            path: account.hdPath,
-            pubkey: pubkeyBuf,
+      for (let i = 0; i < inputs.length; i++) {
+        expect(psbtSpy).toHaveBeenNthCalledWith(i + 1, {
+          hash: inputs[i].txnHash,
+          index: inputs[i].index,
+          witnessUtxo: {
+            script: account.payment.output,
+            value: inputs[i].value,
           },
-        ]);
+          bip32Derivation: [
+            {
+              masterFingerprint: mfpBuf,
+              path: account.hdPath,
+              pubkey: pubkeyBuf,
+            },
+          ],
+          sequence: Transaction.DEFAULT_SEQUENCE - 2,
+        });
+      }
+    });
+
+    it('opt-ins RBF into the psbt input', async () => {
+      const network = networks.testnet;
+      const service = new PsbtService(network);
+      const wallet = createMockWallet(network);
+      const account = await wallet.instance.unlock(0, ScriptType.P2wpkh);
+      const inputs = generateFormatedUtxos(account.address, 2);
+      const mfpBuf = hexToBuffer(account.mfp, false);
+      const pubkeyBuf = hexToBuffer(account.pubkey, false);
+      const psbtSpy = jest.spyOn(service.psbt, 'addInput');
+
+      service.addInputs(
+        inputs,
+        mfpBuf,
+        pubkeyBuf,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        account.payment.output!,
+        account.hdPath,
+        true,
+      );
+
+      for (let i = 0; i < inputs.length; i++) {
+        expect(psbtSpy).toHaveBeenNthCalledWith(i + 1, {
+          hash: inputs[i].txnHash,
+          index: inputs[i].index,
+          witnessUtxo: {
+            script: account.payment.output,
+            value: inputs[i].value,
+          },
+          bip32Derivation: [
+            {
+              masterFingerprint: mfpBuf,
+              path: account.hdPath,
+              pubkey: pubkeyBuf,
+            },
+          ],
+          sequence: Transaction.DEFAULT_SEQUENCE,
+        });
       }
     });
 
@@ -180,6 +228,7 @@ describe('PsbtService', () => {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           account.payment.output!,
           account.hdPath,
+          true,
         );
       }).toThrow('Failed to add inputs in PSBT');
     });
@@ -290,6 +339,7 @@ describe('PsbtService', () => {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         sender.payment.output!,
         sender.hdPath,
+        true,
       );
 
       return {
@@ -331,7 +381,11 @@ describe('PsbtService', () => {
       const receiver1 = await wallet.instance.unlock(1, ScriptType.P2wpkh);
       const receiver2 = await wallet.instance.unlock(2, ScriptType.P2wpkh);
       const receivers = [receiver1, receiver2];
+
       const finalizeSpy = jest.spyOn(service.psbt, 'finalizeAllInputs');
+      const transactionWeightSpy = jest.spyOn(Transaction.prototype, 'weight');
+      const transactionHexSpy = jest.spyOn(Transaction.prototype, 'toHex');
+
       const outputVal = 1000;
       const fee = 500;
       const outputs = receivers.map((account) => ({
@@ -355,6 +409,7 @@ describe('PsbtService', () => {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         sender.payment.output!,
         sender.hdPath,
+        true,
       );
 
       await service.signNVerify(sender.signer);
@@ -363,17 +418,29 @@ describe('PsbtService', () => {
         service,
         sender,
         finalizeSpy,
+        transactionWeightSpy,
+        transactionHexSpy,
       };
     };
 
     it('returns an transaction hex', async () => {
-      const { service, finalizeSpy } = await prepareToFinalize();
+      const { service, finalizeSpy, transactionHexSpy } =
+        await prepareToFinalize();
 
       const txHex = service.finalize();
 
       expect(txHex).not.toBeNull();
       expect(txHex).not.toBe('');
       expect(finalizeSpy).toHaveBeenCalled();
+      expect(transactionHexSpy).toHaveBeenCalled();
+    });
+
+    it('throws `Transaction is too large` error if the txn weight is too large', async () => {
+      const { service, transactionWeightSpy } = await prepareToFinalize();
+
+      transactionWeightSpy.mockReturnValue(MaxStandardTxWeight + 1000);
+
+      expect(() => service.finalize()).toThrow(`Transaction is too large`);
     });
 
     it('throws PsbtServiceError error if finalize operation failed', async () => {

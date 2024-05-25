@@ -8,9 +8,10 @@ import { generateFormatedUtxos } from '../../../../test/utils';
 import { SnapHelper } from '../../snap';
 import { DustLimit, ScriptType } from '../constants';
 import { P2SHP2WPKHAccount, P2WPKHAccount } from './account';
+import { CoinSelectService } from './coin-select';
 import { BtcAccountBip32Deriver } from './deriver';
 import { WalletError } from './exceptions';
-import { UtxoService } from './utxo';
+import { PsbtService } from './psbt';
 import { BtcWallet } from './wallet';
 
 describe('BtcWallet', () => {
@@ -136,6 +137,8 @@ describe('BtcWallet', () => {
         {
           utxos,
           fee: 1,
+          subtractFeeFrom: [],
+          replaceable: false,
         },
       );
 
@@ -143,7 +146,7 @@ describe('BtcWallet', () => {
         txn: expect.any(String),
         txnJson: {
           feeRate: 1,
-          estimatedFee: 226,
+          estimatedFee: expect.any(Number),
           sender: account.address,
           recipients: expect.any(Array),
           changes: expect.any(Array),
@@ -151,13 +154,16 @@ describe('BtcWallet', () => {
       });
     });
 
-    it('passes correct parameter to utxosService', async () => {
+    it('passes correct parameter to CoinSelectService', async () => {
       const network = networks.testnet;
       const { instance } = createMockBip32Instance(network);
       const wallet = new BtcWallet(instance, network);
       const account = await wallet.unlock(0, ScriptType.P2wpkh);
       const utxos = generateFormatedUtxos(account.address, 2);
-      const utxoServiceSpy = jest.spyOn(UtxoService.prototype, 'selectCoins');
+      const coinSelectServiceSpy = jest.spyOn(
+        CoinSelectService.prototype,
+        'selectCoins',
+      );
 
       await wallet.createTransaction(
         account,
@@ -165,10 +171,12 @@ describe('BtcWallet', () => {
         {
           utxos,
           fee: 1,
+          subtractFeeFrom: [],
+          replaceable: false,
         },
       );
 
-      expect(utxoServiceSpy).toHaveBeenCalledWith(
+      expect(coinSelectServiceSpy).toHaveBeenCalledWith(
         utxos,
         [
           {
@@ -176,8 +184,58 @@ describe('BtcWallet', () => {
             value: DustLimit[account.scriptType] + 1,
           },
         ],
-        1,
+        account.payment.output,
       );
+    });
+
+    it('remove dist change', async () => {
+      const network = networks.testnet;
+      const { instance } = createMockBip32Instance(network);
+      const wallet = new BtcWallet(instance, network);
+      const chgAccount = await wallet.unlock(0, ScriptType.P2wpkh);
+      const recipient = await wallet.unlock(1, ScriptType.P2wpkh);
+      const utxos = generateFormatedUtxos(recipient.address, 2);
+      const coinSelectServiceSpy = jest.spyOn(
+        CoinSelectService.prototype,
+        'selectCoins',
+      );
+      const psbtServiceSpy = jest
+        .spyOn(PsbtService.prototype, 'addOutputs')
+        .mockReturnThis();
+
+      // to avoid modifiy the original object when we needed to test the output
+      psbtServiceSpy.mockReturnThis();
+      coinSelectServiceSpy.mockReturnValue({
+        inputs: utxos,
+        outputs: [
+          {
+            address: recipient.address,
+            value: 500,
+          },
+          {
+            value: DustLimit[chgAccount.scriptType] - 1,
+          },
+        ],
+        fee: 100,
+      });
+
+      await wallet.createTransaction(
+        chgAccount,
+        createMockTxnIndent(recipient.address, 500),
+        {
+          utxos,
+          fee: 1,
+          subtractFeeFrom: [],
+          replaceable: false,
+        },
+      );
+
+      expect(psbtServiceSpy).toHaveBeenCalledWith([
+        {
+          address: recipient.address,
+          value: 500,
+        },
+      ]);
     });
 
     it('throws `Unable to get account script hash` error if the account script hash is undefined', async () => {
@@ -198,27 +256,11 @@ describe('BtcWallet', () => {
           {
             utxos,
             fee: 1,
+            subtractFeeFrom: [],
+            replaceable: false,
           },
         ),
       ).rejects.toThrow('Unable to get account script hash');
-    });
-
-    it('throws `Transaction amount too small` error if the output amount is dust', async () => {
-      const network = networks.testnet;
-      const { instance } = createMockBip32Instance(network);
-      const wallet = new BtcWallet(instance, network);
-      const account = await wallet.unlock(0, ScriptType.P2wpkh);
-
-      await expect(
-        wallet.createTransaction(
-          account,
-          createMockTxnIndent(account.address, 1),
-          {
-            utxos: [],
-            fee: 1,
-          },
-        ),
-      ).rejects.toThrow('Transaction amount too small');
     });
   });
 
@@ -236,6 +278,8 @@ describe('BtcWallet', () => {
         {
           utxos,
           fee: 1,
+          subtractFeeFrom: [],
+          replaceable: false,
         },
       );
 

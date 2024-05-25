@@ -51,7 +51,7 @@ export type CommitedTransaction = {
 export type IOnChainService = {
   getBalances(addresses: string[], assets: string[]): Promise<AssetBalances>;
   estimateFees(): Promise<Fees>;
-  boardcastTransaction(signedTransaction: string): Promise<CommitedTransaction>;
+  broadcastTransaction(signedTransaction: string): Promise<CommitedTransaction>;
   listTransactions(address: string, pagination: Pagination);
   getTransaction(txnHash: string);
   getDataForTransaction(

@@ -36,12 +36,12 @@ describe('SendManyHandler', () => {
     const createMockChainApiFactory = () => {
       const getDataForTransactionSpy = jest.fn();
       const estimatedFeeSpy = jest.fn();
-      const boardcastTransactionSpy = jest.fn();
+      const broadcastTransactionSpy = jest.fn();
 
       jest.spyOn(Factory, 'createOnChainServiceProvider').mockReturnValue({
         estimateFees: estimatedFeeSpy,
         getBalances: jest.fn(),
-        boardcastTransaction: boardcastTransactionSpy,
+        broadcastTransaction: broadcastTransactionSpy,
         listTransactions: jest.fn(),
         getTransaction: jest.fn(),
         getDataForTransaction: getDataForTransactionSpy,
@@ -49,7 +49,7 @@ describe('SendManyHandler', () => {
       return {
         getDataForTransactionSpy,
         estimatedFeeSpy,
-        boardcastTransactionSpy,
+        broadcastTransactionSpy,
       };
     };
 
@@ -138,28 +138,38 @@ describe('SendManyHandler', () => {
       } as unknown as SendManyParams;
     };
 
-    it('returns correct result', async () => {
-      const network = networks.testnet;
-      const caip2Network = Network.Testnet;
-      const {
-        getDataForTransactionSpy,
-        estimatedFeeSpy,
-        boardcastTransactionSpy,
-      } = createMockChainApiFactory();
-      const { sender, keyringAccount, receipents } =
-        await createSenderNReceipents(network, caip2Network, 2);
-      const mockResponse = generateBlockChairGetUtxosResp(sender.address, 10);
-      const utxos = mockResponse.data[sender.address].utxo.map((utxo) => ({
+    const createMockGetDataForTransactionResp = (
+      address: string,
+      counter: number,
+    ) => {
+      const mockResponse = generateBlockChairGetUtxosResp(address, counter);
+      return mockResponse.data[address].utxo.map((utxo) => ({
         block: utxo.block_id,
         txnHash: utxo.transaction_hash,
         index: utxo.index,
         value: utxo.value,
       }));
-      const boardcastResp =
-        generateBlockChairBroadcastTransactionResp().data.transaction_hash;
+    };
+
+    const createMockBroadcastTransactionResp = () => {
+      return generateBlockChairBroadcastTransactionResp().data.transaction_hash;
+    };
+
+    const prepareSendMany = async (network, caip2Network) => {
+      const {
+        getDataForTransactionSpy,
+        estimatedFeeSpy,
+        broadcastTransactionSpy,
+      } = createMockChainApiFactory();
+      const snapHelperSpy = jest.spyOn(SnapHelper, 'confirmDialog');
+      const { sender, keyringAccount, receipents } =
+        await createSenderNReceipents(network, caip2Network, 2);
+
+      const broadcastResp = createMockBroadcastTransactionResp();
+
       getDataForTransactionSpy.mockResolvedValue({
         data: {
-          utxos,
+          utxos: createMockGetDataForTransactionResp(sender.address, 10),
         },
       });
       estimatedFeeSpy.mockResolvedValue({
@@ -170,10 +180,34 @@ describe('SendManyHandler', () => {
           },
         ],
       });
-      boardcastTransactionSpy.mockResolvedValue({
-        transactionId: boardcastResp,
+      broadcastTransactionSpy.mockResolvedValue({
+        transactionId: broadcastResp,
       });
-      jest.spyOn(SnapHelper, 'confirmDialog').mockResolvedValue(true);
+      snapHelperSpy.mockResolvedValue(true);
+
+      return {
+        sender,
+        keyringAccount,
+        receipents,
+        broadcastResp,
+        getDataForTransactionSpy,
+        estimatedFeeSpy,
+        broadcastTransactionSpy,
+        snapHelperSpy,
+      };
+    };
+
+    it('returns correct result', async () => {
+      const network = networks.testnet;
+      const caip2Network = Network.Testnet;
+      const {
+        keyringAccount,
+        receipents,
+        broadcastResp,
+        getDataForTransactionSpy,
+        estimatedFeeSpy,
+        broadcastTransactionSpy,
+      } = await prepareSendMany(network, caip2Network);
 
       const result = await SendManyHandler.getInstance({
         scope: caip2Network,
@@ -181,48 +215,17 @@ describe('SendManyHandler', () => {
         account: keyringAccount,
       }).execute(createSendManyParams(receipents, caip2Network, false));
 
-      expect(result).toStrictEqual({ txId: boardcastResp });
+      expect(result).toStrictEqual({ txId: broadcastResp });
       expect(estimatedFeeSpy).toHaveBeenCalledTimes(1);
       expect(getDataForTransactionSpy).toHaveBeenCalledTimes(1);
-      expect(boardcastTransactionSpy).toHaveBeenCalledTimes(1);
+      expect(broadcastTransactionSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('does not boardcast transaction if in dryrun mode', async () => {
+    it('does not broadcast transaction if in dryrun mode', async () => {
       const network = networks.testnet;
       const caip2Network = Network.Testnet;
-      const {
-        getDataForTransactionSpy,
-        estimatedFeeSpy,
-        boardcastTransactionSpy,
-      } = createMockChainApiFactory();
-      const { sender, keyringAccount, receipents } =
-        await createSenderNReceipents(network, caip2Network, 2);
-      const mockResponse = generateBlockChairGetUtxosResp(sender.address, 10);
-      const utxos = mockResponse.data[sender.address].utxo.map((utxo) => ({
-        block: utxo.block_id,
-        txnHash: utxo.transaction_hash,
-        index: utxo.index,
-        value: utxo.value,
-      }));
-      const boardcastResp =
-        generateBlockChairBroadcastTransactionResp().data.transaction_hash;
-      getDataForTransactionSpy.mockResolvedValue({
-        data: {
-          utxos,
-        },
-      });
-      estimatedFeeSpy.mockResolvedValue({
-        fees: [
-          {
-            type: FeeRatio.Fast,
-            rate: 1,
-          },
-        ],
-      });
-      boardcastTransactionSpy.mockResolvedValue({
-        transactionId: boardcastResp,
-      });
-      jest.spyOn(SnapHelper, 'confirmDialog').mockResolvedValue(true);
+      const { keyringAccount, receipents, broadcastTransactionSpy } =
+        await prepareSendMany(network, caip2Network);
 
       await SendManyHandler.getInstance({
         scope: caip2Network,
@@ -230,7 +233,7 @@ describe('SendManyHandler', () => {
         account: keyringAccount,
       }).execute(createSendManyParams(receipents, caip2Network, true));
 
-      expect(boardcastTransactionSpy).toHaveBeenCalledTimes(0);
+      expect(broadcastTransactionSpy).toHaveBeenCalledTimes(0);
     });
 
     it('throws `Request params is invalid` error when request parameter is not correct', async () => {
@@ -304,42 +307,37 @@ describe('SendManyHandler', () => {
       ).rejects.toThrow('Invalid amount for send');
     });
 
+    it('throws `Transaction amount too small` error if the sending amount is dust', async () => {
+      const network = networks.testnet;
+      const caip2Network = Network.Testnet;
+      createMockChainApiFactory();
+      const { keyringAccount, receipents } = await createSenderNReceipents(
+        network,
+        caip2Network,
+        2,
+      );
+
+      await expect(
+        SendManyHandler.getInstance({
+          scope: caip2Network,
+          index: 0,
+          account: keyringAccount,
+        }).execute({
+          ...createSendManyParams(receipents, caip2Network, false),
+          amounts: {
+            [receipents[0].address]: satsToBtc(500),
+            [receipents[1].address]: satsToBtc(200),
+          },
+        }),
+      ).rejects.toThrow('Transaction amount too small');
+    });
+
     it('throws UserRejectedRequestError error if user denied the transaction', async () => {
       const network = networks.testnet;
       const caip2Network = Network.Testnet;
-      const {
-        getDataForTransactionSpy,
-        estimatedFeeSpy,
-        boardcastTransactionSpy,
-      } = createMockChainApiFactory();
-      const { sender, keyringAccount, receipents } =
-        await createSenderNReceipents(network, caip2Network, 2);
-      const mockResponse = generateBlockChairGetUtxosResp(sender.address, 10);
-      const utxos = mockResponse.data[sender.address].utxo.map((utxo) => ({
-        block: utxo.block_id,
-        txnHash: utxo.transaction_hash,
-        index: utxo.index,
-        value: utxo.value,
-      }));
-      const boardcastResp =
-        generateBlockChairBroadcastTransactionResp().data.transaction_hash;
-      getDataForTransactionSpy.mockResolvedValue({
-        data: {
-          utxos,
-        },
-      });
-      estimatedFeeSpy.mockResolvedValue({
-        fees: [
-          {
-            type: FeeRatio.Fast,
-            rate: 1,
-          },
-        ],
-      });
-      boardcastTransactionSpy.mockResolvedValue({
-        transactionId: boardcastResp,
-      });
-      jest.spyOn(SnapHelper, 'confirmDialog').mockResolvedValue(false);
+      const { snapHelperSpy, keyringAccount, receipents } =
+        await prepareSendMany(network, caip2Network);
+      snapHelperSpy.mockResolvedValue(false);
 
       await expect(
         SendManyHandler.getInstance({
@@ -353,35 +351,9 @@ describe('SendManyHandler', () => {
     it('throws `Failed to commit transaction on chain` error if the transaction is fail to commit', async () => {
       const network = networks.testnet;
       const caip2Network = Network.Testnet;
-      const {
-        getDataForTransactionSpy,
-        estimatedFeeSpy,
-        boardcastTransactionSpy,
-      } = createMockChainApiFactory();
-      const { sender, keyringAccount, receipents } =
-        await createSenderNReceipents(network, caip2Network, 2);
-      const mockResponse = generateBlockChairGetUtxosResp(sender.address, 10);
-      const utxos = mockResponse.data[sender.address].utxo.map((utxo) => ({
-        block: utxo.block_id,
-        txnHash: utxo.transaction_hash,
-        index: utxo.index,
-        value: utxo.value,
-      }));
-      getDataForTransactionSpy.mockResolvedValue({
-        data: {
-          utxos,
-        },
-      });
-      estimatedFeeSpy.mockResolvedValue({
-        fees: [
-          {
-            type: FeeRatio.Fast,
-            rate: 1,
-          },
-        ],
-      });
-      boardcastTransactionSpy.mockRejectedValue(new Error('error'));
-      jest.spyOn(SnapHelper, 'confirmDialog').mockResolvedValue(true);
+      const { broadcastTransactionSpy, keyringAccount, receipents } =
+        await prepareSendMany(network, caip2Network);
+      broadcastTransactionSpy.mockRejectedValue(new Error('error'));
 
       await expect(
         SendManyHandler.getInstance({
