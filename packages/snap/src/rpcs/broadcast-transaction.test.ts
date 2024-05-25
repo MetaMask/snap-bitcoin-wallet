@@ -31,7 +31,9 @@ describe('BroadcastTransactionHandler', () => {
     it('broadcast an transaction', async () => {
       const { boardcastTransactionSpy } = createMockChainApiFactory();
       const resp = generateBlockChairBroadcastTransactionResp();
-      boardcastTransactionSpy.mockResolvedValue(resp.data.transaction_hash);
+      boardcastTransactionSpy.mockResolvedValue({
+        transactionId: resp.data.transaction_hash,
+      });
 
       const result = await BroadcastTransactionHandler.getInstance().execute({
         scope: Network.Testnet,

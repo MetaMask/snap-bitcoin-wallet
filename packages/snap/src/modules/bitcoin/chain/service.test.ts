@@ -234,7 +234,9 @@ describe('BtcOnChainService', () => {
       const result = await txnService.boardcastTransaction(signedTransaction);
 
       expect(sendTransactionSpy).toHaveBeenCalledWith(signedTransaction);
-      expect(result).toStrictEqual(resp.data.transaction_hash);
+      expect(result).toStrictEqual({
+        transactionId: resp.data.transaction_hash,
+      });
     });
 
     it('throws BtcOnChainServiceErrorr if write client execute fail', async () => {
