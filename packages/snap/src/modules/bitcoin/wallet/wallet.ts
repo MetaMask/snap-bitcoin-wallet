@@ -82,7 +82,11 @@ export class BtcWallet implements IWallet {
       throw new WalletError('Unable to get account script hash');
     }
 
-    const coinSelectService = new CoinSelectService(options.fee);
+    // as fee rate can be 0, we need to ensure it is at least 1
+    // TODO the min fee rate can be setting by parameter
+    const feeRate = Math.max(1, options.fee);
+
+    const coinSelectService = new CoinSelectService(feeRate);
     const spendTos = Object.entries(txn.amounts).map(([address, value]) => {
       return {
         address,
@@ -101,7 +105,7 @@ export class BtcWallet implements IWallet {
     const formattedOutputs: SpendTo[] = [];
     for (const output of outputs) {
       if (output.address === undefined) {
-        // discard dust outputs and add to fees
+        // discard change output if it is dust and add to fees
         if (isDust(output.value, scriptType)) {
           continue;
         }
@@ -110,6 +114,10 @@ export class BtcWallet implements IWallet {
           value: output.value,
         });
       } else {
+        // dust outputs is forbidden
+        if (isDust(output.value, scriptType)) {
+          throw new WalletError('Transaction amount too small');
+        }
         recipients.push({
           address: output.address,
           value: output.value,

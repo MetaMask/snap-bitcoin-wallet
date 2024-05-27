@@ -238,6 +238,27 @@ describe('BtcWallet', () => {
       ]);
     });
 
+    it('throws `Transaction amount too small` error the transaction output is too small', async () => {
+      const network = networks.testnet;
+      const { instance } = createMockBip32Instance(network);
+      const wallet = new BtcWallet(instance, network);
+      const account = await wallet.unlock(0, ScriptType.P2wpkh);
+      const utxos = generateFormatedUtxos(account.address, 2, 8000, 8000);
+
+      await expect(
+        wallet.createTransaction(
+          account,
+          createMockTxnIndent(account.address, 1),
+          {
+            utxos,
+            fee: 20,
+            subtractFeeFrom: [],
+            replaceable: false,
+          },
+        ),
+      ).rejects.toThrow('Transaction amount too small');
+    });
+
     it('throws `Unable to get account script hash` error if the account script hash is undefined', async () => {
       const network = networks.testnet;
       const { instance } = createMockBip32Instance(network);

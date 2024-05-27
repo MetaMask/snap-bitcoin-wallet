@@ -1,7 +1,4 @@
-import {
-  InvalidParamsError,
-  UserRejectedRequestError,
-} from '@metamask/snaps-sdk';
+import { UserRejectedRequestError } from '@metamask/snaps-sdk';
 import {
   object,
   string,
@@ -10,13 +7,18 @@ import {
   record,
   array,
   boolean,
+  assert,
 } from 'superstruct';
 
-import type { Fees, IOnChainService, TransactionIntent } from '../chain';
+import {
+  TransactionIntentStruct,
+  type Fees,
+  type IOnChainService,
+  type TransactionIntent,
+} from '../chain';
 import { Factory } from '../factory';
 import { type Wallet as WalletData } from '../keyring';
-import { btcToSats, isDust, satsToBtc } from '../modules/bitcoin/utils';
-import type { IBtcAccount } from '../modules/bitcoin/wallet';
+import { btcToSats, satsToBtc } from '../modules/bitcoin/utils';
 import { logger } from '../modules/logger/logger';
 import {
   SnapRpcHandlerRequestStruct,
@@ -25,7 +27,7 @@ import {
 import type { IStaticSnapRpcHandler } from '../modules/rpc';
 import { SnapHelper } from '../modules/snap';
 import type { StaticImplements } from '../types/static';
-import { numberStringStruct } from '../utils';
+import { positiveStringStruct } from '../utils';
 import type { IAccount, IWallet } from '../wallet';
 
 export type SendManyParams = Infer<typeof SendManyHandler.requestStruct>;
@@ -50,6 +52,8 @@ export class SendManyHandler
   extends BaseSnapRpcHandler
   implements StaticImplements<IStaticSnapRpcHandler, typeof SendManyHandler>
 {
+  protected override isThrowValidationError = true;
+
   walletData: WalletData;
 
   wallet: IWallet;
@@ -66,7 +70,7 @@ export class SendManyHandler
   static override get requestStruct() {
     return assign(
       object({
-        amounts: record(string(), numberStringStruct),
+        amounts: record(string(), positiveStringStruct),
         comment: string(),
         subtractFeeFrom: array(string()),
         replaceable: boolean(),
@@ -84,6 +88,12 @@ export class SendManyHandler
 
   protected override async preExecute(params: SendManyParams): Promise<void> {
     await super.preExecute(params);
+    const transactionIntent = this.formatTxnIndents(params);
+    try {
+      assert(transactionIntent, TransactionIntentStruct);
+    } catch (error) {
+      this.throwValidationError(error.message);
+    }
 
     const { scope, index, account } = this.walletData;
     const wallet = Factory.createWallet(scope);
@@ -91,29 +101,6 @@ export class SendManyHandler
 
     if (!unlocked || unlocked.address !== account.address) {
       throw new Error('Account not found');
-    }
-
-    const accountScriptType = (unlocked as IBtcAccount).scriptType;
-    const transactionIntent = this.formatTxnIndents(params);
-    const amountsToSend = Object.values(transactionIntent.amounts);
-
-    if (amountsToSend.length === 0) {
-      throw new InvalidParamsError(
-        'Transaction must have at least one recipient',
-      ) as unknown as Error;
-    }
-
-    for (const amount of amountsToSend) {
-      if (amount <= 0) {
-        throw new InvalidParamsError(
-          'Invalid amount for send',
-        ) as unknown as Error;
-      }
-      if (isDust(amount, accountScriptType)) {
-        throw new InvalidParamsError(
-          'Transaction amount too small',
-        ) as unknown as Error;
-      }
     }
 
     this.transactionIntent = transactionIntent;
@@ -225,7 +212,6 @@ export class SendManyHandler
     try {
       return (await chainApi.broadcastTransaction(txnHash)).transactionId;
     } catch (error) {
-      console.log('fail message', error.message);
       logger.error('Failed to broadcast transaction', error);
       throw new Error('Failed to commit transaction on chain');
     }

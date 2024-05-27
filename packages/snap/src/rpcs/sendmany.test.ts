@@ -307,29 +307,24 @@ describe('SendManyHandler', () => {
       ).rejects.toThrow('Invalid amount for send');
     });
 
-    it('throws `Transaction amount too small` error if the sending amount is dust', async () => {
+    it('throws `Invalid response` error if the response is unexpected', async () => {
       const network = networks.testnet;
       const caip2Network = Network.Testnet;
-      createMockChainApiFactory();
-      const { keyringAccount, receipents } = await createSenderNReceipents(
-        network,
-        caip2Network,
-        2,
-      );
+      const { keyringAccount, receipents, broadcastTransactionSpy } =
+        await prepareSendMany(network, caip2Network);
 
+      broadcastTransactionSpy.mockResolvedValue({
+        transactionId: {
+          txId: 'invalid',
+        },
+      });
       await expect(
         SendManyHandler.getInstance({
           scope: caip2Network,
           index: 0,
           account: keyringAccount,
-        }).execute({
-          ...createSendManyParams(receipents, caip2Network, false),
-          amounts: {
-            [receipents[0].address]: satsToBtc(500),
-            [receipents[1].address]: satsToBtc(200),
-          },
-        }),
-      ).rejects.toThrow('Transaction amount too small');
+        }).execute(createSendManyParams(receipents, caip2Network, false)),
+      ).rejects.toThrow('Invalid Response');
     });
 
     it('throws UserRejectedRequestError error if user denied the transaction', async () => {

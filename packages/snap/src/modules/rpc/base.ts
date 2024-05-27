@@ -2,7 +2,7 @@ import { InvalidParamsError } from '@metamask/snaps-sdk';
 import { type Struct, assert } from 'superstruct';
 
 import { logger } from '../logger/logger';
-import { SnapRpcValidationError } from './exceptions';
+import { InvalidSnapRpcResponseError } from './exceptions';
 import {
   type ISnapRpcExecutable,
   type SnapRpcHandlerOptions,
@@ -19,6 +19,8 @@ export abstract class BaseSnapRpcHandler implements ISnapRpcExecutable {
   static readonly requestStruct: Struct = SnapRpcHandlerRequestStruct;
 
   static readonly responseStruct?: Struct;
+
+  protected isThrowValidationError = false;
 
   abstract handleRequest(
     params: SnapRpcHandlerRequest,
@@ -41,7 +43,7 @@ export abstract class BaseSnapRpcHandler implements ISnapRpcExecutable {
     } catch (error) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       logger.info(`[SnapRpcHandler.preExecute] Error: ${error.message}`);
-      throw new InvalidParamsError() as unknown as Error;
+      this.throwValidationError(error.message);
     }
   }
 
@@ -57,7 +59,9 @@ export abstract class BaseSnapRpcHandler implements ISnapRpcExecutable {
     } catch (error) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       logger.info(`[SnapRpcHandler.postExecute] Error: ${error.message}`);
-      throw new SnapRpcValidationError('Response is invalid');
+      throw new InvalidSnapRpcResponseError(
+        'Invalid Response',
+      ) as unknown as Error;
     }
   }
 
@@ -75,5 +79,11 @@ export abstract class BaseSnapRpcHandler implements ISnapRpcExecutable {
     options?: SnapRpcHandlerOptions,
   ): ISnapRpcHandler {
     return new this(options);
+  }
+
+  protected throwValidationError(message: string): void {
+    throw new InvalidParamsError(
+      this.isThrowValidationError ? message : undefined,
+    ) as unknown as Error;
   }
 }

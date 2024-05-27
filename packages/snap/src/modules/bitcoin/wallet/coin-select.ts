@@ -14,10 +14,10 @@ export class CoinSelectService {
   }
 
   /**
-   * Selects UTXOs to spend.
+   * Selects UTXOs to spend for segwit output.
    * @param utxos - Array of UTXOs.
    * @param spendTos - Array of SpendTo objects.
-   * @param script - Buffer of the Script hash from the change address.
+   * @param script - Script hash of the segwit output.
    * @returns Selected UTXOs.
    */
   selectCoins(

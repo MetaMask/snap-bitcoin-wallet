@@ -25,12 +25,13 @@ export function btcToSats(btc: number): string {
 }
 
 /**
- * A Method to determine the given amount is dust base on script type.
+ * A Method to determine the given amount is dust base on the hardcoded dust limit by script type.
  *
  * @param amt - Compare amount.
  * @param scriptType - Script type.
  * @returns Boolean result.
  */
 export function isDust(amt: number, scriptType: ScriptType): boolean {
-  return amt <= DustLimit[scriptType];
+  // TODO: calculate dust threshold by network fee rate
+  return amt < DustLimit[scriptType];
 }

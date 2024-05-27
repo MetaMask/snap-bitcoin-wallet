@@ -12,7 +12,7 @@ import type {
   SnapRpcHandlerResponse,
 } from '../modules/rpc';
 import type { StaticImplements } from '../types/static';
-import { assetsStruct, numberStringStruct } from '../utils/superstruct';
+import { assetsStruct, positiveStringStruct } from '../utils/superstruct';
 
 export type GetBalancesParams = Infer<typeof GetBalancesHandler.requestStruct>;
 
@@ -40,7 +40,7 @@ export class GetBalancesHandler
         record(
           assetsStruct,
           object({
-            amount: numberStringStruct,
+            amount: positiveStringStruct,
           }),
         ),
       ),

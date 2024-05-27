@@ -11,7 +11,7 @@ import {
   BaseSnapRpcHandler,
 } from '../modules/rpc';
 import type { StaticImplements } from '../types/static';
-import { numberStringStruct } from '../utils';
+import { positiveStringStruct } from '../utils';
 
 export type EstimateFeesParams = Infer<
   typeof EstimateFeesHandler.requestStruct
@@ -34,7 +34,7 @@ export class EstimateFeesHandler
       fees: array(
         object({
           type: enums(Object.values(FeeRatio)),
-          rate: numberStringStruct,
+          rate: positiveStringStruct,
         }),
       ),
     });
