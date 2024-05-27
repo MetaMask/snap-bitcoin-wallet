@@ -58,7 +58,6 @@ const preinstalledSnap = {
 
 // Write preinstalled-snap file
 try {
-  // Preinstalled Snap File
   const outputPath = join(__dirname, '..', 'dist/preinstalled-snap.json');
   writeFileSync(outputPath, JSON.stringify(preinstalledSnap, null, 0));
 
