@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2]
+
+### Uncategorized
+
+- fix: update change log format ([#76](https://github.com/MetaMask/bitcoin/pull/76))
+- 0.1.1 ([#73](https://github.com/MetaMask/bitcoin/pull/73))
+- fix: update resp of chainService - boardcastTransaction ([#68](https://github.com/MetaMask/bitcoin/pull/68))
+- chore: re structure ([#66](https://github.com/MetaMask/bitcoin/pull/66))
+- fix: change to keyring state method get wallet ([#62](https://github.com/MetaMask/bitcoin/pull/62))
+- fix: update btc asset ([#44](https://github.com/MetaMask/bitcoin/pull/44))
+- chore: move config to factory ([#35](https://github.com/MetaMask/bitcoin/pull/35))
+- fix: restructure code 3 ([#31](https://github.com/MetaMask/bitcoin/pull/31))
+- fix: remove non ready code ([#30](https://github.com/MetaMask/bitcoin/pull/30))
+- fix: fix snap publish package is not using builded snap config ([#29](https://github.com/MetaMask/bitcoin/pull/29))
+- chore: restructure the code repo to fit to chain api and keyring api structure ([#26](https://github.com/MetaMask/bitcoin/pull/26))
+- fix: refine coding structure ([#25](https://github.com/MetaMask/bitcoin/pull/25))
+- fix: remove un use code in BaseSnapRpcHandler ([#19](https://github.com/MetaMask/bitcoin/pull/19))
+- fix: fix the ci pipeline for metamask task issue ([#8](https://github.com/MetaMask/bitcoin/pull/8))
+- feat: init commit
+
 ## [0.1.1]
 
 ### Added
@@ -43,5 +63,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add CI for lint and test ([#2](https://github.com/MetaMask/bitcoin/pull/2))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/bitcoin/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/MetaMask/bitcoin/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/MetaMask/bitcoin/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/MetaMask/bitcoin/releases/tag/v0.1.1

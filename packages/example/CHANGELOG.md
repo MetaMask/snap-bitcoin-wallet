@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2]
+
+### Uncategorized
+
+- fix: update change log format ([#76](https://github.com/MetaMask/bitcoin/pull/76))
+- 0.1.1 ([#73](https://github.com/MetaMask/bitcoin/pull/73))
+- feat: init commit
+
 ## [0.1.1]
 
 ### Added
@@ -26,5 +34,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - build(deps): bump @metamask/keyring-api from 5.1.0 to 6.0.0 ([#6](https://github.com/MetaMask/bitcoin/pull/6))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/bitcoin/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/MetaMask/bitcoin/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/MetaMask/bitcoin/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/MetaMask/bitcoin/releases/tag/v0.1.1
