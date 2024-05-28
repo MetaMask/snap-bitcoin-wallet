@@ -246,6 +246,32 @@ describe('BtcKeyring', () => {
       ).rejects.toThrow('Account not found');
     });
 
+    it("throws `Account's scope does not match with the request's scope` error if given scope is not match with the account", async () => {
+      const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
+      const { instance: keyring } = createMockKeyring(stateMgr);
+      const account = generateAccounts(1)[0];
+
+      getWalletSpy.mockResolvedValue({
+        account,
+        index: account.options.index,
+        scope: account.options.scope,
+        hdPath: getHdPath(account.options.index),
+      });
+
+      await expect(
+        keyring.submitRequest({
+          id: account.id,
+          scope: Network.Mainnet,
+          account: account.address,
+          request: {
+            method: 'btc_sendmany',
+          },
+        }),
+      ).rejects.toThrow(
+        "Account's scope does not match with the request's scope",
+      );
+    });
+
     it('throws MethodNotFoundError if the method not support', async () => {
       const { instance: stateMgr } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);

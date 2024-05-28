@@ -1,3 +1,5 @@
+import { InvalidParamsError } from '@metamask/snaps-sdk';
+
 import { FeeRatio } from '../chain';
 import { Factory } from '../factory';
 import { Network } from '../modules/bitcoin/constants';
@@ -19,7 +21,7 @@ describe('EstimateFeesHandler', () => {
       jest.spyOn(Factory, 'createOnChainServiceProvider').mockReturnValue({
         estimateFees: estimateFeesSpy,
         getBalances: jest.fn(),
-        boardcastTransaction: jest.fn(),
+        broadcastTransaction: jest.fn(),
         listTransactions: jest.fn(),
         getTransaction: jest.fn(),
         getDataForTransaction: jest.fn(),
@@ -78,7 +80,7 @@ describe('EstimateFeesHandler', () => {
         EstimateFeesHandler.getInstance().execute({
           scope: 'some invalid value',
         }),
-      ).rejects.toThrow('Request params is invalid');
+      ).rejects.toThrow(InvalidParamsError);
     });
   });
 });

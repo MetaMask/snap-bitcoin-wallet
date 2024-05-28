@@ -158,6 +158,7 @@ export class BtcKeyring implements Keyring {
   protected async handleSubmitRequest(request: KeyringRequest): Promise<Json> {
     const { scope, account } = request;
     const { method, params } = request.request;
+
     if (!Object.prototype.hasOwnProperty.call(this.handlers, method)) {
       throw new MethodNotFoundError() as unknown as Error;
     }
@@ -184,9 +185,9 @@ export class BtcKeyring implements Keyring {
     event: KeyringEvent,
     data: Record<string, Json>,
   ): Promise<void> {
-    // TODO: Temp solutio to support keyring in snap without keyring API
+    // TODO: Temp solution to support keyring in snap without extentions support
     if (this.options.emitEvents) {
-      await emitSnapKeyringEvent(SnapHelper.wallet, event, data);
+      await emitSnapKeyringEvent(SnapHelper.provider, event, data);
     }
   }
 

@@ -120,7 +120,7 @@ describe('KeyringStateManager', () => {
     it('adds an new wallet when state is not empty', async () => {
       const { instance, getDataSpy, setDataSpy } = createMockStateManager();
       const state = createInitState(5);
-      const accountToSave = generateAccounts(1, 'new', 'new')[0];
+      const accountToSave = generateAccounts(1, 'new')[0];
       getDataSpy.mockResolvedValue(state);
 
       await instance.addWallet({
@@ -197,7 +197,7 @@ describe('KeyringStateManager', () => {
     it('throw StateError if the account does not exist', async () => {
       const { instance, getDataSpy } = createMockStateManager();
       const state = createInitState(20);
-      const nonExistAcc = generateAccounts(1, 'notexist', 'notexist')[0];
+      const nonExistAcc = generateAccounts(1, 'notexist')[0];
       getDataSpy.mockResolvedValue(state);
 
       await expect(
@@ -236,7 +236,7 @@ describe('KeyringStateManager', () => {
       const { instance, getDataSpy } = createMockStateManager();
       const state = createInitState(20);
       getDataSpy.mockResolvedValue(state);
-      const { id } = generateAccounts(1, 'notexist', 'notexist')[0];
+      const { id } = generateAccounts(1, 'notexist')[0];
 
       const result = await instance.getAccount(id);
 
@@ -281,7 +281,7 @@ describe('KeyringStateManager', () => {
     it('throw StateError if the account does not exist', async () => {
       const { instance, getDataSpy } = createMockStateManager();
       const state = createInitState(20);
-      const accToUpdate = generateAccounts(1, 'notexist', 'notexist')[0];
+      const accToUpdate = generateAccounts(1, 'notexist')[0];
       getDataSpy.mockResolvedValue(state);
 
       await expect(instance.updateAccount(accToUpdate)).rejects.toThrow(
@@ -338,7 +338,7 @@ describe('KeyringStateManager', () => {
       const { instance, getDataSpy } = createMockStateManager();
       const state = createInitState(20);
       getDataSpy.mockResolvedValue(state);
-      const { id } = generateAccounts(1, 'notexist', 'notexist')[0];
+      const { id } = generateAccounts(1, 'notexist')[0];
 
       const result = await instance.getWallet(id);
 

@@ -3,24 +3,25 @@ import {
   getBIP44AddressKeyDeriver,
   type SLIP10NodeInterface,
 } from '@metamask/key-tree';
-import type { DialogResult, Json } from '@metamask/snaps-sdk';
+import type { Component, DialogResult, Json } from '@metamask/snaps-sdk';
 import {
   heading,
   panel,
   text,
   divider,
   type SnapsProvider,
+  row,
 } from '@metamask/snaps-sdk';
 
 declare const snap: SnapsProvider;
 
 export class SnapHelper {
-  static wallet: SnapsProvider = snap;
+  static provider: SnapsProvider = snap;
 
   static async getBip44Deriver(
     coinType: number,
   ): Promise<BIP44AddressKeyDeriver> {
-    const bip44Node = await SnapHelper.wallet.request({
+    const bip44Node = await SnapHelper.provider.request({
       method: 'snap_getBip44Entropy',
       params: {
         coinType,
@@ -33,7 +34,7 @@ export class SnapHelper {
     path: string[],
     curve: 'secp256k1' | 'ed25519',
   ): Promise<SLIP10NodeInterface> {
-    const node = await SnapHelper.wallet.request({
+    const node = await SnapHelper.provider.request({
       method: 'snap_getBip32Entropy',
       params: {
         path,
@@ -46,26 +47,44 @@ export class SnapHelper {
   static async confirmDialog(
     header: string,
     subHeader: string,
-    body: Record<string, string>,
+    body: {
+      label: string;
+      value:
+        | string
+        | {
+            label: string;
+            value: string;
+          }[];
+    }[],
   ): Promise<DialogResult> {
-    return SnapHelper.wallet.request({
+    const components: Component[] = [
+      heading(header),
+      text(subHeader),
+      divider(),
+    ];
+
+    for (const { label, value } of body) {
+      if (typeof value === 'string') {
+        components.push(row(label, text(value)));
+      } else {
+        components.push(text(`**${label}**:`));
+        for (const { label: lb, value: val } of value) {
+          components.push(row(lb, text(val)));
+        }
+      }
+    }
+
+    return SnapHelper.provider.request({
       method: 'snap_dialog',
       params: {
         type: 'confirmation',
-        content: panel([
-          heading(header),
-          text(subHeader),
-          divider(),
-          ...Object.entries(body).map(([key, value]) =>
-            text(`**${key}**:\n ${value}`),
-          ),
-        ]),
+        content: panel(components),
       },
     });
   }
 
   static async getStateData<State>(): Promise<State> {
-    return (await SnapHelper.wallet.request({
+    return (await SnapHelper.provider.request({
       method: 'snap_manageState',
       params: {
         operation: 'get',
@@ -74,7 +93,7 @@ export class SnapHelper {
   }
 
   static async setStateData<State>(data: State) {
-    await SnapHelper.wallet.request({
+    await SnapHelper.provider.request({
       method: 'snap_manageState',
       params: {
         operation: 'update',
