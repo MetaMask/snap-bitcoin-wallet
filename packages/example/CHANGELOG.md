@@ -9,11 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.2]
 
-### Uncategorized
+### Changed
 
 - fix: update change log format ([#76](https://github.com/MetaMask/bitcoin/pull/76))
-- 0.1.1 ([#73](https://github.com/MetaMask/bitcoin/pull/73))
-- feat: init commit
+- fix: update package.json ([#76](https://github.com/MetaMask/bitcoin/pull/74))
 
 ## [0.1.1]
 
