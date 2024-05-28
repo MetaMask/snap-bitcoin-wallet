@@ -158,9 +158,15 @@ export class BlockStreamClient implements IReadDataClient {
         `[BlockStreamClient.getFeeRates] response: ${JSON.stringify(response)}`,
       );
       return {
-        [FeeRatio.Fast]: response[this.feeRateRatioMap[FeeRatio.Fast]],
-        [FeeRatio.Medium]: response[this.feeRateRatioMap[FeeRatio.Medium]],
-        [FeeRatio.Slow]: response[this.feeRateRatioMap[FeeRatio.Slow]],
+        [FeeRatio.Fast]: Math.round(
+          response[this.feeRateRatioMap[FeeRatio.Fast]],
+        ),
+        [FeeRatio.Medium]: Math.round(
+          response[this.feeRateRatioMap[FeeRatio.Medium]],
+        ),
+        [FeeRatio.Slow]: Math.round(
+          response[this.feeRateRatioMap[FeeRatio.Slow]],
+        ),
       };
     } catch (error) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions

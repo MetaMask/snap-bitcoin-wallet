@@ -1,3 +1,5 @@
+import { InvalidParamsError } from '@metamask/snaps-sdk';
+
 import {
   generateAccounts,
   generateBlockChairGetUtxosResp,
@@ -21,7 +23,7 @@ describe('GetTransactionDataHandler', () => {
       jest.spyOn(Factory, 'createOnChainServiceProvider').mockReturnValue({
         estimateFees: jest.fn(),
         getBalances: jest.fn(),
-        boardcastTransaction: jest.fn(),
+        broadcastTransaction: jest.fn(),
         listTransactions: jest.fn(),
         getTransaction: jest.fn(),
         getDataForTransaction: getDataForTransactionSpy,
@@ -71,7 +73,7 @@ describe('GetTransactionDataHandler', () => {
         GetTransactionDataHandler.getInstance().execute({
           scope: Network.Testnet,
         }),
-      ).rejects.toThrow('Request params is invalid');
+      ).rejects.toThrow(InvalidParamsError);
     });
   });
 });

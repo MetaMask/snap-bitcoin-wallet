@@ -1,3 +1,5 @@
+import { InvalidParamsError } from '@metamask/snaps-sdk';
+
 import { generateAccounts } from '../../test/utils';
 import { Factory } from '../factory';
 import { BtcAsset, Network } from '../modules/bitcoin/constants';
@@ -18,7 +20,7 @@ describe('GetBalancesHandler', () => {
       jest.spyOn(Factory, 'createOnChainServiceProvider').mockReturnValue({
         estimateFees: jest.fn(),
         getBalances: getBalancesSpy,
-        boardcastTransaction: jest.fn(),
+        broadcastTransaction: jest.fn(),
         listTransactions: jest.fn(),
         getTransaction: jest.fn(),
         getDataForTransaction: jest.fn(),
@@ -77,7 +79,7 @@ describe('GetBalancesHandler', () => {
           accounts: addresses,
           assets: ['some-asset'],
         }),
-      ).rejects.toThrow('Request params is invalid');
+      ).rejects.toThrow(InvalidParamsError);
     });
   });
 });

@@ -9,3 +9,4 @@ export * from './Toggle';
 export * from './BroadcastTxnCard';
 export * from './GetDataForTransactionCard';
 export * from './EstimateFeesCard';
+export * from './SendManyCard';

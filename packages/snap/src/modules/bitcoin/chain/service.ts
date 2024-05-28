@@ -120,7 +120,7 @@ export class BtcOnChainService implements IOnChainService {
     }
   }
 
-  async boardcastTransaction(
+  async broadcastTransaction(
     signedTransaction: string,
   ): Promise<CommitedTransaction> {
     try {

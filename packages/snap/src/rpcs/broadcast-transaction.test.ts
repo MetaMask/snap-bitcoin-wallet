@@ -1,3 +1,5 @@
+import { InvalidParamsError } from '@metamask/snaps-sdk';
+
 import { generateBlockChairBroadcastTransactionResp } from '../../test/utils';
 import { Factory } from '../factory';
 import { Network } from '../modules/bitcoin/constants';
@@ -13,25 +15,25 @@ jest.mock('../modules/logger/logger', () => ({
 describe('BroadcastTransactionHandler', () => {
   describe('handleRequest', () => {
     const createMockChainApiFactory = () => {
-      const boardcastTransactionSpy = jest.fn();
+      const broadcastTransactionSpy = jest.fn();
 
       jest.spyOn(Factory, 'createOnChainServiceProvider').mockReturnValue({
         estimateFees: jest.fn(),
         getBalances: jest.fn(),
-        boardcastTransaction: boardcastTransactionSpy,
+        broadcastTransaction: broadcastTransactionSpy,
         listTransactions: jest.fn(),
         getTransaction: jest.fn(),
         getDataForTransaction: jest.fn(),
       });
       return {
-        boardcastTransactionSpy,
+        broadcastTransactionSpy,
       };
     };
 
     it('broadcast an transaction', async () => {
-      const { boardcastTransactionSpy } = createMockChainApiFactory();
+      const { broadcastTransactionSpy } = createMockChainApiFactory();
       const resp = generateBlockChairBroadcastTransactionResp();
-      boardcastTransactionSpy.mockResolvedValue({
+      broadcastTransactionSpy.mockResolvedValue({
         transactionId: resp.data.transaction_hash,
       });
 
@@ -53,7 +55,7 @@ describe('BroadcastTransactionHandler', () => {
         BroadcastTransactionHandler.getInstance().execute({
           scope: 'some invalid value',
         }),
-      ).rejects.toThrow('Request params is invalid');
+      ).rejects.toThrow(InvalidParamsError);
     });
   });
 });

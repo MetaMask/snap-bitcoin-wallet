@@ -217,7 +217,7 @@ describe('BtcOnChainService', () => {
     });
   });
 
-  describe('boardcastTransaction', () => {
+  describe('broadcastTransaction', () => {
     const signedTransaction =
       '02000000000101ec81faa8b57add4c8fb3958dd8f04667f5cd829a7b94199f4400be9e52cda0760000000000ffffffff015802000000000000160014f80b562cbcbbfc97727043484c06cc5579963e8402473044022011ec3f7ea7a7cac7cb891a1ea498d94ca3cd082339b9b2620ba5421ca7cbdf3d022062f34411d6aa5335c2bd7ff4c940adb962e9509133b86a2d97996552fd811f2c012102ceea82614fdb14871ef881498c55c5dbdc24b4633d29b42040dd18b4285540f500000000';
 
@@ -231,7 +231,7 @@ describe('BtcOnChainService', () => {
       const resp = generateBlockChairBroadcastTransactionResp();
       sendTransactionSpy.mockResolvedValue(resp.data.transaction_hash);
 
-      const result = await txnService.boardcastTransaction(signedTransaction);
+      const result = await txnService.broadcastTransaction(signedTransaction);
 
       expect(sendTransactionSpy).toHaveBeenCalledWith(signedTransaction);
       expect(result).toStrictEqual({
@@ -248,7 +248,7 @@ describe('BtcOnChainService', () => {
       sendTransactionSpy.mockRejectedValue(new Error('error'));
 
       await expect(
-        txnService.boardcastTransaction(signedTransaction),
+        txnService.broadcastTransaction(signedTransaction),
       ).rejects.toThrow(BtcOnChainServiceError);
     });
   });

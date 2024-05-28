@@ -1,4 +1,5 @@
-import { satsToBtc, btcToSats } from './unit';
+import { DustLimit, ScriptType } from '../constants';
+import { satsToBtc, btcToSats, isDust } from './unit';
 
 describe('satsToBtc', () => {
   it('returns Btc unit', () => {
@@ -40,5 +41,16 @@ describe('btcToSats', () => {
     const minSats = 1;
     const btc = satsToBtc(minSats);
     expect(btcToSats(parseFloat(btc))).toBe('1');
+  });
+});
+
+describe('isDust', () => {
+  it('returns result', () => {
+    expect(isDust(DustLimit[ScriptType.P2wpkh] + 1, ScriptType.P2wpkh)).toBe(
+      false,
+    );
+    expect(isDust(DustLimit[ScriptType.P2wpkh] - 1, ScriptType.P2wpkh)).toBe(
+      true,
+    );
   });
 });
