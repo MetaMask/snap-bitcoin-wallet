@@ -43,5 +43,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add CI for lint and test ([#2](https://github.com/MetaMask/bitcoin/pull/2))
 - feat: init commit
 
-[Unreleased]: git+https://github.com/MetaMask/bitcoin/compare/v0.1.1...HEAD
-[0.1.1]: git+https://github.com/MetaMask/bitcoin/releases/tag/v0.1.1
+[Unreleased]: https://github.com/MetaMask/bitcoin/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/MetaMask/bitcoin/releases/tag/v0.1.1
