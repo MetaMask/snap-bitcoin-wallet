@@ -9,10 +9,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MetaMask/bitcoin.git"
+    "url": "https://github.com/MetaMask/bitcoin.git"
   },
   "license": "(MIT-0 OR Apache-2.0)",
-  "author": "",
   "workspaces": [
     "packages/*"
   ],
