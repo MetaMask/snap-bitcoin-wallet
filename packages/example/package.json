@@ -1,6 +1,6 @@
 {
   "name": "example",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "A sample dapp to test bitcoin snap.",
   "license": "(MIT-0 OR Apache-2.0)",
