@@ -2755,7 +2755,9 @@ __metadata:
     bip32: ^4.0.0
     bitcoinjs-lib: ^6.1.5
     buffer: ^6.0.3
+    coinselect: ^3.1.13
     dotenv: ^16.4.5
+    ecpair: ^2.1.0
     eslint: ^8.45.0
     eslint-config-prettier: ^8.5.0
     eslint-plugin-import: ~2.26.0
@@ -7579,6 +7581,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"coinselect@npm:^3.1.13":
+  version: 3.1.13
+  resolution: "coinselect@npm:3.1.13"
+  checksum: 47731f5dcb4bcf1ab0c906dff5e79ef4c6f9d64acd3d93cf8c3d47ef6c5a0f5530892c68fc840e398db3d5491ab2aa4143110cca056b642c383c066f7942b511
+  languageName: node
+  linkType: hard
+
 "collect-v8-coverage@npm:^1.0.0":
   version: 1.0.1
   resolution: "collect-v8-coverage@npm:1.0.1"
@@ -8875,6 +8884,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ecpair@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "ecpair@npm:2.1.0"
+  dependencies:
+    randombytes: ^2.1.0
+    typeforce: ^1.18.0
+    wif: ^2.0.6
+  checksum: 924a776808f91d2fdd33a7033f84e3bbfe668ae98c0b9764c7b923e018accd8de57012bf20e419e0a5ef73ec3ec3738a654e71abe12f537b2fd7bcf02b93659f
+  languageName: node
+  linkType: hard
+
 "ee-first@npm:1.1.1":
   version: 1.1.1
   resolution: "ee-first@npm:1.1.1"
@@ -9958,6 +9978,7 @@ __metadata:
     rimraf: ^3.0.2
     styled-components: 5.3.3
     typescript: ^4.7.4
+    uuid: ^9.0.1
   languageName: unknown
   linkType: soft
 
@@ -18413,7 +18434,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typeforce@npm:^1.11.3, typeforce@npm:^1.11.5":
+"typeforce@npm:^1.11.3, typeforce@npm:^1.11.5, typeforce@npm:^1.18.0":
   version: 1.18.0
   resolution: "typeforce@npm:1.18.0"
   checksum: e3b21e27e76cb05f32285bef7c30a29760e79c622cfe4aa3c179ce49d1c7895b7154c8deedb9fe4599b1fd0428d35860d43e0776da1c04861168f3ad7ed99c70

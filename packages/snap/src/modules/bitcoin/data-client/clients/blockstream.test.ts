@@ -115,9 +115,9 @@ describe('BlockStreamClient', () => {
       const result = await instance.getFeeRates();
 
       expect(result).toStrictEqual({
-        [FeeRatio.Fast]: mockResponse['1'],
-        [FeeRatio.Medium]: mockResponse['25'],
-        [FeeRatio.Slow]: mockResponse['144'],
+        [FeeRatio.Fast]: Math.round(mockResponse['1']),
+        [FeeRatio.Medium]: Math.round(mockResponse['25']),
+        [FeeRatio.Slow]: Math.round(mockResponse['144']),
       });
     });
 

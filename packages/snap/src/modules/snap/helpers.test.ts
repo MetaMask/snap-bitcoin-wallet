@@ -1,5 +1,5 @@
 import { expect } from '@jest/globals';
-import { heading, panel, text, divider } from '@metamask/snaps-sdk';
+import { heading, panel, text, divider, row } from '@metamask/snaps-sdk';
 
 import { SnapHelper } from './helpers';
 
@@ -48,9 +48,21 @@ describe('SnapHelper', () => {
       const testcase = {
         header: 'header',
         subHeader: 'subHeader',
-        body: {
-          content: 'content',
-        },
+        body: [
+          {
+            label: 'Label1',
+            value: 'Value1',
+          },
+          {
+            label: 'Label2',
+            value: [
+              {
+                label: 'SubLabel1',
+                value: 'SubValue1',
+              },
+            ],
+          },
+        ],
       };
 
       await SnapHelper.confirmDialog(
@@ -67,8 +79,26 @@ describe('SnapHelper', () => {
             heading(testcase.header),
             text(testcase.subHeader),
             divider(),
-            ...Object.entries(testcase.body).map(([key, value]) =>
-              text(`**${key}**:\n ${value}`),
+            row(
+              testcase.body[0].label,
+              text(testcase.body[0].value as unknown as string),
+            ),
+            text(`**${testcase.body[1].label}**:`),
+            row(
+              (
+                testcase.body[1].value[0] as unknown as {
+                  label: string;
+                  value: string;
+                }
+              ).label,
+              text(
+                (
+                  testcase.body[1].value[0] as unknown as {
+                    label: string;
+                    value: string;
+                  }
+                ).value,
+              ),
             ),
           ]),
         },

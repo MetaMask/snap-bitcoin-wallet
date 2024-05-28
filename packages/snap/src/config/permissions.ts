@@ -12,6 +12,7 @@ const allowSet = new Set([
   KeyringRpcMethod.GetRequest,
   KeyringRpcMethod.ApproveRequest,
   KeyringRpcMethod.RejectRequest,
+  KeyringRpcMethod.SubmitRequest,
   // Chain API methods
   'chain_getBalances',
   'chain_broadcastTransaction',
