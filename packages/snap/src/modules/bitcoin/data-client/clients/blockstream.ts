@@ -1,6 +1,7 @@
 import { type Network, networks } from 'bitcoinjs-lib';
 
-import { type Balances, FeeRatio } from '../../../../chain';
+import type { TransactionStatusData } from '../../../../chain';
+import { type Balances, FeeRatio, TransactionStatus } from '../../../../chain';
 import { compactError, processBatch } from '../../../../utils';
 import { logger } from '../../../logger/logger';
 import type { Utxo } from '../../wallet';
@@ -32,6 +33,13 @@ export type GetAddressStatsResponse = {
   };
 };
 
+export type GetTransactionStatusResponse = {
+  confirmed: boolean;
+  block_height: number;
+  block_hash: string;
+  block_time: number;
+};
+
 export type GetUtxosResponse = {
   txid: string;
   vout: number;
@@ -43,6 +51,23 @@ export type GetUtxosResponse = {
   };
   value: number;
 }[];
+
+export type GetBlocksResponse = {
+  id: string;
+  height: number;
+  version: number;
+  timestamp: number;
+  tx_count: number;
+  size: number;
+  weight: number;
+  merkle_root: string;
+  previousblockhash: string;
+  mediantime: number;
+  nonce: number;
+  bits: number;
+  difficulty: number;
+}[];
+
 /* eslint-enable */
 
 export class BlockStreamClient implements IReadDataClient {
@@ -81,6 +106,20 @@ export class BlockStreamClient implements IReadDataClient {
       );
     }
     return response.json() as unknown as Resp;
+  }
+
+  protected async getLast10Blocks(): Promise<GetBlocksResponse> {
+    try {
+      const response = await this.get<GetBlocksResponse>('/blocks');
+      logger.info(
+        `[BlockStreamClient.getLast10Blocks] response: ${JSON.stringify(
+          response,
+        )}`,
+      );
+      return response;
+    } catch (error) {
+      throw compactError(error, DataClientError);
+    }
   }
 
   async getBalances(addresses: string[]): Promise<Balances> {
@@ -175,6 +214,30 @@ export class BlockStreamClient implements IReadDataClient {
         throw error;
       }
       throw new DataClientError(error);
+    }
+  }
+
+  async getTransactionStatus(txnHash: string): Promise<TransactionStatusData> {
+    try {
+      const txnStatusResp = await this.get<GetTransactionStatusResponse>(
+        `/tx/${txnHash}/status`,
+      );
+
+      let status = TransactionStatus.Pending;
+      let confirmations = 0;
+
+      if (txnStatusResp.confirmed) {
+        const blocksResp = await this.getLast10Blocks();
+        status = TransactionStatus.Confirmed;
+        confirmations = blocksResp[0].height - txnStatusResp.block_height + 1;
+      }
+
+      return {
+        status,
+        confirmations,
+      };
+    } catch (error) {
+      throw compactError(error, DataClientError);
     }
   }
 }

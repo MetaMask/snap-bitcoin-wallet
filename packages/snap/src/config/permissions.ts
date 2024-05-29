@@ -17,6 +17,7 @@ const allowSet = new Set([
   'chain_getBalances',
   'chain_broadcastTransaction',
   'chain_getDataForTransaction',
+  'chain_getTransactionStatus',
   'chain_estimateFees',
 ]);
 

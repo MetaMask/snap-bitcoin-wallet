@@ -93,19 +93,22 @@ export class BtcOnChainService implements IOnChainService {
     }
   }
 
-  /* eslint-disable */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   listTransactions(address: string, pagination: Pagination) {
     throw new Error('Method not implemented.');
   }
 
-  getTransaction(txnHash: string) {
-    throw new Error('Method not implemented.');
+  async getTransactionStatus(txnHash: string) {
+    try {
+      return await this.readClient.getTransactionStatus(txnHash);
+    } catch (error) {
+      throw new BtcOnChainServiceError(error);
+    }
   }
-  /* eslint-disable */
 
-  //eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getDataForTransaction(
     address: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     transactionIntent?: TransactionIntent,
   ): Promise<TransactionData> {
     try {

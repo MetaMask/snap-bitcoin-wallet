@@ -23,7 +23,7 @@ describe('EstimateFeesHandler', () => {
         getBalances: jest.fn(),
         broadcastTransaction: jest.fn(),
         listTransactions: jest.fn(),
-        getTransaction: jest.fn(),
+        getTransactionStatus: jest.fn(),
         getDataForTransaction: jest.fn(),
       });
       return {

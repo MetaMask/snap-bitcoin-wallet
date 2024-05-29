@@ -26,6 +26,17 @@ export enum FeeRatio {
   Slow = 'slow',
 }
 
+export enum TransactionStatus {
+  Confirmed = 'confirmed',
+  Pending = 'pending',
+  Failed = 'failed',
+}
+
+export type TransactionStatusData = {
+  status: TransactionStatus;
+  confirmations: number;
+};
+
 export type Balances = Record<string, number>;
 
 export type Balance = {
@@ -75,7 +86,7 @@ export type IOnChainService = {
   estimateFees(): Promise<Fees>;
   broadcastTransaction(signedTransaction: string): Promise<CommitedTransaction>;
   listTransactions(address: string, pagination: Pagination);
-  getTransaction(txnHash: string);
+  getTransactionStatus(txnHash: string): Promise<TransactionStatusData>;
   getDataForTransaction(
     address: string,
     transactionIntent?: TransactionIntent,

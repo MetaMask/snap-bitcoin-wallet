@@ -22,7 +22,7 @@ describe('BroadcastTransactionHandler', () => {
         getBalances: jest.fn(),
         broadcastTransaction: broadcastTransactionSpy,
         listTransactions: jest.fn(),
-        getTransaction: jest.fn(),
+        getTransactionStatus: jest.fn(),
         getDataForTransaction: jest.fn(),
       });
       return {

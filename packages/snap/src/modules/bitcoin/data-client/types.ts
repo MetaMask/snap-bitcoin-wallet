@@ -1,4 +1,4 @@
-import type { Balances, FeeRatio } from '../../../chain';
+import type { Balances, FeeRatio, TransactionStatusData } from '../../../chain';
 import type { Utxo } from '../wallet';
 
 export type GetFeeRatesResp = {
@@ -9,6 +9,7 @@ export type IReadDataClient = {
   getBalances(address: string[]): Promise<Balances>;
   getUtxos(address: string, includeUnconfirmed?: boolean): Promise<Utxo[]>;
   getFeeRates(): Promise<GetFeeRatesResp>;
+  getTransactionStatus(txnHash: string): Promise<TransactionStatusData>;
 };
 
 export type IWriteDataClient = {
