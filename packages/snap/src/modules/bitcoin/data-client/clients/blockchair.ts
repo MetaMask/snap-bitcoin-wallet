@@ -402,7 +402,6 @@ export class BlockChairClient implements IReadDataClient, IWriteDataClient {
       const response = await this.getTxnDashboardData(txnHash);
 
       let status = TransactionStatus.Pending;
-      let confirmations = 0;
 
       if (
         typeof response.data === 'object' &&
@@ -413,16 +412,10 @@ export class BlockChairClient implements IReadDataClient, IWriteDataClient {
         status = isInMempool
           ? TransactionStatus.Pending
           : TransactionStatus.Confirmed;
-        confirmations = isInMempool
-          ? 0
-          : response.context.state -
-            response.data[txnHash].transaction.block_id +
-            1;
       }
 
       return {
         status: status,
-        confirmations: confirmations,
       };
     } catch (error) {
       throw compactError(error, DataClientError);

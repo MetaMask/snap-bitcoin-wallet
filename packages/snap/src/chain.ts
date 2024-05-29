@@ -34,7 +34,6 @@ export enum TransactionStatus {
 
 export type TransactionStatusData = {
   status: TransactionStatus;
-  confirmations: number;
 };
 
 export type Balances = Record<string, number>;

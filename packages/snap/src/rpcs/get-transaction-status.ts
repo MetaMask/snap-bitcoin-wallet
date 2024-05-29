@@ -1,5 +1,5 @@
 import type { Infer } from 'superstruct';
-import { object, string, assign, enums, number, min } from 'superstruct';
+import { object, string, assign, enums } from 'superstruct';
 
 import { TransactionStatus } from '../chain';
 import { Factory } from '../factory';
@@ -37,9 +37,6 @@ export class GetTransactionStatusHandler
   static override get responseStruct() {
     return object({
       status: enums(Object.values(TransactionStatus)),
-      details: object({
-        confirmations: min(number(), 0),
-      }),
     });
   }
 
@@ -54,9 +51,6 @@ export class GetTransactionStatusHandler
 
     return {
       status: resp.status,
-      details: {
-        confirmations: resp.confirmations,
-      },
     };
   }
 }

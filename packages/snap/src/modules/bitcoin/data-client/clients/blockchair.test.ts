@@ -387,7 +387,6 @@ describe('BlockChairClient', () => {
 
       expect(result).toStrictEqual({
         status: TransactionStatus.Confirmed,
-        confirmations: 200002 - 200000 + 1,
       });
     });
 
@@ -410,7 +409,6 @@ describe('BlockChairClient', () => {
 
       expect(result).toStrictEqual({
         status: TransactionStatus.Pending,
-        confirmations: 0,
       });
     });
 
@@ -432,7 +430,6 @@ describe('BlockChairClient', () => {
 
       expect(result).toStrictEqual({
         status: TransactionStatus.Pending,
-        confirmations: 0,
       });
     });
 

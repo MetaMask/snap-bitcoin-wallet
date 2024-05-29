@@ -5,7 +5,6 @@ import {
   generateBlockStreamAccountStats,
   generateBlockStreamGetUtxosResp,
   generateBlockStreamEstFeeResp,
-  generateBlockStreamLast10BlockResp,
   generateBlockStreamTransactionStatusResp,
 } from '../../../../../test/utils';
 import { FeeRatio, TransactionStatus } from '../../../../chain';
@@ -256,26 +255,19 @@ describe('BlockStreamClient', () => {
         200000,
         true,
       );
-      const mockLastBlockResponse = generateBlockStreamLast10BlockResp(200002);
 
-      fetchSpy
-        .mockResolvedValueOnce({
-          ok: true,
-          json: jest.fn().mockResolvedValue(mockTxnStatusResponse),
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: jest.fn().mockResolvedValue(mockLastBlockResponse),
-        });
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue(mockTxnStatusResponse),
+      });
 
       const instance = new BlockStreamClient({ network: networks.testnet });
       const result = await instance.getTransactionStatus(txnhash);
 
       expect(result).toStrictEqual({
         status: TransactionStatus.Confirmed,
-        confirmations: 200002 - 200000 + 1,
       });
-      expect(fetchSpy).toHaveBeenCalledTimes(2);
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
     });
 
     it('returns correct result for pending transaction', async () => {
@@ -295,33 +287,8 @@ describe('BlockStreamClient', () => {
 
       expect(result).toStrictEqual({
         status: TransactionStatus.Pending,
-        confirmations: 0,
       });
       expect(fetchSpy).toHaveBeenCalledTimes(1);
-    });
-
-    it('throws DataClientError error if get last 10 blocks fail', async () => {
-      const { fetchSpy } = createMockFetch();
-      const mockTxnStatusResponse = generateBlockStreamTransactionStatusResp(
-        200000,
-        true,
-      );
-
-      fetchSpy
-        .mockResolvedValueOnce({
-          ok: true,
-          json: jest.fn().mockResolvedValue(mockTxnStatusResponse),
-        })
-        .mockResolvedValueOnce({
-          ok: false,
-          json: jest.fn().mockResolvedValue(null),
-        });
-
-      const instance = new BlockStreamClient({ network: networks.testnet });
-
-      await expect(instance.getTransactionStatus(txnhash)).rejects.toThrow(
-        DataClientError,
-      );
     });
 
     it('throws DataClientError error if an DataClientError catched', async () => {

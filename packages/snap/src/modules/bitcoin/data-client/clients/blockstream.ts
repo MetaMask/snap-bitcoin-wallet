@@ -223,18 +223,12 @@ export class BlockStreamClient implements IReadDataClient {
         `/tx/${txnHash}/status`,
       );
 
-      let status = TransactionStatus.Pending;
-      let confirmations = 0;
-
-      if (txnStatusResp.confirmed) {
-        const blocksResp = await this.getLast10Blocks();
-        status = TransactionStatus.Confirmed;
-        confirmations = blocksResp[0].height - txnStatusResp.block_height + 1;
-      }
+      const status = txnStatusResp.confirmed
+        ? TransactionStatus.Confirmed
+        : TransactionStatus.Pending;
 
       return {
         status,
-        confirmations,
       };
     } catch (error) {
       throw compactError(error, DataClientError);

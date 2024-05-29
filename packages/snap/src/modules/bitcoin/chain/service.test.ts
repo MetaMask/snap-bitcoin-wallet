@@ -266,7 +266,6 @@ describe('BtcOnChainService', () => {
       const { instance: txnMgr } = createMockBtcService(instance);
       getTransactionStatusSpy.mockResolvedValue({
         status: TransactionStatus.Confirmed,
-        confirmations: 10,
       });
 
       const result = await txnMgr.getTransactionStatus(txnHash);
@@ -274,7 +273,6 @@ describe('BtcOnChainService', () => {
       expect(getTransactionStatusSpy).toHaveBeenCalledWith(txnHash);
       expect(result).toStrictEqual({
         status: TransactionStatus.Confirmed,
-        confirmations: 10,
       });
     });
 

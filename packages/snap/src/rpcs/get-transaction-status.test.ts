@@ -38,7 +38,6 @@ describe('GetBalancesHandler', () => {
 
       const mockResp = {
         status: TransactionStatus.Confirmed,
-        confirmations: 6,
       };
 
       getTransactionStatusSpy.mockResolvedValue(mockResp);
@@ -51,9 +50,6 @@ describe('GetBalancesHandler', () => {
       expect(getTransactionStatusSpy).toHaveBeenCalledWith(txnHash);
       expect(result).toStrictEqual({
         status: TransactionStatus.Confirmed,
-        details: {
-          confirmations: 6,
-        },
       });
     });
 

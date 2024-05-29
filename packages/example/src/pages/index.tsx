@@ -15,6 +15,7 @@ import {
   GetDataForTransactionCard,
   EstimateFeesCard,
   SendManyCard,
+  GetTransactionStatusCard,
 } from '../components';
 import { defaultSnapOrigin } from '../config';
 import { defaultSnapOrigin as snapId } from '../config/snap';
@@ -302,6 +303,16 @@ const Index = () => {
           enabled={!(!installedSnap || !btcAccount)}
           account={btcAccount?.id || ''}
           address={btcAccount?.address || ''}
+          scope={scope}
+          fullWidth={
+            isMetaMaskReady &&
+            Boolean(installedSnap) &&
+            !shouldDisplayReconnectButton(installedSnap)
+          }
+        />
+
+        <GetTransactionStatusCard
+          enabled={!(!installedSnap || !btcAccount)}
           scope={scope}
           fullWidth={
             isMetaMaskReady &&
