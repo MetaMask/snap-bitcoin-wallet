@@ -16,13 +16,13 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "yarn workspace @metamask/bitcoin build",
-    "lint": "yarn workspace @metamask/bitcoin lint",
+    "build": "yarn workspace @consensys/bitcoin-manager-snap build",
+    "lint": "yarn workspace @consensys/bitcoin-manager-snap lint",
     "lint:eslint": "eslint . --cache --ext js,jsx,ts,tsx",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:misc --write",
     "lint:misc": "prettier '**/*.json' '**/*.md' '!**/CHANGELOG.md' '**/*.yml' --ignore-path .gitignore",
     "start": "yarn workspaces foreach --parallel --interlaced --verbose run start",
-    "test": "yarn workspace @metamask/bitcoin test"
+    "test": "yarn workspace @consensys/bitcoin-manager-snap test"
   },
   "devDependencies": {
     "@lavamoat/allow-scripts": "^3.0.0",
