@@ -75,3 +75,6 @@ node_modules/
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# custom ignore pattern
+**/__BAK__/

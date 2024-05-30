@@ -11,9 +11,6 @@ import {
   CreateBTCAccountButton,
   GetBTCAccountBalanceButton,
   ListAccountsButton,
-  BroadcastTxnCard,
-  GetDataForTransactionCard,
-  EstimateFeesCard,
   SendManyCard,
 } from '../components';
 import { defaultSnapOrigin } from '../config';
@@ -267,7 +264,7 @@ const Index = () => {
           }
         />
 
-        <GetDataForTransactionCard
+        {/* <GetDataForTransactionCard
           account={btcAccount?.address || ''}
           scope={scope}
           enabled={!(!installedSnap || !btcAccount)}
@@ -296,7 +293,7 @@ const Index = () => {
             Boolean(installedSnap) &&
             !shouldDisplayReconnectButton(installedSnap)
           }
-        />
+        /> */}
 
         <SendManyCard 
           enabled={!(!installedSnap || !btcAccount)}

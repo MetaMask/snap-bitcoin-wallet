@@ -3,6 +3,7 @@ import { InvalidParamsError } from '@metamask/snaps-sdk';
 import { generateAccounts } from '../../test/utils';
 import { Factory } from '../factory';
 import { BtcAsset, Network } from '../modules/bitcoin/constants';
+import { BtcAmount } from '../modules/bitcoin/wallet/amount';
 import { GetBalancesHandler } from './get-balances';
 
 jest.mock('../modules/logger/logger', () => ({
@@ -18,7 +19,7 @@ describe('GetBalancesHandler', () => {
       const getBalancesSpy = jest.fn();
 
       jest.spyOn(Factory, 'createOnChainServiceProvider').mockReturnValue({
-        estimateFees: jest.fn(),
+        getFeeRates: jest.fn(),
         getBalances: getBalancesSpy,
         broadcastTransaction: jest.fn(),
         listTransactions: jest.fn(),
@@ -39,7 +40,7 @@ describe('GetBalancesHandler', () => {
         balances: addresses.reduce((acc, address) => {
           acc[address] = {
             [BtcAsset.TBtc]: {
-              amount: 100,
+              amount: new BtcAmount(100),
             },
           };
           return acc;

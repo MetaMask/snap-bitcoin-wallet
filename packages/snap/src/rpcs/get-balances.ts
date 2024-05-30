@@ -2,7 +2,6 @@ import type { Infer } from 'superstruct';
 import { object, string, assign, array, record } from 'superstruct';
 
 import { Factory } from '../factory';
-import { satsToBtc } from '../modules/bitcoin/utils/unit';
 import {
   SnapRpcHandlerRequestStruct,
   BaseSnapRpcHandler,
@@ -60,7 +59,7 @@ export class GetBalancesHandler
           balancesObj[address] = Object.entries(assetBalances).reduce(
             (assetBalanceObj, [asset, balance]) => {
               assetBalanceObj[asset] = {
-                amount: satsToBtc(balance.amount),
+                amount: balance.amount.toString(),
               };
               return assetBalanceObj;
             },

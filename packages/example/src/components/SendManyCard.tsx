@@ -32,7 +32,7 @@ export const SendManyCard = ({
             amounts: {
               [address]: '0.00000500',
             },
-            comment: '',
+            comment: 'some very long long long long long long long long long long long long long long long long long long  long long long long long long long long long long long long long long long long long long  long long long long long long long long long long long long long long long long long long  long long long long long long long long long long long long long long long long long long  long long long long long long long long long long long long long long long long long long  long long long long long long long long long long long long long long long long long long comment',
             subtractFeeFrom: [],
             replaceable: false,
             dryrun: true

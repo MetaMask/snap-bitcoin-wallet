@@ -12,6 +12,7 @@ import { CoinSelectService } from './coin-select';
 import { BtcAccountBip32Deriver } from './deriver';
 import { WalletError } from './exceptions';
 import { PsbtService } from './psbt';
+import { BtcTransactionInfo } from './transactionInfo';
 import { BtcWallet } from './wallet';
 
 describe('BtcWallet', () => {
@@ -129,7 +130,7 @@ describe('BtcWallet', () => {
       const { instance } = createMockBip32Instance(network);
       const wallet = new BtcWallet(instance, network);
       const account = await wallet.unlock(0, ScriptType.P2wpkh);
-      const utxos = generateFormatedUtxos(account.address, 2);
+      const utxos = generateFormatedUtxos(account.address, 2, 10000, 10000);
 
       const result = await wallet.createTransaction(
         account,
@@ -142,16 +143,18 @@ describe('BtcWallet', () => {
         },
       );
 
+      const info: BtcTransactionInfo =
+        result.txnInfo as unknown as BtcTransactionInfo;
+
       expect(result).toStrictEqual({
         txn: expect.any(String),
-        txnJson: {
-          feeRate: 1,
-          estimatedFee: expect.any(Number),
-          sender: account.address,
-          recipients: expect.any(Array),
-          changes: expect.any(Array),
-        },
+        txnInfo: expect.any(BtcTransactionInfo),
       });
+
+      expect(info.sender?.address).toStrictEqual(account.address);
+      expect(info.feeRate?.value).toBe(1);
+      expect(info.recipients?.size).toBe(1);
+      expect(info.changes?.size).toBe(1);
     });
 
     it('passes correct parameter to CoinSelectService', async () => {
@@ -219,7 +222,7 @@ describe('BtcWallet', () => {
         fee: 100,
       });
 
-      await wallet.createTransaction(
+      const result = await wallet.createTransaction(
         chgAccount,
         createMockTxnIndent(recipient.address, 500),
         {
@@ -230,12 +233,19 @@ describe('BtcWallet', () => {
         },
       );
 
+      const info: BtcTransactionInfo =
+        result.txnInfo as unknown as BtcTransactionInfo;
+
       expect(psbtServiceSpy).toHaveBeenCalledWith([
         {
           address: recipient.address,
           value: 500,
         },
       ]);
+
+      expect(info.txnFee.value).toStrictEqual(
+        100 + DustLimit[chgAccount.scriptType] - 1,
+      );
     });
 
     it('throws `Transaction amount too small` error the transaction output is too small', async () => {
