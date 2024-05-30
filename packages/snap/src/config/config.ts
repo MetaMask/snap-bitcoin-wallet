@@ -6,6 +6,7 @@ import {
   Network as BtcNetwork,
   DataClient,
   BtcAsset,
+  BtcUnit,
 } from '../modules/bitcoin/constants';
 
 export enum Chain {
@@ -32,6 +33,14 @@ export type SnapConfig = {
   };
   avaliableAssets: {
     [key in Chain]: string[];
+  };
+  unit: {
+    [key in Chain]: string;
+  };
+  explorer: {
+    [key in Chain]: {
+      [network in string]: string;
+    };
   };
   chain: Chain;
   logLevel: string;
@@ -78,6 +87,15 @@ export const Config: SnapConfig = {
   },
   avaliableAssets: {
     [Chain.Bitcoin]: Object.values(BtcAsset),
+  },
+  unit: {
+    [Chain.Bitcoin]: BtcUnit.Btc,
+  },
+  explorer: {
+    [Chain.Bitcoin]: {
+      [BtcNetwork.Mainnet]: 'https://blockstream.info',
+      [BtcNetwork.Testnet]: 'https://blockstream.info/testnet',
+    },
   },
   chain: Chain.Bitcoin,
   // eslint-disable-next-line no-restricted-globals

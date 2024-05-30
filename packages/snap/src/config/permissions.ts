@@ -15,9 +15,6 @@ const allowSet = new Set([
   KeyringRpcMethod.SubmitRequest,
   // Chain API methods
   'chain_getBalances',
-  'chain_broadcastTransaction',
-  'chain_getDataForTransaction',
-  'chain_estimateFees',
 ]);
 
 const allowedOrigins = [

@@ -3,6 +3,23 @@ import type { Buffer } from 'buffer';
 
 import type { TransactionIntent } from './chain';
 
+export type ITransactionInfo = {
+  /**
+   * The transaction json.
+   */
+  toJson<TxnInfoJson extends Record<string, Json>>(): TxnInfoJson;
+};
+
+export type IAddress = {
+  toString(isShortern?: boolean): string;
+  explorerUrl: string;
+};
+
+export type IAmount = {
+  value: number;
+  toString(withUnit?: boolean): string;
+};
+
 export type IAccount = {
   /**
    * Master fingerpring of the devied node.
@@ -67,7 +84,7 @@ export type IWallet = {
     options: Record<string, Json>,
   ): Promise<{
     txn: string;
-    txnJson: Record<string, Json>;
+    txnInfo: ITransactionInfo;
   }>;
 };
 

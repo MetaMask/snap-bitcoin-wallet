@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "A MetaMask snap to manage Bitcoin",
   "proposedName": "Bitcoin Manager",
   "repository": {
@@ -7,7 +7,7 @@
     "url": "https://github.com/MetaMask/bitcoin.git"
   },
   "source": {
-    "shasum": "vWypO8fpSt9kBJueagQk+bvEqiVggRfRJcbdQYPzl5I=",
+    "shasum": "aLYl2Hvq1WIZqAOq8d7mt7N41bUZrd5Xua0ycUjGDtE=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",

@@ -25,7 +25,7 @@ export function hexToBuffer(hexStr: string, trimPrefix = true) {
 }
 
 /**
- * Method to convert a buffer to a string safely.
+ * Method to convert a buffer to a string.
  *
  * @param buffer - Hex string.
  * @param encoding - Buffer encoding.
@@ -37,4 +37,26 @@ export function bufferToString(buffer: Buffer, encoding: BufferEncoding) {
   } catch (error) {
     throw new Error('Unable to convert buffer to string');
   }
+}
+
+/**
+ * Method to format a string by replacing the middle characters.
+ *
+ * @param str - String to replace.
+ * @param headLength - Length of head.
+ * @param tailLength - Length of tail.
+ * @param replaceStr - String to replace with. Default is '...'.
+ * @returns Formatted string.
+ */
+export function replaceMiddleChar(
+  str: string,
+  headLength: number,
+  tailLength: number,
+  replaceStr = '...',
+) {
+  if (!str) {
+    return str;
+  }
+
+  return `${str.substr(0, headLength)}${replaceStr}${str.substr(-tailLength)}`;
 }

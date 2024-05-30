@@ -1,4 +1,5 @@
 import { expect } from '@jest/globals';
+import type { Component } from '@metamask/snaps-sdk';
 import { heading, panel, text, divider, row } from '@metamask/snaps-sdk';
 
 import { SnapHelper } from './helpers';
@@ -45,62 +46,22 @@ describe('SnapHelper', () => {
   describe('confirmDialog', () => {
     it('calls snap_dialog', async () => {
       const spy = jest.spyOn(SnapHelper.provider, 'request');
-      const testcase = {
-        header: 'header',
-        subHeader: 'subHeader',
-        body: [
-          {
-            label: 'Label1',
-            value: 'Value1',
-          },
-          {
-            label: 'Label2',
-            value: [
-              {
-                label: 'SubLabel1',
-                value: 'SubValue1',
-              },
-            ],
-          },
-        ],
-      };
+      const components: Component[] = [
+        heading('header'),
+        text('subHeader'),
+        divider(),
+        row('Label1', text('Value1')),
+        text('**Label2**:'),
+        row('SubLabel1', text('SubValue1')),
+      ];
 
-      await SnapHelper.confirmDialog(
-        testcase.header,
-        testcase.subHeader,
-        testcase.body,
-      );
+      await SnapHelper.confirmDialog(components);
 
       expect(spy).toHaveBeenCalledWith({
         method: 'snap_dialog',
         params: {
           type: 'confirmation',
-          content: panel([
-            heading(testcase.header),
-            text(testcase.subHeader),
-            divider(),
-            row(
-              testcase.body[0].label,
-              text(testcase.body[0].value as unknown as string),
-            ),
-            text(`**${testcase.body[1].label}**:`),
-            row(
-              (
-                testcase.body[1].value[0] as unknown as {
-                  label: string;
-                  value: string;
-                }
-              ).label,
-              text(
-                (
-                  testcase.body[1].value[0] as unknown as {
-                    label: string;
-                    value: string;
-                  }
-                ).value,
-              ),
-            ),
-          ]),
+          content: panel(components),
         },
       });
     });
