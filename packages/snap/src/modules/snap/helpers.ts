@@ -4,14 +4,7 @@ import {
   type SLIP10NodeInterface,
 } from '@metamask/key-tree';
 import type { Component, DialogResult, Json } from '@metamask/snaps-sdk';
-import {
-  heading,
-  panel,
-  text,
-  divider,
-  type SnapsProvider,
-  row,
-} from '@metamask/snaps-sdk';
+import { panel, type SnapsProvider } from '@metamask/snaps-sdk';
 
 declare const snap: SnapsProvider;
 
@@ -44,36 +37,7 @@ export class SnapHelper {
     return node as SLIP10NodeInterface;
   }
 
-  static async confirmDialog(
-    header: string,
-    subHeader: string,
-    body: {
-      label: string;
-      value:
-        | string
-        | {
-            label: string;
-            value: string;
-          }[];
-    }[],
-  ): Promise<DialogResult> {
-    const components: Component[] = [
-      heading(header),
-      text(subHeader),
-      divider(),
-    ];
-
-    for (const { label, value } of body) {
-      if (typeof value === 'string') {
-        components.push(row(label, text(value)));
-      } else {
-        components.push(text(`**${label}**:`));
-        for (const { label: lb, value: val } of value) {
-          components.push(row(lb, text(val)));
-        }
-      }
-    }
-
+  static async confirmDialog(components: Component[]): Promise<DialogResult> {
     return SnapHelper.provider.request({
       method: 'snap_dialog',
       params: {

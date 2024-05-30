@@ -1,7 +1,7 @@
 import { networks } from 'bitcoinjs-lib';
 
 import { Network } from '../constants';
-import { getBtcNetwork } from './network';
+import { getBtcNetwork, getCaip2Network } from './network';
 
 describe('getBtcNetwork', () => {
   it('returns bitcoin testnet network', () => {
@@ -18,5 +18,21 @@ describe('getBtcNetwork', () => {
     expect(() =>
       getBtcNetwork('someInvalidNetwork' as unknown as Network),
     ).toThrow('Invalid network');
+  });
+});
+
+describe('getCaip2Network', () => {
+  it('returns caip2 testnet network', () => {
+    const result = getCaip2Network(networks.testnet);
+    expect(result).toStrictEqual(Network.Testnet);
+  });
+
+  it('returns caip2 mainnet network', () => {
+    const result = getCaip2Network(networks.bitcoin);
+    expect(result).toStrictEqual(Network.Mainnet);
+  });
+
+  it('throws `Invalid network` error if the given network is not support', () => {
+    expect(() => getCaip2Network(networks.regtest)).toThrow('Invalid network');
   });
 });

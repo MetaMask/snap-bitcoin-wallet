@@ -1,4 +1,11 @@
-import { UserRejectedRequestError } from '@metamask/snaps-sdk';
+import type { Component } from '@metamask/snaps-sdk';
+import {
+  UserRejectedRequestError,
+  divider,
+  text,
+  heading,
+  row,
+} from '@metamask/snaps-sdk';
 import {
   object,
   string,
@@ -12,44 +19,54 @@ import {
 
 import {
   TransactionIntentStruct,
-  type Fees,
   type IOnChainService,
   type TransactionIntent,
 } from '../chain';
 import { Factory } from '../factory';
 import { type Wallet as WalletData } from '../keyring';
-import { btcToSats, satsToBtc } from '../modules/bitcoin/utils';
+import { btcToSats } from '../modules/bitcoin/utils';
 import { logger } from '../modules/logger/logger';
-import { SnapRpcHandlerRequestStruct } from '../modules/rpc';
+import {
+  SnapRpcHandlerRequestStruct,
+  BaseSnapRpcHandler,
+} from '../modules/rpc';
 import type { IStaticSnapRpcHandler } from '../modules/rpc';
 import { SnapHelper } from '../modules/snap';
 import type { StaticImplements } from '../types/static';
 import { positiveStringStruct } from '../utils';
-import { KeyringRpcHandler } from './keyring-rpc';
+import type { IAccount, ITransactionInfo, IWallet } from '../wallet';
 
 export type SendManyParams = Infer<typeof SendManyHandler.requestStruct>;
 
 export type SendManyResponse = Infer<typeof SendManyHandler.responseStruct>;
 
 export type TxnJson = {
-  feeRate: number;
-  estimatedFee: number;
+  feeRate: string;
+  txnFee: string;
+  total: string;
   sender: string;
   recipients: {
     address: string;
-    value: number;
+    explorerUrl: string;
+    value: string;
   }[];
   changes: {
     address: string;
-    value: number;
+    value: string;
   }[];
 };
 
 export class SendManyHandler
-  extends KeyringRpcHandler
+  extends BaseSnapRpcHandler
   implements StaticImplements<IStaticSnapRpcHandler, typeof SendManyHandler>
 {
   protected override isThrowValidationError = true;
+
+  walletData: WalletData;
+
+  wallet: IWallet;
+
+  walletAccount: IAccount;
 
   transactionIntent: TransactionIntent;
 
@@ -85,7 +102,18 @@ export class SendManyHandler
     } catch (error) {
       this.throwValidationError(error.message);
     }
+
+    const { scope, index, account } = this.walletData;
+    const wallet = Factory.createWallet(scope);
+    const unlocked = await wallet.unlock(index, account.type);
+
+    if (!unlocked || unlocked.address !== account.address) {
+      throw new Error('Account not found');
+    }
+
     this.transactionIntent = transactionIntent;
+    this.walletAccount = unlocked;
+    this.wallet = wallet;
   }
 
   async handleRequest(params: SendManyParams): Promise<SendManyResponse> {
@@ -93,16 +121,20 @@ export class SendManyHandler
     const { dryrun } = params;
     const chainApi = Factory.createOnChainServiceProvider(scope);
 
-    const feesResp = await chainApi.estimateFees();
+    const feesResp = await chainApi.getFeeRates();
 
-    const fee = await this.getFeeConsensus(feesResp);
+    if (feesResp.fees.length === 0) {
+      throw new Error('No fee rates available');
+    }
+
+    const fee = Math.max(feesResp.fees[feesResp.fees.length - 1].rate.value, 1);
 
     const metadata = await chainApi.getDataForTransaction(
       this.walletAccount.address,
       this.transactionIntent,
     );
 
-    const { txn, txnJson } = await this.wallet.createTransaction(
+    const { txn, txnInfo } = await this.wallet.createTransaction(
       this.walletAccount,
       this.transactionIntent,
       {
@@ -113,7 +145,7 @@ export class SendManyHandler
       },
     );
 
-    if (!(await this.getTxnConsensus(txnJson as unknown as TxnJson))) {
+    if (!(await this.getTxnConsensus(txnInfo, params.comment))) {
       throw new UserRejectedRequestError() as unknown as Error;
     }
 
@@ -145,44 +177,59 @@ export class SendManyHandler
     };
   }
 
-  protected async getFeeConsensus(fees: Fees): Promise<number> {
-    // TODO: Ask user to confirm fee
-    return fees.fees[fees.fees.length - 1].rate;
-  }
+  protected async getTxnConsensus(
+    txnInfo: ITransactionInfo,
+    comment: string,
+  ): Promise<boolean> {
+    const header = `Send Request`;
+    const intro = `Review the request by [portfolio.metamask.io](https://portfolio.metamask.io/) before proceeding. Once the transaction is made, it's irreversible.`;
+    const recipientsLabel = `Recipient`;
+    const amountLabel = `Amount`;
+    const commentLabel = `Comment`;
+    const networkFeeRateLabel = `Network fee rate`;
+    const networkFeeLabel = `Network fee`;
+    const totalLabel = `Total`;
 
-  protected async getTxnConsensus(txnJson: TxnJson): Promise<boolean> {
-    return (await SnapHelper.confirmDialog(
-      'Do you want to send this transaction?',
-      'Transaction details',
-      [
-        {
-          label: 'Fee Rate',
-          value: satsToBtc(txnJson.feeRate),
-        },
-        {
-          label: 'Estimated Fee',
-          value: satsToBtc(txnJson.estimatedFee),
-        },
-        {
-          label: 'Sender',
-          value: txnJson.sender,
-        },
-        {
-          label: 'Recipients',
-          value: txnJson.recipients.map(({ address, value }) => ({
-            label: address,
-            value: satsToBtc(value),
-          })),
-        },
-        {
-          label: 'Changes',
-          value: txnJson.changes.map(({ address, value }) => ({
-            label: address,
-            value: satsToBtc(value),
-          })),
-        },
-      ],
-    )) as boolean;
+    const components: Component[] = [heading(header), text(intro), divider()];
+    const info = txnInfo.toJson<TxnJson>();
+
+    const isMoreThanOneRecipient =
+      info.recipients.length + info.changes.length > 1;
+
+    let i = 0;
+
+    const addReceiptentsToComponents = (data: {
+      address: string;
+      explorerUrl: string;
+      value: string;
+    }) => {
+      components.push(
+        row(
+          isMoreThanOneRecipient
+            ? `${recipientsLabel} ${i + 1}`
+            : recipientsLabel,
+          text(`[${data.address}](${data.explorerUrl})`),
+        ),
+      );
+      components.push(row(amountLabel, text(data.value, false)));
+      components.push(divider());
+      i += 1;
+    };
+
+    info.recipients.forEach(addReceiptentsToComponents);
+    info.changes.forEach(addReceiptentsToComponents);
+
+    if (comment.trim().length > 0) {
+      components.push(row(commentLabel, text(comment.trim())));
+    }
+
+    components.push(row(networkFeeLabel, text(`${info.txnFee}`, false)));
+
+    components.push(row(networkFeeRateLabel, text(`${info.feeRate}`, false)));
+
+    components.push(row(totalLabel, text(`${info.total}`, false)));
+
+    return (await SnapHelper.confirmDialog(components)) as boolean;
   }
 
   protected async broadcastTransaction(

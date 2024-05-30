@@ -3,7 +3,6 @@ import { object, string, assign, array, record } from 'superstruct';
 
 import { Factory } from '../factory';
 import { KeyringStateManager } from '../keyring';
-import { satsToBtc } from '../modules/bitcoin/utils/unit';
 import { SnapRpcHandlerRequestStruct } from '../modules/rpc';
 import type {
   IStaticSnapRpcHandler,
@@ -12,6 +11,7 @@ import type {
 import type { StaticImplements } from '../types/static';
 import { assetsStruct, positiveStringStruct } from '../utils/superstruct';
 import { KeyringRpcHandler } from './keyring-rpc';
+import { IAmount } from '../wallet';
 
 export type GetBalancesParams = Infer<typeof GetBalancesHandler.requestStruct>;
 
@@ -76,7 +76,7 @@ export class GetBalancesHandler
     );
 
     const balancesVals = Object.entries(balances.balances);
-    const balancesMap = new Map<string, number>();
+    const balancesMap = new Map<string, IAmount>();
 
     for (const [address, assetBalances] of balancesVals) {
       if (!addressesSet.has(address)) {
@@ -86,9 +86,16 @@ export class GetBalancesHandler
         if (!assetsSet.has(asset)) {
           continue;
         }
+
+        const amount = assetBalances[asset].amount;
+        const currentAmount = balancesMap.get(asset);
+        if (currentAmount) {
+          currentAmount.value += amount.value;
+        } 
+
         balancesMap.set(
           asset,
-          (balancesMap.get(asset) ?? 0) + assetBalances[asset].amount,
+          currentAmount ?? amount
         );
       }
     }
@@ -97,7 +104,7 @@ export class GetBalancesHandler
       balances: Object.fromEntries(
         [...balancesMap.entries()].map(([asset, amount]) => [
           asset,
-          { amount: satsToBtc(amount) },
+          { amount: amount.toString() },
         ]),
       ),
     };
