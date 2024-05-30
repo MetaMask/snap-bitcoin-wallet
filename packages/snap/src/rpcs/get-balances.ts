@@ -1,8 +1,9 @@
 import type { Infer } from 'superstruct';
-import { object, string, assign, array, record } from 'superstruct';
+import { object, string, assign, array, record, enums } from 'superstruct';
 
+import { Config } from '../config';
 import { Factory } from '../factory';
-import { KeyringStateManager } from '../keyring';
+import { type Wallet as WalletData } from '../keyring';
 import { SnapRpcHandlerRequestStruct } from '../modules/rpc';
 import type {
   IStaticSnapRpcHandler,
@@ -10,8 +11,8 @@ import type {
 } from '../modules/rpc';
 import type { StaticImplements } from '../types/static';
 import { assetsStruct, positiveStringStruct } from '../utils/superstruct';
+import type { IAmount } from '../wallet';
 import { KeyringRpcHandler } from './keyring-rpc';
-import { IAmount } from '../wallet';
 
 export type GetBalancesParams = Infer<typeof GetBalancesHandler.requestStruct>;
 
@@ -35,31 +36,21 @@ export class GetBalancesHandler
   }
 
   static override get responseStruct() {
+    const unit = Config.unit[Config.chain];
     return object({
       balances: record(
         assetsStruct,
         object({
           amount: positiveStringStruct,
+          unit: enums([unit]),
         }),
       ),
     });
   }
 
-  // TODO: move to keyring
-  protected override async preExecute(
-    params: GetBalancesParams,
-  ): Promise<void> {
-    const { account: accountId } = params;
-
-    const state = new KeyringStateManager();
-
-    const walletData = await state.getWallet(accountId);
-
-    if (!walletData) {
-      throw new Error('Account not found');
-    }
+  constructor(walletData: WalletData) {
+    super();
     this.walletData = walletData;
-    await super.preExecute(params);
   }
 
   async handleRequest(params: GetBalancesParams): Promise<GetBalancesResponse> {
@@ -87,16 +78,13 @@ export class GetBalancesHandler
           continue;
         }
 
-        const amount = assetBalances[asset].amount;
+        const { amount } = assetBalances[asset];
         const currentAmount = balancesMap.get(asset);
         if (currentAmount) {
           currentAmount.value += amount.value;
-        } 
+        }
 
-        balancesMap.set(
-          asset,
-          currentAmount ?? amount
-        );
+        balancesMap.set(asset, currentAmount ?? amount);
       }
     }
 
@@ -104,7 +92,10 @@ export class GetBalancesHandler
       balances: Object.fromEntries(
         [...balancesMap.entries()].map(([asset, amount]) => [
           asset,
-          { amount: amount.toString() },
+          {
+            amount: amount.toString(),
+            unit: amount.unit,
+          },
         ]),
       ),
     };

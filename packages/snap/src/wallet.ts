@@ -17,6 +17,7 @@ export type IAddress = {
 
 export type IAmount = {
   value: number;
+  unit: string;
   toString(withUnit?: boolean): string;
 };
 

@@ -8,12 +8,12 @@ import ECPairFactory from 'ecpair';
 import { v4 as uuidv4 } from 'uuid';
 
 import { generateAccounts } from '../../test/utils';
+import { Config } from '../config';
 import { Factory } from '../factory';
-import { KeyringStateManager } from '../keyring';
 import { BtcAsset, Network, ScriptType } from '../modules/bitcoin/constants';
 import { BtcAccountBip32Deriver, BtcWallet } from '../modules/bitcoin/wallet';
-import { SnapHelper } from '../modules/snap';
 import { BtcAmount } from '../modules/bitcoin/wallet/amount';
+import { SnapHelper } from '../modules/snap';
 import { GetBalancesHandler } from './get-balances';
 
 jest.mock('../modules/logger/logger', () => ({
@@ -91,8 +91,16 @@ describe('GetBalancesHandler', () => {
         methods: ['btc_sendmany'],
       };
 
+      const walletData = {
+        account: keyringAccount as unknown as KeyringAccount,
+        hdPath: sender.hdPath,
+        index: sender.index,
+        scope: caip2Network,
+      };
+
       return {
         keyringAccount,
+        walletData,
         sender,
       };
     };
@@ -102,19 +110,9 @@ describe('GetBalancesHandler', () => {
       const caip2Network = Network.Testnet;
       const { getBalancesSpy } = createMockChainApiFactory();
 
-      const { sender, keyringAccount } = await createMockAccount(
-        network,
-        caip2Network,
-      );
+      const { walletData } = await createMockAccount(network, caip2Network);
 
-      jest.spyOn(KeyringStateManager.prototype, 'getWallet').mockResolvedValue({
-        account: keyringAccount as unknown as KeyringAccount,
-        hdPath: sender.hdPath,
-        index: sender.index,
-        scope: caip2Network,
-      });
-
-      const addresses = [sender.address];
+      const addresses = [walletData.account.address];
       const mockResp = {
         balances: addresses.reduce((acc, address) => {
           acc[address] = {
@@ -130,15 +128,16 @@ describe('GetBalancesHandler', () => {
         balances: {
           [BtcAsset.TBtc]: {
             amount: '0.00000100',
+            unit: Config.unit[Config.chain],
           },
         },
       };
 
       getBalancesSpy.mockResolvedValue(mockResp);
 
-      const result = await GetBalancesHandler.getInstance().execute({
-        scope: Network.Testnet,
-        account: sender.address,
+      const result = await GetBalancesHandler.getInstance(walletData).execute({
+        scope: walletData.scope,
+        account: walletData.account.id,
         assets: [BtcAsset.TBtc],
       });
 
@@ -151,19 +150,9 @@ describe('GetBalancesHandler', () => {
       const caip2Network = Network.Testnet;
       const { getBalancesSpy } = createMockChainApiFactory();
       const accounts = generateAccounts(10);
-      const { sender, keyringAccount } = await createMockAccount(
-        network,
-        caip2Network,
-      );
+      const { walletData } = await createMockAccount(network, caip2Network);
 
-      jest.spyOn(KeyringStateManager.prototype, 'getWallet').mockResolvedValue({
-        account: keyringAccount as unknown as KeyringAccount,
-        hdPath: sender.hdPath,
-        index: sender.index,
-        scope: caip2Network,
-      });
-
-      const addresses = [sender.address];
+      const addresses = [walletData.account.address];
       const mockResp = {
         balances: [
           ...addresses,
@@ -171,10 +160,10 @@ describe('GetBalancesHandler', () => {
         ].reduce((acc, address) => {
           acc[address] = {
             [BtcAsset.TBtc]: {
-              amount: 100,
+              amount: new BtcAmount(100),
             },
             'some-asset': {
-              amount: 100,
+              amount: new BtcAmount(100),
             },
           };
           return acc;
@@ -185,15 +174,16 @@ describe('GetBalancesHandler', () => {
         balances: {
           [BtcAsset.TBtc]: {
             amount: '0.00000100',
+            unit: Config.unit[Config.chain],
           },
         },
       };
 
       getBalancesSpy.mockResolvedValue(mockResp);
 
-      const result = await GetBalancesHandler.getInstance().execute({
+      const result = await GetBalancesHandler.getInstance(walletData).execute({
         scope: Network.Testnet,
-        account: sender.address,
+        account: walletData.account.id,
         assets: [BtcAsset.TBtc],
       });
 
@@ -204,35 +194,15 @@ describe('GetBalancesHandler', () => {
     it('throws `Request params is invalid` when request parameter is not correct', async () => {
       const network = networks.testnet;
       const caip2Network = Network.Testnet;
-      const { sender, keyringAccount } = await createMockAccount(
-        network,
-        caip2Network,
-      );
-
-      jest.spyOn(KeyringStateManager.prototype, 'getWallet').mockResolvedValue({
-        account: keyringAccount as unknown as KeyringAccount,
-        hdPath: sender.hdPath,
-        index: sender.index,
-        scope: caip2Network,
-      });
+      const { walletData } = await createMockAccount(network, caip2Network);
 
       await expect(
         GetBalancesHandler.getInstance().execute({
           scope: Network.Testnet,
-          account: keyringAccount.id,
+          account: walletData.account.id,
           assets: ['some-asset'],
         }),
       ).rejects.toThrow(InvalidParamsError);
-    });
-
-    it('throws `Account not found` when account is not exist from state', async () => {
-      await expect(
-        GetBalancesHandler.getInstance().execute({
-          scope: Network.Testnet,
-          account: uuidv4(),
-          assets: ['some-asset'],
-        }),
-      ).rejects.toThrow(`Account not found`);
     });
   });
 });
