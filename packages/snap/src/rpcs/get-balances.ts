@@ -58,10 +58,7 @@ export class GetBalancesHandler
     const addressesSet = new Set(addresses);
     const assetsSet = new Set(assets);
 
-    const balances = await chainApi.getBalances(
-      [this.walletAccount.address],
-      assets,
-    );
+    const balances = await chainApi.getBalances(addresses, assets);
 
     const balancesVals = Object.entries(balances.balances);
     const balancesMap = new Map<string, IAmount>();
