@@ -1,5 +1,4 @@
 import { CreateAccountHandler } from './create-account';
-import { GetBalancesHandler } from './get-balances';
 import { GetTransactionStatusHandler } from './get-transaction-status';
 import { RpcHelper } from './helpers';
 import { SendManyHandler } from './sendmany';

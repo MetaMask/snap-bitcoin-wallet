@@ -21,7 +21,7 @@ describe('GetBalancesHandler', () => {
       const getTransactionStatusSpy = jest.fn();
 
       jest.spyOn(Factory, 'createOnChainServiceProvider').mockReturnValue({
-        estimateFees: jest.fn(),
+        getFeeRates: jest.fn(),
         getBalances: jest.fn(),
         broadcastTransaction: jest.fn(),
         listTransactions: jest.fn(),

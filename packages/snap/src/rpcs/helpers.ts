@@ -1,4 +1,4 @@
-import { CreateAccountHandler, GetBalancesHandler } from '.';
+import { CreateAccountHandler } from '.';
 import type { IStaticSnapRpcHandler } from '../modules/rpc';
 import { GetTransactionStatusHandler } from './get-transaction-status';
 import { SendManyHandler } from './sendmany';

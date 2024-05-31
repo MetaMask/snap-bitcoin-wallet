@@ -108,20 +108,6 @@ export class BlockStreamClient implements IReadDataClient {
     return response.json() as unknown as Resp;
   }
 
-  protected async getLast10Blocks(): Promise<GetBlocksResponse> {
-    try {
-      const response = await this.get<GetBlocksResponse>('/blocks');
-      logger.info(
-        `[BlockStreamClient.getLast10Blocks] response: ${JSON.stringify(
-          response,
-        )}`,
-      );
-      return response;
-    } catch (error) {
-      throw compactError(error, DataClientError);
-    }
-  }
-
   async getBalances(addresses: string[]): Promise<Balances> {
     try {
       const responses: Balances = {};
