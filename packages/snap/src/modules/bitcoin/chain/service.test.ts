@@ -6,7 +6,7 @@ import {
   generateBlockChairBroadcastTransactionResp,
   generateBlockChairGetUtxosResp,
 } from '../../../../test/utils';
-import { FeeRatio } from '../../../chain';
+import { FeeRatio, TransactionStatus } from '../../../chain';
 import { BtcAsset } from '../constants';
 import type { IReadDataClient, IWriteDataClient } from '../data-client';
 import { BtcAmount } from '../wallet/amount';
@@ -24,12 +24,15 @@ describe('BtcOnChainService', () => {
     const getBalanceSpy = jest.fn();
     const getUtxosSpy = jest.fn();
     const getFeeRatesSpy = jest.fn();
+    const getTransactionStatusSpy = jest.fn();
     class MockReadDataClient implements IReadDataClient {
       getBalances = getBalanceSpy;
 
       getUtxos = getUtxosSpy;
 
       getFeeRates = getFeeRatesSpy;
+
+      getTransactionStatus = getTransactionStatusSpy;
     }
 
     return {
@@ -37,6 +40,7 @@ describe('BtcOnChainService', () => {
       getBalanceSpy,
       getUtxosSpy,
       getFeeRatesSpy,
+      getTransactionStatusSpy,
     };
   };
 
@@ -261,6 +265,37 @@ describe('BtcOnChainService', () => {
       await expect(
         txnService.broadcastTransaction(signedTransaction),
       ).rejects.toThrow(BtcOnChainServiceError);
+    });
+  });
+
+  describe('getTransactionStatus', () => {
+    const txnHash =
+      '1cd985fc26a9b27d0b574739b908d5fe78e2297b24323a7f8c04526648dc9c08';
+
+    it('return getTransactionStatus result', async () => {
+      const { instance, getTransactionStatusSpy } = createMockReadDataClient();
+      const { instance: txnMgr } = createMockBtcService(instance);
+      getTransactionStatusSpy.mockResolvedValue({
+        status: TransactionStatus.Confirmed,
+      });
+
+      const result = await txnMgr.getTransactionStatus(txnHash);
+
+      expect(getTransactionStatusSpy).toHaveBeenCalledWith(txnHash);
+      expect(result).toStrictEqual({
+        status: TransactionStatus.Confirmed,
+      });
+    });
+
+    it('throws BtcOnChainServiceError error if an error catched', async () => {
+      const { instance, getTransactionStatusSpy } = createMockReadDataClient();
+      const { instance: txnMgr } = createMockBtcService(instance);
+
+      getTransactionStatusSpy.mockRejectedValue(new Error('error'));
+
+      await expect(txnMgr.getTransactionStatus(txnHash)).rejects.toThrow(
+        BtcOnChainServiceError,
+      );
     });
   });
 });

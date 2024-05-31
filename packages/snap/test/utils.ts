@@ -314,6 +314,74 @@ export function generateBlockChairBroadcastTransactionResp() {
 }
 
 /**
+ * Method to generate blockstream last 10 blocks resp.
+ *
+ * @param blockHeight - A start number for the block height of the resp.
+ * @returns A blockstream last 10 blocks resp.
+ */
+export function generateBlockStreamLast10BlockResp(blockHeight: number) {
+  const template = blockStreamData.getLast10BlockResp;
+  const resp: typeof template = { ...template };
+  for (let i = 0; i < template.length; i++) {
+    resp[i].height = blockHeight - i;
+  }
+  return resp;
+}
+
+/**
+ * Method to generate blockstream transaction status resp.
+ *
+ * @param blockHeight - Block height of the transaction.
+ * @param confirmed - Confirm status of the transaction.
+ * @returns A blockstream transaction status resp.
+ */
+export function generateBlockStreamTransactionStatusResp(
+  blockHeight: number,
+  confirmed: boolean,
+) {
+  const template = blockStreamData.getTransactionStatus;
+  const resp: typeof template = { ...template };
+  resp.block_height = blockHeight;
+  resp.confirmed = confirmed;
+  return resp;
+}
+
+/**
+ * Method to generate blockchair transaction dashboards resp.
+ *
+ * @param txnHash - Transaction hash of the transaction.
+ * @param txnBlockHeight - Block height of the transaction.
+ * @param txnBlockHeight - Block height of the last block.
+ * @param confirmed - Confirm status of the transaction.
+ * @returns A blockchair transaction dashboards resp.
+ */
+export function generateBlockChairTransactionDashboard(
+  txnHash: string,
+  txnBlockHeight: number,
+  lastBlockHeight: number,
+  confirmed: boolean,
+) {
+  const template = blockChairData.getDashboardTransaction;
+  const data = Object.values(template.data)[0];
+  const resp = {
+    data: {
+      [txnHash]: {
+        ...data,
+        transaction: {
+          ...data.transaction,
+          block_id: confirmed ? txnBlockHeight : -1,
+        },
+      },
+    },
+    context: {
+      ...template.context,
+      state: lastBlockHeight,
+    },
+  };
+  return resp;
+}
+
+/**
  * Method to generate formated utxos with blockchair resp.
  *
  * @param address - the utxos owner address.

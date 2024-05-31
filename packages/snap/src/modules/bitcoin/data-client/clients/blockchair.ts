@@ -1,7 +1,8 @@
 import type { Json } from '@metamask/snaps-sdk';
 import { type Network, networks } from 'bitcoinjs-lib';
 
-import { type Balances, FeeRatio } from '../../../../chain';
+import type { TransactionStatusData } from '../../../../chain';
+import { type Balances, FeeRatio, TransactionStatus } from '../../../../chain';
 import { compactError } from '../../../../utils';
 import { logger } from '../../../logger/logger';
 import type { Utxo } from '../../wallet';
@@ -70,6 +71,7 @@ export type GetStatResponse = {
     hodling_addresses: number;
   };
 };
+
 export type GetUtxosResponse = {
   data: {
     [address: string]: {
@@ -99,6 +101,99 @@ export type GetUtxosResponse = {
         value: number;
       }[];
     };
+  };
+};
+
+export type GetTransactionDashboardDataResponse = {
+  data: {
+    [key: string]: {
+      transaction: {
+        block_id: number;
+        id: number;
+        hash: string;
+        date: string;
+        time: string;
+        size: number;
+        weight: number;
+        version: number;
+        lock_time: number;
+        is_coinbase: boolean;
+        has_witness: boolean;
+        input_count: number;
+        output_count: number;
+        input_total: number;
+        input_total_usd: number;
+        output_total: number;
+        output_total_usd: number;
+        fee: number;
+        fee_usd: number;
+        fee_per_kb: number;
+        fee_per_kb_usd: number;
+        fee_per_kwu: number;
+        fee_per_kwu_usd: number;
+        cdd_total: number;
+        is_rbf: boolean;
+      };
+      inputs: {
+        block_id: number;
+        transaction_id: number;
+        index: number;
+        transaction_hash: string;
+        date: string;
+        time: string;
+        value: number;
+        value_usd: number;
+        recipient: string;
+        type: string;
+        script_hex: string;
+        is_from_coinbase: boolean;
+        is_spendable: null;
+        is_spent: boolean;
+        spending_block_id: number | null;
+        spending_transaction_id: number | null;
+        spending_index: number | null;
+        spending_transaction_hash: string | null;
+        spending_date: string | null;
+        spending_time: string | null;
+        spending_value_usd: number | null;
+        spending_sequence: number | null;
+        spending_signature_hex: string | null;
+        spending_witness: string | null;
+        lifespan: number | null;
+        cdd: number | null;
+      }[];
+      outputs: {
+        block_id: number;
+        transaction_id: number;
+        index: number;
+        transaction_hash: string;
+        date: string;
+        time: string;
+        value: number;
+        value_usd: number;
+        recipient: string;
+        type: string;
+        script_hex: string;
+        is_from_coinbase: boolean;
+        is_spendable: null;
+        is_spent: boolean;
+        spending_block_id: null;
+        spending_transaction_id: null;
+        spending_index: null;
+        spending_transaction_hash: null;
+        spending_date: null;
+        spending_time: null;
+        spending_value_usd: null;
+        spending_sequence: null;
+        spending_signature_hex: null;
+        spending_witness: null;
+        lifespan: null;
+        cdd: null;
+      }[];
+    };
+  };
+  context: {
+    state: number;
   };
 };
 
@@ -171,6 +266,25 @@ export class BlockChairClient implements IReadDataClient, IWriteDataClient {
       );
     }
     return response.json() as unknown as Resp;
+  }
+
+  protected async getTxnDashboardData(
+    txnHash: string,
+  ): Promise<GetTransactionDashboardDataResponse> {
+    try {
+      logger.info(`[BlockChairClient.getTxnDashboardData] start:`);
+      const response = await this.get<GetTransactionDashboardDataResponse>(
+        `/dashboards/transaction/${txnHash}`,
+      );
+      logger.info(
+        `[BlockChairClient.getTxnDashboardData] response: ${JSON.stringify(
+          response,
+        )}`,
+      );
+      return response;
+    } catch (error) {
+      throw compactError(error, DataClientError);
+    }
   }
 
   async getBalances(addresses: string[]): Promise<Balances> {
@@ -278,6 +392,31 @@ export class BlockChairClient implements IReadDataClient, IWriteDataClient {
       );
 
       return response.data.transaction_hash;
+    } catch (error) {
+      throw compactError(error, DataClientError);
+    }
+  }
+
+  async getTransactionStatus(txnHash: string): Promise<TransactionStatusData> {
+    try {
+      const response = await this.getTxnDashboardData(txnHash);
+
+      let status = TransactionStatus.Pending;
+
+      if (
+        typeof response.data === 'object' &&
+        Object.prototype.hasOwnProperty.call(response.data, txnHash)
+      ) {
+        const isInMempool = response.data[txnHash].transaction.block_id === -1;
+
+        status = isInMempool
+          ? TransactionStatus.Pending
+          : TransactionStatus.Confirmed;
+      }
+
+      return {
+        status: status,
+      };
     } catch (error) {
       throw compactError(error, DataClientError);
     }

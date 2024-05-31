@@ -129,6 +129,10 @@ export const BroadcastTxnButton = (props: ComponentProps<typeof Button>) => {
   return <Button {...props}>Broadcast txn</Button>;
 };
 
+export const GetTransactionStatus = (props: ComponentProps<typeof Button>) => {
+  return <Button {...props}>Get Status</Button>;
+};
+
 export const SendManyButton = (props: ComponentProps<typeof Button>) => {
   return <Button {...props}>Send txn</Button>;
 };

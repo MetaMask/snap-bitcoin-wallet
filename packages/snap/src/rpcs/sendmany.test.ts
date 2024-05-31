@@ -46,7 +46,7 @@ describe('SendManyHandler', () => {
         getBalances: jest.fn(),
         broadcastTransaction: broadcastTransactionSpy,
         listTransactions: jest.fn(),
-        getTransaction: jest.fn(),
+        getTransactionStatus: jest.fn(),
         getDataForTransaction: getDataForTransactionSpy,
       });
       return {
