@@ -45,7 +45,6 @@ export const TransactionAmountStuct = refine(
 
     for (const val of Object.values(value)) {
       const parsedVal = parseFloat(val);
-      // TODO: Validation for max values, max decimals? Bitcoin core does not have a limit
       if (Number.isNaN(parsedVal) || parsedVal <= 0) {
         return 'Invalid amount for send';
       }
