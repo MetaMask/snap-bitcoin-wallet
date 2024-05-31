@@ -15,5 +15,3 @@ export class PsbtSigValidateError extends CustomError {}
 export class PsbtValidateError extends CustomError {}
 
 export class PsbtUpdateWithnessUtxoError extends CustomError {}
-
-export class UtxoServiceError extends CustomError {}

@@ -86,7 +86,7 @@ export class BtcWallet implements IWallet {
     }
 
     // as fee rate can be 0, we need to ensure it is at least 1
-    // TODO the min fee rate can be setting by parameter
+    // TODO: The min fee rate should be setting from parameter
     const feeRate = Math.max(1, options.fee);
 
     const coinSelectService = new CoinSelectService(feeRate);

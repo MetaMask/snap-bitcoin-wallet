@@ -3,7 +3,7 @@ import type { Buffer } from 'buffer';
 import coinSelect from 'coinselect';
 
 import { hexToBuffer } from '../../utils';
-import { UtxoServiceError } from './exceptions';
+import { TransactionValidationError } from './exceptions';
 import type { SpendTo, SelectedUtxos, Utxo } from './types';
 
 export class CoinSelectService {
@@ -13,13 +13,6 @@ export class CoinSelectService {
     this.feeRate = Math.round(feeRate);
   }
 
-  /**
-   * Selects UTXOs to spend for segwit output.
-   * @param utxos - Array of UTXOs.
-   * @param spendTos - Array of SpendTo objects.
-   * @param script - Script hash of the segwit output.
-   * @returns Selected UTXOs.
-   */
   selectCoins(
     utxos: Utxo[],
     spendTos: SpendTo[],
@@ -49,7 +42,7 @@ export class CoinSelectService {
     const result = coinSelect(spendFrom, spendTos, this.feeRate);
 
     if (!result.inputs || !result.outputs) {
-      throw new UtxoServiceError('Not enough funds');
+      throw new TransactionValidationError('Not enough funds');
     }
 
     const inputs: Utxo[] = [];
