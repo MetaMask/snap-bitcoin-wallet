@@ -38,9 +38,9 @@ describe('hexToBuffer', () => {
     expect(result).toStrictEqual(Buffer.from('0x1234', 'hex'));
   });
 
-  it('throws `Unable to convert hexStr to buffer` error if the execution fail', () => {
+  it('throws `Unable to convert hex string to buffer` error if the execution fail', () => {
     expect(() => hexToBuffer(null as unknown as string)).toThrow(
-      'Unable to convert hexStr to buffer',
+      'Unable to convert hex string to buffer',
     );
   });
 });

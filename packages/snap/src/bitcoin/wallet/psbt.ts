@@ -8,7 +8,7 @@ import { logger } from '../../libs/logger/logger';
 import { compactError } from '../../utils';
 import type { IAccountSigner } from '../../wallet';
 import { MaxStandardTxWeight } from '../constants';
-import { PsbtServiceError } from './exceptions';
+import { PsbtServiceError, TransactionValidationError } from './exceptions';
 import type { SpendTo, Utxo } from './types';
 
 const ECPair = ECPairFactory(ecc);
@@ -110,7 +110,7 @@ export class PsbtService {
             this.validateInputs(pubkey, msghash, signature),
         )
       ) {
-        throw new PsbtServiceError(
+        throw new TransactionValidationError(
           "Invalid signature to sign the PSBT's inputs",
         );
       }
@@ -128,7 +128,7 @@ export class PsbtService {
       const weight = this._psbt.extractTransaction().weight();
 
       if (weight > MaxStandardTxWeight) {
-        throw new PsbtServiceError('Transaction is too large');
+        throw new TransactionValidationError('Transaction is too large');
       }
 
       return txHex;

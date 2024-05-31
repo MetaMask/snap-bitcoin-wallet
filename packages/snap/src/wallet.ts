@@ -3,84 +3,139 @@ import type { Buffer } from 'buffer';
 
 import type { TransactionIntent } from './chain';
 
+/**
+ * An interface that defines a `toJson` method for getting a JSON representation of a transaction info object.
+ */
 export type ITransactionInfo = {
   /**
-   * The transaction json.
+   * Returns a JSON representation of the transaction info object.
+   *
+   * @returns The JSON representation of the transaction info object.
    */
   toJson<TxnInfoJson extends Record<string, Json>>(): TxnInfoJson;
 };
 
+/**
+ * An interface that defines methods and properties for working with blockchain addresses.
+ */
 export type IAddress = {
-  toString(isShortern?: boolean): string;
+  /**
+   * Returns the string representation of the address.
+   *
+   * @param isShorten - A boolean indicating whether the address should be shortened.
+   * @returns The string representation of the address.
+   */
+  toString(isShorten?: boolean): string;
+
+  /**
+   * The URL of the explorer for this address.
+   */
   explorerUrl: string;
+
+  /**
+   * Returns a JSON representation of the address.
+   *
+   * @returns The JSON representation of the address.
+   */
+  toJson(): Record<string, Json>;
 };
 
+/**
+ * An interface that defines properties for working with amounts of cryptocurrency.
+ */
 export type IAmount = {
+  /**
+   * The numeric value of the amount.
+   */
   value: number;
+
+  /**
+   * The unit of the amount, e.g. "BTC" or "ETH".
+   */
   unit: string;
+
+  /**
+   * Returns the string representation of the amount, with or without the unit.
+   *
+   * @param withUnit - A boolean indicating whether to include the unit in the string representation.
+   * @returns The string representation of the amount.
+   */
   toString(withUnit?: boolean): string;
+
+  /**
+   * Returns a JSON representation of the amount.
+   *
+   * @returns The JSON representation of the amount.
+   */
+  toJson(): Record<string, Json>;
 };
 
+/**
+ * An interface that defines properties for an account, including its address, HD path, public key, and signer object.
+ */
 export type IAccount = {
   /**
-   * Master fingerpring of the devied node.
+   * The master fingerprint of the derived node, as a string.
    */
   mfp: string;
   /**
-   * Index of the devied node.
+   * The index of the derived node, as a number.
    */
   index: number;
   /**
-   * Address of the account.
+   * The address of the account, as a string.
    */
   address: string;
   /**
-   * HD path of the account.
+   * The HD path of the account, as a string.
    */
   hdPath: string;
   /**
-   * Public key of the account.
+   * The public key of the account, as a string.
    */
   pubkey: string;
   /**
-   * Type of the account, e.g `bip122:p2pwh`.
+   * The type of the account, e.g. `bip122:p2pwh`, as a string.
    */
   type: string;
   /**
-   * IAccountSigner object derived from the root node.
+   * The `IAccountSigner` object derived from the root node.
    */
   signer: IAccountSigner;
 };
 
+/**
+ * An interface that defines methods for unlocking accounts, signing transactions, and creating transactions.
+ */
 export type IWallet = {
   /**
-   * A method to unlock an account by index and script type.
+   * Unlocks an account by index and script type.
    *
-   * @param index - Index to derive from the node.
-   * @param type - Script type of the unlocked account, e.g `bip122:p2pkh`.
-   * @returns A promise that resolves to an IAccount object.
+   * @param index - The index to derive from the node.
+   * @param type - The script type of the unlocked account, e.g. `bip122:p2pkh`.
+   * @returns A promise that resolves to an `IAccount` object.
    */
   unlock(index: number, type: string): Promise<IAccount>;
 
   /**
-   * A method to sign an transaction by the given encoded txn string.
+   * Signs a transaction by the given encoded transaction string.
    *
-   * @param signer - The signer object to sign the transaction.
-   * @param txn - The encoded txn string to convert back to an transaction.
-   * @returns A promise that resolves to an string of signed transaction.
+   * @param signer - The `IAccountSigner` object to sign the transaction.
+   * @param txn - The encoded transaction string to convert back to a transaction.
+   * @returns A promise that resolves to a string of the signed transaction.
    */
   signTransaction(signer: IAccountSigner, txn: string): Promise<string>;
 
   /**
-   * A method to create an transaction by the given account, transaction intent and options.
+   * Creates a transaction using the given account, transaction intent, and options.
    *
-   * @param acount - The IAccount object to create the transaction.
-   * @param txnIntent - The encoded txn string to convert back to an transaction.
-   * @param options - The options to create the transaction.
-   * @returns A promise that resolves to an object contains txnHash and txnJson.
+   * @param account - The `IAccount` object to create the transaction.
+   * @param txnIntent - The transaction intent object containing the transaction inputs and outputs.
+   * @param options - The options to use when creating the transaction.
+   * @returns A promise that resolves to an object containing the transaction hash and transaction info.
    */
   createTransaction(
-    acount: IAccount,
+    account: IAccount,
     txnIntent: TransactionIntent,
     options: Record<string, Json>,
   ): Promise<{
@@ -89,41 +144,42 @@ export type IWallet = {
   }>;
 };
 
+/**
+ * An interface that defines methods and properties for signing transactions and verifying signatures.
+ */
 export type IAccountSigner = {
   /**
-   * A method to create an transaction by the given account, transaction intent and options.
+   * Signs a transaction hash.
    *
-   * @param acount - The IAccount object to create the transaction.
-   * @param txnIntent - The encoded txn string to convert back to an transaction.
-   * @param options - The options to create the transaction.
-   * @returns A promise that resolves to an object contains txnHash and txnJson.
+   * @param hash - The buffer containing the transaction hash to sign.
+   * @returns A promise that resolves to the signed result as a Buffer.
    */
   sign(hash: Buffer): Promise<Buffer>;
 
   /**
-   * A method to derive an IAccountSigner object by hd path.
+   * Derives a new `IAccountSigner` object using an HD path.
    *
-   * @param path - The hd path in string, e.g `m'\0'\0`.
-   * @returns An IAccountSigner derived by the given path.
+   * @param path - The HD path in string format, e.g. `m'\0'\0`.
+   * @returns A new `IAccountSigner` object derived by the given path.
    */
   derivePath(path: string): IAccountSigner;
 
   /**
-   * A method to veriy the signature by the derived node of an IAccountSigner object.
+   * Verifies a signature using the derived node of an `IAccountSigner` object.
    *
-   * @param hash - The hash of the transaction in buffer.
-   * @param signature - The signature of the signed transaction in buffer.
-   * @returns Verify result in Boolean.
+   * @param hash - The buffer containing the transaction hash.
+   * @param signature - The buffer containing the signature to verify.
+   * @returns A boolean indicating whether the signature is valid.
    */
   verify(hash: Buffer, signature: Buffer): boolean;
 
   /**
-   * Public Key of the current devied node for verify an signature.
+   * The public key of the current derived node used for verifying signatures, as a Buffer.
    */
   publicKey: Buffer;
 
   /**
-   * Fingerprint of the current devied node for verify an signature.
+   * The fingerprint of the current derived node used for verifying signatures, as a Buffer.
    */
   fingerprint: Buffer;
 };

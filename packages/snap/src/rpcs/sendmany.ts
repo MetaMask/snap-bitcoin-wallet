@@ -45,7 +45,6 @@ export const TransactionAmountStuct = refine(
 
     for (const val of Object.values(value)) {
       const parsedVal = parseFloat(val);
-      // TODO: do we need to check for max values, max decimals?
       if (Number.isNaN(parsedVal) || parsedVal <= 0) {
         return 'Invalid amount for send';
       }
