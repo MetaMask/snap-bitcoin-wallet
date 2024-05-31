@@ -60,16 +60,16 @@ provider.request({
             id: 'da40b782-e054-4260-9a6a-c8717a022f92', // an random uuid for this request
             scope: 'bip122:000000000933ea01ad0ee984209779ba', // the caip2 network chain id of bitcoin
             request: {
-            method: 'btc_sendmany',
-            params: {
-                amounts: {
-                ['tb1qlhkuysju47s642834n7f3tyk67mvnt2cfd9r7y']: '0.00000500',
-                }, // the recipient struct to indicate how many BTC to be received for each recipient  
-                comment: 'some comment',
-                subtractFeeFrom: [], // not support yet
-                replaceable: false, // an flag to opt-in RBF
-                dryrun: true // an flag to enable similation of the transaction, without broadcast to network
-            },
+                method: 'btc_sendmany',
+                params: {
+                    amounts: {
+                    ['tb1qlhkuysju47s642834n7f3tyk67mvnt2cfd9r7y']: '0.00000500',
+                    }, // the recipient struct to indicate how many BTC to be received for each recipient  
+                    comment: 'some comment',
+                    subtractFeeFrom: [], // not support yet
+                    replaceable: false, // an flag to opt-in RBF
+                    dryrun: true // an flag to enable similation of the transaction, without broadcast to network
+                },
             },
         },
     },
