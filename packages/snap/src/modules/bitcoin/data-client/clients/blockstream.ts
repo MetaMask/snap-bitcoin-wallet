@@ -1,6 +1,7 @@
 import { type Network, networks } from 'bitcoinjs-lib';
 
-import { type Balances, FeeRatio } from '../../../../chain';
+import type { TransactionStatusData } from '../../../../chain';
+import { type Balances, FeeRatio, TransactionStatus } from '../../../../chain';
 import { compactError, processBatch } from '../../../../utils';
 import { logger } from '../../../logger/logger';
 import type { Utxo } from '../../wallet';
@@ -32,6 +33,13 @@ export type GetAddressStatsResponse = {
   };
 };
 
+export type GetTransactionStatusResponse = {
+  confirmed: boolean;
+  block_height: number;
+  block_hash: string;
+  block_time: number;
+};
+
 export type GetUtxosResponse = {
   txid: string;
   vout: number;
@@ -43,6 +51,23 @@ export type GetUtxosResponse = {
   };
   value: number;
 }[];
+
+export type GetBlocksResponse = {
+  id: string;
+  height: number;
+  version: number;
+  timestamp: number;
+  tx_count: number;
+  size: number;
+  weight: number;
+  merkle_root: string;
+  previousblockhash: string;
+  mediantime: number;
+  nonce: number;
+  bits: number;
+  difficulty: number;
+}[];
+
 /* eslint-enable */
 
 export class BlockStreamClient implements IReadDataClient {
@@ -175,6 +200,24 @@ export class BlockStreamClient implements IReadDataClient {
         throw error;
       }
       throw new DataClientError(error);
+    }
+  }
+
+  async getTransactionStatus(txnHash: string): Promise<TransactionStatusData> {
+    try {
+      const txnStatusResp = await this.get<GetTransactionStatusResponse>(
+        `/tx/${txnHash}/status`,
+      );
+
+      const status = txnStatusResp.confirmed
+        ? TransactionStatus.Confirmed
+        : TransactionStatus.Pending;
+
+      return {
+        status,
+      };
+    } catch (error) {
+      throw compactError(error, DataClientError);
     }
   }
 }

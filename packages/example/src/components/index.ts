@@ -10,4 +10,5 @@ export * from './BroadcastTxnCard';
 export * from './GetDataForTransactionCard';
 export * from './EstimateFeesCard';
 export * from './SendManyCard';
+export * from './GetTransactionStatusCard';
 export * from './GetBalancesCard';

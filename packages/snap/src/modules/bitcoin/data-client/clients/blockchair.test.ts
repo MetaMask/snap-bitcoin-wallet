@@ -6,8 +6,9 @@ import {
   generateBlockChairGetBalanceResp,
   generateBlockChairGetUtxosResp,
   generateBlockChairGetStatsResp,
+  generateBlockChairTransactionDashboard,
 } from '../../../../../test/utils';
-import { FeeRatio } from '../../../../chain';
+import { FeeRatio, TransactionStatus } from '../../../../chain';
 import { DataClientError } from '../exceptions';
 import { BlockChairClient } from './blockchair';
 
@@ -359,6 +360,91 @@ describe('BlockChairClient', () => {
       const instance = new BlockChairClient({ network: networks.testnet });
       await expect(instance.sendTransaction(signedTransaction)).rejects.toThrow(
         'Failed to post data from blockchair: Invalid transaction. Error: Transaction already in block chain',
+      );
+    });
+  });
+
+  describe('getTransactionStatus', () => {
+    const txnhash =
+      '1cd985fc26a9b27d0b574739b908d5fe78e2297b24323a7f8c04526648dc9c08';
+
+    it('returns correct result for confirmed transaction', async () => {
+      const { fetchSpy } = createMockFetch();
+      const mockResponse = generateBlockChairTransactionDashboard(
+        txnhash,
+        200000,
+        200002,
+        true,
+      );
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue(mockResponse),
+      });
+
+      const instance = new BlockChairClient({ network: networks.testnet });
+      const result = await instance.getTransactionStatus(txnhash);
+
+      expect(result).toStrictEqual({
+        status: TransactionStatus.Confirmed,
+      });
+    });
+
+    it('returns correct result for pending transaction', async () => {
+      const { fetchSpy } = createMockFetch();
+      const mockResponse = generateBlockChairTransactionDashboard(
+        txnhash,
+        200000,
+        200002,
+        false,
+      );
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue(mockResponse),
+      });
+
+      const instance = new BlockChairClient({ network: networks.testnet });
+      const result = await instance.getTransactionStatus(txnhash);
+
+      expect(result).toStrictEqual({
+        status: TransactionStatus.Pending,
+      });
+    });
+
+    it('returns pending status if blockchair result is empty', async () => {
+      const { fetchSpy } = createMockFetch();
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue({
+          data: [],
+          context: {
+            state: 200002,
+          },
+        }),
+      });
+
+      const instance = new BlockChairClient({ network: networks.testnet });
+      const result = await instance.getTransactionStatus(txnhash);
+
+      expect(result).toStrictEqual({
+        status: TransactionStatus.Pending,
+      });
+    });
+
+    it('throws DataClientError error if an DataClientError catched', async () => {
+      const { fetchSpy } = createMockFetch();
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        json: jest.fn().mockResolvedValue(null),
+      });
+
+      const instance = new BlockChairClient({ network: networks.testnet });
+
+      await expect(instance.getTransactionStatus(txnhash)).rejects.toThrow(
+        DataClientError,
       );
     });
   });

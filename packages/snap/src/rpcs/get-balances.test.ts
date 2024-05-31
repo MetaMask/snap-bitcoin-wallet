@@ -33,7 +33,7 @@ describe('GetBalancesHandler', () => {
         getBalances: getBalancesSpy,
         broadcastTransaction: jest.fn(),
         listTransactions: jest.fn(),
-        getTransaction: jest.fn(),
+        getTransactionStatus: jest.fn(),
         getDataForTransaction: jest.fn(),
       });
       return {
