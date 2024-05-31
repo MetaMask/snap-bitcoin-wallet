@@ -9,6 +9,7 @@ import {
 import { FeeRatio, TransactionStatus } from '../../../chain';
 import { BtcAsset } from '../constants';
 import type { IReadDataClient, IWriteDataClient } from '../data-client';
+import { BtcAmount } from '../wallet/amount';
 import { BtcOnChainServiceError } from './exceptions';
 import { BtcOnChainService } from './service';
 
@@ -86,9 +87,17 @@ describe('BtcOnChainService', () => {
         }, {}),
       );
 
-      await txnService.getBalances(addresses, [BtcAsset.TBtc]);
+      const result = await txnService.getBalances(addresses, [BtcAsset.TBtc]);
 
       expect(getBalanceSpy).toHaveBeenCalledWith(addresses);
+
+      Object.values(result.balances).forEach((assetBalances) => {
+        expect(assetBalances).toStrictEqual({
+          [BtcAsset.TBtc]: {
+            amount: expect.any(BtcAmount),
+          },
+        });
+      });
     });
 
     it('throws `Only one asset is supported` error if the given asset more than 1', async () => {
@@ -183,8 +192,8 @@ describe('BtcOnChainService', () => {
     });
   });
 
-  describe('estimateFees', () => {
-    it('return estimateFees result', async () => {
+  describe('getFeeRates', () => {
+    it('return getFeeRates result', async () => {
       const { instance, getFeeRatesSpy } = createMockReadDataClient();
       const { instance: txnMgr } = createMockBtcService(instance);
       getFeeRatesSpy.mockResolvedValue({
@@ -192,21 +201,23 @@ describe('BtcOnChainService', () => {
         [FeeRatio.Medium]: 1.2,
       });
 
-      const result = await txnMgr.estimateFees();
+      const result = await txnMgr.getFeeRates();
 
       expect(getFeeRatesSpy).toHaveBeenCalledTimes(1);
       expect(result).toStrictEqual({
         fees: [
           {
             type: FeeRatio.Fast,
-            rate: 1.1,
+            rate: expect.any(BtcAmount),
           },
           {
             type: FeeRatio.Medium,
-            rate: 1.2,
+            rate: expect.any(BtcAmount),
           },
         ],
       });
+      expect(result.fees[0].rate.value).toBe(1.1);
+      expect(result.fees[1].rate.value).toBe(1.2);
     });
 
     it('throws BtcOnChainServiceError error if an error catched', async () => {
@@ -215,7 +226,7 @@ describe('BtcOnChainService', () => {
 
       getFeeRatesSpy.mockRejectedValue(new Error('error'));
 
-      await expect(txnMgr.estimateFees()).rejects.toThrow(
+      await expect(txnMgr.getFeeRates()).rejects.toThrow(
         BtcOnChainServiceError,
       );
     });

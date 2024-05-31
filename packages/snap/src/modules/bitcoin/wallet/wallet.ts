@@ -1,17 +1,23 @@
-import type { Json } from '@metamask/snaps-sdk';
 import type { BIP32Interface } from 'bip32';
 import { type Network } from 'bitcoinjs-lib';
 
 import type { TransactionIntent } from '../../../chain';
 import { bufferToString, compactError, hexToBuffer } from '../../../utils';
-import type { IAccountSigner, IWallet } from '../../../wallet';
+import type {
+  IAccountSigner,
+  ITransactionInfo,
+  IWallet,
+} from '../../../wallet';
 import { ScriptType } from '../constants';
 import { isDust } from '../utils';
 import { P2WPKHAccount, P2SHP2WPKHAccount } from './account';
+import { BtcAddress } from './address';
+import { BtcAmount } from './amount';
 import { CoinSelectService } from './coin-select';
 import { WalletError } from './exceptions';
 import { PsbtService } from './psbt';
 import { AccountSigner } from './signer';
+import { BtcTransactionInfo } from './transactionInfo';
 import type {
   IStaticBtcAccount,
   IBtcAccountDeriver,
@@ -73,7 +79,7 @@ export class BtcWallet implements IWallet {
     options: CreateTransactionOptions,
   ): Promise<{
     txn: string;
-    txnJson: Record<string, Json>;
+    txnInfo: ITransactionInfo;
   }> {
     const scriptOutput = account.payment.output;
     const { scriptType } = account;
@@ -100,30 +106,36 @@ export class BtcWallet implements IWallet {
       scriptOutput,
     );
 
-    const changes: SpendTo[] = [];
-    const recipients: SpendTo[] = [];
-    const formattedOutputs: SpendTo[] = [];
+    const info = new BtcTransactionInfo();
+    info.feeRate.value = feeRate;
+    info.txnFee.value = fee;
+    info.sender = new BtcAddress(account.address, this.network);
+
+    const psbtOutputs: SpendTo[] = [];
+
     for (const output of outputs) {
       if (output.address === undefined) {
         // discard change output if it is dust and add to fees
         if (isDust(output.value, scriptType)) {
+          info.txnFee.value += output.value;
           continue;
         }
-        changes.push({
-          address: account.address,
-          value: output.value,
-        });
+        info.changes.set(
+          new BtcAddress(account.address, this.network),
+          new BtcAmount(output.value),
+        );
       } else {
         // dust outputs is forbidden
         if (isDust(output.value, scriptType)) {
           throw new WalletError('Transaction amount too small');
         }
-        recipients.push({
-          address: output.address,
-          value: output.value,
-        });
+        info.recipients.set(
+          new BtcAddress(output.address, this.network),
+          new BtcAmount(output.value),
+        );
       }
-      formattedOutputs.push({
+
+      psbtOutputs.push({
         address: output.address ?? account.address,
         value: output.value,
       });
@@ -140,17 +152,11 @@ export class BtcWallet implements IWallet {
       options.replaceable,
     );
 
-    psbtService.addOutputs(formattedOutputs);
+    psbtService.addOutputs(psbtOutputs);
 
     return {
       txn: psbtService.toBase64(),
-      txnJson: {
-        feeRate: options.fee,
-        estimatedFee: fee,
-        sender: account.address,
-        recipients,
-        changes,
-      },
+      txnInfo: info,
     };
   }
 

@@ -15,6 +15,7 @@ import type {
 import { compactError } from '../../../utils';
 import { BtcAsset } from '../constants';
 import type { IWriteDataClient, IReadDataClient } from '../data-client';
+import { BtcAmount } from '../wallet/amount';
 import { BtcOnChainServiceError } from './exceptions';
 import type { BtcOnChainServiceOptions } from './types';
 
@@ -64,7 +65,7 @@ export class BtcOnChainService implements IOnChainService {
         (acc: AssetBalances, address: string) => {
           acc.balances[address] = {
             [assets[0]]: {
-              amount: balance[address],
+              amount: new BtcAmount(balance[address]),
             },
           };
           return acc;
@@ -76,7 +77,7 @@ export class BtcOnChainService implements IOnChainService {
     }
   }
 
-  async estimateFees(): Promise<Fees> {
+  async getFeeRates(): Promise<Fees> {
     try {
       const result = await this.readClient.getFeeRates();
 
@@ -84,7 +85,7 @@ export class BtcOnChainService implements IOnChainService {
         fees: Object.entries(result).map(
           ([key, value]: [key: FeeRatio, value: number]) => ({
             type: key,
-            rate: value,
+            rate: new BtcAmount(value),
           }),
         ),
       };

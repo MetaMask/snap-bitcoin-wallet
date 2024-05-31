@@ -2,6 +2,8 @@ import type { Json } from '@metamask/snaps-sdk';
 import type { Infer } from 'superstruct';
 import { object, define, string, array, boolean } from 'superstruct';
 
+import type { IAmount } from './wallet';
+
 const transactionIntentAmts = () =>
   define<Record<string, number>>(
     'transactionIntentAmts',
@@ -39,7 +41,7 @@ export type TransactionStatusData = {
 export type Balances = Record<string, number>;
 
 export type Balance = {
-  amount: number;
+  amount: IAmount;
 };
 
 export type AssetBalances = {
@@ -52,7 +54,7 @@ export type AssetBalances = {
 
 export type Fee = {
   type: FeeRatio;
-  rate: number;
+  rate: IAmount;
 };
 
 export type Fees = {
@@ -82,7 +84,7 @@ export type CommitedTransaction = {
 
 export type IOnChainService = {
   getBalances(addresses: string[], assets: string[]): Promise<AssetBalances>;
-  estimateFees(): Promise<Fees>;
+  getFeeRates(): Promise<Fees>;
   broadcastTransaction(signedTransaction: string): Promise<CommitedTransaction>;
   listTransactions(address: string, pagination: Pagination);
   getTransactionStatus(txnHash: string): Promise<TransactionStatusData>;
