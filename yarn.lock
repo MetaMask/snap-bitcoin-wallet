@@ -3316,8 +3316,8 @@ __metadata:
   linkType: hard
 
 "@metamask/snaps-sdk@npm:^4.0.0, @metamask/snaps-sdk@npm:^4.0.1, @metamask/snaps-sdk@npm:^4.1.0, @metamask/snaps-sdk@npm:^4.2.0":
-  version: 4.2.0
-  resolution: "@metamask/snaps-sdk@npm:4.2.0"
+  version: 4.3.0
+  resolution: "@metamask/snaps-sdk@npm:4.3.0"
   dependencies:
     "@metamask/key-tree": ^9.1.0
     "@metamask/providers": ^16.1.0
@@ -3325,7 +3325,7 @@ __metadata:
     "@metamask/utils": ^8.3.0
     fast-xml-parser: ^4.3.4
     superstruct: ^1.0.3
-  checksum: f9b0e6d7600680183e69d419f5a802208fdc119c7d1226a74076f3b8b8c581850b135392c2f35c391305fc37406973afeb19d8909101580ec16b63fd2f200a8c
+  checksum: 21c5724d53c54d6a98a74470f34fa9bd0bd697506f5bd21f43a4fabfaa70c04dd54c54db59e0eabbd643e8e0d3274872001537e7244916d24f88a4bbae260944
   languageName: node
   linkType: hard
 
