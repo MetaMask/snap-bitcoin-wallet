@@ -3,7 +3,7 @@ import type { Network } from 'bitcoinjs-lib';
 
 import { replaceMiddleChar } from '../../utils';
 import type { IAddress } from '../../wallet';
-import { getCaip2Network, getExplorerUrl } from '../utils';
+import { getCaip2ChainId, getExplorerUrl } from '../utils';
 
 export class BtcAddress implements IAddress {
   address: string;
@@ -16,7 +16,7 @@ export class BtcAddress implements IAddress {
   }
 
   get explorerUrl(): string {
-    return getExplorerUrl(this.address, getCaip2Network(this.network));
+    return getExplorerUrl(this.address, getCaip2ChainId(this.network));
   }
 
   valueOf(): string {

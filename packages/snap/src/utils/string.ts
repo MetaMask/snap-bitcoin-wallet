@@ -1,35 +1,37 @@
 import { Buffer } from 'buffer';
 /**
- * Method to trim the hex prefix from an hex string.
+ * Removes the '0x' prefix from a given hex string.
  *
- * @param hexStr - Hex string.
- * @returns Hex string without the prefix.
+ * @param hexStr - The hex string to remove the prefix from.
+ * @returns The hex string without the prefix.
  */
 export function trimHexPrefix(hexStr: string) {
   return hexStr.startsWith('0x') ? hexStr.substring(2) : hexStr;
 }
 
 /**
- * Method to convert a hex string to a buffer.
+ * Converts a hex string to a buffer instance.
  *
- * @param hexStr - Hex string.
- * @param trimPrefix - Flag to trim the hex prefix.
- * @returns Buffer instance.
+ * @param hexStr - The hex string to convert to a buffer.
+ * @param trimPrefix - A flag indicating whether to remove the '0x' prefix from the hex string.
+ * @returns The buffer instance.
+ * @throws An error if the hex string cannot be converted to a buffer.
  */
 export function hexToBuffer(hexStr: string, trimPrefix = true) {
   try {
     return Buffer.from(trimPrefix ? trimHexPrefix(hexStr) : hexStr, 'hex');
   } catch (error) {
-    throw new Error('Unable to convert hexStr to buffer');
+    throw new Error('Unable to convert hex string to buffer');
   }
 }
 
 /**
- * Method to convert a buffer to a string.
+ * Converts a buffer instance to a string.
  *
- * @param buffer - Hex string.
- * @param encoding - Buffer encoding.
- * @returns Converted String.
+ * @param buffer - The buffer instance to convert to a string.
+ * @param encoding - The encoding to use when converting the buffer to a string.
+ * @returns The converted string.
+ * @throws An error if the buffer cannot be converted to a string.
  */
 export function bufferToString(buffer: Buffer, encoding: BufferEncoding) {
   try {
@@ -40,13 +42,13 @@ export function bufferToString(buffer: Buffer, encoding: BufferEncoding) {
 }
 
 /**
- * Method to format a string by replacing the middle characters.
+ * Replaces the middle characters of a string with a given string.
  *
- * @param str - String to replace.
- * @param headLength - Length of head.
- * @param tailLength - Length of tail.
- * @param replaceStr - String to replace with. Default is '...'.
- * @returns Formatted string.
+ * @param str - The string to replace.
+ * @param headLength - The length of the head of the string that should not be replaced.
+ * @param tailLength - The length of the tail of the string that should not be replaced.
+ * @param replaceStr - The string to replace the middle characters with. Default is '...'.
+ * @returns The formatted string.
  */
 export function replaceMiddleChar(
   str: string,
@@ -58,5 +60,7 @@ export function replaceMiddleChar(
     return str;
   }
 
-  return `${str.substr(0, headLength)}${replaceStr}${str.substr(-tailLength)}`;
+  return `${str.substring(0, headLength)}${replaceStr}${str.substring(
+    str.length - tailLength,
+  )}`;
 }

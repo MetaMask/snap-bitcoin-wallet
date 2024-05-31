@@ -13,13 +13,6 @@ export class CoinSelectService {
     this.feeRate = Math.round(feeRate);
   }
 
-  /**
-   * Selects UTXOs to spend for segwit output.
-   * @param utxos - Array of UTXOs.
-   * @param spendTos - Array of SpendTo objects.
-   * @param script - Script hash of the segwit output.
-   * @returns Selected UTXOs.
-   */
   selectCoins(
     utxos: Utxo[],
     spendTos: SpendTo[],

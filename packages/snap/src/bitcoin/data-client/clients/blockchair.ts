@@ -312,7 +312,7 @@ export class BlockChairClient implements IReadDataClient, IWriteDataClient {
     }
   }
 
-  // TODO: add logic to get UTXOs that sufficiently cover the amount, to reduce the number of requests
+  // TODO: Get UTXOs that sufficiently cover the amount and fee, to reduce the number of requests
   async getUtxos(
     address: string,
     includeUnconfirmed?: boolean,

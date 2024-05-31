@@ -2,36 +2,37 @@ import type { ScriptType } from '../constants';
 import { DustLimit } from '../constants';
 
 /**
- * A Method to convert BTC to Satoshis.
+ * Converts a number of satoshis to a string representing the equivalent amount of BTC.
  *
- * @param sats - Satoshis.
- * @returns Btc unit in string fixed to 8 decimal places.
+ * @param sats - The number of satoshis to convert.
+ * @returns The equivalent amount of BTC as a string, fixed to 8 decimal places.
+ * @throws A TypeError if sats is not an integer.
  */
 export function satsToBtc(sats: number): string {
   if (!Number.isInteger(sats)) {
-    throw new TypeError('satsToBtc must be called on a interger number');
+    throw new TypeError('satsToBtc must be called on an integer number');
   }
   return (sats / 1e8).toFixed(8);
 }
 
 /**
- * A Method to convert Satoshis to Btcs.
+ * Converts a number of BTC to a string representing the equivalent amount of satoshis.
  *
- * @param btc - Btc.
- * @returns Btc unit in string fixed to 8 decimal places.
+ * @param btc - The amount of BTC to convert.
+ * @returns The equivalent amount of satoshis as a string, rounded to the nearest integer.
  */
 export function btcToSats(btc: number): string {
   return (btc * 1e8).toFixed(0);
 }
 
 /**
- * A Method to determine the given amount is dust base on the hardcoded dust limit by script type.
+ * Determines if a given amount is considered dust based on the hardcoded dust limit for a given script type.
  *
- * @param amt - Compare amount.
- * @param scriptType - Script type.
- * @returns Boolean result.
+ * @param amt - The amount to compare.
+ * @param scriptType - The script type for which to calculate the dust limit.
+ * @returns A boolean indicating whether the amount is considered dust.
  */
 export function isDust(amt: number, scriptType: ScriptType): boolean {
-  // TODO: calculate dust threshold by network fee rate
+  // TODO: Calculate dust threshold by network fee rate, rather than hardcoding it.
   return amt < DustLimit[scriptType];
 }

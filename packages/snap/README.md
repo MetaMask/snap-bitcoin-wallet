@@ -40,7 +40,7 @@ provider.request({
     request: {
       method: 'chain_getTransactionStatus',
       params: {
-        scope: 'bip122:000000000933ea01ad0ee984209779ba', // the caip2 network chain id of bitcoin
+        scope: 'bip122:000000000933ea01ad0ee984209779ba', // the CAIP-2 chain ID of bitcoin
         transactionId: '5639078d-742e-4901-8993-bc25a5ef6161', // the txn id of an bitcoin transaction
       },
     },
@@ -62,7 +62,7 @@ provider.request({
       params: {
         account: 'dc06350a-82db-434b-b113-066135804f63', // the uuid account id of the current account
         id: 'da40b782-e054-4260-9a6a-c8717a022f92', // an random uuid for this request
-        scope: 'bip122:000000000933ea01ad0ee984209779ba', // the caip2 network chain id of bitcoin
+        scope: 'bip122:000000000933ea01ad0ee984209779ba', // the CAIP-2 chain ID of bitcoin
         request: {
           method: 'btc_sendmany',
           params: {

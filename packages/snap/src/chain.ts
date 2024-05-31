@@ -55,51 +55,54 @@ export type CommitedTransaction = {
   transactionId: string;
 };
 
+/**
+ * An interface that defines methods for interacting with a blockchain network.
+ */
 export type IOnChainService = {
   /**
-   * A method to get the balances for multiple addresses and multipe assets.
+   * Gets the balances for multiple addresses and multiple assets.
    *
-   * @param addresses - A array of the addresse to fetch.
-   * @param type - A array of the asset to fetch.
-   * @returns A promise that resolves to an AssetBalances object.
+   * @param addresses - An array of addresses to fetch the balances for.
+   * @param assets - An array of assets to fetch the balances of.
+   * @returns A promise that resolves to an `AssetBalances` object.
    */
   getBalances(addresses: string[], assets: string[]): Promise<AssetBalances>;
 
   /**
-   * A method to get the fee rate of the network.
+   * Gets the fee rates of the network.
    *
-   * @returns A promise that resolves to an Fees object.
+   * @returns A promise that resolves to a `Fees` object.
    */
   getFeeRates(): Promise<Fees>;
 
   /**
-   * A method to broadcast the transaction on chain.
+   * Broadcasts a signed transaction on the blockchain network.
    *
-   * @param signedTransaction - An signed transaction string.
-   * @returns A promise that resolves to an CommitedTransaction object.
+   * @param signedTransaction - A signed transaction string.
+   * @returns A promise that resolves to a `CommitedTransaction` object.
    */
   broadcastTransaction(signedTransaction: string): Promise<CommitedTransaction>;
 
   /**
-   * A method to fetch the transaction status.
+   * Gets the status of a transaction with the given transaction hash.
    *
-   * @param txnHash - An transaction hash.
-   * @returns A promise that resolves to an TransactionStatusData object.
+   * @param txnHash - The transaction hash of the transaction to get the status of.
+   * @returns A promise that resolves to a `TransactionStatusData` object.
    */
   getTransactionStatus(txnHash: string): Promise<TransactionStatusData>;
 
   /**
-   * A method to fetch the require metadata to build an transaction.
+   * Gets the required metadata to build a transaction for the given address and transaction intent.
    *
-   * @param address - A address string.
-   * @param transactionIntent - An TransactionIntent Object.
-   * @returns A promise that resolves to an TransactionData object.
+   * @param address - The address to build the transaction for.
+   * @param transactionIntent - The transaction intent object containing the transaction inputs and outputs.
+   * @returns A promise that resolves to a `TransactionData` object.
    */
   getDataForTransaction(
     address: string,
     transactionIntent?: TransactionIntent,
   ): Promise<TransactionData>;
 
-  // TODO: implement listTransactions
+  // TODO: Implement listTransactions in next phase
   listTransactions();
 };
