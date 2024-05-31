@@ -2,10 +2,10 @@ import { MethodNotFoundError } from '@metamask/snaps-sdk';
 import { unknown } from 'superstruct';
 
 import { generateAccounts } from '../../test/utils';
+import { BtcAsset, Network } from '../bitcoin/constants';
 import { Chain, Config } from '../config';
 import { Factory } from '../factory';
-import { BtcAsset, Network } from '../modules/bitcoin/constants';
-import { type IStaticSnapRpcHandler, BaseSnapRpcHandler } from '../modules/rpc';
+import { type IStaticSnapRpcHandler, BaseSnapRpcHandler } from '../libs/rpc';
 import { GetBalancesHandler } from '../rpcs';
 import { RpcHelper } from '../rpcs/helpers';
 import type { StaticImplements } from '../types/static';
@@ -14,11 +14,7 @@ import { BtcKeyringError } from './exceptions';
 import { BtcKeyring } from './keyring';
 import { KeyringStateManager } from './state';
 
-jest.mock('../modules/logger/logger', () => ({
-  logger: {
-    info: jest.fn(),
-  },
-}));
+jest.mock('../libs/logger/logger');
 
 jest.mock('@metamask/keyring-api', () => ({
   ...jest.requireActual('@metamask/keyring-api'),
@@ -170,7 +166,7 @@ describe('BtcKeyring', () => {
       ).rejects.toThrow(BtcKeyringError);
     });
 
-    it('throws `Invalid params to create account` if the create options is invalid', async () => {
+    it('throws `Invalid params to create an account` if the create options is invalid', async () => {
       const { instance: stateMgr } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);
 
@@ -178,7 +174,7 @@ describe('BtcKeyring', () => {
         keyring.createAccount({
           scope: 'invalid',
         }),
-      ).rejects.toThrow(`Invalid params to create account`);
+      ).rejects.toThrow(`Invalid params to create an account`);
     });
   });
 

@@ -1,29 +1,25 @@
-import ecc from '@bitcoinerlab/secp256k1';
-import type { SLIP10NodeInterface } from '@metamask/key-tree';
 import type { KeyringAccount } from '@metamask/keyring-api';
 import { InvalidParamsError } from '@metamask/snaps-sdk';
-import { BIP32Factory } from 'bip32';
 import { networks } from 'bitcoinjs-lib';
-import ECPairFactory from 'ecpair';
 import { v4 as uuidv4 } from 'uuid';
 
 import { generateAccounts } from '../../test/utils';
+import { Network, ScriptType } from '../bitcoin/constants';
+import {
+  BtcAccountBip32Deriver,
+  BtcWallet,
+  BtcAmount,
+} from '../bitcoin/wallet';
 import { Config } from '../config';
 import { Factory } from '../factory';
-import { BtcAsset, Network, ScriptType } from '../modules/bitcoin/constants';
-import { BtcAccountBip32Deriver, BtcWallet } from '../modules/bitcoin/wallet';
-import { BtcAmount } from '../modules/bitcoin/wallet/amount';
-import { SnapHelper } from '../modules/snap';
 import { GetBalancesHandler } from './get-balances';
 
-jest.mock('../modules/logger/logger', () => ({
-  logger: {
-    info: jest.fn(),
-    error: jest.fn(),
-  },
-}));
+jest.mock('../libs/logger/logger');
+jest.mock('../libs/snap/helpers');
 
 describe('GetBalancesHandler', () => {
+  const asset = Config.avaliableAssets[Config.chain][0];
+
   describe('handleRequest', () => {
     const createMockChainApiFactory = () => {
       const getBalancesSpy = jest.fn();
@@ -41,31 +37,7 @@ describe('GetBalancesHandler', () => {
       };
     };
 
-    const createMockBip32Instance = (network) => {
-      const ECPair = ECPairFactory(ecc);
-      const bip32 = BIP32Factory(ecc);
-
-      const keyPair = ECPair.makeRandom();
-      const deriver = bip32.fromSeed(keyPair.publicKey, network);
-
-      const jsonData = {
-        privateKey: deriver.privateKey?.toString('hex'),
-        publicKey: deriver.publicKey.toString('hex'),
-        chainCode: deriver.chainCode.toString('hex'),
-        depth: deriver.depth,
-        index: deriver.index,
-        curve: 'secp256k1',
-        masterFingerprint: undefined,
-        parentFingerprint: 0,
-      };
-      jest.spyOn(SnapHelper, 'getBip32Deriver').mockResolvedValue({
-        ...jsonData,
-        chainCodeBytes: deriver.chainCode,
-        privateKeyBytes: deriver.privateKey,
-        publicKeyBytes: deriver.publicKey,
-        toJSON: jest.fn().mockReturnValue(jsonData),
-      } as unknown as SLIP10NodeInterface);
-
+    const createMockDeriver = (network) => {
       const rootSpy = jest.spyOn(BtcAccountBip32Deriver.prototype, 'getRoot');
       const childSpy = jest.spyOn(BtcAccountBip32Deriver.prototype, 'getChild');
 
@@ -77,7 +49,7 @@ describe('GetBalancesHandler', () => {
     };
 
     const createMockAccount = async (network, caip2Network) => {
-      const { instance } = createMockBip32Instance(network);
+      const { instance } = createMockDeriver(network);
       const wallet = new BtcWallet(instance, network);
       const sender = await wallet.unlock(0, ScriptType.P2wpkh);
       const keyringAccount = {
@@ -116,7 +88,7 @@ describe('GetBalancesHandler', () => {
       const mockResp = {
         balances: addresses.reduce((acc, address) => {
           acc[address] = {
-            [BtcAsset.TBtc]: {
+            [asset]: {
               amount: new BtcAmount(100),
             },
           };
@@ -125,7 +97,7 @@ describe('GetBalancesHandler', () => {
       };
 
       const expected = {
-        [BtcAsset.TBtc]: {
+        [asset]: {
           amount: '0.00000100',
           unit: Config.unit[Config.chain],
         },
@@ -135,10 +107,10 @@ describe('GetBalancesHandler', () => {
 
       const result = await GetBalancesHandler.getInstance(walletData).execute({
         scope: walletData.scope,
-        assets: [BtcAsset.TBtc],
+        assets: [asset],
       });
 
-      expect(getBalancesSpy).toHaveBeenCalledWith(addresses, [BtcAsset.TBtc]);
+      expect(getBalancesSpy).toHaveBeenCalledWith(addresses, [asset]);
       expect(result).toStrictEqual(expected);
     });
 
@@ -156,7 +128,7 @@ describe('GetBalancesHandler', () => {
           ...accounts.map((account) => account.address),
         ].reduce((acc, address) => {
           acc[address] = {
-            [BtcAsset.TBtc]: {
+            [asset]: {
               amount: new BtcAmount(100),
             },
             'some-asset': {
@@ -168,7 +140,7 @@ describe('GetBalancesHandler', () => {
       };
 
       const expected = {
-        [BtcAsset.TBtc]: {
+        [asset]: {
           amount: '0.00000100',
           unit: Config.unit[Config.chain],
         },
@@ -178,11 +150,27 @@ describe('GetBalancesHandler', () => {
 
       const result = await GetBalancesHandler.getInstance(walletData).execute({
         scope: Network.Testnet,
-        assets: [BtcAsset.TBtc],
+        assets: [asset],
       });
 
-      expect(getBalancesSpy).toHaveBeenCalledWith(addresses, [BtcAsset.TBtc]);
+      expect(getBalancesSpy).toHaveBeenCalledWith(addresses, [asset]);
       expect(result).toStrictEqual(expected);
+    });
+
+    it('throws `Fail to get the balances` when transaction status fetch failed', async () => {
+      const network = networks.testnet;
+      const caip2Network = Network.Testnet;
+      const { getBalancesSpy } = createMockChainApiFactory();
+      const { walletData } = await createMockAccount(network, caip2Network);
+
+      getBalancesSpy.mockRejectedValue(new Error('error'));
+
+      await expect(
+        GetBalancesHandler.getInstance(walletData).execute({
+          scope: Network.Testnet,
+          assets: [asset],
+        }),
+      ).rejects.toThrow(`Fail to get the balances`);
     });
 
     it('throws `Request params is invalid` when request parameter is not correct', async () => {

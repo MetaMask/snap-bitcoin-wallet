@@ -1,8 +1,8 @@
+import { BtcOnChainService } from './bitcoin/chain';
+import { Network } from './bitcoin/constants';
+import { BtcWallet } from './bitcoin/wallet';
 import { Factory } from './factory';
 import { BtcKeyring } from './keyring';
-import { BtcOnChainService } from './modules/bitcoin/chain';
-import { Network } from './modules/bitcoin/constants';
-import { BtcWallet } from './modules/bitcoin/wallet';
 
 describe('Factory', () => {
   describe('createOnChainServiceProvider', () => {

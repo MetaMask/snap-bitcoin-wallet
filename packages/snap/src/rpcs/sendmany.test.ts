@@ -1,38 +1,33 @@
-import ecc from '@bitcoinerlab/secp256k1';
-import type { SLIP10NodeInterface } from '@metamask/key-tree';
 import {
   InvalidParamsError,
   UserRejectedRequestError,
 } from '@metamask/snaps-sdk';
-import { BIP32Factory } from 'bip32';
 import { networks } from 'bitcoinjs-lib';
-import ECPairFactory from 'ecpair';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
   generateBlockChairBroadcastTransactionResp,
   generateBlockChairGetUtxosResp,
 } from '../../test/utils';
+import { DustLimit, Network, ScriptType } from '../bitcoin/constants';
+import { satsToBtc } from '../bitcoin/utils/unit';
+import type { IBtcAccount } from '../bitcoin/wallet';
+import {
+  BtcAccountBip32Deriver,
+  BtcWallet,
+  BtcAmount,
+  BtcAddress,
+  BtcTransactionInfo,
+} from '../bitcoin/wallet';
 import { FeeRatio } from '../chain';
 import { Factory } from '../factory';
-import { DustLimit, Network, ScriptType } from '../modules/bitcoin/constants';
-import { satsToBtc } from '../modules/bitcoin/utils/unit';
-import type { IBtcAccount } from '../modules/bitcoin/wallet';
-import { BtcAccountBip32Deriver, BtcWallet } from '../modules/bitcoin/wallet';
-import { BtcAddress } from '../modules/bitcoin/wallet/address';
-import { BtcAmount } from '../modules/bitcoin/wallet/amount';
-import { BtcTransactionInfo } from '../modules/bitcoin/wallet/transactionInfo';
-import { SnapHelper } from '../modules/snap';
+import { SnapHelper } from '../libs/snap';
 import type { IAccount } from '../wallet';
 import { SendManyHandler } from './sendmany';
 import type { SendManyParams } from './sendmany';
 
-jest.mock('../modules/logger/logger', () => ({
-  logger: {
-    info: jest.fn(),
-    error: jest.fn(),
-  },
-}));
+jest.mock('../libs/logger/logger');
+jest.mock('../libs/snap/helpers');
 
 describe('SendManyHandler', () => {
   describe('handleRequest', () => {
@@ -56,38 +51,9 @@ describe('SendManyHandler', () => {
       };
     };
 
-    const createMockBip32Instance = (network) => {
-      const ECPair = ECPairFactory(ecc);
-      const bip32 = BIP32Factory(ecc);
-
-      const keyPair = ECPair.makeRandom();
-      const deriver = bip32.fromSeed(keyPair.publicKey, network);
-
-      const jsonData = {
-        privateKey: deriver.privateKey?.toString('hex'),
-        publicKey: deriver.publicKey.toString('hex'),
-        chainCode: deriver.chainCode.toString('hex'),
-        depth: deriver.depth,
-        index: deriver.index,
-        curve: 'secp256k1',
-        masterFingerprint: undefined,
-        parentFingerprint: 0,
-      };
-      jest.spyOn(SnapHelper, 'getBip32Deriver').mockResolvedValue({
-        ...jsonData,
-        chainCodeBytes: deriver.chainCode,
-        privateKeyBytes: deriver.privateKey,
-        publicKeyBytes: deriver.publicKey,
-        toJSON: jest.fn().mockReturnValue(jsonData),
-      } as unknown as SLIP10NodeInterface);
-
-      const rootSpy = jest.spyOn(BtcAccountBip32Deriver.prototype, 'getRoot');
-      const childSpy = jest.spyOn(BtcAccountBip32Deriver.prototype, 'getChild');
-
+    const createMockDeriver = (network) => {
       return {
         instance: new BtcAccountBip32Deriver(network),
-        rootSpy,
-        childSpy,
       };
     };
 
@@ -96,9 +62,10 @@ describe('SendManyHandler', () => {
       caip2Network: string,
       recipientCnt: number,
     ) => {
-      const { instance } = createMockBip32Instance(network);
+      const { instance } = createMockDeriver(network);
       const wallet = new BtcWallet(instance, network);
       const sender = await wallet.unlock(0, ScriptType.P2wpkh);
+
       const keyringAccount = {
         type: sender.type,
         id: uuidv4(),
@@ -353,7 +320,7 @@ describe('SendManyHandler', () => {
       ).rejects.toThrow('Transaction must have at least one recipient');
     });
 
-    it('throws `No fee rates available` error if no fee rate returns from chain service', async () => {
+    it('throws `Failed to send the transaction` error if no fee rate returns from chain service', async () => {
       const { getFeeRatesSpy } = createMockChainApiFactory();
       const network = networks.testnet;
       const caip2Network = Network.Testnet;
@@ -372,7 +339,7 @@ describe('SendManyHandler', () => {
           index: 0,
           account: keyringAccount,
         }).execute(createSendManyParams(recipients, caip2Network, false)),
-      ).rejects.toThrow('No fee rates available');
+      ).rejects.toThrow('Failed to send the transaction');
     });
 
     it('throws `Invalid amount for send` error if sending amount is <= 0', async () => {
@@ -436,7 +403,7 @@ describe('SendManyHandler', () => {
       ).rejects.toThrow(UserRejectedRequestError);
     });
 
-    it('throws `Failed to commit transaction on chain` error if the transaction is fail to commit', async () => {
+    it('throws `Failed to send the transaction` error if the transaction is fail to commit', async () => {
       const network = networks.testnet;
       const caip2Network = Network.Testnet;
       const { broadcastTransactionSpy, keyringAccount, recipients } =
@@ -449,7 +416,7 @@ describe('SendManyHandler', () => {
           index: 0,
           account: keyringAccount,
         }).execute(createSendManyParams(recipients, caip2Network, false)),
-      ).rejects.toThrow('Failed to commit transaction on chain');
+      ).rejects.toThrow('Failed to send the transaction');
     });
   });
 });

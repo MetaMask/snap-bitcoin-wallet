@@ -1,3 +1,4 @@
+import { BtcP2wpkhAddressStruct } from '@metamask/keyring-api';
 import type { Component } from '@metamask/snaps-sdk';
 import {
   UserRejectedRequestError,
@@ -14,29 +15,45 @@ import {
   record,
   array,
   boolean,
-  assert,
+  refine,
 } from 'superstruct';
 
-import {
-  TransactionIntentStruct,
-  type IOnChainService,
-  type TransactionIntent,
-} from '../chain';
+import { btcToSats } from '../bitcoin/utils';
+import { TransactionValidationError } from '../bitcoin/wallet';
+import { type TransactionIntent } from '../chain';
 import { Factory } from '../factory';
 import { type Wallet as WalletData } from '../keyring';
-import { btcToSats } from '../modules/bitcoin/utils';
-import { logger } from '../modules/logger/logger';
-import { SnapRpcHandlerRequestStruct } from '../modules/rpc';
-import type { IStaticSnapRpcHandler } from '../modules/rpc';
-import { SnapHelper } from '../modules/snap';
+import { logger } from '../libs/logger/logger';
+import { SnapRpcHandlerRequestStruct } from '../libs/rpc';
+import type { IStaticSnapRpcHandler } from '../libs/rpc';
+import { SnapHelper } from '../libs/snap';
 import type { StaticImplements } from '../types/static';
-import { positiveStringStruct } from '../utils';
 import type { IAccount, ITransactionInfo, IWallet } from '../wallet';
 import { KeyringRpcHandler } from './keyring-rpc';
 
 export type SendManyParams = Infer<typeof SendManyHandler.requestStruct>;
 
 export type SendManyResponse = Infer<typeof SendManyHandler.responseStruct>;
+
+export const TransactionAmountStuct = refine(
+  record(BtcP2wpkhAddressStruct, string()),
+  'TransactionAmountStuct',
+  (value: Record<string, string>) => {
+    if (Object.entries(value).length === 0) {
+      return 'Transaction must have at least one recipient';
+    }
+
+    for (const val of Object.values(value)) {
+      const parsedVal = parseFloat(val);
+      // TODO: do we need to check for max values, max decimals?
+      if (Number.isNaN(parsedVal) || parsedVal <= 0) {
+        return 'Invalid amount for send';
+      }
+    }
+
+    return true;
+  },
+);
 
 export type TxnJson = {
   feeRate: string;
@@ -76,9 +93,9 @@ export class SendManyHandler
   static override get requestStruct() {
     return assign(
       object({
-        amounts: record(string(), positiveStringStruct),
+        amounts: TransactionAmountStuct,
         comment: string(),
-        subtractFeeFrom: array(string()),
+        subtractFeeFrom: array(BtcP2wpkhAddressStruct),
         replaceable: boolean(),
         dryrun: boolean(),
       }),
@@ -95,61 +112,72 @@ export class SendManyHandler
   protected override async preExecute(params: SendManyParams): Promise<void> {
     await super.preExecute(params);
     const transactionIntent = this.formatTxnIndents(params);
-    try {
-      assert(transactionIntent, TransactionIntentStruct);
-    } catch (error) {
-      this.throwValidationError(error.message);
-    }
     this.transactionIntent = transactionIntent;
   }
 
   async handleRequest(params: SendManyParams): Promise<SendManyResponse> {
-    const { scope } = this.walletData;
-    const { dryrun } = params;
-    const chainApi = Factory.createOnChainServiceProvider(scope);
+    try {
+      const { scope } = this.walletData;
+      const { dryrun } = params;
+      const chainApi = Factory.createOnChainServiceProvider(scope);
 
-    const feesResp = await chainApi.getFeeRates();
+      const feesResp = await chainApi.getFeeRates();
 
-    if (feesResp.fees.length === 0) {
-      throw new Error('No fee rates available');
-    }
+      if (feesResp.fees.length === 0) {
+        throw new Error('No fee rates available');
+      }
 
-    const fee = Math.max(feesResp.fees[feesResp.fees.length - 1].rate.value, 1);
+      const fee = Math.max(
+        feesResp.fees[feesResp.fees.length - 1].rate.value,
+        1,
+      );
 
-    const metadata = await chainApi.getDataForTransaction(
-      this.walletAccount.address,
-      this.transactionIntent,
-    );
+      const metadata = await chainApi.getDataForTransaction(
+        this.walletAccount.address,
+        this.transactionIntent,
+      );
 
-    const { txn, txnInfo } = await this.wallet.createTransaction(
-      this.walletAccount,
-      this.transactionIntent,
-      {
-        utxos: metadata.data.utxos,
-        fee,
-        subtractFeeFrom: params.subtractFeeFrom,
-        replaceable: params.replaceable,
-      },
-    );
+      const { txn, txnInfo } = await this.wallet.createTransaction(
+        this.walletAccount,
+        this.transactionIntent,
+        {
+          utxos: metadata.data.utxos,
+          fee,
+          subtractFeeFrom: params.subtractFeeFrom,
+          replaceable: params.replaceable,
+        },
+      );
 
-    if (!(await this.getTxnConsensus(txnInfo, params.comment))) {
-      throw new UserRejectedRequestError() as unknown as Error;
-    }
+      if (!(await this.getTxnConsensus(txnInfo, params.comment))) {
+        throw new UserRejectedRequestError() as unknown as Error;
+      }
 
-    const txnHash = await this.wallet.signTransaction(
-      this.walletAccount.signer,
-      txn,
-    );
+      const txnHash = await this.wallet.signTransaction(
+        this.walletAccount.signer,
+        txn,
+      );
 
-    if (dryrun) {
+      if (dryrun) {
+        return {
+          txId: txnHash,
+        };
+      }
+
+      const result = await chainApi.broadcastTransaction(txnHash);
+
       return {
-        txId: txnHash,
+        txId: result.transactionId,
       };
+    } catch (error) {
+      logger.error('Failed to send the transaction', error);
+      if (
+        error instanceof TransactionValidationError ||
+        error instanceof UserRejectedRequestError
+      ) {
+        throw error as unknown as Error;
+      }
+      throw new Error('Failed to send the transaction');
     }
-
-    return {
-      txId: await this.broadcastTransaction(chainApi, txnHash),
-    };
   }
 
   protected formatTxnIndents(params: SendManyParams): TransactionIntent {
@@ -217,17 +245,5 @@ export class SendManyHandler
     components.push(row(totalLabel, text(`${info.total}`, false)));
 
     return (await SnapHelper.confirmDialog(components)) as boolean;
-  }
-
-  protected async broadcastTransaction(
-    chainApi: IOnChainService,
-    txnHash: string,
-  ): Promise<string> {
-    try {
-      return (await chainApi.broadcastTransaction(txnHash)).transactionId;
-    } catch (error) {
-      logger.error('Failed to broadcast transaction', error);
-      throw new Error('Failed to commit transaction on chain');
-    }
   }
 }

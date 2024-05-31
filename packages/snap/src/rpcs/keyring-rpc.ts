@@ -1,7 +1,7 @@
 import { Factory } from '../factory';
 import { type Wallet as WalletData } from '../keyring';
-import { BaseSnapRpcHandler } from '../modules/rpc';
-import type { SnapRpcHandlerRequest } from '../modules/rpc';
+import { BaseSnapRpcHandler } from '../libs/rpc';
+import type { SnapRpcHandlerRequest } from '../libs/rpc';
 import type { IAccount, IWallet } from '../wallet';
 
 export abstract class KeyringRpcHandler extends BaseSnapRpcHandler {

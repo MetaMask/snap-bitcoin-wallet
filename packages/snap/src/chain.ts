@@ -1,26 +1,6 @@
 import type { Json } from '@metamask/snaps-sdk';
-import type { Infer } from 'superstruct';
-import { object, define, string, array, boolean } from 'superstruct';
 
 import type { IAmount } from './wallet';
-
-const transactionIntentAmts = () =>
-  define<Record<string, number>>(
-    'transactionIntentAmts',
-    (value: Record<string, number>) => {
-      if (Object.entries(value).length === 0) {
-        return 'Transaction must have at least one recipient';
-      }
-
-      for (const val of Object.values(value)) {
-        if (val <= 0) {
-          return 'Invalid amount for send';
-        }
-      }
-
-      return true;
-    },
-  );
 
 export enum FeeRatio {
   Fast = 'fast',
@@ -61,21 +41,14 @@ export type Fees = {
   fees: Fee[];
 };
 
-export const TransactionIntentStruct = object({
-  amounts: transactionIntentAmts(),
-  subtractFeeFrom: array(string()),
-  replaceable: boolean(),
-});
-
-export type TransactionIntent = Infer<typeof TransactionIntentStruct>;
+export type TransactionIntent = {
+  amounts: Record<string, number>;
+  subtractFeeFrom: string[];
+  replaceable: boolean;
+};
 
 export type TransactionData = {
   data: Record<string, Json>;
-};
-
-export type Pagination = {
-  limit: number;
-  offset: number;
 };
 
 export type CommitedTransaction = {
@@ -83,13 +56,50 @@ export type CommitedTransaction = {
 };
 
 export type IOnChainService = {
+  /**
+   * A method to get the balances for multiple addresses and multipe assets.
+   *
+   * @param addresses - A array of the addresse to fetch.
+   * @param type - A array of the asset to fetch.
+   * @returns A promise that resolves to an AssetBalances object.
+   */
   getBalances(addresses: string[], assets: string[]): Promise<AssetBalances>;
+
+  /**
+   * A method to get the fee rate of the network.
+   *
+   * @returns A promise that resolves to an Fees object.
+   */
   getFeeRates(): Promise<Fees>;
+
+  /**
+   * A method to broadcast the transaction on chain.
+   *
+   * @param signedTransaction - An signed transaction string.
+   * @returns A promise that resolves to an CommitedTransaction object.
+   */
   broadcastTransaction(signedTransaction: string): Promise<CommitedTransaction>;
-  listTransactions(address: string, pagination: Pagination);
+
+  /**
+   * A method to fetch the transaction status.
+   *
+   * @param txnHash - An transaction hash.
+   * @returns A promise that resolves to an TransactionStatusData object.
+   */
   getTransactionStatus(txnHash: string): Promise<TransactionStatusData>;
+
+  /**
+   * A method to fetch the require metadata to build an transaction.
+   *
+   * @param address - A address string.
+   * @param transactionIntent - An TransactionIntent Object.
+   * @returns A promise that resolves to an TransactionData object.
+   */
   getDataForTransaction(
     address: string,
     transactionIntent?: TransactionIntent,
   ): Promise<TransactionData>;
+
+  // TODO: implement listTransactions
+  listTransactions();
 };

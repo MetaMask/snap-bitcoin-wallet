@@ -6,11 +6,12 @@ import { Factory } from '../factory';
 import {
   SnapRpcHandlerRequestStruct,
   BaseSnapRpcHandler,
-} from '../modules/rpc';
+  SnapRpcError,
+} from '../libs/rpc';
 import type {
   IStaticSnapRpcHandler,
   SnapRpcHandlerResponse,
-} from '../modules/rpc';
+} from '../libs/rpc';
 import type { StaticImplements } from '../types/static';
 
 export type GetTransactionStatusParams = Infer<
@@ -43,14 +44,18 @@ export class GetTransactionStatusHandler
   async handleRequest(
     params: GetTransactionStatusParams,
   ): Promise<GetTransactionStatusResponse> {
-    const { scope, transactionId } = params;
+    try {
+      const { scope, transactionId } = params;
 
-    const chainApi = Factory.createOnChainServiceProvider(scope);
+      const chainApi = Factory.createOnChainServiceProvider(scope);
 
-    const resp = await chainApi.getTransactionStatus(transactionId);
+      const resp = await chainApi.getTransactionStatus(transactionId);
 
-    return {
-      status: resp.status,
-    };
+      return {
+        status: resp.status,
+      };
+    } catch (error) {
+      throw new SnapRpcError('Fail to get the transaction status');
+    }
   }
 }
