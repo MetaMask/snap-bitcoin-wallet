@@ -35,15 +35,15 @@ describe('validateOrigin', () => {
   });
 
   it('throws `Origin not found` error if not origin is provided', () => {
-    expect(() => validateOrigin('', 'chain_getBalances')).toThrow(
-      'Origin not found',
-    );
+    expect(() =>
+      validateOrigin('', keyringApi.KeyringRpcMethod.GetAccountBalances),
+    ).toThrow('Origin not found');
   });
 
   it('throws `Permission denied` error if origin not match to the allowed list', () => {
-    expect(() => validateOrigin('xyz', 'chain_getBalances')).toThrow(
-      'Permission denied',
-    );
+    expect(() =>
+      validateOrigin('xyz', keyringApi.KeyringRpcMethod.GetAccountBalances),
+    ).toThrow('Permission denied');
   });
 
   it('throws `Permission denied` error if the method is not match to the allowed list', () => {
@@ -71,7 +71,7 @@ describe('onRpcRequest', () => {
     return onRpcRequest({
       origin: 'http://localhost:8000',
       request: {
-        method: 'chain_getBalances',
+        method: 'chain_createAccount',
         params: {
           scope: Config.avaliableNetworks[Config.chain][0],
         },
@@ -83,7 +83,7 @@ describe('onRpcRequest', () => {
     const { handler, handleRequestSpy } = createMockChainApiHandler();
     jest.spyOn(RpcHelper, 'getChainRpcApiHandlers').mockReturnValue({
       // eslint-disable-next-line @typescript-eslint/naming-convention
-      chain_getBalances: handler,
+      chain_createAccount: handler,
     });
     handleRequestSpy.mockResolvedValueOnce({
       data: 1,
@@ -95,11 +95,7 @@ describe('onRpcRequest', () => {
   });
 
   it('throws SnapError if an error catched', async () => {
-    const { handler } = createMockChainApiHandler();
-    jest.spyOn(RpcHelper, 'getChainRpcApiHandlers').mockReturnValue({
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      chain_createAccount: handler,
-    });
+    jest.spyOn(RpcHelper, 'getChainRpcApiHandlers').mockReturnValue({});
 
     await expect(executeRequest()).rejects.toThrow(MethodNotFoundError);
   });
@@ -108,7 +104,7 @@ describe('onRpcRequest', () => {
     const { handler, handleRequestSpy } = createMockChainApiHandler();
     jest.spyOn(RpcHelper, 'getChainRpcApiHandlers').mockReturnValue({
       // eslint-disable-next-line @typescript-eslint/naming-convention
-      chain_getBalances: handler,
+      chain_createAccount: handler,
     });
     handleRequestSpy.mockRejectedValue(new SnapError('error'));
 

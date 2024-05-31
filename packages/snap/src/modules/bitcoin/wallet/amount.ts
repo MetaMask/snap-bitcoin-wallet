@@ -11,28 +11,33 @@ export class BtcAmount implements IAmount {
     this.#_value = value;
   }
 
-  public get value(): number {
+  get value(): number {
     return this.#_value;
   }
 
-  public set value(newValue: number) {
+  set value(newValue: number) {
     this.#_value = newValue;
   }
 
-  public valueOf(): number {
+  get unit(): string {
+    return Config.unit[Chain.Bitcoin];
+  }
+
+  valueOf(): number {
     return this.value;
   }
 
-  public toString(withUnit = false): string {
+  toString(withUnit = false): string {
     if (!withUnit) {
       return `${satsToBtc(this.value)}`;
     }
-    return `${satsToBtc(this.value)} ${Config.unit[Chain.Bitcoin]}`;
+    return `${satsToBtc(this.value)} ${this.unit}`;
   }
 
-  public toJson(): Record<string, Json> {
+  toJson(): Record<string, Json> {
     return {
       value: this.toString(true),
+      unit: this.unit,
       rawValue: this.value,
     };
   }

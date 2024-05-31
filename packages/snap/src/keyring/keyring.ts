@@ -5,6 +5,8 @@ import {
   type KeyringAccount,
   type KeyringRequest,
   type KeyringResponse,
+  type Balance,
+  type CaipAssetType,
 } from '@metamask/keyring-api';
 import { MethodNotFoundError, type Json } from '@metamask/snaps-sdk';
 import { assert, StructError } from 'superstruct';
@@ -15,6 +17,7 @@ import { Factory } from '../factory';
 import { logger } from '../modules/logger/logger';
 import type { SnapRpcHandlerRequest } from '../modules/rpc';
 import { SnapHelper } from '../modules/snap';
+import { GetBalancesHandler } from '../rpcs';
 import { RpcHelper } from '../rpcs/helpers';
 import type { IAccount, IWallet } from '../wallet';
 import { BtcKeyringError } from './exceptions';
@@ -163,11 +166,7 @@ export class BtcKeyring implements Keyring {
       throw new MethodNotFoundError() as unknown as Error;
     }
 
-    const walletData = await this.stateMgr.getWallet(account);
-
-    if (!walletData) {
-      throw new Error('Account not found');
-    }
+    const walletData = await this.getAndVerifyWallet(account);
 
     if (walletData.scope !== scope) {
       throw new Error(
@@ -204,5 +203,33 @@ export class BtcKeyring implements Keyring {
       },
       methods: this.keyringMethods,
     } as unknown as KeyringAccount;
+  }
+
+  async getAccountBalances(
+    id: string,
+    assets: CaipAssetType[],
+  ): Promise<Record<CaipAssetType, Balance>> {
+    try {
+      const walletData = await this.getAndVerifyWallet(id);
+
+      return (await GetBalancesHandler.getInstance(walletData).execute({
+        scope: walletData.scope,
+        assets,
+      })) as unknown as Record<CaipAssetType, Balance>;
+    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      logger.info(`[BtcKeyring.getAccountBalances] Error: ${error.message}`);
+      throw new BtcKeyringError(error);
+    }
+  }
+
+  protected async getAndVerifyWallet(id: string) {
+    const walletData = await this.stateMgr.getWallet(id);
+
+    if (!walletData) {
+      throw new Error('Account not found');
+    }
+
+    return walletData;
   }
 }

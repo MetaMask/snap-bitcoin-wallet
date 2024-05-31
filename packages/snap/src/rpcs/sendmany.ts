@@ -26,15 +26,13 @@ import { Factory } from '../factory';
 import { type Wallet as WalletData } from '../keyring';
 import { btcToSats } from '../modules/bitcoin/utils';
 import { logger } from '../modules/logger/logger';
-import {
-  SnapRpcHandlerRequestStruct,
-  BaseSnapRpcHandler,
-} from '../modules/rpc';
+import { SnapRpcHandlerRequestStruct } from '../modules/rpc';
 import type { IStaticSnapRpcHandler } from '../modules/rpc';
 import { SnapHelper } from '../modules/snap';
 import type { StaticImplements } from '../types/static';
 import { positiveStringStruct } from '../utils';
 import type { IAccount, ITransactionInfo, IWallet } from '../wallet';
+import { KeyringRpcHandler } from './keyring-rpc';
 
 export type SendManyParams = Infer<typeof SendManyHandler.requestStruct>;
 
@@ -57,7 +55,7 @@ export type TxnJson = {
 };
 
 export class SendManyHandler
-  extends BaseSnapRpcHandler
+  extends KeyringRpcHandler
   implements StaticImplements<IStaticSnapRpcHandler, typeof SendManyHandler>
 {
   protected override isThrowValidationError = true;
@@ -102,18 +100,7 @@ export class SendManyHandler
     } catch (error) {
       this.throwValidationError(error.message);
     }
-
-    const { scope, index, account } = this.walletData;
-    const wallet = Factory.createWallet(scope);
-    const unlocked = await wallet.unlock(index, account.type);
-
-    if (!unlocked || unlocked.address !== account.address) {
-      throw new Error('Account not found');
-    }
-
     this.transactionIntent = transactionIntent;
-    this.walletAccount = unlocked;
-    this.wallet = wallet;
   }
 
   async handleRequest(params: SendManyParams): Promise<SendManyResponse> {
