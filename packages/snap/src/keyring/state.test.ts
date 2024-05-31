@@ -1,6 +1,6 @@
 import { generateAccounts } from '../../test/utils';
-import { Network } from '../modules/bitcoin/constants';
-import { SnapHelper, StateError } from '../modules/snap';
+import { Network } from '../bitcoin/constants';
+import { SnapHelper, StateError } from '../libs/snap';
 import { KeyringStateManager } from './state';
 
 describe('KeyringStateManager', () => {

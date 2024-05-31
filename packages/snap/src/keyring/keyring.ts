@@ -14,9 +14,9 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Config } from '../config';
 import { Factory } from '../factory';
-import { logger } from '../modules/logger/logger';
-import type { SnapRpcHandlerRequest } from '../modules/rpc';
-import { SnapHelper } from '../modules/snap';
+import { logger } from '../libs/logger/logger';
+import type { SnapRpcHandlerRequest } from '../libs/rpc';
+import { SnapHelper } from '../libs/snap';
 import { GetBalancesHandler } from '../rpcs';
 import { RpcHelper } from '../rpcs/helpers';
 import type { IAccount, IWallet } from '../wallet';
@@ -108,7 +108,7 @@ export class BtcKeyring implements Keyring {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       logger.info(`[BtcKeyring.createAccount] Error: ${error.message}`);
       if (error instanceof StructError) {
-        throw new BtcKeyringError('Invalid params to create account');
+        throw new BtcKeyringError('Invalid params to create an account');
       }
       throw new BtcKeyringError(error);
     }

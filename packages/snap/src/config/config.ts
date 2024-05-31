@@ -1,13 +1,13 @@
 import type {
   BtcWalletConfig,
   BtcOnChainServiceConfig,
-} from '../modules/bitcoin/config';
+} from '../bitcoin/config';
 import {
   Network as BtcNetwork,
   DataClient,
   BtcAsset,
   BtcUnit,
-} from '../modules/bitcoin/constants';
+} from '../bitcoin/constants';
 
 export enum Chain {
   Bitcoin = 'Bitcoin',

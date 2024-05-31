@@ -1,16 +1,16 @@
 import { type Keyring } from '@metamask/keyring-api';
 
-import type { IOnChainService } from './chain';
-import { Config } from './config';
-import { BtcKeyring, KeyringStateManager } from './keyring';
-import { BtcOnChainService } from './modules/bitcoin/chain';
+import { BtcOnChainService } from './bitcoin/chain';
 import {
   type BtcWalletConfig,
   type BtcOnChainServiceConfig,
-} from './modules/bitcoin/config';
-import { DataClientFactory } from './modules/bitcoin/data-client/factory';
-import { getBtcNetwork } from './modules/bitcoin/utils';
-import { BtcWalletFactory } from './modules/bitcoin/wallet';
+} from './bitcoin/config';
+import { DataClientFactory } from './bitcoin/data-client/factory';
+import { getBtcNetwork } from './bitcoin/utils';
+import { BtcWalletFactory } from './bitcoin/wallet';
+import type { IOnChainService } from './chain';
+import { Config } from './config';
+import { BtcKeyring, KeyringStateManager } from './keyring';
 import type { IWallet } from './wallet';
 
 // TODO: Temp solution to support keyring in snap without keyring API
@@ -43,7 +43,7 @@ export class Factory {
     return new BtcKeyring(new KeyringStateManager(), {
       defaultIndex: config.defaultAccountIndex,
       multiAccount: config.enableMultiAccounts,
-      // TODO: Temp solutio to support keyring in snap without keyring API
+      // TODO: Temp solution to support keyring in snap without keyring API
       emitEvents: options.emitEvents,
     });
   }

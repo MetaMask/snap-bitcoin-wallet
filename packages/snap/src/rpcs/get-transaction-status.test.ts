@@ -1,16 +1,11 @@
 import { InvalidParamsError } from '@metamask/snaps-sdk';
 
+import { Network } from '../bitcoin/constants';
 import { TransactionStatus } from '../chain';
 import { Factory } from '../factory';
-import { Network } from '../modules/bitcoin/constants';
 import { GetTransactionStatusHandler } from './get-transaction-status';
 
-jest.mock('../modules/logger/logger', () => ({
-  logger: {
-    info: jest.fn(),
-    error: jest.fn(),
-  },
-}));
+jest.mock('../libs/logger/logger');
 
 describe('GetBalancesHandler', () => {
   const txnHash =
@@ -51,6 +46,19 @@ describe('GetBalancesHandler', () => {
       expect(result).toStrictEqual({
         status: TransactionStatus.Confirmed,
       });
+    });
+
+    it('throws `Fail to get the transaction status` when transaction status fetch failed', async () => {
+      const { getTransactionStatusSpy } = createMockChainApiFactory();
+
+      getTransactionStatusSpy.mockRejectedValue(new Error('error'));
+
+      await expect(
+        GetTransactionStatusHandler.getInstance().execute({
+          scope: Network.Testnet,
+          transactionId: txnHash,
+        }),
+      ).rejects.toThrow(`Fail to get the transaction status`);
     });
 
     it('throws `Request params is invalid` when request parameter is not correct', async () => {

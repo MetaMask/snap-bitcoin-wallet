@@ -3,14 +3,11 @@ import type { Infer } from 'superstruct';
 
 import { Config } from '../config';
 import { BtcKeyring, KeyringStateManager } from '../keyring';
-import {
-  SnapRpcHandlerRequestStruct,
-  BaseSnapRpcHandler,
-} from '../modules/rpc';
+import { SnapRpcHandlerRequestStruct, BaseSnapRpcHandler } from '../libs/rpc';
 import type {
   IStaticSnapRpcHandler,
   SnapRpcHandlerResponse,
-} from '../modules/rpc';
+} from '../libs/rpc';
 import type { StaticImplements } from '../types/static';
 
 export type CreateAccountParams = Infer<
