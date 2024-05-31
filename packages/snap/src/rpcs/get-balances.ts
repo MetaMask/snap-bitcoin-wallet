@@ -1,5 +1,5 @@
 import type { Infer } from 'superstruct';
-import { object, string, assign, array, record, enums } from 'superstruct';
+import { object, assign, array, record, enums } from 'superstruct';
 
 import { Config } from '../config';
 import { Factory } from '../factory';
@@ -28,7 +28,6 @@ export class GetBalancesHandler
   static override get requestStruct() {
     return assign(
       object({
-        account: string(),
         assets: array(assetsStruct),
       }),
       SnapRpcHandlerRequestStruct,
@@ -37,15 +36,13 @@ export class GetBalancesHandler
 
   static override get responseStruct() {
     const unit = Config.unit[Config.chain];
-    return object({
-      balances: record(
-        assetsStruct,
-        object({
-          amount: positiveStringStruct,
-          unit: enums([unit]),
-        }),
-      ),
-    });
+    return record(
+      assetsStruct,
+      object({
+        amount: positiveStringStruct,
+        unit: enums([unit]),
+      }),
+    );
   }
 
   constructor(walletData: WalletData) {
@@ -88,16 +85,14 @@ export class GetBalancesHandler
       }
     }
 
-    return {
-      balances: Object.fromEntries(
-        [...balancesMap.entries()].map(([asset, amount]) => [
-          asset,
-          {
-            amount: amount.toString(),
-            unit: amount.unit,
-          },
-        ]),
-      ),
-    };
+    return Object.fromEntries(
+      [...balancesMap.entries()].map(([asset, amount]) => [
+        asset,
+        {
+          amount: amount.toString(),
+          unit: amount.unit,
+        },
+      ]),
+    );
   }
 }

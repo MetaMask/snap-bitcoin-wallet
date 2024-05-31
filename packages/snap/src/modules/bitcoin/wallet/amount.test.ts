@@ -1,3 +1,4 @@
+import { Chain, Config } from '../../../config';
 import { satsToBtc } from '../utils';
 import { BtcAmount } from './amount';
 
@@ -19,6 +20,7 @@ describe('BtcAmount', () => {
       const val = new BtcAmount(1);
       expect(val.toJson()).toStrictEqual({
         value: val.toString(true),
+        unit: Config.unit[Chain.Bitcoin],
         rawValue: val.value,
       });
     });

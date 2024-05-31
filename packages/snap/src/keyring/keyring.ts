@@ -209,13 +209,18 @@ export class BtcKeyring implements Keyring {
     id: string,
     assets: CaipAssetType[],
   ): Promise<Record<CaipAssetType, Balance>> {
-    const walletData = await this.getAndVerifyWallet(id);
+    try {
+      const walletData = await this.getAndVerifyWallet(id);
 
-    return (await GetBalancesHandler.getInstance(walletData).execute({
-      scope: walletData.scope,
-      account: walletData.account.address,
-      assets,
-    })) as unknown as Record<CaipAssetType, Balance>;
+      return (await GetBalancesHandler.getInstance(walletData).execute({
+        scope: walletData.scope,
+        assets,
+      })) as unknown as Record<CaipAssetType, Balance>;
+    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      logger.info(`[BtcKeyring.getAccountBalances] Error: ${error.message}`);
+      throw new BtcKeyringError(error);
+    }
   }
 
   protected async getAndVerifyWallet(id: string) {

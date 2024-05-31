@@ -125,11 +125,9 @@ describe('GetBalancesHandler', () => {
       };
 
       const expected = {
-        balances: {
-          [BtcAsset.TBtc]: {
-            amount: '0.00000100',
-            unit: Config.unit[Config.chain],
-          },
+        [BtcAsset.TBtc]: {
+          amount: '0.00000100',
+          unit: Config.unit[Config.chain],
         },
       };
 
@@ -137,7 +135,6 @@ describe('GetBalancesHandler', () => {
 
       const result = await GetBalancesHandler.getInstance(walletData).execute({
         scope: walletData.scope,
-        account: walletData.account.id,
         assets: [BtcAsset.TBtc],
       });
 
@@ -171,11 +168,9 @@ describe('GetBalancesHandler', () => {
       };
 
       const expected = {
-        balances: {
-          [BtcAsset.TBtc]: {
-            amount: '0.00000100',
-            unit: Config.unit[Config.chain],
-          },
+        [BtcAsset.TBtc]: {
+          amount: '0.00000100',
+          unit: Config.unit[Config.chain],
         },
       };
 
@@ -183,7 +178,6 @@ describe('GetBalancesHandler', () => {
 
       const result = await GetBalancesHandler.getInstance(walletData).execute({
         scope: Network.Testnet,
-        account: walletData.account.id,
         assets: [BtcAsset.TBtc],
       });
 
@@ -197,9 +191,8 @@ describe('GetBalancesHandler', () => {
       const { walletData } = await createMockAccount(network, caip2Network);
 
       await expect(
-        GetBalancesHandler.getInstance().execute({
+        GetBalancesHandler.getInstance(walletData).execute({
           scope: Network.Testnet,
-          account: walletData.account.id,
           assets: ['some-asset'],
         }),
       ).rejects.toThrow(InvalidParamsError);
