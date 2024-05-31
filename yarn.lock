@@ -3051,15 +3051,15 @@ __metadata:
   linkType: hard
 
 "@metamask/phishing-controller@npm:^9.0.1":
-  version: 9.0.2
-  resolution: "@metamask/phishing-controller@npm:9.0.2"
+  version: 9.0.3
+  resolution: "@metamask/phishing-controller@npm:9.0.3"
   dependencies:
     "@metamask/base-controller": ^5.0.2
     "@metamask/controller-utils": ^9.1.0
     "@types/punycode": ^2.1.0
     eth-phishing-detect: ^1.2.0
     punycode: ^2.1.1
-  checksum: 546838ca49a5e98eefc88c86ac703bf0b41d75496752b3eda4048abcc61bab8ff4b9fed3f5c45aaa89b708eabf2ce442e041f2b42c4acdc8e85d856085311aad
+  checksum: 7f68df1124b96e20dd1bc2359eb6399063933ae66ab87a99e90b46977c4bf2b59d6552cb063629bf7b778ef8e2d4a243dd22a9e064b70bf44580cd55c0f248e1
   languageName: node
   linkType: hard
 
