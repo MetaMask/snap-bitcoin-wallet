@@ -2,6 +2,7 @@ import type { BIP32Interface } from 'bip32';
 import { type Network } from 'bitcoinjs-lib';
 
 import type { TransactionIntent } from '../../chain';
+import { logger } from '../../libs/logger/logger';
 import { bufferToString, compactError, hexToBuffer } from '../../utils';
 import type { IAccountSigner, ITransactionInfo, IWallet } from '../../wallet';
 import { ScriptType } from '../constants';
@@ -96,10 +97,26 @@ export class BtcWallet implements IWallet {
       };
     });
 
+    logger.info(
+      `[BtcWallet.createTransaction] Incoming inputs: ${JSON.stringify(
+        options.utxos,
+        null,
+        2,
+      )}, Incoming outputs: ${JSON.stringify(spendTos, null, 2)}`,
+    );
+
     const { inputs, outputs, fee } = coinSelectService.selectCoins(
       options.utxos,
       spendTos,
       scriptOutput,
+    );
+
+    logger.info(
+      `[BtcWallet.createTransaction] Selected inputs: ${JSON.stringify(
+        inputs,
+        null,
+        2,
+      )}, Selected outputs: ${JSON.stringify(outputs, null, 2)}`,
     );
 
     const info = new BtcTransactionInfo();
@@ -113,6 +130,9 @@ export class BtcWallet implements IWallet {
       if (output.address === undefined) {
         // discard change output if it is dust and add to fees
         if (isDust(output.value, scriptType)) {
+          logger.info(
+            '[BtcWallet.createTransaction] Change is too small, adding to fees',
+          );
           info.txnFee.value += output.value;
           continue;
         }

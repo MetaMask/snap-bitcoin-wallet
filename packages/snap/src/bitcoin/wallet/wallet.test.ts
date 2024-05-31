@@ -11,6 +11,7 @@ import { BtcTransactionInfo } from './transactionInfo';
 import { BtcWallet } from './wallet';
 
 jest.mock('../../libs/snap/helpers');
+jest.mock('../../libs/logger/logger');
 
 describe('BtcWallet', () => {
   const createMockDeriver = (network) => {

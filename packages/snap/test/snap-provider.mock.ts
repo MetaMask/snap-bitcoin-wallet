@@ -1,4 +1,4 @@
-export type Wallet = {
+export type SnapProvider = {
   registerRpcMessageHandler: (fn) => unknown;
   request(options: {
     method: string;
@@ -6,13 +6,14 @@ export type Wallet = {
   }): unknown;
 };
 
-export class WalletMock implements Wallet {
+export class MockSnapProvider implements SnapProvider {
   public readonly registerRpcMessageHandler = jest.fn();
 
   public readonly requestStub = jest.fn();
   /* eslint-disable */
   public readonly rpcStubs = {
     snap_getBip32Entropy: jest.fn(),
+    snap_getBip44Entropy: jest.fn(),
     snap_dialog: jest.fn(),
     snap_manageState: jest.fn(),
   };

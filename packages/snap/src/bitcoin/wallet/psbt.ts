@@ -10,12 +10,10 @@ import type { IAccountSigner } from '../../wallet';
 import { MaxStandardTxWeight } from '../constants';
 import { PsbtServiceError } from './exceptions';
 import type { SpendTo, Utxo } from './types';
-// import { PsbtData } from "./psbt-data";
 
 const ECPair = ECPairFactory(ecc);
 
 export class PsbtService {
-  // protected readonly psbtData: PsbtData;
   protected readonly network: Network;
 
   protected readonly _psbt: Psbt;
@@ -30,17 +28,11 @@ export class PsbtService {
     } else {
       this._psbt = psbt;
     }
-    // this.validator = new PsbtValidator(this._psbt, network);
-    // this._psbtData = new PsbtData(this._psbt, network);
   }
 
   static fromBase64(network: Network, base64Psbt: string): PsbtService {
     const psbt = Psbt.fromBase64(base64Psbt, { network });
     const service = new PsbtService(network, psbt);
-
-    // To make sure the psbt is created from the PSBT creator's server (The Snap)
-    // service.validator.validate();
-
     return service;
   }
 
