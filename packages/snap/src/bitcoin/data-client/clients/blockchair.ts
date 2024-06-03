@@ -268,16 +268,16 @@ export class BlockChairClient implements IReadDataClient, IWriteDataClient {
     return response.json() as unknown as Resp;
   }
 
-  protected async getTxnDashboardData(
-    txnHash: string,
+  protected async getTxDashboardData(
+    txHash: string,
   ): Promise<GetTransactionDashboardDataResponse> {
     try {
-      logger.info(`[BlockChairClient.getTxnDashboardData] start:`);
+      logger.info(`[BlockChairClient.getTxDashboardData] start:`);
       const response = await this.get<GetTransactionDashboardDataResponse>(
-        `/dashboards/transaction/${txnHash}`,
+        `/dashboards/transaction/${txHash}`,
       );
       logger.info(
-        `[BlockChairClient.getTxnDashboardData] response: ${JSON.stringify(
+        `[BlockChairClient.getTxDashboardData] response: ${JSON.stringify(
           response,
         )}`,
       );
@@ -342,7 +342,7 @@ export class BlockChairClient implements IReadDataClient, IWriteDataClient {
         response.data[address].utxo.forEach((utxo) => {
           data.push({
             block: utxo.block_id,
-            txnHash: utxo.transaction_hash,
+            txHash: utxo.transaction_hash,
             index: utxo.index,
             value: utxo.value,
           });
@@ -397,17 +397,17 @@ export class BlockChairClient implements IReadDataClient, IWriteDataClient {
     }
   }
 
-  async getTransactionStatus(txnHash: string): Promise<TransactionStatusData> {
+  async getTransactionStatus(txHash: string): Promise<TransactionStatusData> {
     try {
-      const response = await this.getTxnDashboardData(txnHash);
+      const response = await this.getTxDashboardData(txHash);
 
       let status = TransactionStatus.Pending;
 
       if (
         typeof response.data === 'object' &&
-        Object.prototype.hasOwnProperty.call(response.data, txnHash)
+        Object.prototype.hasOwnProperty.call(response.data, txHash)
       ) {
-        const isInMempool = response.data[txnHash].transaction.block_id === -1;
+        const isInMempool = response.data[txHash].transaction.block_id === -1;
 
         status = isInMempool
           ? TransactionStatus.Pending

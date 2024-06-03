@@ -153,7 +153,7 @@ describe('BlockStreamClient', () => {
       const mockResponse = generateBlockStreamGetUtxosResp(100);
       const expectedResult = mockResponse.map((utxo) => ({
         block: utxo.status.block_height,
-        txnHash: utxo.txid,
+        txHash: utxo.txid,
         index: utxo.vout,
         value: utxo.value,
       }));
@@ -183,7 +183,7 @@ describe('BlockStreamClient', () => {
       );
       const expectedResult = combinedResponse.map((utxo) => ({
         block: utxo.status.block_height,
-        txnHash: utxo.txid,
+        txHash: utxo.txid,
         index: utxo.vout,
         value: utxo.value,
       }));
@@ -213,7 +213,7 @@ describe('BlockStreamClient', () => {
       );
       const expectedResult = mockConfirmedResponse.map((utxo) => ({
         block: utxo.status.block_height,
-        txnHash: utxo.txid,
+        txHash: utxo.txid,
         index: utxo.vout,
         value: utxo.value,
       }));
@@ -242,23 +242,23 @@ describe('BlockStreamClient', () => {
   });
 
   describe('getTransactionStatus', () => {
-    const txnhash =
+    const txHash =
       '1cd985fc26a9b27d0b574739b908d5fe78e2297b24323a7f8c04526648dc9c08';
 
     it('returns correct result for confirmed transaction', async () => {
       const { fetchSpy } = createMockFetch();
-      const mockTxnStatusResponse = generateBlockStreamTransactionStatusResp(
+      const mockTxStatusResponse = generateBlockStreamTransactionStatusResp(
         200000,
         true,
       );
 
       fetchSpy.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockTxnStatusResponse),
+        json: jest.fn().mockResolvedValue(mockTxStatusResponse),
       });
 
       const instance = new BlockStreamClient({ network: networks.testnet });
-      const result = await instance.getTransactionStatus(txnhash);
+      const result = await instance.getTransactionStatus(txHash);
 
       expect(result).toStrictEqual({
         status: TransactionStatus.Confirmed,
@@ -268,18 +268,18 @@ describe('BlockStreamClient', () => {
 
     it('returns correct result for pending transaction', async () => {
       const { fetchSpy } = createMockFetch();
-      const mockTxnStatusResponse = generateBlockStreamTransactionStatusResp(
+      const mockTxStatusResponse = generateBlockStreamTransactionStatusResp(
         200000,
         false,
       );
 
       fetchSpy.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockTxnStatusResponse),
+        json: jest.fn().mockResolvedValue(mockTxStatusResponse),
       });
 
       const instance = new BlockStreamClient({ network: networks.testnet });
-      const result = await instance.getTransactionStatus(txnhash);
+      const result = await instance.getTransactionStatus(txHash);
 
       expect(result).toStrictEqual({
         status: TransactionStatus.Pending,
@@ -297,7 +297,7 @@ describe('BlockStreamClient', () => {
 
       const instance = new BlockStreamClient({ network: networks.testnet });
 
-      await expect(instance.getTransactionStatus(txnhash)).rejects.toThrow(
+      await expect(instance.getTransactionStatus(txHash)).rejects.toThrow(
         DataClientError,
       );
     });

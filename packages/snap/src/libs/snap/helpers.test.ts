@@ -74,7 +74,7 @@ describe('SnapHelper', () => {
         state: {
           transaction: [
             {
-              txnHash: 'hash',
+              txHash: 'hash',
               chainId: 'chainId',
             },
           ],
@@ -102,7 +102,7 @@ describe('SnapHelper', () => {
         state: {
           transaction: [
             {
-              txnHash: 'hash',
+              txHash: 'hash',
               chainId: 'chainId',
             },
           ],

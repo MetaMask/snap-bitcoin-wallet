@@ -16,11 +16,11 @@ import {
   array,
   boolean,
   refine,
+  optional,
 } from 'superstruct';
 
 import { btcToSats } from '../bitcoin/utils';
-import { TransactionValidationError } from '../bitcoin/wallet';
-import { type TransactionIntent } from '../chain';
+import { TxValidationError } from '../bitcoin/wallet';
 import { Factory } from '../factory';
 import { type Wallet as WalletData } from '../keyring';
 import { logger } from '../libs/logger/logger';
@@ -28,7 +28,7 @@ import { SnapRpcHandlerRequestStruct } from '../libs/rpc';
 import type { IStaticSnapRpcHandler } from '../libs/rpc';
 import { SnapHelper } from '../libs/snap';
 import type { StaticImplements } from '../types/static';
-import type { IAccount, ITransactionInfo, IWallet } from '../wallet';
+import type { ITxInfo } from '../wallet';
 import { KeyringRpcHandler } from './keyring-rpc';
 
 export type SendManyParams = Infer<typeof SendManyHandler.requestStruct>;
@@ -54,9 +54,9 @@ export const TransactionAmountStuct = refine(
   },
 );
 
-export type TxnJson = {
+export type TxJson = {
   feeRate: string;
-  txnFee: string;
+  txFee: string;
   total: string;
   sender: string;
   recipients: {
@@ -67,6 +67,7 @@ export type TxnJson = {
   changes: {
     address: string;
     value: string;
+    explorerUrl: string;
   }[];
 };
 
@@ -75,14 +76,6 @@ export class SendManyHandler
   implements StaticImplements<IStaticSnapRpcHandler, typeof SendManyHandler>
 {
   protected override isThrowValidationError = true;
-
-  walletData: WalletData;
-
-  wallet: IWallet;
-
-  walletAccount: IAccount;
-
-  transactionIntent: TransactionIntent;
 
   constructor(walletData: WalletData) {
     super();
@@ -105,13 +98,8 @@ export class SendManyHandler
   static override get responseStruct() {
     return object({
       txId: string(),
+      txHash: optional(string()),
     });
-  }
-
-  protected override async preExecute(params: SendManyParams): Promise<void> {
-    await super.preExecute(params);
-    const transactionIntent = this.formatTxnIndents(params);
-    this.transactionIntent = transactionIntent;
   }
 
   async handleRequest(params: SendManyParams): Promise<SendManyResponse> {
@@ -131,14 +119,20 @@ export class SendManyHandler
         1,
       );
 
-      const metadata = await chainApi.getDataForTransaction(
-        this.walletAccount.address,
-        this.transactionIntent,
+      const recipients = Object.entries(params.amounts).map(
+        ([address, value]) => ({
+          address,
+          value: parseInt(btcToSats(parseFloat(value)), 10),
+        }),
       );
 
-      const { txn, txnInfo } = await this.wallet.createTransaction(
+      const metadata = await chainApi.getDataForTransaction(
+        this.walletAccount.address,
+      );
+
+      const { tx, txInfo } = await this.wallet.createTransaction(
         this.walletAccount,
-        this.transactionIntent,
+        recipients,
         {
           utxos: metadata.data.utxos,
           fee,
@@ -147,22 +141,23 @@ export class SendManyHandler
         },
       );
 
-      if (!(await this.getTxnConsensus(txnInfo, params.comment))) {
+      if (!(await this.getTxConsensus(txInfo, params.comment))) {
         throw new UserRejectedRequestError() as unknown as Error;
       }
 
-      const txnHash = await this.wallet.signTransaction(
+      const txHash = await this.wallet.signTransaction(
         this.walletAccount.signer,
-        txn,
+        tx,
       );
 
       if (dryrun) {
         return {
-          txId: txnHash,
+          txId: '',
+          txHash,
         };
       }
 
-      const result = await chainApi.broadcastTransaction(txnHash);
+      const result = await chainApi.broadcastTransaction(txHash);
 
       return {
         txId: result.transactionId,
@@ -170,7 +165,7 @@ export class SendManyHandler
     } catch (error) {
       logger.error('Failed to send the transaction', error);
       if (
-        error instanceof TransactionValidationError ||
+        error instanceof TxValidationError ||
         error instanceof UserRejectedRequestError
       ) {
         throw error as unknown as Error;
@@ -179,20 +174,8 @@ export class SendManyHandler
     }
   }
 
-  protected formatTxnIndents(params: SendManyParams): TransactionIntent {
-    const { amounts, subtractFeeFrom, replaceable } = params;
-    return {
-      amounts: Object.entries(amounts).reduce((acc, [address, amount]) => {
-        acc[address] = parseInt(btcToSats(parseFloat(amount)), 10);
-        return acc;
-      }, {}),
-      subtractFeeFrom,
-      replaceable,
-    };
-  }
-
-  protected async getTxnConsensus(
-    txnInfo: ITransactionInfo,
+  protected async getTxConsensus(
+    txInfo: ITxInfo,
     comment: string,
   ): Promise<boolean> {
     const header = `Send Request`;
@@ -205,14 +188,14 @@ export class SendManyHandler
     const totalLabel = `Total`;
 
     const components: Component[] = [heading(header), text(intro), divider()];
-    const info = txnInfo.toJson<TxnJson>();
+    const info = txInfo.toJson<TxJson>();
 
     const isMoreThanOneRecipient =
       info.recipients.length + info.changes.length > 1;
 
     let i = 0;
 
-    const addReceiptentsToComponents = (data: {
+    const addReciptentsToComponents = (data: {
       address: string;
       explorerUrl: string;
       value: string;
@@ -230,14 +213,14 @@ export class SendManyHandler
       i += 1;
     };
 
-    info.recipients.forEach(addReceiptentsToComponents);
-    info.changes.forEach(addReceiptentsToComponents);
+    info.recipients.forEach(addReciptentsToComponents);
+    info.changes.forEach(addReciptentsToComponents);
 
     if (comment.trim().length > 0) {
       components.push(row(commentLabel, text(comment.trim())));
     }
 
-    components.push(row(networkFeeLabel, text(`${info.txnFee}`, false)));
+    components.push(row(networkFeeLabel, text(`${info.txFee}`, false)));
 
     components.push(row(networkFeeRateLabel, text(`${info.feeRate}`, false)));
 

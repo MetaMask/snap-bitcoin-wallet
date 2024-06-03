@@ -6,7 +6,7 @@ export class WalletFactoryError extends CustomError {}
 
 export class WalletError extends CustomError {}
 
-export class TransactionValidationError extends WalletError {}
+export class TxValidationError extends WalletError {}
 
 export class PsbtServiceError extends CustomError {}
 

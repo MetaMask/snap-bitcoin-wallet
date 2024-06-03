@@ -1,18 +1,26 @@
 import type { Json } from '@metamask/snaps-sdk';
 import type { Buffer } from 'buffer';
 
-import type { TransactionIntent } from './chain';
+export type Recipient = {
+  address: string;
+  value: number;
+};
+
+export type TxCreationResult = {
+  tx: string;
+  txInfo: ITxInfo;
+};
 
 /**
  * An interface that defines a `toJson` method for getting a JSON representation of a transaction info object.
  */
-export type ITransactionInfo = {
+export type ITxInfo = {
   /**
    * Returns a JSON representation of the transaction info object.
    *
    * @returns The JSON representation of the transaction info object.
    */
-  toJson<TxnInfoJson extends Record<string, Json>>(): TxnInfoJson;
+  toJson<TxInfoJson extends Record<string, Json>>(): TxInfoJson;
 };
 
 /**
@@ -20,24 +28,17 @@ export type ITransactionInfo = {
  */
 export type IAddress = {
   /**
+   * The string value of the address.
+   */
+  value: string;
+
+  /**
    * Returns the string representation of the address.
    *
    * @param isShorten - A boolean indicating whether the address should be shortened.
    * @returns The string representation of the address.
    */
   toString(isShorten?: boolean): string;
-
-  /**
-   * The URL of the explorer for this address.
-   */
-  explorerUrl: string;
-
-  /**
-   * Returns a JSON representation of the address.
-   *
-   * @returns The JSON representation of the address.
-   */
-  toJson(): Record<string, Json>;
 };
 
 /**
@@ -61,13 +62,6 @@ export type IAmount = {
    * @returns The string representation of the amount.
    */
   toString(withUnit?: boolean): string;
-
-  /**
-   * Returns a JSON representation of the amount.
-   *
-   * @returns The JSON representation of the amount.
-   */
-  toJson(): Record<string, Json>;
 };
 
 /**
@@ -121,27 +115,24 @@ export type IWallet = {
    * Signs a transaction by the given encoded transaction string.
    *
    * @param signer - The `IAccountSigner` object to sign the transaction.
-   * @param txn - The encoded transaction string to convert back to a transaction.
+   * @param transaction - The encoded transaction string to convert back to a transaction.
    * @returns A promise that resolves to a string of the signed transaction.
    */
-  signTransaction(signer: IAccountSigner, txn: string): Promise<string>;
+  signTransaction(signer: IAccountSigner, transaction: string): Promise<string>;
 
   /**
    * Creates a transaction using the given account, transaction intent, and options.
    *
    * @param account - The `IAccount` object to create the transaction.
-   * @param txnIntent - The transaction intent object containing the transaction inputs and outputs.
+   * @param recipients - The transaction recipients.
    * @param options - The options to use when creating the transaction.
    * @returns A promise that resolves to an object containing the transaction hash and transaction info.
    */
   createTransaction(
     account: IAccount,
-    txnIntent: TransactionIntent,
+    recipients: Recipient[],
     options: Record<string, Json>,
-  ): Promise<{
-    txn: string;
-    txnInfo: ITransactionInfo;
-  }>;
+  ): Promise<TxCreationResult>;
 };
 
 /**

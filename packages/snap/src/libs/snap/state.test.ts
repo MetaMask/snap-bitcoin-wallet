@@ -8,7 +8,7 @@ import { SnapStateManager } from './state';
 jest.mock('../logger/logger');
 
 type MockTransactionDetail = {
-  txnHash: string;
+  txHash: string;
   cnt: number;
 };
 
@@ -24,7 +24,7 @@ type MockState = {
 };
 
 type MockExecuteTransactionInput = {
-  txnHash: string;
+  txHash: string;
   id: string;
   cnt: number;
 };
@@ -113,12 +113,12 @@ describe('SnapStateManager', () => {
       ) {
         state.transaction.push(data.id);
         state.trasansactionDetails[data.id] = {
-          txnHash: data.txnHash,
+          txHash: data.txHash,
           cnt: data.cnt,
         };
       } else {
         state.trasansactionDetails[data.id] = {
-          txnHash: data.txnHash,
+          txHash: data.txHash,
           cnt: state.trasansactionDetails[data.id].cnt + data.cnt,
         };
       }
@@ -180,7 +180,7 @@ describe('SnapStateManager', () => {
       const state = {
         transaction: [
           {
-            txnHash: 'hash',
+            txHash: 'hash',
             chainId: 'chainId',
           },
         ],
@@ -202,13 +202,13 @@ describe('SnapStateManager', () => {
         state: {
           transaction: [
             {
-              txnHash: 'hash',
+              txHash: 'hash',
               chainId: 'chainId',
             },
           ],
         },
         data: {
-          txnHash: 'hash2',
+          txHash: 'hash2',
           chainId: 'chainId2',
         },
       };
@@ -236,7 +236,7 @@ describe('SnapStateManager', () => {
         transaction: ['id'],
         trasansactionDetails: {
           id: {
-            txnHash: 'hash',
+            txHash: 'hash',
             cnt: 4,
           },
         },
@@ -254,7 +254,7 @@ describe('SnapStateManager', () => {
       const promiseArr = [
         executeTransationFn(
           {
-            txnHash: 'hash-final',
+            txHash: 'hash-final',
             id: 'id',
             cnt: 2,
           },
@@ -262,7 +262,7 @@ describe('SnapStateManager', () => {
         ),
         executeTransationFn(
           {
-            txnHash: 'hash2',
+            txHash: 'hash2',
             id: 'id2',
             cnt: 5,
           },
@@ -275,11 +275,11 @@ describe('SnapStateManager', () => {
 
       expect(initState.trasansactionDetails).toStrictEqual({
         id: {
-          txnHash: 'hash-final',
+          txHash: 'hash-final',
           cnt: 6,
         },
         id2: {
-          txnHash: 'hash2',
+          txHash: 'hash2',
           cnt: 5,
         },
       });
@@ -293,7 +293,7 @@ describe('SnapStateManager', () => {
         transaction: ['id'],
         trasansactionDetails: {
           id: {
-            txnHash: 'hash',
+            txHash: 'hash',
             cnt: 4,
           },
         },
@@ -308,7 +308,7 @@ describe('SnapStateManager', () => {
       const promiseArr = [
         executeTransationFn(
           {
-            txnHash: 'hash4',
+            txHash: 'hash4',
             id: 'id',
             cnt: 1,
           },
@@ -316,7 +316,7 @@ describe('SnapStateManager', () => {
         ),
         executeTransationFn(
           {
-            txnHash: 'hash-final',
+            txHash: 'hash-final',
             id: 'id',
             cnt: 2,
           },
@@ -326,7 +326,7 @@ describe('SnapStateManager', () => {
         ),
         executeTransationFn(
           {
-            txnHash: 'hash2',
+            txHash: 'hash2',
             id: 'id2',
             cnt: 5,
           },
@@ -339,11 +339,11 @@ describe('SnapStateManager', () => {
       expect(initState.transaction).toStrictEqual(['id', 'id2']);
       expect(initState.trasansactionDetails).toStrictEqual({
         id: {
-          txnHash: 'hash4',
+          txHash: 'hash4',
           cnt: 5,
         },
         id2: {
-          txnHash: 'hash2',
+          txHash: 'hash2',
           cnt: 5,
         },
       });
@@ -357,7 +357,7 @@ describe('SnapStateManager', () => {
         transaction: ['id'],
         trasansactionDetails: {
           id: {
-            txnHash: 'hash',
+            txHash: 'hash',
             cnt: 4,
           },
         },
@@ -373,7 +373,7 @@ describe('SnapStateManager', () => {
       try {
         await executeTransationFn(
           {
-            txnHash: 'hash-final',
+            txHash: 'hash-final',
             id: 'id',
             cnt: 2,
           },
@@ -389,7 +389,7 @@ describe('SnapStateManager', () => {
         expect(setStateDataSpy).toHaveBeenCalledTimes(0);
         expect(initState.trasansactionDetails).toStrictEqual({
           id: {
-            txnHash: 'hash',
+            txHash: 'hash',
             cnt: 4,
           },
         });
@@ -402,7 +402,7 @@ describe('SnapStateManager', () => {
         transaction: ['id'],
         trasansactionDetails: {
           id: {
-            txnHash: 'hash',
+            txHash: 'hash',
             cnt: 4,
           },
         },
@@ -423,7 +423,7 @@ describe('SnapStateManager', () => {
       const promiseArr = [
         executeTransationFn(
           {
-            txnHash: 'hash-final',
+            txHash: 'hash-final',
             id: 'id',
             cnt: 2,
           },
@@ -433,7 +433,7 @@ describe('SnapStateManager', () => {
         ),
         executeTransationFn(
           {
-            txnHash: 'hash-final',
+            txHash: 'hash-final',
             id: 'id',
             cnt: 2,
           },
@@ -447,7 +447,7 @@ describe('SnapStateManager', () => {
       expect(initState.transaction).toStrictEqual(['id']);
       expect(initState.trasansactionDetails).toStrictEqual({
         id: {
-          txnHash: 'hash-final',
+          txHash: 'hash-final',
           cnt: 6,
         },
       });
@@ -467,7 +467,7 @@ describe('SnapStateManager', () => {
       const promiseArr = [
         executeTransationFn(
           {
-            txnHash: 'hash',
+            txHash: 'hash',
             id: 'id',
             cnt: 2,
           },
@@ -475,7 +475,7 @@ describe('SnapStateManager', () => {
         ),
         executeTransationFn(
           {
-            txnHash: 'hash2',
+            txHash: 'hash2',
             id: 'id2',
             cnt: 5,
           },
@@ -483,7 +483,7 @@ describe('SnapStateManager', () => {
         ),
         executeFn(
           {
-            txnHash: 'hash32',
+            txHash: 'hash32',
             id: 'id3',
             cnt: 8,
           },
@@ -491,7 +491,7 @@ describe('SnapStateManager', () => {
         ),
         executeTransationFn(
           {
-            txnHash: 'hash-updated',
+            txHash: 'hash-updated',
             id: 'id',
             cnt: 1,
           },
@@ -499,7 +499,7 @@ describe('SnapStateManager', () => {
         ),
         executeTransationFn(
           {
-            txnHash: 'hash3',
+            txHash: 'hash3',
             id: 'id3',
             cnt: 2,
           },
@@ -507,7 +507,7 @@ describe('SnapStateManager', () => {
         ),
         executeTransationFn(
           {
-            txnHash: 'hash-updated-final',
+            txHash: 'hash-updated-final',
             id: 'id',
             cnt: 3,
           },
@@ -520,15 +520,15 @@ describe('SnapStateManager', () => {
       expect(initState.transaction).toStrictEqual(['id', 'id2', 'id3']);
       expect(initState.trasansactionDetails).toStrictEqual({
         id: {
-          txnHash: 'hash-updated-final',
+          txHash: 'hash-updated-final',
           cnt: 6,
         },
         id2: {
-          txnHash: 'hash2',
+          txHash: 'hash2',
           cnt: 5,
         },
         id3: {
-          txnHash: 'hash3',
+          txHash: 'hash3',
           cnt: 10,
         },
       });
@@ -554,7 +554,7 @@ describe('SnapStateManager', () => {
       await expect(
         executeTransationFn(
           {
-            txnHash: 'hash-final',
+            txHash: 'hash-final',
             id: 'id',
             cnt: 2,
           },
@@ -590,7 +590,7 @@ describe('SnapStateManager', () => {
       await expect(
         executeTransationFn(
           {
-            txnHash: 'hash-final',
+            txHash: 'hash-final',
             id: 'id',
             cnt: 2,
           },
