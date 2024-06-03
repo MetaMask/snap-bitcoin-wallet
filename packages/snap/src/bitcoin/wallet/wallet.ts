@@ -1,25 +1,28 @@
 import type { BIP32Interface } from 'bip32';
 import { type Network } from 'bitcoinjs-lib';
 
-import type { TransactionIntent } from '../../chain';
 import { logger } from '../../libs/logger/logger';
-import { bufferToString, compactError, hexToBuffer } from '../../utils';
-import type { IAccountSigner, ITransactionInfo, IWallet } from '../../wallet';
+import { bufferToString, compactError } from '../../utils';
+import type {
+  IAccountSigner,
+  IWallet,
+  Recipient,
+  TxCreationResult,
+} from '../../wallet';
 import { ScriptType } from '../constants';
 import { isDust } from '../utils';
 import { P2WPKHAccount, P2SHP2WPKHAccount } from './account';
 import { BtcAddress } from './address';
-import { BtcAmount } from './amount';
 import { CoinSelectService } from './coin-select';
-import { WalletError, TransactionValidationError } from './exceptions';
+import { WalletError, TxValidationError } from './exceptions';
 import { PsbtService } from './psbt';
 import { AccountSigner } from './signer';
-import { BtcTransactionInfo } from './transactionInfo';
+import { BtcTxInfo } from './transaction-info';
+import { TxInput } from './transaction-input';
 import type {
   IStaticBtcAccount,
   IBtcAccountDeriver,
   IBtcAccount,
-  SpendTo,
   CreateTransactionOptions,
 } from './types';
 
@@ -72,12 +75,9 @@ export class BtcWallet implements IWallet {
 
   async createTransaction(
     account: IBtcAccount,
-    txn: TransactionIntent,
+    recipients: Recipient[],
     options: CreateTransactionOptions,
-  ): Promise<{
-    txn: string;
-    txnInfo: ITransactionInfo;
-  }> {
+  ): Promise<TxCreationResult> {
     const scriptOutput = account.payment.output;
     const { scriptType } = account;
 
@@ -90,94 +90,59 @@ export class BtcWallet implements IWallet {
     const feeRate = Math.max(1, options.fee);
 
     const coinSelectService = new CoinSelectService(feeRate);
-    const spendTos = Object.entries(txn.amounts).map(([address, value]) => {
-      return {
-        address,
-        value,
-      };
-    });
 
-    logger.info(
-      `[BtcWallet.createTransaction] Incoming inputs: ${JSON.stringify(
-        options.utxos,
-        null,
-        2,
-      )}, Incoming outputs: ${JSON.stringify(spendTos, null, 2)}`,
+    const inputs = options.utxos.map((utxo) => new TxInput(utxo, scriptOutput));
+
+    const selectionResult = coinSelectService.selectCoins(
+      inputs,
+      recipients,
+      account,
     );
 
-    const { inputs, outputs, fee } = coinSelectService.selectCoins(
-      options.utxos,
-      spendTos,
-      scriptOutput,
-    );
-
-    logger.info(
-      `[BtcWallet.createTransaction] Selected inputs: ${JSON.stringify(
-        inputs,
-        null,
-        2,
-      )}, Selected outputs: ${JSON.stringify(outputs, null, 2)}`,
-    );
-
-    const info = new BtcTransactionInfo();
-    info.feeRate.value = feeRate;
-    info.txnFee.value = fee;
-    info.sender = new BtcAddress(account.address, this.network);
-
-    const psbtOutputs: SpendTo[] = [];
-
-    for (const output of outputs) {
-      if (output.address === undefined) {
-        // discard change output if it is dust and add to fees
-        if (isDust(output.value, scriptType)) {
-          logger.info(
-            '[BtcWallet.createTransaction] Change is too small, adding to fees',
-          );
-          info.txnFee.value += output.value;
-          continue;
-        }
-        info.changes.set(
-          new BtcAddress(account.address, this.network),
-          new BtcAmount(output.value),
-        );
-      } else {
-        // dust outputs is forbidden
-        if (isDust(output.value, scriptType)) {
-          throw new TransactionValidationError('Transaction amount too small');
-        }
-        info.recipients.set(
-          new BtcAddress(output.address, this.network),
-          new BtcAmount(output.value),
-        );
+    // TODO: add support of subtractFeeFrom, and throw error if output is too small after subtraction
+    for (const output of selectionResult.selectedOutputs) {
+      if (isDust(output.value, scriptType)) {
+        throw new TxValidationError('Transaction amount too small');
       }
+    }
 
-      psbtOutputs.push({
-        address: output.address ?? account.address,
-        value: output.value,
-      });
+    const psbtOutputs = selectionResult.selectedOutputs;
+    const psbtInputs = selectionResult.selectedInputs;
+
+    const info = new BtcTxInfo(
+      new BtcAddress(account.address),
+      selectionResult.selectedOutputs,
+      selectionResult.fee,
+      feeRate,
+      this.network,
+    );
+
+    if (selectionResult.change && selectionResult.change.value > 0) {
+      if (isDust(selectionResult.change.value, scriptType)) {
+        logger.warn(
+          '[BtcWallet.createTransaction] Change is too small, adding to fees',
+        );
+        info.bumpFee(selectionResult.change.value);
+      } else {
+        info.change = selectionResult.change;
+        psbtOutputs.push(selectionResult.change);
+      }
     }
 
     const psbtService = new PsbtService(this.network);
 
-    psbtService.addInputs(
-      inputs,
-      hexToBuffer(account.mfp, false),
-      hexToBuffer(account.pubkey, false),
-      scriptOutput,
-      account.hdPath,
-      options.replaceable,
-    );
+    psbtService.addInputs(psbtInputs, account, options.replaceable);
 
     psbtService.addOutputs(psbtOutputs);
 
     return {
-      txn: psbtService.toBase64(),
-      txnInfo: info,
+      tx: psbtService.toBase64(),
+      txInfo: info,
     };
   }
 
-  async signTransaction(signer: IAccountSigner, txn: string): Promise<string> {
-    const psbtService = PsbtService.fromBase64(this.network, txn);
+  async signTransaction(signer: IAccountSigner, tx: string): Promise<string> {
+    const psbtService = PsbtService.fromBase64(this.network, tx);
     await psbtService.signNVerify(signer);
     return psbtService.finalize();
   }

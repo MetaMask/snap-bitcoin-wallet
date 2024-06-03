@@ -231,7 +231,7 @@ describe('BlockChairClient', () => {
       const mockResponse = generateBlockChairGetUtxosResp(address, 10);
       const expectedResult = mockResponse.data[address].utxo.map((utxo) => ({
         block: utxo.block_id,
-        txnHash: utxo.transaction_hash,
+        txHash: utxo.transaction_hash,
         index: utxo.index,
         value: utxo.value,
       }));
@@ -268,7 +268,7 @@ describe('BlockChairClient', () => {
         expectedResult = expectedResult.concat(
           mockResponse.data[address].utxo.map((utxo) => ({
             block: utxo.block_id,
-            txnHash: utxo.transaction_hash,
+            txHash: utxo.transaction_hash,
             index: utxo.index,
             value: utxo.value,
           })),
@@ -361,13 +361,13 @@ describe('BlockChairClient', () => {
   });
 
   describe('getTransactionStatus', () => {
-    const txnhash =
+    const txHash =
       '1cd985fc26a9b27d0b574739b908d5fe78e2297b24323a7f8c04526648dc9c08';
 
     it('returns correct result for confirmed transaction', async () => {
       const { fetchSpy } = createMockFetch();
       const mockResponse = generateBlockChairTransactionDashboard(
-        txnhash,
+        txHash,
         200000,
         200002,
         true,
@@ -379,7 +379,7 @@ describe('BlockChairClient', () => {
       });
 
       const instance = new BlockChairClient({ network: networks.testnet });
-      const result = await instance.getTransactionStatus(txnhash);
+      const result = await instance.getTransactionStatus(txHash);
 
       expect(result).toStrictEqual({
         status: TransactionStatus.Confirmed,
@@ -389,7 +389,7 @@ describe('BlockChairClient', () => {
     it('returns correct result for pending transaction', async () => {
       const { fetchSpy } = createMockFetch();
       const mockResponse = generateBlockChairTransactionDashboard(
-        txnhash,
+        txHash,
         200000,
         200002,
         false,
@@ -401,7 +401,7 @@ describe('BlockChairClient', () => {
       });
 
       const instance = new BlockChairClient({ network: networks.testnet });
-      const result = await instance.getTransactionStatus(txnhash);
+      const result = await instance.getTransactionStatus(txHash);
 
       expect(result).toStrictEqual({
         status: TransactionStatus.Pending,
@@ -422,7 +422,7 @@ describe('BlockChairClient', () => {
       });
 
       const instance = new BlockChairClient({ network: networks.testnet });
-      const result = await instance.getTransactionStatus(txnhash);
+      const result = await instance.getTransactionStatus(txHash);
 
       expect(result).toStrictEqual({
         status: TransactionStatus.Pending,
@@ -439,7 +439,7 @@ describe('BlockChairClient', () => {
 
       const instance = new BlockChairClient({ network: networks.testnet });
 
-      await expect(instance.getTransactionStatus(txnhash)).rejects.toThrow(
+      await expect(instance.getTransactionStatus(txHash)).rejects.toThrow(
         DataClientError,
       );
     });

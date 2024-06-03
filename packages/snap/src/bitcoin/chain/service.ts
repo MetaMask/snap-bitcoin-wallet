@@ -93,9 +93,9 @@ export class BtcOnChainService implements IOnChainService {
     }
   }
 
-  async getTransactionStatus(txnHash: string) {
+  async getTransactionStatus(txHash: string) {
     try {
-      return await this.readClient.getTransactionStatus(txnHash);
+      return await this.readClient.getTransactionStatus(txHash);
     } catch (error) {
       throw new BtcOnChainServiceError(error);
     }

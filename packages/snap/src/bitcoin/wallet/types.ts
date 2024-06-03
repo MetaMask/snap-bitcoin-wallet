@@ -12,6 +12,7 @@ export type IBtcAccountDeriver = {
 export type IBtcAccount = IAccount & {
   payment: Payment;
   scriptType: ScriptType;
+  network: Network;
 };
 
 export type IStaticBtcAccount = {
@@ -39,25 +40,9 @@ export type CreateTransactionOptions = {
   replaceable: boolean;
 };
 
-export type SpendTo = {
-  address: string;
-  value: number;
-};
-
-export type SelectedOutput = {
-  address?: string;
-  value: number;
-};
-
-export type SelectedUtxos = {
-  inputs: Utxo[];
-  outputs: SelectedOutput[];
-  fee: number;
-};
-
 export type Utxo = {
   block: number;
-  txnHash: string;
+  txHash: string;
   index: number;
   value: number;
 };

@@ -86,10 +86,10 @@ export type IOnChainService = {
   /**
    * Gets the status of a transaction with the given transaction hash.
    *
-   * @param txnHash - The transaction hash of the transaction to get the status of.
+   * @param txHash - The transaction hash of the transaction to get the status of.
    * @returns A promise that resolves to a `TransactionStatusData` object.
    */
-  getTransactionStatus(txnHash: string): Promise<TransactionStatusData>;
+  getTransactionStatus(txHash: string): Promise<TransactionStatusData>;
 
   /**
    * Gets the required metadata to build a transaction for the given address and transaction intent.

@@ -16,9 +16,10 @@ import {
   BtcAccountBip32Deriver,
   BtcWallet,
   BtcAmount,
+  BtcTxInfo,
   BtcAddress,
-  BtcTransactionInfo,
 } from '../bitcoin/wallet';
+import { TxOutput } from '../bitcoin/wallet/transaction-output';
 import { FeeRatio } from '../chain';
 import { Factory } from '../factory';
 import { SnapHelper } from '../libs/snap';
@@ -121,7 +122,7 @@ describe('SendManyHandler', () => {
       );
       return mockResponse.data[address].utxo.map((utxo) => ({
         block: utxo.block_id,
-        txnHash: utxo.transaction_hash,
+        txHash: utxo.transaction_hash,
         index: utxo.index,
         value: utxo.value,
       }));
@@ -236,32 +237,34 @@ describe('SendManyHandler', () => {
       });
     });
 
-    it('display `Recipient` as label in dialog if there is only 1 receipient', async () => {
+    it('display `Recipient` as label in dialog if there is only 1 recipient', async () => {
       const network = networks.testnet;
       const caip2ChainId = Network.Testnet;
       const { keyringAccount, recipients, snapHelperSpy } =
         await prepareSendMany(network, caip2ChainId);
-      const walletCreateTxnSpy = jest.spyOn(
+      const walletCreateTxSpy = jest.spyOn(
         BtcWallet.prototype,
         'createTransaction',
       );
-      const walletSignTxnSpy = jest.spyOn(
+      const walletSignTxSpy = jest.spyOn(
         BtcWallet.prototype,
         'signTransaction',
       );
 
-      const info = new BtcTransactionInfo();
-      info.recipients.set(
-        new BtcAddress(recipients[0].address, networks.testnet),
-        new BtcAmount(100),
+      const info = new BtcTxInfo(
+        new BtcAddress(recipients[0].address),
+        [new TxOutput(100000, recipients[0].address)],
+        1,
+        1,
+        network,
       );
 
-      walletCreateTxnSpy.mockResolvedValue({
-        txn: 'txn',
-        txnInfo: info,
+      walletCreateTxSpy.mockResolvedValue({
+        tx: 'transaction',
+        txInfo: info,
       });
 
-      walletSignTxnSpy.mockResolvedValue('txId');
+      walletSignTxSpy.mockResolvedValue('txId');
 
       await SendManyHandler.getInstance({
         scope: caip2ChainId,
