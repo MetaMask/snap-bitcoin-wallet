@@ -1,22 +1,12 @@
-import type { Json } from '@metamask/snaps-sdk';
-
 import { Chain, Config } from '../../config';
 import type { IAmount } from '../../wallet';
 import { satsToBtc } from '../utils';
 
 export class BtcAmount implements IAmount {
-  #_value: number;
+  value: number;
 
   constructor(value: number) {
-    this.#_value = value;
-  }
-
-  get value(): number {
-    return this.#_value;
-  }
-
-  set value(newValue: number) {
-    this.#_value = newValue;
+    this.value = value;
   }
 
   get unit(): string {
@@ -32,13 +22,5 @@ export class BtcAmount implements IAmount {
       return `${satsToBtc(this.value)}`;
     }
     return `${satsToBtc(this.value)} ${this.unit}`;
-  }
-
-  toJson(): Record<string, Json> {
-    return {
-      value: this.toString(true),
-      unit: this.unit,
-      rawValue: this.value,
-    };
   }
 }

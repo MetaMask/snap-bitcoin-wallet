@@ -80,7 +80,7 @@ export class BlockStreamClient implements IReadDataClient {
     this.feeRateRatioMap = {
       [FeeRatio.Fast]: '1',
       [FeeRatio.Medium]: '144',
-      [FeeRatio.Slow]: '1008',
+      [FeeRatio.Slow]: '144',
     };
   }
 
@@ -162,7 +162,7 @@ export class BlockStreamClient implements IReadDataClient {
         }
         data.push({
           block: utxo.status.block_height,
-          txnHash: utxo.txid,
+          txHash: utxo.txid,
           index: utxo.vout,
           value: utxo.value,
         });
@@ -203,13 +203,13 @@ export class BlockStreamClient implements IReadDataClient {
     }
   }
 
-  async getTransactionStatus(txnHash: string): Promise<TransactionStatusData> {
+  async getTransactionStatus(txHash: string): Promise<TransactionStatusData> {
     try {
-      const txnStatusResp = await this.get<GetTransactionStatusResponse>(
-        `/tx/${txnHash}/status`,
+      const txStatusResp = await this.get<GetTransactionStatusResponse>(
+        `/tx/${txHash}/status`,
       );
 
-      const status = txnStatusResp.confirmed
+      const status = txStatusResp.confirmed
         ? TransactionStatus.Confirmed
         : TransactionStatus.Pending;
 

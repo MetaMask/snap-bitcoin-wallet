@@ -8,7 +8,7 @@ import { GetTransactionStatusHandler } from './get-transaction-status';
 jest.mock('../libs/logger/logger');
 
 describe('GetBalancesHandler', () => {
-  const txnHash =
+  const txHash =
     '1cd985fc26a9b27d0b574739b908d5fe78e2297b24323a7f8c04526648dc9c08';
 
   describe('handleRequest', () => {
@@ -39,10 +39,10 @@ describe('GetBalancesHandler', () => {
 
       const result = await GetTransactionStatusHandler.getInstance().execute({
         scope: Network.Testnet,
-        transactionId: txnHash,
+        transactionId: txHash,
       });
 
-      expect(getTransactionStatusSpy).toHaveBeenCalledWith(txnHash);
+      expect(getTransactionStatusSpy).toHaveBeenCalledWith(txHash);
       expect(result).toStrictEqual({
         status: TransactionStatus.Confirmed,
       });
@@ -56,7 +56,7 @@ describe('GetBalancesHandler', () => {
       await expect(
         GetTransactionStatusHandler.getInstance().execute({
           scope: Network.Testnet,
-          transactionId: txnHash,
+          transactionId: txHash,
         }),
       ).rejects.toThrow(`Fail to get the transaction status`);
     });

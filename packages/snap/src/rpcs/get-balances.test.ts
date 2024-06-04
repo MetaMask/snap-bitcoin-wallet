@@ -48,7 +48,7 @@ describe('GetBalancesHandler', () => {
       };
     };
 
-    const createMockAccount = async (network, caip2Network) => {
+    const createMockAccount = async (network, caip2ChainId) => {
       const { instance } = createMockDeriver(network);
       const wallet = new BtcWallet(instance, network);
       const sender = await wallet.unlock(0, ScriptType.P2wpkh);
@@ -57,7 +57,7 @@ describe('GetBalancesHandler', () => {
         id: uuidv4(),
         address: sender.address,
         options: {
-          scope: caip2Network,
+          scope: caip2ChainId,
           index: sender.index,
         },
         methods: ['btc_sendmany'],
@@ -67,7 +67,7 @@ describe('GetBalancesHandler', () => {
         account: keyringAccount as unknown as KeyringAccount,
         hdPath: sender.hdPath,
         index: sender.index,
-        scope: caip2Network,
+        scope: caip2ChainId,
       };
 
       return {
@@ -79,10 +79,10 @@ describe('GetBalancesHandler', () => {
 
     it('gets balances', async () => {
       const network = networks.testnet;
-      const caip2Network = Network.Testnet;
+      const caip2ChainId = Network.Testnet;
       const { getBalancesSpy } = createMockChainApiFactory();
 
-      const { walletData } = await createMockAccount(network, caip2Network);
+      const { walletData } = await createMockAccount(network, caip2ChainId);
 
       const addresses = [walletData.account.address];
       const mockResp = {
@@ -116,10 +116,10 @@ describe('GetBalancesHandler', () => {
 
     it('gets balances of the request account only', async () => {
       const network = networks.testnet;
-      const caip2Network = Network.Testnet;
+      const caip2ChainId = Network.Testnet;
       const { getBalancesSpy } = createMockChainApiFactory();
       const accounts = generateAccounts(10);
-      const { walletData } = await createMockAccount(network, caip2Network);
+      const { walletData } = await createMockAccount(network, caip2ChainId);
 
       const addresses = [walletData.account.address];
       const mockResp = {
@@ -159,9 +159,9 @@ describe('GetBalancesHandler', () => {
 
     it('throws `Fail to get the balances` when transaction status fetch failed', async () => {
       const network = networks.testnet;
-      const caip2Network = Network.Testnet;
+      const caip2ChainId = Network.Testnet;
       const { getBalancesSpy } = createMockChainApiFactory();
-      const { walletData } = await createMockAccount(network, caip2Network);
+      const { walletData } = await createMockAccount(network, caip2ChainId);
 
       getBalancesSpy.mockRejectedValue(new Error('error'));
 
@@ -175,8 +175,8 @@ describe('GetBalancesHandler', () => {
 
     it('throws `Request params is invalid` when request parameter is not correct', async () => {
       const network = networks.testnet;
-      const caip2Network = Network.Testnet;
-      const { walletData } = await createMockAccount(network, caip2Network);
+      const caip2ChainId = Network.Testnet;
+      const { walletData } = await createMockAccount(network, caip2ChainId);
 
       await expect(
         GetBalancesHandler.getInstance(walletData).execute({

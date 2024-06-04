@@ -2,11 +2,12 @@ import { Chain, Config } from '../../config';
 import { Network } from '../constants';
 
 /**
- * Method to get ExplorerUrl by CAIP2 Chain Id string.
+ * Gets the explorer URL for a given bitcoin address and CAIP-2 Chain ID.
  *
- * @param address - The address to get the Explorer string for.
- * @param network - The CAIP2 Chain Id.
- * @returns The Explorer string.
+ * @param address - The bitcoin address to get the explorer URL for.
+ * @param network - The CAIP-2 Chain ID.
+ * @returns The explorer URL as a string.
+ * @throws An error if an invalid network is provided.
  */
 export function getExplorerUrl(address: string, network: string): string {
   switch (network) {

@@ -6,5 +6,5 @@ export * from './signer';
 export * from './deriver';
 export * from './wallet';
 export * from './address';
-export * from './transactionInfo';
+export * from './transaction-info';
 export * from './amount';

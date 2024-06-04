@@ -404,14 +404,14 @@ export function generateBlockStreamTransactionStatusResp(
 /**
  * Method to generate blockchair transaction dashboards resp.
  *
- * @param txnHash - Transaction hash of the transaction.
+ * @param txHash - Transaction hash of the transaction.
  * @param txnBlockHeight - Block height of the transaction.
  * @param txnBlockHeight - Block height of the last block.
  * @param confirmed - Confirm status of the transaction.
  * @returns A blockchair transaction dashboards resp.
  */
 export function generateBlockChairTransactionDashboard(
-  txnHash: string,
+  txHash: string,
   txnBlockHeight: number,
   lastBlockHeight: number,
   confirmed: boolean,
@@ -420,7 +420,7 @@ export function generateBlockChairTransactionDashboard(
   const data = Object.values(template.data)[0];
   const resp = {
     data: {
-      [txnHash]: {
+      [txHash]: {
         ...data,
         transaction: {
           ...data.transaction,
@@ -459,7 +459,7 @@ export function generateFormatedUtxos(
   );
   const formattedUtxos = rawUtxos.data[address].utxo.map((utxo) => ({
     block: utxo.block_id,
-    txnHash: utxo.transaction_hash,
+    txHash: utxo.transaction_hash,
     index: utxo.index,
     value: utxo.value,
   }));

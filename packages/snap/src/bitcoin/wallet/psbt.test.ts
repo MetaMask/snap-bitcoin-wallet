@@ -6,6 +6,8 @@ import { MaxStandardTxWeight, ScriptType } from '../constants';
 import { BtcAccountBip32Deriver } from './deriver';
 import { PsbtServiceError } from './exceptions';
 import { PsbtService } from './psbt';
+import { TxInput } from './transaction-input';
+import { TxOutput } from './transaction-output';
 import { BtcWallet } from './wallet';
 
 jest.mock('../../libs/logger/logger');
@@ -22,51 +24,60 @@ describe('PsbtService', () => {
     };
   };
 
-  describe('constructor', () => {
-    const preparePsbt = async () => {
-      const network = networks.testnet;
-      const service = new PsbtService(network);
-      const wallet = createMockWallet(network);
-      const sender = await wallet.instance.unlock(0, ScriptType.P2wpkh);
-      const mfpBuf = hexToBuffer(sender.mfp, false);
-      const pubkeyBuf = hexToBuffer(sender.pubkey, false);
-      const receiver1 = await wallet.instance.unlock(1, ScriptType.P2wpkh);
-      const receiver2 = await wallet.instance.unlock(2, ScriptType.P2wpkh);
-      const receivers = [receiver1, receiver2];
-      const finalizeSpy = jest.spyOn(service.psbt, 'finalizeAllInputs');
-      const outputVal = 1000;
-      const fee = 500;
-      const outputs = receivers.map((account) => ({
-        address: account.address,
-        value: outputVal,
-      }));
-      // it has to limit the inputs because it may fail due to alert of paying too much gas fee
-      const inputs = generateFormatedUtxos(
-        sender.address,
-        1,
-        outputVal * outputs.length + fee,
-        outputVal * outputs.length + fee,
-      );
+  const preparePsbt = async (rbfOptIn = false, inputsCnt = 2) => {
+    const network = networks.testnet;
+    const service = new PsbtService(network);
+    const wallet = createMockWallet(network);
+    const sender = await wallet.instance.unlock(0, ScriptType.P2wpkh);
+    const receiver1 = await wallet.instance.unlock(1, ScriptType.P2wpkh);
+    const receiver2 = await wallet.instance.unlock(2, ScriptType.P2wpkh);
+    const receivers = [receiver1, receiver2];
+    const finalizeSpy = jest.spyOn(service.psbt, 'finalizeAllInputs');
+    const inputSpy = jest.spyOn(service.psbt, 'addInput');
+    const outputSpy = jest.spyOn(service.psbt, 'addOutput');
+    const signSpy = jest.spyOn(service.psbt, 'signAllInputsHDAsync');
+    const verifySpy = jest.spyOn(service.psbt, 'validateSignaturesOfAllInputs');
+    const transactionWeightSpy = jest.spyOn(Transaction.prototype, 'weight');
+    const transactionHexSpy = jest.spyOn(Transaction.prototype, 'toHex');
 
-      service.addOutputs(outputs);
+    const outputVal = 1000;
+    const fee = 500;
 
-      service.addInputs(
-        inputs,
-        mfpBuf,
-        pubkeyBuf,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        sender.payment.output!,
-        sender.hdPath,
-        true,
-      );
+    const outputs = receivers.map(
+      (account) => new TxOutput(outputVal, account.address),
+    );
+    const utxos = generateFormatedUtxos(
+      sender.address,
+      inputsCnt,
+      outputVal * outputs.length + fee,
+      outputVal * outputs.length + fee,
+    );
+    const inputs = utxos.map(
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      (utxo) => new TxInput(utxo, sender.payment.output!),
+    );
 
-      return {
-        service,
-        sender,
-        finalizeSpy,
-      };
+    service.addOutputs(outputs);
+
+    service.addInputs(inputs, sender, rbfOptIn);
+
+    return {
+      service,
+      sender,
+      receivers,
+      finalizeSpy,
+      inputSpy,
+      outputSpy,
+      signSpy,
+      verifySpy,
+      inputs,
+      outputs,
+      transactionWeightSpy,
+      transactionHexSpy,
     };
+  };
 
+  describe('constructor', () => {
     it('constructor with a new psbt object', async () => {
       const network = networks.testnet;
 
@@ -76,52 +87,38 @@ describe('PsbtService', () => {
     });
 
     it('constructor with an psbt base string', async () => {
-      const { service } = await preparePsbt();
+      const { service } = await preparePsbt(false, 2);
       const psbtBase64 = service.toBase64();
 
       const newService = PsbtService.fromBase64(networks.testnet, psbtBase64);
 
-      expect(newService.psbt.txInputs).toHaveLength(1);
+      expect(newService.psbt.txInputs).toHaveLength(2);
       expect(newService.psbt.txOutputs).toHaveLength(2);
     });
   });
 
   describe('addInputs', () => {
     it('adds witnessUtxos to psbt object', async () => {
-      const network = networks.testnet;
-      const service = new PsbtService(network);
-      const wallet = createMockWallet(network);
-      const account = await wallet.instance.unlock(0, ScriptType.P2wpkh);
-      const inputs = generateFormatedUtxos(account.address, 2);
-      const mfpBuf = hexToBuffer(account.mfp, false);
-      const pubkeyBuf = hexToBuffer(account.pubkey, false);
-      const psbtSpy = jest.spyOn(service.psbt, 'addInput');
-
-      service.addInputs(
-        inputs,
-        mfpBuf,
-        pubkeyBuf,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        account.payment.output!,
-        account.hdPath,
+      const { service, inputSpy, inputs, sender } = await preparePsbt(
         false,
+        10,
       );
 
-      expect(service.psbt.txInputs).toHaveLength(2);
+      expect(service.psbt.txInputs).toHaveLength(10);
 
-      for (let i = 0; i < inputs.length; i++) {
-        expect(psbtSpy).toHaveBeenNthCalledWith(i + 1, {
-          hash: inputs[i].txnHash,
+      for (let i = 0; i < service.psbt.txInputs.length; i++) {
+        expect(inputSpy).toHaveBeenNthCalledWith(i + 1, {
+          hash: inputs[i].txHash,
           index: inputs[i].index,
           witnessUtxo: {
-            script: account.payment.output,
+            script: inputs[i].scriptBuf,
             value: inputs[i].value,
           },
           bip32Derivation: [
             {
-              masterFingerprint: mfpBuf,
-              path: account.hdPath,
-              pubkey: pubkeyBuf,
+              masterFingerprint: hexToBuffer(sender.mfp, false),
+              path: sender.hdPath,
+              pubkey: hexToBuffer(sender.pubkey, false),
             },
           ],
           sequence: Transaction.DEFAULT_SEQUENCE,
@@ -130,38 +127,21 @@ describe('PsbtService', () => {
     });
 
     it('opt-ins RBF into the psbt input', async () => {
-      const network = networks.testnet;
-      const service = new PsbtService(network);
-      const wallet = createMockWallet(network);
-      const account = await wallet.instance.unlock(0, ScriptType.P2wpkh);
-      const inputs = generateFormatedUtxos(account.address, 2);
-      const mfpBuf = hexToBuffer(account.mfp, false);
-      const pubkeyBuf = hexToBuffer(account.pubkey, false);
-      const psbtSpy = jest.spyOn(service.psbt, 'addInput');
+      const { service, inputSpy, inputs, sender } = await preparePsbt(true);
 
-      service.addInputs(
-        inputs,
-        mfpBuf,
-        pubkeyBuf,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        account.payment.output!,
-        account.hdPath,
-        true,
-      );
-
-      for (let i = 0; i < inputs.length; i++) {
-        expect(psbtSpy).toHaveBeenNthCalledWith(i + 1, {
-          hash: inputs[i].txnHash,
+      for (let i = 0; i < service.psbt.txInputs.length; i++) {
+        expect(inputSpy).toHaveBeenNthCalledWith(i + 1, {
+          hash: inputs[i].txHash,
           index: inputs[i].index,
           witnessUtxo: {
-            script: account.payment.output,
+            script: inputs[i].scriptBuf,
             value: inputs[i].value,
           },
           bip32Derivation: [
             {
-              masterFingerprint: mfpBuf,
-              path: account.hdPath,
-              pubkey: pubkeyBuf,
+              masterFingerprint: hexToBuffer(sender.mfp, false),
+              path: sender.hdPath,
+              pubkey: hexToBuffer(sender.pubkey, false),
             },
           ],
           sequence: Transaction.DEFAULT_SEQUENCE - 2,
@@ -170,48 +150,20 @@ describe('PsbtService', () => {
     });
 
     it('throws `Failed to add inputs in PSBT` error if adding inputs fails', async () => {
-      const network = networks.testnet;
-      const service = new PsbtService(network);
-      const wallet = createMockWallet(network);
-      const account = await wallet.instance.unlock(0, ScriptType.P2wpkh);
-      const inputs = generateFormatedUtxos(account.address, 2);
-      const mfpBuf = hexToBuffer(account.mfp, false);
-      const pubkeyBuf = hexToBuffer(account.pubkey, false);
-
-      jest.spyOn(service.psbt, 'addInput').mockImplementation(() => {
+      const { service, inputSpy, sender, inputs } = await preparePsbt();
+      inputSpy.mockImplementation(() => {
         throw new Error('error');
       });
 
       expect(() => {
-        service.addInputs(
-          inputs,
-          mfpBuf,
-          pubkeyBuf,
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          account.payment.output!,
-          account.hdPath,
-          true,
-        );
+        service.addInputs(inputs, sender, false);
       }).toThrow('Failed to add inputs in PSBT');
     });
   });
 
   describe('addOutputs', () => {
     it('adds outputs to psbt object', async () => {
-      const network = networks.testnet;
-      const service = new PsbtService(network);
-      const wallet = createMockWallet(network);
-      const receiver1 = await wallet.instance.unlock(1, ScriptType.P2wpkh);
-      const receiver2 = await wallet.instance.unlock(2, ScriptType.P2wpkh);
-      const receivers = [receiver1, receiver2];
-
-      const outputs = receivers.map((account) => ({
-        address: account.address,
-        value: 1000,
-      }));
-
-      service.addOutputs(outputs);
-
+      const { service, outputs, receivers } = await preparePsbt();
       expect(service.psbt.txOutputs).toHaveLength(outputs.length);
 
       for (let i = 0; i < service.psbt.txOutputs.length; i++) {
@@ -231,15 +183,10 @@ describe('PsbtService', () => {
     });
 
     it('throws `Failed to add outputs in PSBT` error if adding outputs fails', async () => {
-      const network = networks.testnet;
-      const service = new PsbtService(network);
-
-      const outputs = [
-        {
-          address: 'address',
-          value: 1000,
-        },
-      ];
+      const { service, outputSpy, outputs } = await preparePsbt();
+      outputSpy.mockImplementation(() => {
+        throw new Error('error');
+      });
 
       expect(() => service.addOutputs(outputs)).toThrow(
         'Failed to add outputs in PSBT',
@@ -270,50 +217,8 @@ describe('PsbtService', () => {
   });
 
   describe('signNVerify', () => {
-    const prepareToSign = async () => {
-      const network = networks.testnet;
-      const service = new PsbtService(network);
-      const wallet = createMockWallet(network);
-      const sender = await wallet.instance.unlock(0, ScriptType.P2wpkh);
-      const inputs = generateFormatedUtxos(sender.address, 2);
-      const mfpBuf = hexToBuffer(sender.mfp, false);
-      const pubkeyBuf = hexToBuffer(sender.pubkey, false);
-      const receiver1 = await wallet.instance.unlock(1, ScriptType.P2wpkh);
-      const receiver2 = await wallet.instance.unlock(2, ScriptType.P2wpkh);
-      const receivers = [receiver1, receiver2];
-      const signSpy = jest.spyOn(service.psbt, 'signAllInputsHDAsync');
-      const verifySpy = jest.spyOn(
-        service.psbt,
-        'validateSignaturesOfAllInputs',
-      );
-
-      const outputs = receivers.map((account) => ({
-        address: account.address,
-        value: 1000,
-      }));
-
-      service.addOutputs(outputs);
-
-      service.addInputs(
-        inputs,
-        mfpBuf,
-        pubkeyBuf,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        sender.payment.output!,
-        sender.hdPath,
-        true,
-      );
-
-      return {
-        service,
-        sender,
-        signSpy,
-        verifySpy,
-      };
-    };
-
     it('signs all inputs with the given signer', async () => {
-      const { service, sender, signSpy, verifySpy } = await prepareToSign();
+      const { service, sender, signSpy, verifySpy } = await preparePsbt();
 
       await service.signNVerify(sender.signer);
 
@@ -322,7 +227,7 @@ describe('PsbtService', () => {
     });
 
     it("throws `Invalid signature to sign the PSBT's inputs` error if signature is incorrect", async () => {
-      const { service, sender, verifySpy } = await prepareToSign();
+      const { service, sender, verifySpy } = await preparePsbt();
 
       verifySpy.mockReturnValue(false);
 
@@ -333,61 +238,11 @@ describe('PsbtService', () => {
   });
 
   describe('finalize', () => {
-    const prepareToFinalize = async () => {
-      const network = networks.testnet;
-      const service = new PsbtService(network);
-      const wallet = createMockWallet(network);
-      const sender = await wallet.instance.unlock(0, ScriptType.P2wpkh);
-      const mfpBuf = hexToBuffer(sender.mfp, false);
-      const pubkeyBuf = hexToBuffer(sender.pubkey, false);
-      const receiver1 = await wallet.instance.unlock(1, ScriptType.P2wpkh);
-      const receiver2 = await wallet.instance.unlock(2, ScriptType.P2wpkh);
-      const receivers = [receiver1, receiver2];
-
-      const finalizeSpy = jest.spyOn(service.psbt, 'finalizeAllInputs');
-      const transactionWeightSpy = jest.spyOn(Transaction.prototype, 'weight');
-      const transactionHexSpy = jest.spyOn(Transaction.prototype, 'toHex');
-
-      const outputVal = 1000;
-      const fee = 500;
-      const outputs = receivers.map((account) => ({
-        address: account.address,
-        value: outputVal,
-      }));
-      // it has to limit the inputs because it may fail due to alert of paying too much gas fee
-      const inputs = generateFormatedUtxos(
-        sender.address,
-        1,
-        outputVal * outputs.length + fee,
-        outputVal * outputs.length + fee,
-      );
-
-      service.addOutputs(outputs);
-
-      service.addInputs(
-        inputs,
-        mfpBuf,
-        pubkeyBuf,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        sender.payment.output!,
-        sender.hdPath,
-        true,
-      );
+    it('returns an transaction hex', async () => {
+      const { service, finalizeSpy, sender, transactionHexSpy } =
+        await preparePsbt();
 
       await service.signNVerify(sender.signer);
-
-      return {
-        service,
-        sender,
-        finalizeSpy,
-        transactionWeightSpy,
-        transactionHexSpy,
-      };
-    };
-
-    it('returns an transaction hex', async () => {
-      const { service, finalizeSpy, transactionHexSpy } =
-        await prepareToFinalize();
 
       const txHex = service.finalize();
 
@@ -397,8 +252,10 @@ describe('PsbtService', () => {
       expect(transactionHexSpy).toHaveBeenCalled();
     });
 
-    it('throws `Transaction is too large` error if the txn weight is too large', async () => {
-      const { service, transactionWeightSpy } = await prepareToFinalize();
+    it('throws `Transaction is too large` error if the transaction weight is too large', async () => {
+      const { service, sender, transactionWeightSpy } = await preparePsbt();
+
+      await service.signNVerify(sender.signer);
 
       transactionWeightSpy.mockReturnValue(MaxStandardTxWeight + 1000);
 
@@ -406,7 +263,9 @@ describe('PsbtService', () => {
     });
 
     it('throws PsbtServiceError error if finalize operation failed', async () => {
-      const { service, finalizeSpy } = await prepareToFinalize();
+      const { service, sender, finalizeSpy } = await preparePsbt();
+
+      await service.signNVerify(sender.signer);
 
       finalizeSpy.mockImplementation(() => {
         throw new Error('error');

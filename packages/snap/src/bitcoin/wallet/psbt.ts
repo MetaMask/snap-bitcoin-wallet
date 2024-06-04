@@ -5,11 +5,13 @@ import type { Buffer } from 'buffer';
 import ECPairFactory from 'ecpair';
 
 import { logger } from '../../libs/logger/logger';
-import { compactError } from '../../utils';
+import { compactError, hexToBuffer } from '../../utils';
 import type { IAccountSigner } from '../../wallet';
 import { MaxStandardTxWeight } from '../constants';
-import { PsbtServiceError } from './exceptions';
-import type { SpendTo, Utxo } from './types';
+import { PsbtServiceError, TxValidationError } from './exceptions';
+import type { TxInput } from './transaction-input';
+import type { TxOutput } from './transaction-output';
+import type { IBtcAccount } from './types';
 
 const ECPair = ECPairFactory(ecc);
 
@@ -37,20 +39,21 @@ export class PsbtService {
   }
 
   addInputs(
-    inputs: Utxo[],
-    mfp: Buffer,
-    changeAddressPubkey: Buffer,
-    changeAddressScriptHash: Buffer,
-    changeAddressHdPath: string,
+    inputs: TxInput[],
+    changeAccount: IBtcAccount,
     replaceable: boolean,
   ) {
     try {
+      const changeAddressHdPath = changeAccount.hdPath;
+      const changeAddressPubkey = hexToBuffer(changeAccount.pubkey, false);
+      const changeAddressMfp = hexToBuffer(changeAccount.mfp, false);
+
       for (const input of inputs) {
         this._psbt.addInput({
-          hash: input.txnHash,
+          hash: input.txHash,
           index: input.index,
           witnessUtxo: {
-            script: changeAddressScriptHash,
+            script: input.scriptBuf,
             value: input.value,
           },
           // This is useful because as long as you store the masterFingerprint on
@@ -59,7 +62,7 @@ export class PsbtService {
           // and your signer just needs to pass in an HDSigner interface (ie. bip32 library)
           bip32Derivation: [
             {
-              masterFingerprint: mfp,
+              masterFingerprint: changeAddressMfp,
               path: changeAddressHdPath,
               pubkey: changeAddressPubkey,
             },
@@ -79,9 +82,14 @@ export class PsbtService {
     }
   }
 
-  addOutputs(outputs: SpendTo[]) {
+  addOutputs(outputs: TxOutput[]) {
     try {
-      this._psbt.addOutputs(outputs);
+      for (const output of outputs) {
+        this._psbt.addOutput({
+          address: output.address,
+          value: output.value,
+        });
+      }
     } catch (error) {
       logger.error('Failed to add outputs', error);
       throw new PsbtServiceError('Failed to add outputs in PSBT');
@@ -110,7 +118,7 @@ export class PsbtService {
             this.validateInputs(pubkey, msghash, signature),
         )
       ) {
-        throw new PsbtServiceError(
+        throw new TxValidationError(
           "Invalid signature to sign the PSBT's inputs",
         );
       }
@@ -128,7 +136,7 @@ export class PsbtService {
       const weight = this._psbt.extractTransaction().weight();
 
       if (weight > MaxStandardTxWeight) {
-        throw new PsbtServiceError('Transaction is too large');
+        throw new TxValidationError('Transaction is too large');
       }
 
       return txHex;

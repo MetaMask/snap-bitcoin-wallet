@@ -1,10 +1,11 @@
-import { crypto as cryptoUtils } from 'bitcoinjs-lib';
-import type { Buffer } from 'buffer';
 import coinSelect from 'coinselect';
 
-import { hexToBuffer } from '../../utils';
-import { UtxoServiceError } from './exceptions';
-import type { SpendTo, SelectedUtxos, Utxo } from './types';
+import type { Recipient } from '../../wallet';
+import { TxValidationError } from './exceptions';
+import { SelectionResult } from './selection-result';
+import type { TxInput } from './transaction-input';
+import { TxOutput } from './transaction-output';
+import { type IBtcAccount } from './types';
 
 export class CoinSelectService {
   protected readonly feeRate: number;
@@ -13,56 +14,34 @@ export class CoinSelectService {
     this.feeRate = Math.round(feeRate);
   }
 
-  /**
-   * Selects UTXOs to spend for segwit output.
-   * @param utxos - Array of UTXOs.
-   * @param spendTos - Array of SpendTo objects.
-   * @param script - Script hash of the segwit output.
-   * @returns Selected UTXOs.
-   */
   selectCoins(
-    utxos: Utxo[],
-    spendTos: SpendTo[],
-    script: Buffer,
-  ): SelectedUtxos {
-    const utxosMap = new Map<string, Utxo>();
-
-    const spendFrom = utxos.map((utxo) => {
-      const id = cryptoUtils
-        .sha256(
-          hexToBuffer(
-            `${utxo.txnHash},${utxo.block},${utxo.index},${utxo.value}`,
-            false,
-          ),
-        )
-        .toString('hex');
-
-      utxosMap.set(id, utxo);
-
-      return {
-        id,
-        value: utxo.value,
-        script,
-      };
-    });
-
-    const result = coinSelect(spendFrom, spendTos, this.feeRate);
+    inputs: TxInput[],
+    recipients: Recipient[],
+    changeAccount: IBtcAccount,
+  ): SelectionResult {
+    const result = coinSelect(inputs, recipients, this.feeRate);
 
     if (!result.inputs || !result.outputs) {
-      throw new UtxoServiceError('Not enough funds');
+      throw new TxValidationError('Insufficient funds');
     }
 
-    const inputs: Utxo[] = [];
-    for (const input of result.inputs) {
-      const utxo = utxosMap.get(input.id);
+    const selectedResult = new SelectionResult();
+    selectedResult.fee = result.fee;
+    selectedResult.selectedInputs = result.inputs;
 
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      inputs.push(utxo!);
+    for (const output of result.outputs) {
+      if (output.address) {
+        selectedResult.selectedOutputs.push(
+          new TxOutput(output.value, output.address),
+        );
+      } else {
+        selectedResult.change = new TxOutput(
+          output.value,
+          changeAccount.address,
+        );
+      }
     }
 
-    return {
-      ...result,
-      inputs,
-    };
+    return selectedResult;
   }
 }
