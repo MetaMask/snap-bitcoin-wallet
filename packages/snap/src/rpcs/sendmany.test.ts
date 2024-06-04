@@ -1,3 +1,4 @@
+import type { Json } from '@metamask/snaps-sdk';
 import {
   InvalidParamsError,
   UserRejectedRequestError,
@@ -16,14 +17,11 @@ import {
   BtcAccountBip32Deriver,
   BtcWallet,
   BtcAmount,
-  BtcTxInfo,
-  BtcAddress,
 } from '../bitcoin/wallet';
-import { TxOutput } from '../bitcoin/wallet/transaction-output';
 import { FeeRatio } from '../chain';
 import { Factory } from '../factory';
 import { SnapHelper } from '../libs/snap';
-import type { IAccount } from '../wallet';
+import type { IAccount, ITxInfo } from '../wallet';
 import { SendManyHandler } from './sendmany';
 import type { SendManyParams } from './sendmany';
 
@@ -240,7 +238,7 @@ describe('SendManyHandler', () => {
     it('display `Recipient` as label in dialog if there is only 1 recipient', async () => {
       const network = networks.testnet;
       const caip2ChainId = Network.Testnet;
-      const { keyringAccount, recipients, snapHelperSpy } =
+      const { keyringAccount, recipients, snapHelperSpy, sender } =
         await prepareSendMany(network, caip2ChainId);
       const walletCreateTxSpy = jest.spyOn(
         BtcWallet.prototype,
@@ -251,13 +249,24 @@ describe('SendManyHandler', () => {
         'signTransaction',
       );
 
-      const info = new BtcTxInfo(
-        new BtcAddress(recipients[0].address),
-        [new TxOutput(100000, recipients[0].address)],
-        1,
-        1,
-        network,
-      );
+      const info: ITxInfo = {
+        toJson<TxInfoJson extends Record<string, Json>>() {
+          return {
+            feeRate: `0.00000001 BTC`,
+            txFee: `0.00000001 BTC`,
+            sender: sender.address,
+            recipients: [
+              {
+                address: recipients[0].address,
+                value: `0.000010 BTC`,
+                explorerUrl: `https://blockchair.com/bitcoin/transaction/transactionId`,
+              },
+            ],
+            changes: [],
+            total: `0.000010 BTC`,
+          } as unknown as TxInfoJson;
+        },
+      };
 
       walletCreateTxSpy.mockResolvedValue({
         tx: 'transaction',
@@ -274,7 +283,7 @@ describe('SendManyHandler', () => {
 
       const calls = snapHelperSpy.mock.calls[0][0];
 
-      expect(calls[3]).toHaveProperty('label', 'Recipient');
+      expect(calls[4]).toHaveProperty('label', 'Recipient');
     });
 
     it('throws `Request params is invalid` error when request parameter is not correct', async () => {

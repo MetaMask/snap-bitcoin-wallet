@@ -1,8 +1,8 @@
 import type { BIP32Interface } from 'bip32';
-import { type Network } from 'bitcoinjs-lib';
+import { type Network, address } from 'bitcoinjs-lib';
 
 import { logger } from '../../libs/logger/logger';
-import { bufferToString, compactError } from '../../utils';
+import { bufferToString, compactError, hexToBuffer } from '../../utils';
 import type {
   IAccountSigner,
   IWallet,
@@ -19,6 +19,7 @@ import { PsbtService } from './psbt';
 import { AccountSigner } from './signer';
 import { BtcTxInfo } from './transaction-info';
 import { TxInput } from './transaction-input';
+import { TxOutput } from './transaction-output';
 import type {
   IStaticBtcAccount,
   IBtcAccountDeriver,
@@ -85,59 +86,75 @@ export class BtcWallet implements IWallet {
       throw new WalletError('Fail to get account script hash');
     }
 
+    const inputs = options.utxos.map((utxo) => new TxInput(utxo, scriptOutput));
+    const outputs = recipients.map(
+      (recipient) =>
+        new TxOutput(
+          recipient.value,
+          recipient.address,
+          address.toOutputScript(recipient.address, this.network),
+        ),
+    );
+
     // as fee rate can be 0, we need to ensure it is at least 1
     // TODO: The min fee rate should be setting from parameter
     const feeRate = Math.max(1, options.fee);
-
     const coinSelectService = new CoinSelectService(feeRate);
-
-    const inputs = options.utxos.map((utxo) => new TxInput(utxo, scriptOutput));
-
+    const change = new TxOutput(0, account.address);
     const selectionResult = coinSelectService.selectCoins(
       inputs,
-      recipients,
-      account,
+      outputs,
+      change,
     );
 
-    // TODO: add support of subtractFeeFrom, and throw error if output is too small after subtraction
-    for (const output of selectionResult.selectedOutputs) {
-      if (isDust(output.value, scriptType)) {
-        throw new TxValidationError('Transaction amount too small');
-      }
-    }
+    logger.info({
+      inputs: JSON.stringify(selectionResult.inputs),
+      outputs: JSON.stringify(selectionResult.outputs),
+      change: JSON.stringify(selectionResult.change),
+    });
 
-    const psbtOutputs = selectionResult.selectedOutputs;
-    const psbtInputs = selectionResult.selectedInputs;
-
-    const info = new BtcTxInfo(
+    const txInfo = new BtcTxInfo(
       new BtcAddress(account.address),
-      selectionResult.selectedOutputs,
-      selectionResult.fee,
       feeRate,
       this.network,
     );
 
-    if (selectionResult.change && selectionResult.change.value > 0) {
-      if (isDust(selectionResult.change.value, scriptType)) {
+    const psbtService = new PsbtService(this.network);
+    psbtService.addInputs(
+      selectionResult.inputs,
+      options.replaceable,
+      account.hdPath,
+      hexToBuffer(account.pubkey, false),
+      hexToBuffer(account.mfp, false),
+    );
+
+    // TODO: add support of subtractFeeFrom, and throw error if output is too small after subtraction
+    for (const output of selectionResult.outputs) {
+      if (isDust(output.value, scriptType)) {
+        throw new TxValidationError('Transaction amount too small');
+      }
+      psbtService.addOutput(output);
+      txInfo.addRecipient(output);
+    }
+
+    if (selectionResult.change) {
+      if (isDust(change.value, scriptType)) {
         logger.warn(
           '[BtcWallet.createTransaction] Change is too small, adding to fees',
         );
-        info.bumpFee(selectionResult.change.value);
       } else {
-        info.change = selectionResult.change;
-        psbtOutputs.push(selectionResult.change);
+        psbtService.addOutput(selectionResult.change);
+        txInfo.change = selectionResult.change;
       }
     }
 
-    const psbtService = new PsbtService(this.network);
-
-    psbtService.addInputs(psbtInputs, account, options.replaceable);
-
-    psbtService.addOutputs(psbtOutputs);
+    // Sign dummy transaction to extract the fee which is more accurate
+    const signedService = await psbtService.signDummy(account.signer);
+    txInfo.fee = signedService.getFee();
 
     return {
       tx: psbtService.toBase64(),
-      txInfo: info,
+      txInfo,
     };
   }
 

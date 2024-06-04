@@ -3,6 +3,8 @@ import type { Network, Payment } from 'bitcoinjs-lib';
 
 import type { IAccount, IAccountSigner } from '../../wallet';
 import type { ScriptType } from '../constants';
+import type { TxInput } from './transaction-input';
+import type { TxOutput } from './transaction-output';
 
 export type IBtcAccountDeriver = {
   getRoot(path: string[]): Promise<BIP32Interface>;
@@ -45,4 +47,11 @@ export type Utxo = {
   txHash: string;
   index: number;
   value: number;
+};
+
+export type SelectionResult = {
+  change?: TxOutput;
+  fee: number;
+  inputs: TxInput[];
+  outputs: TxOutput[];
 };

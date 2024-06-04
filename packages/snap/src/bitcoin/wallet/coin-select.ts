@@ -2,10 +2,9 @@ import coinSelect from 'coinselect';
 
 import type { Recipient } from '../../wallet';
 import { TxValidationError } from './exceptions';
-import { SelectionResult } from './selection-result';
 import type { TxInput } from './transaction-input';
 import { TxOutput } from './transaction-output';
-import { type IBtcAccount } from './types';
+import { type SelectionResult } from './types';
 
 export class CoinSelectService {
   protected readonly feeRate: number;
@@ -16,8 +15,8 @@ export class CoinSelectService {
 
   selectCoins(
     inputs: TxInput[],
-    recipients: Recipient[],
-    changeAccount: IBtcAccount,
+    recipients: Recipient[] | TxOutput[],
+    changeTo: TxOutput,
   ): SelectionResult {
     const result = coinSelect(inputs, recipients, this.feeRate);
 
@@ -25,20 +24,25 @@ export class CoinSelectService {
       throw new TxValidationError('Insufficient funds');
     }
 
-    const selectedResult = new SelectionResult();
-    selectedResult.fee = result.fee;
-    selectedResult.selectedInputs = result.inputs;
+    const selectedResult: SelectionResult = {
+      fee: result.fee,
+      inputs: result.inputs,
+      outputs: [],
+    };
 
+    // restructure outputs to avoid depends on coinselect output format
     for (const output of result.outputs) {
       if (output.address) {
-        selectedResult.selectedOutputs.push(
-          new TxOutput(output.value, output.address),
-        );
+        if (output instanceof TxOutput) {
+          selectedResult.outputs.push(output);
+        } else {
+          selectedResult.outputs.push(
+            new TxOutput(output.value, output.address),
+          );
+        }
       } else {
-        selectedResult.change = new TxOutput(
-          output.value,
-          changeAccount.address,
-        );
+        changeTo.value = output.value;
+        selectedResult.change = changeTo;
       }
     }
 

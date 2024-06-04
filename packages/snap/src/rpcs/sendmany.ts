@@ -179,15 +179,25 @@ export class SendManyHandler
     comment: string,
   ): Promise<boolean> {
     const header = `Send Request`;
-    const intro = `Review the request by [portfolio.metamask.io](https://portfolio.metamask.io/) before proceeding. Once the transaction is made, it's irreversible.`;
+    const intro = `Review the request before proceeding. Once the transaction is made, it's irreversible.`;
     const recipientsLabel = `Recipient`;
     const amountLabel = `Amount`;
     const commentLabel = `Comment`;
     const networkFeeRateLabel = `Network fee rate`;
     const networkFeeLabel = `Network fee`;
     const totalLabel = `Total`;
+    const requestedByLable = `Requested by`;
 
-    const components: Component[] = [heading(header), text(intro), divider()];
+    const components: Component[] = [
+      heading(header),
+      text(intro),
+      row(
+        requestedByLable,
+        text(`[portfolio.metamask.io](https://portfolio.metamask.io/)`),
+      ),
+      divider(),
+    ];
+
     const info = txInfo.toJson<TxJson>();
 
     const isMoreThanOneRecipient =
