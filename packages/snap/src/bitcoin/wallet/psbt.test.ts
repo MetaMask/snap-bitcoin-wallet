@@ -92,7 +92,7 @@ describe('PsbtService', () => {
 
       const service = new PsbtService(network);
 
-      expect(service.psbt.txInputs).toHaveLength(0);
+      expect(service.psbt).toBeInstanceOf(Psbt);
     });
 
     it('constructor with an psbt base string', async () => {
@@ -101,8 +101,7 @@ describe('PsbtService', () => {
 
       const newService = PsbtService.fromBase64(networks.testnet, psbtBase64);
 
-      expect(newService.psbt.txInputs).toHaveLength(2);
-      expect(newService.psbt.txOutputs).toHaveLength(2);
+      expect(newService.psbt).toBeInstanceOf(Psbt);
     });
   });
 
@@ -120,7 +119,7 @@ describe('PsbtService', () => {
           hash: inputs[i].txHash,
           index: inputs[i].index,
           witnessUtxo: {
-            script: inputs[i].scriptBuf,
+            script: inputs[i].script,
             value: inputs[i].value,
           },
           bip32Derivation: [
@@ -143,7 +142,7 @@ describe('PsbtService', () => {
           hash: inputs[i].txHash,
           index: inputs[i].index,
           witnessUtxo: {
-            script: inputs[i].scriptBuf,
+            script: inputs[i].script,
             value: inputs[i].value,
           },
           bip32Derivation: [

@@ -1,25 +1,21 @@
-import { Buffer } from 'buffer';
+import type { Buffer } from 'buffer';
 
-import { bufferToString } from '../../utils';
 import type { IAddress, IAmount } from '../../wallet';
 import { BtcAddress } from './address';
 import { BtcAmount } from './amount';
 
 export class TxOutput {
-  amount: IAmount;
-
-  scriptBuf: Buffer;
+  readonly amount: IAmount;
 
   // consume by conselect
-  script: string;
+  readonly script?: Buffer;
 
-  destination: IAddress;
+  readonly destination: IAddress;
 
   constructor(value: number, address: string, script?: Buffer) {
     this.amount = new BtcAmount(value);
     this.destination = new BtcAddress(address);
-    this.scriptBuf = script ?? Buffer.alloc(0);
-    this.script = bufferToString(this.scriptBuf, 'hex');
+    this.script = script;
   }
 
   // consume by conselect

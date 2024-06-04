@@ -228,10 +228,27 @@ describe('SendManyHandler', () => {
 
       const calls = snapHelperSpy.mock.calls[0][0];
 
-      expect(calls[calls.length - 4]).toStrictEqual({
-        type: 'row',
-        label: 'Comment',
-        value: { type: 'text', value: 'test comment' },
+      const lastPanel = calls[calls.length - 1];
+
+      expect(lastPanel).toStrictEqual({
+        type: 'panel',
+        children: [
+          {
+            type: 'row',
+            label: 'Comment',
+            value: { markdown: false, type: 'text', value: 'test comment' },
+          },
+          {
+            type: 'row',
+            label: 'Network fee',
+            value: { markdown: false, type: 'text', value: expect.any(String) },
+          },
+          {
+            type: 'row',
+            label: 'Total',
+            value: { markdown: false, type: 'text', value: expect.any(String) },
+          },
+        ],
       });
     });
 
@@ -283,7 +300,26 @@ describe('SendManyHandler', () => {
 
       const calls = snapHelperSpy.mock.calls[0][0];
 
-      expect(calls[4]).toHaveProperty('label', 'Recipient');
+      const recipientsPanel = calls[2];
+
+      expect(recipientsPanel).toStrictEqual({
+        type: 'panel',
+        children: [
+          {
+            type: 'row',
+            label: 'Recipient',
+            value: {
+              type: 'text',
+              value: `[${recipients[0].address}](https://blockchair.com/bitcoin/transaction/transactionId)`,
+            },
+          },
+          {
+            type: 'row',
+            label: 'Amount',
+            value: { markdown: false, type: 'text', value: '0.000010 BTC' },
+          },
+        ],
+      });
     });
 
     it('throws `Request params is invalid` error when request parameter is not correct', async () => {

@@ -8,15 +8,15 @@ import { BtcAmount } from './amount';
 import type { TxOutput } from './transaction-output';
 
 export class BtcTxInfo implements ITxInfo {
-  #recipients: TxOutput[];
+  readonly sender: BtcAddress;
 
-  #feeRate: BtcAmount;
+  readonly txFee: BtcAmount;
 
   change?: TxOutput;
 
-  #sender: BtcAddress;
+  #recipients: TxOutput[];
 
-  #txFee: BtcAmount;
+  #feeRate: BtcAmount;
 
   #outputTotal: BtcAmount;
 
@@ -29,9 +29,9 @@ export class BtcTxInfo implements ITxInfo {
     this.#serializedRecipients = [];
     this.#outputTotal = new BtcAmount(0);
     this.#feeRate = new BtcAmount(feeRate);
-    this.#txFee = new BtcAmount(0);
+    this.txFee = new BtcAmount(0);
     this.#network = network;
-    this.#sender = sender;
+    this.sender = sender;
   }
 
   protected changeToJson(): Json {
@@ -74,7 +74,7 @@ export class BtcTxInfo implements ITxInfo {
     return new BtcAmount(
       this.#outputTotal.value +
         (this.change ? this.change.value : 0) +
-        this.#txFee.value,
+        this.txFee.value,
     );
   }
 
@@ -82,31 +82,23 @@ export class BtcTxInfo implements ITxInfo {
     return this.#feeRate;
   }
 
-  get sender(): BtcAddress {
-    return this.#sender;
-  }
-
   get recipients(): TxOutput[] {
     return this.#recipients;
   }
 
   get fee(): number {
-    return this.#txFee.value;
+    return this.txFee.value;
   }
 
   set fee(val: number) {
-    this.#txFee.value = val;
-  }
-
-  get txFee(): BtcAmount {
-    return this.#txFee;
+    this.txFee.value = val;
   }
 
   toJson<InfoJson extends Record<string, Json>>(): InfoJson {
     return {
       feeRate: this.#feeRate.toString(true),
-      txFee: this.#txFee.toString(true),
-      sender: this.#sender.toString(),
+      txFee: this.txFee.toString(true),
+      sender: this.sender.toString(),
       recipients: this.#serializedRecipients,
       changes: this.changeToJson(),
       total: this.total.toString(true),

@@ -15,9 +15,9 @@ import type { TxOutput } from './transaction-output';
 const ECPair = ECPairFactory(ecc);
 
 export class PsbtService {
-  readonly #psbt: Psbt;
+  #psbt: Psbt;
 
-  readonly #network: Network;
+  #network: Network;
 
   get psbt() {
     return this.#psbt;
@@ -50,7 +50,7 @@ export class PsbtService {
         hash: input.txHash,
         index: input.index,
         witnessUtxo: {
-          script: input.scriptBuf,
+          script: input.script,
           value: input.value,
         },
         // This is useful because as long as you store the masterFingerprint on

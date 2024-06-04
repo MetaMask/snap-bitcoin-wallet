@@ -107,11 +107,7 @@ export class BtcWallet implements IWallet {
       change,
     );
 
-    logger.info({
-      inputs: JSON.stringify(selectionResult.inputs),
-      outputs: JSON.stringify(selectionResult.outputs),
-      change: JSON.stringify(selectionResult.change),
-    });
+    logger.info(JSON.stringify(selectionResult, null, 2));
 
     const txInfo = new BtcTxInfo(
       new BtcAddress(account.address),
