@@ -1,7 +1,7 @@
 import { networks } from 'bitcoinjs-lib';
+import type { Buffer } from 'buffer';
 
 import { generateFormatedUtxos } from '../../../test/utils';
-import { hexToBuffer } from '../../utils';
 import { ScriptType } from '../constants';
 import { BtcAccountBip32Deriver } from './deriver';
 import { TxInput } from './transaction-input';
@@ -23,13 +23,12 @@ describe('TxInput', () => {
   it('return correct property', async () => {
     const wallet = createMockWallet(networks.testnet);
     const account = await wallet.instance.unlock(0, ScriptType.P2wpkh);
-    const script = account.payment.output?.toString('hex') as unknown as string;
-    const scriptBuf = hexToBuffer(script, false);
+    const script = account.payment.output as unknown as Buffer;
+
     const utxo = generateFormatedUtxos(account.address, 1)[0];
 
-    const input = new TxInput(utxo, scriptBuf);
+    const input = new TxInput(utxo, script);
 
-    expect(input.scriptBuf).toStrictEqual(scriptBuf);
     expect(input.script).toStrictEqual(script);
     expect(input.value).toStrictEqual(utxo.value);
     expect(input.txHash).toStrictEqual(utxo.txHash);
