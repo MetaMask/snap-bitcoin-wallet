@@ -28,13 +28,13 @@ import type {
 } from './types';
 
 export class BtcWallet implements IWallet {
-  protected readonly deriver: IBtcAccountDeriver;
+  protected readonly _deriver: IBtcAccountDeriver;
 
-  protected readonly network: Network;
+  protected readonly _network: Network;
 
   constructor(deriver: IBtcAccountDeriver, network: Network) {
-    this.deriver = deriver;
-    this.network = network;
+    this._deriver = deriver;
+    this._network = network;
   }
 
   protected getAccountCtor(type: string): IStaticBtcAccount {
@@ -55,8 +55,8 @@ export class BtcWallet implements IWallet {
   async unlock(index: number, type: string): Promise<IBtcAccount> {
     try {
       const AccountCtor = this.getAccountCtor(type);
-      const rootNode = await this.deriver.getRoot(AccountCtor.path);
-      const childNode = await this.deriver.getChild(rootNode, index);
+      const rootNode = await this._deriver.getRoot(AccountCtor.path);
+      const childNode = await this._deriver.getChild(rootNode, index);
       const hdPath = [`m`, `0'`, `0`, `${index}`].join('/');
 
       return new AccountCtor(
@@ -64,7 +64,7 @@ export class BtcWallet implements IWallet {
         index,
         hdPath,
         bufferToString(childNode.publicKey, 'hex'),
-        this.network,
+        this._network,
         AccountCtor.scriptType,
         `bip122:${AccountCtor.scriptType.toLowerCase()}`,
         this.getHdSigner(rootNode),
@@ -92,7 +92,7 @@ export class BtcWallet implements IWallet {
         new TxOutput(
           recipient.value,
           recipient.address,
-          address.toOutputScript(recipient.address, this.network),
+          address.toOutputScript(recipient.address, this._network),
         ),
     );
 
@@ -112,10 +112,10 @@ export class BtcWallet implements IWallet {
     const txInfo = new BtcTxInfo(
       new BtcAddress(account.address),
       feeRate,
-      this.network,
+      this._network,
     );
 
-    const psbtService = new PsbtService(this.network);
+    const psbtService = new PsbtService(this._network);
     psbtService.addInputs(
       selectionResult.inputs,
       options.replaceable,
@@ -155,7 +155,7 @@ export class BtcWallet implements IWallet {
   }
 
   async signTransaction(signer: IAccountSigner, tx: string): Promise<string> {
-    const psbtService = PsbtService.fromBase64(this.network, tx);
+    const psbtService = PsbtService.fromBase64(this._network, tx);
     await psbtService.signNVerify(signer);
     return psbtService.finalize();
   }

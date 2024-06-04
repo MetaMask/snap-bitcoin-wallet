@@ -9,12 +9,12 @@ export class AccountSigner implements HDSignerAsync, IAccountSigner {
 
   readonly fingerprint: Buffer;
 
-  protected readonly node: BIP32Interface;
+  protected readonly _node: BIP32Interface;
 
   constructor(accountNode: BIP32Interface, mfp?: Buffer) {
-    this.node = accountNode;
-    this.publicKey = this.node.publicKey;
-    this.fingerprint = mfp ?? this.node.fingerprint;
+    this._node = accountNode;
+    this.publicKey = this._node.publicKey;
+    this.fingerprint = mfp ?? this._node.fingerprint;
   }
 
   derivePath(path: string): IAccountSigner {
@@ -31,7 +31,7 @@ export class AccountSigner implements HDSignerAsync, IAccountSigner {
         }
         index = parseInt(indexStr, 10);
         return prevHd.derive(index);
-      }, this.node);
+      }, this._node);
       return new AccountSigner(childNode, this.fingerprint);
     } catch (error) {
       throw new Error('Unable to derive path');
@@ -39,10 +39,10 @@ export class AccountSigner implements HDSignerAsync, IAccountSigner {
   }
 
   async sign(hash: Buffer): Promise<Buffer> {
-    return this.node.sign(hash);
+    return this._node.sign(hash);
   }
 
   verify(hash: Buffer, signature: Buffer): boolean {
-    return this.node.verify(hash, signature);
+    return this._node.verify(hash, signature);
   }
 }
