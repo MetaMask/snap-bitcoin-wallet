@@ -10,7 +10,7 @@ import * as manager from './wallet';
 describe('BtcWalletFactory', () => {
   class MockBtcWallet extends manager.BtcWallet {
     getDeriver() {
-      return this.deriver;
+      return this._deriver;
     }
   }
 

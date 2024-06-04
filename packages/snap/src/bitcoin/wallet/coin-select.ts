@@ -7,10 +7,10 @@ import { TxOutput } from './transaction-output';
 import { type SelectionResult } from './types';
 
 export class CoinSelectService {
-  #feeRate: number;
+  protected _feeRate: number;
 
   constructor(feeRate: number) {
-    this.#feeRate = Math.round(feeRate);
+    this._feeRate = Math.round(feeRate);
   }
 
   selectCoins(
@@ -18,7 +18,7 @@ export class CoinSelectService {
     recipients: Recipient[] | TxOutput[],
     changeTo: TxOutput,
   ): SelectionResult {
-    const result = coinSelect(inputs, recipients, this.#feeRate);
+    const result = coinSelect(inputs, recipients, this._feeRate);
 
     if (!result.inputs || !result.outputs) {
       throw new TxValidationError('Insufficient funds');
