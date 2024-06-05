@@ -1,5 +1,6 @@
 import type { BIP32Interface } from 'bip32';
 import type { Network, Payment } from 'bitcoinjs-lib';
+import type { Buffer } from 'buffer';
 
 import type { IAccount, IAccountSigner } from '../../wallet';
 import type { ScriptType } from '../constants';
@@ -15,6 +16,7 @@ export type IBtcAccount = IAccount & {
   payment: Payment;
   scriptType: ScriptType;
   network: Network;
+  script: Buffer;
 };
 
 export type IStaticBtcAccount = {

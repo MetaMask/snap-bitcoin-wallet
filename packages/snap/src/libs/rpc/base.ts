@@ -25,11 +25,11 @@ export abstract class BaseSnapRpcHandler {
     params: SnapRpcHandlerRequest,
   ): Promise<SnapRpcHandlerResponse>;
 
-  protected get requestStruct(): Struct {
+  protected get _requestStruct(): Struct {
     return (this.constructor as typeof BaseSnapRpcHandler).requestStruct;
   }
 
-  protected get responseStruct(): Struct | undefined {
+  protected get _responseStruct(): Struct | undefined {
     return (this.constructor as typeof BaseSnapRpcHandler).responseStruct;
   }
 
@@ -38,7 +38,7 @@ export abstract class BaseSnapRpcHandler {
       `[SnapRpcHandler.preExecute] Request: ${JSON.stringify(params)}`,
     );
     try {
-      assert(params, this.requestStruct);
+      assert(params, this._requestStruct);
     } catch (error) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       logger.info(`[SnapRpcHandler.preExecute] Error: ${error.message}`);
@@ -52,8 +52,8 @@ export abstract class BaseSnapRpcHandler {
     );
 
     try {
-      if (this.responseStruct) {
-        assert(response, this.responseStruct);
+      if (this._responseStruct) {
+        assert(response, this._responseStruct);
       }
     } catch (error) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions

@@ -55,10 +55,7 @@ describe('PsbtService', () => {
       outputVal * outputs.length + fee,
       outputVal * outputs.length + fee,
     );
-    const inputs = utxos.map(
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      (utxo) => new TxInput(utxo, sender.payment.output!),
-    );
+    const inputs = utxos.map((utxo) => new TxInput(utxo, sender.script));
 
     service.addOutputs(outputs);
 
@@ -183,7 +180,7 @@ describe('PsbtService', () => {
       for (let i = 0; i < service.psbt.txOutputs.length; i++) {
         expect(service.psbt.txOutputs[i]).toHaveProperty(
           'script',
-          receivers[i].payment.output,
+          receivers[i].script,
         );
         expect(service.psbt.txOutputs[i]).toHaveProperty(
           'value',

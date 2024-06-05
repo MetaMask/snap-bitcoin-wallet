@@ -212,10 +212,7 @@ describe('BtcWallet', () => {
           chgAccount.address,
         ),
         fee: 100,
-        inputs: utxos.map(
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          (utxo) => new TxInput(utxo, chgAccount.payment.output!),
-        ),
+        inputs: utxos.map((utxo) => new TxInput(utxo, chgAccount.script)),
         outputs: [
           new TxOutput(
             500,
@@ -263,31 +260,6 @@ describe('BtcWallet', () => {
           },
         ),
       ).rejects.toThrow('Transaction amount too small');
-    });
-
-    it('throws `Fail to get account script hash` error if the account script hash is undefined', async () => {
-      const network = networks.testnet;
-      const { instance } = createMockDeriver(network);
-      const wallet = new BtcWallet(instance, network);
-      const account = await wallet.unlock(0, ScriptType.P2wpkh);
-      const utxos = generateFormatedUtxos(account.address, 2);
-      account.payment.output = undefined;
-
-      await expect(
-        wallet.createTransaction(
-          account,
-          createMockTxIndent(
-            account.address,
-            DustLimit[account.scriptType] + 1,
-          ),
-          {
-            utxos,
-            fee: 1,
-            subtractFeeFrom: [],
-            replaceable: false,
-          },
-        ),
-      ).rejects.toThrow('Fail to get account script hash');
     });
   });
 

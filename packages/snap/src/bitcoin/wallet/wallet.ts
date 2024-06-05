@@ -7,7 +7,7 @@ import type {
   IAccountSigner,
   IWallet,
   Recipient,
-  TxCreationResult,
+  Transaction,
 } from '../../wallet';
 import { ScriptType } from '../constants';
 import { isDust } from '../utils';
@@ -37,21 +37,6 @@ export class BtcWallet implements IWallet {
     this._network = network;
   }
 
-  protected getAccountCtor(type: string): IStaticBtcAccount {
-    let scriptType = type;
-    if (type.includes('bip122:')) {
-      scriptType = type.split(':')[1];
-    }
-    switch (scriptType.toLowerCase()) {
-      case ScriptType.P2wpkh.toLowerCase():
-        return P2WPKHAccount;
-      case ScriptType.P2shP2wkh.toLowerCase():
-        return P2SHP2WPKHAccount;
-      default:
-        throw new WalletError('Invalid script type');
-    }
-  }
-
   async unlock(index: number, type: string): Promise<IBtcAccount> {
     try {
       const AccountCtor = this.getAccountCtor(type);
@@ -78,14 +63,22 @@ export class BtcWallet implements IWallet {
     account: IBtcAccount,
     recipients: Recipient[],
     options: CreateTransactionOptions,
-  ): Promise<TxCreationResult> {
-    const scriptOutput = account.payment.output;
+  ): Promise<Transaction> {
+    const scriptOutput = account.script;
     const { scriptType } = account;
 
-    if (!scriptOutput) {
-      throw new WalletError('Fail to get account script hash');
-    }
+    logger.info(
+      JSON.stringify(
+        {
+          recipients,
+          options,
+        },
+        null,
+        2,
+      ),
+    );
 
+    // TODO: Supporting getting coins from other address (dynamic address)
     const inputs = options.utxos.map((utxo) => new TxInput(utxo, scriptOutput));
     const outputs = recipients.map(
       (recipient) =>
@@ -100,14 +93,23 @@ export class BtcWallet implements IWallet {
     // TODO: The min fee rate should be setting from parameter
     const feeRate = Math.max(1, options.fee);
     const coinSelectService = new CoinSelectService(feeRate);
-    const change = new TxOutput(0, account.address);
+    const change = new TxOutput(0, account.address, scriptOutput);
     const selectionResult = coinSelectService.selectCoins(
       inputs,
       outputs,
       change,
     );
 
-    logger.info(JSON.stringify(selectionResult, null, 2));
+    logger.info(
+      JSON.stringify(
+        {
+          feeRate,
+          ...selectionResult,
+        },
+        null,
+        2,
+      ),
+    );
 
     const txInfo = new BtcTxInfo(
       new BtcAddress(account.address),
@@ -162,5 +164,20 @@ export class BtcWallet implements IWallet {
 
   protected getHdSigner(rootNode: BIP32Interface) {
     return new AccountSigner(rootNode, rootNode.fingerprint);
+  }
+
+  protected getAccountCtor(type: string): IStaticBtcAccount {
+    let scriptType = type;
+    if (type.includes('bip122:')) {
+      scriptType = type.split(':')[1];
+    }
+    switch (scriptType.toLowerCase()) {
+      case ScriptType.P2wpkh.toLowerCase():
+        return P2WPKHAccount;
+      case ScriptType.P2shP2wkh.toLowerCase():
+        return P2SHP2WPKHAccount;
+      default:
+        throw new WalletError('Invalid script type');
+    }
   }
 }
