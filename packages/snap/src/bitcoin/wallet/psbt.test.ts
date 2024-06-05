@@ -47,7 +47,7 @@ describe('PsbtService', () => {
     const fee = 500;
 
     const outputs = receivers.map(
-      (account) => new TxOutput(outputVal, account.address),
+      (account) => new TxOutput(outputVal, account.address, account.script),
     );
     const utxos = generateFormatedUtxos(
       sender.address,

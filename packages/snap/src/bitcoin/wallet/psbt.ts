@@ -104,7 +104,7 @@ export class PsbtService {
   addOutput(output: TxOutput) {
     try {
       this._psbt.addOutput({
-        address: output.address,
+        script: output.script,
         value: output.value,
       });
     } catch (error) {

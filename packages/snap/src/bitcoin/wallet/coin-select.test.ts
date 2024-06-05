@@ -88,7 +88,7 @@ describe('CoinSelectService', () => {
         coinSelectService.selectCoins(
           inputs,
           outputs,
-          new TxOutput(0, sender.address),
+          new TxOutput(0, sender.address, sender.script),
         ),
       ).toThrow('Insufficient funds');
     });

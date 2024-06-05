@@ -1,5 +1,5 @@
 import type { Json } from '@metamask/snaps-sdk';
-import { address as addressUtils, networks } from 'bitcoinjs-lib';
+import { networks } from 'bitcoinjs-lib';
 
 import { generateFormatedUtxos } from '../../../test/utils';
 import { DustLimit, ScriptType } from '../constants';
@@ -210,16 +210,11 @@ describe('BtcWallet', () => {
         change: new TxOutput(
           DustLimit[chgAccount.scriptType] - 1,
           chgAccount.address,
+          chgAccount.script,
         ),
         fee: 100,
         inputs: utxos.map((utxo) => new TxInput(utxo, chgAccount.script)),
-        outputs: [
-          new TxOutput(
-            500,
-            recipient.address,
-            addressUtils.toOutputScript(recipient.address, network),
-          ),
-        ],
+        outputs: [new TxOutput(500, recipient.address, recipient.script)],
       };
 
       coinSelectServiceSpy.mockReturnValue(selectionResult);
@@ -241,7 +236,7 @@ describe('BtcWallet', () => {
       expect(info.change).toBeUndefined();
     });
 
-    it('throws `Transaction amount too small` error the transaction output is too small', async () => {
+    it('throws `Transaction amount too small` error if the transaction output is too small', async () => {
       const network = networks.testnet;
       const { instance } = createMockDeriver(network);
       const wallet = new BtcWallet(instance, network);

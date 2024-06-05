@@ -1,5 +1,5 @@
 import type { BIP32Interface } from 'bip32';
-import { type Network, address } from 'bitcoinjs-lib';
+import { type Network } from 'bitcoinjs-lib';
 
 import { logger } from '../../libs/logger/logger';
 import { bufferToString, compactError, hexToBuffer } from '../../utils';
@@ -11,6 +11,7 @@ import type {
 } from '../../wallet';
 import { ScriptType } from '../constants';
 import { isDust } from '../utils';
+import { getScriptForDestnation } from '../utils/address';
 import { P2WPKHAccount, P2SHP2WPKHAccount } from './account';
 import { BtcAddress } from './address';
 import { CoinSelectService } from './coin-select';
@@ -80,16 +81,22 @@ export class BtcWallet implements IWallet {
 
     // TODO: Supporting getting coins from other address (dynamic address)
     const inputs = options.utxos.map((utxo) => new TxInput(utxo, scriptOutput));
-    const outputs = recipients.map(
-      (recipient) =>
-        new TxOutput(
-          recipient.value,
-          recipient.address,
-          address.toOutputScript(recipient.address, this._network),
-        ),
-    );
+    const outputs = recipients.map((recipient) => {
+      if (isDust(recipient.value, scriptType)) {
+        throw new TxValidationError('Transaction amount too small');
+      }
+      const destnationScriptOutput = getScriptForDestnation(
+        recipient.address,
+        this._network,
+      );
+      return new TxOutput(
+        recipient.value,
+        recipient.address,
+        destnationScriptOutput,
+      );
+    });
 
-    // as fee rate can be 0, we need to ensure it is at least 1
+    // Do not ever accept zero fee rate, we need to ensure it is at least 1
     // TODO: The min fee rate should be setting from parameter
     const feeRate = Math.max(1, options.fee);
     const coinSelectService = new CoinSelectService(feeRate);
@@ -128,9 +135,6 @@ export class BtcWallet implements IWallet {
 
     // TODO: add support of subtractFeeFrom, and throw error if output is too small after subtraction
     for (const output of selectionResult.outputs) {
-      if (isDust(output.value, scriptType)) {
-        throw new TxValidationError('Transaction amount too small');
-      }
       psbtService.addOutput(output);
       txInfo.addRecipient(output);
     }
