@@ -1,10 +1,9 @@
 import { type Network } from 'bitcoinjs-lib';
 
-import { type BtcOnChainServiceConfig } from '../config';
+import { type BtcOnChainServiceConfig } from '../../config';
 import { DataClient } from '../constants';
 import { BlockChairClient } from './clients/blockchair';
 import { BlockStreamClient } from './clients/blockstream';
-import { DataClientError } from './exceptions';
 import type { IReadDataClient, IWriteDataClient } from './types';
 
 export class DataClientFactory {
@@ -22,7 +21,7 @@ export class DataClientFactory {
           apiKey: options?.apiKey?.toString(),
         });
       default:
-        throw new DataClientError(
+        throw new Error(
           // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
           `Unsupported client type: ${config.dataClient.read.type}`,
         );
@@ -41,7 +40,7 @@ export class DataClientFactory {
           apiKey: options?.apiKey?.toString(),
         });
       default:
-        throw new DataClientError(
+        throw new Error(
           // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
           `Unsupported client type: ${config.dataClient.write.type}`,
         );

@@ -6,7 +6,7 @@ import { BtcAccountBip32Deriver } from './deriver';
 import { TxInput } from './transaction-input';
 import { BtcWallet } from './wallet';
 
-jest.mock('../../libs/snap/helpers');
+jest.mock('../../utils/snap');
 
 describe('TxInput', () => {
   const createMockWallet = (network) => {

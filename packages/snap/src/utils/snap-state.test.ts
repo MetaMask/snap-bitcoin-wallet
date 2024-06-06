@@ -1,11 +1,10 @@
 import { expect } from '@jest/globals';
 
-import { StateError } from './exceptions';
-import { SnapHelper } from './helpers';
-import { MutexLock } from './lock';
-import { SnapStateManager } from './state';
+import * as lockUtil from './lock';
+import * as snapUtil from './snap';
+import { SnapStateManager } from './snap-state';
 
-jest.mock('../logger/logger');
+jest.mock('../logger');
 
 type MockTransactionDetail = {
   txHash: string;
@@ -125,7 +124,7 @@ describe('SnapStateManager', () => {
     };
 
     const getStateDataSpy = jest
-      .spyOn(SnapHelper, 'getStateData')
+      .spyOn(snapUtil, 'getStateData')
       .mockImplementation(async () => {
         return {
           transaction: [...initState.transaction],
@@ -147,7 +146,7 @@ describe('SnapStateManager', () => {
       });
 
     const setStateDataSpy = jest
-      .spyOn(SnapHelper, 'setStateData')
+      .spyOn(snapUtil, 'setStateData')
       .mockImplementation(setStateDataFn);
 
     return {
@@ -160,14 +159,14 @@ describe('SnapStateManager', () => {
 
   describe('constructor', () => {
     it('sends `false` to Lock.Acquire if parameter `createLock` is `undefined`', async () => {
-      const spy = jest.spyOn(MutexLock, 'acquire');
+      const spy = jest.spyOn(lockUtil, 'acquireLock');
       createMockStateManager();
 
       expect(spy).toHaveBeenCalledWith(false);
     });
 
     it('sends `true` to Lock.Acquire if parameter `createLock` is `true`', async () => {
-      const spy = jest.spyOn(MutexLock, 'acquire');
+      const spy = jest.spyOn(lockUtil, 'acquireLock');
       createMockStateManager(true);
 
       expect(spy).toHaveBeenCalledWith(true);
@@ -186,7 +185,7 @@ describe('SnapStateManager', () => {
         ],
       };
       const readSpy = jest
-        .spyOn(SnapHelper, 'getStateData')
+        .spyOn(snapUtil, 'getStateData')
         .mockResolvedValue(state);
       const result = await instance.getData();
 
@@ -213,9 +212,9 @@ describe('SnapStateManager', () => {
         },
       };
       const readSpy = jest
-        .spyOn(SnapHelper, 'getStateData')
+        .spyOn(snapUtil, 'getStateData')
         .mockResolvedValue(testcase.state);
-      const writeSpy = jest.spyOn(SnapHelper, 'setStateData');
+      const writeSpy = jest.spyOn(snapUtil, 'setStateData');
       updateDataSpy.mockImplementation((state, data) => {
         state.transaction.push(data);
       });
@@ -384,7 +383,7 @@ describe('SnapStateManager', () => {
       } catch (error) {
         expectedError = error;
       } finally {
-        expect(expectedError).toBeInstanceOf(StateError);
+        expect(expectedError).toBeInstanceOf(Error);
         expect(initState.transaction).toStrictEqual(['id']);
         expect(setStateDataSpy).toHaveBeenCalledTimes(0);
         expect(initState.trasansactionDetails).toStrictEqual({
@@ -563,7 +562,7 @@ describe('SnapStateManager', () => {
       ).rejects.toThrow('Failed to begin transaction');
     });
 
-    it('throws StateError error, if an StateError catched', async () => {
+    it('throws Error error, if an Error catched', async () => {
       const initState = {
         transaction: [],
         trasansactionDetails: {},
@@ -582,7 +581,7 @@ describe('SnapStateManager', () => {
       // firsy mockImplementation is to mock the set data actions
       setStateDataSpy
         .mockImplementationOnce(async () => {
-          throw new StateError('setStateDataSpy');
+          throw new Error('setStateDataSpy');
           // second mockImplementation is to mock the rollback actions
         })
         .mockImplementationOnce(setStateDataFn);
@@ -596,7 +595,7 @@ describe('SnapStateManager', () => {
           },
           30,
         ),
-      ).rejects.toThrow(StateError);
+      ).rejects.toThrow(Error);
     });
   });
 });

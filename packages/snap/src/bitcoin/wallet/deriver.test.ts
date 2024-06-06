@@ -7,17 +7,17 @@ import { networks } from 'bitcoinjs-lib';
 import { Buffer } from 'buffer';
 import ECPairFactory from 'ecpair';
 
-import { SnapHelper } from '../../libs/snap';
+import * as snapUtils from '../../utils/snap';
 import * as strUtils from '../../utils/string';
 import { P2WPKHAccount } from './account';
 import { BtcAccountBip32Deriver, BtcAccountBip44Deriver } from './deriver';
 
-jest.mock('../../libs/snap/helpers');
+jest.mock('../../utils/snap');
 
 describe('BtcAccountBip32Deriver', () => {
   const prepareBip32Deriver = async (network) => {
     const deriver = new BtcAccountBip32Deriver(network);
-    const bip32Deriver = await SnapHelper.getBip32Deriver(
+    const bip32Deriver = await snapUtils.getBip32Deriver(
       P2WPKHAccount.path,
       deriver.curve,
     );
@@ -168,7 +168,7 @@ describe('BtcAccountBip32Deriver', () => {
       const deriver = new BtcAccountBip32Deriver(network);
 
       jest
-        .spyOn(SnapHelper, 'getBip32Deriver')
+        .spyOn(snapUtils, 'getBip32Deriver')
         .mockResolvedValue({} as unknown as SLIP10NodeInterface);
 
       await expect(deriver.getRoot(P2WPKHAccount.path)).rejects.toThrow(
@@ -180,7 +180,7 @@ describe('BtcAccountBip32Deriver', () => {
 
 describe('BtcAccountBip44Deriver', () => {
   const createMockBip44Entropy = () => {
-    const getBip44DeriverSpy = jest.spyOn(SnapHelper, 'getBip44Deriver');
+    const getBip44DeriverSpy = jest.spyOn(snapUtils, 'getBip44Deriver');
     const deriverSpy = jest.fn();
 
     getBip44DeriverSpy.mockResolvedValue(

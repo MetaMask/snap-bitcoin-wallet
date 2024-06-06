@@ -4,8 +4,12 @@ import { BIP32Factory } from 'bip32';
 import { type Network } from 'bitcoinjs-lib';
 import type { Buffer } from 'buffer';
 
-import { SnapHelper } from '../../libs/snap/helpers';
-import { compactError, hexToBuffer } from '../../utils';
+import {
+  compactError,
+  hexToBuffer,
+  getBip44Deriver,
+  getBip32Deriver,
+} from '../../utils';
 import { DeriverError } from './exceptions';
 import type { IBtcAccountDeriver } from './types';
 
@@ -68,7 +72,7 @@ export abstract class BtcAccountDeriver implements IBtcAccountDeriver {
 export class BtcAccountBip44Deriver extends BtcAccountDeriver {
   async getRoot(path: string[]) {
     try {
-      const deriver = await SnapHelper.getBip44Deriver(0); // seed phase
+      const deriver = await getBip44Deriver(0); // seed phase
       const deriverNode = await deriver(0);
       if (!deriverNode.privateKey) {
         throw new DeriverError('Deriver private key is missing');
@@ -89,7 +93,7 @@ export class BtcAccountBip32Deriver extends BtcAccountDeriver {
 
   async getRoot(path: string[]) {
     try {
-      const deriver = await SnapHelper.getBip32Deriver(path, this.curve);
+      const deriver = await getBip32Deriver(path, this.curve);
 
       if (!deriver.privateKey) {
         throw new DeriverError('Deriver private key is missing');

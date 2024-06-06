@@ -8,10 +8,6 @@ export class BtcAddress implements IAddress {
     this.value = address;
   }
 
-  valueOf(): string {
-    return this.value;
-  }
-
   toString(isShortern = false): string {
     return isShortern ? replaceMiddleChar(this.value, 5, 3) : this.value;
   }

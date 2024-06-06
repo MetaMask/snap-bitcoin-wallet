@@ -2,12 +2,13 @@ import type { Json } from '@metamask/snaps-sdk';
 import { type Network, networks } from 'bitcoinjs-lib';
 
 import type { TransactionStatusData } from '../../../chain';
-import { type Balances, FeeRatio, TransactionStatus } from '../../../chain';
-import { logger } from '../../../libs/logger/logger';
+import { FeeRatio, TransactionStatus } from '../../../chain';
+import { logger } from '../../../logger';
 import { compactError } from '../../../utils';
 import type { Utxo } from '../../wallet';
 import { DataClientError } from '../exceptions';
 import type {
+  GetBalancesResp,
   GetFeeRatesResp,
   IReadDataClient,
   IWriteDataClient,
@@ -24,7 +25,7 @@ export type LargestTransaction = {
   value_usd: number;
 };
 
-export type GetBalanceResponse = {
+export type GetBalancesResponse = {
   data: {
     [address: string]: number;
   };
@@ -218,7 +219,7 @@ export class BlockChairClient implements IReadDataClient, IWriteDataClient {
       case networks.testnet:
         return 'https://api.blockchair.com/bitcoin/testnet';
       default:
-        throw new DataClientError('Invalid network');
+        throw new Error('Invalid network');
     }
   }
 
@@ -237,7 +238,7 @@ export class BlockChairClient implements IReadDataClient, IWriteDataClient {
     });
 
     if (!response.ok) {
-      throw new DataClientError(
+      throw new Error(
         `Failed to fetch data from blockchair: ${response.statusText}`,
       );
     }
@@ -255,13 +256,13 @@ export class BlockChairClient implements IReadDataClient, IWriteDataClient {
 
     if (response.status == 400) {
       const res = await response.json();
-      throw new DataClientError(
+      throw new Error(
         `Failed to post data from blockchair: ${res.context.error}`,
       );
     }
 
     if (!response.ok) {
-      throw new DataClientError(
+      throw new Error(
         `Failed to post data from blockchair: ${response.statusText}`,
       );
     }
@@ -283,11 +284,14 @@ export class BlockChairClient implements IReadDataClient, IWriteDataClient {
       );
       return response;
     } catch (error) {
+      logger.info(
+        `[BlockChairClient.getTxDashboardData] error: ${error.message}`,
+      );
       throw compactError(error, DataClientError);
     }
   }
 
-  async getBalances(addresses: string[]): Promise<Balances> {
+  async getBalances(addresses: string[]): Promise<GetBalancesResp> {
     try {
       logger.info(
         `[BlockChairClient.getBalance] start: { addresses : ${JSON.stringify(
@@ -295,7 +299,7 @@ export class BlockChairClient implements IReadDataClient, IWriteDataClient {
         )} }`,
       );
 
-      const response = await this.get<GetBalanceResponse>(
+      const response = await this.get<GetBalancesResponse>(
         `/addresses/balances?addresses=${addresses.join(',')}`,
       );
 
@@ -303,11 +307,12 @@ export class BlockChairClient implements IReadDataClient, IWriteDataClient {
         `[BlockChairClient.getBalance] response: ${JSON.stringify(response)}`,
       );
 
-      return addresses.reduce((data: Balances, address: string) => {
+      return addresses.reduce((data: GetBalancesResp, address: string) => {
         data[address] = response.data[address] ?? 0;
         return data;
       }, {});
     } catch (error) {
+      logger.info(`[BlockChairClient.getBalance] error: ${error.message}`);
       throw compactError(error, DataClientError);
     }
   }
@@ -336,7 +341,7 @@ export class BlockChairClient implements IReadDataClient, IWriteDataClient {
         );
 
         if (!Object.prototype.hasOwnProperty.call(response.data, address)) {
-          throw new DataClientError(`Data not avaiable`);
+          throw new Error(`Data not avaiable`);
         }
 
         response.data[address].utxo.forEach((utxo) => {
@@ -357,6 +362,7 @@ export class BlockChairClient implements IReadDataClient, IWriteDataClient {
 
       return data;
     } catch (error) {
+      logger.info(`[BlockChairClient.getUtxos] error: ${error.message}`);
       throw compactError(error, DataClientError);
     }
   }
@@ -372,6 +378,7 @@ export class BlockChairClient implements IReadDataClient, IWriteDataClient {
         [FeeRatio.Fast]: response.data.suggested_transaction_fee_per_byte_sat,
       };
     } catch (error) {
+      logger.info(`[BlockChairClient.getFeeRates] error: ${error.message}`);
       throw compactError(error, DataClientError);
     }
   }
@@ -393,6 +400,7 @@ export class BlockChairClient implements IReadDataClient, IWriteDataClient {
 
       return response.data.transaction_hash;
     } catch (error) {
+      logger.info(`[BlockChairClient.sendTransaction] error: ${error.message}`);
       throw compactError(error, DataClientError);
     }
   }
@@ -418,6 +426,9 @@ export class BlockChairClient implements IReadDataClient, IWriteDataClient {
         status: status,
       };
     } catch (error) {
+      logger.info(
+        `[BlockChairClient.getTransactionStatus] error: ${error.message}`,
+      );
       throw compactError(error, DataClientError);
     }
   }

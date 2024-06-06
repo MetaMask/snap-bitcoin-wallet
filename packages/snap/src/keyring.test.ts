@@ -1,20 +1,20 @@
+import type { KeyringAccount } from '@metamask/keyring-api';
 import { MethodNotFoundError } from '@metamask/snaps-sdk';
-import { unknown } from 'superstruct';
+import { v4 as uuidv4 } from 'uuid';
 
-import { generateAccounts } from '../../test/utils';
-import { BtcAsset, Network } from '../bitcoin/constants';
-import { Chain, Config } from '../config';
-import { Factory } from '../factory';
-import { type IStaticSnapRpcHandler, BaseSnapRpcHandler } from '../libs/rpc';
-import { GetBalancesHandler } from '../rpcs';
-import { RpcHelper } from '../rpcs/helpers';
-import type { StaticImplements } from '../types/static';
-import type { IWallet } from '../wallet';
-import { BtcKeyringError } from './exceptions';
+import { generateAccounts } from '../test/utils';
+import { BtcAsset, BtcUnit, Network, ScriptType } from './bitcoin/constants';
+import { BtcAccount } from './bitcoin/wallet';
+import { Config } from './config';
+import { Factory } from './factory';
 import { BtcKeyring } from './keyring';
-import { KeyringStateManager } from './state';
+import * as getBalanceRpc from './rpcs/get-balances';
+import * as sendManyRpc from './rpcs/sendmany';
+import { KeyringStateManager } from './stateManagement';
+import type { IWallet } from './wallet';
 
-jest.mock('../libs/logger/logger');
+jest.mock('./logger');
+jest.mock('./utils/snap');
 
 jest.mock('@metamask/keyring-api', () => ({
   ...jest.requireActual('@metamask/keyring-api'),
@@ -71,45 +71,41 @@ describe('BtcKeyring', () => {
     };
   };
 
-  const createMockChainRPCHandler = () => {
-    const handleRequestSpy = jest.fn();
-    class MockChainRpcHandler
-      extends BaseSnapRpcHandler
-      implements
-        StaticImplements<IStaticSnapRpcHandler, typeof MockChainRpcHandler>
-    {
-      static override get requestStruct() {
-        return unknown();
-      }
-
-      handleRequest = handleRequestSpy;
-    }
-    return {
-      instance: MockChainRpcHandler,
-      handleRequestSpy,
-    };
-  };
-
   const createMockKeyring = (stateMgr: KeyringStateManager) => {
-    const { instance: RpcHandler, handleRequestSpy } =
-      createMockChainRPCHandler();
-
-    jest.spyOn(RpcHelper, 'getKeyringRpcApiHandlers').mockReturnValue({
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      btc_sendmany: RpcHandler,
-    });
-
+    const sendManySpy = jest.spyOn(sendManyRpc, 'sendMany');
+    const getBalanceRpcSpy = jest.spyOn(getBalanceRpc, 'getBalances');
     return {
       instance: new BtcKeyring(stateMgr, {
         defaultIndex: 0,
         multiAccount: false,
       }),
-      handleRequestSpy,
+      sendManySpy,
+      getBalanceRpcSpy,
     };
   };
 
   const getHdPath = (index: number) => {
     return [`m`, `0'`, `0`, `${index}`].join('/');
+  };
+
+  const createSender = async (caip2ChainId: string) => {
+    const wallet = Factory.createWallet(caip2ChainId);
+    const sender = await wallet.unlock(0, ScriptType.P2wpkh);
+
+    const keyringAccount = {
+      type: sender.type,
+      id: uuidv4(),
+      address: sender.address,
+      options: {
+        scope: caip2ChainId,
+        index: sender.index,
+      },
+      methods: ['btc_sendmany'],
+    };
+    return {
+      sender,
+      keyringAccount,
+    };
   };
 
   describe('createAccount', () => {
@@ -132,8 +128,8 @@ describe('BtcKeyring', () => {
       });
 
       expect(unlockSpy).toHaveBeenCalledWith(
-        Config.wallet[Chain.Bitcoin].defaultAccountIndex,
-        Config.wallet[Chain.Bitcoin].defaultAccountType,
+        Config.wallet.defaultAccountIndex,
+        Config.wallet.defaultAccountType,
       );
       expect(addWalletSpy).toHaveBeenCalledWith({
         account: {
@@ -152,7 +148,7 @@ describe('BtcKeyring', () => {
       });
     });
 
-    it('throws BtcKeyringError if an error catched', async () => {
+    it('throws Error if an error catched', async () => {
       const { unlockSpy } = createMockWallet();
       const { instance: stateMgr } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);
@@ -163,7 +159,7 @@ describe('BtcKeyring', () => {
         keyring.createAccount({
           scope,
         }),
-      ).rejects.toThrow(BtcKeyringError);
+      ).rejects.toThrow(Error);
     });
 
     it('throws `Invalid params to create an account` if the create options is invalid', async () => {
@@ -190,103 +186,6 @@ describe('BtcKeyring', () => {
     });
   });
 
-  describe('submitRequest', () => {
-    it('calls SnapRpcHandler if the method support', async () => {
-      const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
-      const { instance: keyring, handleRequestSpy } =
-        createMockKeyring(stateMgr);
-      const account = generateAccounts(1)[0];
-      const params = {
-        scope: 'bip122:000000000933ea01ad0ee984209779ba',
-        amounts: {
-          bc1qrp0yzgkf8rawkuvdlhnjfj2fnjwm0m8727kgah: '0.01',
-          bc1qf5n2h6mgelkls4497pkpemew55xpew90td2qae: '0.01',
-        },
-        comment: 'testing',
-        subtractFeeFrom: ['bc1qrp0yzgkf8rawkuvdlhnjfj2fnjwm0m8727kgah'],
-        replaceable: false,
-      };
-      getWalletSpy.mockResolvedValue({
-        account,
-        index: account.options.index,
-        scope: account.options.scope,
-        hdPath: getHdPath(account.options.index),
-      });
-
-      await keyring.submitRequest({
-        id: account.id,
-        scope: Network.Testnet,
-        account: account.address,
-        request: {
-          method: 'btc_sendmany',
-          params,
-        },
-      });
-
-      expect(handleRequestSpy).toHaveBeenCalledWith(params);
-    });
-
-    it('throws `Account not found` error if the account address not found', async () => {
-      const { instance: stateMgr } = createMockStateMgr();
-      const { instance: keyring } = createMockKeyring(stateMgr);
-      const account = generateAccounts(1)[0];
-
-      await expect(
-        keyring.submitRequest({
-          id: account.id,
-          scope: Network.Testnet,
-          account: account.address,
-          request: {
-            method: 'btc_sendmany',
-          },
-        }),
-      ).rejects.toThrow('Account not found');
-    });
-
-    it("throws `Account's scope does not match with the request's scope` error if given scope is not match with the account", async () => {
-      const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
-      const { instance: keyring } = createMockKeyring(stateMgr);
-      const account = generateAccounts(1)[0];
-
-      getWalletSpy.mockResolvedValue({
-        account,
-        index: account.options.index,
-        scope: account.options.scope,
-        hdPath: getHdPath(account.options.index),
-      });
-
-      await expect(
-        keyring.submitRequest({
-          id: account.id,
-          scope: Network.Mainnet,
-          account: account.address,
-          request: {
-            method: 'btc_sendmany',
-          },
-        }),
-      ).rejects.toThrow(
-        "Account's scope does not match with the request's scope",
-      );
-    });
-
-    it('throws MethodNotFoundError if the method not support', async () => {
-      const { instance: stateMgr } = createMockStateMgr();
-      const { instance: keyring } = createMockKeyring(stateMgr);
-      const account = generateAccounts(1)[0];
-
-      await expect(
-        keyring.submitRequest({
-          id: account.id,
-          scope: Network.Testnet,
-          account: account.address,
-          request: {
-            method: 'btc_doesNotExist',
-          },
-        }),
-      ).rejects.toThrow(MethodNotFoundError);
-    });
-  });
-
   describe('listAccounts', () => {
     it('returns result', async () => {
       const { instance: stateMgr, listAccountsSpy } = createMockStateMgr();
@@ -300,12 +199,12 @@ describe('BtcKeyring', () => {
       expect(listAccountsSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('throws BtcKeyringError if an error catched', async () => {
+    it('throws Error if an error catched', async () => {
       const { instance: stateMgr, listAccountsSpy } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);
       listAccountsSpy.mockRejectedValue(new Error('error'));
 
-      await expect(keyring.listAccounts()).rejects.toThrow(BtcKeyringError);
+      await expect(keyring.listAccounts()).rejects.toThrow(Error);
     });
   });
 
@@ -334,15 +233,13 @@ describe('BtcKeyring', () => {
       expect(getAccountSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('throws BtcKeyringError if an error catched', async () => {
+    it('throws Error if an error catched', async () => {
       const { instance: stateMgr, getAccountSpy } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);
       getAccountSpy.mockRejectedValue(new Error('error'));
       const accounts = generateAccounts(1);
 
-      await expect(keyring.getAccount(accounts[0].id)).rejects.toThrow(
-        BtcKeyringError,
-      );
+      await expect(keyring.getAccount(accounts[0].id)).rejects.toThrow(Error);
     });
   });
 
@@ -358,15 +255,13 @@ describe('BtcKeyring', () => {
       expect(updateAccountSpy).toHaveBeenCalledWith(account);
     });
 
-    it('throws BtcKeyringError if an error catched', async () => {
+    it('throws Error if an error catched', async () => {
       const { instance: stateMgr, updateAccountSpy } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);
       updateAccountSpy.mockRejectedValue(new Error('error'));
       const account = generateAccounts(1)[0];
 
-      await expect(keyring.updateAccount(account)).rejects.toThrow(
-        BtcKeyringError,
-      );
+      await expect(keyring.updateAccount(account)).rejects.toThrow(Error);
     });
   });
 
@@ -382,53 +277,158 @@ describe('BtcKeyring', () => {
       expect(removeAccountsSpy).toHaveBeenCalledWith([account.id]);
     });
 
-    it('throws BtcKeyringError if an error catched', async () => {
+    it('throws Error if an error catched', async () => {
       const { instance: stateMgr, removeAccountsSpy } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);
       removeAccountsSpy.mockRejectedValue(new Error('error'));
       const account = generateAccounts(1)[0];
 
-      await expect(keyring.deleteAccount(account.id)).rejects.toThrow(
-        BtcKeyringError,
+      await expect(keyring.deleteAccount(account.id)).rejects.toThrow(Error);
+    });
+  });
+
+  describe('submitRequest', () => {
+    it('calls SnapRpcHandler if the method support', async () => {
+      const caip2ChainId = Network.Testnet;
+      const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
+      const { instance: keyring, sendManySpy } = createMockKeyring(stateMgr);
+      const { sender, keyringAccount } = await createSender(caip2ChainId);
+      getWalletSpy.mockResolvedValue({
+        account: keyringAccount as unknown as KeyringAccount,
+        index: sender.index,
+        scope: keyringAccount.options.scope,
+        hdPath: sender.hdPath,
+      });
+      sendManySpy.mockResolvedValue({
+        txId: 'txid',
+      });
+
+      const params = {
+        scope: caip2ChainId,
+        amounts: {
+          bc1qrp0yzgkf8rawkuvdlhnjfj2fnjwm0m8727kgah: '0.01',
+          bc1qf5n2h6mgelkls4497pkpemew55xpew90td2qae: '0.01',
+        },
+        comment: 'testing',
+        subtractFeeFrom: ['bc1qrp0yzgkf8rawkuvdlhnjfj2fnjwm0m8727kgah'],
+        replaceable: false,
+      };
+
+      await keyring.submitRequest({
+        id: keyringAccount.id,
+        scope: Network.Testnet,
+        account: keyringAccount.address,
+        request: {
+          method: 'btc_sendmany',
+          params,
+        },
+      });
+
+      expect(sendManySpy).toHaveBeenCalledWith(expect.any(BtcAccount), params);
+    });
+
+    it('throws `Account not found` error if the account address not found', async () => {
+      const { instance: stateMgr } = createMockStateMgr();
+      const { instance: keyring } = createMockKeyring(stateMgr);
+      const account = generateAccounts(1)[0];
+
+      await expect(
+        keyring.submitRequest({
+          id: account.id,
+          scope: Network.Testnet,
+          account: account.address,
+          request: {
+            method: 'btc_sendmany',
+          },
+        }),
+      ).rejects.toThrow('Account not found');
+    });
+
+    it("throws `Account's scope does not match with the request's scope` error if given scope is not match with the account", async () => {
+      const caip2ChainId = Network.Testnet;
+      const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
+      const { instance: keyring } = createMockKeyring(stateMgr);
+      const { sender, keyringAccount } = await createSender(caip2ChainId);
+      getWalletSpy.mockResolvedValue({
+        account: keyringAccount as unknown as KeyringAccount,
+        index: sender.index,
+        scope: keyringAccount.options.scope,
+        hdPath: sender.hdPath,
+      });
+
+      await expect(
+        keyring.submitRequest({
+          id: keyringAccount.id,
+          scope: Network.Mainnet,
+          account: keyringAccount.address,
+          request: {
+            method: 'btc_sendmany',
+          },
+        }),
+      ).rejects.toThrow(
+        "Account's scope does not match with the request's scope",
       );
+    });
+
+    it('throws MethodNotFoundError if the method not support', async () => {
+      const caip2ChainId = Network.Testnet;
+      const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
+      const { instance: keyring } = createMockKeyring(stateMgr);
+      const { sender, keyringAccount } = await createSender(caip2ChainId);
+      getWalletSpy.mockResolvedValue({
+        account: keyringAccount as unknown as KeyringAccount,
+        index: sender.index,
+        scope: keyringAccount.options.scope,
+        hdPath: sender.hdPath,
+      });
+
+      await expect(
+        keyring.submitRequest({
+          id: keyringAccount.id,
+          scope: caip2ChainId,
+          account: keyringAccount.address,
+          request: {
+            method: 'btc_doesNotExist',
+          },
+        }),
+      ).rejects.toThrow(MethodNotFoundError);
     });
   });
 
   describe('getAccountBalances', () => {
     it('executes `GetBalancesHandler` with correct parameter', async () => {
+      const caip2ChainId = Network.Testnet;
       const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
-      const { instance: keyring } = createMockKeyring(stateMgr);
-      const account = generateAccounts(1)[0];
-      const assets = [BtcAsset.TBtc];
-      const getBalancesHandlerSpy = jest.spyOn(
-        GetBalancesHandler.prototype,
-        'execute',
-      );
-      getBalancesHandlerSpy.mockResolvedValue(
-        assets.reduce((acc, asset) => {
-          acc[asset] = {
-            amount: '1',
-            unit: Config.unit[Chain.Bitcoin],
-          };
-          return acc;
-        }),
-      );
+      const { instance: keyring, getBalanceRpcSpy } =
+        createMockKeyring(stateMgr);
+      const { sender, keyringAccount } = await createSender(caip2ChainId);
       getWalletSpy.mockResolvedValue({
-        account,
-        index: account.options.index,
-        scope: account.options.scope,
-        hdPath: getHdPath(account.options.index),
+        account: keyringAccount as unknown as KeyringAccount,
+        index: sender.index,
+        scope: keyringAccount.options.scope,
+        hdPath: sender.hdPath,
       });
 
-      await keyring.getAccountBalances(account.id, [BtcAsset.TBtc]);
+      const assets = [BtcAsset.TBtc];
+      const expectedResp = assets.reduce((acc, asset) => {
+        acc[asset] = {
+          amount: '1',
+          unit: BtcUnit.Btc,
+        };
+        return acc;
+      }, {});
 
-      expect(getBalancesHandlerSpy).toHaveBeenCalledWith({
-        scope: account.options.scope,
+      getBalanceRpcSpy.mockResolvedValue(expectedResp);
+
+      await keyring.getAccountBalances(keyringAccount.id, [BtcAsset.TBtc]);
+
+      expect(getBalanceRpcSpy).toHaveBeenCalledWith(expect.any(BtcAccount), {
+        scope: caip2ChainId,
         assets,
       });
     });
 
-    it('throws BtcKeyringError if an error catched', async () => {
+    it('throws Error if an error catched', async () => {
       const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);
       getWalletSpy.mockRejectedValue(new Error('error'));
@@ -436,7 +436,7 @@ describe('BtcKeyring', () => {
 
       await expect(
         keyring.getAccountBalances(account.id, [BtcAsset.TBtc]),
-      ).rejects.toThrow(BtcKeyringError);
+      ).rejects.toThrow(Error);
     });
   });
 });

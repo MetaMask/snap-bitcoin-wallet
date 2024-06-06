@@ -1,5 +1,10 @@
 import { KeyringRpcMethod } from '@metamask/keyring-api';
 
+export enum InternalRpcMethod {
+  GetTransactionStatus = 'chain_getTransactionStatus',
+  CreateAccount = 'chain_createAccount',
+}
+
 const dappPermissions = new Set([
   // Keyring methods
   KeyringRpcMethod.ListAccounts,
@@ -14,7 +19,7 @@ const dappPermissions = new Set([
   KeyringRpcMethod.RejectRequest,
   KeyringRpcMethod.SubmitRequest,
   // Chain API methods
-  'chain_getTransactionStatus',
+  InternalRpcMethod.GetTransactionStatus,
 ]);
 
 const metamaskPermissions = new Set([
@@ -32,7 +37,7 @@ const metamaskPermissions = new Set([
   KeyringRpcMethod.SubmitRequest,
   KeyringRpcMethod.GetAccountBalances,
   // Chain API methods
-  'chain_getTransactionStatus',
+  InternalRpcMethod.GetTransactionStatus,
 ]);
 
 const allowedOrigins = [
@@ -53,5 +58,5 @@ for (const origin of allowedOrigins) {
 originPermissions.set(metamask, metamaskPermissions);
 originPermissions.set(
   local,
-  new Set([...dappPermissions, 'chain_createAccount']),
+  new Set([...dappPermissions, InternalRpcMethod.CreateAccount]),
 );

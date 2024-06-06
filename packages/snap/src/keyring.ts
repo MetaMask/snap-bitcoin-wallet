@@ -9,48 +9,63 @@ import {
   type CaipAssetType,
 } from '@metamask/keyring-api';
 import { MethodNotFoundError, type Json } from '@metamask/snaps-sdk';
-import { assert, StructError } from 'superstruct';
+import type { Infer } from 'superstruct';
+import { assert, object, StructError } from 'superstruct';
 import { v4 as uuidv4 } from 'uuid';
 
-import { Config } from '../config';
-import { Factory } from '../factory';
-import { logger } from '../libs/logger/logger';
-import type { SnapRpcHandlerRequest } from '../libs/rpc';
-import { SnapHelper } from '../libs/snap';
-import { GetBalancesHandler } from '../rpcs';
-import { RpcHelper } from '../rpcs/helpers';
-import type { IAccount, IWallet } from '../wallet';
-import { BtcKeyringError } from './exceptions';
-import type { KeyringStateManager } from './state';
-import {
-  CreateAccountOptionsStruct,
-  type ChainRPCHandlers,
-  type CreateAccountOptions,
-  type KeyringOptions,
-} from './types';
+import { Config } from './config';
+import { Factory } from './factory';
+import { logger } from './logger';
+import { getBalances, type SendManyParams, sendMany } from './rpcs';
+import type { KeyringStateManager } from './stateManagement';
+import { getProvider, scopeStruct } from './utils';
+import type { IAccount, IWallet } from './wallet';
+
+export type Wallet = {
+  account: KeyringAccount;
+  hdPath: string;
+  index: number;
+  scope: string;
+};
+
+export type Wallets = Record<string, Wallet>;
+
+export type SnapState = {
+  walletIds: string[];
+  wallets: Wallets;
+};
+
+export type KeyringOptions = Record<string, Json> & {
+  defaultIndex: number;
+  multiAccount?: boolean;
+  // TODO: Remove temp solution to support keyring in snap without keyring API
+  emitEvents?: boolean;
+};
+
+export const CreateAccountOptionsStruct = object({
+  scope: scopeStruct,
+});
+
+export type CreateAccountOptions = Record<string, Json> &
+  Infer<typeof CreateAccountOptionsStruct>;
 
 export class BtcKeyring implements Keyring {
   protected readonly _stateMgr: KeyringStateManager;
 
   protected readonly _options: KeyringOptions;
 
-  protected readonly _keyringMethods: string[];
-
-  protected readonly _handlers: ChainRPCHandlers;
+  protected readonly _methods = ['btc_sendmany'];
 
   constructor(stateMgr: KeyringStateManager, options: KeyringOptions) {
     this._stateMgr = stateMgr;
     this._options = options;
-    const mapping = RpcHelper.getKeyringRpcApiHandlers();
-    this._keyringMethods = Object.keys(mapping);
-    this._handlers = mapping;
   }
 
   async listAccounts(): Promise<KeyringAccount[]> {
     try {
       return await this._stateMgr.listAccounts();
     } catch (error) {
-      throw new BtcKeyringError(error);
+      throw new Error(error);
     }
   }
 
@@ -58,7 +73,7 @@ export class BtcKeyring implements Keyring {
     try {
       return (await this._stateMgr.getAccount(id)) ?? undefined;
     } catch (error) {
-      throw new BtcKeyringError(error);
+      throw new Error(error);
     }
   }
 
@@ -66,14 +81,13 @@ export class BtcKeyring implements Keyring {
     try {
       assert(options, CreateAccountOptionsStruct);
 
-      const wallet: IWallet = Factory.createWallet(options.scope);
+      const wallet = this.getBtcWallet(options.scope);
 
       // TODO: Create account with index 0 for now for phase 1 scope, update to use increment index later
-      const index = Config.wallet[Config.chain].defaultAccountIndex;
-      const account = await wallet.unlock(
-        index,
-        Config.wallet[Config.chain].defaultAccountType,
-      );
+      const index = this._options.defaultIndex;
+      const type = Config.wallet.defaultAccountType;
+
+      const account = await this.discoverAccount(wallet, index, type);
 
       logger.info(
         `[BtcKeyring.createAccount] Account unlocked: ${account.address}`,
@@ -108,15 +122,15 @@ export class BtcKeyring implements Keyring {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       logger.info(`[BtcKeyring.createAccount] Error: ${error.message}`);
       if (error instanceof StructError) {
-        throw new BtcKeyringError('Invalid params to create an account');
+        throw new Error('Invalid params to create an account');
       }
-      throw new BtcKeyringError(error);
+      throw new Error(error);
     }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async filterAccountChains(id: string, chains: string[]): Promise<string[]> {
-    throw new BtcKeyringError('Method not implemented.');
+    throw new Error('Method not implemented.');
   }
 
   async updateAccount(account: KeyringAccount): Promise<void> {
@@ -128,7 +142,7 @@ export class BtcKeyring implements Keyring {
     } catch (error) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       logger.info(`[BtcKeyring.updateAccount] Error: ${error.message}`);
-      throw new BtcKeyringError(error);
+      throw new Error(error);
     }
   }
 
@@ -141,7 +155,7 @@ export class BtcKeyring implements Keyring {
     } catch (error) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       logger.info(`[BtcKeyring.deleteAccount] Error: ${error.message}`);
-      throw new BtcKeyringError(error);
+      throw new Error(error);
     }
   }
 
@@ -159,14 +173,10 @@ export class BtcKeyring implements Keyring {
   }
 
   protected async handleSubmitRequest(request: KeyringRequest): Promise<Json> {
-    const { scope, account } = request;
+    const { scope, account: id } = request;
     const { method, params } = request.request;
 
-    if (!Object.prototype.hasOwnProperty.call(this._handlers, method)) {
-      throw new MethodNotFoundError() as unknown as Error;
-    }
-
-    const walletData = await this.getAndVerifyWallet(account);
+    const walletData = await this.getWalletData(id);
 
     if (walletData.scope !== scope) {
       throw new Error(
@@ -174,10 +184,24 @@ export class BtcKeyring implements Keyring {
       );
     }
 
-    return this._handlers[method].getInstance(walletData).execute({
-      ...params,
-      scope,
-    } as unknown as SnapRpcHandlerRequest);
+    const wallet = this.getBtcWallet(walletData.scope);
+    const account = await this.discoverAccount(
+      wallet,
+      walletData.index,
+      walletData.account.type,
+    );
+
+    this.verifyIfAccountValid(account, walletData.account);
+
+    switch (method) {
+      case 'btc_sendmany':
+        return (await sendMany(account, {
+          ...params,
+          scope: walletData.scope,
+        } as unknown as SendManyParams)) as unknown as Json;
+      default:
+        throw new MethodNotFoundError(method) as unknown as Error;
+    }
   }
 
   async #emitEvent(
@@ -186,7 +210,64 @@ export class BtcKeyring implements Keyring {
   ): Promise<void> {
     // TODO: Remove temp solution to support keyring in snap without extentions support
     if (this._options.emitEvents) {
-      await emitSnapKeyringEvent(SnapHelper.provider, event, data);
+      await emitSnapKeyringEvent(getProvider(), event, data);
+    }
+  }
+
+  async getAccountBalances(
+    id: string,
+    assets: CaipAssetType[],
+  ): Promise<Record<CaipAssetType, Balance>> {
+    try {
+      const walletData = await this.getWalletData(id);
+      const wallet = this.getBtcWallet(walletData.scope);
+      const account = await this.discoverAccount(
+        wallet,
+        walletData.index,
+        walletData.account.type,
+      );
+
+      this.verifyIfAccountValid(account, walletData.account);
+
+      return await getBalances(account, {
+        assets,
+        scope: walletData.scope,
+      });
+    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      logger.info(`[BtcKeyring.getAccountBalances] Error: ${error.message}`);
+      throw new Error(error);
+    }
+  }
+
+  protected async getWalletData(id: string): Promise<Wallet> {
+    const walletData = await this._stateMgr.getWallet(id);
+
+    if (!walletData) {
+      throw new Error('Account not found');
+    }
+
+    return walletData;
+  }
+
+  protected getBtcWallet(scope: string): IWallet {
+    return Factory.createWallet(scope);
+  }
+
+  protected async discoverAccount(
+    wallet: IWallet,
+    index: number,
+    type: string,
+  ): Promise<IAccount> {
+    return await wallet.unlock(index, type);
+  }
+
+  protected verifyIfAccountValid(
+    account: IAccount,
+    keyringAccount: KeyringAccount,
+  ): void {
+    if (!account || account.address !== keyringAccount.address) {
+      throw new Error('Account not found');
     }
   }
 
@@ -201,35 +282,7 @@ export class BtcKeyring implements Keyring {
       options: {
         ...options,
       },
-      methods: this._keyringMethods,
+      methods: this._methods,
     } as unknown as KeyringAccount;
-  }
-
-  async getAccountBalances(
-    id: string,
-    assets: CaipAssetType[],
-  ): Promise<Record<CaipAssetType, Balance>> {
-    try {
-      const walletData = await this.getAndVerifyWallet(id);
-
-      return (await GetBalancesHandler.getInstance(walletData).execute({
-        scope: walletData.scope,
-        assets,
-      })) as unknown as Record<CaipAssetType, Balance>;
-    } catch (error) {
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      logger.info(`[BtcKeyring.getAccountBalances] Error: ${error.message}`);
-      throw new BtcKeyringError(error);
-    }
-  }
-
-  protected async getAndVerifyWallet(id: string) {
-    const walletData = await this._stateMgr.getWallet(id);
-
-    if (!walletData) {
-      throw new Error('Account not found');
-    }
-
-    return walletData;
   }
 }

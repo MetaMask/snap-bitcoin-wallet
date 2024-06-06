@@ -1,7 +1,6 @@
 import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 
-import { ScriptType } from '../constants';
 import { BtcAccountBip32Deriver, BtcAccountBip44Deriver } from './deriver';
 import { BtcWalletFactory } from './factory';
 import type { IBtcAccountDeriver } from './types';
@@ -30,12 +29,7 @@ describe('BtcWalletFactory', () => {
       const { spy } = createMockBtcWallet();
 
       const instance = BtcWalletFactory.create(
-        {
-          defaultAccountIndex: 0,
-          defaultAccountType: ScriptType.P2wpkh,
-          deriver: 'BIP32',
-          enableMultiAccounts: false,
-        },
+        'BIP32',
         networks.testnet,
       ) as unknown as MockBtcWallet;
 
@@ -47,12 +41,7 @@ describe('BtcWalletFactory', () => {
       const { spy } = createMockBtcWallet();
 
       const instance = BtcWalletFactory.create(
-        {
-          defaultAccountIndex: 0,
-          defaultAccountType: ScriptType.P2wpkh,
-          deriver: 'BIP44',
-          enableMultiAccounts: false,
-        },
+        'BIP44',
         networks.testnet,
       ) as unknown as MockBtcWallet;
 

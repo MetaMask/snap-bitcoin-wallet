@@ -1,12 +1,12 @@
-import { generateAccounts } from '../../test/utils';
-import { Network } from '../bitcoin/constants';
-import { SnapHelper, StateError } from '../libs/snap';
-import { KeyringStateManager } from './state';
+import { generateAccounts } from '../test/utils';
+import { Network } from './bitcoin/constants';
+import { KeyringStateManager } from './stateManagement';
+import * as snapUtil from './utils/snap';
 
 describe('KeyringStateManager', () => {
   const createMockStateManager = () => {
-    const getDataSpy = jest.spyOn(SnapHelper, 'getStateData');
-    const setDataSpy = jest.spyOn(SnapHelper, 'setStateData');
+    const getDataSpy = jest.spyOn(snapUtil, 'getStateData');
+    const setDataSpy = jest.spyOn(snapUtil, 'setStateData');
     return {
       instance: new KeyringStateManager(),
       getDataSpy,
@@ -82,11 +82,11 @@ describe('KeyringStateManager', () => {
       expect(result).toStrictEqual([]);
     });
 
-    it('throw StateError if an error catched', async () => {
+    it('throw Error if an error catched', async () => {
       const { instance, getDataSpy } = createMockStateManager();
       getDataSpy.mockRejectedValue(new Error('error'));
 
-      await expect(instance.listAccounts()).rejects.toThrow(StateError);
+      await expect(instance.listAccounts()).rejects.toThrow(Error);
     });
   });
 
@@ -140,7 +140,7 @@ describe('KeyringStateManager', () => {
       });
     });
 
-    it('throw StateError if the given account id exist', async () => {
+    it('throw Error if the given account id exist', async () => {
       const { instance, getDataSpy } = createMockStateManager();
       const state = createInitState(20);
       getDataSpy.mockResolvedValue(state);
@@ -153,10 +153,10 @@ describe('KeyringStateManager', () => {
           index: accountToSave.index,
           scope: accountToSave.scope,
         }),
-      ).rejects.toThrow(StateError);
+      ).rejects.toThrow(Error);
     });
 
-    it('throw StateError if the given account address exist', async () => {
+    it('throw Error if the given account address exist', async () => {
       const { instance, getDataSpy } = createMockStateManager();
       const state = createInitState(20);
       getDataSpy.mockResolvedValue(state);
@@ -194,7 +194,7 @@ describe('KeyringStateManager', () => {
       expect(state.wallets).not.toContain(testInput[1]);
     });
 
-    it('throw StateError if the account does not exist', async () => {
+    it('throw Error if the account does not exist', async () => {
       const { instance, getDataSpy } = createMockStateManager();
       const state = createInitState(20);
       const nonExistAcc = generateAccounts(1, 'notexist')[0];
@@ -208,13 +208,13 @@ describe('KeyringStateManager', () => {
       );
     });
 
-    it('throw StateError if an error catched', async () => {
+    it('throw Error if an error catched', async () => {
       const { instance, getDataSpy } = createMockStateManager();
       getDataSpy.mockRejectedValue(new Error('error'));
       const state = createInitState(1);
 
       await expect(instance.removeAccounts(state.walletIds)).rejects.toThrow(
-        StateError,
+        Error,
       );
     });
   });
@@ -244,12 +244,12 @@ describe('KeyringStateManager', () => {
       expect(result).toBeNull();
     });
 
-    it('throw StateError if an error catched', async () => {
+    it('throw Error if an error catched', async () => {
       const { instance, getDataSpy } = createMockStateManager();
       getDataSpy.mockRejectedValue(new Error('error'));
       const { id } = generateAccounts(1)[0];
 
-      await expect(instance.getAccount(id)).rejects.toThrow(StateError);
+      await expect(instance.getAccount(id)).rejects.toThrow(Error);
     });
   });
 
@@ -278,7 +278,7 @@ describe('KeyringStateManager', () => {
       );
     });
 
-    it('throw StateError if the account does not exist', async () => {
+    it('throw Error if the account does not exist', async () => {
       const { instance, getDataSpy } = createMockStateManager();
       const state = createInitState(20);
       const accToUpdate = generateAccounts(1, 'notexist')[0];
@@ -346,13 +346,13 @@ describe('KeyringStateManager', () => {
       expect(result).toBeNull();
     });
 
-    it('throw StateError if an error catched', async () => {
+    it('throw Error if an error catched', async () => {
       const { instance, getDataSpy } = createMockStateManager();
       getDataSpy.mockRejectedValue(new Error('error'));
       const state = createInitState(20);
       const { id } = state.wallets[state.walletIds[0]].account;
 
-      await expect(instance.getWallet(id)).rejects.toThrow(StateError);
+      await expect(instance.getWallet(id)).rejects.toThrow(Error);
     });
   });
 });

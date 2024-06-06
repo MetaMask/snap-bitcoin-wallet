@@ -12,7 +12,7 @@ import * as asyncUtils from '../../../utils/async';
 import { DataClientError } from '../exceptions';
 import { BlockStreamClient } from './blockstream';
 
-jest.mock('../../../libs/logger/logger');
+jest.mock('../../../logger');
 
 describe('BlockStreamClient', () => {
   const createMockFetch = () => {

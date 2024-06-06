@@ -10,8 +10,8 @@ import { TxInput } from './transaction-input';
 import { TxOutput } from './transaction-output';
 import { BtcWallet } from './wallet';
 
-jest.mock('../../libs/logger/logger');
-jest.mock('../../libs/snap/helpers');
+jest.mock('../../logger');
+jest.mock('../../utils/snap');
 
 describe('PsbtService', () => {
   const createMockWallet = (network) => {

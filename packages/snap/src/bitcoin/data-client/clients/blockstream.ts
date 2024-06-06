@@ -1,12 +1,16 @@
 import { type Network, networks } from 'bitcoinjs-lib';
 
 import type { TransactionStatusData } from '../../../chain';
-import { type Balances, FeeRatio, TransactionStatus } from '../../../chain';
-import { logger } from '../../../libs/logger/logger';
+import { FeeRatio, TransactionStatus } from '../../../chain';
+import { logger } from '../../../logger';
 import { compactError, processBatch } from '../../../utils';
 import type { Utxo } from '../../wallet';
 import { DataClientError } from '../exceptions';
-import type { GetFeeRatesResp, IReadDataClient } from '../types';
+import type {
+  GetBalancesResp,
+  GetFeeRatesResp,
+  IReadDataClient,
+} from '../types';
 
 export type BlockStreamClientOptions = {
   network: Network;
@@ -91,7 +95,7 @@ export class BlockStreamClient implements IReadDataClient {
       case networks.testnet:
         return 'https://blockstream.info/testnet/api';
       default:
-        throw new DataClientError('Invalid network');
+        throw new Error('Invalid network');
     }
   }
 
@@ -101,16 +105,16 @@ export class BlockStreamClient implements IReadDataClient {
     });
 
     if (!response.ok) {
-      throw new DataClientError(
+      throw new Error(
         `Failed to fetch data from blockstream: ${response.statusText}`,
       );
     }
     return response.json() as unknown as Resp;
   }
 
-  async getBalances(addresses: string[]): Promise<Balances> {
+  async getBalances(addresses: string[]): Promise<GetBalancesResp> {
     try {
-      const responses: Balances = {};
+      const responses: GetBalancesResp = {};
 
       await processBatch(addresses, async (address: string) => {
         logger.info(`[BlockStreamClient.getBalance] address: ${address}`);
@@ -170,6 +174,8 @@ export class BlockStreamClient implements IReadDataClient {
 
       return data;
     } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      logger.info(`[BlockStreamClient.getUtxos] error: ${error.message}`);
       throw compactError(error, DataClientError);
     }
   }
@@ -196,10 +202,7 @@ export class BlockStreamClient implements IReadDataClient {
     } catch (error) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       logger.info(`[BlockStreamClient.getFeeRates] error: ${error.message}`);
-      if (error instanceof DataClientError) {
-        throw error;
-      }
-      throw new DataClientError(error);
+      throw compactError(error, DataClientError);
     }
   }
 
@@ -217,6 +220,10 @@ export class BlockStreamClient implements IReadDataClient {
         status,
       };
     } catch (error) {
+      logger.info(
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+        `[BlockStreamClient.getTransactionStatus] error: ${error.message}`,
+      );
       throw compactError(error, DataClientError);
     }
   }

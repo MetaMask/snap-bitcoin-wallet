@@ -1,3 +1,4 @@
 export * from './create-account';
 export * from './get-balances';
-export * from './helpers';
+export * from './get-transaction-status';
+export * from './sendmany';

@@ -18,8 +18,6 @@ export type TransactionStatusData = {
   status: TransactionStatus;
 };
 
-export type Balances = Record<string, number>;
-
 export type Balance = {
   amount: IAmount;
 };

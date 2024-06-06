@@ -1,19 +1,19 @@
 import * as keyringApi from '@metamask/keyring-api';
 import {
-  type Json,
   type JsonRpcRequest,
   SnapError,
   MethodNotFoundError,
 } from '@metamask/snaps-sdk';
 
 import { onRpcRequest, validateOrigin, onKeyringRequest } from '.';
-import { Config, originPermissions } from './config';
+import * as entry from '.';
+import { TransactionStatus } from './chain';
+import { Config } from './config';
 import { BtcKeyring } from './keyring';
-import { BaseSnapRpcHandler, type IStaticSnapRpcHandler } from './libs/rpc';
-import { RpcHelper } from './rpcs';
-import type { StaticImplements } from './types/static';
+import { originPermissions } from './permissions';
+import * as getTxStatusRpc from './rpcs/get-transaction-status';
 
-jest.mock('./libs/logger/logger');
+jest.mock('./logger');
 
 jest.mock('@metamask/keyring-api', () => ({
   ...jest.requireActual('@metamask/keyring-api'),
@@ -50,59 +50,47 @@ describe('validateOrigin', () => {
 });
 
 describe('onRpcRequest', () => {
-  const createMockChainApiHandler = () => {
-    const handleRequestSpy = jest.fn();
-    class MockChainApiHandler
-      extends BaseSnapRpcHandler
-      implements
-        StaticImplements<IStaticSnapRpcHandler, typeof MockChainApiHandler>
-    {
-      handleRequest = handleRequestSpy;
-    }
-    return { handler: MockChainApiHandler, handleRequestSpy };
-  };
+  const executeRequest = async (method = 'chain_getTransactionStatus') => {
+    jest.spyOn(entry, 'validateOrigin').mockReturnThis();
 
-  const executeRequest = async () => {
     return onRpcRequest({
       origin: 'http://localhost:8000',
       request: {
-        method: 'chain_getTransactionStatus',
+        method,
         params: {
-          scope: Config.avaliableNetworks[Config.chain][0],
+          scope: Config.avaliableNetworks[0],
         },
       } as unknown as JsonRpcRequest,
     });
   };
 
   it('executes the rpc request', async () => {
-    const { handler, handleRequestSpy } = createMockChainApiHandler();
-    jest.spyOn(RpcHelper, 'getChainRpcApiHandlers').mockReturnValue({
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      chain_getTransactionStatus: handler,
-    });
-    handleRequestSpy.mockResolvedValueOnce({
-      data: 1,
-    } as Json);
+    jest.spyOn(getTxStatusRpc, 'getTransactionStatus').mockResolvedValue({
+      status: TransactionStatus.Confirmed,
+    } as unknown as getTxStatusRpc.GetTransactionStatusResponse);
 
     const resposne = await executeRequest();
 
-    expect(resposne).toStrictEqual({ data: 1 });
+    expect(resposne).toStrictEqual({ status: TransactionStatus.Confirmed });
   });
 
-  it('throws SnapError if an error catched', async () => {
-    jest.spyOn(RpcHelper, 'getChainRpcApiHandlers').mockReturnValue({});
-
-    await expect(executeRequest()).rejects.toThrow(MethodNotFoundError);
+  it('throws MethodNotFoundError if an method not found', async () => {
+    await expect(executeRequest('some-not')).rejects.toThrow(
+      MethodNotFoundError,
+    );
   });
 
-  it('throws SnapError if an SnapError catched', async () => {
-    const { handler, handleRequestSpy } = createMockChainApiHandler();
-    jest.spyOn(RpcHelper, 'getChainRpcApiHandlers').mockReturnValue({
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      chain_getTransactionStatus: handler,
-    });
-    handleRequestSpy.mockRejectedValue(new SnapError('error'));
+  it('throws SnapError if the request is failed to execute', async () => {
+    jest
+      .spyOn(getTxStatusRpc, 'getTransactionStatus')
+      .mockRejectedValue(new SnapError('error'));
+    await expect(executeRequest()).rejects.toThrow(SnapError);
+  });
 
+  it('throws SnapError if the error is not an instance of SnapError', async () => {
+    jest
+      .spyOn(getTxStatusRpc, 'getTransactionStatus')
+      .mockRejectedValue(new Error('error'));
     await expect(executeRequest()).rejects.toThrow(SnapError);
   });
 });
@@ -122,7 +110,7 @@ describe('onKeyringRequest', () => {
       request: {
         method: keyringApi.KeyringRpcMethod.ListAccounts,
         params: {
-          scope: Config.avaliableNetworks[Config.chain][0],
+          scope: Config.avaliableNetworks[0],
         },
       } as unknown as JsonRpcRequest,
     });
@@ -136,7 +124,7 @@ describe('onKeyringRequest', () => {
     expect(handler).toHaveBeenCalledWith(expect.any(BtcKeyring), {
       method: keyringApi.KeyringRpcMethod.ListAccounts,
       params: {
-        scope: Config.avaliableNetworks[Config.chain][0],
+        scope: Config.avaliableNetworks[0],
       },
     });
   });

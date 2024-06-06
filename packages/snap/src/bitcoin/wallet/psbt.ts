@@ -4,7 +4,7 @@ import { Psbt, Transaction } from 'bitcoinjs-lib';
 import type { Buffer } from 'buffer';
 import ECPairFactory from 'ecpair';
 
-import { logger } from '../../libs/logger/logger';
+import { logger } from '../../logger';
 import { compactError } from '../../utils';
 import type { IAccountSigner } from '../../wallet';
 import { MaxStandardTxWeight } from '../constants';

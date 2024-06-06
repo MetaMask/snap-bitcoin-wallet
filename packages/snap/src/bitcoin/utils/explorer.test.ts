@@ -1,4 +1,4 @@
-import { Chain, Config } from '../../config';
+import { Config } from '../../config';
 import { Network } from '../constants';
 import { getExplorerUrl } from './explorer';
 
@@ -8,14 +8,14 @@ describe('getExplorerUrl', () => {
   it('returns a bitcoin testnet explorer url', () => {
     const result = getExplorerUrl(address, Network.Testnet);
     expect(result).toBe(
-      `${Config.explorer[Chain.Bitcoin][Network.Testnet]}/address/${address}`,
+      `${Config.explorer[Network.Testnet]}/address/${address}`,
     );
   });
 
   it('returns a bitcoin mainnet explorer url', () => {
     const result = getExplorerUrl(address, Network.Mainnet);
     expect(result).toBe(
-      `${Config.explorer[Chain.Bitcoin][Network.Mainnet]}/address/${address}`,
+      `${Config.explorer[Network.Mainnet]}/address/${address}`,
     );
   });
 

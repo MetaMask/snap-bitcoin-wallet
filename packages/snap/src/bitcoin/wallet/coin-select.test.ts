@@ -8,7 +8,7 @@ import { TxInput } from './transaction-input';
 import { TxOutput } from './transaction-output';
 import { BtcWallet } from './wallet';
 
-jest.mock('../../libs/snap/helpers');
+jest.mock('../../utils/snap');
 
 describe('CoinSelectService', () => {
   const createMockWallet = (network) => {

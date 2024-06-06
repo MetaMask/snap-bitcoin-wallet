@@ -1,7 +1,7 @@
 import type { BIP32Interface } from 'bip32';
 import { type Network } from 'bitcoinjs-lib';
 
-import { logger } from '../../libs/logger/logger';
+import { logger } from '../../logger';
 import { bufferToString, compactError, hexToBuffer } from '../../utils';
 import type {
   IAccountSigner,
@@ -38,9 +38,9 @@ export class BtcWallet implements IWallet {
     this._network = network;
   }
 
-  async unlock(index: number, type: string): Promise<IBtcAccount> {
+  async unlock(index: number, type?: string): Promise<IBtcAccount> {
     try {
-      const AccountCtor = this.getAccountCtor(type);
+      const AccountCtor = this.getAccountCtor(type ?? ScriptType.P2wpkh);
       const rootNode = await this._deriver.getRoot(AccountCtor.path);
       const childNode = await this._deriver.getChild(rootNode, index);
       const hdPath = [`m`, `0'`, `0`, `${index}`].join('/');

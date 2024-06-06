@@ -14,11 +14,4 @@ describe('BtcAddress', () => {
       expect(val.toString(true)).toBe('tb1qt...aeu');
     });
   });
-
-  describe('valueOf', () => {
-    it('returns a value', async () => {
-      const val = new BtcAddress(address);
-      expect(val.valueOf()).toStrictEqual(val.value);
-    });
-  });
 });

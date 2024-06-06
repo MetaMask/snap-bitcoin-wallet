@@ -1,4 +1,4 @@
-import { Chain, Config } from '../../config';
+import { Config } from '../../config';
 import type { IAmount } from '../../wallet';
 import { satsToBtc } from '../utils';
 
@@ -10,11 +10,7 @@ export class BtcAmount implements IAmount {
   }
 
   get unit(): string {
-    return Config.unit[Chain.Bitcoin];
-  }
-
-  valueOf(): number {
-    return this.value;
+    return Config.unit;
   }
 
   toString(withUnit = false): string {

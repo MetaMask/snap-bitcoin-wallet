@@ -4,7 +4,6 @@ import { networks } from 'bitcoinjs-lib';
 import type {
   FeeRatio,
   IOnChainService,
-  Balances,
   AssetBalances,
   TransactionIntent,
   Fees,
@@ -16,7 +15,10 @@ import { BtcAsset } from '../constants';
 import type { IWriteDataClient, IReadDataClient } from '../data-client';
 import { BtcAmount } from '../wallet';
 import { BtcOnChainServiceError } from './exceptions';
-import type { BtcOnChainServiceOptions } from './types';
+
+export type BtcOnChainServiceOptions = {
+  network: Network;
+};
 
 export class BtcOnChainService implements IOnChainService {
   protected readonly _readClient: IReadDataClient;
@@ -58,7 +60,7 @@ export class BtcOnChainService implements IOnChainService {
         throw new BtcOnChainServiceError('Invalid asset');
       }
 
-      const balance: Balances = await this._readClient.getBalances(addresses);
+      const balance = await this._readClient.getBalances(addresses);
 
       return addresses.reduce<AssetBalances>(
         (acc: AssetBalances, address: string) => {
@@ -89,7 +91,7 @@ export class BtcOnChainService implements IOnChainService {
         ),
       };
     } catch (error) {
-      throw new BtcOnChainServiceError(error);
+      throw compactError(error, BtcOnChainServiceError);
     }
   }
 

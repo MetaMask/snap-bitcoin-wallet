@@ -1,11 +1,11 @@
 import type { Network, Payment } from 'bitcoinjs-lib';
 import type { Buffer } from 'buffer';
 
-import type { StaticImplements } from '../../types/static';
 import { hexToBuffer } from '../../utils';
 import type { IAccountSigner } from '../../wallet';
 import { ScriptType } from '../constants';
 import { getBtcPaymentInst } from '../utils/payment';
+import type { StaticImplements } from './static';
 import type { IBtcAccount, IStaticBtcAccount } from './types';
 
 export class BtcAccount implements IBtcAccount {

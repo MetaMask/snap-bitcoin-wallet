@@ -13,7 +13,7 @@ import { BtcAmount } from '../wallet';
 import { BtcOnChainServiceError } from './exceptions';
 import { BtcOnChainService } from './service';
 
-jest.mock('../../libs/logger/logger');
+jest.mock('../../logger');
 
 describe('BtcOnChainService', () => {
   const createMockReadDataClient = () => {

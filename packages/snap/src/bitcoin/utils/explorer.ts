@@ -1,4 +1,4 @@
-import { Chain, Config } from '../../config';
+import { Config } from '../../config';
 import { Network } from '../constants';
 
 /**
@@ -12,13 +12,9 @@ import { Network } from '../constants';
 export function getExplorerUrl(address: string, network: string): string {
   switch (network) {
     case Network.Mainnet:
-      return `${
-        Config.explorer[Chain.Bitcoin][Network.Mainnet]
-      }/address/${address}`;
+      return `${Config.explorer[Network.Mainnet]}/address/${address}`;
     case Network.Testnet:
-      return `${
-        Config.explorer[Chain.Bitcoin][Network.Testnet]
-      }/address/${address}`;
+      return `${Config.explorer[Network.Testnet]}/address/${address}`;
     default:
       throw new Error('Invalid network');
   }

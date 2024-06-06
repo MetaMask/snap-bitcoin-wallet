@@ -13,11 +13,4 @@ describe('BtcAmount', () => {
       expect(val.toString(false)).toStrictEqual(satsToBtc(val.value));
     });
   });
-
-  describe('valueOf', () => {
-    it('returns a value', async () => {
-      const val = new BtcAmount(1);
-      expect(val.valueOf()).toStrictEqual(val.value);
-    });
-  });
 });

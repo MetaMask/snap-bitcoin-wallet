@@ -1,11 +1,9 @@
 import { type MutexInterface } from 'async-mutex';
 import { v4 as uuidv4 } from 'uuid';
 
-import { compactError } from '../../utils';
-import { logger } from '../logger/logger';
-import { StateError } from './exceptions';
-import { SnapHelper } from './helpers';
-import { MutexLock } from './lock';
+import { logger } from '../logger';
+import { acquireLock } from './lock';
+import { getStateData, setStateData } from './snap';
 
 export type Transaction<State> = {
   id?: string;
@@ -21,7 +19,7 @@ export abstract class SnapStateManager<State> {
   #transaction: Transaction<State>;
 
   constructor(createLock = false) {
-    this.mtx = MutexLock.acquire(createLock);
+    this.mtx = acquireLock(createLock);
     this.#transaction = {
       id: undefined,
       orgState: undefined,
@@ -32,11 +30,11 @@ export abstract class SnapStateManager<State> {
   }
 
   protected async get(): Promise<State> {
-    return SnapHelper.getStateData<State>();
+    return getStateData<State>();
   }
 
   protected async set(state: State): Promise<void> {
-    return SnapHelper.setStateData<State>(state);
+    return setStateData<State>(state);
   }
 
   protected async update(
@@ -79,7 +77,7 @@ export abstract class SnapStateManager<State> {
         !this.#transaction.orgState ||
         !this.#transaction.id
       ) {
-        throw new StateError('Failed to begin transaction');
+        throw new Error('Failed to begin transaction');
       }
 
       logger.info(
@@ -101,7 +99,7 @@ export abstract class SnapStateManager<State> {
           // we only need to rollback if the transaction is committed
           await this.#rollback();
         }
-        throw compactError(error, StateError);
+        throw error;
       } finally {
         this.#cleanUpTransaction();
       }
@@ -110,7 +108,7 @@ export abstract class SnapStateManager<State> {
 
   async commit() {
     if (!this.#transaction.current || !this.#transaction.orgState) {
-      throw new StateError('Failed to commit transaction');
+      throw new Error('Failed to commit transaction');
     }
     this.#transaction.hasCommited = true;
     await this.set(this.#transaction.current);
@@ -146,7 +144,7 @@ export abstract class SnapStateManager<State> {
         }]: error : ${JSON.stringify(error)}`,
       );
       this.#cleanUpTransaction();
-      throw new StateError('Failed to rollback state');
+      throw new Error('Failed to rollback state');
     }
   }
 

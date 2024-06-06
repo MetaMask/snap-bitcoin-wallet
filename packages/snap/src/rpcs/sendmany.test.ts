@@ -20,16 +20,15 @@ import {
 } from '../bitcoin/wallet';
 import { FeeRatio } from '../chain';
 import { Factory } from '../factory';
-import { SnapHelper } from '../libs/snap';
+import * as snapUtils from '../utils/snap';
 import type { IAccount, ITxInfo } from '../wallet';
-import { SendManyHandler } from './sendmany';
-import type { SendManyParams } from './sendmany';
+import { type SendManyParams, sendMany } from './sendmany';
 
-jest.mock('../libs/logger/logger');
-jest.mock('../libs/snap/helpers');
+jest.mock('../logger');
+jest.mock('../utils/snap');
 
 describe('SendManyHandler', () => {
-  describe('handleRequest', () => {
+  describe('sendMany', () => {
     const createMockChainApiFactory = () => {
       const getDataForTransactionSpy = jest.fn();
       const getFeeRatesSpy = jest.fn();
@@ -136,7 +135,7 @@ describe('SendManyHandler', () => {
         getFeeRatesSpy,
         broadcastTransactionSpy,
       } = createMockChainApiFactory();
-      const snapHelperSpy = jest.spyOn(SnapHelper, 'confirmDialog');
+      const snapHelperSpy = jest.spyOn(snapUtils, 'confirmDialog');
 
       const { sender, keyringAccount, recipients } =
         await createSenderNRecipients(network, caip2ChainId, 2);
@@ -177,7 +176,7 @@ describe('SendManyHandler', () => {
       const network = networks.testnet;
       const caip2ChainId = Network.Testnet;
       const {
-        keyringAccount,
+        sender,
         recipients,
         broadcastResp,
         getDataForTransactionSpy,
@@ -185,11 +184,10 @@ describe('SendManyHandler', () => {
         broadcastTransactionSpy,
       } = await prepareSendMany(network, caip2ChainId);
 
-      const result = await SendManyHandler.getInstance({
-        scope: caip2ChainId,
-        index: 0,
-        account: keyringAccount,
-      }).execute(createSendManyParams(recipients, caip2ChainId, false));
+      const result = await sendMany(
+        sender,
+        createSendManyParams(recipients, caip2ChainId, false),
+      );
 
       expect(result).toStrictEqual({ txId: broadcastResp });
       expect(getFeeRatesSpy).toHaveBeenCalledTimes(1);
@@ -200,14 +198,13 @@ describe('SendManyHandler', () => {
     it('does not broadcast transaction if in dryrun mode', async () => {
       const network = networks.testnet;
       const caip2ChainId = Network.Testnet;
-      const { keyringAccount, recipients, broadcastTransactionSpy } =
+      const { recipients, sender, broadcastTransactionSpy } =
         await prepareSendMany(network, caip2ChainId);
 
-      await SendManyHandler.getInstance({
-        scope: caip2ChainId,
-        index: 0,
-        account: keyringAccount,
-      }).execute(createSendManyParams(recipients, caip2ChainId, true));
+      await sendMany(
+        sender,
+        createSendManyParams(recipients, caip2ChainId, true),
+      );
 
       expect(broadcastTransactionSpy).toHaveBeenCalledTimes(0);
     });
@@ -215,14 +212,13 @@ describe('SendManyHandler', () => {
     it('does create comment component in dialog if consumer has provide the comment', async () => {
       const network = networks.testnet;
       const caip2ChainId = Network.Testnet;
-      const { keyringAccount, recipients, snapHelperSpy } =
-        await prepareSendMany(network, caip2ChainId);
+      const { sender, recipients, snapHelperSpy } = await prepareSendMany(
+        network,
+        caip2ChainId,
+      );
 
-      await SendManyHandler.getInstance({
-        scope: caip2ChainId,
-        index: 0,
-        account: keyringAccount,
-      }).execute(
+      await sendMany(
+        sender,
         createSendManyParams(recipients, caip2ChainId, true, 'test comment'),
       );
 
@@ -255,8 +251,10 @@ describe('SendManyHandler', () => {
     it('display `Recipient` as label in dialog if there is only 1 recipient', async () => {
       const network = networks.testnet;
       const caip2ChainId = Network.Testnet;
-      const { keyringAccount, recipients, snapHelperSpy, sender } =
-        await prepareSendMany(network, caip2ChainId);
+      const { recipients, snapHelperSpy, sender } = await prepareSendMany(
+        network,
+        caip2ChainId,
+      );
       const walletCreateTxSpy = jest.spyOn(
         BtcWallet.prototype,
         'createTransaction',
@@ -292,11 +290,10 @@ describe('SendManyHandler', () => {
 
       walletSignTxSpy.mockResolvedValue('txId');
 
-      await SendManyHandler.getInstance({
-        scope: caip2ChainId,
-        index: 0,
-        account: keyringAccount,
-      }).execute(createSendManyParams([recipients[0]], caip2ChainId, true));
+      await sendMany(
+        sender,
+        createSendManyParams([recipients[0]], caip2ChainId, true),
+      );
 
       const calls = snapHelperSpy.mock.calls[0][0];
 
@@ -323,48 +320,30 @@ describe('SendManyHandler', () => {
     });
 
     it('throws `Request params is invalid` error when request parameter is not correct', async () => {
-      createMockChainApiFactory();
-
-      await expect(
-        SendManyHandler.getInstance().execute({
-          scope: Network.Testnet,
-        }),
-      ).rejects.toThrow(InvalidParamsError);
-    });
-
-    it('throws `Account not found` error when given address not match', async () => {
-      createMockChainApiFactory();
       const network = networks.testnet;
       const caip2ChainId = Network.Testnet;
-      const { keyringAccount, recipients } = await createSenderNRecipients(
-        network,
-        caip2ChainId,
-        2,
-      );
+      const { sender } = await prepareSendMany(network, caip2ChainId);
+
       await expect(
-        SendManyHandler.getInstance({
-          scope: caip2ChainId,
-          index: 20,
-          account: keyringAccount,
-        }).execute(createSendManyParams(recipients, caip2ChainId, false)),
-      ).rejects.toThrow('Account not found');
+        sendMany(sender, {
+          amounts: {
+            'some-address': '1',
+          },
+        } as unknown as SendManyParams),
+      ).rejects.toThrow(InvalidParamsError);
     });
 
     it('throws `Transaction must have at least one recipient` error if no recipient provided', async () => {
       createMockChainApiFactory();
       const network = networks.testnet;
       const caip2ChainId = Network.Testnet;
-      const { keyringAccount, recipients } = await createSenderNRecipients(
+      const { recipients, sender } = await createSenderNRecipients(
         network,
         caip2ChainId,
         0,
       );
       await expect(
-        SendManyHandler.getInstance({
-          scope: caip2ChainId,
-          index: 0,
-          account: keyringAccount,
-        }).execute(createSendManyParams(recipients, caip2ChainId, false)),
+        sendMany(sender, createSendManyParams(recipients, caip2ChainId, false)),
       ).rejects.toThrow('Transaction must have at least one recipient');
     });
 
@@ -372,7 +351,7 @@ describe('SendManyHandler', () => {
       const { getFeeRatesSpy } = createMockChainApiFactory();
       const network = networks.testnet;
       const caip2ChainId = Network.Testnet;
-      const { keyringAccount, recipients } = await createSenderNRecipients(
+      const { sender, recipients } = await createSenderNRecipients(
         network,
         caip2ChainId,
         10,
@@ -382,11 +361,7 @@ describe('SendManyHandler', () => {
       });
 
       await expect(
-        SendManyHandler.getInstance({
-          scope: caip2ChainId,
-          index: 0,
-          account: keyringAccount,
-        }).execute(createSendManyParams(recipients, caip2ChainId, false)),
+        sendMany(sender, createSendManyParams(recipients, caip2ChainId, false)),
       ).rejects.toThrow('Failed to send the transaction');
     });
 
@@ -394,21 +369,17 @@ describe('SendManyHandler', () => {
       const network = networks.testnet;
       const caip2ChainId = Network.Testnet;
       createMockChainApiFactory();
-      const { keyringAccount, recipients } = await createSenderNRecipients(
+      const { sender, recipients } = await createSenderNRecipients(
         network,
         caip2ChainId,
         2,
       );
 
       await expect(
-        SendManyHandler.getInstance({
-          scope: caip2ChainId,
-          index: 0,
-          account: keyringAccount,
-        }).execute({
+        sendMany(sender, {
           ...createSendManyParams(recipients, caip2ChainId, false),
           amounts: {
-            [recipients[0].address]: satsToBtc(500),
+            [recipients[0].address]: satsToBtc(0),
             [recipients[1].address]: satsToBtc(0),
           },
         }),
@@ -418,7 +389,7 @@ describe('SendManyHandler', () => {
     it('throws `Invalid response` error if the response is unexpected', async () => {
       const network = networks.testnet;
       const caip2ChainId = Network.Testnet;
-      const { keyringAccount, recipients, broadcastTransactionSpy } =
+      const { sender, recipients, broadcastTransactionSpy } =
         await prepareSendMany(network, caip2ChainId);
 
       broadcastTransactionSpy.mockResolvedValue({
@@ -427,43 +398,39 @@ describe('SendManyHandler', () => {
         },
       });
       await expect(
-        SendManyHandler.getInstance({
-          scope: caip2ChainId,
-          index: 0,
-          account: keyringAccount,
-        }).execute(createSendManyParams(recipients, caip2ChainId, false)),
+        sendMany(sender, {
+          ...createSendManyParams(recipients, caip2ChainId, false),
+        }),
       ).rejects.toThrow('Invalid Response');
     });
 
     it('throws UserRejectedRequestError error if user denied the transaction', async () => {
       const network = networks.testnet;
       const caip2ChainId = Network.Testnet;
-      const { snapHelperSpy, keyringAccount, recipients } =
-        await prepareSendMany(network, caip2ChainId);
+      const { snapHelperSpy, sender, recipients } = await prepareSendMany(
+        network,
+        caip2ChainId,
+      );
       snapHelperSpy.mockResolvedValue(false);
 
       await expect(
-        SendManyHandler.getInstance({
-          scope: caip2ChainId,
-          index: 0,
-          account: keyringAccount,
-        }).execute(createSendManyParams(recipients, caip2ChainId, false)),
+        sendMany(sender, {
+          ...createSendManyParams(recipients, caip2ChainId, false),
+        }),
       ).rejects.toThrow(UserRejectedRequestError);
     });
 
     it('throws `Failed to send the transaction` error if the transaction is fail to commit', async () => {
       const network = networks.testnet;
       const caip2ChainId = Network.Testnet;
-      const { broadcastTransactionSpy, keyringAccount, recipients } =
+      const { broadcastTransactionSpy, sender, recipients } =
         await prepareSendMany(network, caip2ChainId);
       broadcastTransactionSpy.mockRejectedValue(new Error('error'));
 
       await expect(
-        SendManyHandler.getInstance({
-          scope: caip2ChainId,
-          index: 0,
-          account: keyringAccount,
-        }).execute(createSendManyParams(recipients, caip2ChainId, false)),
+        sendMany(sender, {
+          ...createSendManyParams(recipients, caip2ChainId, false),
+        }),
       ).rejects.toThrow('Failed to send the transaction');
     });
   });
