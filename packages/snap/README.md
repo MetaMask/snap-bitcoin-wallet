@@ -84,6 +84,7 @@ provider.request({
 ### API `keyring_getAccountBalances`
 
 example:
+
 ```typescript
 provider.request({
   method: 'wallet_invokeKeyring',
@@ -94,9 +95,7 @@ provider.request({
       params: {
         account: 'dc06350a-82db-434b-b113-066135804f63', // the uuid account id of the current account
         id: 'da40b782-e054-4260-9a6a-c8717a022f92', // an random uuid for this request
-        assets: [
-         'bip122:000000000019d6689c085ae165831e93/slip44:0'
-        ], // Caip-2 BTC Asset
+        assets: ['bip122:000000000019d6689c085ae165831e93/slip44:0'], // Caip-2 BTC Asset
       },
     },
   },
