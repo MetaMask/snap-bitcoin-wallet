@@ -109,7 +109,7 @@ export type IWallet = {
    * @param type - The script type of the unlocked account, e.g. `bip122:p2pkh`.
    * @returns A promise that resolves to an `IAccount` object.
    */
-  unlock(index: number, type: string): Promise<IAccount>;
+  unlock(index: number, type?: string): Promise<IAccount>;
 
   /**
    * Signs a transaction by the given encoded transaction string.
