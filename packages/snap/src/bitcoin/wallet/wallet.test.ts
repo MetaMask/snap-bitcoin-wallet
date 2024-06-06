@@ -1,5 +1,5 @@
 import type { Json } from '@metamask/snaps-sdk';
-import { address as addressUtils, networks } from 'bitcoinjs-lib';
+import { networks } from 'bitcoinjs-lib';
 
 import { generateFormatedUtxos } from '../../../test/utils';
 import { DustLimit, ScriptType } from '../constants';
@@ -210,19 +210,11 @@ describe('BtcWallet', () => {
         change: new TxOutput(
           DustLimit[chgAccount.scriptType] - 1,
           chgAccount.address,
+          chgAccount.script,
         ),
         fee: 100,
-        inputs: utxos.map(
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          (utxo) => new TxInput(utxo, chgAccount.payment.output!),
-        ),
-        outputs: [
-          new TxOutput(
-            500,
-            recipient.address,
-            addressUtils.toOutputScript(recipient.address, network),
-          ),
-        ],
+        inputs: utxos.map((utxo) => new TxInput(utxo, chgAccount.script)),
+        outputs: [new TxOutput(500, recipient.address, recipient.script)],
       };
 
       coinSelectServiceSpy.mockReturnValue(selectionResult);
@@ -244,7 +236,7 @@ describe('BtcWallet', () => {
       expect(info.change).toBeUndefined();
     });
 
-    it('throws `Transaction amount too small` error the transaction output is too small', async () => {
+    it('throws `Transaction amount too small` error if the transaction output is too small', async () => {
       const network = networks.testnet;
       const { instance } = createMockDeriver(network);
       const wallet = new BtcWallet(instance, network);
@@ -263,31 +255,6 @@ describe('BtcWallet', () => {
           },
         ),
       ).rejects.toThrow('Transaction amount too small');
-    });
-
-    it('throws `Fail to get account script hash` error if the account script hash is undefined', async () => {
-      const network = networks.testnet;
-      const { instance } = createMockDeriver(network);
-      const wallet = new BtcWallet(instance, network);
-      const account = await wallet.unlock(0, ScriptType.P2wpkh);
-      const utxos = generateFormatedUtxos(account.address, 2);
-      account.payment.output = undefined;
-
-      await expect(
-        wallet.createTransaction(
-          account,
-          createMockTxIndent(
-            account.address,
-            DustLimit[account.scriptType] + 1,
-          ),
-          {
-            utxos,
-            fee: 1,
-            subtractFeeFrom: [],
-            replaceable: false,
-          },
-        ),
-      ).rejects.toThrow('Fail to get account script hash');
     });
   });
 

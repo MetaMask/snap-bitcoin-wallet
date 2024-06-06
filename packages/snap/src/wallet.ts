@@ -6,7 +6,7 @@ export type Recipient = {
   value: number;
 };
 
-export type TxCreationResult = {
+export type Transaction = {
   tx: string;
   txInfo: ITxInfo;
 };
@@ -132,7 +132,7 @@ export type IWallet = {
     account: IAccount,
     recipients: Recipient[],
     options: Record<string, Json>,
-  ): Promise<TxCreationResult>;
+  ): Promise<Transaction>;
 };
 
 /**
