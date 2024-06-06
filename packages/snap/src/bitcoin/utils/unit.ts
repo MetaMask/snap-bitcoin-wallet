@@ -1,3 +1,5 @@
+import Big from 'big.js';
+
 import type { ScriptType } from '../constants';
 import { DustLimit } from '../constants';
 
@@ -12,7 +14,8 @@ export function satsToBtc(sats: number): string {
   if (!Number.isInteger(sats)) {
     throw new TypeError('satsToBtc must be called on an integer number');
   }
-  return (sats / 1e8).toFixed(8);
+  const bigIntSat = new Big(sats);
+  return bigIntSat.div(100000000).toFixed(8);
 }
 
 /**
@@ -22,7 +25,8 @@ export function satsToBtc(sats: number): string {
  * @returns The equivalent amount of satoshis as a string, rounded to the nearest integer.
  */
 export function btcToSats(btc: number): string {
-  return (btc * 1e8).toFixed(0);
+  const bigIntBtc = new Big(btc);
+  return bigIntBtc.times(100000000).toString();
 }
 
 /**
