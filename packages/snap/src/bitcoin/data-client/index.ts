@@ -1,2 +1,2 @@
 export * from './types';
-export * from './clients/blockstream';
+export * from './factory';

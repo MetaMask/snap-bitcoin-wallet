@@ -4,12 +4,7 @@ import { BIP32Factory } from 'bip32';
 import { type Network } from 'bitcoinjs-lib';
 import type { Buffer } from 'buffer';
 
-import {
-  compactError,
-  hexToBuffer,
-  getBip44Deriver,
-  getBip32Deriver,
-} from '../../utils';
+import { compactError, hexToBuffer, getBip32Deriver } from '../../utils';
 import { DeriverError } from './exceptions';
 import type { IBtcAccountDeriver } from './types';
 
@@ -24,14 +19,6 @@ export abstract class BtcAccountDeriver implements IBtcAccountDeriver {
   }
 
   abstract getRoot(path: string[]): Promise<BIP32Interface>;
-
-  createBip32FromSeed(seed: Buffer): BIP32Interface {
-    try {
-      return this._bip32Api.fromSeed(seed, this._network);
-    } catch (error) {
-      throw new DeriverError('Unable to construct BIP32 node from seed');
-    }
-  }
 
   createBip32FromPrivateKey(
     privateKey: Buffer,
@@ -65,25 +52,6 @@ export abstract class BtcAccountDeriver implements IBtcAccountDeriver {
       return hexToBuffer(chainCode);
     } catch (error) {
       throw new DeriverError('Chain code is invalid');
-    }
-  }
-}
-
-export class BtcAccountBip44Deriver extends BtcAccountDeriver {
-  async getRoot(path: string[]) {
-    try {
-      const deriver = await getBip44Deriver(0); // seed phase
-      const deriverNode = await deriver(0);
-      if (!deriverNode.privateKey) {
-        throw new DeriverError('Deriver private key is missing');
-      }
-      const privateKeyBuffer = this.pkToBuf(deriverNode.privateKey);
-      const root = this.createBip32FromSeed(privateKeyBuffer);
-      return root
-        .deriveHardened(parseInt(path[1].slice(0, -1), 10))
-        .deriveHardened(0);
-    } catch (error) {
-      throw compactError(error, DeriverError);
     }
   }
 }

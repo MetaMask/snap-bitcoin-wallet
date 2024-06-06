@@ -23,7 +23,6 @@ export type BtcOnChainServiceConfig = {
 export type BtcWalletConfig = {
   defaultAccountIndex: number;
   defaultAccountType: string;
-  deriver: string;
 };
 
 export enum Chain {
@@ -76,7 +75,6 @@ export const Config: SnapConfig = {
   wallet: {
     defaultAccountIndex: 0,
     defaultAccountType: 'bip122:p2wpkh',
-    deriver: 'BIP32',
   },
   avaliableNetworks: Object.values(BtcNetwork),
   avaliableAssets: Object.values(BtcAsset),

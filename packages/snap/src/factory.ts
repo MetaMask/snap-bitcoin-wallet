@@ -3,7 +3,7 @@ import { type Keyring } from '@metamask/keyring-api';
 import { BtcOnChainService } from './bitcoin/chain';
 import { DataClientFactory } from './bitcoin/data-client/factory';
 import { getBtcNetwork } from './bitcoin/utils';
-import { BtcWalletFactory } from './bitcoin/wallet';
+import { BtcAccountBip32Deriver, BtcWallet } from './bitcoin/wallet';
 import type { IOnChainService } from './chain';
 import { Config } from './config';
 import { BtcKeyring } from './keyring';
@@ -33,7 +33,7 @@ export class Factory {
 
   static createWallet(scope: string): IWallet {
     const btcNetwork = getBtcNetwork(scope);
-    return BtcWalletFactory.create(Config.wallet.deriver, btcNetwork);
+    return new BtcWallet(new BtcAccountBip32Deriver(btcNetwork), btcNetwork);
   }
 
   static createKeyring(): Keyring {
