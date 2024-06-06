@@ -2965,25 +2965,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/keyring-api@npm:^6.0.0":
-  version: 6.2.0
-  resolution: "@metamask/keyring-api@npm:6.2.0"
-  dependencies:
-    "@metamask/snaps-sdk": ^4.2.0
-    "@metamask/utils": ^8.3.0
-    "@types/uuid": ^9.0.1
-    bech32: ^2.0.0
-    superstruct: ^1.0.3
-    uuid: ^9.0.0
-  peerDependencies:
-    "@metamask/providers": ">=15 <17"
-  checksum: 63ba5e4dde6fcf7cff8c68e777daa85763dc5f352befde1de949adbfabc781a6e2553b0499ca8736fdfa0fd6cb90688540f5db172d625658d0c843187fea50ec
-  languageName: node
-  linkType: hard
-
-"@metamask/keyring-api@npm:^6.3.1":
-  version: 6.3.1
-  resolution: "@metamask/keyring-api@npm:6.3.1"
+"@metamask/keyring-api@npm:^6.0.0, @metamask/keyring-api@npm:^6.3.1":
+  version: 6.4.0
+  resolution: "@metamask/keyring-api@npm:6.4.0"
   dependencies:
     "@metamask/snaps-sdk": ^4.2.0
     "@metamask/utils": ^8.4.0
@@ -2992,8 +2976,8 @@ __metadata:
     superstruct: ^1.0.3
     uuid: ^9.0.1
   peerDependencies:
-    "@metamask/providers": ">=15 <17"
-  checksum: d9b5164b8fbd583dd641c917153ef9264cfb236fbe49f77351f495822f1b83b544293be4946cb15eddded31a73c2a58fd8c312a28f97a6929d8498dbf269bd0b
+    "@metamask/providers": ">=15 <18"
+  checksum: 7845ed5fa73db3165703c2142b6062d03ca5fea329b54d28f424dee2bb393edc1f9a015e771289ef7236c31f30355bf2c52ad74bb47cf531c09c5eec66e06b00
   languageName: node
   linkType: hard
 
@@ -5247,7 +5231,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/uuid@npm:^9.0.1, @types/uuid@npm:^9.0.8":
+"@types/uuid@npm:^9.0.8":
   version: 9.0.8
   resolution: "@types/uuid@npm:9.0.8"
   checksum: b8c60b7ba8250356b5088302583d1704a4e1a13558d143c549c408bf8920535602ffc12394ede77f8a8083511b023704bc66d1345792714002bfa261b17c5275
@@ -18758,7 +18742,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"uuid@npm:^9.0.0, uuid@npm:^9.0.1":
+"uuid@npm:^9.0.1":
   version: 9.0.1
   resolution: "uuid@npm:9.0.1"
   bin:
