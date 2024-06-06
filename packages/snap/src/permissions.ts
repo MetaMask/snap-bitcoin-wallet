@@ -41,7 +41,6 @@ const metamaskPermissions = new Set([
 ]);
 
 const allowedOrigins = [
-  'https://metamask.github.io',
   'https://portfolio.metamask.io',
   'https://portfolio-builds.metafi-dev.codefi.network',
   'https://dev.portfolio.metamask.io',
