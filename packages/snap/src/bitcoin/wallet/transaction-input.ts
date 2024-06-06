@@ -10,28 +10,22 @@ export class TxInput {
 
   readonly amount: IAmount;
 
-  readonly utxo: Utxo;
+  readonly txHash: string;
+
+  readonly index: number;
+
+  readonly block: number;
 
   constructor(utxo: Utxo, script: Buffer) {
     this.script = script;
-    this.utxo = utxo;
     this.amount = new BtcAmount(utxo.value);
+    this.index = utxo.index;
+    this.txHash = utxo.txHash;
+    this.block = utxo.block;
   }
 
   // consume by coinselect
   get value(): number {
     return this.amount.value;
-  }
-
-  get txHash(): string {
-    return this.utxo.txHash;
-  }
-
-  get index(): number {
-    return this.utxo.index;
-  }
-
-  get block(): number {
-    return this.utxo.block;
   }
 }

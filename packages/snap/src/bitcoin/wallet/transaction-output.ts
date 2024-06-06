@@ -8,11 +8,11 @@ export class TxOutput {
   readonly amount: IAmount;
 
   // consume by conselect
-  readonly script?: Buffer;
+  readonly script: Buffer;
 
   readonly destination: IAddress;
 
-  constructor(value: number, address: string, script?: Buffer) {
+  constructor(value: number, address: string, script: Buffer) {
     this.amount = new BtcAmount(value);
     this.destination = new BtcAddress(address);
     this.script = script;

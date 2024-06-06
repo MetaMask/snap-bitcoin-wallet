@@ -1,4 +1,5 @@
 import { networks } from 'bitcoinjs-lib';
+import { Buffer } from 'buffer';
 
 import { generateAccounts } from '../../../test/utils';
 import { getCaip2ChainId, getExplorerUrl, satsToBtc } from '../utils';
@@ -24,13 +25,13 @@ describe('BtcTxInfo', () => {
 
       for (let i = 1; i < addresses.length; i++) {
         total += 100000;
-        const output = new TxOutput(100000, addresses[i]);
+        const output = new TxOutput(100000, addresses[i], Buffer.from('dummy'));
         outputs.push(output);
       }
 
       info.addRecipients(outputs);
 
-      info.change = new TxOutput(500, addresses[0]);
+      info.change = new TxOutput(500, addresses[0], Buffer.from('dummy'));
       total += 500;
 
       const expectedRecipients = outputs.map((recipient) => {
