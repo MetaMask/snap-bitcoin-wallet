@@ -87,5 +87,124 @@
     "data": {
       "transaction_hash": "0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098"
     }
+  },
+  "getDashboardTransaction": {
+    "data": {
+      "1cd985fc26a9b27d0b574739b908d5fe78e2297b24323a7f8c04526648dc9c08": {
+        "transaction": {
+          "block_id": 2817600,
+          "id": 137371353,
+          "hash": "1cd985fc26a9b27d0b574739b908d5fe78e2297b24323a7f8c04526648dc9c08",
+          "date": "2024-05-25",
+          "time": "2024-05-25 07:47:54",
+          "size": 192,
+          "weight": 438,
+          "version": 2,
+          "lock_time": 0,
+          "is_coinbase": false,
+          "has_witness": true,
+          "input_count": 1,
+          "output_count": 1,
+          "input_total": 6864,
+          "input_total_usd": 0,
+          "output_total": 500,
+          "output_total_usd": 0,
+          "fee": 6364,
+          "fee_usd": 0,
+          "fee_per_kb": 33145.832,
+          "fee_per_kb_usd": 0,
+          "fee_per_kwu": 14529.681,
+          "fee_per_kwu_usd": 0,
+          "cdd_total": 7.7915933333333e-5,
+          "is_rbf": true
+        },
+        "inputs": [
+          {
+            "block_id": 2817323,
+            "transaction_id": 137179822,
+            "index": 1,
+            "transaction_hash": "db78f36fc939d054a37210eed56ddc04be030c0f73c9029fe86ff14f1ebedf61",
+            "date": "2024-05-24",
+            "time": "2024-05-24 04:33:18",
+            "value": 6864,
+            "value_usd": 0,
+            "recipient": "tb1qlhkuysju47s642834n7f3tyk67mvnt2cfd9r7y",
+            "type": "witness_v0_keyhash",
+            "script_hex": "0014fdedc2425cafa1aaa8f1acfc98ac96d7b6c9ad58",
+            "is_from_coinbase": false,
+            "is_spendable": null,
+            "is_spent": true,
+            "spending_block_id": 2817600,
+            "spending_transaction_id": 137371353,
+            "spending_index": 0,
+            "spending_transaction_hash": "1cd985fc26a9b27d0b574739b908d5fe78e2297b24323a7f8c04526648dc9c08",
+            "spending_date": "2024-05-25",
+            "spending_time": "2024-05-25 07:47:54",
+            "spending_value_usd": 0,
+            "spending_sequence": 4294967293,
+            "spending_signature_hex": "",
+            "spending_witness": "3045022100b8ab2eff6dde1ba3e4acac8c384bb67ec84d46c7eec55ccfdbacfe3cb8d77b910220733b3013de1a19e543cc48e204af7f0382c9548e73f0a6042dbc72a39c65b70d01,0217c65c157253d09d80e7f49c7595ae5cc82a31d3e787e3019a0260125a55b0d1",
+            "lifespan": 98076,
+            "cdd": 0
+          }
+        ],
+        "outputs": [
+          {
+            "block_id": 2817600,
+            "transaction_id": 137371353,
+            "index": 0,
+            "transaction_hash": "1cd985fc26a9b27d0b574739b908d5fe78e2297b24323a7f8c04526648dc9c08",
+            "date": "2024-05-25",
+            "time": "2024-05-25 07:47:54",
+            "value": 500,
+            "value_usd": 0,
+            "recipient": "tb1qlhkuysju47s642834n7f3tyk67mvnt2cfd9r7y",
+            "type": "witness_v0_keyhash",
+            "script_hex": "0014fdedc2425cafa1aaa8f1acfc98ac96d7b6c9ad58",
+            "is_from_coinbase": false,
+            "is_spendable": null,
+            "is_spent": false,
+            "spending_block_id": null,
+            "spending_transaction_id": null,
+            "spending_index": null,
+            "spending_transaction_hash": null,
+            "spending_date": null,
+            "spending_time": null,
+            "spending_value_usd": null,
+            "spending_sequence": null,
+            "spending_signature_hex": null,
+            "spending_witness": null,
+            "lifespan": null,
+            "cdd": null
+          }
+        ]
+      }
+    },
+    "context": {
+      "code": 200,
+      "source": "D",
+      "results": 1,
+      "state": 2818512,
+      "market_price_usd": 68030,
+      "cache": {
+        "live": true,
+        "duration": 20,
+        "since": "2024-05-29 07:44:19",
+        "until": "2024-05-29 07:44:39",
+        "time": null
+      },
+      "api": {
+        "version": "2.0.95-ie",
+        "last_major_update": "2022-11-07 02:00:00",
+        "next_major_update": "2023-11-12 02:00:00",
+        "documentation": "https://blockchair.com/api/docs",
+        "notice": "Plaese note that on November 12th, 2023 public support for the following blockchains will be dropped: Mixin, Ethereum Testnet (Goerli)"
+      },
+      "servers": "API4,TBTC3",
+      "time": 2.340773820877075,
+      "render_time": 0.04655718803405762,
+      "full_time": 2.387331008911133,
+      "request_cost": 1
+    }
   }
 }

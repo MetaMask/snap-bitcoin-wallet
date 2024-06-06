@@ -1,9 +1,11 @@
-import type { BIP32Interface } from 'bip32';
+import ecc from '@bitcoinerlab/secp256k1';
+import { BIP32Factory, type BIP32Interface } from 'bip32';
 import type { Network } from 'bitcoinjs-lib';
 import { Buffer } from 'buffer';
+import ECPairFactory from 'ecpair';
 import { v4 as uuidv4 } from 'uuid';
 
-import { Network as NetworkEnum } from '../src/modules/bitcoin/constants';
+import { Network as NetworkEnum } from '../src/bitcoin/constants';
 import blockChairData from './fixtures/blockchair.json';
 import blockStreamData from './fixtures/blockstream.json';
 
@@ -37,6 +39,59 @@ export function generateAccounts(cnt = 1, addressPrefix = '') {
   }
 
   return accounts;
+}
+
+/**
+ * Method to generate random bip32 deriver.
+ *
+ * @param network - Bitcoin network.
+ * @param path - Derived path.
+ * @param curve - Curve.
+ * @returns An Json data and the bip32 deriver.
+ */
+export function createRandomBip32Data(
+  network: Network,
+  path: string[],
+  curve: string,
+) {
+  const ECPair = ECPairFactory(ecc);
+  const bip32 = BIP32Factory(ecc);
+
+  const key = `${path.join('')}${curve}`;
+  const hexStr = Buffer.from(key, 'utf8').toString('hex');
+  const bufferHex = Buffer.from(hexStr, 'hex');
+
+  const customRandomBufferFunc = (size: number): Buffer => {
+    const byteBuffer32 = Buffer.alloc(size);
+    bufferHex.copy(byteBuffer32);
+    return byteBuffer32;
+  };
+
+  const keyPair = ECPair.makeRandom({
+    network,
+    rng: customRandomBufferFunc,
+  });
+
+  const deriver = bip32.fromSeed(keyPair.publicKey, network);
+
+  const data = {
+    privateKey: deriver.privateKey?.toString('hex'),
+    publicKey: deriver.publicKey.toString('hex'),
+    chainCode: deriver.chainCode.toString('hex'),
+    depth: deriver.depth,
+    index: deriver.index,
+    curve,
+    masterFingerprint: undefined,
+    parentFingerprint: 0,
+    chainCodeBytes: deriver.chainCode,
+    privateKeyBytes: deriver.privateKey,
+    publicKeyBytes: deriver.publicKey,
+  };
+
+  return {
+    deriver,
+    data,
+  };
 }
 
 /**
@@ -314,6 +369,74 @@ export function generateBlockChairBroadcastTransactionResp() {
 }
 
 /**
+ * Method to generate blockstream last 10 blocks resp.
+ *
+ * @param blockHeight - A start number for the block height of the resp.
+ * @returns A blockstream last 10 blocks resp.
+ */
+export function generateBlockStreamLast10BlockResp(blockHeight: number) {
+  const template = blockStreamData.getLast10BlockResp;
+  const resp: typeof template = { ...template };
+  for (let i = 0; i < template.length; i++) {
+    resp[i].height = blockHeight - i;
+  }
+  return resp;
+}
+
+/**
+ * Method to generate blockstream transaction status resp.
+ *
+ * @param blockHeight - Block height of the transaction.
+ * @param confirmed - Confirm status of the transaction.
+ * @returns A blockstream transaction status resp.
+ */
+export function generateBlockStreamTransactionStatusResp(
+  blockHeight: number,
+  confirmed: boolean,
+) {
+  const template = blockStreamData.getTransactionStatus;
+  const resp: typeof template = { ...template };
+  resp.block_height = blockHeight;
+  resp.confirmed = confirmed;
+  return resp;
+}
+
+/**
+ * Method to generate blockchair transaction dashboards resp.
+ *
+ * @param txHash - Transaction hash of the transaction.
+ * @param txnBlockHeight - Block height of the transaction.
+ * @param txnBlockHeight - Block height of the last block.
+ * @param confirmed - Confirm status of the transaction.
+ * @returns A blockchair transaction dashboards resp.
+ */
+export function generateBlockChairTransactionDashboard(
+  txHash: string,
+  txnBlockHeight: number,
+  lastBlockHeight: number,
+  confirmed: boolean,
+) {
+  const template = blockChairData.getDashboardTransaction;
+  const data = Object.values(template.data)[0];
+  const resp = {
+    data: {
+      [txHash]: {
+        ...data,
+        transaction: {
+          ...data.transaction,
+          block_id: confirmed ? txnBlockHeight : -1,
+        },
+      },
+    },
+    context: {
+      ...template.context,
+      state: lastBlockHeight,
+    },
+  };
+  return resp;
+}
+
+/**
  * Method to generate formated utxos with blockchair resp.
  *
  * @param address - the utxos owner address.
@@ -336,7 +459,7 @@ export function generateFormatedUtxos(
   );
   const formattedUtxos = rawUtxos.data[address].utxo.map((utxo) => ({
     block: utxo.block_id,
-    txnHash: utxo.transaction_hash,
+    txHash: utxo.transaction_hash,
     index: utxo.index,
     value: utxo.value,
   }));

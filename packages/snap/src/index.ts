@@ -11,8 +11,8 @@ import {
 import { Config } from './config';
 import { originPermissions } from './config/permissions';
 import { Factory } from './factory';
-import { logger } from './modules/logger/logger';
-import type { SnapRpcHandlerRequest } from './modules/rpc';
+import { logger } from './libs/logger/logger';
+import type { SnapRpcHandlerRequest } from './libs/rpc';
 import { RpcHelper } from './rpcs/helpers';
 import { isSnapRpcError } from './utils';
 
@@ -27,11 +27,13 @@ export const validateOrigin = (origin: string, method: string): void => {
   }
 };
 
-export const onRpcRequest: OnRpcRequestHandler = async (args) => {
+export const onRpcRequest: OnRpcRequestHandler = async ({
+  origin,
+  request,
+}): Promise<Json> => {
   logger.logLevel = parseInt(Config.logLevel, 10);
 
   try {
-    const { request, origin } = args;
     const { method } = request;
     validateOrigin(origin, method);
 

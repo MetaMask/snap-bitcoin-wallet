@@ -7,12 +7,12 @@
     "url": "https://github.com/MetaMask/bitcoin.git"
   },
   "source": {
-    "shasum": "cfnWRMD2+w40auKMbES5eYfrLcKsorlFBt87v+aATRM=",
+    "shasum": "gycY0HZ56I1PRIdcUPm4dYlATHJxoWWivbMHJddftK0=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
         "iconPath": "images/icon.svg",
-        "packageName": "@consensys/bitcoin-manager-snap",
+        "packageName": "@metamask/bitcoin",
         "registry": "https://registry.npmjs.org/"
       }
     }

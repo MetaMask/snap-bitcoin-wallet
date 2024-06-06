@@ -1,6 +1,11 @@
 import { Buffer } from 'buffer';
 
-import { trimHexPrefix, hexToBuffer, bufferToString } from './string';
+import {
+  trimHexPrefix,
+  hexToBuffer,
+  bufferToString,
+  replaceMiddleChar,
+} from './string';
 
 describe('trimHexPrefix', () => {
   it('trims hex prefix', () => {
@@ -33,9 +38,9 @@ describe('hexToBuffer', () => {
     expect(result).toStrictEqual(Buffer.from('0x1234', 'hex'));
   });
 
-  it('throws `Unable to convert hexStr to buffer` error if the execution fail', () => {
+  it('throws `Unable to convert hex string to buffer` error if the execution fail', () => {
     expect(() => hexToBuffer(null as unknown as string)).toThrow(
-      'Unable to convert hexStr to buffer',
+      'Unable to convert hex string to buffer',
     );
   });
 });
@@ -50,5 +55,16 @@ describe('bufferToString', () => {
     expect(() => bufferToString(undefined as unknown as Buffer, 'hex')).toThrow(
       'Unable to convert buffer to string',
     );
+  });
+});
+
+describe('replaceMiddleChar', () => {
+  const str = 'tb1qt2mpt38wmgw3j0hnr9mp5hsa7kxf2a3ktdxaeu';
+  it('replaces the middle of a string', () => {
+    expect(replaceMiddleChar(str, 5, 3)).toBe('tb1qt...aeu');
+  });
+
+  it('does not replace if the string is empty', () => {
+    expect(replaceMiddleChar('', 5, 3)).toBe('');
   });
 });

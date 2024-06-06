@@ -3,7 +3,7 @@ import { type Json } from '@metamask/snaps-sdk';
 import type { Infer } from 'superstruct';
 import { object } from 'superstruct';
 
-import type { IStaticSnapRpcHandler } from '../modules/rpc';
+import type { IStaticSnapRpcHandler } from '../libs/rpc';
 import { scopeStruct } from '../utils';
 
 export type Wallet = {
@@ -23,7 +23,7 @@ export type SnapState = {
 export type KeyringOptions = Record<string, Json> & {
   defaultIndex: number;
   multiAccount?: boolean;
-  // TODO: Temp solutio to support keyring in snap without keyring API
+  // TODO: Remove temp solution to support keyring in snap without keyring API
   emitEvents?: boolean;
 };
 

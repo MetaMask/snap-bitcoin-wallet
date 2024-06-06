@@ -19,11 +19,11 @@ import {
 } from '@metamask/snaps-sdk';
 
 /**
- * Compact error to a specific error instance.
+ * Compacts an error to a specific error instance.
  *
- * @param error - Error instance.
- * @param ErrCtor - Error constructor.
- * @returns Compacted Error instance.
+ * @param error - The error instance to be compacted.
+ * @param ErrCtor - The error constructor for the desired error instance.
+ * @returns The compacted error instance.
  */
 export function compactError<ErrorInstance extends Error>(
   error: ErrorInstance,
@@ -36,10 +36,10 @@ export function compactError<ErrorInstance extends Error>(
 }
 
 /**
- * A Method to determind the given error is an Snap Error.
+ * Determines if the given error is a Snap RPC error.
  *
- * @param error - Error instance.
- * @returns Result in boolean.
+ * @param error - The error instance to be checked.
+ * @returns A boolean indicating whether the error is a Snap RPC error.
  */
 export function isSnapRpcError(error: Error): boolean {
   const errors = [

@@ -9,20 +9,15 @@ import {
 import { onRpcRequest, validateOrigin, onKeyringRequest } from '.';
 import { Config, originPermissions } from './config';
 import { BtcKeyring } from './keyring';
-import { BaseSnapRpcHandler, type IStaticSnapRpcHandler } from './modules/rpc';
+import { BaseSnapRpcHandler, type IStaticSnapRpcHandler } from './libs/rpc';
 import { RpcHelper } from './rpcs';
 import type { StaticImplements } from './types/static';
+
+jest.mock('./libs/logger/logger');
 
 jest.mock('@metamask/keyring-api', () => ({
   ...jest.requireActual('@metamask/keyring-api'),
   handleKeyringRequest: jest.fn(),
-}));
-
-jest.mock('./modules/logger/logger', () => ({
-  logger: {
-    info: jest.fn(),
-    error: jest.fn(),
-  },
 }));
 
 describe('validateOrigin', () => {
@@ -35,13 +30,13 @@ describe('validateOrigin', () => {
   });
 
   it('throws `Origin not found` error if not origin is provided', () => {
-    expect(() => validateOrigin('', 'chain_getBalances')).toThrow(
+    expect(() => validateOrigin('', 'chain_getTransactionStatus')).toThrow(
       'Origin not found',
     );
   });
 
   it('throws `Permission denied` error if origin not match to the allowed list', () => {
-    expect(() => validateOrigin('xyz', 'chain_getBalances')).toThrow(
+    expect(() => validateOrigin('xyz', 'chain_getTransactionStatus')).toThrow(
       'Permission denied',
     );
   });
@@ -71,7 +66,7 @@ describe('onRpcRequest', () => {
     return onRpcRequest({
       origin: 'http://localhost:8000',
       request: {
-        method: 'chain_getBalances',
+        method: 'chain_getTransactionStatus',
         params: {
           scope: Config.avaliableNetworks[Config.chain][0],
         },
@@ -83,7 +78,7 @@ describe('onRpcRequest', () => {
     const { handler, handleRequestSpy } = createMockChainApiHandler();
     jest.spyOn(RpcHelper, 'getChainRpcApiHandlers').mockReturnValue({
       // eslint-disable-next-line @typescript-eslint/naming-convention
-      chain_getBalances: handler,
+      chain_getTransactionStatus: handler,
     });
     handleRequestSpy.mockResolvedValueOnce({
       data: 1,
@@ -95,11 +90,7 @@ describe('onRpcRequest', () => {
   });
 
   it('throws SnapError if an error catched', async () => {
-    const { handler } = createMockChainApiHandler();
-    jest.spyOn(RpcHelper, 'getChainRpcApiHandlers').mockReturnValue({
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      chain_createAccount: handler,
-    });
+    jest.spyOn(RpcHelper, 'getChainRpcApiHandlers').mockReturnValue({});
 
     await expect(executeRequest()).rejects.toThrow(MethodNotFoundError);
   });
@@ -108,7 +99,7 @@ describe('onRpcRequest', () => {
     const { handler, handleRequestSpy } = createMockChainApiHandler();
     jest.spyOn(RpcHelper, 'getChainRpcApiHandlers').mockReturnValue({
       // eslint-disable-next-line @typescript-eslint/naming-convention
-      chain_getBalances: handler,
+      chain_getTransactionStatus: handler,
     });
     handleRequestSpy.mockRejectedValue(new SnapError('error'));
 
@@ -129,7 +120,7 @@ describe('onKeyringRequest', () => {
     return onKeyringRequest({
       origin: 'http://localhost:8000',
       request: {
-        method: keyringApi.KeyringRpcMethod.CreateAccount,
+        method: keyringApi.KeyringRpcMethod.ListAccounts,
         params: {
           scope: Config.avaliableNetworks[Config.chain][0],
         },
@@ -143,7 +134,7 @@ describe('onKeyringRequest', () => {
     await executeRequest();
 
     expect(handler).toHaveBeenCalledWith(expect.any(BtcKeyring), {
-      method: keyringApi.KeyringRpcMethod.CreateAccount,
+      method: keyringApi.KeyringRpcMethod.ListAccounts,
       params: {
         scope: Config.avaliableNetworks[Config.chain][0],
       },

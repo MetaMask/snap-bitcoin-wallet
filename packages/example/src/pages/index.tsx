@@ -9,12 +9,10 @@ import {
   ReconnectButton,
   Card,
   CreateBTCAccountButton,
-  GetBTCAccountBalanceButton,
+  GetBalancesCard,
   ListAccountsButton,
-  BroadcastTxnCard,
-  GetDataForTransactionCard,
-  EstimateFeesCard,
   SendManyCard,
+  GetTransactionStatusCard,
 } from '../components';
 import { defaultSnapOrigin } from '../config';
 import { defaultSnapOrigin as snapId } from '../config/snap';
@@ -133,7 +131,7 @@ const Index = () => {
       return;
     }
     const accountBalance = (await invokeSnap({
-      method: 'chain_getBalances',
+      method: 'keyring_getAccountBalances',
       params: {
         accounts: [address],
         assets: [asset],
@@ -248,18 +246,10 @@ const Index = () => {
             !shouldDisplayReconnectButton(installedSnap)
           }
         />
-        <Card
-          content={{
-            title: 'Get Balance',
-            description: `Get BTC Account's balance - ${balance}`,
-            button: (
-              <GetBTCAccountBalanceButton
-                onClick={handleGetBalanceClick}
-                disabled={!installedSnap}
-              />
-            ),
-          }}
-          disabled={!installedSnap || !btcAccount}
+        <GetBalancesCard 
+          enabled={!(!installedSnap || !btcAccount)}
+          account={btcAccount?.id || ''}
+          scope={scope}
           fullWidth={
             isMetaMaskReady &&
             Boolean(installedSnap) &&
@@ -267,7 +257,7 @@ const Index = () => {
           }
         />
 
-        <GetDataForTransactionCard
+        {/* <GetDataForTransactionCard
           account={btcAccount?.address || ''}
           scope={scope}
           enabled={!(!installedSnap || !btcAccount)}
@@ -296,12 +286,22 @@ const Index = () => {
             Boolean(installedSnap) &&
             !shouldDisplayReconnectButton(installedSnap)
           }
-        />
+        /> */}
 
         <SendManyCard 
           enabled={!(!installedSnap || !btcAccount)}
           account={btcAccount?.id || ''}
           address={btcAccount?.address || ''}
+          scope={scope}
+          fullWidth={
+            isMetaMaskReady &&
+            Boolean(installedSnap) &&
+            !shouldDisplayReconnectButton(installedSnap)
+          }
+        />
+
+        <GetTransactionStatusCard
+          enabled={!(!installedSnap || !btcAccount)}
           scope={scope}
           fullWidth={
             isMetaMaskReady &&

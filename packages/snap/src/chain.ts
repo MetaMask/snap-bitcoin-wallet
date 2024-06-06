@@ -1,24 +1,6 @@
 import type { Json } from '@metamask/snaps-sdk';
-import type { Infer } from 'superstruct';
-import { object, define, string, array, boolean } from 'superstruct';
 
-const transactionIntentAmts = () =>
-  define<Record<string, number>>(
-    'transactionIntentAmts',
-    (value: Record<string, number>) => {
-      if (Object.entries(value).length === 0) {
-        return 'Transaction must have at least one recipient';
-      }
-
-      for (const val of Object.values(value)) {
-        if (val <= 0) {
-          return 'Invalid amount for send';
-        }
-      }
-
-      return true;
-    },
-  );
+import type { IAmount } from './wallet';
 
 export enum FeeRatio {
   Fast = 'fast',
@@ -26,10 +8,20 @@ export enum FeeRatio {
   Slow = 'slow',
 }
 
+export enum TransactionStatus {
+  Confirmed = 'confirmed',
+  Pending = 'pending',
+  Failed = 'failed',
+}
+
+export type TransactionStatusData = {
+  status: TransactionStatus;
+};
+
 export type Balances = Record<string, number>;
 
 export type Balance = {
-  amount: number;
+  amount: IAmount;
 };
 
 export type AssetBalances = {
@@ -42,42 +34,75 @@ export type AssetBalances = {
 
 export type Fee = {
   type: FeeRatio;
-  rate: number;
+  rate: IAmount;
 };
 
 export type Fees = {
   fees: Fee[];
 };
 
-export const TransactionIntentStruct = object({
-  amounts: transactionIntentAmts(),
-  subtractFeeFrom: array(string()),
-  replaceable: boolean(),
-});
-
-export type TransactionIntent = Infer<typeof TransactionIntentStruct>;
+export type TransactionIntent = {
+  amounts: Record<string, number>;
+  subtractFeeFrom: string[];
+  replaceable: boolean;
+};
 
 export type TransactionData = {
   data: Record<string, Json>;
-};
-
-export type Pagination = {
-  limit: number;
-  offset: number;
 };
 
 export type CommitedTransaction = {
   transactionId: string;
 };
 
+/**
+ * An interface that defines methods for interacting with a blockchain network.
+ */
 export type IOnChainService = {
+  /**
+   * Gets the balances for multiple addresses and multiple assets.
+   *
+   * @param addresses - An array of addresses to fetch the balances for.
+   * @param assets - An array of assets to fetch the balances of.
+   * @returns A promise that resolves to an `AssetBalances` object.
+   */
   getBalances(addresses: string[], assets: string[]): Promise<AssetBalances>;
-  estimateFees(): Promise<Fees>;
+
+  /**
+   * Gets the fee rates of the network.
+   *
+   * @returns A promise that resolves to a `Fees` object.
+   */
+  getFeeRates(): Promise<Fees>;
+
+  /**
+   * Broadcasts a signed transaction on the blockchain network.
+   *
+   * @param signedTransaction - A signed transaction string.
+   * @returns A promise that resolves to a `CommitedTransaction` object.
+   */
   broadcastTransaction(signedTransaction: string): Promise<CommitedTransaction>;
-  listTransactions(address: string, pagination: Pagination);
-  getTransaction(txnHash: string);
+
+  /**
+   * Gets the status of a transaction with the given transaction hash.
+   *
+   * @param txHash - The transaction hash of the transaction to get the status of.
+   * @returns A promise that resolves to a `TransactionStatusData` object.
+   */
+  getTransactionStatus(txHash: string): Promise<TransactionStatusData>;
+
+  /**
+   * Gets the required metadata to build a transaction for the given address and transaction intent.
+   *
+   * @param address - The address to build the transaction for.
+   * @param transactionIntent - The transaction intent object containing the transaction inputs and outputs.
+   * @returns A promise that resolves to a `TransactionData` object.
+   */
   getDataForTransaction(
     address: string,
     transactionIntent?: TransactionIntent,
   ): Promise<TransactionData>;
+
+  // TODO: Implement listTransactions in next phase
+  listTransactions();
 };
