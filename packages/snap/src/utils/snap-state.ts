@@ -95,10 +95,9 @@ export abstract class SnapStateManager<State> {
             this.#transactionId
           }]: error : ${JSON.stringify(error.message)}`,
         );
-        if (this.#transaction.hasCommited) {
-          // we only need to rollback if the transaction is committed
-          await this.#rollback();
-        }
+
+        await this.#rollback();
+
         throw error;
       } finally {
         this.#cleanUpTransaction();
@@ -126,7 +125,12 @@ export abstract class SnapStateManager<State> {
 
   async #rollback(): Promise<void> {
     try {
-      if (!this.#transaction.isRollingBack && this.#transaction.orgState) {
+      // we only need to rollback if the transaction is committed
+      if (
+        this.#transaction.hasCommited &&
+        !this.#transaction.isRollingBack &&
+        this.#transaction.orgState
+      ) {
         logger.info(
           `SnapStateManager.rollback [${
             this.#transactionId
@@ -134,7 +138,6 @@ export abstract class SnapStateManager<State> {
         );
         this.#transaction.isRollingBack = true;
         await this.set(this.#transaction.orgState);
-        this.#cleanUpTransaction();
       }
     } catch (error) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
@@ -143,7 +146,6 @@ export abstract class SnapStateManager<State> {
           this.#transactionId
         }]: error : ${JSON.stringify(error)}`,
       );
-      this.#cleanUpTransaction();
       throw new Error('Failed to rollback state');
     }
   }
