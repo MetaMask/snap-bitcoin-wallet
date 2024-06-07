@@ -68,17 +68,6 @@ export class BtcWallet implements IWallet {
     const scriptOutput = account.script;
     const { scriptType } = account;
 
-    logger.info(
-      JSON.stringify(
-        {
-          recipients,
-          options,
-        },
-        null,
-        2,
-      ),
-    );
-
     // TODO: Supporting getting coins from other address (dynamic address)
     const inputs = options.utxos.map((utxo) => new TxInput(utxo, scriptOutput));
     const outputs = recipients.map((recipient) => {
@@ -107,17 +96,6 @@ export class BtcWallet implements IWallet {
       change,
     );
 
-    logger.info(
-      JSON.stringify(
-        {
-          feeRate,
-          ...selectionResult,
-        },
-        null,
-        2,
-      ),
-    );
-
     const txInfo = new BtcTxInfo(
       new BtcAddress(account.address),
       feeRate,
@@ -140,7 +118,7 @@ export class BtcWallet implements IWallet {
     }
 
     if (selectionResult.change) {
-      if (isDust(change.value, scriptType)) {
+      if (isDust(change.amount.value, scriptType)) {
         logger.warn(
           '[BtcWallet.createTransaction] Change is too small, adding to fees',
         );

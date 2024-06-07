@@ -37,13 +37,17 @@ export const TransactionAmountStuct = refine(
 
     for (const val of Object.values(value)) {
       const parsedVal = parseFloat(val);
-      const stringVals = val.split('.');
       if (
         Number.isNaN(parsedVal) ||
         parsedVal <= 0 ||
-        !Number.isFinite(parsedVal) ||
-        (stringVals.length > 1 && stringVals[1].length > 8)
+        !Number.isFinite(parsedVal)
       ) {
+        return 'Invalid amount for send';
+      }
+
+      try {
+        btcToSats(val);
+      } catch (error) {
         return 'Invalid amount for send';
       }
     }
@@ -108,12 +112,15 @@ export async function sendMany(account: IAccount, params: SendManyParams) {
       throw new Error('No fee rates available');
     }
 
-    const fee = Math.max(feesResp.fees[feesResp.fees.length - 1].rate.value, 1);
+    const fee = Math.max(
+      Number(feesResp.fees[feesResp.fees.length - 1].rate.value),
+      1,
+    );
 
     const recipients = Object.entries(params.amounts).map(
       ([address, value]) => ({
         address,
-        value: parseInt(btcToSats(parseFloat(value)), 10),
+        value: btcToSats(value),
       }),
     );
 

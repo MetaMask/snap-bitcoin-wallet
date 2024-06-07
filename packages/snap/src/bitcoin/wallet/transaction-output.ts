@@ -12,7 +12,9 @@ export class TxOutput {
 
   readonly destination: IAddress;
 
-  constructor(value: number, address: string, script: Buffer) {
+  protected _value: bigint;
+
+  constructor(value: bigint | number, address: string, script: Buffer) {
     this.amount = new BtcAmount(value);
     this.destination = new BtcAddress(address);
     this.script = script;
@@ -20,11 +22,15 @@ export class TxOutput {
 
   // consume by conselect
   get value(): number {
-    return this.amount.value;
+    return Number(this.amount.value);
   }
 
-  set value(value: number) {
-    this.amount.value = value;
+  set value(value: bigint | number) {
+    if (typeof value === 'number') {
+      this.amount.value = BigInt(value);
+    } else {
+      this.amount.value = value;
+    }
   }
 
   get address(): string {

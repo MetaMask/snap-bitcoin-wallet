@@ -57,15 +57,15 @@ describe('BtcTxInfo', () => {
       ];
 
       expect(info.total).toBeInstanceOf(BtcAmount);
-      expect(info.total.value).toStrictEqual(total);
+      expect(info.total.value).toStrictEqual(BigInt(total));
       expect(info.sender).toStrictEqual(sender);
       expect(info.recipients).toHaveLength(expectedRecipients.length);
       expect(info.change).toBeDefined();
       expect(info.fee).toStrictEqual(fee);
       expect(info.txFee).toBeInstanceOf(BtcAmount);
-      expect(info.txFee.value).toStrictEqual(fee);
+      expect(info.txFee.value).toStrictEqual(BigInt(fee));
       expect(info.feeRate).toBeInstanceOf(BtcAmount);
-      expect(info.feeRate.value).toStrictEqual(feeRate);
+      expect(info.feeRate.value).toStrictEqual(BigInt(feeRate));
 
       expect(info.toJson()).toStrictEqual({
         feeRate: `${satsToBtc(feeRate)} BTC`,

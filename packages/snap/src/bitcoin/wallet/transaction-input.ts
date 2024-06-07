@@ -26,6 +26,6 @@ export class TxInput {
 
   // consume by coinselect
   get value(): number {
-    return this.amount.value;
+    return Number(this.amount.value);
   }
 }

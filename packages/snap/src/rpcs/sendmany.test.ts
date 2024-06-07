@@ -385,6 +385,16 @@ describe('SendManyHandler', () => {
           },
         }),
       ).rejects.toThrow('Invalid amount for send');
+
+      await expect(
+        sendMany(sender, {
+          ...createSendManyParams(recipients, caip2ChainId, false),
+          amounts: {
+            [recipients[0].address]: '1',
+            [recipients[1].address]: '999999999.99999999',
+          },
+        }),
+      ).rejects.toThrow('Invalid amount for send');
     });
 
     it('throws `Failed to send the transaction` error if no fee rate returns from chain service', async () => {

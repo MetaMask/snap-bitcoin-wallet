@@ -2,7 +2,7 @@ import type { Json } from '@metamask/snaps-sdk';
 import { networks } from 'bitcoinjs-lib';
 
 import { generateFormatedUtxos } from '../../../test/utils';
-import { DustLimit, ScriptType } from '../constants';
+import { DustLimit, ScriptType, maxSatoshi } from '../constants';
 import { P2SHP2WPKHAccount, P2WPKHAccount } from './account';
 import { CoinSelectService } from './coin-select';
 import { BtcAccountBip32Deriver } from './deriver';
@@ -43,7 +43,7 @@ describe('BtcWallet', () => {
     return [
       {
         address,
-        value: amount,
+        value: BigInt(amount),
       },
     ];
   };
@@ -102,11 +102,17 @@ describe('BtcWallet', () => {
       const { instance } = createMockDeriver(network);
       const wallet = new BtcWallet(instance, network);
       const account = await wallet.unlock(0, ScriptType.P2wpkh);
-      const utxos = generateFormatedUtxos(account.address, 200, 100000, 100000);
+
+      const utxos = generateFormatedUtxos(
+        account.address,
+        200,
+        maxSatoshi,
+        maxSatoshi,
+      );
 
       const result = await wallet.createTransaction(
         account,
-        createMockTxIndent(account.address, 132000),
+        createMockTxIndent(account.address, maxSatoshi),
         {
           utxos,
           fee: 56,

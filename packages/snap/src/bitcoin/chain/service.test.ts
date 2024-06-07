@@ -193,8 +193,8 @@ describe('BtcOnChainService', () => {
       const { instance, getFeeRatesSpy } = createMockReadDataClient();
       const { instance: txMgr } = createMockBtcService(instance);
       getFeeRatesSpy.mockResolvedValue({
-        [FeeRatio.Fast]: 1.1,
-        [FeeRatio.Medium]: 1.2,
+        [FeeRatio.Fast]: 1,
+        [FeeRatio.Medium]: 2,
       });
 
       const result = await txMgr.getFeeRates();
@@ -212,8 +212,8 @@ describe('BtcOnChainService', () => {
           },
         ],
       });
-      expect(result.fees[0].rate.value).toBe(1.1);
-      expect(result.fees[1].rate.value).toBe(1.2);
+      expect(result.fees[0].rate.value).toStrictEqual(BigInt(1));
+      expect(result.fees[1].rate.value).toStrictEqual(BigInt(2));
     });
 
     it('throws BtcOnChainServiceError error if an error catched', async () => {

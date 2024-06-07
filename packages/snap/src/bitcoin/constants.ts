@@ -48,4 +48,11 @@ export const DustLimit = {
   /* eslint-disable */
 };
 
+// Maximum weight in bytes for a standard transaction
 export const MaxStandardTxWeight = 400000;
+
+// Maximum amount of satoshis
+export const maxSatoshi = 21 * 1e14;
+
+// Minimum amount of satoshis
+export const minSatoshi = 1;

@@ -48,6 +48,7 @@ export type Utxo = {
   block: number;
   txHash: string;
   index: number;
+  // TODO: convert to bigint | IAmount for standardization
   value: number;
 };
 

@@ -56,7 +56,7 @@ export class BtcTxInfo implements ITxInfo {
   }
 
   addRecipient(output: TxOutput): void {
-    this._outputTotal.value += output.value;
+    this._outputTotal.value += output.amount.value;
 
     this._recipients.push(output);
 
@@ -73,7 +73,7 @@ export class BtcTxInfo implements ITxInfo {
   get total(): BtcAmount {
     return new BtcAmount(
       this._outputTotal.value +
-        (this.change ? this.change.value : 0) +
+        (this.change ? this.change.amount.value : BigInt(0)) +
         this.txFee.value,
     );
   }
@@ -87,11 +87,11 @@ export class BtcTxInfo implements ITxInfo {
   }
 
   get fee(): number {
-    return this.txFee.value;
+    return Number(this.txFee.value);
   }
 
   set fee(val: number) {
-    this.txFee.value = val;
+    this.txFee.value = BigInt(val);
   }
 
   toJson<InfoJson extends Record<string, Json>>(): InfoJson {

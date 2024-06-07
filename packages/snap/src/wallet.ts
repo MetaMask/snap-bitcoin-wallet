@@ -3,7 +3,7 @@ import type { Buffer } from 'buffer';
 
 export type Recipient = {
   address: string;
-  value: number;
+  value: bigint;
 };
 
 export type Transaction = {
@@ -48,7 +48,7 @@ export type IAmount = {
   /**
    * The numeric value of the amount.
    */
-  value: number;
+  value: bigint;
 
   /**
    * The unit of the amount, e.g. "BTC" or "ETH".
