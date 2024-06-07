@@ -319,7 +319,7 @@ describe('SendManyHandler', () => {
       });
     });
 
-    it('throws `Request params is invalid` error when request parameter is not correct', async () => {
+    it('throws InvalidParamsError when request parameter is not correct', async () => {
       const network = networks.testnet;
       const caip2ChainId = Network.Testnet;
       const { sender } = await prepareSendMany(network, caip2ChainId);
@@ -347,6 +347,46 @@ describe('SendManyHandler', () => {
       ).rejects.toThrow('Transaction must have at least one recipient');
     });
 
+    it('throws `Invalid amount for send` error if receive amount is not valid', async () => {
+      createMockChainApiFactory();
+      const network = networks.testnet;
+      const caip2ChainId = Network.Testnet;
+      const { recipients, sender } = await createSenderNRecipients(
+        network,
+        caip2ChainId,
+        2,
+      );
+      await expect(
+        sendMany(sender, {
+          ...createSendManyParams(recipients, caip2ChainId, false),
+          amounts: {
+            [recipients[0].address]: 'invalid',
+            [recipients[1].address]: '0.1',
+          },
+        }),
+      ).rejects.toThrow('Invalid amount for send');
+
+      await expect(
+        sendMany(sender, {
+          ...createSendManyParams(recipients, caip2ChainId, false),
+          amounts: {
+            [recipients[0].address]: '0',
+            [recipients[1].address]: '0.1',
+          },
+        }),
+      ).rejects.toThrow('Invalid amount for send');
+
+      await expect(
+        sendMany(sender, {
+          ...createSendManyParams(recipients, caip2ChainId, false),
+          amounts: {
+            [recipients[0].address]: 'invalid',
+            [recipients[1].address]: '0.000000019',
+          },
+        }),
+      ).rejects.toThrow('Invalid amount for send');
+    });
+
     it('throws `Failed to send the transaction` error if no fee rate returns from chain service', async () => {
       const { getFeeRatesSpy } = createMockChainApiFactory();
       const network = networks.testnet;
@@ -363,27 +403,6 @@ describe('SendManyHandler', () => {
       await expect(
         sendMany(sender, createSendManyParams(recipients, caip2ChainId, false)),
       ).rejects.toThrow('Failed to send the transaction');
-    });
-
-    it('throws `Invalid amount for send` error if sending amount is <= 0', async () => {
-      const network = networks.testnet;
-      const caip2ChainId = Network.Testnet;
-      createMockChainApiFactory();
-      const { sender, recipients } = await createSenderNRecipients(
-        network,
-        caip2ChainId,
-        2,
-      );
-
-      await expect(
-        sendMany(sender, {
-          ...createSendManyParams(recipients, caip2ChainId, false),
-          amounts: {
-            [recipients[0].address]: satsToBtc(0),
-            [recipients[1].address]: satsToBtc(0),
-          },
-        }),
-      ).rejects.toThrow('Invalid amount for send');
     });
 
     it('throws `Invalid response` error if the response is unexpected', async () => {
