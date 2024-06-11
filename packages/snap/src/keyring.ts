@@ -163,6 +163,7 @@ export class BtcKeyring implements Keyring {
     return this.syncSubmitRequest(request);
   }
 
+  //  CHECK - Remove this Func.
   protected async syncSubmitRequest(
     request: KeyringRequest,
   ): Promise<KeyringResponse> {

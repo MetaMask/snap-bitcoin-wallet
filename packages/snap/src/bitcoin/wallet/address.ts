@@ -1,3 +1,4 @@
+//  CHECK - remove
 import { replaceMiddleChar } from '../../utils';
 import type { IAddress } from '../../wallet';
 

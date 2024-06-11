@@ -36,6 +36,7 @@ export class Factory {
     return new BtcWallet(new BtcAccountBip32Deriver(btcNetwork), btcNetwork);
   }
 
+  //  CHECK - remove fn
   static createKeyring(): Keyring {
     return new BtcKeyring(new KeyringStateManager(), {
       defaultIndex: Config.wallet.defaultAccountIndex,

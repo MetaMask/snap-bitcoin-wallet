@@ -85,6 +85,7 @@ export class P2WPKHAccount
   static readonly scriptType = ScriptType.P2wpkh;
 }
 
+//  CHECK - remove
 export class P2SHP2WPKHAccount
   extends BtcAccount
   implements StaticImplements<IStaticBtcAccount, typeof P2SHP2WPKHAccount>

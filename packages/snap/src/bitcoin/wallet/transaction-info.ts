@@ -1,3 +1,4 @@
+//  CHECK - simplify
 import type { Json } from '@metamask/snaps-sdk';
 import type { Network } from 'bitcoinjs-lib';
 

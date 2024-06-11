@@ -1,3 +1,4 @@
+//  CHECK - remove (?)
 import { Config } from '../../config';
 import type { IAmount } from '../../wallet';
 import { satsToBtc } from '../utils';

@@ -7,6 +7,7 @@ import type { ScriptType } from '../constants';
 import type { TxInput } from './transaction-input';
 import type { TxOutput } from './transaction-output';
 
+//  CHECK - remove
 export type IBtcAccountDeriver = {
   getRoot(path: string[]): Promise<BIP32Interface>;
   getChild(root: BIP32Interface, idx: number): Promise<BIP32Interface>;

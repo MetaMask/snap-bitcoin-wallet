@@ -1,3 +1,4 @@
+//  CHECK - remove
 /**
  * A type that enforces static implementation of a class.
  *

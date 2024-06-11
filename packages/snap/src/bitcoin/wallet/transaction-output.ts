@@ -1,3 +1,4 @@
+//  CHECK - simplify
 import type { Buffer } from 'buffer';
 
 import type { IAddress, IAmount } from '../../wallet';

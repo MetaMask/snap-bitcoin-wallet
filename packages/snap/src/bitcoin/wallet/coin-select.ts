@@ -1,3 +1,4 @@
+//  CHECK - convert to Util Fn (?)
 import coinSelect from 'coinselect';
 
 import { TxValidationError } from './exceptions';

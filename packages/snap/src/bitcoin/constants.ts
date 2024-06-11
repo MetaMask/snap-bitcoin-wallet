@@ -9,6 +9,7 @@ export enum Network {
   Testnet = 'bip122:000000000933ea01ad0ee984209779ba',
 }
 
+//  CHECK - remove Blockstream (also data-client/client folder)
 export enum DataClient {
   BlockStream = 'BlockStream',
   BlockChair = 'BlockChair',

@@ -1,3 +1,4 @@
+//  CHECK - remove
 import type { FeeRatio, TransactionStatusData } from '../../chain';
 import type { Utxo } from '../wallet';
 

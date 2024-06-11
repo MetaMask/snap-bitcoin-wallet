@@ -8,6 +8,7 @@ import { compactError, hexToBuffer, getBip32Deriver } from '../../utils';
 import { DeriverError } from './exceptions';
 import type { IBtcAccountDeriver } from './types';
 
+//  CHECK - combine  BtcAccountDeriver + BtcAccountBip32Deriver
 export abstract class BtcAccountDeriver implements IBtcAccountDeriver {
   protected readonly _network: Network;
 

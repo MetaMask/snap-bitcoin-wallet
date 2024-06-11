@@ -17,6 +17,7 @@ export function getProvider(): SnapsProvider {
   return snap;
 }
 
+//  CHECK - remove Fn
 /**
  * Retrieves a BIP44AddressKeyDeriver for the specified coin type.
  *

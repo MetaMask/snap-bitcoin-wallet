@@ -1,3 +1,4 @@
+//  CHECK - Move to Bitcoin folder (?)
 import type { Json } from '@metamask/snaps-sdk';
 
 import type { IAmount } from './wallet';

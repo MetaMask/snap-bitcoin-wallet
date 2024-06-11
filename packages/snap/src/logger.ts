@@ -1,3 +1,4 @@
+//  CHECK - Move to Util Folder
 // ERROR, WARN, INFO, DEBUG, TRACE, ALL, and OF
 export enum LogLevel {
   ERROR = 1,

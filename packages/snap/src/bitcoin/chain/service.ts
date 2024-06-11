@@ -20,6 +20,7 @@ export type BtcOnChainServiceOptions = {
   network: Network;
 };
 
+//  CHECK - Cleanup based on removal of BlockStream
 export class BtcOnChainService implements IOnChainService {
   protected readonly _readClient: IReadDataClient;
 
