@@ -1,6 +1,6 @@
 import type { Json } from '@metamask/snaps-sdk';
 
-import { Network as BtcNetwork, BtcAsset, BtcUnit } from './bitcoin/constants';
+import { Caip2ChainId, Caip2Asset } from './constants';
 
 export type BtcOnChainServiceConfig = {
   dataClient: {
@@ -42,14 +42,15 @@ export const Config: SnapConfig = {
     defaultAccountIndex: 0,
     defaultAccountType: 'bip122:p2wpkh',
   },
-  avaliableNetworks: Object.values(BtcNetwork),
-  avaliableAssets: Object.values(BtcAsset),
-  unit: BtcUnit.Btc,
+  avaliableNetworks: Object.values(Caip2ChainId),
+  avaliableAssets: Object.values(Caip2Asset),
+  unit: 'BTC',
   explorer: {
     // eslint-disable-next-line no-template-curly-in-string
-    [BtcNetwork.Mainnet]: 'https://blockstream.info/address/${address}',
-    // eslint-disable-next-line no-template-curly-in-string
-    [BtcNetwork.Testnet]: 'https://blockstream.info/testnet/address/${address}',
+    [Caip2ChainId.Mainnet]: 'https://blockstream.info/address/${address}',
+    [Caip2ChainId.Testnet]:
+      // eslint-disable-next-line no-template-curly-in-string
+      'https://blockstream.info/testnet/address/${address}',
   },
   // eslint-disable-next-line no-restricted-globals
   logLevel: process.env.LOG_LEVEL ?? '6',

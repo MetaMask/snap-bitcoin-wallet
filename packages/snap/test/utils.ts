@@ -5,7 +5,7 @@ import { Buffer } from 'buffer';
 import ECPairFactory from 'ecpair';
 import { v4 as uuidv4 } from 'uuid';
 
-import { Network as NetworkEnum } from '../src/bitcoin/constants';
+import { Caip2ChainId } from '../src/constants';
 import blockChairData from './fixtures/blockchair.json';
 
 /* eslint-disable */
@@ -32,7 +32,7 @@ export function generateAccounts(cnt = 1, addressPrefix = '') {
         baseAddress.slice(0, baseAddress.length - i.toString().length) +
         i.toString(),
       options: {
-        scope: NetworkEnum.Testnet,
+        scope: Caip2ChainId.Testnet,
         index: i,
       },
       methods: ['btc_sendmany'],

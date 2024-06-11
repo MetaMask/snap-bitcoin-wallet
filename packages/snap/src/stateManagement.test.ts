@@ -1,5 +1,5 @@
 import { generateAccounts } from '../test/utils';
-import { Network } from './bitcoin/constants';
+import { Caip2ChainId } from './constants';
 import { KeyringStateManager } from './stateManagement';
 import * as snapUtil from './utils/snap';
 
@@ -18,7 +18,7 @@ describe('KeyringStateManager', () => {
     return [`m`, `0'`, `0`, `${index}`].join('/');
   };
 
-  const createInitState = (cnt = 1, scope = Network.Testnet) => {
+  const createInitState = (cnt = 1, scope = Caip2ChainId.Testnet) => {
     const generatedAccounts = generateAccounts(cnt);
     return {
       walletIds: generatedAccounts.map((accounts) => accounts.id),

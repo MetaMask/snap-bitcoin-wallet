@@ -3,9 +3,10 @@ import { MethodNotFoundError } from '@metamask/snaps-sdk';
 import { v4 as uuidv4 } from 'uuid';
 
 import { generateAccounts } from '../test/utils';
-import { BtcAsset, BtcUnit, Network, ScriptType } from './bitcoin/constants';
+import { ScriptType } from './bitcoin/constants';
 import { BtcAccount } from './bitcoin/wallet';
 import { Config } from './config';
+import { Caip2Asset, Caip2ChainId } from './constants';
 import { Factory } from './factory';
 import { BtcKeyring } from './keyring';
 import * as getBalanceRpc from './rpcs/get-balances';
@@ -113,7 +114,7 @@ describe('BtcKeyring', () => {
       const { unlockSpy } = createMockWallet();
       const { instance: stateMgr, addWalletSpy } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);
-      const scope = Network.Testnet;
+      const scope = Caip2ChainId.Testnet;
       const account = generateAccounts(1)[0];
 
       unlockSpy.mockResolvedValue({
@@ -153,7 +154,7 @@ describe('BtcKeyring', () => {
       const { instance: stateMgr } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);
       unlockSpy.mockRejectedValue(new Error('error'));
-      const scope = Network.Testnet;
+      const scope = Caip2ChainId.Testnet;
 
       await expect(
         keyring.createAccount({
@@ -181,7 +182,7 @@ describe('BtcKeyring', () => {
       const account = generateAccounts(1)[0];
 
       await expect(
-        keyring.filterAccountChains(account.id, [Network.Testnet]),
+        keyring.filterAccountChains(account.id, [Caip2ChainId.Testnet]),
       ).rejects.toThrow('Method not implemented.');
     });
   });
@@ -289,7 +290,7 @@ describe('BtcKeyring', () => {
 
   describe('submitRequest', () => {
     it('calls SnapRpcHandler if the method support', async () => {
-      const caip2ChainId = Network.Testnet;
+      const caip2ChainId = Caip2ChainId.Testnet;
       const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
       const { instance: keyring, sendManySpy } = createMockKeyring(stateMgr);
       const { sender, keyringAccount } = await createSender(caip2ChainId);
@@ -316,7 +317,7 @@ describe('BtcKeyring', () => {
 
       await keyring.submitRequest({
         id: keyringAccount.id,
-        scope: Network.Testnet,
+        scope: Caip2ChainId.Testnet,
         account: keyringAccount.address,
         request: {
           method: 'btc_sendmany',
@@ -335,7 +336,7 @@ describe('BtcKeyring', () => {
       await expect(
         keyring.submitRequest({
           id: account.id,
-          scope: Network.Testnet,
+          scope: Caip2ChainId.Testnet,
           account: account.address,
           request: {
             method: 'btc_sendmany',
@@ -345,7 +346,7 @@ describe('BtcKeyring', () => {
     });
 
     it("throws `Account's scope does not match with the request's scope` error if given scope is not match with the account", async () => {
-      const caip2ChainId = Network.Testnet;
+      const caip2ChainId = Caip2ChainId.Testnet;
       const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);
       const { sender, keyringAccount } = await createSender(caip2ChainId);
@@ -359,7 +360,7 @@ describe('BtcKeyring', () => {
       await expect(
         keyring.submitRequest({
           id: keyringAccount.id,
-          scope: Network.Mainnet,
+          scope: Caip2ChainId.Mainnet,
           account: keyringAccount.address,
           request: {
             method: 'btc_sendmany',
@@ -371,7 +372,7 @@ describe('BtcKeyring', () => {
     });
 
     it('throws MethodNotFoundError if the method not support', async () => {
-      const caip2ChainId = Network.Testnet;
+      const caip2ChainId = Caip2ChainId.Testnet;
       const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);
       const { sender, keyringAccount } = await createSender(caip2ChainId);
@@ -397,7 +398,7 @@ describe('BtcKeyring', () => {
 
   describe('getAccountBalances', () => {
     it('executes `GetBalancesHandler` with correct parameter', async () => {
-      const caip2ChainId = Network.Testnet;
+      const caip2ChainId = Caip2ChainId.Testnet;
       const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
       const { instance: keyring, getBalanceRpcSpy } =
         createMockKeyring(stateMgr);
@@ -409,18 +410,18 @@ describe('BtcKeyring', () => {
         hdPath: sender.hdPath,
       });
 
-      const assets = [BtcAsset.TBtc];
+      const assets = [Caip2Asset.TBtc];
       const expectedResp = assets.reduce((acc, asset) => {
         acc[asset] = {
           amount: '1',
-          unit: BtcUnit.Btc,
+          unit: Config.unit,
         };
         return acc;
       }, {});
 
       getBalanceRpcSpy.mockResolvedValue(expectedResp);
 
-      await keyring.getAccountBalances(keyringAccount.id, [BtcAsset.TBtc]);
+      await keyring.getAccountBalances(keyringAccount.id, [Caip2Asset.TBtc]);
 
       expect(getBalanceRpcSpy).toHaveBeenCalledWith(expect.any(BtcAccount), {
         scope: caip2ChainId,
@@ -435,7 +436,7 @@ describe('BtcKeyring', () => {
       const account = generateAccounts(1)[0];
 
       await expect(
-        keyring.getAccountBalances(account.id, [BtcAsset.TBtc]),
+        keyring.getAccountBalances(account.id, [Caip2Asset.TBtc]),
       ).rejects.toThrow(Error);
     });
   });

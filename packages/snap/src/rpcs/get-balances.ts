@@ -1,7 +1,6 @@
 import type { Infer } from 'superstruct';
 import { object, array, record, enums, assert } from 'superstruct';
 
-import { BtcUnit } from '../bitcoin/constants';
 import { Config } from '../config';
 import { Factory } from '../factory';
 import { logger } from '../logger';
@@ -24,7 +23,7 @@ export const getBalancesResponseStruct = object({
     assetsStruct,
     object({
       amount: positiveStringStruct,
-      unit: enums([BtcUnit.Btc]),
+      unit: enums([Config.unit]),
     }),
   ),
 });

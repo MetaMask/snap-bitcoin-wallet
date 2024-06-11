@@ -4,9 +4,10 @@ import { networks } from 'bitcoinjs-lib';
 import { v4 as uuidv4 } from 'uuid';
 
 import { generateAccounts } from '../../test/utils';
-import { Network, ScriptType } from '../bitcoin/constants';
+import { ScriptType } from '../bitcoin/constants';
 import { BtcAccountDeriver, BtcWallet } from '../bitcoin/wallet';
 import { Config } from '../config';
+import { Caip2ChainId } from '../constants';
 import { Factory } from '../factory';
 import { getBalances } from './get-balances';
 
@@ -74,7 +75,7 @@ describe('getBalances', () => {
 
   it('gets balances', async () => {
     const network = networks.testnet;
-    const caip2ChainId = Network.Testnet;
+    const caip2ChainId = Caip2ChainId.Testnet;
     const { getBalancesSpy } = createMockChainApiFactory();
 
     const { walletData, sender } = await createMockAccount(
@@ -114,7 +115,7 @@ describe('getBalances', () => {
 
   it('gets balances of the request account only', async () => {
     const network = networks.testnet;
-    const caip2ChainId = Network.Testnet;
+    const caip2ChainId = Caip2ChainId.Testnet;
     const { getBalancesSpy } = createMockChainApiFactory();
     const accounts = generateAccounts(10);
     const { walletData, sender } = await createMockAccount(
@@ -150,7 +151,7 @@ describe('getBalances', () => {
     getBalancesSpy.mockResolvedValue(mockResp);
 
     const result = await getBalances(sender, {
-      scope: Network.Testnet,
+      scope: Caip2ChainId.Testnet,
       assets: [asset],
     });
 
@@ -160,7 +161,7 @@ describe('getBalances', () => {
 
   it('throws `Fail to get the balances` when transaction status fetch failed', async () => {
     const network = networks.testnet;
-    const caip2ChainId = Network.Testnet;
+    const caip2ChainId = Caip2ChainId.Testnet;
     const { getBalancesSpy } = createMockChainApiFactory();
     const { sender } = await createMockAccount(network, caip2ChainId);
 
@@ -168,7 +169,7 @@ describe('getBalances', () => {
 
     await expect(
       getBalances(sender, {
-        scope: Network.Testnet,
+        scope: Caip2ChainId.Testnet,
         assets: [asset],
       }),
     ).rejects.toThrow(`Fail to get the balances`);
@@ -176,12 +177,12 @@ describe('getBalances', () => {
 
   it('throws `Request params is invalid` when request parameter is not correct', async () => {
     const network = networks.testnet;
-    const caip2ChainId = Network.Testnet;
+    const caip2ChainId = Caip2ChainId.Testnet;
     const { sender } = await createMockAccount(network, caip2ChainId);
 
     await expect(
       getBalances(sender, {
-        scope: Network.Testnet,
+        scope: Caip2ChainId.Testnet,
         assets: ['some-asset'],
       }),
     ).rejects.toThrow(InvalidParamsError);

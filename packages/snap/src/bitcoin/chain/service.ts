@@ -10,8 +10,8 @@ import type {
   TransactionData,
   CommitedTransaction,
 } from '../../chain';
+import { Caip2Asset } from '../../constants';
 import { compactError } from '../../utils';
-import { BtcAsset } from '../constants';
 import type { IDataClient } from './data-client';
 import { BtcOnChainServiceError } from './exceptions';
 
@@ -42,12 +42,12 @@ export class BtcOnChainService implements IOnChainService {
         throw new BtcOnChainServiceError('Only one asset is supported');
       }
 
-      const allowedAssets = new Set<string>(Object.values(BtcAsset));
+      const allowedAssets = new Set<string>(Object.values(Caip2Asset));
 
       if (
         !allowedAssets.has(assets[0]) ||
-        (this.network === networks.testnet && assets[0] !== BtcAsset.TBtc) ||
-        (this.network === networks.bitcoin && assets[0] !== BtcAsset.Btc)
+        (this.network === networks.testnet && assets[0] !== Caip2Asset.TBtc) ||
+        (this.network === networks.bitcoin && assets[0] !== Caip2Asset.Btc)
       ) {
         throw new BtcOnChainServiceError('Invalid asset');
       }

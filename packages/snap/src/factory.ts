@@ -6,11 +6,6 @@ import type { IOnChainService } from './chain';
 import { Config } from './config';
 import type { IWallet } from './wallet';
 
-// TODO: Remove temp solution to support keyring in snap without keyring API
-export type CreateBtcKeyringOptions = {
-  emitEvents: boolean;
-};
-
 export class Factory {
   static createOnChainServiceProvider(scope: string): IOnChainService {
     const btcNetwork = getBtcNetwork(scope);

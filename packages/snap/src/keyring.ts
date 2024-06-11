@@ -17,23 +17,9 @@ import { Config } from './config';
 import { Factory } from './factory';
 import { logger } from './logger';
 import { getBalances, type SendManyParams, sendMany } from './rpcs';
-import type { KeyringStateManager } from './stateManagement';
+import type { KeyringStateManager, Wallet } from './stateManagement';
 import { getProvider, scopeStruct } from './utils';
 import type { IAccount, IWallet } from './wallet';
-
-export type Wallet = {
-  account: KeyringAccount;
-  hdPath: string;
-  index: number;
-  scope: string;
-};
-
-export type Wallets = Record<string, Wallet>;
-
-export type SnapState = {
-  walletIds: string[];
-  wallets: Wallets;
-};
 
 export type KeyringOptions = Record<string, Json> & {
   defaultIndex: number;

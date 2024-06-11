@@ -1,7 +1,7 @@
 import { InvalidParamsError } from '@metamask/snaps-sdk';
 
-import { Network } from '../bitcoin/constants';
 import { TransactionStatus } from '../chain';
+import { Caip2ChainId } from '../constants';
 import { Factory } from '../factory';
 import { getTransactionStatus } from './get-transaction-status';
 
@@ -37,7 +37,7 @@ describe('getTransactionStatus', () => {
     getTransactionStatusSpy.mockResolvedValue(mockResp);
 
     const result = await getTransactionStatus({
-      scope: Network.Testnet,
+      scope: Caip2ChainId.Testnet,
       transactionId: txHash,
     });
 
@@ -54,7 +54,7 @@ describe('getTransactionStatus', () => {
 
     await expect(
       getTransactionStatus({
-        scope: Network.Testnet,
+        scope: Caip2ChainId.Testnet,
         transactionId: txHash,
       }),
     ).rejects.toThrow(`Fail to get the transaction status`);
