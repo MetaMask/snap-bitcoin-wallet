@@ -8,6 +8,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { Network as NetworkEnum } from '../src/bitcoin/constants';
 import blockChairData from './fixtures/blockchair.json';
 
+/* eslint-disable */
+
 /**
  * Method to generate testing account.
  *
@@ -220,8 +222,8 @@ export function generateBlockChairGetBalanceResp(addresses: string[]) {
  *
  * @param address - address in string.
  * @param utxosCount - utxos count.
- * @param minAmount
- * @param maxAmount
+ * @param minAmount - min amount of each utxo value.
+ * @param maxAmount - max amount of each utxo value.
  * @returns An array of blockchair getUtxos response.
  */
 export function generateBlockChairGetUtxosResp(
@@ -295,7 +297,7 @@ export function generateBlockChairBroadcastTransactionResp() {
  * @param txHash - Transaction hash of the transaction.
  * @param txnBlockHeight - Block height of the transaction.
  * @param txnBlockHeight - Block height of the last block.
- * @param lastBlockHeight
+ * @param lastBlockHeight - Block height of the last block.
  * @param confirmed - Confirm status of the transaction.
  * @returns A blockchair transaction dashboards resp.
  */
@@ -330,10 +332,8 @@ export function generateBlockChairTransactionDashboard(
  *
  * @param address - the utxos owner address.
  * @param utxoCnt - count of the utox to be generated.
- * @param minAmount - min amount of each utxo value.
- * @param maxAmount - max amount of each utxo value.
- * @param minAmt
- * @param maxAmt
+ * @param minAmt - min amount of the utxo array.
+ * @param maxAmt - max amount of the utxo array.
  * @returns An formatted utxo array.
  */
 export function generateFormatedUtxos(
@@ -356,3 +356,5 @@ export function generateFormatedUtxos(
   }));
   return formattedUtxos;
 }
+
+/* eslint-disable */
