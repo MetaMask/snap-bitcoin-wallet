@@ -7,12 +7,7 @@ import type { Buffer } from 'buffer';
 import { compactError, hexToBuffer, getBip32Deriver } from '../../utils';
 import { DeriverError } from './exceptions';
 
-export type IBtcAccountDeriver = {
-  getRoot(path: string[]): Promise<BIP32Interface>;
-  getChild(root: BIP32Interface, idx: number): Promise<BIP32Interface>;
-};
-
-export class BtcAccountDeriver implements IBtcAccountDeriver {
+export class BtcAccountDeriver {
   protected readonly _network: Network;
 
   protected readonly _bip32Api: BIP32API;

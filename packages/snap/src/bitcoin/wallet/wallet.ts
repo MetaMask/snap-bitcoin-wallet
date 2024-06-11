@@ -20,7 +20,7 @@ import {
   type IBtcAccount,
 } from './account';
 import { CoinSelectService } from './coin-select';
-import type { IBtcAccountDeriver } from './deriver';
+import type { BtcAccountDeriver } from './deriver';
 import { WalletError, TxValidationError } from './exceptions';
 import { PsbtService } from './psbt';
 import { AccountSigner } from './signer';
@@ -39,11 +39,11 @@ export type CreateTransactionOptions = {
 };
 
 export class BtcWallet implements IWallet {
-  protected readonly _deriver: IBtcAccountDeriver;
+  protected readonly _deriver: BtcAccountDeriver;
 
   protected readonly _network: Network;
 
-  constructor(deriver: IBtcAccountDeriver, network: Network) {
+  constructor(deriver: BtcAccountDeriver, network: Network) {
     this._deriver = deriver;
     this._network = network;
   }
