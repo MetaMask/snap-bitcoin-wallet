@@ -1,7 +1,5 @@
 import type { Json } from '@metamask/snaps-sdk';
 
-import type { IAmount } from './wallet';
-
 export enum FeeRatio {
   Fast = 'fast',
   Medium = 'medium',
@@ -19,7 +17,7 @@ export type TransactionStatusData = {
 };
 
 export type Balance = {
-  amount: IAmount;
+  amount: bigint;
 };
 
 export type AssetBalances = {
@@ -32,7 +30,7 @@ export type AssetBalances = {
 
 export type Fee = {
   type: FeeRatio;
-  rate: IAmount;
+  rate: bigint;
 };
 
 export type Fees = {

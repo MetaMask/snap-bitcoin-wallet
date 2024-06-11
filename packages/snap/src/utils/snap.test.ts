@@ -8,22 +8,6 @@ jest.mock('@metamask/key-tree', () => ({
   getBIP44AddressKeyDeriver: jest.fn(),
 }));
 
-describe('getBip44Deriver', () => {
-  it('gets bip44 deriver', async () => {
-    const spy = jest.spyOn(snapUtil.getProvider(), 'request');
-    const coinType = 1001;
-
-    await snapUtil.getBip44Deriver(coinType);
-
-    expect(spy).toHaveBeenCalledWith({
-      method: 'snap_getBip44Entropy',
-      params: {
-        coinType,
-      },
-    });
-  });
-});
-
 describe('getBip32Deriver', () => {
   it('gets bip32 deriver', async () => {
     const spy = jest.spyOn(snapUtil.getProvider(), 'request');

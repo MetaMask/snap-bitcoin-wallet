@@ -5,14 +5,13 @@ import type { TransactionStatusData } from '../../../chain';
 import { FeeRatio, TransactionStatus } from '../../../chain';
 import { logger } from '../../../logger';
 import { compactError } from '../../../utils';
-import type { Utxo } from '../../wallet';
-import { DataClientError } from '../exceptions';
+import type { Utxo } from '../../../wallet';
 import type {
   GetBalancesResp,
   GetFeeRatesResp,
-  IReadDataClient,
-  IWriteDataClient,
-} from '../types';
+  IDataClient,
+} from '../data-client';
+import { DataClientError } from '../exceptions';
 
 export type BlockChairClientOptions = {
   network: Network;
@@ -205,7 +204,7 @@ export type PostTransactionResponse = {
 };
 /* eslint-disable */
 
-export class BlockChairClient implements IReadDataClient, IWriteDataClient {
+export class BlockChairClient implements IDataClient {
   protected readonly _options: BlockChairClientOptions;
 
   constructor(options: BlockChairClientOptions) {

@@ -1,5 +1,5 @@
-import { DustLimit, ScriptType, maxSatoshi, minSatoshi } from '../constants';
-import { satsToBtc, btcToSats, isDust } from './unit';
+import { maxSatoshi, minSatoshi } from '../bitcoin/constants';
+import { satsToBtc, btcToSats } from './unit';
 
 describe('satsToBtc', () => {
   it('returns Btc unit', () => {
@@ -12,6 +12,10 @@ describe('satsToBtc', () => {
 
   it('returns Btc unit with min Satoshis', () => {
     expect(satsToBtc(minSatoshi)).toBe('0.00000001');
+  });
+
+  it('returns Btc unit with unit', () => {
+    expect(satsToBtc(minSatoshi, true)).toBe('0.00000001 BTC');
   });
 
   it('throw an error if then given Satoshis in float', () => {
@@ -45,19 +49,5 @@ describe('btcToSats', () => {
       'BTC amount is out of range',
     );
     expect(() => btcToSats('22000000')).toThrow('BTC amount is out of range');
-  });
-});
-
-describe('isDust', () => {
-  it('returns result', () => {
-    expect(isDust(DustLimit[ScriptType.P2wpkh] + 1, ScriptType.P2wpkh)).toBe(
-      false,
-    );
-    expect(
-      isDust(BigInt(DustLimit[ScriptType.P2wpkh] + 1), ScriptType.P2wpkh),
-    ).toBe(false);
-    expect(
-      isDust(BigInt(DustLimit[ScriptType.P2wpkh] - 1), ScriptType.P2wpkh),
-    ).toBe(true);
   });
 });

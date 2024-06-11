@@ -6,3 +6,5 @@ export * from './lock';
 export * from './snap';
 export * from './snap-state';
 export * from './rpc';
+export * from './explorer';
+export * from './unit';

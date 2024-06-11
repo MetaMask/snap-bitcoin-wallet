@@ -5,13 +5,13 @@ import { Buffer } from 'buffer';
 import * as snapUtils from '../../utils/snap';
 import * as strUtils from '../../utils/string';
 import { P2WPKHAccount } from './account';
-import { BtcAccountBip32Deriver } from './deriver';
+import { BtcAccountDeriver } from './deriver';
 
 jest.mock('../../utils/snap');
 
-describe('BtcAccountBip32Deriver', () => {
+describe('BtcAccountDeriver', () => {
   const prepareBip32Deriver = async (network) => {
-    const deriver = new BtcAccountBip32Deriver(network);
+    const deriver = new BtcAccountDeriver(network);
     const bip32Deriver = await snapUtils.getBip32Deriver(
       P2WPKHAccount.path,
       deriver.curve,
@@ -50,7 +50,7 @@ describe('BtcAccountBip32Deriver', () => {
 
     it('throws `Unable to construct BIP32 node from private key` if an error catched', async () => {
       const network = networks.testnet;
-      const deriver = new BtcAccountBip32Deriver(network);
+      const deriver = new BtcAccountDeriver(network);
       const pkBuffer = Buffer.from('');
       const ccBuffer = Buffer.from('');
 
@@ -129,7 +129,7 @@ describe('BtcAccountBip32Deriver', () => {
 
     it('throws DeriverError if private key is missing', async () => {
       const network = networks.testnet;
-      const deriver = new BtcAccountBip32Deriver(network);
+      const deriver = new BtcAccountDeriver(network);
 
       jest
         .spyOn(snapUtils, 'getBip32Deriver')

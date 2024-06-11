@@ -2,6 +2,7 @@ import type { Infer } from 'superstruct';
 import { object, array, record, enums, assert } from 'superstruct';
 
 import { BtcUnit } from '../bitcoin/constants';
+import { Config } from '../config';
 import { Factory } from '../factory';
 import { logger } from '../logger';
 import { isSnapRpcError, validateRequest, validateResponse } from '../utils';
@@ -10,7 +11,8 @@ import {
   positiveStringStruct,
   scopeStruct,
 } from '../utils/superstruct';
-import type { IAccount, IAmount } from '../wallet';
+import { satsToBtc } from '../utils/unit';
+import type { IAccount } from '../wallet';
 
 export const getBalancesRequestStruct = object({
   assets: array(assetsStruct),
@@ -57,7 +59,7 @@ export async function getBalances(
     const balances = await chainApi.getBalances(addresses, assets);
 
     const balancesVals = Object.entries(balances.balances);
-    const balancesMap = new Map<string, IAmount>();
+    const balancesMap = new Map<string, bigint>();
 
     for (const [address, assetBalances] of balancesVals) {
       if (!addressesSet.has(address)) {
@@ -69,9 +71,9 @@ export async function getBalances(
         }
 
         const { amount } = assetBalances[asset];
-        const currentAmount = balancesMap.get(asset);
+        let currentAmount = balancesMap.get(asset);
         if (currentAmount) {
-          currentAmount.value += amount.value;
+          currentAmount += amount;
         }
 
         balancesMap.set(asset, currentAmount ?? amount);
@@ -82,8 +84,8 @@ export async function getBalances(
       [...balancesMap.entries()].map(([asset, amount]) => [
         asset,
         {
-          amount: amount.toString(),
-          unit: amount.unit,
+          amount: satsToBtc(amount),
+          unit: Config.unit,
         },
       ]),
     );

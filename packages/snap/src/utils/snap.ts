@@ -1,8 +1,4 @@
-import {
-  getBIP44AddressKeyDeriver,
-  type BIP44AddressKeyDeriver,
-  type SLIP10NodeInterface,
-} from '@metamask/key-tree';
+import { type SLIP10NodeInterface } from '@metamask/key-tree';
 import type { Component, DialogResult, Json } from '@metamask/snaps-sdk';
 import { panel, type SnapsProvider } from '@metamask/snaps-sdk';
 
@@ -15,24 +11,6 @@ declare const snap: SnapsProvider;
  */
 export function getProvider(): SnapsProvider {
   return snap;
-}
-
-/**
- * Retrieves a BIP44AddressKeyDeriver for the specified coin type.
- *
- * @param coinType - The coin type for which to retrieve a BIP44AddressKeyDeriver.
- * @returns A Promise that resolves to a BIP44AddressKeyDeriver object.
- */
-export async function getBip44Deriver(
-  coinType: number,
-): Promise<BIP44AddressKeyDeriver> {
-  const bip44Node = await snap.request({
-    method: 'snap_getBip44Entropy',
-    params: {
-      coinType,
-    },
-  });
-  return getBIP44AddressKeyDeriver(bip44Node);
 }
 
 /**

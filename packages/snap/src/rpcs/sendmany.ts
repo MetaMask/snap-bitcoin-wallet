@@ -19,12 +19,20 @@ import {
   optional,
 } from 'superstruct';
 
-import { btcToSats } from '../bitcoin/utils';
 import { TxValidationError } from '../bitcoin/wallet';
 import { Factory } from '../factory';
 import { logger } from '../logger';
-import { scopeStruct, confirmDialog, isSnapRpcError } from '../utils';
-import { validateRequest, validateResponse } from '../utils/rpc';
+import {
+  scopeStruct,
+  confirmDialog,
+  isSnapRpcError,
+  shortenAddress,
+  getExplorerUrl,
+  btcToSats,
+  satsToBtc,
+  validateRequest,
+  validateResponse,
+} from '../utils';
 import type { IAccount, ITxInfo } from '../wallet';
 
 export const TransactionAmountStuct = refine(
@@ -74,23 +82,6 @@ export type SendManyParams = Infer<typeof sendManyParamsStruct>;
 
 export type SendManyResponse = Infer<typeof sendManyResponseStruct>;
 
-export type TxJson = {
-  feeRate: string;
-  txFee: string;
-  total: string;
-  sender: string;
-  recipients: {
-    address: string;
-    explorerUrl: string;
-    value: string;
-  }[];
-  changes: {
-    address: string;
-    value: string;
-    explorerUrl: string;
-  }[];
-};
-
 /**
  * Send BTC to multiple account.
  *
@@ -113,7 +104,7 @@ export async function sendMany(account: IAccount, params: SendManyParams) {
     }
 
     const fee = Math.max(
-      Number(feesResp.fees[feesResp.fees.length - 1].rate.value),
+      Number(feesResp.fees[feesResp.fees.length - 1].rate),
       1,
     );
 
@@ -133,7 +124,7 @@ export async function sendMany(account: IAccount, params: SendManyParams) {
       replaceable: params.replaceable,
     });
 
-    if (!(await getTxConsensus(txInfo, params.comment))) {
+    if (!(await getTxConsensus(txInfo, params.comment, scope))) {
       throw new UserRejectedRequestError() as unknown as Error;
     }
 
@@ -176,13 +167,15 @@ export async function sendMany(account: IAccount, params: SendManyParams) {
 /**
  * Display an confirmation dialog to confirm an transaction.
  *
- * @param txInfo - The json transaction data.
+ * @param info - The transaction data object contains the transaction information.
  * @param comment - The comment text to display.
+ * @param scope - The CAIP-2 Chain ID.
  * @returns A Promise that resolves to the response of the confirmation dialog.
  */
 export async function getTxConsensus(
-  txInfo: ITxInfo,
+  info: ITxInfo,
   comment: string,
+  scope: string,
 ): Promise<boolean> {
   const header = `Send Request`;
   const intro = `Review the request before proceeding. Once the transaction is made, it's irreversible.`;
@@ -206,17 +199,14 @@ export async function getTxConsensus(
     divider(),
   ];
 
-  const info = txInfo.toJson<TxJson>();
-
   const isMoreThanOneRecipient =
-    info.recipients.length + info.changes.length > 1;
+    info.recipients.length + (info.change ? 1 : 0) > 1;
 
   let i = 0;
 
   const addReciptentsToComponents = (data: {
     address: string;
-    explorerUrl: string;
-    value: string;
+    value: bigint;
   }) => {
     const recipientsPanel: Component[] = [];
     recipientsPanel.push(
@@ -224,28 +214,42 @@ export async function getTxConsensus(
         isMoreThanOneRecipient
           ? `${recipientsLabel} ${i + 1}`
           : recipientsLabel,
-        text(`[${data.address}](${data.explorerUrl})`),
+        text(
+          `[${shortenAddress(data.address)}](${getExplorerUrl(
+            data.address,
+            scope,
+          )})`,
+        ),
       ),
     );
-    recipientsPanel.push(row(amountLabel, text(data.value, false)));
+    recipientsPanel.push(
+      row(amountLabel, text(satsToBtc(data.value, true), false)),
+    );
     i += 1;
     components.push(panel(recipientsPanel));
     components.push(divider());
   };
 
   info.recipients.forEach(addReciptentsToComponents);
-  info.changes.forEach(addReciptentsToComponents);
+
+  if (info.change) {
+    [info.change].forEach(addReciptentsToComponents);
+  }
 
   const bottomPanel: Component[] = [];
   if (comment.trim().length > 0) {
     bottomPanel.push(row(commentLabel, text(comment.trim(), false)));
   }
 
-  bottomPanel.push(row(networkFeeLabel, text(`${info.txFee}`, false)));
+  bottomPanel.push(
+    row(networkFeeLabel, text(`${satsToBtc(info.txFee, true)}`, false)),
+  );
 
   // bottomPanel.push(row(networkFeeRateLabel, text(`${info.feeRate}`, false)));
 
-  bottomPanel.push(row(totalLabel, text(`${info.total}`, false)));
+  bottomPanel.push(
+    row(totalLabel, text(`${satsToBtc(info.total, true)}`, false)),
+  );
 
   components.push(panel(bottomPanel));
 

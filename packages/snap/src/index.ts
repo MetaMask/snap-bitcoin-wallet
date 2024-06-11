@@ -9,11 +9,12 @@ import {
 } from '@metamask/snaps-sdk';
 
 import { Config } from './config';
-import { Factory } from './factory';
+import { BtcKeyring } from './keyring';
 import { logger } from './logger';
 import { InternalRpcMethod, originPermissions } from './permissions';
 import type { CreateAccountParams, GetTransactionStatusParams } from './rpcs';
 import { createAccount, getTransactionStatus } from './rpcs';
+import { KeyringStateManager } from './stateManagement';
 import { isSnapRpcError } from './utils';
 
 export const validateOrigin = (origin: string, method: string): void => {
@@ -70,7 +71,12 @@ export const onKeyringRequest: OnKeyringRequestHandler = async ({
   try {
     validateOrigin(origin, request.method);
 
-    const keyring = Factory.createKeyring();
+    const keyring = new BtcKeyring(new KeyringStateManager(), {
+      defaultIndex: Config.wallet.defaultAccountIndex,
+      // TODO: Remove temp solution to support keyring in snap without keyring API
+      emitEvents: true,
+    });
+
     return (await handleKeyringRequest(
       keyring,
       request,

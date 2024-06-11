@@ -11,91 +11,23 @@ export type Transaction = {
   txInfo: ITxInfo;
 };
 
+export type Utxo = {
+  block: number;
+  txHash: string;
+  index: number;
+  value: number;
+};
+
 /**
  * An interface that defines a `toJson` method for getting a JSON representation of a transaction info object.
  */
 export type ITxInfo = {
-  /**
-   * Returns a JSON representation of the transaction info object.
-   *
-   * @returns The JSON representation of the transaction info object.
-   */
-  toJson<TxInfoJson extends Record<string, Json>>(): TxInfoJson;
-};
-
-/**
- * An interface that defines methods and properties for working with blockchain addresses.
- */
-export type IAddress = {
-  /**
-   * The string value of the address.
-   */
-  value: string;
-
-  /**
-   * Returns the string representation of the address.
-   *
-   * @param isShorten - A boolean indicating whether the address should be shortened.
-   * @returns The string representation of the address.
-   */
-  toString(isShorten?: boolean): string;
-};
-
-/**
- * An interface that defines properties for working with amounts of cryptocurrency.
- */
-export type IAmount = {
-  /**
-   * The numeric value of the amount.
-   */
-  value: bigint;
-
-  /**
-   * The unit of the amount, e.g. "BTC" or "ETH".
-   */
-  unit: string;
-
-  /**
-   * Returns the string representation of the amount, with or without the unit.
-   *
-   * @param withUnit - A boolean indicating whether to include the unit in the string representation.
-   * @returns The string representation of the amount.
-   */
-  toString(withUnit?: boolean): string;
-};
-
-/**
- * An interface that defines properties for an account, including its address, HD path, public key, and signer object.
- */
-export type IAccount = {
-  /**
-   * The master fingerprint of the derived node, as a string.
-   */
-  mfp: string;
-  /**
-   * The index of the derived node, as a number.
-   */
-  index: number;
-  /**
-   * The address of the account, as a string.
-   */
-  address: string;
-  /**
-   * The HD path of the account, as a string.
-   */
-  hdPath: string;
-  /**
-   * The public key of the account, as a string.
-   */
-  pubkey: string;
-  /**
-   * The type of the account, e.g. `bip122:p2pwh`, as a string.
-   */
-  type: string;
-  /**
-   * The `IAccountSigner` object derived from the root node.
-   */
-  signer: IAccountSigner;
+  sender: string;
+  change?: Recipient;
+  recipients: Recipient[];
+  total: bigint;
+  txFee: bigint;
+  feeRate: bigint;
 };
 
 /**
@@ -133,6 +65,40 @@ export type IWallet = {
     recipients: Recipient[],
     options: Record<string, Json>,
   ): Promise<Transaction>;
+};
+
+/**
+ * An interface that defines properties for an account, including its address, HD path, public key, and signer object.
+ */
+export type IAccount = {
+  /**
+   * The master fingerprint of the derived node, as a string.
+   */
+  mfp: string;
+  /**
+   * The index of the derived node, as a number.
+   */
+  index: number;
+  /**
+   * The address of the account, as a string.
+   */
+  address: string;
+  /**
+   * The HD path of the account, as a string.
+   */
+  hdPath: string;
+  /**
+   * The public key of the account, as a string.
+   */
+  pubkey: string;
+  /**
+   * The type of the account, e.g. `bip122:p2pwh`, as a string.
+   */
+  type: string;
+  /**
+   * The `IAccountSigner` object derived from the root node.
+   */
+  signer: IAccountSigner;
 };
 
 /**

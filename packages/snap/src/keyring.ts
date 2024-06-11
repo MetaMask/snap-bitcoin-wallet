@@ -90,6 +90,7 @@ export class BtcKeyring implements Keyring {
       const account = await this.discoverAccount(wallet, index, type);
 
       logger.info(
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         `[BtcKeyring.createAccount] Account unlocked: ${account.address}`,
       );
 

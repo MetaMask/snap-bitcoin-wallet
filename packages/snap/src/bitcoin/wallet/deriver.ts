@@ -6,19 +6,53 @@ import type { Buffer } from 'buffer';
 
 import { compactError, hexToBuffer, getBip32Deriver } from '../../utils';
 import { DeriverError } from './exceptions';
-import type { IBtcAccountDeriver } from './types';
 
-export abstract class BtcAccountDeriver implements IBtcAccountDeriver {
+export type IBtcAccountDeriver = {
+  getRoot(path: string[]): Promise<BIP32Interface>;
+  getChild(root: BIP32Interface, idx: number): Promise<BIP32Interface>;
+};
+
+export class BtcAccountDeriver implements IBtcAccountDeriver {
   protected readonly _network: Network;
 
   protected readonly _bip32Api: BIP32API;
+
+  readonly curve: 'secp256k1' | 'ed25519' = 'secp256k1';
 
   constructor(network: Network) {
     this._bip32Api = BIP32Factory(ecc);
     this._network = network;
   }
 
-  abstract getRoot(path: string[]): Promise<BIP32Interface>;
+  async getRoot(path: string[]) {
+    try {
+      const deriver = await getBip32Deriver(path, this.curve);
+
+      if (!deriver.privateKey) {
+        throw new DeriverError('Deriver private key is missing');
+      }
+
+      const privateKeyBuffer = this.pkToBuf(deriver.privateKey);
+      const chainCodeBuffer = this.chainCodeToBuf(deriver.chainCode);
+
+      const root = this.createBip32FromPrivateKey(
+        privateKeyBuffer,
+        chainCodeBuffer,
+      );
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      // ignore checking since no function to set depth for node
+      root.DEPTH = deriver.depth;
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      // ignore checking since no function to set index for node
+      root.INDEX = deriver.index;
+
+      return root;
+    } catch (error) {
+      throw compactError(error, DeriverError);
+    }
+  }
 
   createBip32FromPrivateKey(
     privateKey: Buffer,
@@ -52,40 +86,6 @@ export abstract class BtcAccountDeriver implements IBtcAccountDeriver {
       return hexToBuffer(chainCode);
     } catch (error) {
       throw new DeriverError('Chain code is invalid');
-    }
-  }
-}
-
-export class BtcAccountBip32Deriver extends BtcAccountDeriver {
-  readonly curve: 'secp256k1' | 'ed25519' = 'secp256k1';
-
-  async getRoot(path: string[]) {
-    try {
-      const deriver = await getBip32Deriver(path, this.curve);
-
-      if (!deriver.privateKey) {
-        throw new DeriverError('Deriver private key is missing');
-      }
-
-      const privateKeyBuffer = this.pkToBuf(deriver.privateKey);
-      const chainCodeBuffer = this.chainCodeToBuf(deriver.chainCode);
-
-      const root = this.createBip32FromPrivateKey(
-        privateKeyBuffer,
-        chainCodeBuffer,
-      );
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      // ignore checking since no function to set depth for node
-      root.DEPTH = deriver.depth;
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      // ignore checking since no function to set index for node
-      root.INDEX = deriver.index;
-
-      return root;
-    } catch (error) {
-      throw compactError(error, DeriverError);
     }
   }
 }

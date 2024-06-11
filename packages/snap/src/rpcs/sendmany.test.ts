@@ -1,4 +1,3 @@
-import type { Json } from '@metamask/snaps-sdk';
 import {
   InvalidParamsError,
   UserRejectedRequestError,
@@ -11,16 +10,16 @@ import {
   generateBlockChairGetUtxosResp,
 } from '../../test/utils';
 import { DustLimit, Network, ScriptType } from '../bitcoin/constants';
-import { satsToBtc } from '../bitcoin/utils/unit';
-import type { IBtcAccount } from '../bitcoin/wallet';
 import {
-  BtcAccountBip32Deriver,
+  BtcAccountDeriver,
   BtcWallet,
-  BtcAmount,
+  type IBtcAccount,
 } from '../bitcoin/wallet';
 import { FeeRatio } from '../chain';
 import { Factory } from '../factory';
+import { getExplorerUrl, shortenAddress } from '../utils';
 import * as snapUtils from '../utils/snap';
+import { satsToBtc } from '../utils/unit';
 import type { IAccount, ITxInfo } from '../wallet';
 import { type SendManyParams, sendMany } from './sendmany';
 
@@ -51,7 +50,7 @@ describe('SendManyHandler', () => {
 
     const createMockDeriver = (network) => {
       return {
-        instance: new BtcAccountBip32Deriver(network),
+        instance: new BtcAccountDeriver(network),
       };
     };
 
@@ -151,7 +150,7 @@ describe('SendManyHandler', () => {
         fees: [
           {
             type: FeeRatio.Fast,
-            rate: new BtcAmount(1),
+            rate: BigInt(1),
           },
         ],
       });
@@ -265,22 +264,16 @@ describe('SendManyHandler', () => {
       );
 
       const info: ITxInfo = {
-        toJson<TxInfoJson extends Record<string, Json>>() {
-          return {
-            feeRate: `0.00000001 BTC`,
-            txFee: `0.00000001 BTC`,
-            sender: sender.address,
-            recipients: [
-              {
-                address: recipients[0].address,
-                value: `0.000010 BTC`,
-                explorerUrl: `https://blockchair.com/bitcoin/transaction/transactionId`,
-              },
-            ],
-            changes: [],
-            total: `0.000010 BTC`,
-          } as unknown as TxInfoJson;
-        },
+        feeRate: BigInt('1'),
+        txFee: BigInt('1'),
+        sender: sender.address,
+        recipients: [
+          {
+            address: recipients[0].address,
+            value: BigInt('1000'),
+          },
+        ],
+        total: BigInt('1000'),
       };
 
       walletCreateTxSpy.mockResolvedValue({
@@ -307,13 +300,15 @@ describe('SendManyHandler', () => {
             label: 'Recipient',
             value: {
               type: 'text',
-              value: `[${recipients[0].address}](https://blockchair.com/bitcoin/transaction/transactionId)`,
+              value: `[${shortenAddress(
+                recipients[0].address,
+              )}](${getExplorerUrl(recipients[0].address, caip2ChainId)})`,
             },
           },
           {
             type: 'row',
             label: 'Amount',
-            value: { markdown: false, type: 'text', value: '0.000010 BTC' },
+            value: { markdown: false, type: 'text', value: '0.00001000 BTC' },
           },
         ],
       });

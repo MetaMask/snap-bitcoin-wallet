@@ -5,11 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { generateAccounts } from '../../test/utils';
 import { Network, ScriptType } from '../bitcoin/constants';
-import {
-  BtcAccountBip32Deriver,
-  BtcWallet,
-  BtcAmount,
-} from '../bitcoin/wallet';
+import { BtcAccountDeriver, BtcWallet } from '../bitcoin/wallet';
 import { Config } from '../config';
 import { Factory } from '../factory';
 import { getBalances } from './get-balances';
@@ -37,11 +33,11 @@ describe('getBalances', () => {
   };
 
   const createMockDeriver = (network) => {
-    const rootSpy = jest.spyOn(BtcAccountBip32Deriver.prototype, 'getRoot');
-    const childSpy = jest.spyOn(BtcAccountBip32Deriver.prototype, 'getChild');
+    const rootSpy = jest.spyOn(BtcAccountDeriver.prototype, 'getRoot');
+    const childSpy = jest.spyOn(BtcAccountDeriver.prototype, 'getChild');
 
     return {
-      instance: new BtcAccountBip32Deriver(network),
+      instance: new BtcAccountDeriver(network),
       rootSpy,
       childSpy,
     };
@@ -91,7 +87,7 @@ describe('getBalances', () => {
       balances: addresses.reduce((acc, address) => {
         acc[address] = {
           [asset]: {
-            amount: new BtcAmount(100),
+            amount: BigInt(100),
           },
         };
         return acc;
@@ -134,10 +130,10 @@ describe('getBalances', () => {
       ].reduce((acc, address) => {
         acc[address] = {
           [asset]: {
-            amount: new BtcAmount(100),
+            amount: BigInt(100),
           },
           'some-asset': {
-            amount: new BtcAmount(100),
+            amount: BigInt(100),
           },
         };
         return acc;

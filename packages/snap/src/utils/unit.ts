@@ -1,21 +1,28 @@
 import Big from 'big.js';
 
-import type { ScriptType } from '../constants';
-import { DustLimit, maxSatoshi } from '../constants';
+import { maxSatoshi } from '../bitcoin/constants';
+import { Config } from '../config';
 
 /**
  * Converts a satoshis to a string representing the equivalent amount of BTC.
  *
  * @param sats - The number of satoshis to convert.
+ * @param withUnit - A boolean indicating whether to include the unit in the string representation. Default is false.
  * @returns The equivalent amount of BTC as a string, fixed to 8 decimal places.
  * @throws A Error if sats is not an integer.
  */
-export function satsToBtc(sats: number | bigint): string {
+export function satsToBtc(sats: number | bigint, withUnit = false): string {
   if (typeof sats === 'number' && !Number.isInteger(sats)) {
     throw new Error('satsToBtc must be called on an integer number');
   }
   const bigIntSat = new Big(sats);
-  return bigIntSat.div(100000000).toFixed(8);
+  const val = bigIntSat.div(100000000).toFixed(8);
+
+  if (withUnit) {
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+    return `${val} ${Config.unit}`;
+  }
+  return val;
 }
 
 /**
@@ -36,19 +43,4 @@ export function btcToSats(btc: string): bigint {
     throw new Error('BTC amount is out of range');
   }
   return BigInt(sats.toFixed(0));
-}
-
-/**
- * Determines if a given amount is considered dust based on the hardcoded dust limit for a given script type.
- *
- * @param amt - The amount to compare.
- * @param scriptType - The script type for which to calculate the dust limit.
- * @returns A boolean indicating whether the amount is considered dust.
- */
-export function isDust(amt: bigint | number, scriptType: ScriptType): boolean {
-  // TODO: Calculate dust threshold by network fee rate, rather than hardcoding it.
-  if (typeof amt === 'number') {
-    return amt < DustLimit[scriptType];
-  }
-  return amt < BigInt(DustLimit[scriptType]);
 }
