@@ -161,12 +161,6 @@ export class BtcKeyring implements Keyring {
   }
 
   async submitRequest(request: KeyringRequest): Promise<KeyringResponse> {
-    return this.syncSubmitRequest(request);
-  }
-
-  protected async syncSubmitRequest(
-    request: KeyringRequest,
-  ): Promise<KeyringResponse> {
     return {
       pending: false,
       result: await this.handleSubmitRequest(request),

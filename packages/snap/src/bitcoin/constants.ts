@@ -10,7 +10,6 @@ export enum Network {
 }
 
 export enum DataClient {
-  BlockStream = 'BlockStream',
   BlockChair = 'BlockChair',
 }
 
