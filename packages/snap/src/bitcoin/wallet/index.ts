@@ -4,3 +4,7 @@ export * from './signer';
 export * from './deriver';
 export * from './wallet';
 export * from './transaction-info';
+export * from './coin-select';
+export * from './psbt';
+export * from './transaction-input';
+export * from './transaction-output';

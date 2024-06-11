@@ -1,5 +1,4 @@
-import type { FeeRatio, TransactionStatusData } from '../../chain';
-import type { Utxo } from '../../wallet';
+import type { FeeRatio, TransactionStatusData, Utxo } from '../../chain';
 
 export type GetBalancesResp = Record<string, number>;
 

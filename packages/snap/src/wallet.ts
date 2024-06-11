@@ -11,13 +11,6 @@ export type Transaction = {
   txInfo: ITxInfo;
 };
 
-export type Utxo = {
-  block: number;
-  txHash: string;
-  index: number;
-  value: number;
-};
-
 /**
  * An interface that defines a `toJson` method for getting a JSON representation of a transaction info object.
  */

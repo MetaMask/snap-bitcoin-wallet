@@ -1,11 +1,10 @@
 import type { Json } from '@metamask/snaps-sdk';
 import { type Network, networks } from 'bitcoinjs-lib';
 
-import type { TransactionStatusData } from '../../../chain';
+import type { TransactionStatusData, Utxo } from '../../../chain';
 import { FeeRatio, TransactionStatus } from '../../../chain';
 import { logger } from '../../../logger';
 import { compactError } from '../../../utils';
-import type { Utxo } from '../../../wallet';
 import type {
   GetBalancesResp,
   GetFeeRatesResp,

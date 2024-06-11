@@ -1,5 +1,3 @@
-import type { Json } from '@metamask/snaps-sdk';
-
 export enum FeeRatio {
   Fast = 'fast',
   Medium = 'medium',
@@ -44,11 +42,20 @@ export type TransactionIntent = {
 };
 
 export type TransactionData = {
-  data: Record<string, Json>;
+  data: {
+    utxos: Utxo[];
+  };
 };
 
 export type CommitedTransaction = {
   transactionId: string;
+};
+
+export type Utxo = {
+  block: number;
+  txHash: string;
+  index: number;
+  value: number;
 };
 
 /**

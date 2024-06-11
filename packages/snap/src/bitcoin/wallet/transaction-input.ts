@@ -1,6 +1,6 @@
 import type { Buffer } from 'buffer';
 
-import type { Utxo } from '../../wallet';
+import type { Utxo } from '../../chain';
 
 export class TxInput {
   protected _value: bigint;
