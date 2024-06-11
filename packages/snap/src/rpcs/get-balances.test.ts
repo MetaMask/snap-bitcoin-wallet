@@ -4,14 +4,13 @@ import { networks } from 'bitcoinjs-lib';
 import { v4 as uuidv4 } from 'uuid';
 
 import { generateAccounts } from '../../test/utils';
-import { ScriptType } from '../bitcoin/constants';
 import { BtcAccountDeriver, BtcWallet } from '../bitcoin/wallet';
 import { Config } from '../config';
 import { Caip2ChainId } from '../constants';
 import { Factory } from '../factory';
 import { getBalances } from './get-balances';
 
-jest.mock('../logger');
+jest.mock('../utils/logger');
 jest.mock('../utils/snap');
 
 describe('getBalances', () => {
@@ -47,7 +46,7 @@ describe('getBalances', () => {
   const createMockAccount = async (network, caip2ChainId) => {
     const { instance } = createMockDeriver(network);
     const wallet = new BtcWallet(instance, network);
-    const sender = await wallet.unlock(0, ScriptType.P2wpkh);
+    const sender = await wallet.unlock(0, Config.wallet.defaultAccountType);
     const keyringAccount = {
       type: sender.type,
       id: uuidv4(),

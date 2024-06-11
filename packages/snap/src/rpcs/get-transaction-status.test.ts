@@ -5,7 +5,7 @@ import { Caip2ChainId } from '../constants';
 import { Factory } from '../factory';
 import { getTransactionStatus } from './get-transaction-status';
 
-jest.mock('../logger');
+jest.mock('../utils/logger');
 
 describe('getTransactionStatus', () => {
   const txHash =

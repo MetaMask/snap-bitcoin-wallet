@@ -4,7 +4,7 @@ import * as lockUtil from './lock';
 import * as snapUtil from './snap';
 import { SnapStateManager } from './snap-state';
 
-jest.mock('../logger');
+jest.mock('../utils/logger');
 
 type MockTransactionDetail = {
   txHash: string;

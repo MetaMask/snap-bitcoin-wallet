@@ -8,3 +8,4 @@ export * from './snap-state';
 export * from './rpc';
 export * from './explorer';
 export * from './unit';
+export * from './logger';

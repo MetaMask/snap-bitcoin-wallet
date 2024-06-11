@@ -1,8 +1,8 @@
 import { type MutexInterface } from 'async-mutex';
 import { v4 as uuidv4 } from 'uuid';
 
-import { logger } from '../logger';
 import { acquireLock } from './lock';
+import { logger } from './logger';
 import { getStateData, setStateData } from './snap';
 
 export type Transaction<State> = {

@@ -12,7 +12,7 @@ import { FeeRatio, TransactionStatus } from '../../../chain';
 import { DataClientError } from '../exceptions';
 import { BlockChairClient } from './blockchair';
 
-jest.mock('../../../logger');
+jest.mock('../../../utils/logger');
 
 describe('BlockChairClient', () => {
   const createMockFetch = () => {

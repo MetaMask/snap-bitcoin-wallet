@@ -2,8 +2,7 @@ import type { BIP32Interface } from 'bip32';
 import { type Network } from 'bitcoinjs-lib';
 
 import type { Utxo } from '../../chain';
-import { logger } from '../../logger';
-import { bufferToString, compactError, hexToBuffer } from '../../utils';
+import { bufferToString, compactError, hexToBuffer, logger } from '../../utils';
 import type {
   IAccountSigner,
   IWallet,
@@ -11,8 +10,7 @@ import type {
   Transaction,
 } from '../../wallet';
 import { ScriptType } from '../constants';
-import { isDust } from '../utils';
-import { getScriptForDestnation } from '../utils/address';
+import { isDust, getScriptForDestnation } from '../utils';
 import {
   P2WPKHAccount,
   P2SHP2WPKHAccount,

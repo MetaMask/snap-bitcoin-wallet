@@ -3,14 +3,18 @@ import { object, array, record, enums, assert } from 'superstruct';
 
 import { Config } from '../config';
 import { Factory } from '../factory';
-import { logger } from '../logger';
-import { isSnapRpcError, validateRequest, validateResponse } from '../utils';
+import {
+  isSnapRpcError,
+  validateRequest,
+  validateResponse,
+  logger,
+  satsToBtc,
+} from '../utils';
 import {
   assetsStruct,
   positiveStringStruct,
   scopeStruct,
 } from '../utils/superstruct';
-import { satsToBtc } from '../utils/unit';
 import type { IAccount } from '../wallet';
 
 export const getBalancesRequestStruct = object({

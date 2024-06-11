@@ -14,7 +14,7 @@ import * as sendManyRpc from './rpcs/sendmany';
 import { KeyringStateManager } from './stateManagement';
 import type { IWallet } from './wallet';
 
-jest.mock('./logger');
+jest.mock('./utils/logger');
 jest.mock('./utils/snap');
 
 jest.mock('@metamask/keyring-api', () => ({

@@ -3,9 +3,13 @@ import { object, string, enums } from 'superstruct';
 
 import { TransactionStatus } from '../chain';
 import { Factory } from '../factory';
-import { logger } from '../logger';
-import { isSnapRpcError, scopeStruct } from '../utils';
-import { validateRequest, validateResponse } from '../utils/rpc';
+import {
+  isSnapRpcError,
+  scopeStruct,
+  validateRequest,
+  validateResponse,
+  logger,
+} from '../utils';
 
 export const getTransactionStatusParamsRequestStruct = object({
   transactionId: string(),

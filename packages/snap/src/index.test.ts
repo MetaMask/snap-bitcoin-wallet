@@ -13,7 +13,7 @@ import { BtcKeyring } from './keyring';
 import { originPermissions } from './permissions';
 import * as getTxStatusRpc from './rpcs/get-transaction-status';
 
-jest.mock('./logger');
+jest.mock('./utils/logger');
 
 jest.mock('@metamask/keyring-api', () => ({
   ...jest.requireActual('@metamask/keyring-api'),

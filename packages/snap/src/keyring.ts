@@ -15,10 +15,9 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Config } from './config';
 import { Factory } from './factory';
-import { logger } from './logger';
 import { getBalances, type SendManyParams, sendMany } from './rpcs';
 import type { KeyringStateManager, Wallet } from './stateManagement';
-import { getProvider, scopeStruct } from './utils';
+import { getProvider, scopeStruct, logger } from './utils';
 import type { IAccount, IWallet } from './wallet';
 
 export type KeyringOptions = Record<string, Json> & {

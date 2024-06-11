@@ -9,13 +9,9 @@ import {
   generateBlockChairBroadcastTransactionResp,
   generateBlockChairGetUtxosResp,
 } from '../../test/utils';
-import { DustLimit, ScriptType } from '../bitcoin/constants';
-import {
-  BtcAccountDeriver,
-  BtcWallet,
-  type IBtcAccount,
-} from '../bitcoin/wallet';
+import { BtcAccountDeriver, BtcWallet } from '../bitcoin/wallet';
 import { FeeRatio } from '../chain';
+import { Config } from '../config';
 import { Caip2ChainId } from '../constants';
 import { Factory } from '../factory';
 import { getExplorerUrl, shortenAddress } from '../utils';
@@ -24,7 +20,7 @@ import { satsToBtc } from '../utils/unit';
 import type { IAccount, ITxInfo } from '../wallet';
 import { type SendManyParams, sendMany } from './sendmany';
 
-jest.mock('../logger');
+jest.mock('../utils/logger');
 jest.mock('../utils/snap');
 
 describe('SendManyHandler', () => {
@@ -62,7 +58,7 @@ describe('SendManyHandler', () => {
     ) => {
       const { instance } = createMockDeriver(network);
       const wallet = new BtcWallet(instance, network);
-      const sender = await wallet.unlock(0, ScriptType.P2wpkh);
+      const sender = await wallet.unlock(0, Config.wallet.defaultAccountType);
 
       const keyringAccount = {
         type: sender.type,
@@ -76,7 +72,9 @@ describe('SendManyHandler', () => {
       };
       const recipients: IAccount[] = [];
       for (let i = 1; i < recipientCnt + 1; i++) {
-        recipients.push(await wallet.unlock(i, ScriptType.P2wpkh));
+        recipients.push(
+          await wallet.unlock(i, Config.wallet.defaultAccountType),
+        );
       }
 
       return {
@@ -93,10 +91,8 @@ describe('SendManyHandler', () => {
       comment = '',
     ): SendManyParams => {
       return {
-        amounts: recipients.reduce((acc, recipient: IBtcAccount) => {
-          acc[recipient.address] = satsToBtc(
-            DustLimit[recipient.scriptType] + 1,
-          );
+        amounts: recipients.reduce((acc, recipient) => {
+          acc[recipient.address] = satsToBtc(500);
           return acc;
         }, {}),
         comment,

@@ -10,7 +10,7 @@ import { TxInput } from './transaction-input';
 import { TxOutput } from './transaction-output';
 import { BtcWallet } from './wallet';
 
-jest.mock('../../logger');
+jest.mock('../../utils/logger');
 jest.mock('../../utils/snap');
 
 describe('PsbtService', () => {

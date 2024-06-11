@@ -12,7 +12,7 @@ import type { IDataClient } from './data-client';
 import { BtcOnChainServiceError } from './exceptions';
 import { BtcOnChainService } from './service';
 
-jest.mock('../../logger');
+jest.mock('../../utils/logger');
 
 describe('BtcOnChainService', () => {
   const createMockDataClient = () => {

@@ -10,12 +10,11 @@ import {
 
 import { Config } from './config';
 import { BtcKeyring } from './keyring';
-import { logger } from './logger';
 import { InternalRpcMethod, originPermissions } from './permissions';
 import type { CreateAccountParams, GetTransactionStatusParams } from './rpcs';
 import { createAccount, getTransactionStatus } from './rpcs';
 import { KeyringStateManager } from './stateManagement';
-import { isSnapRpcError } from './utils';
+import { isSnapRpcError, logger } from './utils';
 
 export const validateOrigin = (origin: string, method: string): void => {
   if (!origin) {

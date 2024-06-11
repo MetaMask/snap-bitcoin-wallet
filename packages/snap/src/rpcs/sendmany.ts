@@ -21,7 +21,6 @@ import {
 
 import { TxValidationError } from '../bitcoin/wallet';
 import { Factory } from '../factory';
-import { logger } from '../logger';
 import {
   scopeStruct,
   confirmDialog,
@@ -32,6 +31,7 @@ import {
   satsToBtc,
   validateRequest,
   validateResponse,
+  logger,
 } from '../utils';
 import type { IAccount, ITxInfo } from '../wallet';
 

@@ -3,8 +3,8 @@ import { type Network, networks } from 'bitcoinjs-lib';
 
 import type { TransactionStatusData, Utxo } from '../../../chain';
 import { FeeRatio, TransactionStatus } from '../../../chain';
-import { logger } from '../../../logger';
 import { compactError } from '../../../utils';
+import { logger } from '../../../utils/logger';
 import type {
   GetBalancesResp,
   GetFeeRatesResp,

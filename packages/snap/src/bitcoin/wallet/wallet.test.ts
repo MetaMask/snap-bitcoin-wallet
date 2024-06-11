@@ -12,7 +12,7 @@ import { TxOutput } from './transaction-output';
 import { BtcWallet } from './wallet';
 
 jest.mock('../../utils/snap');
-jest.mock('../../logger');
+jest.mock('../../utils/logger');
 
 describe('BtcWallet', () => {
   const createMockDeriver = (network) => {

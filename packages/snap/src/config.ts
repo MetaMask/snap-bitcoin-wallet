@@ -2,24 +2,16 @@ import type { Json } from '@metamask/snaps-sdk';
 
 import { Caip2ChainId, Caip2Asset } from './constants';
 
-export type BtcOnChainServiceConfig = {
-  dataClient: {
-    options?: Record<string, Json | undefined>;
-  };
-};
-
-export type BtcWalletConfig = {
-  defaultAccountIndex: number;
-  defaultAccountType: string;
-};
-
-export type NetworkConfig = {
-  [key in string]: string;
-};
-
 export type SnapConfig = {
-  onChainService: BtcOnChainServiceConfig;
-  wallet: BtcWalletConfig;
+  onChainService: {
+    dataClient: {
+      options?: Record<string, Json | undefined>;
+    };
+  };
+  wallet: {
+    defaultAccountIndex: number;
+    defaultAccountType: string;
+  };
   avaliableNetworks: string[];
   avaliableAssets: string[];
   unit: string;
