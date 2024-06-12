@@ -5,6 +5,7 @@ import {
   hexToBuffer,
   bufferToString,
   replaceMiddleChar,
+  shortenAddress,
 } from './string';
 
 describe('trimHexPrefix', () => {
@@ -66,5 +67,12 @@ describe('replaceMiddleChar', () => {
 
   it('does not replace if the string is empty', () => {
     expect(replaceMiddleChar('', 5, 3)).toBe('');
+  });
+});
+
+describe('shortenAddress', () => {
+  const str = 'tb1qt2mpt38wmgw3j0hnr9mp5hsa7kxf2a3ktdxaeu';
+  it('shorten an address', () => {
+    expect(shortenAddress(str)).toBe('tb1qt...aeu');
   });
 });

@@ -1,13 +1,14 @@
 import { BtcOnChainService } from './bitcoin/chain';
-import { Network } from './bitcoin/constants';
 import { BtcWallet } from './bitcoin/wallet';
+import { Caip2ChainId } from './constants';
 import { Factory } from './factory';
-import { BtcKeyring } from './keyring';
 
 describe('Factory', () => {
   describe('createOnChainServiceProvider', () => {
     it('creates BtcOnChainService instance', () => {
-      const instance = Factory.createOnChainServiceProvider(Network.Testnet);
+      const instance = Factory.createOnChainServiceProvider(
+        Caip2ChainId.Testnet,
+      );
 
       expect(instance).toBeInstanceOf(BtcOnChainService);
     });
@@ -15,17 +16,9 @@ describe('Factory', () => {
 
   describe('createWallet', () => {
     it('creates BtcWallet instance', () => {
-      const instance = Factory.createWallet(Network.Testnet);
+      const instance = Factory.createWallet(Caip2ChainId.Testnet);
 
       expect(instance).toBeInstanceOf(BtcWallet);
-    });
-  });
-
-  describe('createKeyring', () => {
-    it('creates BtcKeyring instance', () => {
-      const instance = Factory.createKeyring();
-
-      expect(instance).toBeInstanceOf(BtcKeyring);
     });
   });
 });

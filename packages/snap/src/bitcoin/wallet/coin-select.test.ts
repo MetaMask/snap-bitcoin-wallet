@@ -3,19 +3,16 @@ import { networks, address as addressUtils } from 'bitcoinjs-lib';
 import { generateFormatedUtxos } from '../../../test/utils';
 import { ScriptType } from '../constants';
 import { CoinSelectService } from './coin-select';
-import { BtcAccountBip32Deriver } from './deriver';
+import { BtcAccountDeriver } from './deriver';
 import { TxInput } from './transaction-input';
 import { TxOutput } from './transaction-output';
 import { BtcWallet } from './wallet';
 
-jest.mock('../../libs/snap/helpers');
+jest.mock('../../utils/snap');
 
 describe('CoinSelectService', () => {
   const createMockWallet = (network) => {
-    const instance = new BtcWallet(
-      new BtcAccountBip32Deriver(network),
-      network,
-    );
+    const instance = new BtcWallet(new BtcAccountDeriver(network), network);
     return {
       instance,
     };

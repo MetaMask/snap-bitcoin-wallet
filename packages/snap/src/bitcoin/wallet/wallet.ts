@@ -1,8 +1,8 @@
 import type { BIP32Interface } from 'bip32';
 import { type Network } from 'bitcoinjs-lib';
 
-import { logger } from '../../libs/logger/logger';
-import { bufferToString, compactError, hexToBuffer } from '../../utils';
+import type { Utxo } from '../../chain';
+import { bufferToString, compactError, hexToBuffer, logger } from '../../utils';
 import type {
   IAccountSigner,
   IWallet,
@@ -10,37 +10,45 @@ import type {
   Transaction,
 } from '../../wallet';
 import { ScriptType } from '../constants';
-import { isDust } from '../utils';
-import { getScriptForDestnation } from '../utils/address';
-import { P2WPKHAccount, P2SHP2WPKHAccount } from './account';
-import { BtcAddress } from './address';
+import { isDust, getScriptForDestnation } from '../utils';
+import {
+  P2WPKHAccount,
+  P2SHP2WPKHAccount,
+  type IStaticBtcAccount,
+  type IBtcAccount,
+} from './account';
 import { CoinSelectService } from './coin-select';
+import type { BtcAccountDeriver } from './deriver';
 import { WalletError, TxValidationError } from './exceptions';
 import { PsbtService } from './psbt';
 import { AccountSigner } from './signer';
 import { BtcTxInfo } from './transaction-info';
 import { TxInput } from './transaction-input';
 import { TxOutput } from './transaction-output';
-import type {
-  IStaticBtcAccount,
-  IBtcAccountDeriver,
-  IBtcAccount,
-  CreateTransactionOptions,
-} from './types';
+
+export type CreateTransactionOptions = {
+  utxos: Utxo[];
+  fee: number;
+  subtractFeeFrom: string[];
+  //
+  // BIP125 opt-in RBF flag,
+  //
+  replaceable: boolean;
+};
 
 export class BtcWallet implements IWallet {
-  protected readonly _deriver: IBtcAccountDeriver;
+  protected readonly _deriver: BtcAccountDeriver;
 
   protected readonly _network: Network;
 
-  constructor(deriver: IBtcAccountDeriver, network: Network) {
+  constructor(deriver: BtcAccountDeriver, network: Network) {
     this._deriver = deriver;
     this._network = network;
   }
 
-  async unlock(index: number, type: string): Promise<IBtcAccount> {
+  async unlock(index: number, type?: string): Promise<IBtcAccount> {
     try {
-      const AccountCtor = this.getAccountCtor(type);
+      const AccountCtor = this.getAccountCtor(type ?? ScriptType.P2wpkh);
       const rootNode = await this._deriver.getRoot(AccountCtor.path);
       const childNode = await this._deriver.getChild(rootNode, index);
       const hdPath = [`m`, `0'`, `0`, `${index}`].join('/');
@@ -67,17 +75,6 @@ export class BtcWallet implements IWallet {
   ): Promise<Transaction> {
     const scriptOutput = account.script;
     const { scriptType } = account;
-
-    logger.info(
-      JSON.stringify(
-        {
-          recipients,
-          options,
-        },
-        null,
-        2,
-      ),
-    );
 
     // TODO: Supporting getting coins from other address (dynamic address)
     const inputs = options.utxos.map((utxo) => new TxInput(utxo, scriptOutput));
@@ -107,23 +104,6 @@ export class BtcWallet implements IWallet {
       change,
     );
 
-    logger.info(
-      JSON.stringify(
-        {
-          feeRate,
-          ...selectionResult,
-        },
-        null,
-        2,
-      ),
-    );
-
-    const txInfo = new BtcTxInfo(
-      new BtcAddress(account.address),
-      feeRate,
-      this._network,
-    );
-
     const psbtService = new PsbtService(this._network);
     psbtService.addInputs(
       selectionResult.inputs,
@@ -132,6 +112,8 @@ export class BtcWallet implements IWallet {
       hexToBuffer(account.pubkey, false),
       hexToBuffer(account.mfp, false),
     );
+
+    const txInfo = new BtcTxInfo(account.address, feeRate);
 
     // TODO: add support of subtractFeeFrom, and throw error if output is too small after subtraction
     for (const output of selectionResult.outputs) {
@@ -146,13 +128,13 @@ export class BtcWallet implements IWallet {
         );
       } else {
         psbtService.addOutput(selectionResult.change);
-        txInfo.change = selectionResult.change;
+        txInfo.addChange(selectionResult.change);
       }
     }
 
     // Sign dummy transaction to extract the fee which is more accurate
     const signedService = await psbtService.signDummy(account.signer);
-    txInfo.fee = signedService.getFee();
+    txInfo.txFee = signedService.getFee();
 
     return {
       tx: psbtService.toBase64(),
