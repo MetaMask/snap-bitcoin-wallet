@@ -8,3 +8,5 @@ export * from './coin-select';
 export * from './psbt';
 export * from './transaction-input';
 export * from './transaction-output';
+export * from './utils';
+export * from './constants';

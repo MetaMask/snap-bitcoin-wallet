@@ -1,9 +1,9 @@
 import { networks } from 'bitcoinjs-lib';
 
 import { generateFormatedUtxos } from '../../../test/utils';
-import { DustLimit, ScriptType, maxSatoshi } from '../constants';
 import { P2SHP2WPKHAccount, P2WPKHAccount } from './account';
 import { CoinSelectService } from './coin-select';
+import { DustLimit, ScriptType } from './constants';
 import { BtcAccountDeriver } from './deriver';
 import { WalletError } from './exceptions';
 import { BtcTxInfo } from './transaction-info';
@@ -101,16 +101,11 @@ describe('BtcWallet', () => {
       const wallet = new BtcWallet(instance, network);
       const account = await wallet.unlock(0, ScriptType.P2wpkh);
 
-      const utxos = generateFormatedUtxos(
-        account.address,
-        200,
-        maxSatoshi,
-        maxSatoshi,
-      );
+      const utxos = generateFormatedUtxos(account.address, 200, 100000, 100000);
 
       const result = await wallet.createTransaction(
         account,
-        createMockTxIndent(account.address, maxSatoshi),
+        createMockTxIndent(account.address, 100000),
         {
           utxos,
           fee: 56,

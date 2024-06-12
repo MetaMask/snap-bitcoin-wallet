@@ -3,7 +3,6 @@ import { type Network, networks } from 'bitcoinjs-lib';
 
 import { compactError, logger } from '../../../utils';
 import { FeeRatio, TransactionStatus } from '../constants';
-import { DataClientError } from '../exceptions';
 import type {
   IDataClient,
   DataClientGetBalancesResp,
@@ -11,7 +10,8 @@ import type {
   DataClientGetUtxosResp,
   DataClientSendTxResp,
   DataClientGetFeeRatesResp,
-} from '../types';
+} from '../data-client';
+import { DataClientError } from '../exceptions';
 
 export type BlockChairClientOptions = {
   network: Network;

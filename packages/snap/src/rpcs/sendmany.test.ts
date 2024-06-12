@@ -10,12 +10,12 @@ import {
   generateBlockChairGetUtxosResp,
 } from '../../test/utils';
 import { BtcOnChainService, FeeRatio } from '../bitcoin/chain';
-import { BtcAccountDeriver, BtcWallet } from '../bitcoin/wallet';
+import type { BtcAccount } from '../bitcoin/wallet';
+import { BtcAccountDeriver, BtcWallet, type ITxInfo } from '../bitcoin/wallet';
 import { Config } from '../config';
 import { Caip2ChainId } from '../constants';
 import { getExplorerUrl, shortenAddress, satsToBtc } from '../utils';
 import * as snapUtils from '../utils/snap';
-import type { IAccount, ITxInfo } from '../wallet';
 import { type SendManyParams, sendMany } from './sendmany';
 
 jest.mock('../utils/logger');
@@ -69,7 +69,7 @@ describe('SendManyHandler', () => {
         },
         methods: ['btc_sendmany'],
       };
-      const recipients: IAccount[] = [];
+      const recipients: BtcAccount[] = [];
       for (let i = 1; i < recipientCnt + 1; i++) {
         recipients.push(
           await wallet.unlock(i, Config.wallet.defaultAccountType),
@@ -84,7 +84,7 @@ describe('SendManyHandler', () => {
     };
 
     const createSendManyParams = (
-      recipients: IAccount[],
+      recipients: BtcAccount[],
       caip2ChainId: string,
       dryrun: boolean,
       comment = '',

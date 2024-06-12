@@ -2,7 +2,7 @@ import { Psbt, Transaction, networks } from 'bitcoinjs-lib';
 
 import { generateFormatedUtxos } from '../../../test/utils';
 import { hexToBuffer } from '../../utils';
-import { MaxStandardTxWeight, ScriptType } from '../constants';
+import { MaxStandardTxWeight, ScriptType } from './constants';
 import { BtcAccountDeriver } from './deriver';
 import { PsbtServiceError } from './exceptions';
 import { PsbtService } from './psbt';

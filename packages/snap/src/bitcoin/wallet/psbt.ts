@@ -1,12 +1,11 @@
 import ecc from '@bitcoinerlab/secp256k1';
-import type { Network } from 'bitcoinjs-lib';
+import type { HDSignerAsync, Network } from 'bitcoinjs-lib';
 import { Psbt, Transaction } from 'bitcoinjs-lib';
 import type { Buffer } from 'buffer';
 import ECPairFactory from 'ecpair';
 
 import { compactError, logger } from '../../utils';
-import type { IAccountSigner } from '../../wallet';
-import { MaxStandardTxWeight } from '../constants';
+import { MaxStandardTxWeight } from './constants';
 import { PsbtServiceError, TxValidationError } from './exceptions';
 import type { TxInput } from './transaction-input';
 import type { TxOutput } from './transaction-output';
@@ -132,7 +131,7 @@ export class PsbtService {
     }
   }
 
-  async signDummy(signer: IAccountSigner): Promise<PsbtService> {
+  async signDummy(signer: HDSignerAsync): Promise<PsbtService> {
     try {
       const psbt = this._psbt.clone();
       await psbt.signAllInputsHDAsync(signer);
@@ -153,7 +152,7 @@ export class PsbtService {
     }
   }
 
-  async signNVerify(signer: IAccountSigner) {
+  async signNVerify(signer: HDSignerAsync) {
     try {
       // This function signAllInputsHDAsync is used to sign all inputs with the signer.
       // When using the method signAllInputsHDAsync, it is important to note that the signer must derive from the root node as well as the finderprint.

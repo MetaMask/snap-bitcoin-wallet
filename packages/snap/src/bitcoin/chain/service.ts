@@ -3,17 +3,54 @@ import { networks } from 'bitcoinjs-lib';
 
 import { Caip2Asset } from '../../constants';
 import { compactError } from '../../utils';
-import type { FeeRatio } from './constants';
+import type { FeeRatio, TransactionStatus } from './constants';
+import type { IDataClient } from './data-client';
 import { BtcOnChainServiceError } from './exceptions';
-import type {
-  AssetBalances,
-  TransactionIntent,
-  Fees,
-  TransactionData,
-  CommitedTransaction,
-  TransactionStatusData,
-  IDataClient,
-} from './types';
+
+export type TransactionStatusData = {
+  status: TransactionStatus;
+};
+
+export type Balance = {
+  amount: bigint;
+};
+
+export type AssetBalances = {
+  balances: {
+    [address: string]: {
+      [asset: string]: Balance;
+    };
+  };
+};
+
+export type Fee = {
+  type: FeeRatio;
+  rate: bigint;
+};
+
+export type Fees = {
+  fees: {
+    type: FeeRatio;
+    rate: bigint;
+  }[];
+};
+
+export type Utxo = {
+  block: number;
+  txHash: string;
+  index: number;
+  value: number;
+};
+
+export type TransactionData = {
+  data: {
+    utxos: Utxo[];
+  };
+};
+
+export type CommitedTransaction = {
+  transactionId: string;
+};
 
 export type BtcOnChainServiceOptions = {
   network: Network;
@@ -117,14 +154,9 @@ export class BtcOnChainService {
    * Gets the required metadata to build a transaction for the given address and transaction intent.
    *
    * @param address - The address to build the transaction for.
-   * @param transactionIntent - The transaction intent object containing the transaction inputs and outputs.
    * @returns A promise that resolves to a `TransactionData` object.
    */
-  async getDataForTransaction(
-    address: string,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    transactionIntent?: TransactionIntent,
-  ): Promise<TransactionData> {
+  async getDataForTransaction(address: string): Promise<TransactionData> {
     try {
       const data = await this._dataClient.getUtxos(address);
       return {

@@ -20,7 +20,11 @@ import {
   nonempty,
 } from 'superstruct';
 
-import { TxValidationError } from '../bitcoin/wallet';
+import {
+  type BtcAccount,
+  type ITxInfo,
+  TxValidationError,
+} from '../bitcoin/wallet';
 import { Factory } from '../factory';
 import {
   scopeStruct,
@@ -34,7 +38,6 @@ import {
   validateResponse,
   logger,
 } from '../utils';
-import type { IAccount, ITxInfo } from '../wallet';
 
 export const TransactionAmountStuct = refine(
   record(BtcP2wpkhAddressStruct, string()),
@@ -90,7 +93,7 @@ export type SendManyResponse = Infer<typeof sendManyResponseStruct>;
  * @param params - The parameters for send the transaction.
  * @returns A Promise that resolves to an SendManyResponse object.
  */
-export async function sendMany(account: IAccount, params: SendManyParams) {
+export async function sendMany(account: BtcAccount, params: SendManyParams) {
   try {
     validateRequest(params, sendManyParamsStruct);
 

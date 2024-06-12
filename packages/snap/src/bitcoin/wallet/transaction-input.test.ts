@@ -1,7 +1,7 @@
 import { networks } from 'bitcoinjs-lib';
 
 import { generateFormatedUtxos } from '../../../test/utils';
-import { ScriptType } from '../constants';
+import { ScriptType } from './constants';
 import { BtcAccountDeriver } from './deriver';
 import { TxInput } from './transaction-input';
 import { BtcWallet } from './wallet';
