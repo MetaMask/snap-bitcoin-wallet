@@ -151,7 +151,7 @@ describe('PsbtService', () => {
       }
     });
 
-    it('throws `Failed to add inputs in PSBT` error if adding inputs fails', async () => {
+    it('throws `Failed to add input in PSBT` error if adding inputs fails', async () => {
       const { service, inputSpy, sender, inputs } = await preparePsbt();
       inputSpy.mockImplementation(() => {
         throw new Error('error');
@@ -165,7 +165,7 @@ describe('PsbtService', () => {
           hexToBuffer(sender.pubkey, false),
           hexToBuffer(sender.mfp),
         );
-      }).toThrow('Failed to add inputs in PSBT');
+      }).toThrow('Failed to add input in PSBT');
     });
   });
 
@@ -190,14 +190,14 @@ describe('PsbtService', () => {
       }
     });
 
-    it('throws `Failed to add outputs in PSBT` error if adding outputs fails', async () => {
+    it('throws `Failed to add output in PSBT` error if adding outputs fails', async () => {
       const { service, outputSpy, outputs } = await preparePsbt();
       outputSpy.mockImplementation(() => {
         throw new Error('error');
       });
 
       expect(() => service.addOutputs(outputs)).toThrow(
-        'Failed to add outputs in PSBT',
+        'Failed to add output in PSBT',
       );
     });
   });

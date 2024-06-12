@@ -6,7 +6,7 @@ import ECPairFactory from 'ecpair';
 
 import { compactError, logger } from '../../utils';
 import { MaxStandardTxWeight } from './constants';
-import { PsbtServiceError, TxValidationError } from './exceptions';
+import { PsbtServiceError } from './exceptions';
 import type { TxInput } from './transaction-input';
 import type { TxOutput } from './transaction-output';
 
@@ -30,12 +30,29 @@ export class PsbtService {
     this._network = network;
   }
 
+  /**
+   * Creates a new instance of the `PsbtService` class from a base64-encoded PSBT string and a network.
+   *
+   * @param network - The network to use for the PSBT.
+   * @param base64Psbt - The base64-encoded PSBT string.
+   * @returns A new instance of the `PsbtService` class.
+   */
   static fromBase64(network: Network, base64Psbt: string): PsbtService {
     const psbt = Psbt.fromBase64(base64Psbt, { network });
     const service = new PsbtService(network, psbt);
     return service;
   }
 
+  /**
+   * Adds an input to the PSBT.
+   *
+   * @param input - The transaction input to add.
+   * @param replaceable - Whether or not the transaction is replaceable.
+   * @param changeAddressHdPath - The HD path of the change address.
+   * @param changeAddressPubkey - The public key of the change address.
+   * @param changeAddressMfp - The master fingerprint of the change address.
+   * @throws {PsbtServiceError} If there was an error adding the input to the PSBT.
+   */
   addInput(
     input: TxInput,
     replaceable: boolean,
@@ -76,6 +93,15 @@ export class PsbtService {
     }
   }
 
+  /**
+   * Adds multiple inputs to the PSBT.
+   *
+   * @param inputs - An array of transaction inputs to add.
+   * @param replaceable - Whether or not the transactions are replaceable.
+   * @param changeAddressHdPath - The HD path of the change address.
+   * @param changeAddressPubkey - The public key of the change address.
+   * @param changeAddressMfp - The master fingerprint of the change address.
+   */
   addInputs(
     inputs: TxInput[],
     replaceable: boolean,
@@ -83,22 +109,23 @@ export class PsbtService {
     changeAddressPubkey: Buffer,
     changeAddressMfp: Buffer,
   ) {
-    try {
-      for (const input of inputs) {
-        this.addInput(
-          input,
-          replaceable,
-          changeAddressHdPath,
-          changeAddressPubkey,
-          changeAddressMfp,
-        );
-      }
-    } catch (error) {
-      logger.error('Failed to add inputs', error);
-      throw new PsbtServiceError('Failed to add inputs in PSBT');
+    for (const input of inputs) {
+      this.addInput(
+        input,
+        replaceable,
+        changeAddressHdPath,
+        changeAddressPubkey,
+        changeAddressMfp,
+      );
     }
   }
 
+  /**
+   * Adds an output to the PSBT.
+   *
+   * @param output - The transaction output to add.
+   * @throws {PsbtServiceError} If there was an error adding the output to the PSBT.
+   */
   addOutput(output: TxOutput) {
     try {
       this._psbt.addOutput({
@@ -111,17 +138,23 @@ export class PsbtService {
     }
   }
 
+  /**
+   * Adds multiple outputs to the PSBT.
+   *
+   * @param outputs - An array of transaction outputs to add.
+   */
   addOutputs(outputs: TxOutput[]) {
-    try {
-      for (const output of outputs) {
-        this.addOutput(output);
-      }
-    } catch (error) {
-      logger.error('Failed to add outputs', error);
-      throw new PsbtServiceError('Failed to add outputs in PSBT');
+    for (const output of outputs) {
+      this.addOutput(output);
     }
   }
 
+  /**
+   * Gets the fee for the PSBT.
+   *
+   * @returns The fee for the PSBT.
+   * @throws {PsbtServiceError} If there was an error getting the fee from the PSBT.
+   */
   getFee(): number {
     try {
       return this._psbt.getFee();
@@ -131,6 +164,13 @@ export class PsbtService {
     }
   }
 
+  /**
+   * Signs all inputs in the PSBT with a dummy signature using an asynchronous signer.
+   *
+   * @param signer - The asynchronous signer to use.
+   * @returns A promise that resolves with a new `PsbtService` instance with the signed inputs.
+   * @throws {PsbtServiceError} If there was an error signing the inputs in the PSBT.
+   */
   async signDummy(signer: HDSignerAsync): Promise<PsbtService> {
     try {
       const psbt = this._psbt.clone();
@@ -143,6 +183,12 @@ export class PsbtService {
     }
   }
 
+  /**
+   * Converts the PSBT to a base64-encoded string.
+   *
+   * @returns The base64-encoded string representation of the PSBT.
+   * @throws {PsbtServiceError} If there was an error converting the PSBT to a base64-encoded string.
+   */
   toBase64(): string {
     try {
       return this._psbt.toBase64();
@@ -152,6 +198,12 @@ export class PsbtService {
     }
   }
 
+  /**
+   * Signs all inputs in the PSBT and verifies that the signatures are valid using an asynchronous signer.
+   *
+   * @param signer - The asynchronous signer to use.
+   * @throws {PsbtServiceError} If there was an error signing or verifying the PSBT's inputs.
+   */
   async signNVerify(signer: HDSignerAsync) {
     try {
       // This function signAllInputsHDAsync is used to sign all inputs with the signer.
@@ -165,7 +217,7 @@ export class PsbtService {
             this.validateInputs(pubkey, msghash, signature),
         )
       ) {
-        throw new TxValidationError(
+        throw new PsbtServiceError(
           "Invalid signature to sign the PSBT's inputs",
         );
       }
@@ -174,6 +226,12 @@ export class PsbtService {
     }
   }
 
+  /**
+   * Finalizes the PSBT and returns the resulting transaction in hexadecimal format.
+   *
+   * @returns The transaction in hexadecimal format.
+   * @throws {PsbtServiceError} If there was an error finalizing the PSBT.
+   */
   finalize(): string {
     try {
       this._psbt.finalizeAllInputs();
@@ -183,7 +241,7 @@ export class PsbtService {
       const weight = this._psbt.extractTransaction().weight();
 
       if (weight > MaxStandardTxWeight) {
-        throw new TxValidationError('Transaction is too large');
+        throw new PsbtServiceError('Transaction is too large');
       }
 
       return txHex;
