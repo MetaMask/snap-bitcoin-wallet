@@ -18,12 +18,21 @@ export class CoinSelectService {
     this._feeRate = Math.round(feeRate);
   }
 
+  /**
+   * This function selects the UTXOs that will be used to pay for a transaction and its associated gas fee.
+   *
+   * @param inputs - An array of input objects.
+   * @param outputs - An array of output objects.
+   * @param changeTo - The change output object.
+   * @returns A SelectionResult object that includes the calculated transaction fee, selected inputs, outputs, and change (if any).
+   * @throws {TxValidationError} Throws a TxValidationError if there are insufficient funds to complete the transaction.
+   */
   selectCoins(
     inputs: TxInput[],
-    recipients: TxOutput[],
+    outputs: TxOutput[],
     changeTo: TxOutput,
   ): SelectionResult {
-    const result = coinSelect(inputs, recipients, this._feeRate);
+    const result = coinSelect(inputs, outputs, this._feeRate);
 
     if (!result.inputs || !result.outputs) {
       throw new TxValidationError('Insufficient funds');

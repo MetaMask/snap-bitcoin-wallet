@@ -1,25 +1,62 @@
 import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 
-import type {
-  FeeRatio,
-  IOnChainService,
-  AssetBalances,
-  TransactionIntent,
-  Fees,
-  TransactionData,
-  CommitedTransaction,
-} from '../../chain';
 import { Caip2Asset } from '../../constants';
 import { compactError } from '../../utils';
+import type { FeeRatio, TransactionStatus } from './constants';
 import type { IDataClient } from './data-client';
 import { BtcOnChainServiceError } from './exceptions';
+
+export type TransactionStatusData = {
+  status: TransactionStatus;
+};
+
+export type Balance = {
+  amount: bigint;
+};
+
+export type AssetBalances = {
+  balances: {
+    [address: string]: {
+      [asset: string]: Balance;
+    };
+  };
+};
+
+export type Fee = {
+  type: FeeRatio;
+  rate: bigint;
+};
+
+export type Fees = {
+  fees: {
+    type: FeeRatio;
+    rate: bigint;
+  }[];
+};
+
+export type Utxo = {
+  block: number;
+  txHash: string;
+  index: number;
+  value: number;
+};
+
+export type TransactionData = {
+  data: {
+    utxos: Utxo[];
+  };
+};
+
+export type CommitedTransaction = {
+  transactionId: string;
+};
 
 export type BtcOnChainServiceOptions = {
   network: Network;
 };
 
-export class BtcOnChainService implements IOnChainService {
+export class BtcOnChainService {
   protected readonly _dataClient: IDataClient;
 
   protected readonly _options: BtcOnChainServiceOptions;
@@ -33,6 +70,13 @@ export class BtcOnChainService implements IOnChainService {
     return this._options.network;
   }
 
+  /**
+   * Gets the balances for multiple addresses and multiple assets.
+   *
+   * @param addresses - An array of addresses to fetch the balances for.
+   * @param assets - An array of assets to fetch the balances of.
+   * @returns A promise that resolves to an `AssetBalances` object.
+   */
   async getBalances(
     addresses: string[],
     assets: string[],
@@ -70,6 +114,11 @@ export class BtcOnChainService implements IOnChainService {
     }
   }
 
+  /**
+   * Gets the fee rates of the network.
+   *
+   * @returns A promise that resolves to a `Fees` object.
+   */
   async getFeeRates(): Promise<Fees> {
     try {
       const result = await this._dataClient.getFeeRates();
@@ -87,7 +136,13 @@ export class BtcOnChainService implements IOnChainService {
     }
   }
 
-  async getTransactionStatus(txHash: string) {
+  /**
+   * Gets the status of a transaction with the given transaction hash.
+   *
+   * @param txHash - The transaction hash of the transaction to get the status of.
+   * @returns A promise that resolves to a `TransactionStatusData` object.
+   */
+  async getTransactionStatus(txHash: string): Promise<TransactionStatusData> {
     try {
       return await this._dataClient.getTransactionStatus(txHash);
     } catch (error) {
@@ -95,11 +150,13 @@ export class BtcOnChainService implements IOnChainService {
     }
   }
 
-  async getDataForTransaction(
-    address: string,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    transactionIntent?: TransactionIntent,
-  ): Promise<TransactionData> {
+  /**
+   * Gets the required metadata to build a transaction for the given address and transaction intent.
+   *
+   * @param address - The address to build the transaction for.
+   * @returns A promise that resolves to a `TransactionData` object.
+   */
+  async getDataForTransaction(address: string): Promise<TransactionData> {
     try {
       const data = await this._dataClient.getUtxos(address);
       return {
@@ -112,6 +169,12 @@ export class BtcOnChainService implements IOnChainService {
     }
   }
 
+  /**
+   * Broadcasts a signed transaction on the blockchain network.
+   *
+   * @param signedTransaction - A signed transaction string.
+   * @returns A promise that resolves to a `CommitedTransaction` object.
+   */
   async broadcastTransaction(
     signedTransaction: string,
   ): Promise<CommitedTransaction> {

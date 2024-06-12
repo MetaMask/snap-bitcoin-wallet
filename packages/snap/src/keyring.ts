@@ -13,12 +13,12 @@ import type { Infer } from 'superstruct';
 import { assert, object, StructError } from 'superstruct';
 import { v4 as uuidv4 } from 'uuid';
 
+import type { BtcAccount, BtcWallet } from './bitcoin/wallet';
 import { Config } from './config';
 import { Factory } from './factory';
 import { getBalances, type SendManyParams, sendMany } from './rpcs';
 import type { KeyringStateManager, Wallet } from './stateManagement';
 import { getProvider, scopeStruct, logger } from './utils';
-import type { IAccount, IWallet } from './wallet';
 
 export type KeyringOptions = Record<string, Json> & {
   defaultIndex: number;
@@ -230,20 +230,20 @@ export class BtcKeyring implements Keyring {
     return walletData;
   }
 
-  protected getBtcWallet(scope: string): IWallet {
+  protected getBtcWallet(scope: string): BtcWallet {
     return Factory.createWallet(scope);
   }
 
   protected async discoverAccount(
-    wallet: IWallet,
+    wallet: BtcWallet,
     index: number,
     type: string,
-  ): Promise<IAccount> {
+  ): Promise<BtcAccount> {
     return await wallet.unlock(index, type);
   }
 
   protected verifyIfAccountValid(
-    account: IAccount,
+    account: BtcAccount,
     keyringAccount: KeyringAccount,
   ): void {
     if (!account || account.address !== keyringAccount.address) {
@@ -252,7 +252,7 @@ export class BtcKeyring implements Keyring {
   }
 
   protected newKeyringAccount(
-    account: IAccount,
+    account: BtcAccount,
     options?: CreateAccountOptions,
   ): KeyringAccount {
     return {

@@ -3,8 +3,7 @@ import { MethodNotFoundError } from '@metamask/snaps-sdk';
 import { v4 as uuidv4 } from 'uuid';
 
 import { generateAccounts } from '../test/utils';
-import { ScriptType } from './bitcoin/constants';
-import { BtcAccount } from './bitcoin/wallet';
+import { BtcAccount, BtcWallet, ScriptType } from './bitcoin/wallet';
 import { Config } from './config';
 import { Caip2Asset, Caip2ChainId } from './constants';
 import { Factory } from './factory';
@@ -12,7 +11,6 @@ import { BtcKeyring } from './keyring';
 import * as getBalanceRpc from './rpcs/get-balances';
 import * as sendManyRpc from './rpcs/sendmany';
 import { KeyringStateManager } from './stateManagement';
-import type { IWallet } from './wallet';
 
 jest.mock('./utils/logger');
 jest.mock('./utils/snap');
@@ -24,20 +22,17 @@ jest.mock('@metamask/keyring-api', () => ({
 
 describe('BtcKeyring', () => {
   const createMockWallet = () => {
-    const unlockSpy = jest.fn();
-    class Wallet implements IWallet {
-      unlock = unlockSpy;
+    const unlockSpy = jest.spyOn(BtcWallet.prototype, 'unlock');
+    const signTransaction = jest.spyOn(BtcWallet.prototype, 'signTransaction');
+    const createTransaction = jest.spyOn(
+      BtcWallet.prototype,
+      'createTransaction',
+    );
 
-      signTransaction = jest.fn();
-
-      createTransaction = jest.fn();
-    }
-    jest
-      .spyOn(Factory, 'createWallet')
-      .mockImplementation()
-      .mockReturnValue(new Wallet());
     return {
       unlockSpy,
+      signTransaction,
+      createTransaction,
     };
   };
 
@@ -85,10 +80,6 @@ describe('BtcKeyring', () => {
     };
   };
 
-  const getHdPath = (index: number) => {
-    return [`m`, `0'`, `0`, `${index}`].join('/');
-  };
-
   const createSender = async (caip2ChainId: string) => {
     const wallet = Factory.createWallet(caip2ChainId);
     const sender = await wallet.unlock(0, ScriptType.P2wpkh);
@@ -114,38 +105,29 @@ describe('BtcKeyring', () => {
       const { unlockSpy } = createMockWallet();
       const { instance: stateMgr, addWalletSpy } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);
-      const scope = Caip2ChainId.Testnet;
-      const account = generateAccounts(1)[0];
-
-      unlockSpy.mockResolvedValue({
-        address: account.address,
-        hdPath: getHdPath(account.options.index),
-        index: account.options.index,
-        type: account.type,
-      });
+      const caip2ChainId = Caip2ChainId.Testnet;
+      const { sender, keyringAccount } = await createSender(caip2ChainId);
 
       await keyring.createAccount({
-        scope,
+        scope: caip2ChainId,
       });
 
       expect(unlockSpy).toHaveBeenCalledWith(
         Config.wallet.defaultAccountIndex,
         Config.wallet.defaultAccountType,
       );
+
       expect(addWalletSpy).toHaveBeenCalledWith({
         account: {
-          type: account.type,
+          type: keyringAccount.type,
           id: expect.any(String),
-          address: account.address,
-          options: {
-            scope,
-            index: account.options.index,
-          },
-          methods: account.methods,
+          address: keyringAccount.address,
+          options: keyringAccount.options,
+          methods: keyringAccount.methods,
         },
-        hdPath: getHdPath(account.options.index),
-        index: account.options.index,
-        scope,
+        hdPath: sender.hdPath,
+        index: sender.index,
+        scope: caip2ChainId,
       });
     });
 

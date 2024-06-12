@@ -1,5 +1,4 @@
-import { maxSatoshi, minSatoshi } from '../bitcoin/constants';
-import { satsToBtc, btcToSats } from './unit';
+import { satsToBtc, btcToSats, maxSatoshi, minSatoshi } from './unit';
 
 describe('satsToBtc', () => {
   it('returns Btc unit', () => {
