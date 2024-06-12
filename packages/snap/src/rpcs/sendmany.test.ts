@@ -9,15 +9,18 @@ import {
   generateBlockChairBroadcastTransactionResp,
   generateBlockChairGetUtxosResp,
 } from '../../test/utils';
-import { BtcAccountDeriver, BtcWallet } from '../bitcoin/wallet';
-import { FeeRatio } from '../chain';
+import { BtcOnChainService, FeeRatio } from '../bitcoin/chain';
+import type { BtcAccount } from '../bitcoin/wallet';
+import {
+  BtcAccountDeriver,
+  BtcWallet,
+  type ITxInfo,
+  TxValidationError,
+} from '../bitcoin/wallet';
 import { Config } from '../config';
 import { Caip2ChainId } from '../constants';
-import { Factory } from '../factory';
-import { getExplorerUrl, shortenAddress } from '../utils';
+import { getExplorerUrl, shortenAddress, satsToBtc } from '../utils';
 import * as snapUtils from '../utils/snap';
-import { satsToBtc } from '../utils/unit';
-import type { IAccount, ITxInfo } from '../wallet';
 import { type SendManyParams, sendMany } from './sendmany';
 
 jest.mock('../utils/logger');
@@ -26,18 +29,19 @@ jest.mock('../utils/snap');
 describe('SendManyHandler', () => {
   describe('sendMany', () => {
     const createMockChainApiFactory = () => {
-      const getDataForTransactionSpy = jest.fn();
-      const getFeeRatesSpy = jest.fn();
-      const broadcastTransactionSpy = jest.fn();
+      const getFeeRatesSpy = jest.spyOn(
+        BtcOnChainService.prototype,
+        'getFeeRates',
+      );
+      const broadcastTransactionSpy = jest.spyOn(
+        BtcOnChainService.prototype,
+        'broadcastTransaction',
+      );
+      const getDataForTransactionSpy = jest.spyOn(
+        BtcOnChainService.prototype,
+        'getDataForTransaction',
+      );
 
-      jest.spyOn(Factory, 'createOnChainServiceProvider').mockReturnValue({
-        getFeeRates: getFeeRatesSpy,
-        getBalances: jest.fn(),
-        broadcastTransaction: broadcastTransactionSpy,
-        listTransactions: jest.fn(),
-        getTransactionStatus: jest.fn(),
-        getDataForTransaction: getDataForTransactionSpy,
-      });
       return {
         getDataForTransactionSpy,
         getFeeRatesSpy,
@@ -70,7 +74,7 @@ describe('SendManyHandler', () => {
         },
         methods: ['btc_sendmany'],
       };
-      const recipients: IAccount[] = [];
+      const recipients: BtcAccount[] = [];
       for (let i = 1; i < recipientCnt + 1; i++) {
         recipients.push(
           await wallet.unlock(i, Config.wallet.defaultAccountType),
@@ -85,7 +89,7 @@ describe('SendManyHandler', () => {
     };
 
     const createSendManyParams = (
-      recipients: IAccount[],
+      recipients: BtcAccount[],
       caip2ChainId: string,
       dryrun: boolean,
       comment = '',
@@ -389,24 +393,6 @@ describe('SendManyHandler', () => {
       ).rejects.toThrow('Invalid amount for send');
     });
 
-    it('throws `Failed to send the transaction` error if no fee rate returns from chain service', async () => {
-      const { getFeeRatesSpy } = createMockChainApiFactory();
-      const network = networks.testnet;
-      const caip2ChainId = Caip2ChainId.Testnet;
-      const { sender, recipients } = await createSenderNRecipients(
-        network,
-        caip2ChainId,
-        10,
-      );
-      getFeeRatesSpy.mockResolvedValue({
-        fees: [],
-      });
-
-      await expect(
-        sendMany(sender, createSendManyParams(recipients, caip2ChainId, false)),
-      ).rejects.toThrow('Failed to send the transaction');
-    });
-
     it('throws `Invalid response` error if the response is unexpected', async () => {
       const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
@@ -414,9 +400,7 @@ describe('SendManyHandler', () => {
         await prepareSendMany(network, caip2ChainId);
 
       broadcastTransactionSpy.mockResolvedValue({
-        transactionId: {
-          txId: 'invalid',
-        },
+        transactionId: '',
       });
       await expect(
         sendMany(sender, {
@@ -441,6 +425,24 @@ describe('SendManyHandler', () => {
       ).rejects.toThrow(UserRejectedRequestError);
     });
 
+    it('throws `Failed to send the transaction` error if no fee rate returns from chain service', async () => {
+      const { getFeeRatesSpy } = createMockChainApiFactory();
+      const network = networks.testnet;
+      const caip2ChainId = Caip2ChainId.Testnet;
+      const { sender, recipients } = await createSenderNRecipients(
+        network,
+        caip2ChainId,
+        10,
+      );
+      getFeeRatesSpy.mockResolvedValue({
+        fees: [],
+      });
+
+      await expect(
+        sendMany(sender, createSendManyParams(recipients, caip2ChainId, false)),
+      ).rejects.toThrow('Failed to send the transaction');
+    });
+
     it('throws `Failed to send the transaction` error if the transaction is fail to commit', async () => {
       const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
@@ -453,6 +455,22 @@ describe('SendManyHandler', () => {
           ...createSendManyParams(recipients, caip2ChainId, false),
         }),
       ).rejects.toThrow('Failed to send the transaction');
+    });
+
+    it('throws DisplayableError error meesage if the DisplayableError throwed', async () => {
+      const network = networks.testnet;
+      const caip2ChainId = Caip2ChainId.Testnet;
+      const { broadcastTransactionSpy, sender, recipients } =
+        await prepareSendMany(network, caip2ChainId);
+      broadcastTransactionSpy.mockRejectedValue(
+        new TxValidationError('some tx error'),
+      );
+
+      await expect(
+        sendMany(sender, {
+          ...createSendManyParams(recipients, caip2ChainId, false),
+        }),
+      ).rejects.toThrow('some tx error');
     });
   });
 });

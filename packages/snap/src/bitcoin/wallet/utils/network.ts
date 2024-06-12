@@ -1,7 +1,7 @@
 import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 
-import { Caip2ChainId } from '../../constants';
+import { Caip2ChainId } from '../../../constants';
 
 /**
  * Gets a bitcoinjs-lib network instance based on a given CAIP-2 Chain ID.

@@ -1,7 +1,7 @@
-import type { ITxInfo, Recipient } from '../../wallet';
 import type { TxOutput } from './transaction-output';
+import type { ITxInfo, Recipient } from './wallet';
 
-export class BtcTxInfo implements ITxInfo {
+export class TxInfo implements ITxInfo {
   readonly sender: string;
 
   protected _change?: Recipient;
