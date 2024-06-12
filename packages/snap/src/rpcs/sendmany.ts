@@ -157,10 +157,7 @@ export async function sendMany(account: BtcAccount, params: SendManyParams) {
       throw error as unknown as Error;
     }
 
-    if (
-      error instanceof TxValidationError ||
-      error instanceof UserRejectedRequestError
-    ) {
+    if (error instanceof TxValidationError) {
       throw error as unknown as Error;
     }
 

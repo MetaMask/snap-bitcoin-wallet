@@ -11,7 +11,12 @@ import {
 } from '../../test/utils';
 import { BtcOnChainService, FeeRatio } from '../bitcoin/chain';
 import type { BtcAccount } from '../bitcoin/wallet';
-import { BtcAccountDeriver, BtcWallet, type ITxInfo } from '../bitcoin/wallet';
+import {
+  BtcAccountDeriver,
+  BtcWallet,
+  type ITxInfo,
+  TxValidationError,
+} from '../bitcoin/wallet';
 import { Config } from '../config';
 import { Caip2ChainId } from '../constants';
 import { getExplorerUrl, shortenAddress, satsToBtc } from '../utils';
@@ -388,24 +393,6 @@ describe('SendManyHandler', () => {
       ).rejects.toThrow('Invalid amount for send');
     });
 
-    it('throws `Failed to send the transaction` error if no fee rate returns from chain service', async () => {
-      const { getFeeRatesSpy } = createMockChainApiFactory();
-      const network = networks.testnet;
-      const caip2ChainId = Caip2ChainId.Testnet;
-      const { sender, recipients } = await createSenderNRecipients(
-        network,
-        caip2ChainId,
-        10,
-      );
-      getFeeRatesSpy.mockResolvedValue({
-        fees: [],
-      });
-
-      await expect(
-        sendMany(sender, createSendManyParams(recipients, caip2ChainId, false)),
-      ).rejects.toThrow('Failed to send the transaction');
-    });
-
     it('throws `Invalid response` error if the response is unexpected', async () => {
       const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
@@ -438,6 +425,24 @@ describe('SendManyHandler', () => {
       ).rejects.toThrow(UserRejectedRequestError);
     });
 
+    it('throws `Failed to send the transaction` error if no fee rate returns from chain service', async () => {
+      const { getFeeRatesSpy } = createMockChainApiFactory();
+      const network = networks.testnet;
+      const caip2ChainId = Caip2ChainId.Testnet;
+      const { sender, recipients } = await createSenderNRecipients(
+        network,
+        caip2ChainId,
+        10,
+      );
+      getFeeRatesSpy.mockResolvedValue({
+        fees: [],
+      });
+
+      await expect(
+        sendMany(sender, createSendManyParams(recipients, caip2ChainId, false)),
+      ).rejects.toThrow('Failed to send the transaction');
+    });
+
     it('throws `Failed to send the transaction` error if the transaction is fail to commit', async () => {
       const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
@@ -450,6 +455,22 @@ describe('SendManyHandler', () => {
           ...createSendManyParams(recipients, caip2ChainId, false),
         }),
       ).rejects.toThrow('Failed to send the transaction');
+    });
+
+    it('throws DisplayableError error meesage if the DisplayableError throwed', async () => {
+      const network = networks.testnet;
+      const caip2ChainId = Caip2ChainId.Testnet;
+      const { broadcastTransactionSpy, sender, recipients } =
+        await prepareSendMany(network, caip2ChainId);
+      broadcastTransactionSpy.mockRejectedValue(
+        new TxValidationError('some tx error'),
+      );
+
+      await expect(
+        sendMany(sender, {
+          ...createSendManyParams(recipients, caip2ChainId, false),
+        }),
+      ).rejects.toThrow('some tx error');
     });
   });
 });

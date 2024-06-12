@@ -15,7 +15,7 @@ import type { BtcAccountDeriver } from './deriver';
 import { WalletError, TxValidationError } from './exceptions';
 import { PsbtService } from './psbt';
 import { AccountSigner } from './signer';
-import { BtcTxInfo } from './transaction-info';
+import { TxInfo } from './transaction-info';
 import { TxInput } from './transaction-input';
 import { TxOutput } from './transaction-output';
 import { isDust, getScriptForDestnation } from './utils';
@@ -141,7 +141,7 @@ export class BtcWallet {
       hexToBuffer(account.mfp, false),
     );
 
-    const txInfo = new BtcTxInfo(account.address, feeRate);
+    const txInfo = new TxInfo(account.address, feeRate);
 
     // TODO: add support of subtractFeeFrom, and throw error if output is too small after subtraction
     for (const output of selectionResult.outputs) {

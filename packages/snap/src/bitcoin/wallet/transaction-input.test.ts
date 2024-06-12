@@ -31,4 +31,16 @@ describe('TxInput', () => {
     expect(input.index).toStrictEqual(utxo.index);
     expect(input.block).toStrictEqual(utxo.block);
   });
+
+  it('return bigint val', async () => {
+    const wallet = createMockWallet(networks.testnet);
+    const account = await wallet.instance.unlock(0, ScriptType.P2wpkh);
+    const { script } = account;
+
+    const utxo = generateFormatedUtxos(account.address, 1)[0];
+
+    const input = new TxInput(utxo, script);
+
+    expect(input.bigIntValue).toStrictEqual(BigInt(utxo.value));
+  });
 });

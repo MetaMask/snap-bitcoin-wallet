@@ -6,7 +6,7 @@ import { CoinSelectService } from './coin-select';
 import { DustLimit, ScriptType } from './constants';
 import { BtcAccountDeriver } from './deriver';
 import { WalletError } from './exceptions';
-import { BtcTxInfo } from './transaction-info';
+import { TxInfo } from './transaction-info';
 import { TxInput } from './transaction-input';
 import { TxOutput } from './transaction-output';
 import { BtcWallet } from './wallet';
@@ -47,7 +47,19 @@ describe('BtcWallet', () => {
   };
 
   describe('unlock', () => {
-    it('returns an `Account` objec with type bip122:p2wpkh', async () => {
+    it('returns an `Account` object with defualt type', async () => {
+      const network = networks.testnet;
+      const { rootSpy, childSpy, instance } = createMockWallet(network);
+      const idx = 0;
+
+      const result = await instance.unlock(idx);
+
+      expect(result).toBeInstanceOf(P2WPKHAccount);
+      expect(rootSpy).toHaveBeenCalledWith(P2WPKHAccount.path);
+      expect(childSpy).toHaveBeenCalledWith(expect.any(Object), idx);
+    });
+
+    it('returns an `Account` object with type bip122:p2wpkh', async () => {
       const network = networks.testnet;
       const { rootSpy, childSpy, instance } = createMockWallet(network);
       const idx = 0;
@@ -59,7 +71,7 @@ describe('BtcWallet', () => {
       expect(childSpy).toHaveBeenCalledWith(expect.any(Object), idx);
     });
 
-    it('returns an `Account` objec with type `p2wpkh`', async () => {
+    it('returns an `Account` object with type `p2wpkh`', async () => {
       const network = networks.testnet;
       const { rootSpy, childSpy, instance } = createMockWallet(network);
       const idx = 0;
@@ -122,7 +134,7 @@ describe('BtcWallet', () => {
       expect(change).toBeDefined();
       expect(result).toStrictEqual({
         tx: expect.any(String),
-        txInfo: expect.any(BtcTxInfo),
+        txInfo: expect.any(TxInfo),
       });
     });
 
@@ -152,7 +164,7 @@ describe('BtcWallet', () => {
       expect(change).toBeUndefined();
       expect(result).toStrictEqual({
         tx: expect.any(String),
-        txInfo: expect.any(BtcTxInfo),
+        txInfo: expect.any(TxInfo),
       });
     });
 
@@ -229,7 +241,7 @@ describe('BtcWallet', () => {
         },
       );
 
-      const info: BtcTxInfo = result.txInfo as unknown as BtcTxInfo;
+      const info: TxInfo = result.txInfo as unknown as TxInfo;
 
       expect(info.txFee).toBe(BigInt(19500));
       expect(info.change).toBeUndefined();
