@@ -4,7 +4,7 @@ import type { Buffer } from 'buffer';
 import { hexToBuffer } from '../../utils';
 import { ScriptType } from './constants';
 import type { AccountSigner } from './signer';
-import type { StaticImplements } from './static';
+import type { StaticImplements } from '../../utils/static';
 import { getBtcPaymentInst } from './utils';
 
 export type IStaticBtcAccount = {
