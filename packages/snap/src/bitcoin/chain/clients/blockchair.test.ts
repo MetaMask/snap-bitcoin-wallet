@@ -8,7 +8,7 @@ import {
   generateBlockChairGetStatsResp,
   generateBlockChairTransactionDashboard,
 } from '../../../../test/utils';
-import { FeeRatio, TransactionStatus } from '../../../chain';
+import { FeeRatio, TransactionStatus } from '../constants';
 import { DataClientError } from '../exceptions';
 import { BlockChairClient } from './blockchair';
 

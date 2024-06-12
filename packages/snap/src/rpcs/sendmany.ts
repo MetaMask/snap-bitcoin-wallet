@@ -17,6 +17,7 @@ import {
   boolean,
   refine,
   optional,
+  nonempty,
 } from 'superstruct';
 
 import { TxValidationError } from '../bitcoin/wallet';
@@ -74,7 +75,7 @@ export const sendManyParamsStruct = object({
 });
 
 export const sendManyResponseStruct = object({
-  txId: string(),
+  txId: nonempty(string()),
   txHash: optional(string()),
 });
 

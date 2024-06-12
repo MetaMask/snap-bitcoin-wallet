@@ -6,11 +6,11 @@ import {
   generateBlockChairBroadcastTransactionResp,
   generateBlockChairGetUtxosResp,
 } from '../../../test/utils';
-import { FeeRatio, TransactionStatus } from '../../chain';
 import { Caip2Asset } from '../../constants';
-import type { IDataClient } from './data-client';
+import { FeeRatio, TransactionStatus } from './constants';
 import { BtcOnChainServiceError } from './exceptions';
 import { BtcOnChainService } from './service';
+import type { IDataClient } from './types';
 
 jest.mock('../../utils/logger');
 

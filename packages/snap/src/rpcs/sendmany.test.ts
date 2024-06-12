@@ -9,14 +9,12 @@ import {
   generateBlockChairBroadcastTransactionResp,
   generateBlockChairGetUtxosResp,
 } from '../../test/utils';
+import { BtcOnChainService, FeeRatio } from '../bitcoin/chain';
 import { BtcAccountDeriver, BtcWallet } from '../bitcoin/wallet';
-import { FeeRatio } from '../chain';
 import { Config } from '../config';
 import { Caip2ChainId } from '../constants';
-import { Factory } from '../factory';
-import { getExplorerUrl, shortenAddress } from '../utils';
+import { getExplorerUrl, shortenAddress, satsToBtc } from '../utils';
 import * as snapUtils from '../utils/snap';
-import { satsToBtc } from '../utils/unit';
 import type { IAccount, ITxInfo } from '../wallet';
 import { type SendManyParams, sendMany } from './sendmany';
 
@@ -26,18 +24,19 @@ jest.mock('../utils/snap');
 describe('SendManyHandler', () => {
   describe('sendMany', () => {
     const createMockChainApiFactory = () => {
-      const getDataForTransactionSpy = jest.fn();
-      const getFeeRatesSpy = jest.fn();
-      const broadcastTransactionSpy = jest.fn();
+      const getFeeRatesSpy = jest.spyOn(
+        BtcOnChainService.prototype,
+        'getFeeRates',
+      );
+      const broadcastTransactionSpy = jest.spyOn(
+        BtcOnChainService.prototype,
+        'broadcastTransaction',
+      );
+      const getDataForTransactionSpy = jest.spyOn(
+        BtcOnChainService.prototype,
+        'getDataForTransaction',
+      );
 
-      jest.spyOn(Factory, 'createOnChainServiceProvider').mockReturnValue({
-        getFeeRates: getFeeRatesSpy,
-        getBalances: jest.fn(),
-        broadcastTransaction: broadcastTransactionSpy,
-        listTransactions: jest.fn(),
-        getTransactionStatus: jest.fn(),
-        getDataForTransaction: getDataForTransactionSpy,
-      });
       return {
         getDataForTransactionSpy,
         getFeeRatesSpy,
@@ -414,9 +413,7 @@ describe('SendManyHandler', () => {
         await prepareSendMany(network, caip2ChainId);
 
       broadcastTransactionSpy.mockResolvedValue({
-        transactionId: {
-          txId: 'invalid',
-        },
+        transactionId: '',
       });
       await expect(
         sendMany(sender, {

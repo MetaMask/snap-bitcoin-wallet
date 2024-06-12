@@ -1,7 +1,6 @@
 import type { BIP32Interface } from 'bip32';
 import { type Network } from 'bitcoinjs-lib';
 
-import type { Utxo } from '../../chain';
 import { bufferToString, compactError, hexToBuffer, logger } from '../../utils';
 import type {
   IAccountSigner,
@@ -9,6 +8,7 @@ import type {
   Recipient,
   Transaction,
 } from '../../wallet';
+import type { Utxo } from '../chain';
 import { ScriptType } from '../constants';
 import { isDust, getScriptForDestnation } from '../utils';
 import {

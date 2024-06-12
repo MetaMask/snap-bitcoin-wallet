@@ -1,7 +1,7 @@
 import type { Infer } from 'superstruct';
 import { object, string, enums } from 'superstruct';
 
-import { TransactionStatus } from '../chain';
+import { TransactionStatus } from '../bitcoin/chain';
 import { Factory } from '../factory';
 import {
   isSnapRpcError,

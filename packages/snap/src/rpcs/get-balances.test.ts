@@ -4,10 +4,10 @@ import { networks } from 'bitcoinjs-lib';
 import { v4 as uuidv4 } from 'uuid';
 
 import { generateAccounts } from '../../test/utils';
+import { BtcOnChainService } from '../bitcoin/chain';
 import { BtcAccountDeriver, BtcWallet } from '../bitcoin/wallet';
 import { Config } from '../config';
 import { Caip2ChainId } from '../constants';
-import { Factory } from '../factory';
 import { getBalances } from './get-balances';
 
 jest.mock('../utils/logger');
@@ -16,17 +16,12 @@ jest.mock('../utils/snap');
 describe('getBalances', () => {
   const asset = Config.avaliableAssets[0];
 
-  const createMockChainApiFactory = () => {
-    const getBalancesSpy = jest.fn();
+  const createMockChainService = () => {
+    const getBalancesSpy = jest.spyOn(
+      BtcOnChainService.prototype,
+      'getBalances',
+    );
 
-    jest.spyOn(Factory, 'createOnChainServiceProvider').mockReturnValue({
-      getFeeRates: jest.fn(),
-      getBalances: getBalancesSpy,
-      broadcastTransaction: jest.fn(),
-      listTransactions: jest.fn(),
-      getTransactionStatus: jest.fn(),
-      getDataForTransaction: jest.fn(),
-    });
     return {
       getBalancesSpy,
     };
@@ -75,7 +70,7 @@ describe('getBalances', () => {
   it('gets balances', async () => {
     const network = networks.testnet;
     const caip2ChainId = Caip2ChainId.Testnet;
-    const { getBalancesSpy } = createMockChainApiFactory();
+    const { getBalancesSpy } = createMockChainService();
 
     const { walletData, sender } = await createMockAccount(
       network,
@@ -115,7 +110,7 @@ describe('getBalances', () => {
   it('gets balances of the request account only', async () => {
     const network = networks.testnet;
     const caip2ChainId = Caip2ChainId.Testnet;
-    const { getBalancesSpy } = createMockChainApiFactory();
+    const { getBalancesSpy } = createMockChainService();
     const accounts = generateAccounts(10);
     const { walletData, sender } = await createMockAccount(
       network,
@@ -161,7 +156,7 @@ describe('getBalances', () => {
   it('throws `Fail to get the balances` when transaction status fetch failed', async () => {
     const network = networks.testnet;
     const caip2ChainId = Caip2ChainId.Testnet;
-    const { getBalancesSpy } = createMockChainApiFactory();
+    const { getBalancesSpy } = createMockChainService();
     const { sender } = await createMockAccount(network, caip2ChainId);
 
     getBalancesSpy.mockRejectedValue(new Error('error'));
