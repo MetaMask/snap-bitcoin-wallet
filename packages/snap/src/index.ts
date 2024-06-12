@@ -9,12 +9,12 @@ import {
 } from '@metamask/snaps-sdk';
 
 import { Config } from './config';
-import { originPermissions } from './config/permissions';
-import { Factory } from './factory';
-import { logger } from './libs/logger/logger';
-import type { SnapRpcHandlerRequest } from './libs/rpc';
-import { RpcHelper } from './rpcs/helpers';
-import { isSnapRpcError } from './utils';
+import { BtcKeyring } from './keyring';
+import { InternalRpcMethod, originPermissions } from './permissions';
+import type { CreateAccountParams, GetTransactionStatusParams } from './rpcs';
+import { createAccount, getTransactionStatus } from './rpcs';
+import { KeyringStateManager } from './stateManagement';
+import { isSnapRpcError, logger } from './utils';
 
 export const validateOrigin = (origin: string, method: string): void => {
   if (!origin) {
@@ -35,17 +35,19 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
 
   try {
     const { method } = request;
+
     validateOrigin(origin, method);
 
-    const methodHanlders = RpcHelper.getChainRpcApiHandlers();
-
-    if (!Object.prototype.hasOwnProperty.call(methodHanlders, method)) {
-      throw new MethodNotFoundError() as unknown as Error;
+    switch (method) {
+      case InternalRpcMethod.CreateAccount:
+        return await createAccount(request.params as CreateAccountParams);
+      case InternalRpcMethod.GetTransactionStatus:
+        return await getTransactionStatus(
+          request.params as GetTransactionStatusParams,
+        );
+      default:
+        throw new MethodNotFoundError(method) as unknown as Error;
     }
-
-    return await methodHanlders[method]
-      .getInstance()
-      .execute(request.params as SnapRpcHandlerRequest);
   } catch (error) {
     let snapError = error;
 
@@ -68,7 +70,12 @@ export const onKeyringRequest: OnKeyringRequestHandler = async ({
   try {
     validateOrigin(origin, request.method);
 
-    const keyring = Factory.createKeyring();
+    const keyring = new BtcKeyring(new KeyringStateManager(), {
+      defaultIndex: Config.wallet.defaultAccountIndex,
+      // TODO: Remove temp solution to support keyring in snap without keyring API
+      emitEvents: true,
+    });
+
     return (await handleKeyringRequest(
       keyring,
       request,

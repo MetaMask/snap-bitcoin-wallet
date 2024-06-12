@@ -34,6 +34,7 @@
     "@metamask/keyring-api": "^6.3.1",
     "@metamask/snaps-sdk": "^4.0.0",
     "async-mutex": "^0.3.2",
+    "big.js": "^6.2.1",
     "bip32": "^4.0.0",
     "bitcoinjs-lib": "^6.1.5",
     "buffer": "^6.0.3",

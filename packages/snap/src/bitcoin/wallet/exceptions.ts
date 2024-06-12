@@ -1,4 +1,4 @@
-import { CustomError } from '../../libs/exception';
+import { CustomError } from '../../utils';
 
 export class DeriverError extends CustomError {}
 
