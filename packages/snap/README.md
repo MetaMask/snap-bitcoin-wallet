@@ -6,20 +6,6 @@ Rename `.env.example` to `.env`
 Configurations are setup though `.env`,
 
 ```bash
-# Description: Environment variables for read data client
-# Possible Options: BlockStream | BlockChair
-# Default: BlockChair
-# Required: false
-DATA_CLIENT_READ_TYPE=BlockStream
-# Description: Environment variables for write data client
-# Possible Options: BlockChair
-# Default: BlockChair
-# Required: false
-DATA_CLIENT_WRITE_TYPE=BlockChair
-# Description: Environment variables for Log Level, 0 does not log anything, 6 logs everything
-# Possible Options: 0-6
-# Default: 0
-# Required: false
 LOG_LEVEL=6
 # Description: Environment variables for API key of BlockChair
 # Required: false
@@ -27,6 +13,46 @@ BLOCKCHAIR_API_KEY=
 ```
 
 ## Rpcs:
+
+### API `keyring_createAccount`
+
+example:
+
+```typescript
+provider.request({
+  method: 'wallet_invokeKeyring',
+  params: {
+    snapId,
+    request: {
+      method: 'keyring_createAccount',
+      params: {
+        scope: 'bip122:000000000933ea01ad0ee984209779ba', // the CAIP-2 chain ID of bitcoin
+      },
+    },
+  },
+});
+```
+
+### API `keyring_getAccountBalances`
+
+example:
+
+```typescript
+provider.request({
+  method: 'wallet_invokeKeyring',
+  params: {
+    snapId,
+    request: {
+      method: 'keyring_getAccountBalances',
+      params: {
+        account: 'dc06350a-82db-434b-b113-066135804f63', // the uuid account id of the current account
+        id: 'da40b782-e054-4260-9a6a-c8717a022f92', // an random uuid for this request
+        assets: ['bip122:000000000019d6689c085ae165831e93/slip44:0'], // Caip-2 BTC Asset
+      },
+    },
+  },
+});
+```
 
 ### API `chain_getTransactionStatus`
 
@@ -75,27 +101,6 @@ provider.request({
             dryrun: true, // an flag to enable similation of the transaction, without broadcast to network
           },
         },
-      },
-    },
-  },
-});
-```
-
-### API `keyring_getAccountBalances`
-
-example:
-
-```typescript
-provider.request({
-  method: 'wallet_invokeKeyring',
-  params: {
-    snapId,
-    request: {
-      method: 'keyring_getAccountBalances',
-      params: {
-        account: 'dc06350a-82db-434b-b113-066135804f63', // the uuid account id of the current account
-        id: 'da40b782-e054-4260-9a6a-c8717a022f92', // an random uuid for this request
-        assets: ['bip122:000000000019d6689c085ae165831e93/slip44:0'], // Caip-2 BTC Asset
       },
     },
   },
