@@ -1,33 +1,65 @@
 import type { Network, Payment } from 'bitcoinjs-lib';
 import type { Buffer } from 'buffer';
 
-import type { StaticImplements } from '../../types/static';
 import { hexToBuffer } from '../../utils';
-import type { IAccountSigner } from '../../wallet';
-import { ScriptType } from '../constants';
-import { getBtcPaymentInst } from '../utils/payment';
-import type { IBtcAccount, IStaticBtcAccount } from './types';
+import type { StaticImplements } from '../../utils/static';
+import { ScriptType } from './constants';
+import type { AccountSigner } from './signer';
+import { getBtcPaymentInst } from './utils';
 
-export class BtcAccount implements IBtcAccount {
+export type IStaticBtcAccount = {
+  path: string[];
+  scriptType: ScriptType;
+  new (
+    mfp: string,
+    index: number,
+    hdPath: string,
+    pubkey: string,
+    network: Network,
+    scriptType: ScriptType,
+    type: string,
+    signer: AccountSigner,
+  ): BtcAccount;
+};
+
+export abstract class BtcAccount {
   #address: string;
 
   #payment: Payment;
-
-  readonly mfp: string;
-
-  readonly index: number;
-
-  readonly hdPath: string;
-
-  readonly pubkey: string;
 
   readonly network: Network;
 
   readonly scriptType: ScriptType;
 
+  /**
+   * The master fingerprint of the derived node, as a string.
+   */
+  readonly mfp: string;
+
+  /**
+   * The index of the derived node, as a number.
+   */
+  readonly index: number;
+
+  /**
+   * The HD path of the account, as a string.
+   */
+  readonly hdPath: string;
+
+  /**
+   * The public key of the account, as a string.
+   */
+  readonly pubkey: string;
+
+  /**
+   * The type of the account, e.g. `bip122:p2pwh`, as a string.
+   */
   readonly type: string;
 
-  readonly signer: IAccountSigner;
+  /**
+   * The `IAccountSigner` object derived from the root node.
+   */
+  readonly signer: AccountSigner;
 
   constructor(
     mfp: string,
@@ -37,7 +69,7 @@ export class BtcAccount implements IBtcAccount {
     network: Network,
     scriptType: ScriptType,
     type: string,
-    signer: IAccountSigner,
+    signer: AccountSigner,
   ) {
     this.mfp = mfp;
     this.index = index;
@@ -49,11 +81,21 @@ export class BtcAccount implements IBtcAccount {
     this.type = type;
   }
 
+  /**
+   * A getter function to return the correcsponing account type's output script.
+   *
+   * @returns The correcsponing account type's output script.
+   */
   get script(): Buffer {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return this.payment.output!;
   }
 
+  /**
+   * A getter function to return the correcsponing account type's address.
+   *
+   * @returns The correcsponing account type's address.
+   */
   get address(): string {
     if (!this.#address) {
       if (!this.payment.address) {
@@ -64,6 +106,11 @@ export class BtcAccount implements IBtcAccount {
     return this.#address;
   }
 
+  /**
+   * A getter function to return the correcsponing account type's payment instance.
+   *
+   * @returns The correcsponing account type's payment instance.
+   */
   get payment(): Payment {
     if (!this.#payment) {
       this.#payment = getBtcPaymentInst(

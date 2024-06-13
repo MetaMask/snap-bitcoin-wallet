@@ -2,23 +2,20 @@ import { Psbt, Transaction, networks } from 'bitcoinjs-lib';
 
 import { generateFormatedUtxos } from '../../../test/utils';
 import { hexToBuffer } from '../../utils';
-import { MaxStandardTxWeight, ScriptType } from '../constants';
-import { BtcAccountBip32Deriver } from './deriver';
+import { MaxStandardTxWeight, ScriptType } from './constants';
+import { BtcAccountDeriver } from './deriver';
 import { PsbtServiceError } from './exceptions';
 import { PsbtService } from './psbt';
 import { TxInput } from './transaction-input';
 import { TxOutput } from './transaction-output';
 import { BtcWallet } from './wallet';
 
-jest.mock('../../libs/logger/logger');
-jest.mock('../../libs/snap/helpers');
+jest.mock('../../utils/logger');
+jest.mock('../../utils/snap');
 
 describe('PsbtService', () => {
   const createMockWallet = (network) => {
-    const instance = new BtcWallet(
-      new BtcAccountBip32Deriver(network),
-      network,
-    );
+    const instance = new BtcWallet(new BtcAccountDeriver(network), network);
     return {
       instance,
     };
@@ -154,7 +151,7 @@ describe('PsbtService', () => {
       }
     });
 
-    it('throws `Failed to add inputs in PSBT` error if adding inputs fails', async () => {
+    it('throws `Failed to add input in PSBT` error if adding inputs fails', async () => {
       const { service, inputSpy, sender, inputs } = await preparePsbt();
       inputSpy.mockImplementation(() => {
         throw new Error('error');
@@ -168,7 +165,7 @@ describe('PsbtService', () => {
           hexToBuffer(sender.pubkey, false),
           hexToBuffer(sender.mfp),
         );
-      }).toThrow('Failed to add inputs in PSBT');
+      }).toThrow('Failed to add input in PSBT');
     });
   });
 
@@ -193,14 +190,14 @@ describe('PsbtService', () => {
       }
     });
 
-    it('throws `Failed to add outputs in PSBT` error if adding outputs fails', async () => {
+    it('throws `Failed to add output in PSBT` error if adding outputs fails', async () => {
       const { service, outputSpy, outputs } = await preparePsbt();
       outputSpy.mockImplementation(() => {
         throw new Error('error');
       });
 
       expect(() => service.addOutputs(outputs)).toThrow(
-        'Failed to add outputs in PSBT',
+        'Failed to add output in PSBT',
       );
     });
   });

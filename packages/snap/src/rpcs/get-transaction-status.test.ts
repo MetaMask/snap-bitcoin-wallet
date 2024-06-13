@@ -1,72 +1,64 @@
 import { InvalidParamsError } from '@metamask/snaps-sdk';
 
-import { Network } from '../bitcoin/constants';
-import { TransactionStatus } from '../chain';
-import { Factory } from '../factory';
-import { GetTransactionStatusHandler } from './get-transaction-status';
+import { BtcOnChainService, TransactionStatus } from '../bitcoin/chain';
+import { Caip2ChainId } from '../constants';
+import { getTransactionStatus } from './get-transaction-status';
 
-jest.mock('../libs/logger/logger');
+jest.mock('../utils/logger');
 
-describe('GetBalancesHandler', () => {
+describe('getTransactionStatus', () => {
   const txHash =
     '1cd985fc26a9b27d0b574739b908d5fe78e2297b24323a7f8c04526648dc9c08';
 
-  describe('handleRequest', () => {
-    const createMockChainApiFactory = () => {
-      const getTransactionStatusSpy = jest.fn();
+  const createMockChainService = () => {
+    const getTransactionStatusSpy = jest.spyOn(
+      BtcOnChainService.prototype,
+      'getTransactionStatus',
+    );
+    return {
+      getTransactionStatusSpy,
+    };
+  };
 
-      jest.spyOn(Factory, 'createOnChainServiceProvider').mockReturnValue({
-        getFeeRates: jest.fn(),
-        getBalances: jest.fn(),
-        broadcastTransaction: jest.fn(),
-        listTransactions: jest.fn(),
-        getTransactionStatus: getTransactionStatusSpy,
-        getDataForTransaction: jest.fn(),
-      });
-      return {
-        getTransactionStatusSpy,
-      };
+  it('gets status', async () => {
+    const { getTransactionStatusSpy } = createMockChainService();
+
+    const mockResp = {
+      status: TransactionStatus.Confirmed,
     };
 
-    it('gets status', async () => {
-      const { getTransactionStatusSpy } = createMockChainApiFactory();
+    getTransactionStatusSpy.mockResolvedValue(mockResp);
 
-      const mockResp = {
-        status: TransactionStatus.Confirmed,
-      };
+    const result = await getTransactionStatus({
+      scope: Caip2ChainId.Testnet,
+      transactionId: txHash,
+    });
 
-      getTransactionStatusSpy.mockResolvedValue(mockResp);
+    expect(getTransactionStatusSpy).toHaveBeenCalledWith(txHash);
+    expect(result).toStrictEqual({
+      status: TransactionStatus.Confirmed,
+    });
+  });
 
-      const result = await GetTransactionStatusHandler.getInstance().execute({
-        scope: Network.Testnet,
+  it('throws `Fail to get the transaction status` when transaction status fetch failed', async () => {
+    const { getTransactionStatusSpy } = createMockChainService();
+
+    getTransactionStatusSpy.mockRejectedValue(new Error('error'));
+
+    await expect(
+      getTransactionStatus({
+        scope: Caip2ChainId.Testnet,
         transactionId: txHash,
-      });
+      }),
+    ).rejects.toThrow(`Fail to get the transaction status`);
+  });
 
-      expect(getTransactionStatusSpy).toHaveBeenCalledWith(txHash);
-      expect(result).toStrictEqual({
-        status: TransactionStatus.Confirmed,
-      });
-    });
-
-    it('throws `Fail to get the transaction status` when transaction status fetch failed', async () => {
-      const { getTransactionStatusSpy } = createMockChainApiFactory();
-
-      getTransactionStatusSpy.mockRejectedValue(new Error('error'));
-
-      await expect(
-        GetTransactionStatusHandler.getInstance().execute({
-          scope: Network.Testnet,
-          transactionId: txHash,
-        }),
-      ).rejects.toThrow(`Fail to get the transaction status`);
-    });
-
-    it('throws `Request params is invalid` when request parameter is not correct', async () => {
-      await expect(
-        GetTransactionStatusHandler.getInstance().execute({
-          scope: Network.Testnet,
-        }),
-      ).rejects.toThrow(InvalidParamsError);
-    });
+  it('throws `Request params is invalid` when request parameter is not correct', async () => {
+    await expect(
+      getTransactionStatus({
+        scope: 'some-scope',
+        transactionId: '',
+      }),
+    ).rejects.toThrow(InvalidParamsError);
   });
 });

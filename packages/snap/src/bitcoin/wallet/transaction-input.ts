@@ -1,14 +1,12 @@
 import type { Buffer } from 'buffer';
 
-import type { IAmount } from '../../wallet';
-import { BtcAmount } from './amount';
-import type { Utxo } from './types';
+import type { Utxo } from '../chain';
 
 export class TxInput {
+  protected _value: bigint;
+
   // consume by coinselect
   readonly script: Buffer;
-
-  readonly amount: IAmount;
 
   readonly txHash: string;
 
@@ -18,7 +16,7 @@ export class TxInput {
 
   constructor(utxo: Utxo, script: Buffer) {
     this.script = script;
-    this.amount = new BtcAmount(utxo.value);
+    this._value = BigInt(utxo.value);
     this.index = utxo.index;
     this.txHash = utxo.txHash;
     this.block = utxo.block;
@@ -26,6 +24,10 @@ export class TxInput {
 
   // consume by coinselect
   get value(): number {
-    return this.amount.value;
+    return Number(this._value);
+  }
+
+  get bigIntValue(): bigint {
+    return this._value;
   }
 }
