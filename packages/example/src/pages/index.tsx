@@ -1,5 +1,4 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
-import { KeyringSnapRpcClient } from '@metamask/keyring-api';
 import { useState } from 'react';
 import styled from 'styled-components';
 
@@ -9,13 +8,11 @@ import {
   ReconnectButton,
   Card,
   CreateBTCAccountButton,
-  GetBalancesCard,
   ListAccountsButton,
   SendManyCard,
   GetTransactionStatusCard,
 } from '../components';
 import { defaultSnapOrigin } from '../config';
-import { defaultSnapOrigin as snapId } from '../config/snap';
 import {
   useMetaMask,
   useInvokeSnap,
@@ -25,7 +22,6 @@ import {
 } from '../hooks';
 import { isLocalSnap, shouldDisplayReconnectButton } from '../utils';
 
-export const keyringClient = new KeyringSnapRpcClient(snapId, window.ethereum);
 
 const Container = styled.div`
   display: flex;
@@ -82,20 +78,52 @@ const ErrorMessage = styled.div`
   }
 `;
 
-type Balance = {
-  amount: string;
-};
+const Resp = styled.div`
+  background-color: ${({ theme }) => theme.colors.primary?.muted};
+  border: 1px solid ${({ theme }) => theme.colors.primary?.default};
+  color: ${({ theme }) => theme.colors.primary?.alternative};
+  border-radius: ${({ theme }) => theme.radii.default};
+  padding: 2.4rem;
+  margin-bottom: 2.4rem;
+  margin-top: 2.4rem;
+  max-width: 60rem;
+  width: 100%;
+  ${({ theme }) => theme.mediaQueries.small} {
+    padding: 1.6rem;
+    margin-bottom: 1.2rem;
+    margin-top: 1.2rem;
+    max-width: 100%;
+  }
+`;
 
-type AssetBalances = {
-  balances: {
-    [address: string]: {
-      [asset: string]: Balance;
-    };
-  };
-};
+const Title = styled.h2`
+  font-size: ${({ theme }) => theme.fontSizes.large};
+  margin: 0;
+  margin-bottom: 1.2rem;
+  ${({ theme }) => theme.mediaQueries.small} {
+    font-size: ${({ theme }) => theme.fontSizes.text};
+  }
+`;
+
+const Loading = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(16, 16, 16, 0.5);
+  z-index: 1000;
+`
+const LoadingText = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1001;
+  font-size: 5rem;
+`
 
 const Index = () => {
-  const { error } = useMetaMaskContext();
+  const { error, resp, loading } = useMetaMaskContext();
   const { isFlask, snapsDetected, installedSnap } = useMetaMask();
   const requestSnap = useRequestSnap();
   const invokeSnap = useInvokeSnap();
@@ -132,18 +160,35 @@ const Index = () => {
       setBtcAccount(account);
     }
   };
-
+  
   return (
     <Container>
       <Heading>
         <Span>BTC Snap</Span>
       </Heading>
       <CardContainer>
+        
+        {
+          loading && (
+            <Loading>
+              <LoadingText>LOADING...</LoadingText>
+            </Loading>
+          )
+        }
+   
         {error && (
           <ErrorMessage>
             <b>An error happened:</b> {error.message}
           </ErrorMessage>
         )}
+        {
+          resp && (
+            <Resp>
+              <Title>RPC Response</Title>
+              {resp}
+            </Resp>
+          )
+        }
         {!isMetaMaskReady && (
           <Card
             content={{
@@ -223,7 +268,7 @@ const Index = () => {
             !shouldDisplayReconnectButton(installedSnap)
           }
         />
-        <GetBalancesCard 
+        {/* <GetBalancesCard 
           enabled={!(!installedSnap || !btcAccount)}
           account={btcAccount?.id || ''}
           scope={scope}
@@ -232,7 +277,7 @@ const Index = () => {
             Boolean(installedSnap) &&
             !shouldDisplayReconnectButton(installedSnap)
           }
-        />
+        /> */}
 
         {/* <GetDataForTransactionCard
           account={btcAccount?.address || ''}

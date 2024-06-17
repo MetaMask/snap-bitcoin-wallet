@@ -19,9 +19,9 @@ export const SendManyCard = ({
   const invokeKeyring = useInvokeKeyring();
 
   const handleClick = async () => {
+   
     const resp = await invokeKeyring({
       method: 'keyring_submitRequest',
-
       params: {
         account: account,
         id: uuidv4(),
@@ -40,10 +40,7 @@ export const SendManyCard = ({
         },
       },
     });
-    console.log({
-      resp,
-    });
-  };
+  }
 
   return (
     <Card
