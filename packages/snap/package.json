@@ -1,7 +1,7 @@
 {
   "name": "@metamask/bitcoin",
   "version": "0.1.2",
-  "description": "A MetaMask snap to manage Bitcoin",
+  "description": "Manage Bitcoin using MetaMask",
   "repository": {
     "type": "git",
     "url": "https://github.com/MetaMask/bitcoin.git"

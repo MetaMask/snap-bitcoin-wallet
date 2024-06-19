@@ -1,5 +1,7 @@
 # Bitcoin Manager Snap
 
+## Manage Bitcoin using MetaMask
+
 ## Configuration
 
 Rename `.env.example` to `.env`
