@@ -108,10 +108,12 @@ const Index = () => {
     : snapsDetected;
 
   const handleCreateAccountClick = async () => {
-    const account = (await invokeSnap({
-      method: 'chain_createAccount',
+    const account = (await invokeKeyring({
+      method: 'keyring_createAccount',
       params: {
-        scope: scope,
+        options: {
+          scope: scope,
+        }
       },
     })) as KeyringAccount;
 
