@@ -2,7 +2,7 @@
   "name": "bitcoin-manager-snap-monorepo",
   "version": "0.1.2",
   "private": true,
-  "description": "",
+  "description": "Manage Bitcoin using MetaMask",
   "homepage": "https://github.com/MetaMask/bitcoin#readme",
   "bugs": {
     "url": "https://github.com/MetaMask/bitcoin/issues"
