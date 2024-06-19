@@ -41,9 +41,6 @@ import {
           transactionId: transactionId
         },
       }));
-      console.log({
-        resp
-      }) 
       setTransactionId('');
     };
   
