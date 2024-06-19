@@ -38,9 +38,6 @@ type AssetBalances = {
           assets: [asset],
         },
       })) as unknown as AssetBalances;
-      console.log({
-        accountBalance,
-      });
     
       setBalance(accountBalance?.[asset]?.amount || '0');
     };

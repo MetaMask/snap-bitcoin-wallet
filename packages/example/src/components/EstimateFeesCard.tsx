@@ -25,9 +25,6 @@ export const EstimateFeesCard = ({
         scope: scope,
       },
     }));
-    console.log({
-      resp
-    }) 
   };
 
   return (

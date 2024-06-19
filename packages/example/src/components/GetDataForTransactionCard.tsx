@@ -29,10 +29,6 @@ export const GetDataForTransactionCard = ({
         scope: scope,
       },
     })) as unknown ;
-
-    console.log({
-        resp
-    }) 
   };
 
   return (

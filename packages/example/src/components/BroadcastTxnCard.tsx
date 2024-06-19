@@ -41,9 +41,6 @@ import {
           signedTransaction: signedTransaction
         },
       }));
-      console.log({
-        resp
-      }) 
       setSignedTransaction('');
     };
   
