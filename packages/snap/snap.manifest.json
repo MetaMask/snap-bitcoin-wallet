@@ -1,5 +1,5 @@
 {
-  "version": "0.1.3",
+  "version": "0.1.4-rc2",
   "description": "A MetaMask snap to manage Bitcoin",
   "proposedName": "Bitcoin Manager",
   "repository": {
@@ -7,7 +7,7 @@
     "url": "https://github.com/MetaMask/bitcoin.git"
   },
   "source": {
-    "shasum": "MO1uECXQxFuVEjZuXbUov3P6Sx1Gklzx+8cqYxSYj3U=",
+    "shasum": "pCLAX93uy8BXDkPVNpDDxXzyFXwNy2mlNH6NsvIKSlI=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
@@ -18,7 +18,7 @@
     }
   },
   "initialConnections": {
-    "http://localhost:8000": {},
+    "http://localhost:3000": {},
     "https://portfolio.metamask.io": {},
     "https://portfolio-builds.metafi-dev.codefi.network": {},
     "https://dev.portfolio.metamask.io": {}
@@ -30,7 +30,7 @@
     },
     "endowment:keyring": {
       "allowedOrigins": [
-        "http://localhost:8000",
+        "http://localhost:3000",
         "https://portfolio.metamask.io",
         "https://portfolio-builds.metafi-dev.codefi.network",
         "https://dev.portfolio.metamask.io"
