@@ -2778,6 +2778,53 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@metamask/bitcoin@workspace:packages/snap":
+  version: 0.0.0-use.local
+  resolution: "@metamask/bitcoin@workspace:packages/snap"
+  dependencies:
+    "@babel/preset-typescript": ^7.23.3
+    "@bitcoinerlab/secp256k1": ^1.1.1
+    "@jest/globals": ^29.5.0
+    "@metamask/auto-changelog": ^3.4.4
+    "@metamask/eslint-config": ^12.2.0
+    "@metamask/eslint-config-jest": ^12.1.0
+    "@metamask/eslint-config-nodejs": ^12.1.0
+    "@metamask/eslint-config-typescript": ^12.1.0
+    "@metamask/key-tree": ^9.0.0
+    "@metamask/keyring-api": ^8.0.0
+    "@metamask/snaps-cli": ^6.1.0
+    "@metamask/snaps-jest": ^8.0.0
+    "@metamask/snaps-sdk": ^4.0.0
+    "@typescript-eslint/eslint-plugin": ^5.42.1
+    "@typescript-eslint/parser": ^5.42.1
+    async-mutex: ^0.3.2
+    big.js: ^6.2.1
+    bip174: ^2.1.1
+    bip32: ^4.0.0
+    bitcoinjs-lib: ^6.1.5
+    buffer: ^6.0.3
+    coinselect: ^3.1.13
+    dotenv: ^16.4.5
+    ecpair: ^2.1.0
+    eslint: ^8.45.0
+    eslint-config-prettier: ^8.5.0
+    eslint-plugin-import: ~2.26.0
+    eslint-plugin-jest: ^27.1.5
+    eslint-plugin-jsdoc: ^41.1.2
+    eslint-plugin-n: ^15.7.0
+    eslint-plugin-prettier: ^4.2.1
+    eslint-plugin-promise: ^6.1.1
+    jest: ^29.5.0
+    prettier: ^2.7.1
+    prettier-plugin-packagejson: ^2.2.11
+    rimraf: ^3.0.2
+    superstruct: ^1.0.3
+    ts-jest: ^29.1.0
+    typescript: ^4.7.4
+    uuid: ^9.0.1
+  languageName: unknown
+  linkType: soft
+
 "@metamask/controller-utils@npm:^9.0.1, @metamask/controller-utils@npm:^9.1.0":
   version: 9.1.0
   resolution: "@metamask/controller-utils@npm:9.1.0"
@@ -2966,7 +3013,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/keyring-api@npm:^6.0.0, @metamask/keyring-api@npm:^6.3.1":
+"@metamask/keyring-api@npm:^6.0.0":
   version: 6.4.0
   resolution: "@metamask/keyring-api@npm:6.4.0"
   dependencies:
@@ -2979,6 +3026,22 @@ __metadata:
   peerDependencies:
     "@metamask/providers": ">=15 <18"
   checksum: 7845ed5fa73db3165703c2142b6062d03ca5fea329b54d28f424dee2bb393edc1f9a015e771289ef7236c31f30355bf2c52ad74bb47cf531c09c5eec66e06b00
+  languageName: node
+  linkType: hard
+
+"@metamask/keyring-api@npm:^8.0.0":
+  version: 8.0.0
+  resolution: "@metamask/keyring-api@npm:8.0.0"
+  dependencies:
+    "@metamask/snaps-sdk": ^4.2.0
+    "@metamask/utils": ^8.4.0
+    "@types/uuid": ^9.0.8
+    bech32: ^2.0.0
+    superstruct: ^1.0.3
+    uuid: ^9.0.1
+  peerDependencies:
+    "@metamask/providers": ">=15 <18"
+  checksum: 945d4bdb69d2eea60bd990d6372a7b8e5740a1c7aa66361ad1fa309273f05ec0543edea84524ed266e8e06a38fd4727869da646306682e5fa0d52c8ccc393c4a
   languageName: node
   linkType: hard
 

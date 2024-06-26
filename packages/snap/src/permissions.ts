@@ -18,6 +18,7 @@ const dappPermissions = new Set([
   KeyringRpcMethod.ApproveRequest,
   KeyringRpcMethod.RejectRequest,
   KeyringRpcMethod.SubmitRequest,
+  KeyringRpcMethod.GetAccountBalances,
   // Chain API methods
   InternalRpcMethod.GetTransactionStatus,
 ]);
