@@ -67,11 +67,11 @@ describe('BtcAccountDeriver', () => {
         network,
       );
 
-      const idx = 0;
+      const hdPath = [`m`, `0'`, `0`, `0`];
 
       const node = deriver.createBip32FromPrivateKey(pkBuffer, ccBuffer);
 
-      const result = await deriver.getChild(node, idx);
+      const result = await deriver.getChild(node, hdPath);
 
       expect(result.chainCode).toBeDefined();
       expect(result.chainCode).not.toBeNull();

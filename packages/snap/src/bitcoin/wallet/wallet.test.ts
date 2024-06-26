@@ -47,7 +47,30 @@ describe('BtcWallet', () => {
   };
 
   describe('unlock', () => {
-    it('returns an `Account` object with defualt type', async () => {
+    const p2wpkhPathMainnet = P2WPKHAccount.path;
+    const p2wpkhPathTestnet = P2WPKHAccount.path.slice(0, -1).concat("1'");
+    const p2shp2wpkhPathTestnet = P2SHP2WPKHAccount.path
+      .slice(0, -1)
+      .concat("1'");
+
+    it('creates an `Account` object with different hd path on different network', async () => {
+      const { instance, rootSpy } = createMockWallet(networks.testnet);
+      const { instance: mainnetInstance, rootSpy: mainRootSpy } =
+        createMockWallet(networks.bitcoin);
+
+      const idx = 0;
+
+      const testnetAcc = await instance.unlock(idx);
+      const mainnetAcc = await mainnetInstance.unlock(idx);
+
+      expect(mainRootSpy).toHaveBeenCalledWith(p2wpkhPathMainnet);
+      expect(rootSpy).toHaveBeenCalledWith(p2wpkhPathTestnet);
+      expect(testnetAcc.signer.publicKey).not.toStrictEqual(
+        mainnetAcc.signer.publicKey,
+      );
+    });
+
+    it('creates an `Account` object with defualt type', async () => {
       const network = networks.testnet;
       const { rootSpy, childSpy, instance } = createMockWallet(network);
       const idx = 0;
@@ -55,11 +78,16 @@ describe('BtcWallet', () => {
       const result = await instance.unlock(idx);
 
       expect(result).toBeInstanceOf(P2WPKHAccount);
-      expect(rootSpy).toHaveBeenCalledWith(P2WPKHAccount.path);
-      expect(childSpy).toHaveBeenCalledWith(expect.any(Object), idx);
+      expect(rootSpy).toHaveBeenCalledWith(p2wpkhPathTestnet);
+      expect(childSpy).toHaveBeenCalledWith(expect.any(Object), [
+        `m`,
+        `0'`,
+        `0`,
+        `${idx}`,
+      ]);
     });
 
-    it('returns an `Account` object with type bip122:p2wpkh', async () => {
+    it('creates an `Account` object with type bip122:p2wpkh', async () => {
       const network = networks.testnet;
       const { rootSpy, childSpy, instance } = createMockWallet(network);
       const idx = 0;
@@ -67,11 +95,16 @@ describe('BtcWallet', () => {
       const result = await instance.unlock(idx, `bip122:p2wpkh`);
 
       expect(result).toBeInstanceOf(P2WPKHAccount);
-      expect(rootSpy).toHaveBeenCalledWith(P2WPKHAccount.path);
-      expect(childSpy).toHaveBeenCalledWith(expect.any(Object), idx);
+      expect(rootSpy).toHaveBeenCalledWith(p2wpkhPathTestnet);
+      expect(childSpy).toHaveBeenCalledWith(expect.any(Object), [
+        `m`,
+        `0'`,
+        `0`,
+        `${idx}`,
+      ]);
     });
 
-    it('returns an `Account` object with type `p2wpkh`', async () => {
+    it('creates an `Account` object with type `p2wpkh`', async () => {
       const network = networks.testnet;
       const { rootSpy, childSpy, instance } = createMockWallet(network);
       const idx = 0;
@@ -79,11 +112,16 @@ describe('BtcWallet', () => {
       const result = await instance.unlock(idx, ScriptType.P2wpkh);
 
       expect(result).toBeInstanceOf(P2WPKHAccount);
-      expect(rootSpy).toHaveBeenCalledWith(P2WPKHAccount.path);
-      expect(childSpy).toHaveBeenCalledWith(expect.any(Object), idx);
+      expect(rootSpy).toHaveBeenCalledWith(p2wpkhPathTestnet);
+      expect(childSpy).toHaveBeenCalledWith(expect.any(Object), [
+        `m`,
+        `0'`,
+        `0`,
+        `${idx}`,
+      ]);
     });
 
-    it('returns an `Account` object with type `p2shp2wkh`', async () => {
+    it('creates an `Account` object with type `p2shp2wkh`', async () => {
       const network = networks.testnet;
       const { rootSpy, childSpy, instance } = createMockWallet(network);
       const idx = 0;
@@ -91,8 +129,13 @@ describe('BtcWallet', () => {
       const result = await instance.unlock(idx, ScriptType.P2shP2wkh);
 
       expect(result).toBeInstanceOf(P2SHP2WPKHAccount);
-      expect(rootSpy).toHaveBeenCalledWith(P2SHP2WPKHAccount.path);
-      expect(childSpy).toHaveBeenCalledWith(expect.any(Object), idx);
+      expect(rootSpy).toHaveBeenCalledWith(p2shp2wpkhPathTestnet);
+      expect(childSpy).toHaveBeenCalledWith(expect.any(Object), [
+        `m`,
+        `0'`,
+        `0`,
+        `${idx}`,
+      ]);
     });
 
     it('throws error if the account cannot be unlocked', async () => {
@@ -102,6 +145,16 @@ describe('BtcWallet', () => {
 
       await expect(instance.unlock(idx, ScriptType.P2pkh)).rejects.toThrow(
         WalletError,
+      );
+    });
+
+    it('throws `Network not supported` error if the network is not supported', async () => {
+      const network = networks.regtest;
+      const idx = 0;
+      const { instance } = createMockWallet(network);
+
+      await expect(instance.unlock(idx, ScriptType.P2wpkh)).rejects.toThrow(
+        `Network not supported`,
       );
     });
   });

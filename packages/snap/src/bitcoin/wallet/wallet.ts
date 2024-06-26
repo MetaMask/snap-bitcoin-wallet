@@ -1,5 +1,5 @@
 import type { BIP32Interface } from 'bip32';
-import { type Network } from 'bitcoinjs-lib';
+import { networks, type Network } from 'bitcoinjs-lib';
 
 import { bufferToString, compactError, hexToBuffer, logger } from '../../utils';
 import type { Utxo } from '../chain';
@@ -64,19 +64,21 @@ export class BtcWallet {
    *
    * @param index - The index to derive from the node.
    * @param type - The script type of the unlocked account, e.g. `bip122:p2pkh`.
-   * @returns A promise that resolves to an `IAccount` object.
+   * @returns A promise that resolves to an `BtcAccount` object.
    */
   async unlock(index: number, type?: string): Promise<BtcAccount> {
     try {
       const AccountCtor = this.getAccountCtor(type ?? ScriptType.P2wpkh);
-      const rootNode = await this._deriver.getRoot(AccountCtor.path);
-      const childNode = await this._deriver.getChild(rootNode, index);
-      const hdPath = [`m`, `0'`, `0`, `${index}`].join('/');
+      const childNodeHdPath = [`m`, `0'`, `0`, `${index}`];
+      const rootNode = await this._deriver.getRoot(
+        this.getRootNodeHdPath(AccountCtor),
+      );
+      const childNode = await this._deriver.getChild(rootNode, childNodeHdPath);
 
       return new AccountCtor(
         bufferToString(rootNode.fingerprint, 'hex'),
         index,
-        hdPath,
+        childNodeHdPath.join('/'),
         bufferToString(childNode.publicKey, 'hex'),
         this._network,
         AccountCtor.scriptType,
@@ -200,5 +202,26 @@ export class BtcWallet {
       default:
         throw new WalletError('Invalid script type');
     }
+  }
+
+  /**
+   * Get the hd path for the account based on the network.
+   * Recall that a BIP-44 HD tree path consists of the following nodes.
+   * `m / 44' / coin_type' / account' / change / address_index`.
+   * coin_type is 0 for bitcoin mainnet and 1 for testnet.
+   * reference: https://github.com/satoshilabs/slips/blob/master/slip-0044.md.
+   *
+   * @param AccountCtor - The Account objects contians the hd path.
+   * @returns The updated hd path.
+   */
+  protected getRootNodeHdPath(AccountCtor: IStaticBtcAccount): string[] {
+    if (this._network === networks.bitcoin) {
+      return AccountCtor.path;
+    } else if (this._network === networks.testnet) {
+      return [...AccountCtor.path]
+        .slice(0, AccountCtor.path.length - 1)
+        .concat(["1'"]);
+    }
+    throw new WalletError('Network not supported');
   }
 }
