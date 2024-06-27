@@ -11,6 +11,7 @@ import {
   ListAccountsButton,
   SendManyCard,
   GetTransactionStatusCard,
+  GetBalancesCard,
 } from '../components';
 import { defaultSnapOrigin } from '../config';
 import {
@@ -319,7 +320,7 @@ const Index = () => {
             !shouldDisplayReconnectButton(installedSnap)
           }
         />
-        {/* <GetBalancesCard 
+        <GetBalancesCard 
           enabled={!(!installedSnap || !btcAccount)}
           account={btcAccount?.id || ''}
           scope={scope}
@@ -328,7 +329,7 @@ const Index = () => {
             Boolean(installedSnap) &&
             !shouldDisplayReconnectButton(installedSnap)
           }
-        /> */}
+        />
 
         {/* <GetDataForTransactionCard
           account={btcAccount?.address || ''}
