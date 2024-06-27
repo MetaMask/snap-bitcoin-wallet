@@ -11,12 +11,12 @@ export function deriveByPath(
   rootNode: BIP32Interface,
   path: string[],
 ): BIP32Interface {
-  let _path = path;
+  let _path: string[] = path;
   if (_path[0] === 'm') {
     _path = _path.slice(1);
   }
-  return _path.reduce((prevHd, indexStr) => {
-    let index;
+  return _path.reduce((prevHd: BIP32Interface, indexStr: string) => {
+    let index: number;
     if (indexStr.endsWith(`'`)) {
       index = parseInt(indexStr.slice(0, -1), 10);
       return prevHd.deriveHardened(index);
