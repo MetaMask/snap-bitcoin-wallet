@@ -1,6 +1,6 @@
 {
   "name": "@consensys/bitcoin-manager-snap",
-  "version": "0.1.4-rc3",
+  "version": "0.1.4-rc4",
   "description": "A MetaMask snap to manage Bitcoin",
   "repository": {
     "type": "git",

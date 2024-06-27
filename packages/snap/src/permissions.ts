@@ -45,6 +45,7 @@ const allowedOrigins = [
   'https://portfolio.metamask.io',
   'https://portfolio-builds.metafi-dev.codefi.network',
   'https://dev.portfolio.metamask.io',
+  'https://ramps-dev.portfolio.metamask.io',
 ];
 
 const local = 'http://localhost:3000';
