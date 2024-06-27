@@ -4,11 +4,7 @@ import { networks, type Network } from 'bitcoinjs-lib';
 import { bufferToString, compactError, hexToBuffer, logger } from '../../utils';
 import type { Utxo } from '../chain';
 import type { BtcAccount } from './account';
-import {
-  P2WPKHAccount,
-  P2SHP2WPKHAccount,
-  type IStaticBtcAccount,
-} from './account';
+import { P2WPKHAccount, type IStaticBtcAccount } from './account';
 import { CoinSelectService } from './coin-select';
 import { ScriptType } from './constants';
 import type { BtcAccountDeriver } from './deriver';
@@ -197,8 +193,6 @@ export class BtcWallet {
     switch (scriptType.toLowerCase()) {
       case ScriptType.P2wpkh.toLowerCase():
         return P2WPKHAccount;
-      case ScriptType.P2shP2wkh.toLowerCase():
-        return P2SHP2WPKHAccount;
       default:
         throw new WalletError('Invalid script type');
     }
