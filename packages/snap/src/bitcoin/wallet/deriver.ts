@@ -33,7 +33,7 @@ export class BtcAccountDeriver {
    * @returns The root node of the BIP32 account.
    * @throws {DeriverError} Throws a DeriverError if the private key is missing or if the BIP32 node cannot be constructed from the private key.
    */
-  async getRoot(path: string[]) {
+  async getRoot(path: string[]): Promise<BIP32Interface> {
     try {
       const deriver = await getBip32Deriver(path, this.curve);
 

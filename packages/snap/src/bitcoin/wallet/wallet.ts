@@ -185,7 +185,7 @@ export class BtcWallet {
     return psbtService.finalize();
   }
 
-  protected getHdSigner(rootNode: BIP32Interface) {
+  protected getHdSigner(rootNode: BIP32Interface): AccountSigner {
     return new AccountSigner(rootNode, rootNode.fingerprint);
   }
 
