@@ -1,7 +1,7 @@
 import { networks } from 'bitcoinjs-lib';
 
 import { generateFormatedUtxos } from '../../../test/utils';
-import { P2SHP2WPKHAccount, P2WPKHAccount } from './account';
+import { P2WPKHAccount } from './account';
 import { CoinSelectService } from './coin-select';
 import { DustLimit, ScriptType } from './constants';
 import { BtcAccountDeriver } from './deriver';
@@ -49,9 +49,6 @@ describe('BtcWallet', () => {
   describe('unlock', () => {
     const p2wpkhPathMainnet = P2WPKHAccount.path;
     const p2wpkhPathTestnet = P2WPKHAccount.path.slice(0, -1).concat("1'");
-    const p2shp2wpkhPathTestnet = P2SHP2WPKHAccount.path
-      .slice(0, -1)
-      .concat("1'");
 
     it('creates an `Account` object with different hd path on different network', async () => {
       const { instance, rootSpy } = createMockWallet(networks.testnet);
@@ -113,23 +110,6 @@ describe('BtcWallet', () => {
 
       expect(result).toBeInstanceOf(P2WPKHAccount);
       expect(rootSpy).toHaveBeenCalledWith(p2wpkhPathTestnet);
-      expect(childSpy).toHaveBeenCalledWith(expect.any(Object), [
-        `m`,
-        `0'`,
-        `0`,
-        `${idx}`,
-      ]);
-    });
-
-    it('creates an `Account` object with type `p2shp2wkh`', async () => {
-      const network = networks.testnet;
-      const { rootSpy, childSpy, instance } = createMockWallet(network);
-      const idx = 0;
-
-      const result = await instance.unlock(idx, ScriptType.P2shP2wkh);
-
-      expect(result).toBeInstanceOf(P2SHP2WPKHAccount);
-      expect(rootSpy).toHaveBeenCalledWith(p2shp2wpkhPathTestnet);
       expect(childSpy).toHaveBeenCalledWith(expect.any(Object), [
         `m`,
         `0'`,
