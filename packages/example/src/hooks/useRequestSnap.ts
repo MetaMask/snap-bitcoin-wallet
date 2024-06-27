@@ -13,7 +13,7 @@ import { useRequest } from './useRequest';
  */
 export const useRequestSnap = (
   snapId = defaultSnapOrigin,
-  version = '0.1.4-rc2',
+  version = '0.1.4-rc3',
 ) => {
   const request = useRequest();
   const { setInstalledSnap } = useMetaMaskContext();
