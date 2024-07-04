@@ -232,9 +232,9 @@ describe('BtcKeyring', () => {
       const { instance: keyring } = createMockKeyring(stateMgr);
       const account = generateAccounts(1)[0];
 
-      await expect(
-        keyring.updateAccount(account),
-      ).rejects.toThrow('Method not implemented.');
+      await expect(keyring.updateAccount(account)).rejects.toThrow(
+        'Method not implemented.',
+      );
     });
   });
 
