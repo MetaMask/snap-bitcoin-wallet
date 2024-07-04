@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.0]
 
-### Uncategorized
+### Changed
 
-- chore: rename `example` to `site` ([#145](https://github.com/MetaMask/snap-bitcoin-wallet/pull/145))
+- Rename `example` to `site` ([#145](https://github.com/MetaMask/snap-bitcoin-wallet/pull/145))
 
 ## [0.1.2]
 
