@@ -119,17 +119,9 @@ export class BtcKeyring implements Keyring {
     throw new Error('Method not implemented.');
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async updateAccount(account: KeyringAccount): Promise<void> {
-    try {
-      await this._stateMgr.withTransaction(async () => {
-        await this._stateMgr.updateAccount(account);
-        await this.#emitEvent(KeyringEvent.AccountUpdated, { account });
-      });
-    } catch (error) {
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      logger.info(`[BtcKeyring.updateAccount] Error: ${error.message}`);
-      throw new Error(error);
-    }
+    throw new Error('Method not implemented.');
   }
 
   async deleteAccount(id: string): Promise<void> {
