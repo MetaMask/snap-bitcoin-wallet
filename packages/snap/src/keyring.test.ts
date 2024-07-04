@@ -358,6 +358,8 @@ describe('BtcKeyring', () => {
       const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);
       const { sender, keyringAccount } = await createSender(caip2ChainId);
+      keyringAccount.methods = ['new_method'];
+
       getWalletSpy.mockResolvedValue({
         account: keyringAccount as unknown as KeyringAccount,
         index: sender.index,
@@ -371,10 +373,36 @@ describe('BtcKeyring', () => {
           scope: caip2ChainId,
           account: keyringAccount.address,
           request: {
-            method: 'btc_doesNotExist',
+            method: 'new_method',
           },
         }),
       ).rejects.toThrow(MethodNotFoundError);
+    });
+
+    it('throws `Forbidden Method` error if the method is not allowed from the account', async () => {
+      const caip2ChainId = Caip2ChainId.Testnet;
+      const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
+      const { instance: keyring } = createMockKeyring(stateMgr);
+      const { sender, keyringAccount } = await createSender(caip2ChainId);
+      keyringAccount.methods = ['new_method'];
+
+      getWalletSpy.mockResolvedValue({
+        account: keyringAccount as unknown as KeyringAccount,
+        index: sender.index,
+        scope: keyringAccount.options.scope,
+        hdPath: sender.hdPath,
+      });
+
+      await expect(
+        keyring.submitRequest({
+          id: keyringAccount.id,
+          scope: caip2ChainId,
+          account: keyringAccount.address,
+          request: {
+            method: 'btc_sendmany',
+          },
+        }),
+      ).rejects.toThrow('Forbidden Method');
     });
   });
 
