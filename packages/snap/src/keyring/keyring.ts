@@ -184,7 +184,7 @@ export class BtcKeyring implements Keyring {
     event: KeyringEvent,
     data: Record<string, Json>,
   ): Promise<void> {
-    // TODO: Remove temp solution to support keyring in snap without extentions support
+    // TODO: Temp solution to support keyring in snap without extentions support
     if (this._options.emitEvents) {
       await emitSnapKeyringEvent(SnapHelper.provider, event, data);
     }

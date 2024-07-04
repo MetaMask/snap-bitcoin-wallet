@@ -1,4 +1,4 @@
-import { networks, address as addressUtils } from 'bitcoinjs-lib';
+import { networks } from 'bitcoinjs-lib';
 
 import { generateFormatedUtxos } from '../../../test/utils';
 import { ScriptType } from '../constants';
@@ -34,15 +34,12 @@ describe('CoinSelectService', () => {
 
     const utxos = generateFormatedUtxos(sender.address, 2, inputMin, inputMax);
 
-    const outputs = [
-      new TxOutput(
-        outputVal,
-        receiver1.address,
-        addressUtils.toOutputScript(receiver1.address, network),
-      ),
-    ];
+    const outputs = [new TxOutput(outputVal, receiver1.address)];
 
-    const inputs = utxos.map((utxo) => new TxInput(utxo, sender.script));
+    const inputs = utxos.map(
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      (utxo) => new TxInput(utxo, sender.payment.output!),
+    );
 
     return {
       sender,
@@ -64,13 +61,33 @@ describe('CoinSelectService', () => {
       const result = coinSelectService.selectCoins(
         inputs,
         outputs,
-        new TxOutput(0, sender.address, sender.script),
+        new TxOutput(0, sender.address),
       );
 
       expect(result.fee).toBeGreaterThan(1);
       expect(result.change).toBeDefined();
       expect(result.inputs.length).toBeGreaterThan(0);
       expect(result.outputs.length).toBeGreaterThan(0);
+    });
+
+    it('converts output to TxOutput', async () => {
+      const network = networks.testnet;
+      const { inputs, outputs, sender } = await prepareCoinSlect(network);
+
+      const coinSelectService = new CoinSelectService(1);
+
+      const result = coinSelectService.selectCoins(
+        inputs,
+        outputs.map((output) => ({
+          address: output.address,
+          value: output.value,
+        })),
+        new TxOutput(0, sender.address),
+      );
+
+      for (const output of result.outputs) {
+        expect(output).toBeInstanceOf(TxOutput);
+      }
     });
 
     it('throws `Insufficient funds` error if the given utxos is not sufficient', async () => {
@@ -88,7 +105,7 @@ describe('CoinSelectService', () => {
         coinSelectService.selectCoins(
           inputs,
           outputs,
-          new TxOutput(0, sender.address, sender.script),
+          new TxOutput(0, sender.address),
         ),
       ).toThrow('Insufficient funds');
     });

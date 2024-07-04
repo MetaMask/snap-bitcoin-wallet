@@ -23,7 +23,7 @@ export type SnapState = {
 export type KeyringOptions = Record<string, Json> & {
   defaultIndex: number;
   multiAccount?: boolean;
-  // TODO: Remove temp solution to support keyring in snap without keyring API
+  // TODO: Temp solutio to support keyring in snap without keyring API
   emitEvents?: boolean;
 };
 

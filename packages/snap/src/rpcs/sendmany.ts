@@ -46,11 +46,7 @@ export const TransactionAmountStuct = refine(
 
     for (const val of Object.values(value)) {
       const parsedVal = parseFloat(val);
-      if (
-        Number.isNaN(parsedVal) ||
-        parsedVal <= 0 ||
-        !Number.isFinite(parsedVal)
-      ) {
+      if (Number.isNaN(parsedVal) || parsedVal <= 0) {
         return 'Invalid amount for send';
       }
     }

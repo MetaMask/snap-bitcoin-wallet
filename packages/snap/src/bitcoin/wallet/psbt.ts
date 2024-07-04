@@ -15,9 +15,9 @@ import type { TxOutput } from './transaction-output';
 const ECPair = ECPairFactory(ecc);
 
 export class PsbtService {
-  protected readonly _psbt: Psbt;
+  protected _psbt: Psbt;
 
-  protected readonly _network: Network;
+  protected _network: Network;
 
   get psbt() {
     return this._psbt;
@@ -104,7 +104,7 @@ export class PsbtService {
   addOutput(output: TxOutput) {
     try {
       this._psbt.addOutput({
-        script: output.script,
+        address: output.address,
         value: output.value,
       });
     } catch (error) {

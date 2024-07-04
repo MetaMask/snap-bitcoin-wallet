@@ -1,4 +1,5 @@
 import { networks } from 'bitcoinjs-lib';
+import type { Buffer } from 'buffer';
 
 import { generateFormatedUtxos } from '../../../test/utils';
 import { ScriptType } from '../constants';
@@ -22,7 +23,7 @@ describe('TxInput', () => {
   it('return correct property', async () => {
     const wallet = createMockWallet(networks.testnet);
     const account = await wallet.instance.unlock(0, ScriptType.P2wpkh);
-    const { script } = account;
+    const script = account.payment.output as unknown as Buffer;
 
     const utxo = generateFormatedUtxos(account.address, 1)[0];
 
