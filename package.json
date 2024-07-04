@@ -1,15 +1,15 @@
 {
   "name": "bitcoin-wallet-snap-monorepo",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "private": true,
   "description": "",
-  "homepage": "https://github.com/MetaMask/bitcoin#readme",
+  "homepage": "https://github.com/MetaMask/snap-bitcoin-wallet#readme",
   "bugs": {
-    "url": "https://github.com/MetaMask/bitcoin/issues"
+    "url": "https://github.com/MetaMask/snap-bitcoin-wallet/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/MetaMask/bitcoin.git"
+    "url": "https://github.com/MetaMask/snap-bitcoin-wallet.git"
   },
   "license": "(MIT-0 OR Apache-2.0)",
   "workspaces": [
