@@ -129,6 +129,55 @@ describe('onKeyringRequest', () => {
     });
   });
 
+  it('does not throws `Permission denied` error if the method is in the allowed list', async () => {
+    const { handler } = createMockHandleKeyringRequest();
+    handler.mockResolvedValue({});
+
+    for (const method of [
+      keyringApi.KeyringRpcMethod.ListAccounts,
+      keyringApi.KeyringRpcMethod.GetAccount,
+      keyringApi.KeyringRpcMethod.CreateAccount,
+      keyringApi.KeyringRpcMethod.FilterAccountChains,
+      keyringApi.KeyringRpcMethod.DeleteAccount,
+      keyringApi.KeyringRpcMethod.GetAccountBalances,
+    ]) {
+      const result = await onKeyringRequest({
+        origin: 'metamask',
+        request: {
+          method,
+          params: {
+            scope: Config.avaliableNetworks[0],
+          },
+        } as unknown as JsonRpcRequest,
+      });
+      expect(result).toStrictEqual({});
+    }
+  });
+
+  it('throws `Permission denied` error if the method is not match to the allowed list', async () => {
+    for (const method of [
+      keyringApi.KeyringRpcMethod.SubmitRequest,
+      keyringApi.KeyringRpcMethod.ApproveRequest,
+      keyringApi.KeyringRpcMethod.RejectRequest,
+      keyringApi.KeyringRpcMethod.GetRequest,
+      keyringApi.KeyringRpcMethod.ListRequests,
+      keyringApi.KeyringRpcMethod.ExportAccount,
+      keyringApi.KeyringRpcMethod.UpdateAccount,
+    ]) {
+      await expect(
+        onKeyringRequest({
+          origin: 'metamask',
+          request: {
+            method,
+            params: {
+              scope: Config.avaliableNetworks[0],
+            },
+          } as unknown as JsonRpcRequest,
+        }),
+      ).rejects.toThrow('Permission denied');
+    }
+  });
+
   it('throws SnapError if an error catched', async () => {
     const { handler } = createMockHandleKeyringRequest();
     handler.mockRejectedValue(new Error('error'));
