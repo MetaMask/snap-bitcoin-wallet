@@ -5,10 +5,9 @@ import { Buffer } from 'buffer';
 import ECPairFactory from 'ecpair';
 import { v4 as uuidv4 } from 'uuid';
 
-import { Caip2ChainId } from '../src/constants';
+import { Network as NetworkEnum } from '../src/bitcoin/constants';
 import blockChairData from './fixtures/blockchair.json';
-
-/* eslint-disable */
+import blockStreamData from './fixtures/blockstream.json';
 
 /**
  * Method to generate testing account.
@@ -32,7 +31,7 @@ export function generateAccounts(cnt = 1, addressPrefix = '') {
         baseAddress.slice(0, baseAddress.length - i.toString().length) +
         i.toString(),
       options: {
-        scope: Caip2ChainId.Testnet,
+        scope: NetworkEnum.Testnet,
         index: i,
       },
       methods: ['btc_sendmany'],
@@ -201,6 +200,39 @@ export function createMockBip32Instance(
 }
 
 const randomNum = (max) => Math.floor(Math.random() * max);
+/**
+ * Method to generate blockstream account stats resp by addresses.
+ *
+ * @param addresses - Array of address in string.
+ * @returns An array of blocksteam stats response.
+ */
+export function generateBlockStreamAccountStats(addresses: string[]) {
+  const template = blockStreamData.getAccountStatsResp;
+  const resp: (typeof template)[] = [];
+  for (const address of addresses) {
+    /* eslint-disable */
+    resp.push({
+      ...template,
+      address,
+      chain_stats: {
+        funded_txo_count: randomNum(100),
+        funded_txo_sum: Math.max(randomNum(1000000), 10000),
+        spent_txo_count: randomNum(100),
+        spent_txo_sum: randomNum(10000),
+        tx_count: randomNum(100),
+      },
+      mempool_stats: {
+        funded_txo_count: randomNum(100),
+        funded_txo_sum: Math.max(randomNum(1000000), 10000),
+        spent_txo_count: randomNum(100),
+        spent_txo_sum: randomNum(10000),
+        tx_count: randomNum(100),
+      },
+    });
+    /* eslint-disable */
+  }
+  return resp;
+}
 
 /**
  * Method to generate blockchair getBalance resp by addresses.
@@ -222,15 +254,13 @@ export function generateBlockChairGetBalanceResp(addresses: string[]) {
  *
  * @param address - address in string.
  * @param utxosCount - utxos count.
- * @param minAmount - min amount of each utxo value.
- * @param maxAmount - max amount of each utxo value.
  * @returns An array of blockchair getUtxos response.
  */
 export function generateBlockChairGetUtxosResp(
   address: string,
   utxosCount: number,
-  minAmount = 0,
-  maxAmount = 1000000,
+  minAmount: number = 0,
+  maxAmount: number = 1000000,
 ) {
   const template = blockChairData.getUtxoResp;
   const data = { ...template.data.tb1qlq94vt9uh07fwunsgdyycpkv24uev05ywjua0r };
@@ -276,7 +306,54 @@ export function generateBlockChairGetStatsResp() {
       resp.data[key] = randomNum(value);
     }
   });
-  resp.data.suggested_transaction_fee_per_byte_sat = randomNum(20);
+  resp.data['suggested_transaction_fee_per_byte_sat'] = randomNum(20);
+  return resp;
+}
+
+/**
+ * Method to generate blockstream getUtxos resp.
+ *
+ * @param utxosCount - utxos count.
+ * @returns An array of blockstream getUtxos response.
+ */
+export function generateBlockStreamGetUtxosResp(
+  utxosCount: number,
+  confirmed: boolean = true,
+) {
+  const template = blockStreamData.getUtxoResp;
+  let idx = -1;
+  const resp = Array.from({ length: utxosCount }, () => {
+    idx += 1;
+    return {
+      txid: randomNum(1000000)
+        .toString(16)
+        .padStart(template[0].txid.length, '0'),
+      vout: idx,
+      status: {
+        confirmed: confirmed,
+        block_height: randomNum(1000000),
+        block_hash: randomNum(1000000)
+          .toString(16)
+          .padStart(template[0].status.block_hash.length, '0'),
+        block_time: 1710329183,
+      },
+      value: randomNum(1000000),
+    };
+  });
+  return resp;
+}
+
+/**
+ * Method to generate blockstream estimate fee resp.
+ *
+ * @returns A blockstream estimate fee resp.
+ */
+export function generateBlockStreamEstFeeResp() {
+  const template = blockStreamData.feeEstimateResp;
+  const resp: typeof template = { ...template };
+  Object.keys(template).forEach((key) => {
+    resp[key] = Math.min(0.1, randomNum(40));
+  });
   return resp;
 }
 
@@ -292,12 +369,44 @@ export function generateBlockChairBroadcastTransactionResp() {
 }
 
 /**
+ * Method to generate blockstream last 10 blocks resp.
+ *
+ * @param blockHeight - A start number for the block height of the resp.
+ * @returns A blockstream last 10 blocks resp.
+ */
+export function generateBlockStreamLast10BlockResp(blockHeight: number) {
+  const template = blockStreamData.getLast10BlockResp;
+  const resp: typeof template = { ...template };
+  for (let i = 0; i < template.length; i++) {
+    resp[i].height = blockHeight - i;
+  }
+  return resp;
+}
+
+/**
+ * Method to generate blockstream transaction status resp.
+ *
+ * @param blockHeight - Block height of the transaction.
+ * @param confirmed - Confirm status of the transaction.
+ * @returns A blockstream transaction status resp.
+ */
+export function generateBlockStreamTransactionStatusResp(
+  blockHeight: number,
+  confirmed: boolean,
+) {
+  const template = blockStreamData.getTransactionStatus;
+  const resp: typeof template = { ...template };
+  resp.block_height = blockHeight;
+  resp.confirmed = confirmed;
+  return resp;
+}
+
+/**
  * Method to generate blockchair transaction dashboards resp.
  *
  * @param txHash - Transaction hash of the transaction.
  * @param txnBlockHeight - Block height of the transaction.
  * @param txnBlockHeight - Block height of the last block.
- * @param lastBlockHeight - Block height of the last block.
  * @param confirmed - Confirm status of the transaction.
  * @returns A blockchair transaction dashboards resp.
  */
@@ -332,8 +441,8 @@ export function generateBlockChairTransactionDashboard(
  *
  * @param address - the utxos owner address.
  * @param utxoCnt - count of the utox to be generated.
- * @param minAmt - min amount of the utxo array.
- * @param maxAmt - max amount of the utxo array.
+ * @param minAmount - min amount of each utxo value.
+ * @param maxAmount - max amount of each utxo value.
  * @returns An formatted utxo array.
  */
 export function generateFormatedUtxos(
@@ -356,5 +465,3 @@ export function generateFormatedUtxos(
   }));
   return formattedUtxos;
 }
-
-/* eslint-disable */

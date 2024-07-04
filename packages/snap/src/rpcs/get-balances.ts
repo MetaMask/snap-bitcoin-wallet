@@ -1,108 +1,99 @@
 import type { Infer } from 'superstruct';
-import { object, array, record, enums, assert } from 'superstruct';
+import { object, assign, array, record, enums } from 'superstruct';
 
 import { Config } from '../config';
 import { Factory } from '../factory';
-import {
-  isSnapRpcError,
-  validateRequest,
-  validateResponse,
-  logger,
-  satsToBtc,
-} from '../utils';
-import {
-  assetsStruct,
-  positiveStringStruct,
-  scopeStruct,
-} from '../utils/superstruct';
-import type { IAccount } from '../wallet';
+import { type Wallet as WalletData } from '../keyring';
+import { SnapRpcError, SnapRpcHandlerRequestStruct } from '../libs/rpc';
+import type {
+  IStaticSnapRpcHandler,
+  SnapRpcHandlerResponse,
+} from '../libs/rpc';
+import type { StaticImplements } from '../types/static';
+import { assetsStruct, positiveStringStruct } from '../utils/superstruct';
+import type { IAmount } from '../wallet';
+import { KeyringRpcHandler } from './keyring-rpc';
 
-export const getBalancesRequestStruct = object({
-  assets: array(assetsStruct),
-  scope: scopeStruct,
-});
+export type GetBalancesParams = Infer<typeof GetBalancesHandler.requestStruct>;
 
-export const getBalancesResponseStruct = object({
-  assets: record(
-    assetsStruct,
-    object({
-      amount: positiveStringStruct,
-      unit: enums([Config.unit]),
-    }),
-  ),
-});
+export type GetBalancesResponse = SnapRpcHandlerResponse &
+  Infer<typeof GetBalancesHandler.responseStruct>;
 
-export type GetBalancesParams = Infer<typeof getBalancesRequestStruct>;
+export class GetBalancesHandler
+  extends KeyringRpcHandler
+  implements StaticImplements<IStaticSnapRpcHandler, typeof GetBalancesHandler>
+{
+  protected override isThrowValidationError = true;
 
-export type GetBalancesResponse = Infer<typeof getBalancesResponseStruct>;
+  static override get requestStruct() {
+    return assign(
+      object({
+        assets: array(assetsStruct),
+      }),
+      SnapRpcHandlerRequestStruct,
+    );
+  }
 
-/**
- * Get Balances by a given account.
- *
- * @param account - The account to get the balances.
- * @param params - The parameters for get the account.
- * @returns A Promise that resolves to an GetBalancesResponse object.
- */
-export async function getBalances(
-  account: IAccount,
-  params: GetBalancesParams,
-) {
-  try {
-    validateRequest(params, getBalancesRequestStruct);
+  static override get responseStruct() {
+    const unit = Config.unit[Config.chain];
+    return record(
+      assetsStruct,
+      object({
+        amount: positiveStringStruct,
+        unit: enums([unit]),
+      }),
+    );
+  }
 
-    assert(params, getBalancesRequestStruct);
+  constructor(walletData: WalletData) {
+    super();
+    this.walletData = walletData;
+  }
 
-    const { assets, scope } = params;
+  async handleRequest(params: GetBalancesParams): Promise<GetBalancesResponse> {
+    try {
+      const { scope, assets } = params;
 
-    const chainApi = Factory.createOnChainServiceProvider(scope);
-    const addresses = [account.address];
-    const addressesSet = new Set(addresses);
-    const assetsSet = new Set(assets);
+      const chainApi = Factory.createOnChainServiceProvider(scope);
+      const addresses = [this.walletAccount.address];
+      const addressesSet = new Set(addresses);
+      const assetsSet = new Set(assets);
 
-    const balances = await chainApi.getBalances(addresses, assets);
+      const balances = await chainApi.getBalances(addresses, assets);
 
-    const balancesVals = Object.entries(balances.balances);
-    const balancesMap = new Map<string, bigint>();
+      const balancesVals = Object.entries(balances.balances);
+      const balancesMap = new Map<string, IAmount>();
 
-    for (const [address, assetBalances] of balancesVals) {
-      if (!addressesSet.has(address)) {
-        continue;
-      }
-      for (const asset in assetBalances) {
-        if (!assetsSet.has(asset)) {
+      for (const [address, assetBalances] of balancesVals) {
+        if (!addressesSet.has(address)) {
           continue;
         }
+        for (const asset in assetBalances) {
+          if (!assetsSet.has(asset)) {
+            continue;
+          }
 
-        const { amount } = assetBalances[asset];
-        let currentAmount = balancesMap.get(asset);
-        if (currentAmount) {
-          currentAmount += amount;
+          const { amount } = assetBalances[asset];
+          const currentAmount = balancesMap.get(asset);
+          if (currentAmount) {
+            currentAmount.value += amount.value;
+          }
+
+          balancesMap.set(asset, currentAmount ?? amount);
         }
-
-        balancesMap.set(asset, currentAmount ?? amount);
       }
+
+      return Object.fromEntries(
+        [...balancesMap.entries()].map(([asset, amount]) => [
+          asset,
+          {
+            amount: amount.toString(),
+            unit: amount.unit,
+          },
+        ]),
+      );
+    } catch (error) {
+      throw new SnapRpcError('Fail to get the balances');
     }
-
-    const resp = Object.fromEntries(
-      [...balancesMap.entries()].map(([asset, amount]) => [
-        asset,
-        {
-          amount: satsToBtc(amount),
-          unit: Config.unit,
-        },
-      ]),
-    );
-
-    validateResponse(params, getBalancesRequestStruct);
-
-    return resp;
-  } catch (error) {
-    logger.error('Failed to get balances', error);
-
-    if (isSnapRpcError(error)) {
-      throw error as unknown as Error;
-    }
-
-    throw new Error('Fail to get the balances');
   }
 }

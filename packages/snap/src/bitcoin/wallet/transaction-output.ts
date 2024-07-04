@@ -1,33 +1,33 @@
 import type { Buffer } from 'buffer';
 
+import type { IAddress, IAmount } from '../../wallet';
+import { BtcAddress } from './address';
+import { BtcAmount } from './amount';
+
 export class TxOutput {
-  protected _value: bigint;
+  readonly amount: IAmount;
 
   // consume by conselect
   readonly script: Buffer;
 
-  readonly address: string;
+  readonly destination: IAddress;
 
-  constructor(value: bigint | number, address: string, script: Buffer) {
-    this.value = value;
-    this.address = address;
+  constructor(value: number, address: string, script: Buffer) {
+    this.amount = new BtcAmount(value);
+    this.destination = new BtcAddress(address);
     this.script = script;
   }
 
   // consume by conselect
   get value(): number {
-    return Number(this._value);
+    return this.amount.value;
   }
 
-  set value(value: bigint | number) {
-    if (typeof value === 'number') {
-      this._value = BigInt(value);
-    } else {
-      this._value = value;
-    }
+  set value(value: number) {
+    this.amount.value = value;
   }
 
-  get bigIntValue(): bigint {
-    return this._value;
+  get address(): string {
+    return this.destination.value;
   }
 }

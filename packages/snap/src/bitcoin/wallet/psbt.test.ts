@@ -3,19 +3,22 @@ import { Psbt, Transaction, networks } from 'bitcoinjs-lib';
 import { generateFormatedUtxos } from '../../../test/utils';
 import { hexToBuffer } from '../../utils';
 import { MaxStandardTxWeight, ScriptType } from '../constants';
-import { BtcAccountDeriver } from './deriver';
+import { BtcAccountBip32Deriver } from './deriver';
 import { PsbtServiceError } from './exceptions';
 import { PsbtService } from './psbt';
 import { TxInput } from './transaction-input';
 import { TxOutput } from './transaction-output';
 import { BtcWallet } from './wallet';
 
-jest.mock('../../utils/logger');
-jest.mock('../../utils/snap');
+jest.mock('../../libs/logger/logger');
+jest.mock('../../libs/snap/helpers');
 
 describe('PsbtService', () => {
   const createMockWallet = (network) => {
-    const instance = new BtcWallet(new BtcAccountDeriver(network), network);
+    const instance = new BtcWallet(
+      new BtcAccountBip32Deriver(network),
+      network,
+    );
     return {
       instance,
     };

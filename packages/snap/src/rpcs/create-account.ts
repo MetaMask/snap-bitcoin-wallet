@@ -1,36 +1,43 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
-import { object, type Infer } from 'superstruct';
+import type { Infer } from 'superstruct';
 
 import { Config } from '../config';
-import { BtcKeyring } from '../keyring';
-import { KeyringStateManager } from '../stateManagement';
-import { scopeStruct } from '../utils';
+import { BtcKeyring, KeyringStateManager } from '../keyring';
+import { SnapRpcHandlerRequestStruct, BaseSnapRpcHandler } from '../libs/rpc';
+import type {
+  IStaticSnapRpcHandler,
+  SnapRpcHandlerResponse,
+} from '../libs/rpc';
+import type { StaticImplements } from '../types/static';
 
-export const CreateAccountParamsStruct = object({
-  scope: scopeStruct,
-});
+export type CreateAccountParams = Infer<
+  typeof CreateAccountHandler.requestStruct
+>;
 
-export type CreateAccountParams = Infer<typeof CreateAccountParamsStruct>;
+export type CreateAccountResponse = SnapRpcHandlerResponse & KeyringAccount;
 
-export type CreateAccountResponse = KeyringAccount;
+export class CreateAccountHandler
+  extends BaseSnapRpcHandler
+  implements
+    StaticImplements<IStaticSnapRpcHandler, typeof CreateAccountHandler>
+{
+  static override get requestStruct() {
+    return SnapRpcHandlerRequestStruct;
+  }
 
-/**
- * Creates a new account with the specified parameters.
- *
- * @param params - The parameters for creating the account.
- * @returns A Promise that resolves to the new account.
- */
-export async function createAccount(
-  params: CreateAccountParams,
-): Promise<CreateAccountResponse> {
-  const keyring = new BtcKeyring(new KeyringStateManager(), {
-    defaultIndex: Config.wallet.defaultAccountIndex,
-    emitEvents: false,
-  });
+  async handleRequest(
+    params: CreateAccountParams,
+  ): Promise<CreateAccountResponse> {
+    const keyring = new BtcKeyring(new KeyringStateManager(), {
+      defaultIndex: Config.wallet[Config.chain].defaultAccountIndex,
+      multiAccount: Config.wallet[Config.chain].enableMultiAccounts,
+      emitEvents: false,
+    });
 
-  const account = await keyring.createAccount({
-    scope: params.scope,
-  });
+    const account = await keyring.createAccount({
+      scope: params.scope,
+    });
 
-  return account;
+    return account;
+  }
 }

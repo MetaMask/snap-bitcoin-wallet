@@ -1,35 +1,14 @@
 import type { Network, Payment } from 'bitcoinjs-lib';
 import type { Buffer } from 'buffer';
 
+import type { StaticImplements } from '../../types/static';
 import { hexToBuffer } from '../../utils';
-import type { IAccount, IAccountSigner } from '../../wallet';
+import type { IAccountSigner } from '../../wallet';
 import { ScriptType } from '../constants';
-import { getBtcPaymentInst } from '../utils';
-import type { StaticImplements } from './static';
+import { getBtcPaymentInst } from '../utils/payment';
+import type { IBtcAccount, IStaticBtcAccount } from './types';
 
-export type IBtcAccount = IAccount & {
-  payment: Payment;
-  scriptType: ScriptType;
-  network: Network;
-  script: Buffer;
-};
-
-export type IStaticBtcAccount = {
-  path: string[];
-  scriptType: ScriptType;
-  new (
-    mfp: string,
-    index: number,
-    hdPath: string,
-    pubkey: string,
-    network: Network,
-    scriptType: ScriptType,
-    type: string,
-    signer: IAccountSigner,
-  ): IBtcAccount;
-};
-
-export abstract class BtcAccount implements IBtcAccount {
+export class BtcAccount implements IBtcAccount {
   #address: string;
 
   #payment: Payment;

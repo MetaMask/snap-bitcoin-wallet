@@ -64,13 +64,3 @@ export function replaceMiddleChar(
     str.length - tailLength,
   )}`;
 }
-
-/**
- * Format the address in shorten string.
- *
- * @param address - The address to format.
- * @returns The formatted address.
- */
-export function shortenAddress(address: string) {
-  return replaceMiddleChar(address, 5, 3);
-}

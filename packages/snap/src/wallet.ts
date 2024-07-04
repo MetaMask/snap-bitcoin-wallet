@@ -3,7 +3,7 @@ import type { Buffer } from 'buffer';
 
 export type Recipient = {
   address: string;
-  value: bigint;
+  value: number;
 };
 
 export type Transaction = {
@@ -15,49 +15,53 @@ export type Transaction = {
  * An interface that defines a `toJson` method for getting a JSON representation of a transaction info object.
  */
 export type ITxInfo = {
-  sender: string;
-  change?: Recipient;
-  recipients: Recipient[];
-  total: bigint;
-  txFee: bigint;
-  feeRate: bigint;
+  /**
+   * Returns a JSON representation of the transaction info object.
+   *
+   * @returns The JSON representation of the transaction info object.
+   */
+  toJson<TxInfoJson extends Record<string, Json>>(): TxInfoJson;
 };
 
 /**
- * An interface that defines methods for unlocking accounts, signing transactions, and creating transactions.
+ * An interface that defines methods and properties for working with blockchain addresses.
  */
-export type IWallet = {
+export type IAddress = {
   /**
-   * Unlocks an account by index and script type.
-   *
-   * @param index - The index to derive from the node.
-   * @param type - The script type of the unlocked account, e.g. `bip122:p2pkh`.
-   * @returns A promise that resolves to an `IAccount` object.
+   * The string value of the address.
    */
-  unlock(index: number, type?: string): Promise<IAccount>;
+  value: string;
 
   /**
-   * Signs a transaction by the given encoded transaction string.
+   * Returns the string representation of the address.
    *
-   * @param signer - The `IAccountSigner` object to sign the transaction.
-   * @param transaction - The encoded transaction string to convert back to a transaction.
-   * @returns A promise that resolves to a string of the signed transaction.
+   * @param isShorten - A boolean indicating whether the address should be shortened.
+   * @returns The string representation of the address.
    */
-  signTransaction(signer: IAccountSigner, transaction: string): Promise<string>;
+  toString(isShorten?: boolean): string;
+};
+
+/**
+ * An interface that defines properties for working with amounts of cryptocurrency.
+ */
+export type IAmount = {
+  /**
+   * The numeric value of the amount.
+   */
+  value: number;
 
   /**
-   * Creates a transaction using the given account, transaction intent, and options.
-   *
-   * @param account - The `IAccount` object to create the transaction.
-   * @param recipients - The transaction recipients.
-   * @param options - The options to use when creating the transaction.
-   * @returns A promise that resolves to an object containing the transaction hash and transaction info.
+   * The unit of the amount, e.g. "BTC" or "ETH".
    */
-  createTransaction(
-    account: IAccount,
-    recipients: Recipient[],
-    options: Record<string, Json>,
-  ): Promise<Transaction>;
+  unit: string;
+
+  /**
+   * Returns the string representation of the amount, with or without the unit.
+   *
+   * @param withUnit - A boolean indicating whether to include the unit in the string representation.
+   * @returns The string representation of the amount.
+   */
+  toString(withUnit?: boolean): string;
 };
 
 /**
@@ -92,6 +96,43 @@ export type IAccount = {
    * The `IAccountSigner` object derived from the root node.
    */
   signer: IAccountSigner;
+};
+
+/**
+ * An interface that defines methods for unlocking accounts, signing transactions, and creating transactions.
+ */
+export type IWallet = {
+  /**
+   * Unlocks an account by index and script type.
+   *
+   * @param index - The index to derive from the node.
+   * @param type - The script type of the unlocked account, e.g. `bip122:p2pkh`.
+   * @returns A promise that resolves to an `IAccount` object.
+   */
+  unlock(index: number, type: string): Promise<IAccount>;
+
+  /**
+   * Signs a transaction by the given encoded transaction string.
+   *
+   * @param signer - The `IAccountSigner` object to sign the transaction.
+   * @param transaction - The encoded transaction string to convert back to a transaction.
+   * @returns A promise that resolves to a string of the signed transaction.
+   */
+  signTransaction(signer: IAccountSigner, transaction: string): Promise<string>;
+
+  /**
+   * Creates a transaction using the given account, transaction intent, and options.
+   *
+   * @param account - The `IAccount` object to create the transaction.
+   * @param recipients - The transaction recipients.
+   * @param options - The options to use when creating the transaction.
+   * @returns A promise that resolves to an object containing the transaction hash and transaction info.
+   */
+  createTransaction(
+    account: IAccount,
+    recipients: Recipient[],
+    options: Record<string, Json>,
+  ): Promise<Transaction>;
 };
 
 /**

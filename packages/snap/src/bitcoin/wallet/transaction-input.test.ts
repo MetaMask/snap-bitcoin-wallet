@@ -2,15 +2,18 @@ import { networks } from 'bitcoinjs-lib';
 
 import { generateFormatedUtxos } from '../../../test/utils';
 import { ScriptType } from '../constants';
-import { BtcAccountDeriver } from './deriver';
+import { BtcAccountBip32Deriver } from './deriver';
 import { TxInput } from './transaction-input';
 import { BtcWallet } from './wallet';
 
-jest.mock('../../utils/snap');
+jest.mock('../../libs/snap/helpers');
 
 describe('TxInput', () => {
   const createMockWallet = (network) => {
-    const instance = new BtcWallet(new BtcAccountDeriver(network), network);
+    const instance = new BtcWallet(
+      new BtcAccountBip32Deriver(network),
+      network,
+    );
     return {
       instance,
     };

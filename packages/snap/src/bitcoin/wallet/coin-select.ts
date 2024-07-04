@@ -3,13 +3,7 @@ import coinSelect from 'coinselect';
 import { TxValidationError } from './exceptions';
 import type { TxInput } from './transaction-input';
 import type { TxOutput } from './transaction-output';
-
-export type SelectionResult = {
-  change?: TxOutput;
-  fee: number;
-  inputs: TxInput[];
-  outputs: TxOutput[];
-};
+import { type SelectionResult } from './types';
 
 export class CoinSelectService {
   protected readonly _feeRate: number;
