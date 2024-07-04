@@ -1,8 +1,8 @@
-# Bitcoin Manager Snap Monorepo
+# Bitcoin Wallet Snap Monorepo
 
 ## Getting Started
 
-The Bitcoin Manager Snap allows MetaMask and dapp to manage account with Bitcoin network through the new Keyring API SDK to support an non-evm network integration.
+The Bitcoin Wallet Snap allows MetaMask and dapp to manage account with Bitcoin network through the new Keyring API SDK to support an non-evm network integration.
 
 ### Prerequisites
 

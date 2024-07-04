@@ -1,10 +1,10 @@
 {
-  "name": "@metamask/bitcoin",
+  "name": "@metamask/bitcoin-wallet-snap",
   "version": "0.1.2",
-  "description": "A MetaMask snap to manage Bitcoin",
+  "description": "A Bitcoin wallet Snap",
   "repository": {
     "type": "git",
-    "url": "https://github.com/MetaMask/bitcoin.git"
+    "url": "https://github.com/MetaMask/snap-bitcoin-wallet.git"
   },
   "license": "(MIT-0 OR Apache-2.0)",
   "main": "./dist/bundle.js",

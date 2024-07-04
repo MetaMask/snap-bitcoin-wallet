@@ -1,5 +1,5 @@
 {
-  "name": "example",
+  "name": "@metamask/bitcoin-wallet-test-dapp",
   "version": "0.1.2",
   "private": true,
   "description": "A sample dapp to test bitcoin snap.",
