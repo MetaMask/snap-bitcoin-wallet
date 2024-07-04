@@ -44,6 +44,12 @@ describe('hexToBuffer', () => {
       'Unable to convert hex string to buffer',
     );
   });
+
+  it('throws `Unable to convert hex string to buffer` error if the given string is not hex string', () => {
+    expect(() => hexToBuffer('hello123')).toThrow(
+      'Unable to convert hex string to buffer',
+    );
+  });
 });
 
 describe('bufferToString', () => {
