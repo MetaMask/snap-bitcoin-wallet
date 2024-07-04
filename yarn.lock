@@ -2778,9 +2778,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@metamask/bitcoin-wallet-test-dapp@workspace:packages/example":
+"@metamask/bitcoin-wallet-test-dapp@workspace:packages/site":
   version: 0.0.0-use.local
-  resolution: "@metamask/bitcoin-wallet-test-dapp@workspace:packages/example"
+  resolution: "@metamask/bitcoin-wallet-test-dapp@workspace:packages/site"
   dependencies:
     "@metamask/auto-changelog": ^3.4.4
     "@metamask/eslint-config": ^12.2.0
