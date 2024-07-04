@@ -38,7 +38,7 @@ yarn start
 
 ```bash
 # Running Snap via watch mode
-yarn workspace @metamask/bitcoin start
+yarn workspace @metamask/bitcoin-wallet-snap start
 ```
 
 Alternatively you can build and serve the snap manually. This can sometimes be more stable than watch mode but requires
@@ -46,8 +46,8 @@ a manual rebuild and serve anytime there is a change on the snap.
 
 ```bash
 # Building and serving snap manually
-yarn workspace @metamask/bitcoin build
-yarn workspace @metamask/bitcoin serve
+yarn workspace @metamask/bitcoin-wallet-snap build
+yarn workspace @metamask/bitcoin-wallet-snap serve
 ```
 
 ### Example UI
