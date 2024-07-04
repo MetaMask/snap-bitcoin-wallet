@@ -154,6 +154,20 @@ describe('onKeyringRequest', () => {
     }
   });
 
+  it('throws SnapError if an error catched', async () => {
+    const { handler } = createMockHandleKeyringRequest();
+    handler.mockRejectedValue(new Error('error'));
+
+    await expect(executeRequest()).rejects.toThrow(SnapError);
+  });
+
+  it('throws SnapError if an SnapError catched', async () => {
+    const { handler } = createMockHandleKeyringRequest();
+    handler.mockRejectedValue(new SnapError('error'));
+
+    await expect(executeRequest()).rejects.toThrow(SnapError);
+  });
+
   it('throws `Permission denied` error if the method is not match to the allowed list', async () => {
     for (const method of [
       keyringApi.KeyringRpcMethod.SubmitRequest,
@@ -176,19 +190,5 @@ describe('onKeyringRequest', () => {
         }),
       ).rejects.toThrow('Permission denied');
     }
-  });
-
-  it('throws SnapError if an error catched', async () => {
-    const { handler } = createMockHandleKeyringRequest();
-    handler.mockRejectedValue(new Error('error'));
-
-    await expect(executeRequest()).rejects.toThrow(SnapError);
-  });
-
-  it('throws SnapError if an SnapError catched', async () => {
-    const { handler } = createMockHandleKeyringRequest();
-    handler.mockRejectedValue(new SnapError('error'));
-
-    await expect(executeRequest()).rejects.toThrow(SnapError);
   });
 });
