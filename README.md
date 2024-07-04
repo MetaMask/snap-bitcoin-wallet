@@ -2,7 +2,7 @@
 
 ## Getting Started
 
-The Bitcoin Wallet Snap allows MetaMask and dapp to manage account with Bitcoin network through the new Keyring API SDK to support an non-evm network integration.
+The Bitcoin Wallet Snap allows MetaMask and dapp to manage account with Bitcoin network through the new Keyring API SDK that now supports non-EVM accounts.
 
 ### Prerequisites
 
