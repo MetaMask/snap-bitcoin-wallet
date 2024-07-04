@@ -172,6 +172,7 @@ export class BtcKeyring implements Keyring {
     );
 
     this.verifyIfAccountValid(account, walletData.account);
+    this.verifyIfMethodValid(method, walletData.account);
 
     switch (method) {
       case 'btc_sendmany':
@@ -248,6 +249,15 @@ export class BtcKeyring implements Keyring {
   ): void {
     if (!account || account.address !== keyringAccount.address) {
       throw new Error('Account not found');
+    }
+  }
+
+  protected verifyIfMethodValid(
+    method: string,
+    keyringAccount: KeyringAccount,
+  ): void {
+    if (!keyringAccount.methods.includes(method)) {
+      throw new Error('Forbidden Method');
     }
   }
 
