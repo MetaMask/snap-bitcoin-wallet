@@ -9,26 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.0]
 
-### Uncategorized
+### Added
 
-- chore: add 'ramps-dev.portfolio.metamask.io' origin ([#144](https://github.com/MetaMask/snap-bitcoin-wallet/pull/144))
-- chore: enable get balance api ([#126](https://github.com/MetaMask/snap-bitcoin-wallet/pull/126))
-- chore: move `dependencies` to `devDependencies` ([#129](https://github.com/MetaMask/snap-bitcoin-wallet/pull/129))
-- chore: rename "Bitcoin Manager" to "Bitcoin Wallet" ([#142](https://github.com/MetaMask/snap-bitcoin-wallet/pull/142))
-- chore: update readme and env example ([#111](https://github.com/MetaMask/snap-bitcoin-wallet/pull/111))
-- chore: simplify code structure batch 2 ([#110](https://github.com/MetaMask/snap-bitcoin-wallet/pull/110))
-- chore: refactor with simple version ([#108](https://github.com/MetaMask/snap-bitcoin-wallet/pull/108))
-- Update README.md
-- Update README.md ([#102](https://github.com/MetaMask/snap-bitcoin-wallet/pull/102))
-- chore: refinement batch2 ([#101](https://github.com/MetaMask/snap-bitcoin-wallet/pull/101))
-- chore: update protected property
-- chore: update send many ([#97](https://github.com/MetaMask/snap-bitcoin-wallet/pull/97))
-- feat: add selection result ([#96](https://github.com/MetaMask/snap-bitcoin-wallet/pull/96))
-- chore: Update README.md and comments ([#89](https://github.com/MetaMask/snap-bitcoin-wallet/pull/89))
-- chore: refinement ([#86](https://github.com/MetaMask/snap-bitcoin-wallet/pull/86))
-- Feat/implement chain api get transaction status ([#85](https://github.com/MetaMask/snap-bitcoin-wallet/pull/85))
-- chore: update get balances api ([#84](https://github.com/MetaMask/snap-bitcoin-wallet/pull/84))
-- chore: update send many dialog and convert txnJson to TransactionInfo Object ([#83](https://github.com/MetaMask/snap-bitcoin-wallet/pull/83))
+- Add 'ramps-dev.portfolio.metamask.io' origin ([#144](https://github.com/MetaMask/snap-bitcoin-wallet/pull/144))
+- Enable `getAccountBalances` method for Portfolio origins ([#126](https://github.com/MetaMask/snap-bitcoin-wallet/pull/126))
+- Implement Keyring API `getAccountBalances` method ([#84](https://github.com/MetaMask/snap-bitcoin-wallet/pull/84))
+- Implement Chain API `getTransactionStatus` method ([#85](https://github.com/MetaMask/snap-bitcoin-wallet/pull/85))
+
+### Changed
+
+- Rename "Bitcoin Manager" to "Bitcoin Wallet" ([#142](https://github.com/MetaMask/snap-bitcoin-wallet/pull/142))
+- Improve `btc_sendMany` implementation ([#97](https://github.com/MetaMask/snap-bitcoin-wallet/pull/97))
+- Update `btc_sendMany` dialogs ([#83](https://github.com/MetaMask/snap-bitcoin-wallet/pull/83))
 
 ## [0.1.2]
 
