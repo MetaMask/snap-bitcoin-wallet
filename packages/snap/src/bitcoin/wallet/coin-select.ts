@@ -49,6 +49,9 @@ export class CoinSelectService {
       if (output.address) {
         selectedResult.outputs.push(output);
       } else {
+        if (selectedResult.change !== undefined) {
+          throw new Error('Unexpected error, more than 1 output return');
+        }
         changeTo.value = output.value;
         selectedResult.change = changeTo;
       }
