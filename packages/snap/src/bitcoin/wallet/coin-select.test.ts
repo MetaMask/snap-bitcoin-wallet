@@ -4,6 +4,7 @@ import { generateFormatedUtxos } from '../../../test/utils';
 import { ScriptType } from '../constants';
 import { CoinSelectService } from './coin-select';
 import { BtcAccountBip32Deriver } from './deriver';
+import { SelectionResult } from './selection-result';
 import { TxInput } from './transaction-input';
 import { TxOutput } from './transaction-output';
 import { BtcWallet } from './wallet';
@@ -58,36 +59,10 @@ describe('CoinSelectService', () => {
 
       const coinSelectService = new CoinSelectService(1);
 
-      const result = coinSelectService.selectCoins(
-        inputs,
-        outputs,
-        new TxOutput(0, sender.address),
-      );
+      const result = coinSelectService.selectCoins(inputs, outputs, sender);
 
+      expect(result).toBeInstanceOf(SelectionResult);
       expect(result.fee).toBeGreaterThan(1);
-      expect(result.change).toBeDefined();
-      expect(result.inputs.length).toBeGreaterThan(0);
-      expect(result.outputs.length).toBeGreaterThan(0);
-    });
-
-    it('converts output to TxOutput', async () => {
-      const network = networks.testnet;
-      const { inputs, outputs, sender } = await prepareCoinSlect(network);
-
-      const coinSelectService = new CoinSelectService(1);
-
-      const result = coinSelectService.selectCoins(
-        inputs,
-        outputs.map((output) => ({
-          address: output.address,
-          value: output.value,
-        })),
-        new TxOutput(0, sender.address),
-      );
-
-      for (const output of result.outputs) {
-        expect(output).toBeInstanceOf(TxOutput);
-      }
     });
 
     it('throws `Insufficient funds` error if the given utxos is not sufficient', async () => {
@@ -102,11 +77,7 @@ describe('CoinSelectService', () => {
       const coinSelectService = new CoinSelectService(100);
 
       expect(() =>
-        coinSelectService.selectCoins(
-          inputs,
-          outputs,
-          new TxOutput(0, sender.address),
-        ),
+        coinSelectService.selectCoins(inputs, outputs, sender),
       ).toThrow('Insufficient funds');
     });
   });

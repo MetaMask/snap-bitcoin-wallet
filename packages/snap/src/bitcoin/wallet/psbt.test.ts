@@ -1,4 +1,4 @@
-import { Psbt, Transaction, networks } from 'bitcoinjs-lib';
+import { Transaction, networks } from 'bitcoinjs-lib';
 
 import { generateFormatedUtxos } from '../../../test/utils';
 import { hexToBuffer } from '../../utils';
@@ -32,14 +32,11 @@ describe('PsbtService', () => {
     const receiver1 = await wallet.instance.unlock(1, ScriptType.P2wpkh);
     const receiver2 = await wallet.instance.unlock(2, ScriptType.P2wpkh);
     const receivers = [receiver1, receiver2];
-    const finalizeSpy = jest.spyOn(Psbt.prototype, 'finalizeAllInputs');
-    const inputSpy = jest.spyOn(Psbt.prototype, 'addInput');
-    const outputSpy = jest.spyOn(Psbt.prototype, 'addOutput');
-    const signSpy = jest.spyOn(Psbt.prototype, 'signAllInputsHDAsync');
-    const verifySpy = jest.spyOn(
-      Psbt.prototype,
-      'validateSignaturesOfAllInputs',
-    );
+    const finalizeSpy = jest.spyOn(service.psbt, 'finalizeAllInputs');
+    const inputSpy = jest.spyOn(service.psbt, 'addInput');
+    const outputSpy = jest.spyOn(service.psbt, 'addOutput');
+    const signSpy = jest.spyOn(service.psbt, 'signAllInputsHDAsync');
+    const verifySpy = jest.spyOn(service.psbt, 'validateSignaturesOfAllInputs');
     const transactionWeightSpy = jest.spyOn(Transaction.prototype, 'weight');
     const transactionHexSpy = jest.spyOn(Transaction.prototype, 'toHex');
 
@@ -62,13 +59,7 @@ describe('PsbtService', () => {
 
     service.addOutputs(outputs);
 
-    service.addInputs(
-      inputs,
-      rbfOptIn,
-      sender.hdPath,
-      hexToBuffer(sender.pubkey, false),
-      hexToBuffer(sender.mfp, false),
-    );
+    service.addInputs(inputs, sender, rbfOptIn);
 
     return {
       service,
@@ -92,7 +83,7 @@ describe('PsbtService', () => {
 
       const service = new PsbtService(network);
 
-      expect(service.psbt).toBeInstanceOf(Psbt);
+      expect(service.psbt.txInputs).toHaveLength(0);
     });
 
     it('constructor with an psbt base string', async () => {
@@ -101,7 +92,8 @@ describe('PsbtService', () => {
 
       const newService = PsbtService.fromBase64(networks.testnet, psbtBase64);
 
-      expect(newService.psbt).toBeInstanceOf(Psbt);
+      expect(newService.psbt.txInputs).toHaveLength(2);
+      expect(newService.psbt.txOutputs).toHaveLength(2);
     });
   });
 
@@ -119,7 +111,7 @@ describe('PsbtService', () => {
           hash: inputs[i].txHash,
           index: inputs[i].index,
           witnessUtxo: {
-            script: inputs[i].script,
+            script: inputs[i].scriptBuf,
             value: inputs[i].value,
           },
           bip32Derivation: [
@@ -142,7 +134,7 @@ describe('PsbtService', () => {
           hash: inputs[i].txHash,
           index: inputs[i].index,
           witnessUtxo: {
-            script: inputs[i].script,
+            script: inputs[i].scriptBuf,
             value: inputs[i].value,
           },
           bip32Derivation: [
@@ -164,13 +156,7 @@ describe('PsbtService', () => {
       });
 
       expect(() => {
-        service.addInputs(
-          inputs,
-          false,
-          sender.hdPath,
-          hexToBuffer(sender.pubkey, false),
-          hexToBuffer(sender.mfp),
-        );
+        service.addInputs(inputs, sender, false);
       }).toThrow('Failed to add inputs in PSBT');
     });
   });
@@ -286,46 +272,6 @@ describe('PsbtService', () => {
       });
 
       expect(() => service.finalize()).toThrow(PsbtServiceError);
-    });
-  });
-
-  describe('signDummy', () => {
-    it('clones a psbt, then sign it and returns an PsbtService object', async () => {
-      const { service, sender } = await preparePsbt();
-
-      const signedService = await service.signDummy(sender.signer);
-
-      expect(signedService).toBeInstanceOf(PsbtService);
-    });
-
-    it('throws `Failed to sign dummy in PSBT` error if signDummy is failed', async () => {
-      const { service, sender, finalizeSpy } = await preparePsbt();
-
-      finalizeSpy.mockImplementation(() => {
-        throw new Error('error');
-      });
-
-      await expect(service.signDummy(sender.signer)).rejects.toThrow(
-        `Failed to sign dummy in PSBT`,
-      );
-    });
-  });
-
-  describe('getFee', () => {
-    it('extracts fee from the psbt', async () => {
-      const { service, sender } = await preparePsbt();
-
-      const signedService = await service.signDummy(sender.signer);
-
-      const fee = signedService.getFee();
-
-      expect(fee).toBeGreaterThan(0);
-    });
-
-    it('throws `Failed to get fee from PSBT` error if getFee is failed', async () => {
-      const { service } = await preparePsbt();
-
-      expect(() => service.getFee()).toThrow(`Failed to get fee from PSBT`);
     });
   });
 });

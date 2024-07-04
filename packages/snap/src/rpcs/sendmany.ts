@@ -6,7 +6,6 @@ import {
   text,
   heading,
   row,
-  panel,
 } from '@metamask/snaps-sdk';
 import {
   object,
@@ -180,27 +179,15 @@ export class SendManyHandler
     comment: string,
   ): Promise<boolean> {
     const header = `Send Request`;
-    const intro = `Review the request before proceeding. Once the transaction is made, it's irreversible.`;
+    const intro = `Review the request by [portfolio.metamask.io](https://portfolio.metamask.io/) before proceeding. Once the transaction is made, it's irreversible.`;
     const recipientsLabel = `Recipient`;
     const amountLabel = `Amount`;
     const commentLabel = `Comment`;
-    // const networkFeeRateLabel = `Network fee rate`;
+    const networkFeeRateLabel = `Network fee rate`;
     const networkFeeLabel = `Network fee`;
     const totalLabel = `Total`;
-    const requestedByLable = `Requested by`;
 
-    const components: Component[] = [
-      panel([
-        heading(header),
-        text(intro),
-        row(
-          requestedByLable,
-          text(`[portfolio.metamask.io](https://portfolio.metamask.io/)`),
-        ),
-      ]),
-      divider(),
-    ];
-
+    const components: Component[] = [heading(header), text(intro), divider()];
     const info = txInfo.toJson<TxJson>();
 
     const isMoreThanOneRecipient =
@@ -213,8 +200,7 @@ export class SendManyHandler
       explorerUrl: string;
       value: string;
     }) => {
-      const recipientsPanel: Component[] = [];
-      recipientsPanel.push(
+      components.push(
         row(
           isMoreThanOneRecipient
             ? `${recipientsLabel} ${i + 1}`
@@ -222,27 +208,23 @@ export class SendManyHandler
           text(`[${data.address}](${data.explorerUrl})`),
         ),
       );
-      recipientsPanel.push(row(amountLabel, text(data.value, false)));
-      i += 1;
-      components.push(panel(recipientsPanel));
+      components.push(row(amountLabel, text(data.value, false)));
       components.push(divider());
+      i += 1;
     };
 
     info.recipients.forEach(addReciptentsToComponents);
     info.changes.forEach(addReciptentsToComponents);
 
-    const bottomPanel: Component[] = [];
     if (comment.trim().length > 0) {
-      bottomPanel.push(row(commentLabel, text(comment.trim(), false)));
+      components.push(row(commentLabel, text(comment.trim())));
     }
 
-    bottomPanel.push(row(networkFeeLabel, text(`${info.txFee}`, false)));
+    components.push(row(networkFeeLabel, text(`${info.txFee}`, false)));
 
-    // bottomPanel.push(row(networkFeeRateLabel, text(`${info.feeRate}`, false)));
+    components.push(row(networkFeeRateLabel, text(`${info.feeRate}`, false)));
 
-    bottomPanel.push(row(totalLabel, text(`${info.total}`, false)));
-
-    components.push(panel(bottomPanel));
+    components.push(row(totalLabel, text(`${info.total}`, false)));
 
     return (await SnapHelper.confirmDialog(components)) as boolean;
   }
