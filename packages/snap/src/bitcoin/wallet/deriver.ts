@@ -10,20 +10,20 @@ import { DeriverError } from './exceptions';
 import type { IBtcAccountDeriver } from './types';
 
 export abstract class BtcAccountDeriver implements IBtcAccountDeriver {
-  protected readonly _network: Network;
+  protected readonly network: Network;
 
-  protected readonly _bip32Api: BIP32API;
+  protected readonly bip32Api: BIP32API;
 
   constructor(network: Network) {
-    this._bip32Api = BIP32Factory(ecc);
-    this._network = network;
+    this.bip32Api = BIP32Factory(ecc);
+    this.network = network;
   }
 
   abstract getRoot(path: string[]): Promise<BIP32Interface>;
 
   createBip32FromSeed(seed: Buffer): BIP32Interface {
     try {
-      return this._bip32Api.fromSeed(seed, this._network);
+      return this.bip32Api.fromSeed(seed, this.network);
     } catch (error) {
       throw new DeriverError('Unable to construct BIP32 node from seed');
     }
@@ -34,11 +34,7 @@ export abstract class BtcAccountDeriver implements IBtcAccountDeriver {
     chainNode: Buffer,
   ): BIP32Interface {
     try {
-      return this._bip32Api.fromPrivateKey(
-        privateKey,
-        chainNode,
-        this._network,
-      );
+      return this.bip32Api.fromPrivateKey(privateKey, chainNode, this.network);
     } catch (error) {
       throw new DeriverError('Unable to construct BIP32 node from private key');
     }

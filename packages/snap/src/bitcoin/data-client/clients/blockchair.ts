@@ -205,14 +205,14 @@ export type PostTransactionResponse = {
 /* eslint-disable */
 
 export class BlockChairClient implements IReadDataClient, IWriteDataClient {
-  protected readonly _options: BlockChairClientOptions;
+  options: BlockChairClientOptions;
 
   constructor(options: BlockChairClientOptions) {
-    this._options = options;
+    this.options = options;
   }
 
   get baseUrl(): string {
-    switch (this._options.network) {
+    switch (this.options.network) {
       case networks.bitcoin:
         return 'https://api.blockchair.com/bitcoin';
       case networks.testnet:
@@ -225,8 +225,8 @@ export class BlockChairClient implements IReadDataClient, IWriteDataClient {
   protected getApiUrl(endpoint: string): string {
     const url = new URL(`${this.baseUrl}${endpoint}`);
     // TODO: Update to proxy
-    if (this._options.apiKey) {
-      url.searchParams.append('key', this._options.apiKey);
+    if (this.options.apiKey) {
+      url.searchParams.append('key', this.options.apiKey);
     }
     return url.toString();
   }
