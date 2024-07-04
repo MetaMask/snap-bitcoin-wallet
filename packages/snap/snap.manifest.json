@@ -1,6 +1,6 @@
 {
   "version": "0.1.2",
-  "description": "A MetaMask snap to manage Bitcoin",
+  "description": "A Bitcoin wallet Snap.",
   "proposedName": "Bitcoin Wallet",
   "repository": {
     "type": "git",
