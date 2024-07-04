@@ -6,8 +6,8 @@ import {
   generateBlockChairBroadcastTransactionResp,
   generateBlockChairGetUtxosResp,
 } from '../../../test/utils';
+import { FeeRatio, TransactionStatus } from '../../chain';
 import { Caip2Asset } from '../../constants';
-import { FeeRatio, TransactionStatus } from './constants';
 import type { IDataClient } from './data-client';
 import { BtcOnChainServiceError } from './exceptions';
 import { BtcOnChainService } from './service';
@@ -127,8 +127,9 @@ describe('BtcOnChainService', () => {
     it('calls getUtxos with readClient', async () => {
       const { instance, getUtxosSpy } = createMockDataClient();
       const { instance: txService } = createMockBtcService(instance);
-      const accounts = generateAccounts(1);
+      const accounts = generateAccounts(2);
       const sender = accounts[0].address;
+      const receiver = accounts[1].address;
       const mockResponse = generateBlockChairGetUtxosResp(sender, 10);
       const utxos = mockResponse.data[sender].utxo.map((utxo) => ({
         block: utxo.block_id,
@@ -139,7 +140,13 @@ describe('BtcOnChainService', () => {
 
       getUtxosSpy.mockResolvedValue(utxos);
 
-      const result = await txService.getDataForTransaction(sender);
+      const result = await txService.getDataForTransaction(sender, {
+        amounts: {
+          [receiver]: 100,
+        },
+        subtractFeeFrom: [],
+        replaceable: true,
+      });
 
       expect(getUtxosSpy).toHaveBeenCalledWith(sender);
       expect(result).toStrictEqual({
@@ -152,14 +159,21 @@ describe('BtcOnChainService', () => {
     it('throws error if readClient fail', async () => {
       const { instance, getUtxosSpy } = createMockDataClient();
       const { instance: txService } = createMockBtcService(instance);
-      const accounts = generateAccounts(1);
+      const accounts = generateAccounts(2);
       const sender = accounts[0].address;
+      const receiver = accounts[1].address;
 
       getUtxosSpy.mockRejectedValue(new Error('error'));
 
-      await expect(txService.getDataForTransaction(sender)).rejects.toThrow(
-        BtcOnChainServiceError,
-      );
+      await expect(
+        txService.getDataForTransaction(sender, {
+          amounts: {
+            [receiver]: 100,
+          },
+          subtractFeeFrom: [],
+          replaceable: true,
+        }),
+      ).rejects.toThrow(BtcOnChainServiceError);
     });
   });
 

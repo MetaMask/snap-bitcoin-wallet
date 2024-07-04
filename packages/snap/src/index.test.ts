@@ -7,7 +7,7 @@ import {
 
 import { onRpcRequest, validateOrigin, onKeyringRequest } from '.';
 import * as entry from '.';
-import { TransactionStatus } from './bitcoin/chain';
+import { TransactionStatus } from './chain';
 import { Config } from './config';
 import { BtcKeyring } from './keyring';
 import { originPermissions } from './permissions';

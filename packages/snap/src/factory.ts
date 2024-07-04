@@ -1,10 +1,13 @@
 import { BtcOnChainService } from './bitcoin/chain';
 import { BlockChairClient } from './bitcoin/chain/clients/blockchair';
-import { BtcAccountDeriver, BtcWallet, getBtcNetwork } from './bitcoin/wallet';
+import { getBtcNetwork } from './bitcoin/utils';
+import { BtcAccountDeriver, BtcWallet } from './bitcoin/wallet';
+import type { IOnChainService } from './chain';
 import { Config } from './config';
+import type { IWallet } from './wallet';
 
 export class Factory {
-  static createOnChainServiceProvider(scope: string): BtcOnChainService {
+  static createOnChainServiceProvider(scope: string): IOnChainService {
     const btcNetwork = getBtcNetwork(scope);
 
     const client = new BlockChairClient({
@@ -17,7 +20,7 @@ export class Factory {
     });
   }
 
-  static createWallet(scope: string): BtcWallet {
+  static createWallet(scope: string): IWallet {
     const btcNetwork = getBtcNetwork(scope);
     return new BtcWallet(new BtcAccountDeriver(btcNetwork), btcNetwork);
   }

@@ -2,10 +2,10 @@ import type { Network, Payment } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 import { Buffer } from 'buffer';
 
+import type { IAccountSigner } from '../../wallet';
+import { ScriptType } from '../constants';
+import * as utils from '../utils/payment';
 import { P2WPKHAccount } from './account';
-import { ScriptType } from './constants';
-import type { AccountSigner } from './signer';
-import * as utils from './utils/payment';
 
 describe('BtcAccount', () => {
   const createMockPaymentInstance = (address: string | undefined) => {
@@ -31,7 +31,7 @@ describe('BtcAccount', () => {
       network,
       P2WPKHAccount.scriptType,
       `bip122:${P2WPKHAccount.scriptType.toLowerCase()}`,
-      { sign: signerSpy } as unknown as AccountSigner,
+      { sign: signerSpy } as unknown as IAccountSigner,
     );
 
     return {
