@@ -1,8 +1,12 @@
+import type { Network } from 'bitcoinjs-lib';
+
 import { replaceMiddleChar } from '../../utils';
 import type { IAddress } from '../../wallet';
 
 export class BtcAddress implements IAddress {
   value: string;
+
+  network?: Network;
 
   constructor(address: string) {
     this.value = address;

@@ -1,21 +1,26 @@
 import type { Buffer } from 'buffer';
 
+import { bufferToString } from '../../utils';
 import type { IAmount } from '../../wallet';
 import { BtcAmount } from './amount';
 import type { Utxo } from './types';
 
 export class TxInput {
-  // consume by coinselect
-  readonly script: Buffer;
+  scriptBuf: Buffer;
 
-  readonly amount: IAmount;
+  amount: IAmount;
 
-  readonly utxo: Utxo;
+  utxo: Utxo;
 
   constructor(utxo: Utxo, script: Buffer) {
-    this.script = script;
+    this.scriptBuf = script;
     this.utxo = utxo;
     this.amount = new BtcAmount(utxo.value);
+  }
+
+  // consume by coinselect
+  get script(): string {
+    return bufferToString(this.scriptBuf, 'hex');
   }
 
   // consume by coinselect

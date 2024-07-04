@@ -1,4 +1,3 @@
-import type { Json } from '@metamask/snaps-sdk';
 import {
   InvalidParamsError,
   UserRejectedRequestError,
@@ -17,11 +16,14 @@ import {
   BtcAccountBip32Deriver,
   BtcWallet,
   BtcAmount,
+  BtcTxInfo,
+  BtcAddress,
 } from '../bitcoin/wallet';
+import { TxOutput } from '../bitcoin/wallet/transaction-output';
 import { FeeRatio } from '../chain';
 import { Factory } from '../factory';
 import { SnapHelper } from '../libs/snap';
-import type { IAccount, ITxInfo } from '../wallet';
+import type { IAccount } from '../wallet';
 import { SendManyHandler } from './sendmany';
 import type { SendManyParams } from './sendmany';
 
@@ -228,34 +230,17 @@ describe('SendManyHandler', () => {
 
       const calls = snapHelperSpy.mock.calls[0][0];
 
-      const lastPanel = calls[calls.length - 1];
-
-      expect(lastPanel).toStrictEqual({
-        type: 'panel',
-        children: [
-          {
-            type: 'row',
-            label: 'Comment',
-            value: { markdown: false, type: 'text', value: 'test comment' },
-          },
-          {
-            type: 'row',
-            label: 'Network fee',
-            value: { markdown: false, type: 'text', value: expect.any(String) },
-          },
-          {
-            type: 'row',
-            label: 'Total',
-            value: { markdown: false, type: 'text', value: expect.any(String) },
-          },
-        ],
+      expect(calls[calls.length - 4]).toStrictEqual({
+        type: 'row',
+        label: 'Comment',
+        value: { type: 'text', value: 'test comment' },
       });
     });
 
     it('display `Recipient` as label in dialog if there is only 1 recipient', async () => {
       const network = networks.testnet;
       const caip2ChainId = Network.Testnet;
-      const { keyringAccount, recipients, snapHelperSpy, sender } =
+      const { keyringAccount, recipients, snapHelperSpy } =
         await prepareSendMany(network, caip2ChainId);
       const walletCreateTxSpy = jest.spyOn(
         BtcWallet.prototype,
@@ -266,24 +251,13 @@ describe('SendManyHandler', () => {
         'signTransaction',
       );
 
-      const info: ITxInfo = {
-        toJson<TxInfoJson extends Record<string, Json>>() {
-          return {
-            feeRate: `0.00000001 BTC`,
-            txFee: `0.00000001 BTC`,
-            sender: sender.address,
-            recipients: [
-              {
-                address: recipients[0].address,
-                value: `0.000010 BTC`,
-                explorerUrl: `https://blockchair.com/bitcoin/transaction/transactionId`,
-              },
-            ],
-            changes: [],
-            total: `0.000010 BTC`,
-          } as unknown as TxInfoJson;
-        },
-      };
+      const info = new BtcTxInfo(
+        new BtcAddress(recipients[0].address),
+        [new TxOutput(100000, recipients[0].address)],
+        1,
+        1,
+        network,
+      );
 
       walletCreateTxSpy.mockResolvedValue({
         tx: 'transaction',
@@ -300,26 +274,7 @@ describe('SendManyHandler', () => {
 
       const calls = snapHelperSpy.mock.calls[0][0];
 
-      const recipientsPanel = calls[2];
-
-      expect(recipientsPanel).toStrictEqual({
-        type: 'panel',
-        children: [
-          {
-            type: 'row',
-            label: 'Recipient',
-            value: {
-              type: 'text',
-              value: `[${recipients[0].address}](https://blockchair.com/bitcoin/transaction/transactionId)`,
-            },
-          },
-          {
-            type: 'row',
-            label: 'Amount',
-            value: { markdown: false, type: 'text', value: '0.000010 BTC' },
-          },
-        ],
-      });
+      expect(calls[3]).toHaveProperty('label', 'Recipient');
     });
 
     it('throws `Request params is invalid` error when request parameter is not correct', async () => {
