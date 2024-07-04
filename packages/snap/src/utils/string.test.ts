@@ -68,6 +68,15 @@ describe('replaceMiddleChar', () => {
   it('does not replace if the string is empty', () => {
     expect(replaceMiddleChar('', 5, 3)).toBe('');
   });
+
+  it('throws error if the headLength + tailLength exceed the string length', () => {
+    expect(() => replaceMiddleChar(str, 100, 0)).toThrow(
+      'The sum of headLength and tailLength should be less than the length of the string',
+    );
+    expect(() => replaceMiddleChar(str, 0, 100)).toThrow(
+      'The sum of headLength and tailLength should be less than the length of the string',
+    );
+  });
 });
 
 describe('shortenAddress', () => {
