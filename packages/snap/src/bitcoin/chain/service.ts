@@ -19,24 +19,24 @@ import { BtcOnChainServiceError } from './exceptions';
 import type { BtcOnChainServiceOptions } from './types';
 
 export class BtcOnChainService implements IOnChainService {
-  protected readonly _readClient: IReadDataClient;
+  protected readonly readClient: IReadDataClient;
 
-  protected readonly _writeClient: IWriteDataClient;
+  protected readonly writeClient: IWriteDataClient;
 
-  protected readonly _options: BtcOnChainServiceOptions;
+  protected readonly options: BtcOnChainServiceOptions;
 
   constructor(
     readClient: IReadDataClient,
     writeClient: IWriteDataClient,
     options: BtcOnChainServiceOptions,
   ) {
-    this._readClient = readClient;
-    this._writeClient = writeClient;
-    this._options = options;
+    this.readClient = readClient;
+    this.writeClient = writeClient;
+    this.options = options;
   }
 
   get network(): Network {
-    return this._options.network;
+    return this.options.network;
   }
 
   async getBalances(
@@ -58,7 +58,7 @@ export class BtcOnChainService implements IOnChainService {
         throw new BtcOnChainServiceError('Invalid asset');
       }
 
-      const balance: Balances = await this._readClient.getBalances(addresses);
+      const balance: Balances = await this.readClient.getBalances(addresses);
 
       return addresses.reduce<AssetBalances>(
         (acc: AssetBalances, address: string) => {
@@ -78,7 +78,7 @@ export class BtcOnChainService implements IOnChainService {
 
   async getFeeRates(): Promise<Fees> {
     try {
-      const result = await this._readClient.getFeeRates();
+      const result = await this.readClient.getFeeRates();
 
       return {
         fees: Object.entries(result).map(
@@ -95,7 +95,7 @@ export class BtcOnChainService implements IOnChainService {
 
   async getTransactionStatus(txHash: string) {
     try {
-      return await this._readClient.getTransactionStatus(txHash);
+      return await this.readClient.getTransactionStatus(txHash);
     } catch (error) {
       throw new BtcOnChainServiceError(error);
     }
@@ -107,7 +107,7 @@ export class BtcOnChainService implements IOnChainService {
     transactionIntent?: TransactionIntent,
   ): Promise<TransactionData> {
     try {
-      const data = await this._readClient.getUtxos(address);
+      const data = await this.readClient.getUtxos(address);
       return {
         data: {
           utxos: data,
@@ -122,7 +122,7 @@ export class BtcOnChainService implements IOnChainService {
     signedTransaction: string,
   ): Promise<CommitedTransaction> {
     try {
-      const transactionId = await this._writeClient.sendTransaction(
+      const transactionId = await this.writeClient.sendTransaction(
         signedTransaction,
       );
       return {

@@ -30,25 +30,25 @@ import {
 } from './types';
 
 export class BtcKeyring implements Keyring {
-  protected readonly _stateMgr: KeyringStateManager;
+  protected readonly stateMgr: KeyringStateManager;
 
-  protected readonly _options: KeyringOptions;
+  protected readonly options: KeyringOptions;
 
-  protected readonly _keyringMethods: string[];
+  protected readonly keyringMethods: string[];
 
-  protected readonly _handlers: ChainRPCHandlers;
+  protected readonly handlers: ChainRPCHandlers;
 
   constructor(stateMgr: KeyringStateManager, options: KeyringOptions) {
-    this._stateMgr = stateMgr;
-    this._options = options;
+    this.stateMgr = stateMgr;
+    this.options = options;
     const mapping = RpcHelper.getKeyringRpcApiHandlers();
-    this._keyringMethods = Object.keys(mapping);
-    this._handlers = mapping;
+    this.keyringMethods = Object.keys(mapping);
+    this.handlers = mapping;
   }
 
   async listAccounts(): Promise<KeyringAccount[]> {
     try {
-      return await this._stateMgr.listAccounts();
+      return await this.stateMgr.listAccounts();
     } catch (error) {
       throw new BtcKeyringError(error);
     }
@@ -56,7 +56,7 @@ export class BtcKeyring implements Keyring {
 
   async getAccount(id: string): Promise<KeyringAccount | undefined> {
     try {
-      return (await this._stateMgr.getAccount(id)) ?? undefined;
+      return (await this.stateMgr.getAccount(id)) ?? undefined;
     } catch (error) {
       throw new BtcKeyringError(error);
     }
@@ -90,8 +90,8 @@ export class BtcKeyring implements Keyring {
         )}`,
       );
 
-      await this._stateMgr.withTransaction(async () => {
-        await this._stateMgr.addWallet({
+      await this.stateMgr.withTransaction(async () => {
+        await this.stateMgr.addWallet({
           account: keyringAccount,
           hdPath: account.hdPath,
           index: account.index,
@@ -121,8 +121,8 @@ export class BtcKeyring implements Keyring {
 
   async updateAccount(account: KeyringAccount): Promise<void> {
     try {
-      await this._stateMgr.withTransaction(async () => {
-        await this._stateMgr.updateAccount(account);
+      await this.stateMgr.withTransaction(async () => {
+        await this.stateMgr.updateAccount(account);
         await this.#emitEvent(KeyringEvent.AccountUpdated, { account });
       });
     } catch (error) {
@@ -134,8 +134,8 @@ export class BtcKeyring implements Keyring {
 
   async deleteAccount(id: string): Promise<void> {
     try {
-      await this._stateMgr.withTransaction(async () => {
-        await this._stateMgr.removeAccounts([id]);
+      await this.stateMgr.withTransaction(async () => {
+        await this.stateMgr.removeAccounts([id]);
         await this.#emitEvent(KeyringEvent.AccountDeleted, { id });
       });
     } catch (error) {
@@ -162,7 +162,7 @@ export class BtcKeyring implements Keyring {
     const { scope, account } = request;
     const { method, params } = request.request;
 
-    if (!Object.prototype.hasOwnProperty.call(this._handlers, method)) {
+    if (!Object.prototype.hasOwnProperty.call(this.handlers, method)) {
       throw new MethodNotFoundError() as unknown as Error;
     }
 
@@ -174,7 +174,7 @@ export class BtcKeyring implements Keyring {
       );
     }
 
-    return this._handlers[method].getInstance(walletData).execute({
+    return this.handlers[method].getInstance(walletData).execute({
       ...params,
       scope,
     } as unknown as SnapRpcHandlerRequest);
@@ -185,7 +185,7 @@ export class BtcKeyring implements Keyring {
     data: Record<string, Json>,
   ): Promise<void> {
     // TODO: Temp solution to support keyring in snap without extentions support
-    if (this._options.emitEvents) {
+    if (this.options.emitEvents) {
       await emitSnapKeyringEvent(SnapHelper.provider, event, data);
     }
   }
@@ -201,7 +201,7 @@ export class BtcKeyring implements Keyring {
       options: {
         ...options,
       },
-      methods: this._keyringMethods,
+      methods: this.keyringMethods,
     } as unknown as KeyringAccount;
   }
 
@@ -224,7 +224,7 @@ export class BtcKeyring implements Keyring {
   }
 
   protected async getAndVerifyWallet(id: string) {
-    const walletData = await this._stateMgr.getWallet(id);
+    const walletData = await this.stateMgr.getWallet(id);
 
     if (!walletData) {
       throw new Error('Account not found');

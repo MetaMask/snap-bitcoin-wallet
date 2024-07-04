@@ -15,21 +15,21 @@ import type { TxOutput } from './transaction-output';
 const ECPair = ECPairFactory(ecc);
 
 export class PsbtService {
-  protected _psbt: Psbt;
+  #psbt: Psbt;
 
-  protected _network: Network;
+  #network: Network;
 
   get psbt() {
-    return this._psbt;
+    return this.#psbt;
   }
 
   constructor(network: Network, psbt?: Psbt) {
     if (psbt === undefined) {
-      this._psbt = new Psbt({ network });
+      this.#psbt = new Psbt({ network });
     } else {
-      this._psbt = psbt;
+      this.#psbt = psbt;
     }
-    this._network = network;
+    this.#network = network;
   }
 
   static fromBase64(network: Network, base64Psbt: string): PsbtService {
@@ -46,7 +46,7 @@ export class PsbtService {
     changeAddressMfp: Buffer,
   ) {
     try {
-      this._psbt.addInput({
+      this.#psbt.addInput({
         hash: input.txHash,
         index: input.index,
         witnessUtxo: {
@@ -103,7 +103,7 @@ export class PsbtService {
 
   addOutput(output: TxOutput) {
     try {
-      this._psbt.addOutput({
+      this.#psbt.addOutput({
         address: output.address,
         value: output.value,
       });
@@ -126,7 +126,7 @@ export class PsbtService {
 
   getFee(): number {
     try {
-      return this._psbt.getFee();
+      return this.#psbt.getFee();
     } catch (error) {
       logger.error('Failed to get fee', error);
       throw new PsbtServiceError('Failed to get fee from PSBT');
@@ -135,10 +135,10 @@ export class PsbtService {
 
   async signDummy(signer: IAccountSigner): Promise<PsbtService> {
     try {
-      const psbt = this._psbt.clone();
+      const psbt = this.#psbt.clone();
       await psbt.signAllInputsHDAsync(signer);
       psbt.finalizeAllInputs();
-      return new PsbtService(this._network, psbt);
+      return new PsbtService(this.#network, psbt);
     } catch (error) {
       logger.error('Failed to sign dummy', error);
       throw new PsbtServiceError('Failed to sign dummy in PSBT');
@@ -147,7 +147,7 @@ export class PsbtService {
 
   toBase64(): string {
     try {
-      return this._psbt.toBase64();
+      return this.#psbt.toBase64();
     } catch (error) {
       logger.error('Failed to convert to base64', error);
       throw new PsbtServiceError('Failed to output PSBT string');
@@ -159,10 +159,10 @@ export class PsbtService {
       // This function signAllInputsHDAsync is used to sign all inputs with the signer.
       // When using the method signAllInputsHDAsync, it is important to note that the signer must derive from the root node as well as the finderprint.
       // For further reference, please see the getHdSigner method in BtcWallet.
-      await this._psbt.signAllInputsHDAsync(signer);
+      await this.#psbt.signAllInputsHDAsync(signer);
 
       if (
-        !this._psbt.validateSignaturesOfAllInputs(
+        !this.#psbt.validateSignaturesOfAllInputs(
           (pubkey: Buffer, msghash: Buffer, signature: Buffer) =>
             this.validateInputs(pubkey, msghash, signature),
         )
@@ -178,11 +178,11 @@ export class PsbtService {
 
   finalize(): string {
     try {
-      this._psbt.finalizeAllInputs();
+      this.#psbt.finalizeAllInputs();
 
-      const txHex = this._psbt.extractTransaction().toHex();
+      const txHex = this.#psbt.extractTransaction().toHex();
 
-      const weight = this._psbt.extractTransaction().weight();
+      const weight = this.#psbt.extractTransaction().weight();
 
       if (weight > MaxStandardTxWeight) {
         throw new TxValidationError('Transaction is too large');

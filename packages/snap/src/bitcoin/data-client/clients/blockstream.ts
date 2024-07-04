@@ -71,13 +71,13 @@ export type GetBlocksResponse = {
 /* eslint-enable */
 
 export class BlockStreamClient implements IReadDataClient {
-  protected readonly _options: BlockStreamClientOptions;
+  protected readonly options: BlockStreamClientOptions;
 
-  protected readonly _feeRateRatioMap: Record<FeeRatio, string>;
+  protected readonly feeRateRatioMap: Record<FeeRatio, string>;
 
   constructor(options: BlockStreamClientOptions) {
-    this._options = options;
-    this._feeRateRatioMap = {
+    this.options = options;
+    this.feeRateRatioMap = {
       [FeeRatio.Fast]: '1',
       [FeeRatio.Medium]: '144',
       [FeeRatio.Slow]: '144',
@@ -85,7 +85,7 @@ export class BlockStreamClient implements IReadDataClient {
   }
 
   get baseUrl(): string {
-    switch (this._options.network) {
+    switch (this.options.network) {
       case networks.bitcoin:
         return 'https://blockstream.info/api';
       case networks.testnet:
@@ -184,13 +184,13 @@ export class BlockStreamClient implements IReadDataClient {
       );
       return {
         [FeeRatio.Fast]: Math.round(
-          response[this._feeRateRatioMap[FeeRatio.Fast]],
+          response[this.feeRateRatioMap[FeeRatio.Fast]],
         ),
         [FeeRatio.Medium]: Math.round(
-          response[this._feeRateRatioMap[FeeRatio.Medium]],
+          response[this.feeRateRatioMap[FeeRatio.Medium]],
         ),
         [FeeRatio.Slow]: Math.round(
-          response[this._feeRateRatioMap[FeeRatio.Slow]],
+          response[this.feeRateRatioMap[FeeRatio.Slow]],
         ),
       };
     } catch (error) {

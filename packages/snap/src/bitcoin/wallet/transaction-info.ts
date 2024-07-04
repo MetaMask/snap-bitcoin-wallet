@@ -14,23 +14,23 @@ export class BtcTxInfo implements ITxInfo {
 
   change?: TxOutput;
 
-  protected _recipients: TxOutput[];
+  #recipients: TxOutput[];
 
-  protected _feeRate: BtcAmount;
+  #feeRate: BtcAmount;
 
-  protected _outputTotal: BtcAmount;
+  #outputTotal: BtcAmount;
 
-  protected _serializedRecipients: Json[];
+  #serializedRecipients: Json[];
 
-  protected _network: Network;
+  #network: Network;
 
   constructor(sender: BtcAddress, feeRate: number, network: Network) {
-    this._recipients = [];
-    this._serializedRecipients = [];
-    this._outputTotal = new BtcAmount(0);
-    this._feeRate = new BtcAmount(feeRate);
+    this.#recipients = [];
+    this.#serializedRecipients = [];
+    this.#outputTotal = new BtcAmount(0);
+    this.#feeRate = new BtcAmount(feeRate);
     this.txFee = new BtcAmount(0);
-    this._network = network;
+    this.#network = network;
     this.sender = sender;
   }
 
@@ -42,7 +42,7 @@ export class BtcTxInfo implements ITxInfo {
             value: this.change.amount.toString(true),
             explorerUrl: getExplorerUrl(
               this.change.destination.value,
-              getCaip2ChainId(this._network),
+              getCaip2ChainId(this.#network),
             ),
           },
         ]
@@ -56,34 +56,34 @@ export class BtcTxInfo implements ITxInfo {
   }
 
   addRecipient(output: TxOutput): void {
-    this._outputTotal.value += output.value;
+    this.#outputTotal.value += output.value;
 
-    this._recipients.push(output);
+    this.#recipients.push(output);
 
-    this._serializedRecipients.push({
+    this.#serializedRecipients.push({
       address: output.destination.toString(true),
       value: output.amount.toString(true),
       explorerUrl: getExplorerUrl(
         output.destination.value,
-        getCaip2ChainId(this._network),
+        getCaip2ChainId(this.#network),
       ),
     });
   }
 
   get total(): BtcAmount {
     return new BtcAmount(
-      this._outputTotal.value +
+      this.#outputTotal.value +
         (this.change ? this.change.value : 0) +
         this.txFee.value,
     );
   }
 
   get feeRate(): BtcAmount {
-    return this._feeRate;
+    return this.#feeRate;
   }
 
   get recipients(): TxOutput[] {
-    return this._recipients;
+    return this.#recipients;
   }
 
   get fee(): number {
@@ -96,10 +96,10 @@ export class BtcTxInfo implements ITxInfo {
 
   toJson<InfoJson extends Record<string, Json>>(): InfoJson {
     return {
-      feeRate: this._feeRate.toString(true),
+      feeRate: this.#feeRate.toString(true),
       txFee: this.txFee.toString(true),
       sender: this.sender.toString(),
-      recipients: this._serializedRecipients,
+      recipients: this.#serializedRecipients,
       changes: this.changeToJson(),
       total: this.total.toString(true),
     } as unknown as InfoJson;
