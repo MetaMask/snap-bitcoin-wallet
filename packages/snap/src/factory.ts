@@ -13,7 +13,7 @@ import { Config } from './config';
 import { BtcKeyring, KeyringStateManager } from './keyring';
 import type { IWallet } from './wallet';
 
-// TODO: Remove temp solution to support keyring in snap without keyring API
+// TODO: Temp solution to support keyring in snap without keyring API
 export type CreateBtcKeyringOptions = {
   emitEvents: boolean;
 };
@@ -43,7 +43,7 @@ export class Factory {
     return new BtcKeyring(new KeyringStateManager(), {
       defaultIndex: config.defaultAccountIndex,
       multiAccount: config.enableMultiAccounts,
-      // TODO: Remove temp solution to support keyring in snap without keyring API
+      // TODO: Temp solution to support keyring in snap without keyring API
       emitEvents: options.emitEvents,
     });
   }

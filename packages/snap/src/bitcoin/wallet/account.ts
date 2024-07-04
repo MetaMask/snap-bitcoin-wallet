@@ -1,5 +1,4 @@
 import type { Network, Payment } from 'bitcoinjs-lib';
-import type { Buffer } from 'buffer';
 
 import type { StaticImplements } from '../../types/static';
 import { hexToBuffer } from '../../utils';
@@ -47,11 +46,6 @@ export class BtcAccount implements IBtcAccount {
     this.scriptType = scriptType;
     this.signer = signer;
     this.type = type;
-  }
-
-  get script(): Buffer {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return this.payment.output!;
   }
 
   get address(): string {
