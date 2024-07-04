@@ -21,43 +21,6 @@ jest.mock('@metamask/keyring-api', () => ({
 }));
 
 describe('validateOrigin', () => {
-  it('allows `https://portfolio.metamask.io` origin to pass if the requested method is match in the allowed list', () => {
-    const dappPermissions = originPermissions.get(
-      'https://portfolio.metamask.io',
-    );
-
-    expect(dappPermissions).toBeDefined();
-
-    for (const method of dappPermissions ?? []) {
-      expect(() =>
-        validateOrigin('https://portfolio.metamask.io', method),
-      ).not.toThrow(SnapError);
-    }
-  });
-
-  it('does not allows `https://portfolio.metamask.io` origin to pass if the requested method is not match in the allowed list', () => {
-    const dappPermissions = originPermissions.get(
-      'https://portfolio.metamask.io',
-    );
-
-    expect(dappPermissions).toBeDefined();
-
-    for (const method of [
-      keyringApi.KeyringRpcMethod.CreateAccount,
-      keyringApi.KeyringRpcMethod.FilterAccountChains,
-      keyringApi.KeyringRpcMethod.UpdateAccount,
-      keyringApi.KeyringRpcMethod.DeleteAccount,
-      keyringApi.KeyringRpcMethod.ListRequests,
-      keyringApi.KeyringRpcMethod.GetRequest,
-      keyringApi.KeyringRpcMethod.ApproveRequest,
-      keyringApi.KeyringRpcMethod.RejectRequest,
-    ]) {
-      expect(() =>
-        validateOrigin('https://portfolio.metamask.io', method),
-      ).toThrow(SnapError);
-    }
-  });
-
   it('does not throws error if the origin and method is match to the allowed list', () => {
     const [origin, methods]: [string, Set<string>] = originPermissions
       .entries()
@@ -166,6 +129,29 @@ describe('onKeyringRequest', () => {
     });
   });
 
+  it('does not throws `Permission denied` error if the Dapp origin request an method that is in the allowed list', async () => {
+    const { handler } = createMockHandleKeyringRequest();
+    handler.mockResolvedValue({});
+
+    for (const method of [
+      keyringApi.KeyringRpcMethod.ListAccounts,
+      keyringApi.KeyringRpcMethod.GetAccount,
+      keyringApi.KeyringRpcMethod.GetAccountBalances,
+      keyringApi.KeyringRpcMethod.SubmitRequest,
+    ]) {
+      const result = await onKeyringRequest({
+        origin: 'https://portfolio.metamask.io',
+        request: {
+          method,
+          params: {
+            scope: Config.avaliableNetworks[0],
+          },
+        } as unknown as JsonRpcRequest,
+      });
+      expect(result).toStrictEqual({});
+    }
+  });
+
   it('throws SnapError if an error catched', async () => {
     const { handler } = createMockHandleKeyringRequest();
     handler.mockRejectedValue(new Error('error'));
@@ -178,5 +164,33 @@ describe('onKeyringRequest', () => {
     handler.mockRejectedValue(new SnapError('error'));
 
     await expect(executeRequest()).rejects.toThrow(SnapError);
+  });
+
+  it('throws `Permission denied` error if the Dapp origin request an method that is not in the allowed list', async () => {
+    const { handler } = createMockHandleKeyringRequest();
+    handler.mockResolvedValue({});
+
+    for (const method of [
+      keyringApi.KeyringRpcMethod.CreateAccount,
+      keyringApi.KeyringRpcMethod.FilterAccountChains,
+      keyringApi.KeyringRpcMethod.UpdateAccount,
+      keyringApi.KeyringRpcMethod.DeleteAccount,
+      keyringApi.KeyringRpcMethod.ListRequests,
+      keyringApi.KeyringRpcMethod.GetRequest,
+      keyringApi.KeyringRpcMethod.ApproveRequest,
+      keyringApi.KeyringRpcMethod.RejectRequest,
+    ]) {
+      await expect(
+        onKeyringRequest({
+          origin: 'https://portfolio.metamask.io',
+          request: {
+            method,
+            params: {
+              scope: Config.avaliableNetworks[0],
+            },
+          } as unknown as JsonRpcRequest,
+        }),
+      ).rejects.toThrow('Permission denied');
+    }
   });
 });
