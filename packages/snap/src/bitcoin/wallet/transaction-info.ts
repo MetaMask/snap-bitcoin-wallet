@@ -1,26 +1,52 @@
-import type { ITxInfo, Recipient } from '../../wallet';
+import type { Json } from '@metamask/snaps-sdk';
+import type { Network } from 'bitcoinjs-lib';
+
+import type { ITxInfo } from '../../wallet';
+import { getCaip2ChainId, getExplorerUrl } from '../utils';
+import type { BtcAddress } from './address';
+import { BtcAmount } from './amount';
 import type { TxOutput } from './transaction-output';
 
 export class BtcTxInfo implements ITxInfo {
-  readonly sender: string;
+  readonly sender: BtcAddress;
 
-  protected _change?: Recipient;
+  readonly txFee: BtcAmount;
 
-  protected _recipients: Recipient[];
+  change?: TxOutput;
 
-  protected _outputTotal: bigint;
+  protected _recipients: TxOutput[];
 
-  protected _txFee: bigint;
+  protected _feeRate: BtcAmount;
 
-  protected _feeRate: bigint;
+  protected _outputTotal: BtcAmount;
 
-  constructor(sender: string, feeRate: number) {
-    this.feeRate = feeRate;
-    this.txFee = 0;
-    this.sender = sender;
+  protected _serializedRecipients: Json[];
 
+  protected _network: Network;
+
+  constructor(sender: BtcAddress, feeRate: number, network: Network) {
     this._recipients = [];
-    this._outputTotal = BigInt(0);
+    this._serializedRecipients = [];
+    this._outputTotal = new BtcAmount(0);
+    this._feeRate = new BtcAmount(feeRate);
+    this.txFee = new BtcAmount(0);
+    this._network = network;
+    this.sender = sender;
+  }
+
+  protected changeToJson(): Json {
+    return this.change
+      ? [
+          {
+            address: this.change.destination.toString(true),
+            value: this.change.amount.toString(true),
+            explorerUrl: getExplorerUrl(
+              this.change.destination.value,
+              getCaip2ChainId(this._network),
+            ),
+          },
+        ]
+      : [];
   }
 
   addRecipients(outputs: TxOutput[]): void {
@@ -30,58 +56,52 @@ export class BtcTxInfo implements ITxInfo {
   }
 
   addRecipient(output: TxOutput): void {
-    this._outputTotal += output.bigIntValue;
+    this._outputTotal.value += output.value;
 
-    this._recipients.push({
-      address: output.address,
-      value: output.bigIntValue,
+    this._recipients.push(output);
+
+    this._serializedRecipients.push({
+      address: output.destination.toString(true),
+      value: output.amount.toString(true),
+      explorerUrl: getExplorerUrl(
+        output.destination.value,
+        getCaip2ChainId(this._network),
+      ),
     });
   }
 
-  addChange(change: TxOutput): void {
-    this._change = {
-      address: change.address,
-      value: change.bigIntValue,
-    };
-  }
-
-  set txFee(fee: bigint | number) {
-    if (typeof fee === 'number') {
-      this._txFee = BigInt(fee);
-    } else {
-      this._txFee = fee;
-    }
-  }
-
-  get txFee(): bigint {
-    return this._txFee;
-  }
-
-  set feeRate(fee: bigint | number) {
-    if (typeof fee === 'number') {
-      this._feeRate = BigInt(fee);
-    } else {
-      this._feeRate = fee;
-    }
-  }
-
-  get feeRate(): bigint {
-    return this._feeRate;
-  }
-
-  get total(): bigint {
-    return (
-      this._outputTotal +
-      (this.change ? BigInt(this.change.value) : BigInt(0)) +
-      this.txFee
+  get total(): BtcAmount {
+    return new BtcAmount(
+      this._outputTotal.value +
+        (this.change ? this.change.value : 0) +
+        this.txFee.value,
     );
   }
 
-  get recipients(): Recipient[] {
+  get feeRate(): BtcAmount {
+    return this._feeRate;
+  }
+
+  get recipients(): TxOutput[] {
     return this._recipients;
   }
 
-  get change(): Recipient | undefined {
-    return this._change;
+  get fee(): number {
+    return this.txFee.value;
+  }
+
+  set fee(val: number) {
+    this.txFee.value = val;
+  }
+
+  toJson<InfoJson extends Record<string, Json>>(): InfoJson {
+    return {
+      feeRate: this._feeRate.toString(true),
+      txFee: this.txFee.toString(true),
+      sender: this.sender.toString(),
+      recipients: this._serializedRecipients,
+      changes: this.changeToJson(),
+      total: this.total.toString(true),
+    } as unknown as InfoJson;
   }
 }

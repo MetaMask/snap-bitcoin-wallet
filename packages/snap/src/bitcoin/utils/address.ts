@@ -12,6 +12,6 @@ export function getScriptForDestnation(address: string, network: Network) {
   try {
     return addressUtils.toOutputScript(address, network);
   } catch (error) {
-    throw new Error('Destination address has no matching Script');
+    throw new Error('Destnation address has no matching Script');
   }
 }

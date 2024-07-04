@@ -1,5 +1,3 @@
-import { CustomError } from '../../utils';
-
-export class DataClientError extends CustomError {}
+import { CustomError } from '../../libs/exception';
 
 export class BtcOnChainServiceError extends CustomError {}

@@ -1,3 +1,7 @@
+import type { Json } from '@metamask/snaps-sdk';
+
+import type { IAmount } from './wallet';
+
 export enum FeeRatio {
   Fast = 'fast',
   Medium = 'medium',
@@ -14,8 +18,10 @@ export type TransactionStatusData = {
   status: TransactionStatus;
 };
 
+export type Balances = Record<string, number>;
+
 export type Balance = {
-  amount: bigint;
+  amount: IAmount;
 };
 
 export type AssetBalances = {
@@ -28,7 +34,7 @@ export type AssetBalances = {
 
 export type Fee = {
   type: FeeRatio;
-  rate: bigint;
+  rate: IAmount;
 };
 
 export type Fees = {
@@ -42,20 +48,11 @@ export type TransactionIntent = {
 };
 
 export type TransactionData = {
-  data: {
-    utxos: Utxo[];
-  };
+  data: Record<string, Json>;
 };
 
 export type CommitedTransaction = {
   transactionId: string;
-};
-
-export type Utxo = {
-  block: number;
-  txHash: string;
-  index: number;
-  value: number;
 };
 
 /**

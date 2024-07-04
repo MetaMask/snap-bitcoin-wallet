@@ -1,65 +1,61 @@
 import type { Infer } from 'superstruct';
-import { object, string, enums } from 'superstruct';
+import { object, string, assign, enums } from 'superstruct';
 
 import { TransactionStatus } from '../chain';
 import { Factory } from '../factory';
 import {
-  isSnapRpcError,
-  scopeStruct,
-  validateRequest,
-  validateResponse,
-  logger,
-} from '../utils';
-
-export const getTransactionStatusParamsRequestStruct = object({
-  transactionId: string(),
-  scope: scopeStruct,
-});
-
-export const getTransactionStatusParamsResponseStruct = object({
-  status: enums(Object.values(TransactionStatus)),
-});
+  SnapRpcHandlerRequestStruct,
+  BaseSnapRpcHandler,
+  SnapRpcError,
+} from '../libs/rpc';
+import type {
+  IStaticSnapRpcHandler,
+  SnapRpcHandlerResponse,
+} from '../libs/rpc';
+import type { StaticImplements } from '../types/static';
 
 export type GetTransactionStatusParams = Infer<
-  typeof getTransactionStatusParamsRequestStruct
+  typeof GetTransactionStatusHandler.requestStruct
 >;
 
-export type GetTransactionStatusResponse = Infer<
-  typeof getTransactionStatusParamsResponseStruct
->;
+export type GetTransactionStatusResponse = SnapRpcHandlerResponse &
+  Infer<typeof GetTransactionStatusHandler.responseStruct>;
 
-/**
- * Get Transaction Status by a given transaction id.
- *
- * @param params - The parameters for get the transaction status.
- * @returns A Promise that resolves to an GetTransactionStatusResponse object.
- */
-export async function getTransactionStatus(
-  params: GetTransactionStatusParams,
-): Promise<GetTransactionStatusResponse> {
-  try {
-    validateRequest(params, getTransactionStatusParamsRequestStruct);
+export class GetTransactionStatusHandler
+  extends BaseSnapRpcHandler
+  implements
+    StaticImplements<IStaticSnapRpcHandler, typeof GetTransactionStatusHandler>
+{
+  static override get requestStruct() {
+    return assign(
+      object({
+        transactionId: string(),
+      }),
+      SnapRpcHandlerRequestStruct,
+    );
+  }
 
-    const { scope, transactionId } = params;
+  static override get responseStruct() {
+    return object({
+      status: enums(Object.values(TransactionStatus)),
+    });
+  }
 
-    const chainApi = Factory.createOnChainServiceProvider(scope);
+  async handleRequest(
+    params: GetTransactionStatusParams,
+  ): Promise<GetTransactionStatusResponse> {
+    try {
+      const { scope, transactionId } = params;
 
-    const txStatusResp = await chainApi.getTransactionStatus(transactionId);
+      const chainApi = Factory.createOnChainServiceProvider(scope);
 
-    const resp = {
-      status: txStatusResp.status,
-    };
+      const resp = await chainApi.getTransactionStatus(transactionId);
 
-    validateResponse(resp, getTransactionStatusParamsResponseStruct);
-
-    return resp;
-  } catch (error) {
-    logger.error('Failed to get transaction status', error);
-
-    if (isSnapRpcError(error)) {
-      throw error as unknown as Error;
+      return {
+        status: resp.status,
+      };
+    } catch (error) {
+      throw new SnapRpcError('Fail to get the transaction status');
     }
-
-    throw new Error('Fail to get the transaction status');
   }
 }

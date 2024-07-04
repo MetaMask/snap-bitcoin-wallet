@@ -12,10 +12,10 @@ describe('address', () => {
       expect(val).toBeInstanceOf(Buffer);
     });
 
-    it('throws `Destination address has no matching Script` error if the given address is invalid', () => {
+    it('throws `Destnation address has no matching Script` error if the given address is invalid', () => {
       expect(() =>
         getScriptForDestnation('bad-address', networks.testnet),
-      ).toThrow(`Destination address has no matching Script`);
+      ).toThrow(`Destnation address has no matching Script`);
     });
   });
 });
