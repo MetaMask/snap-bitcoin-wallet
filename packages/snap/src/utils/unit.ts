@@ -1,12 +1,7 @@
 import Big from 'big.js';
 
+import { maxSatoshi } from '../bitcoin/constants';
 import { Config } from '../config';
-
-// Maximum amount of satoshis
-export const maxSatoshi = 21 * 1e14;
-
-// Minimum amount of satoshis
-export const minSatoshi = 1;
 
 /**
  * Converts a satoshis to a string representing the equivalent amount of BTC.

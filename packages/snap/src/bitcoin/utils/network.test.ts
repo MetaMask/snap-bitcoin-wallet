@@ -1,6 +1,6 @@
 import { networks } from 'bitcoinjs-lib';
 
-import { Caip2ChainId } from '../../../constants';
+import { Caip2ChainId } from '../../constants';
 import { getBtcNetwork, getCaip2ChainId } from './network';
 
 describe('getBtcNetwork', () => {

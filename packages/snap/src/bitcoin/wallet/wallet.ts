@@ -1,43 +1,30 @@
 import type { BIP32Interface } from 'bip32';
 import { type Network } from 'bitcoinjs-lib';
 
+import type { Utxo } from '../../chain';
 import { bufferToString, compactError, hexToBuffer, logger } from '../../utils';
-import type { Utxo } from '../chain';
-import type { BtcAccount } from './account';
+import type {
+  IAccountSigner,
+  IWallet,
+  Recipient,
+  Transaction,
+} from '../../wallet';
+import { ScriptType } from '../constants';
+import { isDust, getScriptForDestnation } from '../utils';
 import {
   P2WPKHAccount,
   P2SHP2WPKHAccount,
   type IStaticBtcAccount,
+  type IBtcAccount,
 } from './account';
 import { CoinSelectService } from './coin-select';
-import { ScriptType } from './constants';
 import type { BtcAccountDeriver } from './deriver';
 import { WalletError, TxValidationError } from './exceptions';
 import { PsbtService } from './psbt';
 import { AccountSigner } from './signer';
-import { TxInfo } from './transaction-info';
+import { BtcTxInfo } from './transaction-info';
 import { TxInput } from './transaction-input';
 import { TxOutput } from './transaction-output';
-import { isDust, getScriptForDestnation } from './utils';
-
-export type Recipient = {
-  address: string;
-  value: bigint;
-};
-
-export type Transaction = {
-  tx: string;
-  txInfo: ITxInfo;
-};
-
-export type ITxInfo = {
-  sender: string;
-  change?: Recipient;
-  recipients: Recipient[];
-  total: bigint;
-  txFee: bigint;
-  feeRate: bigint;
-};
 
 export type CreateTransactionOptions = {
   utxos: Utxo[];
@@ -49,7 +36,7 @@ export type CreateTransactionOptions = {
   replaceable: boolean;
 };
 
-export class BtcWallet {
+export class BtcWallet implements IWallet {
   protected readonly _deriver: BtcAccountDeriver;
 
   protected readonly _network: Network;
@@ -59,14 +46,7 @@ export class BtcWallet {
     this._network = network;
   }
 
-  /**
-   * Unlocks an account by index and script type.
-   *
-   * @param index - The index to derive from the node.
-   * @param type - The script type of the unlocked account, e.g. `bip122:p2pkh`.
-   * @returns A promise that resolves to an `IAccount` object.
-   */
-  async unlock(index: number, type?: string): Promise<BtcAccount> {
+  async unlock(index: number, type?: string): Promise<IBtcAccount> {
     try {
       const AccountCtor = this.getAccountCtor(type ?? ScriptType.P2wpkh);
       const rootNode = await this._deriver.getRoot(AccountCtor.path);
@@ -88,16 +68,8 @@ export class BtcWallet {
     }
   }
 
-  /**
-   * Creates a transaction using the given account, transaction intent, and options.
-   *
-   * @param account - The `IAccount` object to create the transaction.
-   * @param recipients - The transaction recipients.
-   * @param options - The options to use when creating the transaction.
-   * @returns A promise that resolves to an object containing the transaction hash and transaction info.
-   */
   async createTransaction(
-    account: BtcAccount,
+    account: IBtcAccount,
     recipients: Recipient[],
     options: CreateTransactionOptions,
   ): Promise<Transaction> {
@@ -141,7 +113,7 @@ export class BtcWallet {
       hexToBuffer(account.mfp, false),
     );
 
-    const txInfo = new TxInfo(account.address, feeRate);
+    const txInfo = new BtcTxInfo(account.address, feeRate);
 
     // TODO: add support of subtractFeeFrom, and throw error if output is too small after subtraction
     for (const output of selectionResult.outputs) {
@@ -170,14 +142,7 @@ export class BtcWallet {
     };
   }
 
-  /**
-   * Signs a transaction by the given encoded transaction string.
-   *
-   * @param signer - The `AccountSigner` object to sign the transaction.
-   * @param tx - The encoded transaction string to convert back to a transaction.
-   * @returns A promise that resolves to a string of the signed transaction.
-   */
-  async signTransaction(signer: AccountSigner, tx: string): Promise<string> {
+  async signTransaction(signer: IAccountSigner, tx: string): Promise<string> {
     const psbtService = PsbtService.fromBase64(this._network, tx);
     await psbtService.signNVerify(signer);
     return psbtService.finalize();

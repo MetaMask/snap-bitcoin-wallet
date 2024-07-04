@@ -99,7 +99,7 @@ describe('BtcAccountDeriver', () => {
       expect(result.privateKey).toStrictEqual(pkBuffer);
     });
 
-    it('throws error if private key is invalid', async () => {
+    it('throws `Private key is invalid` if private key is invalid', async () => {
       const network = networks.testnet;
       const spy = jest.spyOn(strUtils, 'hexToBuffer');
       spy.mockImplementation(() => {
@@ -108,11 +108,11 @@ describe('BtcAccountDeriver', () => {
       const { deriver } = await prepareBip32Deriver(network);
 
       await expect(deriver.getRoot(P2WPKHAccount.path)).rejects.toThrow(
-        'error',
+        'Private key is invalid',
       );
     });
 
-    it('throws error if chain code is invalid', async () => {
+    it('throws `Chain code is invalid` if chain code is invalid', async () => {
       const network = networks.testnet;
       const spy = jest.spyOn(strUtils, 'hexToBuffer');
       spy
@@ -123,7 +123,7 @@ describe('BtcAccountDeriver', () => {
       const { deriver } = await prepareBip32Deriver(network);
 
       await expect(deriver.getRoot(P2WPKHAccount.path)).rejects.toThrow(
-        'error',
+        'Chain code is invalid',
       );
     });
 

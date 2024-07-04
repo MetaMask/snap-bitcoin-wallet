@@ -1,15 +1,14 @@
 import type { Json } from '@metamask/snaps-sdk';
 import { type Network, networks } from 'bitcoinjs-lib';
 
-import { compactError, logger } from '../../../utils';
-import { FeeRatio, TransactionStatus } from '../constants';
+import type { TransactionStatusData, Utxo } from '../../../chain';
+import { FeeRatio, TransactionStatus } from '../../../chain';
+import { compactError } from '../../../utils';
+import { logger } from '../../../utils/logger';
 import type {
+  GetBalancesResp,
+  GetFeeRatesResp,
   IDataClient,
-  DataClientGetBalancesResp,
-  DataClientGetTxStatusResp,
-  DataClientGetUtxosResp,
-  DataClientSendTxResp,
-  DataClientGetFeeRatesResp,
 } from '../data-client';
 import { DataClientError } from '../exceptions';
 
@@ -290,7 +289,7 @@ export class BlockChairClient implements IDataClient {
     }
   }
 
-  async getBalances(addresses: string[]): Promise<DataClientGetBalancesResp> {
+  async getBalances(addresses: string[]): Promise<GetBalancesResp> {
     try {
       logger.info(
         `[BlockChairClient.getBalance] start: { addresses : ${JSON.stringify(
@@ -306,28 +305,26 @@ export class BlockChairClient implements IDataClient {
         `[BlockChairClient.getBalance] response: ${JSON.stringify(response)}`,
       );
 
-      return addresses.reduce(
-        (data: DataClientGetBalancesResp, address: string) => {
-          data[address] = response.data[address] ?? 0;
-          return data;
-        },
-        {},
-      );
+      return addresses.reduce((data: GetBalancesResp, address: string) => {
+        data[address] = response.data[address] ?? 0;
+        return data;
+      }, {});
     } catch (error) {
       logger.info(`[BlockChairClient.getBalance] error: ${error.message}`);
       throw compactError(error, DataClientError);
     }
   }
 
+  // TODO: Get UTXOs that sufficiently cover the amount and fee, to reduce the number of requests
   async getUtxos(
     address: string,
     includeUnconfirmed?: boolean,
-  ): Promise<DataClientGetUtxosResp> {
+  ): Promise<Utxo[]> {
     try {
       let process = true;
       let offset = 0;
       const limit = 1000;
-      const data: DataClientGetUtxosResp = [];
+      const data: Utxo[] = [];
 
       while (process) {
         let url = `/dashboards/address/${address}?limit=0,${limit}&offset=0,${offset}`;
@@ -368,7 +365,7 @@ export class BlockChairClient implements IDataClient {
     }
   }
 
-  async getFeeRates(): Promise<DataClientGetFeeRatesResp> {
+  async getFeeRates(): Promise<GetFeeRatesResp> {
     try {
       logger.info(`[BlockChairClient.getFeeRates] start:`);
       const response = await this.get<GetStatResponse>(`/stats`);
@@ -384,9 +381,7 @@ export class BlockChairClient implements IDataClient {
     }
   }
 
-  async sendTransaction(
-    signedTransaction: string,
-  ): Promise<DataClientSendTxResp> {
+  async sendTransaction(signedTransaction: string): Promise<string> {
     try {
       const response = await this.post<PostTransactionResponse>(
         `/push/transaction`,
@@ -408,9 +403,7 @@ export class BlockChairClient implements IDataClient {
     }
   }
 
-  async getTransactionStatus(
-    txHash: string,
-  ): Promise<DataClientGetTxStatusResp> {
+  async getTransactionStatus(txHash: string): Promise<TransactionStatusData> {
     try {
       const response = await this.getTxDashboardData(txHash);
 

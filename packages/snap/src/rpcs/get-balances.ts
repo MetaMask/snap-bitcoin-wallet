@@ -1,7 +1,6 @@
 import type { Infer } from 'superstruct';
 import { object, array, record, enums, assert } from 'superstruct';
 
-import type { BtcAccount } from '../bitcoin/wallet';
 import { Config } from '../config';
 import { Factory } from '../factory';
 import {
@@ -16,6 +15,7 @@ import {
   positiveStringStruct,
   scopeStruct,
 } from '../utils/superstruct';
+import type { IAccount } from '../wallet';
 
 export const getBalancesRequestStruct = object({
   assets: array(assetsStruct),
@@ -44,7 +44,7 @@ export type GetBalancesResponse = Infer<typeof getBalancesResponseStruct>;
  * @returns A Promise that resolves to an GetBalancesResponse object.
  */
 export async function getBalances(
-  account: BtcAccount,
+  account: IAccount,
   params: GetBalancesParams,
 ) {
   try {

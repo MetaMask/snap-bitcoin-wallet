@@ -1,8 +1,8 @@
 import { networks, address as addressUtils } from 'bitcoinjs-lib';
 
 import { generateFormatedUtxos } from '../../../test/utils';
+import { ScriptType } from '../constants';
 import { CoinSelectService } from './coin-select';
-import { ScriptType } from './constants';
 import { BtcAccountDeriver } from './deriver';
 import { TxInput } from './transaction-input';
 import { TxOutput } from './transaction-output';
