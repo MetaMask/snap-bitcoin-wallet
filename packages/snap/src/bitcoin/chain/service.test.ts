@@ -6,22 +6,23 @@ import {
   generateBlockChairBroadcastTransactionResp,
   generateBlockChairGetUtxosResp,
 } from '../../../test/utils';
-import { FeeRatio, TransactionStatus } from '../../chain';
-import { BtcAsset } from '../constants';
-import type { IReadDataClient, IWriteDataClient } from '../data-client';
-import { BtcAmount } from '../wallet';
+import { Caip2Asset } from '../../constants';
+import { FeeRatio, TransactionStatus } from './constants';
+import type { IDataClient } from './data-client';
 import { BtcOnChainServiceError } from './exceptions';
 import { BtcOnChainService } from './service';
 
-jest.mock('../../libs/logger/logger');
+jest.mock('../../utils/logger');
 
 describe('BtcOnChainService', () => {
-  const createMockReadDataClient = () => {
+  const createMockDataClient = () => {
     const getBalanceSpy = jest.fn();
     const getUtxosSpy = jest.fn();
     const getFeeRatesSpy = jest.fn();
     const getTransactionStatusSpy = jest.fn();
-    class MockReadDataClient implements IReadDataClient {
+    const sendTransactionSpy = jest.fn();
+
+    class MockReadDataClient implements IDataClient {
       getBalances = getBalanceSpy;
 
       getUtxos = getUtxosSpy;
@@ -29,6 +30,8 @@ describe('BtcOnChainService', () => {
       getFeeRates = getFeeRatesSpy;
 
       getTransactionStatus = getTransactionStatusSpy;
+
+      sendTransaction = sendTransactionSpy;
     }
 
     return {
@@ -37,29 +40,16 @@ describe('BtcOnChainService', () => {
       getUtxosSpy,
       getFeeRatesSpy,
       getTransactionStatusSpy,
-    };
-  };
-
-  const createMockWriteDataClient = () => {
-    const sendTransactionSpy = jest.fn();
-
-    class MockWriteDataClient implements IWriteDataClient {
-      sendTransaction = sendTransactionSpy;
-    }
-    return {
-      instance: new MockWriteDataClient(),
       sendTransactionSpy,
     };
   };
 
   const createMockBtcService = (
-    readDataClient?: IReadDataClient,
-    writeDataClient?: IWriteDataClient,
+    dataClient?: IDataClient,
     network: Network = networks.testnet,
   ) => {
     const instance = new BtcOnChainService(
-      readDataClient ?? createMockReadDataClient().instance,
-      writeDataClient ?? createMockWriteDataClient().instance,
+      dataClient ?? createMockDataClient().instance,
       {
         network,
       },
@@ -72,7 +62,7 @@ describe('BtcOnChainService', () => {
 
   describe('getBalance', () => {
     it('calls getBalances with readClient', async () => {
-      const { instance, getBalanceSpy } = createMockReadDataClient();
+      const { instance, getBalanceSpy } = createMockDataClient();
       const { instance: txService } = createMockBtcService(instance);
       const accounts = generateAccounts(2);
       const addresses = accounts.map((account) => account.address);
@@ -83,64 +73,62 @@ describe('BtcOnChainService', () => {
         }, {}),
       );
 
-      const result = await txService.getBalances(addresses, [BtcAsset.TBtc]);
+      const result = await txService.getBalances(addresses, [Caip2Asset.TBtc]);
 
       expect(getBalanceSpy).toHaveBeenCalledWith(addresses);
 
       Object.values(result.balances).forEach((assetBalances) => {
         expect(assetBalances).toStrictEqual({
-          [BtcAsset.TBtc]: {
-            amount: expect.any(BtcAmount),
+          [Caip2Asset.TBtc]: {
+            amount: BigInt(100),
           },
         });
       });
     });
 
     it('throws `Only one asset is supported` error if the given asset more than 1', async () => {
-      const { instance } = createMockReadDataClient();
+      const { instance } = createMockDataClient();
       const { instance: txService } = createMockBtcService(instance);
       const accounts = generateAccounts(2);
       const addresses = accounts.map((account) => account.address);
 
       await expect(
-        txService.getBalances(addresses, [BtcAsset.TBtc, BtcAsset.Btc]),
+        txService.getBalances(addresses, [Caip2Asset.TBtc, Caip2Asset.Btc]),
       ).rejects.toThrow('Only one asset is supported');
     });
 
     it('throws `Invalid asset` error if the BTC asset is given and current network is testnet network', async () => {
-      const { instance } = createMockReadDataClient();
+      const { instance } = createMockDataClient();
       const { instance: txService } = createMockBtcService(instance);
       const accounts = generateAccounts(2);
       const addresses = accounts.map((account) => account.address);
 
       await expect(
-        txService.getBalances(addresses, [BtcAsset.Btc]),
+        txService.getBalances(addresses, [Caip2Asset.Btc]),
       ).rejects.toThrow('Invalid asset');
     });
 
     it('throws `Invalid asset` error if the TBTC asset is given and current network is bitcoin network', async () => {
-      const { instance } = createMockReadDataClient();
+      const { instance } = createMockDataClient();
       const { instance: txService } = createMockBtcService(
         instance,
-        undefined,
         networks.bitcoin,
       );
       const accounts = generateAccounts(2);
       const addresses = accounts.map((account) => account.address);
 
       await expect(
-        txService.getBalances(addresses, [BtcAsset.TBtc]),
+        txService.getBalances(addresses, [Caip2Asset.TBtc]),
       ).rejects.toThrow('Invalid asset');
     });
   });
 
   describe('getUtxos', () => {
     it('calls getUtxos with readClient', async () => {
-      const { instance, getUtxosSpy } = createMockReadDataClient();
+      const { instance, getUtxosSpy } = createMockDataClient();
       const { instance: txService } = createMockBtcService(instance);
-      const accounts = generateAccounts(2);
+      const accounts = generateAccounts(1);
       const sender = accounts[0].address;
-      const receiver = accounts[1].address;
       const mockResponse = generateBlockChairGetUtxosResp(sender, 10);
       const utxos = mockResponse.data[sender].utxo.map((utxo) => ({
         block: utxo.block_id,
@@ -151,13 +139,7 @@ describe('BtcOnChainService', () => {
 
       getUtxosSpy.mockResolvedValue(utxos);
 
-      const result = await txService.getDataForTransaction(sender, {
-        amounts: {
-          [receiver]: 100,
-        },
-        subtractFeeFrom: [],
-        replaceable: true,
-      });
+      const result = await txService.getDataForTransaction(sender);
 
       expect(getUtxosSpy).toHaveBeenCalledWith(sender);
       expect(result).toStrictEqual({
@@ -168,33 +150,26 @@ describe('BtcOnChainService', () => {
     });
 
     it('throws error if readClient fail', async () => {
-      const { instance, getUtxosSpy } = createMockReadDataClient();
+      const { instance, getUtxosSpy } = createMockDataClient();
       const { instance: txService } = createMockBtcService(instance);
-      const accounts = generateAccounts(2);
+      const accounts = generateAccounts(1);
       const sender = accounts[0].address;
-      const receiver = accounts[1].address;
 
       getUtxosSpy.mockRejectedValue(new Error('error'));
 
-      await expect(
-        txService.getDataForTransaction(sender, {
-          amounts: {
-            [receiver]: 100,
-          },
-          subtractFeeFrom: [],
-          replaceable: true,
-        }),
-      ).rejects.toThrow(BtcOnChainServiceError);
+      await expect(txService.getDataForTransaction(sender)).rejects.toThrow(
+        BtcOnChainServiceError,
+      );
     });
   });
 
   describe('getFeeRates', () => {
     it('return getFeeRates result', async () => {
-      const { instance, getFeeRatesSpy } = createMockReadDataClient();
+      const { instance, getFeeRatesSpy } = createMockDataClient();
       const { instance: txMgr } = createMockBtcService(instance);
       getFeeRatesSpy.mockResolvedValue({
-        [FeeRatio.Fast]: 1.1,
-        [FeeRatio.Medium]: 1.2,
+        [FeeRatio.Fast]: 1,
+        [FeeRatio.Medium]: 2,
       });
 
       const result = await txMgr.getFeeRates();
@@ -204,20 +179,18 @@ describe('BtcOnChainService', () => {
         fees: [
           {
             type: FeeRatio.Fast,
-            rate: expect.any(BtcAmount),
+            rate: BigInt(1),
           },
           {
             type: FeeRatio.Medium,
-            rate: expect.any(BtcAmount),
+            rate: BigInt(2),
           },
         ],
       });
-      expect(result.fees[0].rate.value).toBe(1.1);
-      expect(result.fees[1].rate.value).toBe(1.2);
     });
 
     it('throws BtcOnChainServiceError error if an error catched', async () => {
-      const { instance, getFeeRatesSpy } = createMockReadDataClient();
+      const { instance, getFeeRatesSpy } = createMockDataClient();
       const { instance: txMgr } = createMockBtcService(instance);
 
       getFeeRatesSpy.mockRejectedValue(new Error('error'));
@@ -231,8 +204,8 @@ describe('BtcOnChainService', () => {
       '02000000000101ec81faa8b57add4c8fb3958dd8f04667f5cd829a7b94199f4400be9e52cda0760000000000ffffffff015802000000000000160014f80b562cbcbbfc97727043484c06cc5579963e8402473044022011ec3f7ea7a7cac7cb891a1ea498d94ca3cd082339b9b2620ba5421ca7cbdf3d022062f34411d6aa5335c2bd7ff4c940adb962e9509133b86a2d97996552fd811f2c012102ceea82614fdb14871ef881498c55c5dbdc24b4633d29b42040dd18b4285540f500000000';
 
     it('calls sendTransaction with writeClient', async () => {
-      const { instance, sendTransactionSpy } = createMockWriteDataClient();
-      const { instance: txService } = createMockBtcService(undefined, instance);
+      const { instance, sendTransactionSpy } = createMockDataClient();
+      const { instance: txService } = createMockBtcService(instance);
 
       const resp = generateBlockChairBroadcastTransactionResp();
       sendTransactionSpy.mockResolvedValue(resp.data.transaction_hash);
@@ -246,8 +219,8 @@ describe('BtcOnChainService', () => {
     });
 
     it('throws BtcOnChainServiceErrorr if write client execute fail', async () => {
-      const { instance, sendTransactionSpy } = createMockWriteDataClient();
-      const { instance: txService } = createMockBtcService(undefined, instance);
+      const { instance, sendTransactionSpy } = createMockDataClient();
+      const { instance: txService } = createMockBtcService(instance);
       sendTransactionSpy.mockRejectedValue(new Error('error'));
 
       await expect(
@@ -261,7 +234,7 @@ describe('BtcOnChainService', () => {
       '1cd985fc26a9b27d0b574739b908d5fe78e2297b24323a7f8c04526648dc9c08';
 
     it('return getTransactionStatus result', async () => {
-      const { instance, getTransactionStatusSpy } = createMockReadDataClient();
+      const { instance, getTransactionStatusSpy } = createMockDataClient();
       const { instance: txMgr } = createMockBtcService(instance);
       getTransactionStatusSpy.mockResolvedValue({
         status: TransactionStatus.Confirmed,
@@ -276,7 +249,7 @@ describe('BtcOnChainService', () => {
     });
 
     it('throws BtcOnChainServiceError error if an error catched', async () => {
-      const { instance, getTransactionStatusSpy } = createMockReadDataClient();
+      const { instance, getTransactionStatusSpy } = createMockDataClient();
       const { instance: txMgr } = createMockBtcService(instance);
 
       getTransactionStatusSpy.mockRejectedValue(new Error('error'));

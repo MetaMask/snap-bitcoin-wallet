@@ -1,98 +1,87 @@
-import type { Json } from '@metamask/snaps-sdk';
-import type { Network } from 'bitcoinjs-lib';
-
-import type { ITxInfo } from '../../wallet';
-import { getCaip2ChainId, getExplorerUrl } from '../utils';
-import type { BtcAddress } from './address';
-import { BtcAmount } from './amount';
 import type { TxOutput } from './transaction-output';
+import type { ITxInfo, Recipient } from './wallet';
 
-export class BtcTxInfo implements ITxInfo {
-  #recipients: TxOutput[];
+export class TxInfo implements ITxInfo {
+  readonly sender: string;
 
-  #feeRate: BtcAmount;
+  protected _change?: Recipient;
 
-  change?: TxOutput;
+  protected _recipients: Recipient[];
 
-  #sender: BtcAddress;
+  protected _outputTotal: bigint;
 
-  #txFee: BtcAmount;
+  protected _txFee: bigint;
 
-  #outputTotal: BtcAmount;
+  protected _feeRate: bigint;
 
-  #serializedRecipients: Json[];
+  constructor(sender: string, feeRate: number) {
+    this.feeRate = feeRate;
+    this.txFee = 0;
+    this.sender = sender;
 
-  #network: Network;
-
-  constructor(
-    sender: BtcAddress,
-    outputs: TxOutput[],
-    fee: number,
-    feeRate: number,
-    network: Network,
-  ) {
-    this.#recipients = [];
-    this.#outputTotal = new BtcAmount(0);
-    this.#serializedRecipients = [];
-    this.#feeRate = new BtcAmount(feeRate);
-    this.#txFee = new BtcAmount(fee);
-    this.#network = network;
-    this.#sender = sender;
-    this.addRecipients(outputs);
+    this._recipients = [];
+    this._outputTotal = BigInt(0);
   }
 
-  protected changeToJson(): Json {
-    return this.change
-      ? [
-          {
-            address: this.change.destination.toString(true),
-            value: this.change.amount.toString(true),
-            explorerUrl: getExplorerUrl(
-              this.change.destination.value,
-              getCaip2ChainId(this.#network),
-            ),
-          },
-        ]
-      : [];
-  }
-
-  protected addRecipients(outputs: TxOutput[]): void {
+  addRecipients(outputs: TxOutput[]): void {
     for (const output of outputs) {
-      this.#outputTotal.value += output.value;
-
-      this.#recipients.push(output);
-
-      this.#serializedRecipients.push({
-        address: output.destination.toString(true),
-        value: output.amount.toString(true),
-        explorerUrl: getExplorerUrl(
-          output.destination.value,
-          getCaip2ChainId(this.#network),
-        ),
-      });
+      this.addRecipient(output);
     }
   }
 
-  bumpFee(val: number): void {
-    this.#txFee.value += val;
+  addRecipient(output: TxOutput): void {
+    this._outputTotal += output.bigIntValue;
+
+    this._recipients.push({
+      address: output.address,
+      value: output.bigIntValue,
+    });
   }
 
-  get total(): BtcAmount {
-    return new BtcAmount(
-      this.#outputTotal.value +
-        (this.change ? this.change.value : 0) +
-        this.#txFee.value,
+  addChange(change: TxOutput): void {
+    this._change = {
+      address: change.address,
+      value: change.bigIntValue,
+    };
+  }
+
+  set txFee(fee: bigint | number) {
+    if (typeof fee === 'number') {
+      this._txFee = BigInt(fee);
+    } else {
+      this._txFee = fee;
+    }
+  }
+
+  get txFee(): bigint {
+    return this._txFee;
+  }
+
+  set feeRate(fee: bigint | number) {
+    if (typeof fee === 'number') {
+      this._feeRate = BigInt(fee);
+    } else {
+      this._feeRate = fee;
+    }
+  }
+
+  get feeRate(): bigint {
+    return this._feeRate;
+  }
+
+  get total(): bigint {
+    return (
+      this._outputTotal +
+      (this.change ? BigInt(this.change.value) : BigInt(0)) +
+      this.txFee
     );
   }
 
-  toJson<InfoJson extends Record<string, Json>>(): InfoJson {
-    return {
-      feeRate: this.#feeRate.toString(true),
-      txFee: this.#txFee.toString(true),
-      sender: this.#sender.toString(),
-      recipients: this.#serializedRecipients,
-      changes: this.changeToJson(),
-      total: this.total.toString(true),
-    } as unknown as InfoJson;
+  get recipients(): Recipient[] {
+    return this._recipients;
+  }
+
+  get change(): Recipient | undefined {
+    return this._change;
   }
 }

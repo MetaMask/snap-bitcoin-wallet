@@ -1,39 +1,190 @@
 import type { BIP32Interface } from 'bip32';
 import { type Network } from 'bitcoinjs-lib';
 
-import { logger } from '../../libs/logger/logger';
-import { bufferToString, compactError } from '../../utils';
-import type {
-  IAccountSigner,
-  IWallet,
-  Recipient,
-  TxCreationResult,
-} from '../../wallet';
-import { ScriptType } from '../constants';
-import { isDust } from '../utils';
-import { P2WPKHAccount, P2SHP2WPKHAccount } from './account';
-import { BtcAddress } from './address';
+import { bufferToString, compactError, hexToBuffer, logger } from '../../utils';
+import type { Utxo } from '../chain';
+import type { BtcAccount } from './account';
+import {
+  P2WPKHAccount,
+  P2SHP2WPKHAccount,
+  type IStaticBtcAccount,
+} from './account';
 import { CoinSelectService } from './coin-select';
+import { ScriptType } from './constants';
+import type { BtcAccountDeriver } from './deriver';
 import { WalletError, TxValidationError } from './exceptions';
 import { PsbtService } from './psbt';
 import { AccountSigner } from './signer';
-import { BtcTxInfo } from './transaction-info';
+import { TxInfo } from './transaction-info';
 import { TxInput } from './transaction-input';
-import type {
-  IStaticBtcAccount,
-  IBtcAccountDeriver,
-  IBtcAccount,
-  CreateTransactionOptions,
-} from './types';
+import { TxOutput } from './transaction-output';
+import { isDust, getScriptForDestnation } from './utils';
 
-export class BtcWallet implements IWallet {
-  protected readonly deriver: IBtcAccountDeriver;
+export type Recipient = {
+  address: string;
+  value: bigint;
+};
 
-  protected readonly network: Network;
+export type Transaction = {
+  tx: string;
+  txInfo: ITxInfo;
+};
 
-  constructor(deriver: IBtcAccountDeriver, network: Network) {
-    this.deriver = deriver;
-    this.network = network;
+export type ITxInfo = {
+  sender: string;
+  change?: Recipient;
+  recipients: Recipient[];
+  total: bigint;
+  txFee: bigint;
+  feeRate: bigint;
+};
+
+export type CreateTransactionOptions = {
+  utxos: Utxo[];
+  fee: number;
+  subtractFeeFrom: string[];
+  //
+  // BIP125 opt-in RBF flag,
+  //
+  replaceable: boolean;
+};
+
+export class BtcWallet {
+  protected readonly _deriver: BtcAccountDeriver;
+
+  protected readonly _network: Network;
+
+  constructor(deriver: BtcAccountDeriver, network: Network) {
+    this._deriver = deriver;
+    this._network = network;
+  }
+
+  /**
+   * Unlocks an account by index and script type.
+   *
+   * @param index - The index to derive from the node.
+   * @param type - The script type of the unlocked account, e.g. `bip122:p2pkh`.
+   * @returns A promise that resolves to an `IAccount` object.
+   */
+  async unlock(index: number, type?: string): Promise<BtcAccount> {
+    try {
+      const AccountCtor = this.getAccountCtor(type ?? ScriptType.P2wpkh);
+      const rootNode = await this._deriver.getRoot(AccountCtor.path);
+      const childNode = await this._deriver.getChild(rootNode, index);
+      const hdPath = [`m`, `0'`, `0`, `${index}`].join('/');
+
+      return new AccountCtor(
+        bufferToString(rootNode.fingerprint, 'hex'),
+        index,
+        hdPath,
+        bufferToString(childNode.publicKey, 'hex'),
+        this._network,
+        AccountCtor.scriptType,
+        `bip122:${AccountCtor.scriptType.toLowerCase()}`,
+        this.getHdSigner(rootNode),
+      );
+    } catch (error) {
+      throw compactError(error, WalletError);
+    }
+  }
+
+  /**
+   * Creates a transaction using the given account, transaction intent, and options.
+   *
+   * @param account - The `IAccount` object to create the transaction.
+   * @param recipients - The transaction recipients.
+   * @param options - The options to use when creating the transaction.
+   * @returns A promise that resolves to an object containing the transaction hash and transaction info.
+   */
+  async createTransaction(
+    account: BtcAccount,
+    recipients: Recipient[],
+    options: CreateTransactionOptions,
+  ): Promise<Transaction> {
+    const scriptOutput = account.script;
+    const { scriptType } = account;
+
+    // TODO: Supporting getting coins from other address (dynamic address)
+    const inputs = options.utxos.map((utxo) => new TxInput(utxo, scriptOutput));
+    const outputs = recipients.map((recipient) => {
+      if (isDust(recipient.value, scriptType)) {
+        throw new TxValidationError('Transaction amount too small');
+      }
+      const destnationScriptOutput = getScriptForDestnation(
+        recipient.address,
+        this._network,
+      );
+      return new TxOutput(
+        recipient.value,
+        recipient.address,
+        destnationScriptOutput,
+      );
+    });
+
+    // Do not ever accept zero fee rate, we need to ensure it is at least 1
+    // TODO: The min fee rate should be setting from parameter
+    const feeRate = Math.max(1, options.fee);
+    const coinSelectService = new CoinSelectService(feeRate);
+    const change = new TxOutput(0, account.address, scriptOutput);
+    const selectionResult = coinSelectService.selectCoins(
+      inputs,
+      outputs,
+      change,
+    );
+
+    const psbtService = new PsbtService(this._network);
+    psbtService.addInputs(
+      selectionResult.inputs,
+      options.replaceable,
+      account.hdPath,
+      hexToBuffer(account.pubkey, false),
+      hexToBuffer(account.mfp, false),
+    );
+
+    const txInfo = new TxInfo(account.address, feeRate);
+
+    // TODO: add support of subtractFeeFrom, and throw error if output is too small after subtraction
+    for (const output of selectionResult.outputs) {
+      psbtService.addOutput(output);
+      txInfo.addRecipient(output);
+    }
+
+    if (selectionResult.change) {
+      if (isDust(change.value, scriptType)) {
+        logger.warn(
+          '[BtcWallet.createTransaction] Change is too small, adding to fees',
+        );
+      } else {
+        psbtService.addOutput(selectionResult.change);
+        txInfo.addChange(selectionResult.change);
+      }
+    }
+
+    // Sign dummy transaction to extract the fee which is more accurate
+    const signedService = await psbtService.signDummy(account.signer);
+    txInfo.txFee = signedService.getFee();
+
+    return {
+      tx: psbtService.toBase64(),
+      txInfo,
+    };
+  }
+
+  /**
+   * Signs a transaction by the given encoded transaction string.
+   *
+   * @param signer - The `AccountSigner` object to sign the transaction.
+   * @param tx - The encoded transaction string to convert back to a transaction.
+   * @returns A promise that resolves to a string of the signed transaction.
+   */
+  async signTransaction(signer: AccountSigner, tx: string): Promise<string> {
+    const psbtService = PsbtService.fromBase64(this._network, tx);
+    await psbtService.signNVerify(signer);
+    return psbtService.finalize();
+  }
+
+  protected getHdSigner(rootNode: BIP32Interface) {
+    return new AccountSigner(rootNode, rootNode.fingerprint);
   }
 
   protected getAccountCtor(type: string): IStaticBtcAccount {
@@ -49,105 +200,5 @@ export class BtcWallet implements IWallet {
       default:
         throw new WalletError('Invalid script type');
     }
-  }
-
-  async unlock(index: number, type: string): Promise<IBtcAccount> {
-    try {
-      const AccountCtor = this.getAccountCtor(type);
-      const rootNode = await this.deriver.getRoot(AccountCtor.path);
-      const childNode = await this.deriver.getChild(rootNode, index);
-      const hdPath = [`m`, `0'`, `0`, `${index}`].join('/');
-
-      return new AccountCtor(
-        bufferToString(rootNode.fingerprint, 'hex'),
-        index,
-        hdPath,
-        bufferToString(childNode.publicKey, 'hex'),
-        this.network,
-        AccountCtor.scriptType,
-        `bip122:${AccountCtor.scriptType.toLowerCase()}`,
-        this.getHdSigner(rootNode),
-      );
-    } catch (error) {
-      throw compactError(error, WalletError);
-    }
-  }
-
-  async createTransaction(
-    account: IBtcAccount,
-    recipients: Recipient[],
-    options: CreateTransactionOptions,
-  ): Promise<TxCreationResult> {
-    const scriptOutput = account.payment.output;
-    const { scriptType } = account;
-
-    if (!scriptOutput) {
-      throw new WalletError('Fail to get account script hash');
-    }
-
-    // as fee rate can be 0, we need to ensure it is at least 1
-    // TODO: The min fee rate should be setting from parameter
-    const feeRate = Math.max(1, options.fee);
-
-    const coinSelectService = new CoinSelectService(feeRate);
-
-    const inputs = options.utxos.map((utxo) => new TxInput(utxo, scriptOutput));
-
-    const selectionResult = coinSelectService.selectCoins(
-      inputs,
-      recipients,
-      account,
-    );
-
-    // TODO: add support of subtractFeeFrom, and throw error if output is too small after subtraction
-    for (const output of selectionResult.selectedOutputs) {
-      if (isDust(output.value, scriptType)) {
-        throw new TxValidationError('Transaction amount too small');
-      }
-    }
-
-    const psbtOutputs = selectionResult.selectedOutputs;
-    const psbtInputs = selectionResult.selectedInputs;
-
-    const info = new BtcTxInfo(
-      new BtcAddress(account.address),
-      selectionResult.selectedOutputs,
-      selectionResult.fee,
-      feeRate,
-      this.network,
-    );
-
-    if (selectionResult.change && selectionResult.change.value > 0) {
-      if (isDust(selectionResult.change.value, scriptType)) {
-        logger.warn(
-          '[BtcWallet.createTransaction] Change is too small, adding to fees',
-        );
-        info.bumpFee(selectionResult.change.value);
-      } else {
-        info.change = selectionResult.change;
-        psbtOutputs.push(selectionResult.change);
-      }
-    }
-
-    const psbtService = new PsbtService(this.network);
-
-    psbtService.addInputs(psbtInputs, account, options.replaceable);
-
-    psbtService.addOutputs(psbtOutputs);
-
-    return {
-      tx: psbtService.toBase64(),
-      txInfo: info,
-    };
-  }
-
-  async signTransaction(signer: IAccountSigner, tx: string): Promise<string> {
-    const psbtService = PsbtService.fromBase64(this.network, tx);
-    await psbtService.signNVerify(signer);
-    return psbtService.finalize();
-  }
-
-  protected getHdSigner(rootNode: BIP32Interface) {
-    return new AccountSigner(rootNode, rootNode.fingerprint);
   }
 }

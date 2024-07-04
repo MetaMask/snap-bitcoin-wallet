@@ -4,95 +4,44 @@ import { BIP32Factory } from 'bip32';
 import { type Network } from 'bitcoinjs-lib';
 import type { Buffer } from 'buffer';
 
-import { SnapHelper } from '../../libs/snap/helpers';
-import { compactError, hexToBuffer } from '../../utils';
+import { compactError, hexToBuffer, getBip32Deriver } from '../../utils';
 import { DeriverError } from './exceptions';
-import type { IBtcAccountDeriver } from './types';
 
-export abstract class BtcAccountDeriver implements IBtcAccountDeriver {
-  protected readonly network: Network;
+/**
+ * This class provides a mechanism for deriving Bitcoin accounts using BIP32.
+ */
+export class BtcAccountDeriver {
+  protected readonly _network: Network;
 
-  protected readonly bip32Api: BIP32API;
+  protected readonly _bip32Api: BIP32API;
 
-  constructor(network: Network) {
-    this.bip32Api = BIP32Factory(ecc);
-    this.network = network;
-  }
-
-  abstract getRoot(path: string[]): Promise<BIP32Interface>;
-
-  createBip32FromSeed(seed: Buffer): BIP32Interface {
-    try {
-      return this.bip32Api.fromSeed(seed, this.network);
-    } catch (error) {
-      throw new DeriverError('Unable to construct BIP32 node from seed');
-    }
-  }
-
-  createBip32FromPrivateKey(
-    privateKey: Buffer,
-    chainNode: Buffer,
-  ): BIP32Interface {
-    try {
-      return this.bip32Api.fromPrivateKey(privateKey, chainNode, this.network);
-    } catch (error) {
-      throw new DeriverError('Unable to construct BIP32 node from private key');
-    }
-  }
-
-  async getChild(root: BIP32Interface, idx: number): Promise<BIP32Interface> {
-    return Promise.resolve(root.deriveHardened(0).derive(0).derive(idx));
-  }
-
-  protected pkToBuf(pk: string): Buffer {
-    try {
-      return hexToBuffer(pk);
-    } catch (error) {
-      throw new DeriverError('Private key is invalid');
-    }
-  }
-
-  protected chainCodeToBuf(chainCode: string): Buffer {
-    try {
-      return hexToBuffer(chainCode);
-    } catch (error) {
-      throw new DeriverError('Chain code is invalid');
-    }
-  }
-}
-
-export class BtcAccountBip44Deriver extends BtcAccountDeriver {
-  async getRoot(path: string[]) {
-    try {
-      const deriver = await SnapHelper.getBip44Deriver(0); // seed phase
-      const deriverNode = await deriver(0);
-      if (!deriverNode.privateKey) {
-        throw new DeriverError('Deriver private key is missing');
-      }
-      const privateKeyBuffer = this.pkToBuf(deriverNode.privateKey);
-      const root = this.createBip32FromSeed(privateKeyBuffer);
-      return root
-        .deriveHardened(parseInt(path[1].slice(0, -1), 10))
-        .deriveHardened(0);
-    } catch (error) {
-      throw compactError(error, DeriverError);
-    }
-  }
-}
-
-export class BtcAccountBip32Deriver extends BtcAccountDeriver {
+  /**
+   * The curve to use for account derivation. Defaults to 'secp256k1'.
+   */
   readonly curve: 'secp256k1' | 'ed25519' = 'secp256k1';
 
+  constructor(network: Network) {
+    this._bip32Api = BIP32Factory(ecc);
+    this._network = network;
+  }
+
+  /**
+   * Gets the root node of a BIP32 account given a path.
+   *
+   * @param path - The BIP32 path to use for derivation.
+   * @returns The root node of the BIP32 account.
+   * @throws {DeriverError} Throws a DeriverError if the private key is missing or if the BIP32 node cannot be constructed from the private key.
+   */
   async getRoot(path: string[]) {
     try {
-      const deriver = await SnapHelper.getBip32Deriver(path, this.curve);
+      const deriver = await getBip32Deriver(path, this.curve);
 
       if (!deriver.privateKey) {
         throw new DeriverError('Deriver private key is missing');
       }
 
-      const privateKeyBuffer = this.pkToBuf(deriver.privateKey);
-      const chainCodeBuffer = this.chainCodeToBuf(deriver.chainCode);
+      const privateKeyBuffer = hexToBuffer(deriver.privateKey);
+      const chainCodeBuffer = hexToBuffer(deriver.chainCode);
 
       const root = this.createBip32FromPrivateKey(
         privateKeyBuffer,
@@ -111,5 +60,39 @@ export class BtcAccountBip32Deriver extends BtcAccountDeriver {
     } catch (error) {
       throw compactError(error, DeriverError);
     }
+  }
+
+  /**
+   * Creates a BIP32 node from a private key and chain node.
+   *
+   * @param privateKey - The private key buffer.
+   * @param chainNode - The chain node buffer.
+   * @returns The BIP32 node.
+   * @throws {DeriverError} Throws a DeriverError if the BIP32 node cannot be constructed from the private key.
+   */
+  createBip32FromPrivateKey(
+    privateKey: Buffer,
+    chainNode: Buffer,
+  ): BIP32Interface {
+    try {
+      return this._bip32Api.fromPrivateKey(
+        privateKey,
+        chainNode,
+        this._network,
+      );
+    } catch (error) {
+      throw new DeriverError('Unable to construct BIP32 node from private key');
+    }
+  }
+
+  /**
+   * Gets a child node of a BIP32 account given an index.
+   *
+   * @param root - The root node of the BIP32 account.
+   * @param idx - The index of the child node to get.
+   * @returns A promise that resolves to the child node.
+   */
+  async getChild(root: BIP32Interface, idx: number): Promise<BIP32Interface> {
+    return Promise.resolve(root.deriveHardened(0).derive(0).derive(idx));
   }
 }

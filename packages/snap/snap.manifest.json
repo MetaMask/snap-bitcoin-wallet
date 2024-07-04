@@ -7,7 +7,7 @@
     "url": "https://github.com/MetaMask/bitcoin.git"
   },
   "source": {
-    "shasum": "Nz/fHikjqUlxBPopJv1lTeWP6FaObv0z7jw4pMzpZns=",
+    "shasum": "MO1uECXQxFuVEjZuXbUov3P6Sx1Gklzx+8cqYxSYj3U=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
@@ -18,7 +18,6 @@
     }
   },
   "initialConnections": {
-    "https://metamask.github.io": {},
     "http://localhost:8000": {},
     "https://portfolio.metamask.io": {},
     "https://portfolio-builds.metafi-dev.codefi.network": {},
@@ -31,7 +30,6 @@
     },
     "endowment:keyring": {
       "allowedOrigins": [
-        "https://metamask.github.io",
         "http://localhost:8000",
         "https://portfolio.metamask.io",
         "https://portfolio-builds.metafi-dev.codefi.network",

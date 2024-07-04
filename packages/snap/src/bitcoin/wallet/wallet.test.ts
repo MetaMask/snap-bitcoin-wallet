@@ -1,30 +1,26 @@
 import { networks } from 'bitcoinjs-lib';
 
 import { generateFormatedUtxos } from '../../../test/utils';
-import { DustLimit, ScriptType } from '../constants';
-import type { BtcAccount } from './account';
 import { P2SHP2WPKHAccount, P2WPKHAccount } from './account';
-import { BtcAmount } from './amount';
 import { CoinSelectService } from './coin-select';
-import { BtcAccountBip32Deriver } from './deriver';
+import { DustLimit, ScriptType } from './constants';
+import { BtcAccountDeriver } from './deriver';
 import { WalletError } from './exceptions';
-import { PsbtService } from './psbt';
-import { SelectionResult } from './selection-result';
-import { BtcTxInfo } from './transaction-info';
+import { TxInfo } from './transaction-info';
 import { TxInput } from './transaction-input';
 import { TxOutput } from './transaction-output';
 import { BtcWallet } from './wallet';
 
-jest.mock('../../libs/snap/helpers');
-jest.mock('../../libs/logger/logger');
+jest.mock('../../utils/snap');
+jest.mock('../../utils/logger');
 
 describe('BtcWallet', () => {
   const createMockDeriver = (network) => {
-    const rootSpy = jest.spyOn(BtcAccountBip32Deriver.prototype, 'getRoot');
-    const childSpy = jest.spyOn(BtcAccountBip32Deriver.prototype, 'getChild');
+    const rootSpy = jest.spyOn(BtcAccountDeriver.prototype, 'getRoot');
+    const childSpy = jest.spyOn(BtcAccountDeriver.prototype, 'getChild');
 
     return {
-      instance: new BtcAccountBip32Deriver(network),
+      instance: new BtcAccountDeriver(network),
       rootSpy,
       childSpy,
     };
@@ -45,13 +41,25 @@ describe('BtcWallet', () => {
     return [
       {
         address,
-        value: amount,
+        value: BigInt(amount),
       },
     ];
   };
 
   describe('unlock', () => {
-    it('returns an `Account` objec with type bip122:p2wpkh', async () => {
+    it('returns an `Account` object with defualt type', async () => {
+      const network = networks.testnet;
+      const { rootSpy, childSpy, instance } = createMockWallet(network);
+      const idx = 0;
+
+      const result = await instance.unlock(idx);
+
+      expect(result).toBeInstanceOf(P2WPKHAccount);
+      expect(rootSpy).toHaveBeenCalledWith(P2WPKHAccount.path);
+      expect(childSpy).toHaveBeenCalledWith(expect.any(Object), idx);
+    });
+
+    it('returns an `Account` object with type bip122:p2wpkh', async () => {
       const network = networks.testnet;
       const { rootSpy, childSpy, instance } = createMockWallet(network);
       const idx = 0;
@@ -63,7 +71,7 @@ describe('BtcWallet', () => {
       expect(childSpy).toHaveBeenCalledWith(expect.any(Object), idx);
     });
 
-    it('returns an `Account` objec with type `p2wpkh`', async () => {
+    it('returns an `Account` object with type `p2wpkh`', async () => {
       const network = networks.testnet;
       const { rootSpy, childSpy, instance } = createMockWallet(network);
       const idx = 0;
@@ -99,26 +107,64 @@ describe('BtcWallet', () => {
   });
 
   describe('createTransaction', () => {
-    it('creates an transaction', async () => {
+    it('creates an transaction with changes', async () => {
       const network = networks.testnet;
       const { instance } = createMockDeriver(network);
       const wallet = new BtcWallet(instance, network);
       const account = await wallet.unlock(0, ScriptType.P2wpkh);
-      const utxos = generateFormatedUtxos(account.address, 2, 10000, 10000);
+
+      const utxos = generateFormatedUtxos(account.address, 200, 100000, 100000);
 
       const result = await wallet.createTransaction(
         account,
-        createMockTxIndent(account.address, 15000),
+        createMockTxIndent(account.address, 100000),
         {
           utxos,
-          fee: 1,
+          fee: 56,
           subtractFeeFrom: [],
           replaceable: false,
         },
       );
+
+      const info = result.txInfo;
+      const { recipients } = info;
+      const { change } = info;
+
+      expect(recipients).toHaveLength(1);
+      expect(change).toBeDefined();
       expect(result).toStrictEqual({
         tx: expect.any(String),
-        txInfo: expect.any(BtcTxInfo),
+        txInfo: expect.any(TxInfo),
+      });
+    });
+
+    it('creates an transaction without changes', async () => {
+      const network = networks.testnet;
+      const { instance } = createMockDeriver(network);
+      const wallet = new BtcWallet(instance, network);
+      const account = await wallet.unlock(0, ScriptType.P2wpkh);
+      const utxos = generateFormatedUtxos(account.address, 200, 10000, 10000);
+
+      const result = await wallet.createTransaction(
+        account,
+        createMockTxIndent(account.address, 100000),
+        {
+          utxos,
+          fee: 50,
+          subtractFeeFrom: [],
+          replaceable: false,
+        },
+      );
+
+      const info = result.txInfo;
+      const { recipients } = info;
+      const { change } = info;
+
+      expect(recipients).toHaveLength(1);
+      expect(change).toBeUndefined();
+      expect(result).toStrictEqual({
+        tx: expect.any(String),
+        txInfo: expect.any(TxInfo),
       });
     });
 
@@ -147,7 +193,7 @@ describe('BtcWallet', () => {
       expect(coinSelectServiceSpy).toHaveBeenCalledWith(
         expect.any(Array),
         expect.any(Array),
-        account,
+        expect.any(TxOutput),
       );
 
       for (const input of coinSelectServiceSpy.mock.calls[0][0]) {
@@ -155,10 +201,7 @@ describe('BtcWallet', () => {
       }
 
       for (const output of coinSelectServiceSpy.mock.calls[0][1]) {
-        expect(output).toStrictEqual({
-          address: account.address,
-          value: DustLimit[account.scriptType] + 1,
-        });
+        expect(output).toBeInstanceOf(TxOutput);
       }
     });
 
@@ -166,34 +209,24 @@ describe('BtcWallet', () => {
       const network = networks.testnet;
       const { instance } = createMockDeriver(network);
       const wallet = new BtcWallet(instance, network);
-      const chgAccount = (await wallet.unlock(
-        0,
-        ScriptType.P2wpkh,
-      )) as unknown as BtcAccount;
+      const chgAccount = await wallet.unlock(0, ScriptType.P2wpkh);
       const recipient = await wallet.unlock(1, ScriptType.P2wpkh);
-      const utxos = generateFormatedUtxos(chgAccount.address, 2);
+      const utxos = generateFormatedUtxos(chgAccount.address, 2, 10000, 10000);
       const coinSelectServiceSpy = jest.spyOn(
         CoinSelectService.prototype,
         'selectCoins',
       );
-      const psbtServiceSpy = jest
-        .spyOn(PsbtService.prototype, 'addOutputs')
-        .mockReturnThis();
 
-      // to avoid modifiy the original object when we needed to test the output
-      psbtServiceSpy.mockReturnThis();
-
-      const selectionResult = new SelectionResult();
-      selectionResult.selectedInputs = utxos.map(
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        (utxo) => new TxInput(utxo, chgAccount.payment.output!),
-      );
-      selectionResult.selectedOutputs = [new TxOutput(500, recipient.address)];
-      selectionResult.fee = 100;
-      selectionResult.change = new TxOutput(
-        DustLimit[chgAccount.scriptType] - 1,
-        chgAccount.address,
-      );
+      const selectionResult = {
+        change: new TxOutput(
+          DustLimit[chgAccount.scriptType] - 1,
+          chgAccount.address,
+          chgAccount.script,
+        ),
+        fee: 100,
+        inputs: utxos.map((utxo) => new TxInput(utxo, chgAccount.script)),
+        outputs: [new TxOutput(500, recipient.address, recipient.script)],
+      };
 
       coinSelectServiceSpy.mockReturnValue(selectionResult);
 
@@ -208,23 +241,13 @@ describe('BtcWallet', () => {
         },
       );
 
-      const info: BtcTxInfo = result.txInfo as unknown as BtcTxInfo;
+      const info: TxInfo = result.txInfo as unknown as TxInfo;
 
-      expect(psbtServiceSpy).toHaveBeenCalledWith(
-        selectionResult.selectedOutputs,
-      );
-
-      const jsonInfo = info.toJson();
-
-      expect(jsonInfo).toHaveProperty(
-        'txFee',
-        new BtcAmount(100 + DustLimit[chgAccount.scriptType] - 1).toString(
-          true,
-        ),
-      );
+      expect(info.txFee).toBe(BigInt(19500));
+      expect(info.change).toBeUndefined();
     });
 
-    it('throws `Transaction amount too small` error the transaction output is too small', async () => {
+    it('throws `Transaction amount too small` error if the transaction output is too small', async () => {
       const network = networks.testnet;
       const { instance } = createMockDeriver(network);
       const wallet = new BtcWallet(instance, network);
@@ -243,31 +266,6 @@ describe('BtcWallet', () => {
           },
         ),
       ).rejects.toThrow('Transaction amount too small');
-    });
-
-    it('throws `Fail to get account script hash` error if the account script hash is undefined', async () => {
-      const network = networks.testnet;
-      const { instance } = createMockDeriver(network);
-      const wallet = new BtcWallet(instance, network);
-      const account = await wallet.unlock(0, ScriptType.P2wpkh);
-      const utxos = generateFormatedUtxos(account.address, 2);
-      account.payment.output = undefined;
-
-      await expect(
-        wallet.createTransaction(
-          account,
-          createMockTxIndent(
-            account.address,
-            DustLimit[account.scriptType] + 1,
-          ),
-          {
-            utxos,
-            fee: 1,
-            subtractFeeFrom: [],
-            replaceable: false,
-          },
-        ),
-      ).rejects.toThrow('Fail to get account script hash');
     });
   });
 

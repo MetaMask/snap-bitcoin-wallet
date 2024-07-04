@@ -1,44 +1,82 @@
 import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 
-import type {
-  FeeRatio,
-  IOnChainService,
-  Balances,
-  AssetBalances,
-  TransactionIntent,
-  Fees,
-  TransactionData,
-  CommitedTransaction,
-} from '../../chain';
+import { Caip2Asset } from '../../constants';
 import { compactError } from '../../utils';
-import { BtcAsset } from '../constants';
-import type { IWriteDataClient, IReadDataClient } from '../data-client';
-import { BtcAmount } from '../wallet';
+import type { FeeRatio, TransactionStatus } from './constants';
+import type { IDataClient } from './data-client';
 import { BtcOnChainServiceError } from './exceptions';
-import type { BtcOnChainServiceOptions } from './types';
 
-export class BtcOnChainService implements IOnChainService {
-  protected readonly readClient: IReadDataClient;
+export type TransactionStatusData = {
+  status: TransactionStatus;
+};
 
-  protected readonly writeClient: IWriteDataClient;
+export type Balance = {
+  amount: bigint;
+};
 
-  protected readonly options: BtcOnChainServiceOptions;
+export type AssetBalances = {
+  balances: {
+    [address: string]: {
+      [asset: string]: Balance;
+    };
+  };
+};
 
-  constructor(
-    readClient: IReadDataClient,
-    writeClient: IWriteDataClient,
-    options: BtcOnChainServiceOptions,
-  ) {
-    this.readClient = readClient;
-    this.writeClient = writeClient;
-    this.options = options;
+export type Fee = {
+  type: FeeRatio;
+  rate: bigint;
+};
+
+export type Fees = {
+  fees: {
+    type: FeeRatio;
+    rate: bigint;
+  }[];
+};
+
+export type Utxo = {
+  block: number;
+  txHash: string;
+  index: number;
+  value: number;
+};
+
+export type TransactionData = {
+  data: {
+    utxos: Utxo[];
+  };
+};
+
+export type CommitedTransaction = {
+  transactionId: string;
+};
+
+export type BtcOnChainServiceOptions = {
+  network: Network;
+};
+
+export class BtcOnChainService {
+  protected readonly _dataClient: IDataClient;
+
+  protected readonly _options: BtcOnChainServiceOptions;
+
+  constructor(dataClient: IDataClient, options: BtcOnChainServiceOptions) {
+    this._dataClient = dataClient;
+    this._options = options;
   }
 
   get network(): Network {
-    return this.options.network;
+    return this._options.network;
   }
 
+  /**
+   * Gets the balances for multiple addresses and multiple assets.
+   *
+   * @param addresses - An array of addresses to fetch the balances for.
+   * @param assets - An array of assets to fetch the balances of.
+   * @returns A promise that resolves to an `AssetBalances` object.
+   */
   async getBalances(
     addresses: string[],
     assets: string[],
@@ -48,23 +86,23 @@ export class BtcOnChainService implements IOnChainService {
         throw new BtcOnChainServiceError('Only one asset is supported');
       }
 
-      const allowedAssets = new Set<string>(Object.values(BtcAsset));
+      const allowedAssets = new Set<string>(Object.values(Caip2Asset));
 
       if (
         !allowedAssets.has(assets[0]) ||
-        (this.network === networks.testnet && assets[0] !== BtcAsset.TBtc) ||
-        (this.network === networks.bitcoin && assets[0] !== BtcAsset.Btc)
+        (this.network === networks.testnet && assets[0] !== Caip2Asset.TBtc) ||
+        (this.network === networks.bitcoin && assets[0] !== Caip2Asset.Btc)
       ) {
         throw new BtcOnChainServiceError('Invalid asset');
       }
 
-      const balance: Balances = await this.readClient.getBalances(addresses);
+      const balance = await this._dataClient.getBalances(addresses);
 
       return addresses.reduce<AssetBalances>(
         (acc: AssetBalances, address: string) => {
           acc.balances[address] = {
             [assets[0]]: {
-              amount: new BtcAmount(balance[address]),
+              amount: BigInt(balance[address]),
             },
           };
           return acc;
@@ -76,38 +114,51 @@ export class BtcOnChainService implements IOnChainService {
     }
   }
 
+  /**
+   * Gets the fee rates of the network.
+   *
+   * @returns A promise that resolves to a `Fees` object.
+   */
   async getFeeRates(): Promise<Fees> {
     try {
-      const result = await this.readClient.getFeeRates();
+      const result = await this._dataClient.getFeeRates();
 
       return {
         fees: Object.entries(result).map(
           ([key, value]: [key: FeeRatio, value: number]) => ({
             type: key,
-            rate: new BtcAmount(value),
+            rate: BigInt(value),
           }),
         ),
       };
     } catch (error) {
-      throw new BtcOnChainServiceError(error);
+      throw compactError(error, BtcOnChainServiceError);
     }
   }
 
-  async getTransactionStatus(txHash: string) {
+  /**
+   * Gets the status of a transaction with the given transaction hash.
+   *
+   * @param txHash - The transaction hash of the transaction to get the status of.
+   * @returns A promise that resolves to a `TransactionStatusData` object.
+   */
+  async getTransactionStatus(txHash: string): Promise<TransactionStatusData> {
     try {
-      return await this.readClient.getTransactionStatus(txHash);
+      return await this._dataClient.getTransactionStatus(txHash);
     } catch (error) {
       throw new BtcOnChainServiceError(error);
     }
   }
 
-  async getDataForTransaction(
-    address: string,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    transactionIntent?: TransactionIntent,
-  ): Promise<TransactionData> {
+  /**
+   * Gets the required metadata to build a transaction for the given address and transaction intent.
+   *
+   * @param address - The address to build the transaction for.
+   * @returns A promise that resolves to a `TransactionData` object.
+   */
+  async getDataForTransaction(address: string): Promise<TransactionData> {
     try {
-      const data = await this.readClient.getUtxos(address);
+      const data = await this._dataClient.getUtxos(address);
       return {
         data: {
           utxos: data,
@@ -118,11 +169,17 @@ export class BtcOnChainService implements IOnChainService {
     }
   }
 
+  /**
+   * Broadcasts a signed transaction on the blockchain network.
+   *
+   * @param signedTransaction - A signed transaction string.
+   * @returns A promise that resolves to a `CommitedTransaction` object.
+   */
   async broadcastTransaction(
     signedTransaction: string,
   ): Promise<CommitedTransaction> {
     try {
-      const transactionId = await this.writeClient.sendTransaction(
+      const transactionId = await this._dataClient.sendTransaction(
         signedTransaction,
       );
       return {

@@ -1,24 +1,21 @@
-import { Transaction, networks } from 'bitcoinjs-lib';
+import { Psbt, Transaction, networks } from 'bitcoinjs-lib';
 
 import { generateFormatedUtxos } from '../../../test/utils';
 import { hexToBuffer } from '../../utils';
-import { MaxStandardTxWeight, ScriptType } from '../constants';
-import { BtcAccountBip32Deriver } from './deriver';
+import { MaxStandardTxWeight, ScriptType } from './constants';
+import { BtcAccountDeriver } from './deriver';
 import { PsbtServiceError } from './exceptions';
 import { PsbtService } from './psbt';
 import { TxInput } from './transaction-input';
 import { TxOutput } from './transaction-output';
 import { BtcWallet } from './wallet';
 
-jest.mock('../../libs/logger/logger');
-jest.mock('../../libs/snap/helpers');
+jest.mock('../../utils/logger');
+jest.mock('../../utils/snap');
 
 describe('PsbtService', () => {
   const createMockWallet = (network) => {
-    const instance = new BtcWallet(
-      new BtcAccountBip32Deriver(network),
-      network,
-    );
+    const instance = new BtcWallet(new BtcAccountDeriver(network), network);
     return {
       instance,
     };
@@ -32,11 +29,14 @@ describe('PsbtService', () => {
     const receiver1 = await wallet.instance.unlock(1, ScriptType.P2wpkh);
     const receiver2 = await wallet.instance.unlock(2, ScriptType.P2wpkh);
     const receivers = [receiver1, receiver2];
-    const finalizeSpy = jest.spyOn(service.psbt, 'finalizeAllInputs');
-    const inputSpy = jest.spyOn(service.psbt, 'addInput');
-    const outputSpy = jest.spyOn(service.psbt, 'addOutput');
-    const signSpy = jest.spyOn(service.psbt, 'signAllInputsHDAsync');
-    const verifySpy = jest.spyOn(service.psbt, 'validateSignaturesOfAllInputs');
+    const finalizeSpy = jest.spyOn(Psbt.prototype, 'finalizeAllInputs');
+    const inputSpy = jest.spyOn(Psbt.prototype, 'addInput');
+    const outputSpy = jest.spyOn(Psbt.prototype, 'addOutput');
+    const signSpy = jest.spyOn(Psbt.prototype, 'signAllInputsHDAsync');
+    const verifySpy = jest.spyOn(
+      Psbt.prototype,
+      'validateSignaturesOfAllInputs',
+    );
     const transactionWeightSpy = jest.spyOn(Transaction.prototype, 'weight');
     const transactionHexSpy = jest.spyOn(Transaction.prototype, 'toHex');
 
@@ -44,7 +44,7 @@ describe('PsbtService', () => {
     const fee = 500;
 
     const outputs = receivers.map(
-      (account) => new TxOutput(outputVal, account.address),
+      (account) => new TxOutput(outputVal, account.address, account.script),
     );
     const utxos = generateFormatedUtxos(
       sender.address,
@@ -52,14 +52,17 @@ describe('PsbtService', () => {
       outputVal * outputs.length + fee,
       outputVal * outputs.length + fee,
     );
-    const inputs = utxos.map(
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      (utxo) => new TxInput(utxo, sender.payment.output!),
-    );
+    const inputs = utxos.map((utxo) => new TxInput(utxo, sender.script));
 
     service.addOutputs(outputs);
 
-    service.addInputs(inputs, sender, rbfOptIn);
+    service.addInputs(
+      inputs,
+      rbfOptIn,
+      sender.hdPath,
+      hexToBuffer(sender.pubkey, false),
+      hexToBuffer(sender.mfp, false),
+    );
 
     return {
       service,
@@ -83,7 +86,7 @@ describe('PsbtService', () => {
 
       const service = new PsbtService(network);
 
-      expect(service.psbt.txInputs).toHaveLength(0);
+      expect(service.psbt).toBeInstanceOf(Psbt);
     });
 
     it('constructor with an psbt base string', async () => {
@@ -92,8 +95,7 @@ describe('PsbtService', () => {
 
       const newService = PsbtService.fromBase64(networks.testnet, psbtBase64);
 
-      expect(newService.psbt.txInputs).toHaveLength(2);
-      expect(newService.psbt.txOutputs).toHaveLength(2);
+      expect(newService.psbt).toBeInstanceOf(Psbt);
     });
   });
 
@@ -111,7 +113,7 @@ describe('PsbtService', () => {
           hash: inputs[i].txHash,
           index: inputs[i].index,
           witnessUtxo: {
-            script: inputs[i].scriptBuf,
+            script: inputs[i].script,
             value: inputs[i].value,
           },
           bip32Derivation: [
@@ -134,7 +136,7 @@ describe('PsbtService', () => {
           hash: inputs[i].txHash,
           index: inputs[i].index,
           witnessUtxo: {
-            script: inputs[i].scriptBuf,
+            script: inputs[i].script,
             value: inputs[i].value,
           },
           bip32Derivation: [
@@ -149,15 +151,21 @@ describe('PsbtService', () => {
       }
     });
 
-    it('throws `Failed to add inputs in PSBT` error if adding inputs fails', async () => {
+    it('throws `Failed to add input in PSBT` error if adding inputs fails', async () => {
       const { service, inputSpy, sender, inputs } = await preparePsbt();
       inputSpy.mockImplementation(() => {
         throw new Error('error');
       });
 
       expect(() => {
-        service.addInputs(inputs, sender, false);
-      }).toThrow('Failed to add inputs in PSBT');
+        service.addInputs(
+          inputs,
+          false,
+          sender.hdPath,
+          hexToBuffer(sender.pubkey, false),
+          hexToBuffer(sender.mfp),
+        );
+      }).toThrow('Failed to add input in PSBT');
     });
   });
 
@@ -169,7 +177,7 @@ describe('PsbtService', () => {
       for (let i = 0; i < service.psbt.txOutputs.length; i++) {
         expect(service.psbt.txOutputs[i]).toHaveProperty(
           'script',
-          receivers[i].payment.output,
+          receivers[i].script,
         );
         expect(service.psbt.txOutputs[i]).toHaveProperty(
           'value',
@@ -182,14 +190,14 @@ describe('PsbtService', () => {
       }
     });
 
-    it('throws `Failed to add outputs in PSBT` error if adding outputs fails', async () => {
+    it('throws `Failed to add output in PSBT` error if adding outputs fails', async () => {
       const { service, outputSpy, outputs } = await preparePsbt();
       outputSpy.mockImplementation(() => {
         throw new Error('error');
       });
 
       expect(() => service.addOutputs(outputs)).toThrow(
-        'Failed to add outputs in PSBT',
+        'Failed to add output in PSBT',
       );
     });
   });
@@ -272,6 +280,46 @@ describe('PsbtService', () => {
       });
 
       expect(() => service.finalize()).toThrow(PsbtServiceError);
+    });
+  });
+
+  describe('signDummy', () => {
+    it('clones a psbt, then sign it and returns an PsbtService object', async () => {
+      const { service, sender } = await preparePsbt();
+
+      const signedService = await service.signDummy(sender.signer);
+
+      expect(signedService).toBeInstanceOf(PsbtService);
+    });
+
+    it('throws `Failed to sign dummy in PSBT` error if signDummy is failed', async () => {
+      const { service, sender, finalizeSpy } = await preparePsbt();
+
+      finalizeSpy.mockImplementation(() => {
+        throw new Error('error');
+      });
+
+      await expect(service.signDummy(sender.signer)).rejects.toThrow(
+        `Failed to sign dummy in PSBT`,
+      );
+    });
+  });
+
+  describe('getFee', () => {
+    it('extracts fee from the psbt', async () => {
+      const { service, sender } = await preparePsbt();
+
+      const signedService = await service.signDummy(sender.signer);
+
+      const fee = signedService.getFee();
+
+      expect(fee).toBeGreaterThan(0);
+    });
+
+    it('throws `Failed to get fee from PSBT` error if getFee is failed', async () => {
+      const { service } = await preparePsbt();
+
+      expect(() => service.getFee()).toThrow(`Failed to get fee from PSBT`);
     });
   });
 });

@@ -7,7 +7,7 @@ module.exports = {
   restoreMocks: true,
   resetMocks: true,
   verbose: true,
-  testPathIgnorePatterns: ['/node_modules/', '/__BAK__/', '/__mocks__/'],
+  testPathIgnorePatterns: ['/node_modules/', '/__mocks__/'],
   testMatch: ['**/src/**/?(*.)+(spec|test).[tj]s?(x)'],
   collectCoverage: true,
   // An array of glob patterns indicating a set of files for which coverage information should be collected

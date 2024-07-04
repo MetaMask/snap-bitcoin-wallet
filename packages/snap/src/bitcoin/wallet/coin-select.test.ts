@@ -1,22 +1,18 @@
-import { networks } from 'bitcoinjs-lib';
+import { networks, address as addressUtils } from 'bitcoinjs-lib';
 
 import { generateFormatedUtxos } from '../../../test/utils';
-import { ScriptType } from '../constants';
 import { CoinSelectService } from './coin-select';
-import { BtcAccountBip32Deriver } from './deriver';
-import { SelectionResult } from './selection-result';
+import { ScriptType } from './constants';
+import { BtcAccountDeriver } from './deriver';
 import { TxInput } from './transaction-input';
 import { TxOutput } from './transaction-output';
 import { BtcWallet } from './wallet';
 
-jest.mock('../../libs/snap/helpers');
+jest.mock('../../utils/snap');
 
 describe('CoinSelectService', () => {
   const createMockWallet = (network) => {
-    const instance = new BtcWallet(
-      new BtcAccountBip32Deriver(network),
-      network,
-    );
+    const instance = new BtcWallet(new BtcAccountDeriver(network), network);
     return {
       instance,
     };
@@ -35,12 +31,15 @@ describe('CoinSelectService', () => {
 
     const utxos = generateFormatedUtxos(sender.address, 2, inputMin, inputMax);
 
-    const outputs = [new TxOutput(outputVal, receiver1.address)];
+    const outputs = [
+      new TxOutput(
+        outputVal,
+        receiver1.address,
+        addressUtils.toOutputScript(receiver1.address, network),
+      ),
+    ];
 
-    const inputs = utxos.map(
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      (utxo) => new TxInput(utxo, sender.payment.output!),
-    );
+    const inputs = utxos.map((utxo) => new TxInput(utxo, sender.script));
 
     return {
       sender,
@@ -59,10 +58,16 @@ describe('CoinSelectService', () => {
 
       const coinSelectService = new CoinSelectService(1);
 
-      const result = coinSelectService.selectCoins(inputs, outputs, sender);
+      const result = coinSelectService.selectCoins(
+        inputs,
+        outputs,
+        new TxOutput(0, sender.address, sender.script),
+      );
 
-      expect(result).toBeInstanceOf(SelectionResult);
       expect(result.fee).toBeGreaterThan(1);
+      expect(result.change).toBeDefined();
+      expect(result.inputs.length).toBeGreaterThan(0);
+      expect(result.outputs.length).toBeGreaterThan(0);
     });
 
     it('throws `Insufficient funds` error if the given utxos is not sufficient', async () => {
@@ -77,7 +82,11 @@ describe('CoinSelectService', () => {
       const coinSelectService = new CoinSelectService(100);
 
       expect(() =>
-        coinSelectService.selectCoins(inputs, outputs, sender),
+        coinSelectService.selectCoins(
+          inputs,
+          outputs,
+          new TxOutput(0, sender.address, sender.script),
+        ),
       ).toThrow('Insufficient funds');
     });
   });
