@@ -1,4 +1,7 @@
 import { Buffer } from 'buffer';
+import { assert } from 'superstruct';
+
+import { hexStringStruct } from './superstruct';
 /**
  * Removes the '0x' prefix from a given hex string.
  *
@@ -19,6 +22,7 @@ export function trimHexPrefix(hexStr: string) {
  */
 export function hexToBuffer(hexStr: string, trimPrefix = true) {
   try {
+    assert(hexStr, hexStringStruct);
     return Buffer.from(trimPrefix ? trimHexPrefix(hexStr) : hexStr, 'hex');
   } catch (error) {
     throw new Error('Unable to convert hex string to buffer');

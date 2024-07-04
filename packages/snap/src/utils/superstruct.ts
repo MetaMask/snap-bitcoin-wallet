@@ -10,3 +10,5 @@ export const positiveStringStruct = pattern(
   string(),
   /^(?!0\d)(\d+(\.\d+)?)$/u,
 );
+
+export const hexStringStruct = pattern(string(), /^(0x|0X)?[0-9a-fA-F]+$/u);
