@@ -310,7 +310,7 @@ describe('BtcKeyring', () => {
       expect(sendManySpy).toHaveBeenCalledWith(expect.any(BtcAccount), params);
     });
 
-    it('throws `Account not found` error if the given account address is not match with the unlocked account', async () => {
+    it('throws `Account not found` error if the account address is not match with the unlocked account', async () => {
       const caip2ChainId = Caip2ChainId.Testnet;
       const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);
