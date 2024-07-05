@@ -49,6 +49,8 @@ export class CoinSelectService {
       if (output.address) {
         selectedResult.outputs.push(output);
       } else {
+        // We only support 1 change output, so we do check if there are more than 1
+        // and raise an error to avoid overwriting it
         if (selectedResult.change !== undefined) {
           throw new Error('Unexpected error, more than 1 output return');
         }
