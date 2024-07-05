@@ -60,10 +60,13 @@ export function replaceMiddleChar(
   if (!str) {
     return str;
   }
+  // Enforces indexes to be positive to avoid parameter swapping in `.substring`
+  if (headLength < 0 || tailLength < 0) {
+    throw new Error('Indexes must be positives');
+  }
+  // Check upper bound (using + is safe here, since we know that both lengths are positives)
   if (headLength + tailLength > str.length) {
-    throw new Error(
-      'The sum of headLength and tailLength should be less than the length of the string',
-    );
+    throw new Error('Indexes out of bounds');
   }
   return `${str.substring(0, headLength)}${replaceStr}${str.substring(
     str.length - tailLength,
