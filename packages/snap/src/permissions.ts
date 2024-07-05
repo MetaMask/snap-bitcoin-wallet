@@ -48,7 +48,7 @@ const allowedOrigins = [
   'https://ramps-dev.portfolio.metamask.io',
 ];
 
-const local = 'http://localhost:8000';
+const local = 'http://localhost:3000';
 const metamask = 'metamask';
 
 export const originPermissions = new Map<string, Set<string>>([]);
