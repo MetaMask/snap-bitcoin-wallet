@@ -2788,7 +2788,7 @@ __metadata:
     "@metamask/eslint-config-jest": ^12.1.0
     "@metamask/eslint-config-nodejs": ^12.1.0
     "@metamask/eslint-config-typescript": ^12.1.0
-    "@metamask/keyring-api": ^6.0.0
+    "@metamask/keyring-api": ^8.0.0
     "@metamask/providers": ^16.0.0
     "@svgr/webpack": ^6.4.0
     "@testing-library/dom": ^8.17.1
@@ -3010,22 +3010,6 @@ __metadata:
     "@noble/hashes": ^1.3.2
     "@scure/base": ^1.0.0
   checksum: 4de5f92e4d9408829552bb569b998613ed940f289613fe86f9a5f0a66e392ec386d70b2365943c216b83c9ff249877fd731f2f791240a622ff186fd047d81f9e
-  languageName: node
-  linkType: hard
-
-"@metamask/keyring-api@npm:^6.0.0":
-  version: 6.4.0
-  resolution: "@metamask/keyring-api@npm:6.4.0"
-  dependencies:
-    "@metamask/snaps-sdk": ^4.2.0
-    "@metamask/utils": ^8.4.0
-    "@types/uuid": ^9.0.8
-    bech32: ^2.0.0
-    superstruct: ^1.0.3
-    uuid: ^9.0.1
-  peerDependencies:
-    "@metamask/providers": ">=15 <18"
-  checksum: 7845ed5fa73db3165703c2142b6062d03ca5fea329b54d28f424dee2bb393edc1f9a015e771289ef7236c31f30355bf2c52ad74bb47cf531c09c5eec66e06b00
   languageName: node
   linkType: hard
 
