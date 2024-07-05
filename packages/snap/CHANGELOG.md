@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Remove duplicate validation ([#137](https://github.com/MetaMask/snap-bitcoin-wallet/pull/137))
+- Remove duplicate validation when getting balances ([#137](https://github.com/MetaMask/snap-bitcoin-wallet/pull/137))
 
 ## [0.2.0]
 
