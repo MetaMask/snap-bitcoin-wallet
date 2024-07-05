@@ -2731,9 +2731,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/bitcoin@workspace:packages/snap":
+"@metamask/bitcoin-wallet-snap@workspace:packages/snap":
   version: 0.0.0-use.local
-  resolution: "@metamask/bitcoin@workspace:packages/snap"
+  resolution: "@metamask/bitcoin-wallet-snap@workspace:packages/snap"
   dependencies:
     "@babel/preset-typescript": ^7.23.3
     "@bitcoinerlab/secp256k1": ^1.1.1
@@ -2744,7 +2744,7 @@ __metadata:
     "@metamask/eslint-config-nodejs": ^12.1.0
     "@metamask/eslint-config-typescript": ^12.1.0
     "@metamask/key-tree": ^9.0.0
-    "@metamask/keyring-api": ^6.3.1
+    "@metamask/keyring-api": ^8.0.0
     "@metamask/snaps-cli": ^6.1.0
     "@metamask/snaps-jest": ^8.0.0
     "@metamask/snaps-sdk": ^4.0.0
@@ -2774,6 +2774,53 @@ __metadata:
     rimraf: ^3.0.2
     superstruct: ^1.0.3
     ts-jest: ^29.1.0
+    typescript: ^4.7.4
+    uuid: ^9.0.1
+  languageName: unknown
+  linkType: soft
+
+"@metamask/bitcoin-wallet-test-dapp@workspace:packages/site":
+  version: 0.0.0-use.local
+  resolution: "@metamask/bitcoin-wallet-test-dapp@workspace:packages/site"
+  dependencies:
+    "@metamask/auto-changelog": ^3.4.4
+    "@metamask/eslint-config": ^12.2.0
+    "@metamask/eslint-config-browser": ^12.1.0
+    "@metamask/eslint-config-jest": ^12.1.0
+    "@metamask/eslint-config-nodejs": ^12.1.0
+    "@metamask/eslint-config-typescript": ^12.1.0
+    "@metamask/keyring-api": ^6.0.0
+    "@metamask/providers": ^16.0.0
+    "@svgr/webpack": ^6.4.0
+    "@testing-library/dom": ^8.17.1
+    "@testing-library/jest-dom": ^5.16.4
+    "@testing-library/react": ^13.3.0
+    "@testing-library/user-event": ^13.5.0
+    "@types/jest": ^27.5.2
+    "@types/react": ^18.0.15
+    "@types/react-dom": ^18.0.6
+    "@types/styled-components": ^5.1.25
+    "@typescript-eslint/eslint-plugin": ^5.42.1
+    "@typescript-eslint/parser": ^5.42.1
+    eslint: ^8.45.0
+    eslint-config-prettier: ^8.5.0
+    eslint-plugin-import: ~2.26.0
+    eslint-plugin-jest: ^27.1.5
+    eslint-plugin-jsdoc: ^41.1.2
+    eslint-plugin-n: ^15.7.0
+    eslint-plugin-prettier: ^4.2.1
+    eslint-plugin-promise: ^6.1.1
+    gatsby: ^5.13.3
+    gatsby-plugin-manifest: ^5.13.1
+    gatsby-plugin-styled-components: ^6.13.1
+    gatsby-plugin-svgr: ^3.0.0-beta.0
+    prettier: ^2.7.1
+    prettier-plugin-packagejson: ^2.2.18
+    react: ^18.2.0
+    react-dom: ^18.2.0
+    react-is: ^18.2.0
+    rimraf: ^3.0.2
+    styled-components: 5.3.3
     typescript: ^4.7.4
     uuid: ^9.0.1
   languageName: unknown
@@ -2967,7 +3014,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/keyring-api@npm:^6.0.0, @metamask/keyring-api@npm:^6.3.1":
+"@metamask/keyring-api@npm:^6.0.0":
   version: 6.4.0
   resolution: "@metamask/keyring-api@npm:6.4.0"
   dependencies:
@@ -2980,6 +3027,22 @@ __metadata:
   peerDependencies:
     "@metamask/providers": ">=15 <18"
   checksum: 7845ed5fa73db3165703c2142b6062d03ca5fea329b54d28f424dee2bb393edc1f9a015e771289ef7236c31f30355bf2c52ad74bb47cf531c09c5eec66e06b00
+  languageName: node
+  linkType: hard
+
+"@metamask/keyring-api@npm:^8.0.0":
+  version: 8.0.0
+  resolution: "@metamask/keyring-api@npm:8.0.0"
+  dependencies:
+    "@metamask/snaps-sdk": ^4.2.0
+    "@metamask/utils": ^8.4.0
+    "@types/uuid": ^9.0.8
+    bech32: ^2.0.0
+    superstruct: ^1.0.3
+    uuid: ^9.0.1
+  peerDependencies:
+    "@metamask/providers": ">=15 <18"
+  checksum: 945d4bdb69d2eea60bd990d6372a7b8e5740a1c7aa66361ad1fa309273f05ec0543edea84524ed266e8e06a38fd4727869da646306682e5fa0d52c8ccc393c4a
   languageName: node
   linkType: hard
 
@@ -3066,12 +3129,12 @@ __metadata:
   linkType: hard
 
 "@metamask/rpc-errors@npm:^6.0.0, @metamask/rpc-errors@npm:^6.2.1":
-  version: 6.2.1
-  resolution: "@metamask/rpc-errors@npm:6.2.1"
+  version: 6.3.1
+  resolution: "@metamask/rpc-errors@npm:6.3.1"
   dependencies:
-    "@metamask/utils": ^8.3.0
+    "@metamask/utils": ^9.0.0
     fast-safe-stringify: ^2.0.6
-  checksum: a9223c3cb9ab05734ea0dda990597f90a7cdb143efa0c026b1a970f2094fe5fa3c341ed39b1e7623be13a96b98fb2c697ef51a2e2b87d8f048114841d35ee0a9
+  checksum: 8761f5c0161cb3b342abd3ccccbd7b792f36a987e1f22c3f89b1bd29f72a2e35a2c91b58164fdd9dc3e5b67157500dcbdb5d04245117c14310c34cf42f7b8463
   languageName: node
   linkType: hard
 
@@ -6672,9 +6735,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bitcoin-manager-snap-monorepo@workspace:.":
+"bitcoin-wallet-snap-monorepo@workspace:.":
   version: 0.0.0-use.local
-  resolution: "bitcoin-manager-snap-monorepo@workspace:."
+  resolution: "bitcoin-wallet-snap-monorepo@workspace:."
   dependencies:
     "@lavamoat/allow-scripts": ^3.0.0
     "@lavamoat/preinstall-always-fail": ^2.0.0
@@ -9965,53 +10028,6 @@ __metadata:
   checksum: ad4e1577f1a6b721c7800dcc7c733fe01f6c310732bb5bf2240245c2a5b45a38518b91d8be2c610611623160b9d1c0e91f1ce96d639f8b53e8894625cf20fa45
   languageName: node
   linkType: hard
-
-"example@workspace:packages/example":
-  version: 0.0.0-use.local
-  resolution: "example@workspace:packages/example"
-  dependencies:
-    "@metamask/auto-changelog": ^3.4.4
-    "@metamask/eslint-config": ^12.2.0
-    "@metamask/eslint-config-browser": ^12.1.0
-    "@metamask/eslint-config-jest": ^12.1.0
-    "@metamask/eslint-config-nodejs": ^12.1.0
-    "@metamask/eslint-config-typescript": ^12.1.0
-    "@metamask/keyring-api": ^6.0.0
-    "@metamask/providers": ^16.0.0
-    "@svgr/webpack": ^6.4.0
-    "@testing-library/dom": ^8.17.1
-    "@testing-library/jest-dom": ^5.16.4
-    "@testing-library/react": ^13.3.0
-    "@testing-library/user-event": ^13.5.0
-    "@types/jest": ^27.5.2
-    "@types/react": ^18.0.15
-    "@types/react-dom": ^18.0.6
-    "@types/styled-components": ^5.1.25
-    "@typescript-eslint/eslint-plugin": ^5.42.1
-    "@typescript-eslint/parser": ^5.42.1
-    eslint: ^8.45.0
-    eslint-config-prettier: ^8.5.0
-    eslint-plugin-import: ~2.26.0
-    eslint-plugin-jest: ^27.1.5
-    eslint-plugin-jsdoc: ^41.1.2
-    eslint-plugin-n: ^15.7.0
-    eslint-plugin-prettier: ^4.2.1
-    eslint-plugin-promise: ^6.1.1
-    gatsby: ^5.13.3
-    gatsby-plugin-manifest: ^5.13.1
-    gatsby-plugin-styled-components: ^6.13.1
-    gatsby-plugin-svgr: ^3.0.0-beta.0
-    prettier: ^2.7.1
-    prettier-plugin-packagejson: ^2.2.18
-    react: ^18.2.0
-    react-dom: ^18.2.0
-    react-is: ^18.2.0
-    rimraf: ^3.0.2
-    styled-components: 5.3.3
-    typescript: ^4.7.4
-    uuid: ^9.0.1
-  languageName: unknown
-  linkType: soft
 
 "execa@npm:^5.0.0, execa@npm:^5.1.1":
   version: 5.1.1

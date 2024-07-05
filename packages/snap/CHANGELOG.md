@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0]
+
+### Added
+
+- Add 'ramps-dev.portfolio.metamask.io' origin ([#144](https://github.com/MetaMask/snap-bitcoin-wallet/pull/144))
+- Enable `getAccountBalances` method for Portfolio origins ([#126](https://github.com/MetaMask/snap-bitcoin-wallet/pull/126))
+- Implement Keyring API `getAccountBalances` method ([#84](https://github.com/MetaMask/snap-bitcoin-wallet/pull/84))
+- Implement Chain API `getTransactionStatus` method ([#85](https://github.com/MetaMask/snap-bitcoin-wallet/pull/85))
+
+### Changed
+
+- Rename "Bitcoin Manager" to "Bitcoin Wallet" ([#142](https://github.com/MetaMask/snap-bitcoin-wallet/pull/142))
+- Improve `btc_sendMany` implementation ([#97](https://github.com/MetaMask/snap-bitcoin-wallet/pull/97))
+- Update `btc_sendMany` dialogs ([#83](https://github.com/MetaMask/snap-bitcoin-wallet/pull/83))
+
 ## [0.1.2]
 
 ### Changed
@@ -62,6 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add CI for lint and test ([#2](https://github.com/MetaMask/bitcoin/pull/2))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/bitcoin/compare/v0.1.2...HEAD
-[0.1.2]: https://github.com/MetaMask/bitcoin/compare/v0.1.1...v0.1.2
-[0.1.1]: https://github.com/MetaMask/bitcoin/releases/tag/v0.1.1
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.1.2...v0.2.0
+[0.1.2]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/MetaMask/snap-bitcoin-wallet/releases/tag/v0.1.1
