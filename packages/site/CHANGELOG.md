@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.1]
 
-### Uncategorized
+### Changed
 
-- ci: update CI based on SSK Snap ([#150](https://github.com/MetaMask/snap-bitcoin-wallet/pull/150))
+- Fix linting errors ([#150](https://github.com/MetaMask/snap-bitcoin-wallet/pull/150))
 
 ## [0.2.0]
 

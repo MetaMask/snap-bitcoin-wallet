@@ -11,8 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Uncategorized
 
-- ci: update CI based on SSK Snap ([#150](https://github.com/MetaMask/snap-bitcoin-wallet/pull/150))
-- fix: remove duplicate validation ([#137](https://github.com/MetaMask/snap-bitcoin-wallet/pull/137))
+### Fixed
+
+- Remove duplicate validation ([#137](https://github.com/MetaMask/snap-bitcoin-wallet/pull/137))
 
 ## [0.2.0]
 
