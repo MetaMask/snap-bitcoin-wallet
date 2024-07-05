@@ -32,9 +32,11 @@ jobs:
           yarn build
         env:
           BLOCKCHAIR_API_KEY: ${{ secrets.BLOCKCHAIR_API_KEY }}
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         id: restore-build
         with:
+          # We must cache the `snap.manifest.json` file because it might change
+          # during the release build due to secrets being injected by the CI.
           path: |
             ./packages/*/dist
             ./packages/snap/snap.manifest.json
@@ -48,16 +50,18 @@ jobs:
       - uses: actions/checkout@v3
         with:
           ref: ${{ github.sha }}
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         id: restore-build
         with:
+          # We must cache the `snap.manifest.json` file because it might change
+          # during the release build due to secrets being injected by the CI.
           path: |
             ./packages/*/dist
             ./packages/snap/snap.manifest.json
             ./node_modules/.yarn-state.yml
           key: ${{ github.sha }}
       - name: Dry Run Publish
-        # omit npm-token token to perform dry run publish
+        # Omit npm-token token to perform dry-run publish
         uses: MetaMask/action-npm-publish@v4
         with:
           slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -73,9 +77,11 @@ jobs:
       - uses: actions/checkout@v3
         with:
           ref: ${{ github.sha }}
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         id: restore-build
         with:
+          # We must cache the `snap.manifest.json` file because it might change
+          # during the release build due to secrets being injected by the CI.
           path: |
             ./packages/*/dist
             ./packages/snap/snap.manifest.json
