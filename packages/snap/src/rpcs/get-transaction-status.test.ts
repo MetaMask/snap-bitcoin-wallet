@@ -72,6 +72,7 @@ describe('getTransactionStatus', () => {
       getTransactionStatus({
         scope: Caip2ChainId.Testnet,
         transactionId:
+          // 63 characters long while `transactionId` is expected to be 64 long
           '2c2a9ef9cecbe08117da640ce5761c8d2209b418cd43cc3af05ffc16a425828',
       }),
     ).rejects.toThrow(InvalidParamsError);
