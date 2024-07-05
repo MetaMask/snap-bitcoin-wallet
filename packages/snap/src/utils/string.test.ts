@@ -1,28 +1,11 @@
 import { Buffer } from 'buffer';
 
 import {
-  trimHexPrefix,
   hexToBuffer,
   bufferToString,
   replaceMiddleChar,
   shortenAddress,
 } from './string';
-
-describe('trimHexPrefix', () => {
-  it('trims hex prefix', () => {
-    const key = '0x1234';
-    const result = trimHexPrefix(key);
-
-    expect(result).toBe('1234');
-  });
-
-  it('returns key as is if it does not have hex prefix', () => {
-    const key = '1234';
-    const result = trimHexPrefix(key);
-
-    expect(result).toBe('1234');
-  });
-});
 
 describe('hexToBuffer', () => {
   it('converts a hex string to buffer with trimed prefix', () => {
@@ -45,7 +28,7 @@ describe('hexToBuffer', () => {
     );
   });
 
-  it('throws `Unable to convert hex string to buffer` error if the given string is not hex string', () => {
+  it('throws `Unable to convert hex string to buffer` error if the given string is not a hex string', () => {
     expect(() => hexToBuffer('hello123')).toThrow(
       'Unable to convert hex string to buffer',
     );

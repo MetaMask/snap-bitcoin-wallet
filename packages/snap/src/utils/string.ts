@@ -1,16 +1,6 @@
+import { remove0x, HexStruct } from '@metamask/utils';
 import { Buffer } from 'buffer';
 import { assert } from 'superstruct';
-
-import { hexStringStruct } from './superstruct';
-/**
- * Removes the '0x' prefix from a given hex string.
- *
- * @param hexStr - The hex string to remove the prefix from.
- * @returns The hex string without the prefix.
- */
-export function trimHexPrefix(hexStr: string) {
-  return hexStr.startsWith('0x') ? hexStr.substring(2) : hexStr;
-}
 
 /**
  * Converts a hex string to a buffer instance.
@@ -22,8 +12,8 @@ export function trimHexPrefix(hexStr: string) {
  */
 export function hexToBuffer(hexStr: string, trimPrefix = true) {
   try {
-    assert(hexStr, hexStringStruct);
-    return Buffer.from(trimPrefix ? trimHexPrefix(hexStr) : hexStr, 'hex');
+    assert(hexStr, HexStruct);
+    return Buffer.from(trimPrefix ? remove0x(hexStr) : hexStr, 'hex');
   } catch (error) {
     throw new Error('Unable to convert hex string to buffer');
   }

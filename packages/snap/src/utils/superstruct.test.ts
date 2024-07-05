@@ -63,20 +63,4 @@ describe('superstruct', () => {
       );
     });
   });
-
-  describe('hexStringStruct', () => {
-    it('validates correctly', () => {
-      expect(() =>
-        assert('21232310', superstruct.hexStringStruct),
-      ).not.toThrow();
-
-      expect(() =>
-        assert('0x12312321', superstruct.hexStringStruct),
-      ).not.toThrow();
-
-      expect(() => assert('0X1232', superstruct.hexStringStruct)).not.toThrow();
-
-      expect(() => assert('xello', superstruct.hexStringStruct)).toThrow(Error);
-    });
-  });
 });
