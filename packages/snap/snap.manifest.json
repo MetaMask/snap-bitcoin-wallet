@@ -1,18 +1,18 @@
 {
   "version": "0.1.2",
-  "description": "A MetaMask snap to manage Bitcoin",
-  "proposedName": "Bitcoin Manager",
+  "description": "Manage Bitcoin using MetaMask",
+  "proposedName": "Bitcoin Wallet",
   "repository": {
     "type": "git",
-    "url": "https://github.com/MetaMask/bitcoin.git"
+    "url": "https://github.com/MetaMask/snap-bitcoin-wallet.git"
   },
   "source": {
-    "shasum": "MO1uECXQxFuVEjZuXbUov3P6Sx1Gklzx+8cqYxSYj3U=",
+    "shasum": "r/KofIlziKWHLZchcutxUdZL8nqhBPXedv1m+WROvoo=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
         "iconPath": "images/icon.svg",
-        "packageName": "@metamask/bitcoin",
+        "packageName": "@metamask/bitcoin-wallet-snap",
         "registry": "https://registry.npmjs.org/"
       }
     }
@@ -21,7 +21,8 @@
     "http://localhost:8000": {},
     "https://portfolio.metamask.io": {},
     "https://portfolio-builds.metafi-dev.codefi.network": {},
-    "https://dev.portfolio.metamask.io": {}
+    "https://dev.portfolio.metamask.io": {},
+    "https://ramps-dev.portfolio.metamask.io": {}
   },
   "initialPermissions": {
     "endowment:rpc": {
@@ -33,7 +34,8 @@
         "http://localhost:8000",
         "https://portfolio.metamask.io",
         "https://portfolio-builds.metafi-dev.codefi.network",
-        "https://dev.portfolio.metamask.io"
+        "https://dev.portfolio.metamask.io",
+        "https://ramps-dev.portfolio.metamask.io"
       ]
     },
     "snap_getBip32Entropy": [
