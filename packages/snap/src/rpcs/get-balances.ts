@@ -1,5 +1,5 @@
 import type { Infer } from 'superstruct';
-import { object, array, record, enums, assert } from 'superstruct';
+import { object, array, record, enums } from 'superstruct';
 
 import type { BtcAccount } from '../bitcoin/wallet';
 import { Config } from '../config';
@@ -49,8 +49,6 @@ export async function getBalances(
 ) {
   try {
     validateRequest(params, getBalancesRequestStruct);
-
-    assert(params, getBalancesRequestStruct);
 
     const { assets, scope } = params;
 

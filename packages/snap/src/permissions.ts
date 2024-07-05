@@ -17,6 +17,7 @@ const dappPermissions = new Set([
   KeyringRpcMethod.ApproveRequest,
   KeyringRpcMethod.RejectRequest,
   KeyringRpcMethod.SubmitRequest,
+  KeyringRpcMethod.GetAccountBalances,
   // Chain API methods
   InternalRpcMethod.GetTransactionStatus,
 ]);
@@ -44,6 +45,7 @@ const allowedOrigins = [
   'https://portfolio-builds.metafi-dev.codefi.network',
   'https://dev.portfolio.metamask.io',
   'http://localhost:8000',
+  'https://ramps-dev.portfolio.metamask.io',
 ];
 
 const metamask = 'metamask';
