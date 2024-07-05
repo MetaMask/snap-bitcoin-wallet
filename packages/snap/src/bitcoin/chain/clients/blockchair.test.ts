@@ -146,7 +146,7 @@ describe('BlockChairClient', () => {
       const network = networks.testnet;
       const { accounts } = await createAccounts(network, 3);
       const addresses = accounts.slice(1).map((account) => account.address);
-      const accountWithNoBalance = accounts.slice(0, 1)[0];
+      const accountWithNoBalance = accounts[0];
       const mockResponse = generateBlockChairGetBalanceResp(addresses);
 
       const expectedResult = {
