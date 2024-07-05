@@ -21,7 +21,7 @@ jest.mock('@metamask/keyring-api', () => ({
 }));
 
 describe('validateOrigin', () => {
-  it('does not throws error if the origin and method is match to the allowed list', () => {
+  it('does not throw error if the origin and method is in the allowed list', () => {
     const [origin, methods]: [string, Set<string>] = originPermissions
       .entries()
       .next().value;
@@ -35,13 +35,13 @@ describe('validateOrigin', () => {
     );
   });
 
-  it('throws `Permission denied` error if origin not match to the allowed list', () => {
+  it('throws `Permission denied` error if origin not in the allowed list', () => {
     expect(() => validateOrigin('xyz', 'chain_getTransactionStatus')).toThrow(
       'Permission denied',
     );
   });
 
-  it('throws `Permission denied` error if the method is not match to the allowed list', () => {
+  it('throws `Permission denied` error if the method is not in the allowed list', () => {
     const elm = originPermissions.entries().next().value;
     expect(() => validateOrigin(elm[0], 'some_method')).toThrow(
       'Permission denied',
@@ -129,7 +129,7 @@ describe('onKeyringRequest', () => {
     });
   });
 
-  it('does not throws `Permission denied` error if the method is in the allowed list', async () => {
+  it('does not throw `Permission denied` error if the method is in the allowed list', async () => {
     const { handler } = createMockHandleKeyringRequest();
     handler.mockResolvedValue({});
 
@@ -168,7 +168,7 @@ describe('onKeyringRequest', () => {
     await expect(executeRequest()).rejects.toThrow(SnapError);
   });
 
-  it('throws `Permission denied` error if the method is not match to the allowed list', async () => {
+  it('throws `Permission denied` error if the method is not in the allowed list', async () => {
     for (const method of [
       keyringApi.KeyringRpcMethod.SubmitRequest,
       keyringApi.KeyringRpcMethod.ApproveRequest,
