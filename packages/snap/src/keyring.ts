@@ -257,7 +257,7 @@ export class BtcKeyring implements Keyring {
     keyringAccount: KeyringAccount,
   ): void {
     if (!keyringAccount.methods.includes(method)) {
-      throw new Error('Forbidden Method');
+      throw new Error('Forbidden method');
     }
   }
 
