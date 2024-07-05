@@ -1,10 +1,10 @@
 {
-  "name": "@metamask/bitcoin",
-  "version": "0.1.2",
+  "name": "@metamask/bitcoin-wallet-snap",
+  "version": "0.2.0",
   "description": "Manage Bitcoin using MetaMask",
   "repository": {
     "type": "git",
-    "url": "https://github.com/MetaMask/bitcoin.git"
+    "url": "https://github.com/MetaMask/snap-bitcoin-wallet.git"
   },
   "license": "(MIT-0 OR Apache-2.0)",
   "main": "./dist/bundle.js",
@@ -28,35 +28,31 @@
     "start": "mm-snap watch",
     "test": "jest --passWithNoTests"
   },
-  "dependencies": {
-    "@bitcoinerlab/secp256k1": "^1.1.1",
-    "@metamask/key-tree": "^9.0.0",
-    "@metamask/keyring-api": "^6.3.1",
-    "@metamask/snaps-sdk": "^4.0.0",
-    "async-mutex": "^0.3.2",
-    "big.js": "^6.2.1",
-    "bip32": "^4.0.0",
-    "bitcoinjs-lib": "^6.1.5",
-    "buffer": "^6.0.3",
-    "coinselect": "^3.1.13",
-    "ecpair": "^2.1.0",
-    "superstruct": "^1.0.3",
-    "uuid": "^9.0.1"
-  },
   "devDependencies": {
     "@babel/preset-typescript": "^7.23.3",
+    "@bitcoinerlab/secp256k1": "^1.1.1",
     "@jest/globals": "^29.5.0",
     "@metamask/auto-changelog": "^3.4.4",
     "@metamask/eslint-config": "^12.2.0",
     "@metamask/eslint-config-jest": "^12.1.0",
     "@metamask/eslint-config-nodejs": "^12.1.0",
     "@metamask/eslint-config-typescript": "^12.1.0",
+    "@metamask/key-tree": "^9.0.0",
+    "@metamask/keyring-api": "^8.0.0",
     "@metamask/snaps-cli": "^6.1.0",
     "@metamask/snaps-jest": "^8.0.0",
+    "@metamask/snaps-sdk": "^4.0.0",
     "@typescript-eslint/eslint-plugin": "^5.42.1",
     "@typescript-eslint/parser": "^5.42.1",
+    "async-mutex": "^0.3.2",
+    "big.js": "^6.2.1",
     "bip174": "^2.1.1",
+    "bip32": "^4.0.0",
+    "bitcoinjs-lib": "^6.1.5",
+    "buffer": "^6.0.3",
+    "coinselect": "^3.1.13",
     "dotenv": "^16.4.5",
+    "ecpair": "^2.1.0",
     "eslint": "^8.45.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-import": "~2.26.0",
@@ -69,8 +65,10 @@
     "prettier": "^2.7.1",
     "prettier-plugin-packagejson": "^2.2.11",
     "rimraf": "^3.0.2",
+    "superstruct": "^1.0.3",
     "ts-jest": "^29.1.0",
-    "typescript": "^4.7.4"
+    "typescript": "^4.7.4",
+    "uuid": "^9.0.1"
   },
   "packageManager": "yarn@3.2.1",
   "engines": {
