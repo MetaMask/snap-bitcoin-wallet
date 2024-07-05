@@ -5,6 +5,10 @@ on:
     secrets:
       NPM_TOKEN:
         required: true
+      SLACK_WEBHOOK_URL:
+        required: true
+      PUBLISH_DOCS_TOKEN:
+        required: true
       BLOCKCHAIR_API_KEY:
         required: false
 
@@ -33,10 +37,8 @@ jobs:
       - uses: actions/cache@v3
         id: restore-build
         with:
-          # add /packages/snap/snap.manifest.json to include an updated shasum from build due to version update in auto PR
           path: |
             ./packages/*/dist
-            ./packages/snap/snap.manifest.json
             ./node_modules/.yarn-state.yml
           key: ${{ github.sha }}
 
@@ -50,15 +52,16 @@ jobs:
       - uses: actions/cache@v3
         id: restore-build
         with:
-          # add /packages/snap/snap.manifest.json to include an updated shasum from build due to version update in auto PR
           path: |
             ./packages/*/dist
-            ./packages/snap/snap.manifest.json
             ./node_modules/.yarn-state.yml
           key: ${{ github.sha }}
       - name: Dry Run Publish
         # omit npm-token token to perform dry run publish
         uses: MetaMask/action-npm-publish@v4
+        with:
+          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          subteam: S042S7RE4AE # @metamask-npm-publishers
         env:
           SKIP_PREPACK: true
 
@@ -73,10 +76,8 @@ jobs:
       - uses: actions/cache@v3
         id: restore-build
         with:
-          # add /packages/snap/snap.manifest.json to include an updated shasum from build due to version update in auto PR
           path: |
             ./packages/*/dist
-            ./packages/snap/snap.manifest.json
             ./node_modules/.yarn-state.yml
           key: ${{ github.sha }}
       - name: Publish
