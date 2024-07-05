@@ -69,12 +69,21 @@ describe('replaceMiddleChar', () => {
     expect(replaceMiddleChar('', 5, 3)).toBe('');
   });
 
-  it('throws error if the headLength + tailLength exceed the string length', () => {
+  it('throws `Indexes must be positives` error if headLength or tailLength is negative value', () => {
+    expect(() => replaceMiddleChar(str, -1, 20)).toThrow(
+      'Indexes must be positives',
+    );
+    expect(() => replaceMiddleChar(str, 20, -10)).toThrow(
+      'Indexes must be positives',
+    );
+  });
+
+  it('throws `Indexes out of bounds` error if headLength + tailLength is out of bounds', () => {
     expect(() => replaceMiddleChar(str, 100, 0)).toThrow(
-      'The sum of headLength and tailLength should be less than the length of the string',
+      'Indexes out of bounds',
     );
     expect(() => replaceMiddleChar(str, 0, 100)).toThrow(
-      'The sum of headLength and tailLength should be less than the length of the string',
+      'Indexes out of bounds',
     );
   });
 });
