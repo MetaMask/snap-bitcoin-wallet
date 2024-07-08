@@ -50,7 +50,6 @@ export const MetaMaskProvider = ({ children }: { children: ReactNode }) => {
   const [error, setError] = useState<Error | null>(null);
   const [resp, setResp] = useState(null);
   const [loading, setLoading] = useState<boolean>(false);
-  
 
   useEffect(() => {
     getSnapsProvider().then(setProvider).catch(console.error);
@@ -72,7 +71,17 @@ export const MetaMaskProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <MetaMaskContext.Provider
-      value={{ provider, error, setError, installedSnap, setInstalledSnap, resp, setResp, loading, setLoading }}
+      value={{
+        provider,
+        error,
+        setError,
+        installedSnap,
+        setInstalledSnap,
+        resp,
+        setResp,
+        loading,
+        setLoading,
+      }}
     >
       {children}
     </MetaMaskContext.Provider>
