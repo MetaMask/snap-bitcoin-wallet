@@ -1,5 +1,4 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
-import { KeyringSnapRpcClient } from '@metamask/keyring-api';
 import { useState } from 'react';
 import styled from 'styled-components';
 
@@ -15,17 +14,13 @@ import {
   GetTransactionStatusCard,
 } from '../components';
 import { defaultSnapOrigin } from '../config';
-import { defaultSnapOrigin as snapId } from '../config/snap';
 import {
   useMetaMask,
-  useInvokeSnap,
   useInvokeKeyring,
   useMetaMaskContext,
   useRequestSnap,
 } from '../hooks';
 import { isLocalSnap, shouldDisplayReconnectButton } from '../utils';
-
-export const keyringClient = new KeyringSnapRpcClient(snapId, window.ethereum);
 
 const Container = styled.div`
   display: flex;
@@ -82,26 +77,13 @@ const ErrorMessage = styled.div`
   }
 `;
 
-type Balance = {
-  amount: string;
-};
-
-type AssetBalances = {
-  balances: {
-    [address: string]: {
-      [asset: string]: Balance;
-    };
-  };
-};
-
 const Index = () => {
   const { error } = useMetaMaskContext();
   const { isFlask, snapsDetected, installedSnap } = useMetaMask();
   const requestSnap = useRequestSnap();
-  const invokeSnap = useInvokeSnap();
   const invokeKeyring = useInvokeKeyring();
   const [btcAccount, setBtcAccount] = useState<KeyringAccount>();
-  const scope = 'bip122:000000000933ea01ad0ee984209779ba'
+  const scope = 'bip122:000000000933ea01ad0ee984209779ba';
 
   const isMetaMaskReady = isLocalSnap(defaultSnapOrigin)
     ? isFlask
@@ -112,8 +94,8 @@ const Index = () => {
       method: 'keyring_createAccount',
       params: {
         options: {
-          scope: scope,
-        }
+          scope,
+        },
       },
     })) as KeyringAccount;
 
@@ -130,8 +112,9 @@ const Index = () => {
     })) as KeyringAccount[];
 
     if (accounts.length) {
-      const account = accounts.find((account) => account.options.scope === scope)
-      setBtcAccount(account);
+      setBtcAccount(
+        accounts.find((account) => account.options.scope === scope),
+      );
     }
   };
 
@@ -192,7 +175,7 @@ const Index = () => {
         <Card
           content={{
             title: 'Create Account',
-            description: `Create BTC Account - ${btcAccount?.address}`,
+            description: `Create BTC Account - ${btcAccount?.address ?? ''}`,
             button: (
               <CreateBTCAccountButton
                 onClick={handleCreateAccountClick}
@@ -225,9 +208,9 @@ const Index = () => {
             !shouldDisplayReconnectButton(installedSnap)
           }
         />
-        <GetBalancesCard 
+        <GetBalancesCard
           enabled={!(!installedSnap || !btcAccount)}
-          account={btcAccount?.id || ''}
+          account={btcAccount?.id ?? ''}
           scope={scope}
           fullWidth={
             isMetaMaskReady &&
@@ -267,10 +250,10 @@ const Index = () => {
           }
         /> */}
 
-        <SendManyCard 
+        <SendManyCard
           enabled={!(!installedSnap || !btcAccount)}
-          account={btcAccount?.id || ''}
-          address={btcAccount?.address || ''}
+          account={btcAccount?.id ?? ''}
+          address={btcAccount?.address ?? ''}
           scope={scope}
           fullWidth={
             isMetaMaskReady &&
@@ -288,7 +271,6 @@ const Index = () => {
             !shouldDisplayReconnectButton(installedSnap)
           }
         />
-
       </CardContainer>
     </Container>
   );
