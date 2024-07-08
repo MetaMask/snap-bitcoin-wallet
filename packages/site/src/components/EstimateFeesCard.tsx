@@ -1,46 +1,37 @@
-import {
-  Card,
-  EstimateFeesButton,
-} from '.';
-import {
-  useInvokeSnap,
-} from '../hooks';
-
+import { Card, EstimateFeesButton } from '.';
+import { useInvokeSnap } from '../hooks';
 
 export const EstimateFeesCard = ({
-    enabled,
-    fullWidth,
-    scope,
+  enabled,
+  fullWidth,
+  scope,
 }: {
-    enabled: boolean;
-    fullWidth: boolean;
-    scope: string;
+  enabled: boolean;
+  fullWidth: boolean;
+  scope: string;
 }) => {
   const invokeSnap = useInvokeSnap();
 
   const handleClick = async () => {
-    const resp = (await invokeSnap({
+    await invokeSnap({
       method: 'chain_estimateFees',
       params: {
-        scope: scope,
+        scope,
       },
-    }));
+    });
   };
 
   return (
-      <Card
-          content={{
-            title: 'Estimate Fees',
-            description: `Estimate Fees`,
-            button: (
-              <EstimateFeesButton
-                onClick={handleClick}
-                disabled={!enabled}
-              />
-            ),
-          }}
-          disabled={!enabled}
-          fullWidth={fullWidth}
-        />
+    <Card
+      content={{
+        title: 'Estimate Fees',
+        description: `Estimate Fees`,
+        button: (
+          <EstimateFeesButton onClick={handleClick} disabled={!enabled} />
+        ),
+      }}
+      disabled={!enabled}
+      fullWidth={fullWidth}
+    />
   );
 };
