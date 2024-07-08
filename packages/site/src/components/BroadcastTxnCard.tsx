@@ -24,7 +24,7 @@ export const BroadcastTxnCard = ({
 
   const [signedTransaction, setSignedTransaction] = useState('');
 
-  const handleOnChange = (chgEvent: { target: { value: string } }) => {
+  const handleOnChange = (chgEvent: React.ChangeEvent<HTMLInputElement>) => {
     setSignedTransaction(chgEvent.target.value);
   };
 

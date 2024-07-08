@@ -178,8 +178,12 @@ const Index = () => {
     }
   };
 
-  const scopeOnChange = (chgEvent: { target: { value: Caip2ChainId } }) => {
-    if (Object.values(Caip2ChainId).includes(chgEvent.target.value)) {
+  const scopeOnChange = (chgEvent: React.ChangeEvent<HTMLSelectElement>) => {
+    if (
+      Object.values(Caip2ChainId).includes(
+        chgEvent.target.value as unknown as Caip2ChainId,
+      )
+    ) {
       setScope(chgEvent.target.value);
     }
   };
