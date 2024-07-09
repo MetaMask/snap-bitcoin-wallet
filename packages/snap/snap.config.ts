@@ -13,8 +13,6 @@ const config: SnapConfig = {
   environment: {
     /* eslint-disable */
     LOG_LEVEL: process.env.LOG_LEVEL,
-    DATA_CLIENT_READ_TYPE: process.env.DATA_CLIENT_READ_TYPE,
-    DATA_CLIENT_WRITE_TYPE: process.env.DATA_CLIENT_WRITE_TYPE,
     BLOCKCHAIR_API_KEY: process.env.BLOCKCHAIR_API_KEY,
     /* eslint-disable */
   },
