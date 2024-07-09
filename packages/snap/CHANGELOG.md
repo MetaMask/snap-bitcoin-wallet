@@ -9,13 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.2]
 
-### Fixed
-
-- Emit event on account creation ([#153](https://github.com/MetaMask/snap-bitcoin-wallet/pull/153))
-
 ### Changed
 
 - Remove unused env var ([#148](https://github.com/MetaMask/snap-bitcoin-wallet/pull/148))
+
+### Fixed
+
+- Emit event on account creation ([#153](https://github.com/MetaMask/snap-bitcoin-wallet/pull/153))
 
 ## [0.2.1]
 
