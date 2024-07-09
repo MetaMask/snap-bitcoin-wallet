@@ -25,6 +25,7 @@ export async function createAccount(
 ): Promise<CreateAccountResponse> {
   const keyring = new BtcKeyring(new KeyringStateManager(), {
     defaultIndex: Config.wallet.defaultAccountIndex,
+    origin: 'http://localhost:300', // the whole api will be removed from other PR, the change here is to by pass the build process
     emitEvents: false,
   });
 

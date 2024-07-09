@@ -21,6 +21,8 @@ jest.mock('@metamask/keyring-api', () => ({
 }));
 
 describe('BtcKeyring', () => {
+  const origin = 'http://localhost:3000';
+
   const createMockWallet = () => {
     const unlockSpy = jest.spyOn(BtcWallet.prototype, 'unlock');
     const signTransaction = jest.spyOn(BtcWallet.prototype, 'signTransaction');
@@ -73,6 +75,7 @@ describe('BtcKeyring', () => {
     return {
       instance: new BtcKeyring(stateMgr, {
         defaultIndex: 0,
+        origin,
         multiAccount: false,
       }),
       sendManySpy,
@@ -307,7 +310,11 @@ describe('BtcKeyring', () => {
         },
       });
 
-      expect(sendManySpy).toHaveBeenCalledWith(expect.any(BtcAccount), params);
+      expect(sendManySpy).toHaveBeenCalledWith(
+        expect.any(BtcAccount),
+        origin,
+        params,
+      );
     });
 
     it('throws `Account not found` error if the account address not found', async () => {

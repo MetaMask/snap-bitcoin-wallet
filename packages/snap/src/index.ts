@@ -72,6 +72,7 @@ export const onKeyringRequest: OnKeyringRequestHandler = async ({
 
     const keyring = new BtcKeyring(new KeyringStateManager(), {
       defaultIndex: Config.wallet.defaultAccountIndex,
+      origin,
       // TODO: Remove temp solution to support keyring in snap without keyring API
       emitEvents: true,
     });
