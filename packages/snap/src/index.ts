@@ -11,8 +11,8 @@ import {
 import { Config } from './config';
 import { BtcKeyring } from './keyring';
 import { InternalRpcMethod, originPermissions } from './permissions';
-import type { CreateAccountParams, GetTransactionStatusParams } from './rpcs';
-import { createAccount, getTransactionStatus } from './rpcs';
+import type { GetTransactionStatusParams } from './rpcs';
+import { getTransactionStatus } from './rpcs';
 import { KeyringStateManager } from './stateManagement';
 import { isSnapRpcError, logger } from './utils';
 
@@ -39,8 +39,6 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
     validateOrigin(origin, method);
 
     switch (method) {
-      case InternalRpcMethod.CreateAccount:
-        return await createAccount(request.params as CreateAccountParams);
       case InternalRpcMethod.GetTransactionStatus:
         return await getTransactionStatus(
           request.params as GetTransactionStatusParams,
@@ -72,8 +70,6 @@ export const onKeyringRequest: OnKeyringRequestHandler = async ({
 
     const keyring = new BtcKeyring(new KeyringStateManager(), {
       defaultIndex: Config.wallet.defaultAccountIndex,
-      // TODO: Remove temp solution to support keyring in snap without keyring API
-      emitEvents: true,
     });
 
     return (await handleKeyringRequest(
