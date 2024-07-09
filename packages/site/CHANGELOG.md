@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1]
+
+### Changed
+
+- Fix linting errors ([#150](https://github.com/MetaMask/snap-bitcoin-wallet/pull/150))
+
+## [0.2.0]
+
+### Changed
+
+- Rename `example` to `site` ([#145](https://github.com/MetaMask/snap-bitcoin-wallet/pull/145))
+
 ## [0.1.2]
 
 ### Changed
@@ -33,6 +45,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - build(deps): bump @metamask/keyring-api from 5.1.0 to 6.0.0 ([#6](https://github.com/MetaMask/bitcoin/pull/6))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/bitcoin/compare/v0.1.2...HEAD
-[0.1.2]: https://github.com/MetaMask/bitcoin/compare/v0.1.1...v0.1.2
-[0.1.1]: https://github.com/MetaMask/bitcoin/releases/tag/v0.1.1
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.1.2...v0.2.0
+[0.1.2]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/MetaMask/snap-bitcoin-wallet/releases/tag/v0.1.1
