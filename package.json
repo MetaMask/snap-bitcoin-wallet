@@ -1,28 +1,32 @@
 {
-  "name": "bitcoin-manager-snap-monorepo",
-  "version": "0.1.2",
+  "name": "bitcoin-wallet-snap-monorepo",
+  "version": "0.2.1",
   "private": true,
   "description": "",
-  "homepage": "https://github.com/MetaMask/bitcoin#readme",
+  "homepage": "https://github.com/MetaMask/snap-bitcoin-wallet#readme",
   "bugs": {
-    "url": "https://github.com/MetaMask/bitcoin/issues"
+    "url": "https://github.com/MetaMask/snap-bitcoin-wallet/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/MetaMask/bitcoin.git"
+    "url": "https://github.com/MetaMask/snap-bitcoin-wallet.git"
   },
   "license": "(MIT-0 OR Apache-2.0)",
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
-    "build": "yarn workspace @metamask/bitcoin build",
-    "lint": "yarn workspace @metamask/bitcoin lint",
-    "lint:eslint": "eslint . --cache --ext js,jsx,ts,tsx",
-    "lint:fix": "yarn lint:eslint --fix && yarn lint:misc --write",
-    "lint:misc": "prettier '**/*.json' '**/*.md' '!**/CHANGELOG.md' '**/*.yml' --ignore-path .gitignore",
-    "start": "yarn workspaces foreach --parallel --interlaced --verbose run start",
-    "test": "yarn workspace @metamask/bitcoin test"
+    "build": "yarn workspaces foreach --parallel --verbose --topological run build",
+    "build:dapp": "yarn workspace @metamask/bitcoin-wallet-test-dapp build",
+    "build:snap": "yarn workspace @metamask/bitcoin-wallet-snap build",
+    "lint": "yarn workspaces foreach --parallel --verbose run lint",
+    "lint:deps": "yarn workspaces foreach --parallel --verbose run depcheck",
+    "lint:eslint": "yarn workspaces foreach --parallel --verbose run lint:eslint",
+    "lint:fix": "yarn workspaces foreach --parallel --verbose run lint:fix",
+    "lint:misc": "yarn workspaces foreach --parallel --verbose run lint:misc",
+    "lint:types": "yarn workspaces foreach --parallel --verbose run lint:types",
+    "start": "yarn workspaces foreach --parallel --verbose --interlaced run start",
+    "test": "yarn workspaces foreach --parallel --verbose run test"
   },
   "devDependencies": {
     "@lavamoat/allow-scripts": "^3.0.0",
@@ -33,6 +37,7 @@
     "@metamask/eslint-config-typescript": "^12.1.0",
     "@typescript-eslint/eslint-plugin": "^5.42.1",
     "@typescript-eslint/parser": "^5.42.1",
+    "depcheck": "^1.4.7",
     "eslint": "^8.45.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-import": "~2.26.0",

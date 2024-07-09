@@ -1,4 +1,4 @@
-# Bitcoin Manager Snap
+# Bitcoin Wallet Snap
 
 ## Configuration
 
