@@ -25,7 +25,7 @@ export async function createAccount(
 ): Promise<CreateAccountResponse> {
   const keyring = new BtcKeyring(new KeyringStateManager(), {
     defaultIndex: Config.wallet.defaultAccountIndex,
-    emitEvents: false,
+    emitEvents: true,
   });
 
   const account = await keyring.createAccount({
