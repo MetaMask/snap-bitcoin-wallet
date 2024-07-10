@@ -35,9 +35,6 @@ export const GetBalancesCard = ({
         assets: [asset],
       },
     })) as AssetBalances;
-    console.log({
-      accountBalance,
-    });
 
     setBalance(accountBalance?.[asset]?.amount ?? '0');
   };
