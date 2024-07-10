@@ -13,14 +13,11 @@ export const EstimateFeesCard = ({
   const invokeSnap = useInvokeSnap();
 
   const handleClick = async () => {
-    const resp = await invokeSnap({
+    await invokeSnap({
       method: 'chain_estimateFees',
       params: {
         scope,
       },
-    });
-    console.log({
-      resp,
     });
   };
 

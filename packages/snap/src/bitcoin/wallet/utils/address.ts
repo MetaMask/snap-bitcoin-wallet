@@ -8,7 +8,7 @@ import { address as addressUtils, type Network } from 'bitcoinjs-lib';
  * @returns The Bitcoin script for the destination address.
  * @throws An error if the address does not have a matching script.
  */
-export function getScriptForDestnation(address: string, network: Network) {
+export function getScriptForDestination(address: string, network: Network) {
   try {
     return addressUtils.toOutputScript(address, network);
   } catch (error) {
