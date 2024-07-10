@@ -195,9 +195,11 @@ const Index = () => {
         <Span>BTC Snap</Span>
       </Heading>
       <CardContainer>
-        <Loading>
-          <LoadingText>LOADING...</LoadingText>
-        </Loading>
+        {loading && (
+          <Loading>
+            <LoadingText>LOADING...</LoadingText>
+          </Loading>
+        )}
 
         {error && (
           <ErrorMessage>
