@@ -15,16 +15,12 @@ export const GetDataForTransactionCard = ({
   const invokeSnap = useInvokeSnap();
 
   const handleClick = async () => {
-    const resp = await invokeSnap({
+    await invokeSnap({
       method: 'chain_getDataForTransaction',
       params: {
         account,
         scope,
       },
-    });
-
-    console.log({
-      resp,
     });
   };
 
