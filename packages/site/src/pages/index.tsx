@@ -16,7 +16,6 @@ import {
 import { defaultSnapOrigin } from '../config';
 import {
   useMetaMask,
-  useInvokeSnap,
   useInvokeKeyring,
   useMetaMaskContext,
   useRequestSnap,
@@ -82,7 +81,6 @@ const Index = () => {
   const { error } = useMetaMaskContext();
   const { isFlask, snapsDetected, installedSnap } = useMetaMask();
   const requestSnap = useRequestSnap();
-  const invokeSnap = useInvokeSnap();
   const invokeKeyring = useInvokeKeyring();
   const [btcAccount, setBtcAccount] = useState<KeyringAccount>();
   const scope = 'bip122:000000000933ea01ad0ee984209779ba';
@@ -92,10 +90,12 @@ const Index = () => {
     : snapsDetected;
 
   const handleCreateAccountClick = async () => {
-    const account = (await invokeSnap({
-      method: 'chain_createAccount',
+    const account = (await invokeKeyring({
+      method: 'keyring_createAccount',
       params: {
-        scope,
+        options: {
+          scope,
+        },
       },
     })) as KeyringAccount;
 

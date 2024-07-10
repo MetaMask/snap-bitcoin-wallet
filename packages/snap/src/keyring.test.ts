@@ -335,16 +335,41 @@ describe('BtcKeyring', () => {
       expect(sendManySpy).toHaveBeenCalledWith(expect.any(BtcAccount), params);
     });
 
-    it('throws `Account not found` error if the account address not found', async () => {
+    it('throws `Account not found` error if the account address is not match with the unlocked account', async () => {
+      const caip2ChainId = Caip2ChainId.Testnet;
+      const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
+      const { instance: keyring } = createMockKeyring(stateMgr);
+      const accFromState = generateAccounts(1)[0];
+
+      getWalletSpy.mockResolvedValue({
+        account: accFromState as unknown as KeyringAccount,
+        index: accFromState.options.index,
+        scope: accFromState.options.scope,
+        hdPath: [`m`, `0'`, `0`, `0`].join('/'),
+      });
+
+      await expect(
+        keyring.submitRequest({
+          id: uuidv4(),
+          scope: caip2ChainId,
+          account: accFromState.id,
+          request: {
+            method: 'btc_sendmany',
+          },
+        }),
+      ).rejects.toThrow('Account not found');
+    });
+
+    it('throws `Account not found` error if the account id not found from state', async () => {
       const { instance: stateMgr } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);
       const account = generateAccounts(1)[0];
 
       await expect(
         keyring.submitRequest({
-          id: account.id,
+          id: uuidv4(),
           scope: Caip2ChainId.Testnet,
-          account: account.address,
+          account: account.id,
           request: {
             method: 'btc_sendmany',
           },
@@ -366,9 +391,9 @@ describe('BtcKeyring', () => {
 
       await expect(
         keyring.submitRequest({
-          id: keyringAccount.id,
+          id: uuidv4(),
           scope: Caip2ChainId.Mainnet,
-          account: keyringAccount.address,
+          account: keyringAccount.id,
           request: {
             method: 'btc_sendmany',
           },
@@ -392,9 +417,9 @@ describe('BtcKeyring', () => {
 
       await expect(
         keyring.submitRequest({
-          id: keyringAccount.id,
+          id: uuidv4(),
           scope: caip2ChainId,
-          account: keyringAccount.address,
+          account: keyringAccount.id,
           request: {
             method: 'btc_doesNotExist',
           },
