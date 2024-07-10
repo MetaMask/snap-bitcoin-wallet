@@ -114,10 +114,11 @@ const Loading = styled.div`
   z-index: 1000;
 `;
 const LoadingText = styled.div`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  z-index: 1001;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999999;
   font-size: 5rem;
 `;
 
@@ -147,7 +148,7 @@ const Index = () => {
   const invokeKeyring = useInvokeKeyring();
   const [btcAccount, setBtcAccount] = useState<KeyringAccount>();
 
-  const [scope, setScope] = useState<string>(Caip2ChainId.Testnet);
+  const [scope, setScope] = useState<string>(Caip2ChainId.Mainnet);
 
   const isMetaMaskReady = isLocalSnap(defaultSnapOrigin)
     ? isFlask
@@ -194,11 +195,9 @@ const Index = () => {
         <Span>BTC Snap</Span>
       </Heading>
       <CardContainer>
-        {loading && (
-          <Loading>
-            <LoadingText>LOADING...</LoadingText>
-          </Loading>
-        )}
+        <Loading>
+          <LoadingText>LOADING...</LoadingText>
+        </Loading>
 
         {error && (
           <ErrorMessage>
