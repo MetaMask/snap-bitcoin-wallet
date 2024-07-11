@@ -23,8 +23,6 @@ import { getProvider, scopeStruct, logger } from './utils';
 export type KeyringOptions = Record<string, Json> & {
   defaultIndex: number;
   multiAccount?: boolean;
-  // TODO: Remove temp solution to support keyring in snap without keyring API
-  emitEvents?: boolean;
 };
 
 export const CreateAccountOptionsStruct = object({
@@ -180,10 +178,7 @@ export class BtcKeyring implements Keyring {
     event: KeyringEvent,
     data: Record<string, Json>,
   ): Promise<void> {
-    // TODO: Remove temp solution to support keyring in snap without extentions support
-    if (this._options.emitEvents) {
-      await emitSnapKeyringEvent(getProvider(), event, data);
-    }
+    await emitSnapKeyringEvent(getProvider(), event, data);
   }
 
   async getAccountBalances(

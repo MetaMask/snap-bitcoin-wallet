@@ -3,6 +3,8 @@ import { networks } from 'bitcoinjs-lib';
 
 import { createRandomBip32Data } from '../../../test/utils';
 
+export const getProvider = jest.fn();
+
 /**
  * Retrieves a SLIP10NodeInterface object for the specified path and curve.
  *
