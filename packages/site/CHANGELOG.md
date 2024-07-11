@@ -9,11 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.3]
 
-### Uncategorized
+### Added
 
-- feat: bs-31 add network dropdown on example dapp ([#116](https://github.com/MetaMask/snap-bitcoin-wallet/pull/116))
-- chore: update permission list for localhost ([#147](https://github.com/MetaMask/snap-bitcoin-wallet/pull/147))
-- fix: audit report 4.24 - remove temporary create account endpoint ([#115](https://github.com/MetaMask/snap-bitcoin-wallet/pull/115))
+- Add network dropdown on example dapp ([#116](https://github.com/MetaMask/snap-bitcoin-wallet/pull/116))
+- Update permission list for localhost ([#147](https://github.com/MetaMask/snap-bitcoin-wallet/pull/147))
+
+### Fixed
+
+- Audit 4.24: Remove temporary create account endpoint ([#115](https://github.com/MetaMask/snap-bitcoin-wallet/pull/115))
 
 ## [0.2.2]
 
