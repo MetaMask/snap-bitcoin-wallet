@@ -129,7 +129,7 @@ describe('onKeyringRequest', () => {
     });
   });
 
-  it('does not throws a `Permission denied` error if the Dapp origin requests a method that is on the allowed list', async () => {
+  it('does not throw a `Permission denied` error if the Dapp origin requests a method that is on the allowed list', async () => {
     const { handler } = createMockHandleKeyringRequest();
     handler.mockResolvedValue({});
 
