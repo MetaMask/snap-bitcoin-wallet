@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3]
+
+### Uncategorized
+
+- ui: change Snap name ([#158](https://github.com/MetaMask/snap-bitcoin-wallet/pull/158))
+- fix: audit report 4.2 - remove update account method ([#130](https://github.com/MetaMask/snap-bitcoin-wallet/pull/130))
+- fix: audit report 4.3 - restrict permissions for Portfolio origin ([#131](https://github.com/MetaMask/snap-bitcoin-wallet/pull/131))
+- fix: audit report 4.8 - enforce request.method in submit request is in account.methods ([#133](https://github.com/MetaMask/snap-bitcoin-wallet/pull/133))
+- fix: audit report 4.4 - restrict permissions for MetaMask origin ([#141](https://github.com/MetaMask/snap-bitcoin-wallet/pull/141))
+- fix: audit report 4.9 - validate non-hex string in `hexToBuffer` ([#134](https://github.com/MetaMask/snap-bitcoin-wallet/pull/134))
+- fix: audit report 4.23 - disable logging for production builds ([#124](https://github.com/MetaMask/snap-bitcoin-wallet/pull/124))
+- fix: audit report 4.20 - validate `headLength` and `tailLength` in `replaceMiddleChar` ([#138](https://github.com/MetaMask/snap-bitcoin-wallet/pull/138))
+- fix: audit report 4.13 - add a safeguard for change output ([#135](https://github.com/MetaMask/snap-bitcoin-wallet/pull/135))
+- fix: audit report 4.14 - rename `txHash` to `signedTransaction` ([#120](https://github.com/MetaMask/snap-bitcoin-wallet/pull/120))
+- fix: typo ([#119](https://github.com/MetaMask/snap-bitcoin-wallet/pull/119))
+- chore: update permission list for localhost ([#147](https://github.com/MetaMask/snap-bitcoin-wallet/pull/147))
+- fix: audit report 4.24 - remove temporary create account endpoint ([#115](https://github.com/MetaMask/snap-bitcoin-wallet/pull/115))
+
 ## [0.2.2]
 
 ### Changed
@@ -93,7 +111,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add CI for lint and test ([#2](https://github.com/MetaMask/bitcoin/pull/2))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.1.2...v0.2.0
