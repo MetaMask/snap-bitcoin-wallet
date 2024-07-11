@@ -112,10 +112,11 @@ export class BtcKeyring implements Keyring {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async filterAccountChains(id: string, chains: string[]): Promise<string[]> {
     const walletData = await this._stateMgr.getWallet(id);
-    return walletData ? [walletData.scope] : [];
+    return walletData && chains.includes(walletData.scope)
+      ? [walletData.scope]
+      : [];
   }
 
   async updateAccount(account: KeyringAccount): Promise<void> {

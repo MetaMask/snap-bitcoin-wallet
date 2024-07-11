@@ -192,6 +192,21 @@ describe('BtcKeyring', () => {
 
       expect(result).toStrictEqual([]);
     });
+
+    it('returns empty array if the account scope is not in `chains` list', async () => {
+      const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
+      const scope = Caip2ChainId.Testnet;
+      const { instance: keyring } = createMockKeyring(stateMgr);
+      const { keyringAccount } = await createSender(scope);
+
+      getWalletSpy.mockResolvedValue(null);
+
+      const result = await keyring.filterAccountChains(keyringAccount.id, [
+        Caip2ChainId.Mainnet,
+      ]);
+
+      expect(result).toStrictEqual([]);
+    });
   });
 
   describe('listAccounts', () => {
