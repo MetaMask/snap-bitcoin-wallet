@@ -10,7 +10,7 @@ export type Request = (params: RequestArguments) => Promise<unknown | null>;
  * @returns The `request` function.
  */
 export const useRequest = () => {
-  const { provider, setError } = useMetaMaskContext();
+  const { provider, setError, setLoading, setResp } = useMetaMaskContext();
 
   /**
    * `provider.request` wrapper.
@@ -21,6 +21,8 @@ export const useRequest = () => {
    * @returns The result of the request.
    */
   const request: Request = async ({ method, params }) => {
+    setLoading(true);
+    setResp(null);
     try {
       const data =
         (await provider?.request({
@@ -28,11 +30,19 @@ export const useRequest = () => {
           params,
         } as RequestArguments)) ?? null;
 
+      if (
+        method &&
+        !['web3_clientVersion', 'wallet_getSnaps'].includes(method)
+      ) {
+        setResp(JSON.stringify(data, null, 2));
+      }
       return data;
     } catch (requestError: any) {
       setError(requestError);
 
       return null;
+    } finally {
+      setLoading(false);
     }
   };
 

@@ -79,7 +79,7 @@ export const sendManyParamsStruct = object({
 
 export const sendManyResponseStruct = object({
   txId: nonempty(string()),
-  txHash: optional(string()),
+  signedTransaction: optional(string()),
 });
 
 export type SendManyParams = Infer<typeof sendManyParamsStruct>;
@@ -132,16 +132,16 @@ export async function sendMany(account: BtcAccount, params: SendManyParams) {
       throw new UserRejectedRequestError() as unknown as Error;
     }
 
-    const txHash = await wallet.signTransaction(account.signer, tx);
+    const signedTransaction = await wallet.signTransaction(account.signer, tx);
 
     if (dryrun) {
       return {
         txId: '',
-        txHash,
+        signedTransaction,
       };
     }
 
-    const result = await chainApi.broadcastTransaction(txHash);
+    const result = await chainApi.broadcastTransaction(signedTransaction);
 
     const resp = {
       txId: result.transactionId,
