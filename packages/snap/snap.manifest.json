@@ -1,5 +1,5 @@
 {
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Manage Bitcoin using MetaMask",
   "proposedName": "Bitcoin Wallet",
   "repository": {
@@ -7,7 +7,7 @@
     "url": "https://github.com/MetaMask/snap-bitcoin-wallet.git"
   },
   "source": {
-    "shasum": "LRMVRwpeJxdznEzDv9PBYo4H5mWdUgp6McyQXCbWB70=",
+    "shasum": "rUCkpNpfbKStO1+U5i/JrdZ0Xebbt+FrGWhcola7qtQ=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
@@ -18,7 +18,7 @@
     }
   },
   "initialConnections": {
-    "http://localhost:8000": {},
+    "http://localhost:3000": {},
     "https://portfolio.metamask.io": {},
     "https://portfolio-builds.metafi-dev.codefi.network": {},
     "https://dev.portfolio.metamask.io": {},
@@ -31,7 +31,7 @@
     },
     "endowment:keyring": {
       "allowedOrigins": [
-        "http://localhost:8000",
+        "http://localhost:3000",
         "https://portfolio.metamask.io",
         "https://portfolio-builds.metafi-dev.codefi.network",
         "https://dev.portfolio.metamask.io",
