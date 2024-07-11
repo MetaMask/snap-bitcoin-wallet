@@ -227,24 +227,14 @@ describe('BtcKeyring', () => {
   });
 
   describe('updateAccount', () => {
-    it('updates account', async () => {
-      const { instance: stateMgr, updateAccountSpy } = createMockStateMgr();
+    it('throws `Method not implemented` error', async () => {
+      const { instance: stateMgr } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);
       const account = generateAccounts(1)[0];
-      updateAccountSpy.mockReturnThis();
 
-      await keyring.updateAccount(account);
-
-      expect(updateAccountSpy).toHaveBeenCalledWith(account);
-    });
-
-    it('throws Error if an error catched', async () => {
-      const { instance: stateMgr, updateAccountSpy } = createMockStateMgr();
-      const { instance: keyring } = createMockKeyring(stateMgr);
-      updateAccountSpy.mockRejectedValue(new Error('error'));
-      const account = generateAccounts(1)[0];
-
-      await expect(keyring.updateAccount(account)).rejects.toThrow(Error);
+      await expect(keyring.updateAccount(account)).rejects.toThrow(
+        'Method not implemented.',
+      );
     });
   });
 
