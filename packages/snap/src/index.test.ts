@@ -10,7 +10,7 @@ import * as entry from '.';
 import { TransactionStatus } from './bitcoin/chain';
 import { Config } from './config';
 import { BtcKeyring } from './keyring';
-import { originPermissions } from './permissions';
+import { InternalRpcMethod, originPermissions } from './permissions';
 import * as getTxStatusRpc from './rpcs/get-transaction-status';
 
 jest.mock('./utils/logger');
@@ -177,6 +177,7 @@ describe('onKeyringRequest', () => {
       keyringApi.KeyringRpcMethod.ListRequests,
       keyringApi.KeyringRpcMethod.ExportAccount,
       keyringApi.KeyringRpcMethod.UpdateAccount,
+      InternalRpcMethod.GetTransactionStatus,
     ]) {
       await expect(
         onKeyringRequest({
