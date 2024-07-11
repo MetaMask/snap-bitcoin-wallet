@@ -129,7 +129,31 @@ describe('onKeyringRequest', () => {
     });
   });
 
-  it('does not throw `Permission denied` error if the method is in the allowed list', async () => {
+  it('does not throw a `Permission denied` error if the dapp origin requests a method that is on the allowed list', async () => {
+    const { handler } = createMockHandleKeyringRequest();
+    handler.mockResolvedValue({});
+
+    for (const method of [
+      keyringApi.KeyringRpcMethod.ListAccounts,
+      keyringApi.KeyringRpcMethod.GetAccount,
+      keyringApi.KeyringRpcMethod.GetAccountBalances,
+      keyringApi.KeyringRpcMethod.SubmitRequest,
+      InternalRpcMethod.GetTransactionStatus,
+    ]) {
+      const result = await onKeyringRequest({
+        origin: 'https://portfolio.metamask.io',
+        request: {
+          method,
+          params: {
+            scope: Config.avaliableNetworks[0],
+          },
+        } as unknown as JsonRpcRequest,
+      });
+      expect(result).toStrictEqual({});
+    }
+  });
+
+  it('does not throw a `Permission denied` error if the MetaMask origin requests a method that is on the allowed list', async () => {
     const { handler } = createMockHandleKeyringRequest();
     handler.mockResolvedValue({});
 
@@ -168,7 +192,35 @@ describe('onKeyringRequest', () => {
     await expect(executeRequest()).rejects.toThrow(SnapError);
   });
 
-  it('throws `Permission denied` error if the method is not in the allowed list', async () => {
+  it('throws a `Permission denied` error if the dapp origin requests a method that is not on the allowed list', async () => {
+    const { handler } = createMockHandleKeyringRequest();
+    handler.mockResolvedValue({});
+
+    for (const method of [
+      keyringApi.KeyringRpcMethod.CreateAccount,
+      keyringApi.KeyringRpcMethod.FilterAccountChains,
+      keyringApi.KeyringRpcMethod.UpdateAccount,
+      keyringApi.KeyringRpcMethod.DeleteAccount,
+      keyringApi.KeyringRpcMethod.ListRequests,
+      keyringApi.KeyringRpcMethod.GetRequest,
+      keyringApi.KeyringRpcMethod.ApproveRequest,
+      keyringApi.KeyringRpcMethod.RejectRequest,
+    ]) {
+      await expect(
+        onKeyringRequest({
+          origin: 'https://portfolio.metamask.io',
+          request: {
+            method,
+            params: {
+              scope: Config.avaliableNetworks[0],
+            },
+          } as unknown as JsonRpcRequest,
+        }),
+      ).rejects.toThrow('Permission denied');
+    }
+  });
+
+  it('throws a `Permission denied` error if the MetaMask origin requests a method that is not on the allowed list', async () => {
     for (const method of [
       keyringApi.KeyringRpcMethod.SubmitRequest,
       keyringApi.KeyringRpcMethod.ApproveRequest,

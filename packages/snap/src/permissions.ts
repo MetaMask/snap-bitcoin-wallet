@@ -8,16 +8,8 @@ const dappPermissions = new Set([
   // Keyring methods
   KeyringRpcMethod.ListAccounts,
   KeyringRpcMethod.GetAccount,
-  KeyringRpcMethod.CreateAccount,
-  KeyringRpcMethod.FilterAccountChains,
-  // KeyringRpcMethod.UpdateAccount,
-  // KeyringRpcMethod.DeleteAccount,
-  KeyringRpcMethod.ListRequests,
-  KeyringRpcMethod.GetRequest,
-  KeyringRpcMethod.ApproveRequest,
-  KeyringRpcMethod.RejectRequest,
-  KeyringRpcMethod.SubmitRequest,
   KeyringRpcMethod.GetAccountBalances,
+  KeyringRpcMethod.SubmitRequest,
   // Chain API methods
   InternalRpcMethod.GetTransactionStatus,
 ]);
