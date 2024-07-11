@@ -129,7 +129,7 @@ describe('onKeyringRequest', () => {
     });
   });
 
-  it('does not throw a `Permission denied` error if the Dapp origin requests a method that is on the allowed list', async () => {
+  it('does not throw a `Permission denied` error if the dapp origin requests a method that is on the allowed list', async () => {
     const { handler } = createMockHandleKeyringRequest();
     handler.mockResolvedValue({});
 
@@ -138,6 +138,7 @@ describe('onKeyringRequest', () => {
       keyringApi.KeyringRpcMethod.GetAccount,
       keyringApi.KeyringRpcMethod.GetAccountBalances,
       keyringApi.KeyringRpcMethod.SubmitRequest,
+      InternalRpcMethod.GetTransactionStatus,
     ]) {
       const result = await onKeyringRequest({
         origin: 'https://portfolio.metamask.io',
@@ -191,7 +192,7 @@ describe('onKeyringRequest', () => {
     await expect(executeRequest()).rejects.toThrow(SnapError);
   });
 
-  it('throws a `Permission denied` error if the Dapp origin requests a method that is not on the allowed list', async () => {
+  it('throws a `Permission denied` error if the dapp origin requests a method that is not on the allowed list', async () => {
     const { handler } = createMockHandleKeyringRequest();
     handler.mockResolvedValue({});
 
