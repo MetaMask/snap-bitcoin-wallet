@@ -92,11 +92,19 @@ describe('BtcAccountDeriver', () => {
       );
       const node = deriver.createBip32FromPrivateKey(pkBuffer, ccBuffer);
 
-      await expect(deriver.getChild(node, [`m`, `1''`, `0`, `0`])).rejects.toThrow('Invalid index');
-      await expect(deriver.getChild(node, [`m`, `-1'`, `0`, `0`])).rejects.toThrow('Invalid index');
-      await expect(deriver.getChild(node, [`m`, `0'`, `-1`, `0`])).rejects.toThrow('Invalid index');
-      await expect(deriver.getChild(node, [`m`, `0'`, `1a`, `0`])).rejects.toThrow('Invalid index');
-    })
+      await expect(
+        deriver.getChild(node, [`m`, `1''`, `0`, `0`]),
+      ).rejects.toThrow('Invalid index');
+      await expect(
+        deriver.getChild(node, [`m`, `-1'`, `0`, `0`]),
+      ).rejects.toThrow('Invalid index');
+      await expect(
+        deriver.getChild(node, [`m`, `0'`, `-1`, `0`]),
+      ).rejects.toThrow('Invalid index');
+      await expect(
+        deriver.getChild(node, [`m`, `0'`, `1a`, `0`]),
+      ).rejects.toThrow('Invalid index');
+    });
   });
 
   describe('getRoot', () => {

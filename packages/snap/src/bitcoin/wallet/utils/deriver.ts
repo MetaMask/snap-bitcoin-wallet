@@ -19,12 +19,12 @@ export function deriveByPath(
     let index: number;
     const isHardened = indexStr.endsWith(`'`);
     let _indexStr = indexStr;
-  
+
     if (isHardened) {
-      _indexStr = _indexStr.slice(0, -1)
+      _indexStr = _indexStr.slice(0, -1);
     }
 
-    if (RegExp(/^\d+?$/).test(_indexStr) === false) {
+    if (!RegExp(/^\d+?$/).test(_indexStr)) {
       throw new Error(`Invalid index`);
     }
 
