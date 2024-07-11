@@ -29,15 +29,12 @@ export const GetTransactionStatusCard = ({
   };
 
   const handleClick = async () => {
-    const resp = await invokeSnap({
+    await invokeSnap({
       method: 'chain_getTransactionStatus',
       params: {
         scope,
         transactionId,
       },
-    });
-    console.log({
-      resp,
     });
     setTransactionId('');
   };

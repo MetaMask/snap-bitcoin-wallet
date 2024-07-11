@@ -24,20 +24,17 @@ export const BroadcastTxnCard = ({
 
   const [signedTransaction, setSignedTransaction] = useState('');
 
-  const handleOnChange = (action: any) => {
-    setSignedTransaction(action.target.value);
+  const handleOnChange = (chgEvent: React.ChangeEvent<HTMLInputElement>) => {
+    setSignedTransaction(chgEvent.target.value);
   };
 
   const handleClick = async () => {
-    const resp = await invokeSnap({
+    await invokeSnap({
       method: 'chain_broadcastTransaction',
       params: {
         scope,
         signedTransaction,
       },
-    });
-    console.log({
-      resp,
     });
     setSignedTransaction('');
   };

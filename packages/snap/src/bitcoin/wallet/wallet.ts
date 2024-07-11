@@ -18,7 +18,7 @@ import { AccountSigner } from './signer';
 import { TxInfo } from './transaction-info';
 import { TxInput } from './transaction-input';
 import { TxOutput } from './transaction-output';
-import { isDust, getScriptForDestnation } from './utils';
+import { isDust, getScriptForDestination } from './utils';
 
 export type Recipient = {
   address: string;
@@ -110,14 +110,14 @@ export class BtcWallet {
       if (isDust(recipient.value, scriptType)) {
         throw new TxValidationError('Transaction amount too small');
       }
-      const destnationScriptOutput = getScriptForDestnation(
+      const destinationScriptOutput = getScriptForDestination(
         recipient.address,
         this._network,
       );
       return new TxOutput(
         recipient.value,
         recipient.address,
-        destnationScriptOutput,
+        destinationScriptOutput,
       );
     });
 
