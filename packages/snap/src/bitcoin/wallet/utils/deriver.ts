@@ -16,7 +16,6 @@ export function deriveByPath(
     _path = _path.slice(1);
   }
   return _path.reduce((prevHd: BIP32Interface, indexStr: string) => {
-    let index: number;
     const isHardened = indexStr.endsWith(`'`);
     let _indexStr = indexStr;
 
@@ -24,11 +23,11 @@ export function deriveByPath(
       _indexStr = _indexStr.slice(0, -1);
     }
 
-    if (!RegExp(/^\d+?$/).test(_indexStr)) {
+    if (!/^\d+?$/u.test(_indexStr)) {
       throw new Error(`Invalid index`);
     }
 
-    index = parseInt(indexStr, 10);
+    const index = parseInt(indexStr, 10);
     return isHardened ? prevHd.deriveHardened(index) : prevHd.derive(index);
   }, rootNode);
 }
