@@ -4,7 +4,11 @@ import { networks, type Network } from 'bitcoinjs-lib';
 import { bufferToString, compactError, hexToBuffer, logger } from '../../utils';
 import type { Utxo } from '../chain';
 import type { BtcAccount } from './account';
-import { P2WPKHAccount, type IStaticBtcAccount } from './account';
+import {
+  P2WPKHAccount,
+  P2WPKHTestnetAccount,
+  type IStaticBtcAccount,
+} from './account';
 import { CoinSelectService } from './coin-select';
 import { ScriptType } from './constants';
 import type { BtcAccountDeriver } from './deriver';
@@ -60,15 +64,13 @@ export class BtcWallet {
    *
    * @param index - The index to derive from the node.
    * @param type - The script type of the unlocked account, e.g. `bip122:p2pkh`.
-   * @returns A promise that resolves to an `BtcAccount` object.
+   * @returns A promise that resolves to a `BtcAccount` object.
    */
   async unlock(index: number, type?: string): Promise<BtcAccount> {
     try {
       const AccountCtor = this.getAccountCtor(type ?? ScriptType.P2wpkh);
       const childNodeHdPath = [`m`, `0'`, `0`, `${index}`];
-      const rootNode = await this._deriver.getRoot(
-        this.getRootNodeHdPath(AccountCtor),
-      );
+      const rootNode = await this._deriver.getRoot(AccountCtor.path);
       const childNode = await this._deriver.getChild(rootNode, childNodeHdPath);
 
       return new AccountCtor(
@@ -190,32 +192,23 @@ export class BtcWallet {
     if (type.includes('bip122:')) {
       scriptType = type.split(':')[1];
     }
+
     switch (scriptType.toLowerCase()) {
       case ScriptType.P2wpkh.toLowerCase():
-        return P2WPKHAccount;
+        return this.getP2WPKHAccountByNetwork();
       default:
         throw new WalletError('Invalid script type');
     }
   }
 
-  /**
-   * Get the hd path for the account based on the network.
-   * Recall that a BIP-44 HD tree path consists of the following nodes.
-   * `m / 44' / coin_type' / account' / change / address_index`.
-   * coin_type is 0 for bitcoin mainnet and 1 for testnet.
-   * reference: https://github.com/satoshilabs/slips/blob/master/slip-0044.md.
-   *
-   * @param AccountCtor - The Account objects contians the hd path.
-   * @returns The updated hd path.
-   */
-  protected getRootNodeHdPath(AccountCtor: IStaticBtcAccount): string[] {
-    if (this._network === networks.bitcoin) {
-      return AccountCtor.path;
-    } else if (this._network === networks.testnet) {
-      return [...AccountCtor.path]
-        .slice(0, AccountCtor.path.length - 1)
-        .concat(["1'"]);
+  protected getP2WPKHAccountByNetwork(): IStaticBtcAccount {
+    switch (this._network) {
+      case networks.bitcoin:
+        return P2WPKHAccount;
+      case networks.testnet:
+        return P2WPKHTestnetAccount;
+      default:
+        throw new WalletError('Invalid network');
     }
-    throw new WalletError('Network not supported');
   }
 }

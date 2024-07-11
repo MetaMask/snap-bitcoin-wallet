@@ -131,3 +131,10 @@ export class P2WPKHAccount
 
   static readonly scriptType = ScriptType.P2wpkh;
 }
+
+export class P2WPKHTestnetAccount
+  extends P2WPKHAccount
+  implements StaticImplements<IStaticBtcAccount, typeof P2WPKHTestnetAccount>
+{
+  static readonly path = ['m', "84'", "1'"];
+}
