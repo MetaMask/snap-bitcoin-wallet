@@ -54,7 +54,7 @@ describe('onRpcRequest', () => {
     jest.spyOn(entry, 'validateOrigin').mockReturnThis();
 
     return onRpcRequest({
-      origin: 'http://localhost:8000',
+      origin: 'https://portfolio.metamask.io',
       request: {
         method,
         params: {
@@ -106,7 +106,7 @@ describe('onKeyringRequest', () => {
 
   const executeRequest = async () => {
     return onKeyringRequest({
-      origin: 'http://localhost:8000',
+      origin: 'https://portfolio.metamask.io',
       request: {
         method: keyringApi.KeyringRpcMethod.ListAccounts,
         params: {
