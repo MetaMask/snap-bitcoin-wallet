@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Change Snap name ([#158](https://github.com/MetaMask/snap-bitcoin-wallet/pull/158))
+- Change Snap name to "Bitcoin Manager" ([#158](https://github.com/MetaMask/snap-bitcoin-wallet/pull/158))
 - Change local dapp port ([#147](https://github.com/MetaMask/snap-bitcoin-wallet/pull/147))
 
 ### Fixed
