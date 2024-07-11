@@ -44,7 +44,7 @@ describe('BlockChairClient', () => {
     const wallet = new BtcWallet(instance, network);
 
     const accounts: BtcAccount[] = [];
-    for (let i = 0; i < recipientCnt + 1; i++) {
+    for (let i = 0; i < recipientCnt; i++) {
       accounts.push(await wallet.unlock(i, Config.wallet.defaultAccountType));
     }
 
