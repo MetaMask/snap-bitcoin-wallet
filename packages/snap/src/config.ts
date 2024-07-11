@@ -45,5 +45,5 @@ export const Config: SnapConfig = {
       'https://blockstream.info/testnet/address/${address}',
   },
   // eslint-disable-next-line no-restricted-globals
-  logLevel: process.env.LOG_LEVEL ?? '6',
+  logLevel: process.env.LOG_LEVEL ?? '0',
 };

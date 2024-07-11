@@ -29,14 +29,7 @@ const metamaskPermissions = new Set([
   KeyringRpcMethod.CreateAccount,
   KeyringRpcMethod.FilterAccountChains,
   KeyringRpcMethod.DeleteAccount,
-  KeyringRpcMethod.ListRequests,
-  KeyringRpcMethod.GetRequest,
-  KeyringRpcMethod.ApproveRequest,
-  KeyringRpcMethod.RejectRequest,
-  KeyringRpcMethod.SubmitRequest,
   KeyringRpcMethod.GetAccountBalances,
-  // Chain API methods
-  InternalRpcMethod.GetTransactionStatus,
 ]);
 
 const allowedOrigins = [
