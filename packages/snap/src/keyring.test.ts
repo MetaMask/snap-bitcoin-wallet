@@ -383,6 +383,7 @@ describe('BtcKeyring', () => {
       const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);
       const { sender, keyringAccount } = await createSender(caip2ChainId);
+      // This method will not be dispatched in `handleSubmitRequest` and will throw a `MethodNotFoundError` if used
       keyringAccount.methods = ['btc_notImplemented'];
 
       getWalletSpy.mockResolvedValue({
