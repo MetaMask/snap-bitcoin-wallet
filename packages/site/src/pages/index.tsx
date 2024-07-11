@@ -1,5 +1,4 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
-import { KeyringSnapRpcClient } from '@metamask/keyring-api';
 import { useState } from 'react';
 import styled from 'styled-components';
 
@@ -9,23 +8,19 @@ import {
   ReconnectButton,
   Card,
   CreateBTCAccountButton,
-  GetBalancesCard,
   ListAccountsButton,
   SendManyCard,
   GetTransactionStatusCard,
+  GetBalancesCard,
 } from '../components';
 import { defaultSnapOrigin } from '../config';
-import { defaultSnapOrigin as snapId } from '../config/snap';
 import {
   useMetaMask,
-  useInvokeSnap,
   useInvokeKeyring,
   useMetaMaskContext,
   useRequestSnap,
 } from '../hooks';
 import { isLocalSnap, shouldDisplayReconnectButton } from '../utils';
-
-export const keyringClient = new KeyringSnapRpcClient(snapId, window.ethereum);
 
 const Container = styled.div`
   display: flex;
@@ -82,42 +77,92 @@ const ErrorMessage = styled.div`
   }
 `;
 
-type Balance = {
-  amount: string;
-};
+const Resp = styled.div`
+  background-color: ${({ theme }) => theme.colors.primary?.muted};
+  border: 1px solid ${({ theme }) => theme.colors.primary?.default};
+  color: ${({ theme }) => theme.colors.primary?.alternative};
+  border-radius: ${({ theme }) => theme.radii.default};
+  padding: 2.4rem;
+  margin-bottom: 2.4rem;
+  margin-top: 2.4rem;
+  max-width: 60rem;
+  width: 100%;
+  ${({ theme }) => theme.mediaQueries.small} {
+    padding: 1.6rem;
+    margin-bottom: 1.2rem;
+    margin-top: 1.2rem;
+    max-width: 100%;
+  }
+`;
 
-type AssetBalances = {
-  balances: {
-    [address: string]: {
-      [asset: string]: Balance;
-    };
-  };
-};
+const Title = styled.h2`
+  font-size: ${({ theme }) => theme.fontSizes.large};
+  margin: 0;
+  margin-bottom: 1.2rem;
+  ${({ theme }) => theme.mediaQueries.small} {
+    font-size: ${({ theme }) => theme.fontSizes.text};
+  }
+`;
+
+const Loading = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(16, 16, 16, 0.5);
+  z-index: 1000;
+`;
+const LoadingText = styled.div`
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999999;
+  font-size: 5rem;
+`;
+
+const Dropdown = styled.select`
+  display: flex;
+  align-self: flex-start;
+  align-items: center;
+  justify-content: center;
+  font-size: ${(props) => props.theme.fontSizes.small};
+  border-radius: ${(props) => props.theme.radii.button};
+  border: 1px solid ${(props) => props.theme.colors.background?.inverse};
+  background-color: ${(props) => props.theme.colors.background?.inverse};
+  color: ${(props) => props.theme.colors.text?.inverse};
+  font-weight: bold;
+  padding: 1.2rem;
+`;
+
+export enum Caip2ChainId {
+  Mainnet = 'bip122:000000000019d6689c085ae165831e93',
+  Testnet = 'bip122:000000000933ea01ad0ee984209779ba',
+}
 
 const Index = () => {
-  const { error } = useMetaMaskContext();
+  const { error, resp, loading } = useMetaMaskContext();
   const { isFlask, snapsDetected, installedSnap } = useMetaMask();
   const requestSnap = useRequestSnap();
-  const invokeSnap = useInvokeSnap();
   const invokeKeyring = useInvokeKeyring();
   const [btcAccount, setBtcAccount] = useState<KeyringAccount>();
-  const scope = 'bip122:000000000933ea01ad0ee984209779ba'
+
+  const [scope, setScope] = useState<string>(Caip2ChainId.Mainnet);
 
   const isMetaMaskReady = isLocalSnap(defaultSnapOrigin)
     ? isFlask
     : snapsDetected;
 
   const handleCreateAccountClick = async () => {
-    const account = (await invokeSnap({
-      method: 'chain_createAccount',
+    const account = (await invokeKeyring({
+      method: 'keyring_createAccount',
       params: {
-        scope: scope,
+        options: {
+          scope,
+        },
       },
     })) as KeyringAccount;
-
-    console.log({
-      account,
-    });
 
     setBtcAccount(account);
   };
@@ -128,8 +173,19 @@ const Index = () => {
     })) as KeyringAccount[];
 
     if (accounts.length) {
-      const account = accounts.find((account) => account.options.scope === scope)
-      setBtcAccount(account);
+      setBtcAccount(
+        accounts.find((account) => account.options.scope === scope),
+      );
+    }
+  };
+
+  const scopeOnChange = (chgEvent: React.ChangeEvent<HTMLSelectElement>) => {
+    if (
+      Object.values(Caip2ChainId).includes(
+        chgEvent.target.value as unknown as Caip2ChainId,
+      )
+    ) {
+      setScope(chgEvent.target.value);
     }
   };
 
@@ -139,10 +195,22 @@ const Index = () => {
         <Span>BTC Snap</Span>
       </Heading>
       <CardContainer>
+        {loading && (
+          <Loading>
+            <LoadingText>LOADING...</LoadingText>
+          </Loading>
+        )}
+
         {error && (
           <ErrorMessage>
             <b>An error happened:</b> {error.message}
           </ErrorMessage>
+        )}
+        {resp && (
+          <Resp>
+            <Title>RPC Response</Title>
+            {resp}
+          </Resp>
         )}
         {!isMetaMaskReady && (
           <Card
@@ -187,10 +255,40 @@ const Index = () => {
             disabled={!installedSnap}
           />
         )}
+
+        <Card
+          content={{
+            title: 'Select Network',
+            description: `Current: ${scope}`,
+            button: (
+              <Dropdown onChange={scopeOnChange}>
+                <option
+                  value={Caip2ChainId.Mainnet}
+                  selected={scope === Caip2ChainId.Mainnet}
+                >
+                  Mainnet
+                </option>
+                <option
+                  value={Caip2ChainId.Testnet}
+                  selected={scope === Caip2ChainId.Testnet}
+                >
+                  Testnet
+                </option>
+              </Dropdown>
+            ),
+          }}
+          disabled={!installedSnap}
+          fullWidth={
+            isMetaMaskReady &&
+            Boolean(installedSnap) &&
+            !shouldDisplayReconnectButton(installedSnap)
+          }
+        />
+
         <Card
           content={{
             title: 'Create Account',
-            description: `Create BTC Account - ${btcAccount?.address}`,
+            description: `Create BTC Account - ${btcAccount?.address ?? ''}`,
             button: (
               <CreateBTCAccountButton
                 onClick={handleCreateAccountClick}
@@ -223,9 +321,9 @@ const Index = () => {
             !shouldDisplayReconnectButton(installedSnap)
           }
         />
-        <GetBalancesCard 
+        <GetBalancesCard
           enabled={!(!installedSnap || !btcAccount)}
-          account={btcAccount?.id || ''}
+          account={btcAccount?.id ?? ''}
           scope={scope}
           fullWidth={
             isMetaMaskReady &&
@@ -265,10 +363,10 @@ const Index = () => {
           }
         /> */}
 
-        <SendManyCard 
+        <SendManyCard
           enabled={!(!installedSnap || !btcAccount)}
-          account={btcAccount?.id || ''}
-          address={btcAccount?.address || ''}
+          account={btcAccount?.id ?? ''}
+          address={btcAccount?.address ?? ''}
           scope={scope}
           fullWidth={
             isMetaMaskReady &&
@@ -286,7 +384,6 @@ const Index = () => {
             !shouldDisplayReconnectButton(installedSnap)
           }
         />
-
       </CardContainer>
     </Container>
   );

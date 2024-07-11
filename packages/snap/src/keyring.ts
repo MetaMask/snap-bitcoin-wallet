@@ -23,8 +23,6 @@ import { getProvider, scopeStruct, logger } from './utils';
 export type KeyringOptions = Record<string, Json> & {
   defaultIndex: number;
   multiAccount?: boolean;
-  // TODO: Remove temp solution to support keyring in snap without keyring API
-  emitEvents?: boolean;
 };
 
 export const CreateAccountOptionsStruct = object({
@@ -119,17 +117,8 @@ export class BtcKeyring implements Keyring {
     throw new Error('Method not implemented.');
   }
 
-  async updateAccount(account: KeyringAccount): Promise<void> {
-    try {
-      await this._stateMgr.withTransaction(async () => {
-        await this._stateMgr.updateAccount(account);
-        await this.#emitEvent(KeyringEvent.AccountUpdated, { account });
-      });
-    } catch (error) {
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      logger.info(`[BtcKeyring.updateAccount] Error: ${error.message}`);
-      throw new Error(error);
-    }
+  async updateAccount(_account: KeyringAccount): Promise<void> {
+    throw new Error('Method not implemented.');
   }
 
   async deleteAccount(id: string): Promise<void> {
@@ -172,6 +161,7 @@ export class BtcKeyring implements Keyring {
     );
 
     this.verifyIfAccountValid(account, walletData.account);
+    this.verifyIfMethodValid(method, walletData.account);
 
     switch (method) {
       case 'btc_sendmany':
@@ -188,10 +178,7 @@ export class BtcKeyring implements Keyring {
     event: KeyringEvent,
     data: Record<string, Json>,
   ): Promise<void> {
-    // TODO: Remove temp solution to support keyring in snap without extentions support
-    if (this._options.emitEvents) {
-      await emitSnapKeyringEvent(getProvider(), event, data);
-    }
+    await emitSnapKeyringEvent(getProvider(), event, data);
   }
 
   async getAccountBalances(
@@ -248,6 +235,15 @@ export class BtcKeyring implements Keyring {
   ): void {
     if (!account || account.address !== keyringAccount.address) {
       throw new Error('Account not found');
+    }
+  }
+
+  protected verifyIfMethodValid(
+    method: string,
+    keyringAccount: KeyringAccount,
+  ): void {
+    if (!keyringAccount.methods.includes(method)) {
+      throw new Error('Forbidden method');
     }
   }
 

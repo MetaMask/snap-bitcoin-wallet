@@ -1,13 +1,6 @@
+import { remove0x, HexStruct } from '@metamask/utils';
 import { Buffer } from 'buffer';
-/**
- * Removes the '0x' prefix from a given hex string.
- *
- * @param hexStr - The hex string to remove the prefix from.
- * @returns The hex string without the prefix.
- */
-export function trimHexPrefix(hexStr: string) {
-  return hexStr.startsWith('0x') ? hexStr.substring(2) : hexStr;
-}
+import { assert } from 'superstruct';
 
 /**
  * Converts a hex string to a buffer instance.
@@ -19,7 +12,8 @@ export function trimHexPrefix(hexStr: string) {
  */
 export function hexToBuffer(hexStr: string, trimPrefix = true) {
   try {
-    return Buffer.from(trimPrefix ? trimHexPrefix(hexStr) : hexStr, 'hex');
+    assert(hexStr, HexStruct);
+    return Buffer.from(trimPrefix ? remove0x(hexStr) : hexStr, 'hex');
   } catch (error) {
     throw new Error('Unable to convert hex string to buffer');
   }
@@ -49,6 +43,7 @@ export function bufferToString(buffer: Buffer, encoding: BufferEncoding) {
  * @param tailLength - The length of the tail of the string that should not be replaced.
  * @param replaceStr - The string to replace the middle characters with. Default is '...'.
  * @returns The formatted string.
+ * @throws An error if the given headLength and tailLength cannot be replaced.
  */
 export function replaceMiddleChar(
   str: string,
@@ -59,7 +54,14 @@ export function replaceMiddleChar(
   if (!str) {
     return str;
   }
-
+  // Enforces indexes to be positive to avoid parameter swapping in `.substring`
+  if (headLength < 0 || tailLength < 0) {
+    throw new Error('Indexes must be positives');
+  }
+  // Check upper bound (using + is safe here, since we know that both lengths are positives)
+  if (headLength + tailLength > str.length) {
+    throw new Error('Indexes out of bounds');
+  }
   return `${str.substring(0, headLength)}${replaceStr}${str.substring(
     str.length - tailLength,
   )}`;

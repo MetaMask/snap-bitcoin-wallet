@@ -19,29 +19,26 @@ export const SendManyCard = ({
   const invokeKeyring = useInvokeKeyring();
 
   const handleClick = async () => {
-    const resp = await invokeKeyring({
+    await invokeKeyring({
       method: 'keyring_submitRequest',
-
       params: {
-        account: account,
+        account,
         id: uuidv4(),
-        scope: scope,
+        scope,
         request: {
           method: 'btc_sendmany',
           params: {
             amounts: {
               [address]: '0.00000500',
             },
-            comment: 'some very long long long long long long long long long long long long long long long long long long  long long long long long long long long long long long long long long long long long long  long long long long long long long long long long long long long long long long long long  long long long long long long long long long long long long long long long long long long  long long long long long long long long long long long long long long long long long long  long long long long long long long long long long long long long long long long long long comment',
+            comment:
+              'some very long long long long long long long long long long long long long long long long long long  long long long long long long long long long long long long long long long long long long  long long long long long long long long long long long long long long long long long long  long long long long long long long long long long long long long long long long long long  long long long long long long long long long long long long long long long long long long  long long long long long long long long long long long long long long long long long long comment',
             subtractFeeFrom: [],
             replaceable: false,
-            dryrun: true
+            dryrun: true,
           },
         },
       },
-    });
-    console.log({
-      resp,
     });
   };
 
