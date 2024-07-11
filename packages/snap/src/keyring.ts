@@ -117,8 +117,7 @@ export class BtcKeyring implements Keyring {
     throw new Error('Method not implemented.');
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async updateAccount(account: KeyringAccount): Promise<void> {
+  async updateAccount(_account: KeyringAccount): Promise<void> {
     throw new Error('Method not implemented.');
   }
 
