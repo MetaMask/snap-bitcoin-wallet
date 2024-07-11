@@ -18,13 +18,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Audit 4.2: Remove update account method ([#130](https://github.com/MetaMask/snap-bitcoin-wallet/pull/130))
 - Audit 4.3: Restrict permissions for Portfolio origin ([#131](https://github.com/MetaMask/snap-bitcoin-wallet/pull/131))
-- Audit 4.8: Ensure that `request.method` in submit request is part of `account.methods` ([#133](https://github.com/MetaMask/snap-bitcoin-wallet/pull/133))
 - Audit 4.4: Restrict permissions for MetaMask origin ([#141](https://github.com/MetaMask/snap-bitcoin-wallet/pull/141))
+- Audit 4.8: Ensure that `request.method` in submit request is part of `account.methods` ([#133](https://github.com/MetaMask/snap-bitcoin-wallet/pull/133))
 - Audit 4.9: Validate non-hex string in `hexToBuffer` ([#134](https://github.com/MetaMask/snap-bitcoin-wallet/pull/134))
-- Audit 4.23: Disable logging for production builds ([#124](https://github.com/MetaMask/snap-bitcoin-wallet/pull/124))
-- Audit 4.20: Validate `headLength` and `tailLength` in `replaceMiddleChar` ([#138](https://github.com/MetaMask/snap-bitcoin-wallet/pull/138))
 - Audit 4.13: Add a safeguard for change output ([#135](https://github.com/MetaMask/snap-bitcoin-wallet/pull/135))
 - Audit 4.14: Rename `txHash` to `signedTransaction` ([#120](https://github.com/MetaMask/snap-bitcoin-wallet/pull/120))
+- Audit 4.20: Validate `headLength` and `tailLength` in `replaceMiddleChar` ([#138](https://github.com/MetaMask/snap-bitcoin-wallet/pull/138))
+- Audit 4.23: Disable logging for production builds ([#124](https://github.com/MetaMask/snap-bitcoin-wallet/pull/124))
 - Audit 4.24: Remove temporary create account endpoint ([#115](https://github.com/MetaMask/snap-bitcoin-wallet/pull/115))
 - Fix typo ([#119](https://github.com/MetaMask/snap-bitcoin-wallet/pull/119))
 
