@@ -49,6 +49,7 @@ export function bufferToString(buffer: Buffer, encoding: BufferEncoding) {
  * @param tailLength - The length of the tail of the string that should not be replaced.
  * @param replaceStr - The string to replace the middle characters with. Default is '...'.
  * @returns The formatted string.
+ * @throws An error if the given headLength and tailLength cannot be replaced.
  */
 export function replaceMiddleChar(
   str: string,
@@ -59,7 +60,14 @@ export function replaceMiddleChar(
   if (!str) {
     return str;
   }
-
+  // Enforces indexes to be positive to avoid parameter swapping in `.substring`
+  if (headLength < 0 || tailLength < 0) {
+    throw new Error('Indexes must be positives');
+  }
+  // Check upper bound (using + is safe here, since we know that both lengths are positives)
+  if (headLength + tailLength > str.length) {
+    throw new Error('Indexes out of bounds');
+  }
   return `${str.substring(0, headLength)}${replaceStr}${str.substring(
     str.length - tailLength,
   )}`;

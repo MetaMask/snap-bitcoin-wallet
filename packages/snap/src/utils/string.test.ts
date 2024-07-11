@@ -68,6 +68,24 @@ describe('replaceMiddleChar', () => {
   it('does not replace if the string is empty', () => {
     expect(replaceMiddleChar('', 5, 3)).toBe('');
   });
+
+  it('throws `Indexes must be positives` error if headLength or tailLength is negative value', () => {
+    expect(() => replaceMiddleChar(str, -1, 20)).toThrow(
+      'Indexes must be positives',
+    );
+    expect(() => replaceMiddleChar(str, 20, -10)).toThrow(
+      'Indexes must be positives',
+    );
+  });
+
+  it('throws `Indexes out of bounds` error if headLength + tailLength is out of bounds', () => {
+    expect(() => replaceMiddleChar(str, 100, 0)).toThrow(
+      'Indexes out of bounds',
+    );
+    expect(() => replaceMiddleChar(str, 0, 100)).toThrow(
+      'Indexes out of bounds',
+    );
+  });
 });
 
 describe('shortenAddress', () => {
