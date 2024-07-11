@@ -17,11 +17,18 @@ export function deriveByPath(
   }
   return _path.reduce((prevHd: BIP32Interface, indexStr: string) => {
     let index: number;
-    if (indexStr.endsWith(`'`)) {
-      index = parseInt(indexStr.slice(0, -1), 10);
-      return prevHd.deriveHardened(index);
+    const isHardened = indexStr.endsWith(`'`);
+    let _indexStr = indexStr;
+  
+    if (isHardened) {
+      _indexStr = _indexStr.slice(0, -1)
     }
+
+    if (RegExp(/^\d+?$/).test(_indexStr) === false) {
+      throw new Error(`Invalid index`);
+    }
+
     index = parseInt(indexStr, 10);
-    return prevHd.derive(index);
+    return isHardened ? prevHd.deriveHardened(index) : prevHd.derive(index);
   }, rootNode);
 }
