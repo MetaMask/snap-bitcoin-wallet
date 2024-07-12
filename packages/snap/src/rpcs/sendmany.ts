@@ -193,13 +193,13 @@ export async function getTxConsensus(
   // const networkFeeRateLabel = `Network fee rate`;
   const networkFeeLabel = `Network fee`;
   const totalLabel = `Total`;
-  const requestedByLable = `Requested by`;
+  const requestedByLabel = `Requested by`;
 
   const components: Component[] = [
     panel([
       heading(header),
       text(intro),
-      row(requestedByLable, text(`${origin}`, false)),
+      row(requestedByLabel, text(`${origin}`, false)),
     ]),
     divider(),
   ];
