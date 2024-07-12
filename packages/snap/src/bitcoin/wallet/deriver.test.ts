@@ -85,12 +85,7 @@ describe('BtcAccountDeriver', () => {
       expect(result.index).not.toBeNull();
     });
 
-    it.each([
-      [`m`, `1''`, `0`, `0`].join('/'),
-      [`m`, `-1'`, `0`, `0`].join('/'),
-      [`m`, `0'`, `-1`, `0`].join('/'),
-      [`m`, `0'`, `1a`, `0`].join('/'),
-    ])(
+    it.each(["m/1''/0/0", "m/-1'/0/0", "m/0'/-1/0", "m/0'/1a/0"])(
       'throws `Invalid index` if hdPath is invalid: %s',
       async (path: string) => {
         const network = networks.testnet;
