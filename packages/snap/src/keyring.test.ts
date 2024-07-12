@@ -158,14 +158,61 @@ describe('BtcKeyring', () => {
   });
 
   describe('filterAccountChains', () => {
-    it('throws `Method not implemented` error', async () => {
-      const { instance: stateMgr } = createMockStateMgr();
+    it('returns the corresponding CAIP-2 Chain Id if the account exist', async () => {
+      const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
+      const scope = Caip2ChainId.Testnet;
       const { instance: keyring } = createMockKeyring(stateMgr);
-      const account = generateAccounts(1)[0];
+      const { sender, keyringAccount } = await createSender(scope);
 
-      await expect(
-        keyring.filterAccountChains(account.id, [Caip2ChainId.Testnet]),
-      ).rejects.toThrow('Method not implemented.');
+      getWalletSpy.mockResolvedValue({
+        account: keyringAccount as unknown as KeyringAccount,
+        index: 0,
+        scope,
+        hdPath: sender.hdPath,
+      });
+
+      const result = await keyring.filterAccountChains(keyringAccount.id, [
+        scope,
+      ]);
+
+      expect(result).toStrictEqual([scope]);
+    });
+
+    it('returns empty array if the account does not exist', async () => {
+      const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
+      const scope = Caip2ChainId.Testnet;
+      const { instance: keyring } = createMockKeyring(stateMgr);
+      const { keyringAccount } = await createSender(scope);
+
+      getWalletSpy.mockResolvedValue(null);
+
+      const result = await keyring.filterAccountChains(keyringAccount.id, [
+        scope,
+      ]);
+
+      expect(result).toStrictEqual([]);
+    });
+
+    it('returns empty array if the account scope is not in `chains` list', async () => {
+      const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
+      const scope = Caip2ChainId.Testnet;
+      const { instance: keyring } = createMockKeyring(stateMgr);
+      const { keyringAccount, sender } = await createSender(scope);
+
+      getWalletSpy.mockResolvedValue({
+        account: keyringAccount as unknown as KeyringAccount,
+        index: 0,
+        scope,
+        hdPath: sender.hdPath,
+      });
+
+      // Current account has been created for testnet, so requesting mainnet will yield an
+      // empty array:
+      const result = await keyring.filterAccountChains(keyringAccount.id, [
+        Caip2ChainId.Mainnet,
+      ]);
+
+      expect(result).toStrictEqual([]);
     });
   });
 
