@@ -70,6 +70,7 @@ export const onKeyringRequest: OnKeyringRequestHandler = async ({
 
     const keyring = new BtcKeyring(new KeyringStateManager(), {
       defaultIndex: Config.wallet.defaultAccountIndex,
+      origin,
     });
 
     return (await handleKeyringRequest(

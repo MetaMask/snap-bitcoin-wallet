@@ -23,6 +23,7 @@ import { getProvider, scopeStruct, logger } from './utils';
 export type KeyringOptions = Record<string, Json> & {
   defaultIndex: number;
   multiAccount?: boolean;
+  origin: string;
 };
 
 export const CreateAccountOptionsStruct = object({
@@ -167,7 +168,7 @@ export class BtcKeyring implements Keyring {
 
     switch (method) {
       case 'btc_sendmany':
-        return (await sendMany(account, {
+        return (await sendMany(account, this._options.origin, {
           ...params,
           scope: walletData.scope,
         } as unknown as SendManyParams)) as unknown as Json;
