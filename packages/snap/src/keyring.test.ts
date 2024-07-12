@@ -197,10 +197,17 @@ describe('BtcKeyring', () => {
       const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
       const scope = Caip2ChainId.Testnet;
       const { instance: keyring } = createMockKeyring(stateMgr);
-      const { keyringAccount } = await createSender(scope);
+      const { keyringAccount, sender } = await createSender(scope);
 
-      getWalletSpy.mockResolvedValue(null);
+      getWalletSpy.mockResolvedValue({
+        account: keyringAccount as unknown as KeyringAccount,
+        index: 0,
+        scope,
+        hdPath: sender.hdPath,
+      });
 
+      // Current account has been created for testnet, so requesting mainnet will yield an
+      // empty array:
       const result = await keyring.filterAccountChains(keyringAccount.id, [
         Caip2ChainId.Mainnet,
       ]);
