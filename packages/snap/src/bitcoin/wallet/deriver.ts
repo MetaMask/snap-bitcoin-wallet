@@ -90,7 +90,7 @@ export class BtcAccountDeriver {
    * Gets a child node of a BIP32 account given an index.
    *
    * @param root - The root node of the BIP32 account.
-   * @param hdPath - The hd path to derive.
+   * @param hdPath - The HD path to derive.
    * @returns A promise that resolves to the child node.
    */
   async getChild(
