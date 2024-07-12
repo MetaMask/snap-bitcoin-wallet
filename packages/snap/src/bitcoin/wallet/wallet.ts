@@ -195,13 +195,13 @@ export class BtcWallet {
 
     switch (scriptType.toLowerCase()) {
       case ScriptType.P2wpkh.toLowerCase():
-        return this.getP2WPKHAccountByNetwork();
+        return this.getP2WPKHAccountCtorByNetwork();
       default:
         throw new WalletError('Invalid script type');
     }
   }
 
-  protected getP2WPKHAccountByNetwork(): IStaticBtcAccount {
+  protected getP2WPKHAccountCtorByNetwork(): IStaticBtcAccount {
     switch (this._network) {
       case networks.bitcoin:
         return P2WPKHAccount;

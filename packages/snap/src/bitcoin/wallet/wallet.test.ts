@@ -15,6 +15,9 @@ jest.mock('../../utils/snap');
 jest.mock('../../utils/logger');
 
 describe('BtcWallet', () => {
+  const bip44Account = "0'";
+  const bip44Change = '0';
+
   const createMockDeriver = (network) => {
     const rootSpy = jest.spyOn(BtcAccountDeriver.prototype, 'getRoot');
     const childSpy = jest.spyOn(BtcAccountDeriver.prototype, 'getChild');
@@ -52,7 +55,7 @@ describe('BtcWallet', () => {
 
     it('creates an `Account` object with different hd path on different network', async () => {
       const { instance, rootSpy } = createMockWallet(networks.testnet);
-      const { instance: mainnetInstance, rootSpy: mainRootSpy } =
+      const { instance: mainnetInstance, rootSpy: mainnetRootSpy } =
         createMockWallet(networks.bitcoin);
 
       const idx = 0;
@@ -60,7 +63,7 @@ describe('BtcWallet', () => {
       const testnetAcc = await instance.unlock(idx);
       const mainnetAcc = await mainnetInstance.unlock(idx);
 
-      expect(mainRootSpy).toHaveBeenCalledWith(p2wpkhPathMainnet);
+      expect(mainnetRootSpy).toHaveBeenCalledWith(p2wpkhPathMainnet);
       expect(rootSpy).toHaveBeenCalledWith(p2wpkhPathTestnet);
       expect(testnetAcc.signer.publicKey).not.toStrictEqual(
         mainnetAcc.signer.publicKey,
@@ -78,8 +81,8 @@ describe('BtcWallet', () => {
       expect(rootSpy).toHaveBeenCalledWith(p2wpkhPathTestnet);
       expect(childSpy).toHaveBeenCalledWith(expect.any(Object), [
         `m`,
-        `0'`,
-        `0`,
+        bip44Account,
+        bip44Change,
         `${idx}`,
       ]);
     });
@@ -95,8 +98,8 @@ describe('BtcWallet', () => {
       expect(rootSpy).toHaveBeenCalledWith(p2wpkhPathTestnet);
       expect(childSpy).toHaveBeenCalledWith(expect.any(Object), [
         `m`,
-        `0'`,
-        `0`,
+        bip44Account,
+        bip44Change,
         `${idx}`,
       ]);
     });
@@ -112,8 +115,8 @@ describe('BtcWallet', () => {
       expect(rootSpy).toHaveBeenCalledWith(p2wpkhPathTestnet);
       expect(childSpy).toHaveBeenCalledWith(expect.any(Object), [
         `m`,
-        `0'`,
-        `0`,
+        bip44Account,
+        bip44Change,
         `${idx}`,
       ]);
     });

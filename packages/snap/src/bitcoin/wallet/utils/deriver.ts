@@ -23,11 +23,11 @@ export function deriveByPath(
       _indexStr = _indexStr.slice(0, -1);
     }
 
-    if (!/^\d+?$/u.test(_indexStr)) {
+    if (!/^\d+$/u.test(_indexStr)) {
       throw new Error(`Invalid index`);
     }
 
-    const index = parseInt(indexStr, 10);
+    const index = parseInt(_indexStr, 10);
     return isHardened ? prevHd.deriveHardened(index) : prevHd.derive(index);
   }, rootNode);
 }
