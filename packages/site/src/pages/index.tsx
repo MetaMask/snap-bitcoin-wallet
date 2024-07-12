@@ -12,6 +12,7 @@ import {
   SendManyCard,
   GetTransactionStatusCard,
   GetBalancesCard,
+  EstimateFeeCard,
 } from '../components';
 import { defaultSnapOrigin } from '../config';
 import {
@@ -332,10 +333,10 @@ const Index = () => {
           }
         />
 
-        {/* <GetDataForTransactionCard
-          account={btcAccount?.address || ''}
+        <EstimateFeeCard
           scope={scope}
           enabled={!(!installedSnap || !btcAccount)}
+          account={btcAccount?.id ?? ''}
           fullWidth={
             isMetaMaskReady &&
             Boolean(installedSnap) &&
@@ -343,7 +344,8 @@ const Index = () => {
           }
         />
 
-        <EstimateFeesCard
+        {/* <GetDataForTransactionCard
+          account={btcAccount?.address || ''}
           scope={scope}
           enabled={!(!installedSnap || !btcAccount)}
           fullWidth={

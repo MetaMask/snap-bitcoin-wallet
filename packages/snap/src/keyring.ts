@@ -15,6 +15,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import type { BtcAccount, BtcWallet } from './bitcoin/wallet';
 import { Config } from './config';
+import { AccountNotFoundError } from './exceptions';
 import { Factory } from './factory';
 import { getBalances, type SendManyParams, sendMany } from './rpcs';
 import type { KeyringStateManager, Wallet } from './stateManagement';
@@ -211,7 +212,7 @@ export class BtcKeyring implements Keyring {
     const walletData = await this._stateMgr.getWallet(id);
 
     if (!walletData) {
-      throw new Error('Account not found');
+      throw new AccountNotFoundError();
     }
 
     return walletData;
@@ -234,7 +235,7 @@ export class BtcKeyring implements Keyring {
     keyringAccount: KeyringAccount,
   ): void {
     if (!account || account.address !== keyringAccount.address) {
-      throw new Error('Account not found');
+      throw new AccountNotFoundError();
     }
   }
 

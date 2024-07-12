@@ -1,5 +1,6 @@
 import type { BIP32Interface } from 'bip32';
 import { type Network } from 'bitcoinjs-lib';
+import { type Buffer } from 'buffer';
 
 import { bufferToString, compactError, hexToBuffer, logger } from '../../utils';
 import type { Utxo } from '../chain';
@@ -9,6 +10,7 @@ import {
   P2SHP2WPKHAccount,
   type IStaticBtcAccount,
 } from './account';
+import type { SelectionResult } from './coin-select';
 import { CoinSelectService } from './coin-select';
 import { ScriptType } from './constants';
 import type { BtcAccountDeriver } from './deriver';
@@ -42,11 +44,11 @@ export type ITxInfo = {
 export type CreateTransactionOptions = {
   utxos: Utxo[];
   fee: number;
-  subtractFeeFrom: string[];
+  subtractFeeFrom?: string[];
   //
   // BIP125 opt-in RBF flag,
   //
-  replaceable: boolean;
+  replaceable?: boolean;
 };
 
 export class BtcWallet {
@@ -101,47 +103,38 @@ export class BtcWallet {
     recipients: Recipient[],
     options: CreateTransactionOptions,
   ): Promise<Transaction> {
-    const scriptOutput = account.script;
-    const { scriptType } = account;
+    const {
+      scriptType,
+      script: scriptOutput,
+      address,
+      hdPath,
+      pubkey,
+      mfp,
+      signer,
+    } = account;
 
-    // TODO: Supporting getting coins from other address (dynamic address)
-    const inputs = options.utxos.map((utxo) => new TxInput(utxo, scriptOutput));
-    const outputs = recipients.map((recipient) => {
-      if (isDust(recipient.value, scriptType)) {
-        throw new TxValidationError('Transaction amount too small');
-      }
-      const destinationScriptOutput = getScriptForDestination(
-        recipient.address,
-        this._network,
-      );
-      return new TxOutput(
-        recipient.value,
-        recipient.address,
-        destinationScriptOutput,
-      );
-    });
+    const inputs = this.createTxInput(options.utxos, scriptOutput);
+    const outputs = this.createTxOutput(recipients, scriptType);
 
     // Do not ever accept zero fee rate, we need to ensure it is at least 1
-    // TODO: The min fee rate should be setting from parameter
     const feeRate = Math.max(1, options.fee);
-    const coinSelectService = new CoinSelectService(feeRate);
-    const change = new TxOutput(0, account.address, scriptOutput);
-    const selectionResult = coinSelectService.selectCoins(
+    const selectionResult = this.selectCoins(
       inputs,
       outputs,
-      change,
+      new TxOutput(0, address, scriptOutput),
+      feeRate,
     );
 
     const psbtService = new PsbtService(this._network);
     psbtService.addInputs(
       selectionResult.inputs,
-      options.replaceable,
-      account.hdPath,
-      hexToBuffer(account.pubkey, false),
-      hexToBuffer(account.mfp, false),
+      options.replaceable ?? false,
+      hdPath,
+      hexToBuffer(pubkey, false),
+      hexToBuffer(mfp, false),
     );
 
-    const txInfo = new TxInfo(account.address, feeRate);
+    const txInfo = new TxInfo(address, feeRate);
 
     // TODO: add support of subtractFeeFrom, and throw error if output is too small after subtraction
     for (const output of selectionResult.outputs) {
@@ -150,7 +143,7 @@ export class BtcWallet {
     }
 
     if (selectionResult.change) {
-      if (isDust(change.value, scriptType)) {
+      if (isDust(selectionResult.change.value, scriptType)) {
         logger.warn(
           '[BtcWallet.createTransaction] Change is too small, adding to fees',
         );
@@ -161,13 +154,41 @@ export class BtcWallet {
     }
 
     // Sign dummy transaction to extract the fee which is more accurate
-    const signedService = await psbtService.signDummy(account.signer);
+    const signedService = await psbtService.signDummy(signer);
     txInfo.txFee = signedService.getFee();
 
     return {
       tx: psbtService.toBase64(),
       txInfo,
     };
+  }
+
+  /**
+   * Creates a transaction using the given account, transaction intent, and options.
+   *
+   * @param account - The `IAccount` object to create the transaction.
+   * @param recipients - The transaction recipients.
+   * @param options - The options to use when creating the transaction.
+   * @returns A promise that resolves to an object containing the transaction hash and transaction info.
+   */
+  async estimateFee(
+    account: BtcAccount,
+    recipients: Recipient[],
+    options: CreateTransactionOptions,
+  ): Promise<bigint> {
+    const { scriptType, script: scriptOutput } = account;
+
+    const inputs = this.createTxInput(options.utxos, scriptOutput);
+    const outputs = this.createTxOutput(recipients, scriptType);
+
+    const selectionResult = this.selectCoins(
+      inputs,
+      outputs,
+      new TxOutput(0, account.address, scriptOutput),
+      options.fee,
+    );
+
+    return BigInt(selectionResult.fee);
   }
 
   /**
@@ -200,5 +221,42 @@ export class BtcWallet {
       default:
         throw new WalletError('Invalid script type');
     }
+  }
+
+  protected createTxInput(utxos: Utxo[], scriptOutput: Buffer): TxInput[] {
+    return utxos.map((utxo) => new TxInput(utxo, scriptOutput));
+  }
+
+  protected createTxOutput(
+    recipients: Recipient[],
+    scriptType: ScriptType,
+  ): TxOutput[] {
+    return recipients.map((recipient) => {
+      if (isDust(recipient.value, scriptType)) {
+        throw new TxValidationError('Transaction amount too small');
+      }
+      const destinationScriptOutput = getScriptForDestination(
+        recipient.address,
+        this._network,
+      );
+      return new TxOutput(
+        recipient.value,
+        recipient.address,
+        destinationScriptOutput,
+      );
+    });
+  }
+
+  protected selectCoins(
+    inputs: TxInput[],
+    outputs: TxOutput[],
+    change: TxOutput,
+    fee: number,
+  ): SelectionResult {
+    // TODO: The min fee rate should be setting from parameter
+    // Do not ever accept zero fee rate, we need to ensure it is at least 1
+    const feeRate = Math.max(1, fee);
+    const coinSelectService = new CoinSelectService(feeRate);
+    return coinSelectService.selectCoins(inputs, outputs, change);
   }
 }
