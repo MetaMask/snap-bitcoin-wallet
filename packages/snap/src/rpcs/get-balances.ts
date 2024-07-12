@@ -12,29 +12,27 @@ import {
   satsToBtc,
 } from '../utils';
 import {
-  assetsStruct,
-  positiveStringStruct,
-  scopeStruct,
+  AssetsStruct,
+  PositiveStringStruct,
+  ScopeStruct,
 } from '../utils/superstruct';
 
-export const getBalancesRequestStruct = object({
-  assets: array(assetsStruct),
-  scope: scopeStruct,
+export const GetBalancesRequestStruct = object({
+  assets: array(AssetsStruct),
+  scope: ScopeStruct,
 });
 
-export const getBalancesResponseStruct = object({
-  assets: record(
-    assetsStruct,
-    object({
-      amount: positiveStringStruct,
-      unit: enums([Config.unit]),
-    }),
-  ),
-});
+export const GetBalancesResponseStruct = record(
+  AssetsStruct,
+  object({
+    amount: PositiveStringStruct,
+    unit: enums([Config.unit]),
+  }),
+);
 
-export type GetBalancesParams = Infer<typeof getBalancesRequestStruct>;
+export type GetBalancesParams = Infer<typeof GetBalancesRequestStruct>;
 
-export type GetBalancesResponse = Infer<typeof getBalancesResponseStruct>;
+export type GetBalancesResponse = Infer<typeof GetBalancesResponseStruct>;
 
 /**
  * Get Balances by a given account.
@@ -48,7 +46,7 @@ export async function getBalances(
   params: GetBalancesParams,
 ) {
   try {
-    validateRequest(params, getBalancesRequestStruct);
+    validateRequest(params, GetBalancesRequestStruct);
 
     const { assets, scope } = params;
 
@@ -91,7 +89,7 @@ export async function getBalances(
       ]),
     );
 
-    validateResponse(params, getBalancesRequestStruct);
+    validateResponse(resp, GetBalancesResponseStruct);
 
     return resp;
   } catch (error) {

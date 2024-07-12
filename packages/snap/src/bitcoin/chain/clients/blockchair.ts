@@ -3,7 +3,7 @@ import type { Json } from '@metamask/snaps-sdk';
 import { type Network, networks } from 'bitcoinjs-lib';
 import { array, assert } from 'superstruct';
 
-import { compactError, logger, txIdStruct } from '../../../utils';
+import { compactError, logger, TxIdStruct } from '../../../utils';
 import { FeeRatio, TransactionStatus } from '../constants';
 import type {
   IDataClient,
@@ -274,7 +274,7 @@ export class BlockChairClient implements IDataClient {
     txHash: string,
   ): Promise<GetTransactionDashboardDataResponse> {
     try {
-      assert(txHash, txIdStruct);
+      assert(txHash, TxIdStruct);
 
       logger.info(`[BlockChairClient.getTxDashboardData] start:`);
       const response = await this.get<GetTransactionDashboardDataResponse>(

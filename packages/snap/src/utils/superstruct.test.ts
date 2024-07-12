@@ -4,61 +4,61 @@ import { Config } from '../config';
 import * as superstruct from './superstruct';
 
 describe('superstruct', () => {
-  describe('positiveStringStruct', () => {
+  describe('PositiveStringStruct', () => {
     it('validates correctly', () => {
-      expect(() => assert('1', superstruct.positiveStringStruct)).not.toThrow(
+      expect(() => assert('1', superstruct.PositiveStringStruct)).not.toThrow(
         Error,
       );
-      expect(() => assert('1.2', superstruct.positiveStringStruct)).not.toThrow(
+      expect(() => assert('1.2', superstruct.PositiveStringStruct)).not.toThrow(
         Error,
       );
-      expect(() => assert('0', superstruct.positiveStringStruct)).not.toThrow(
+      expect(() => assert('0', superstruct.PositiveStringStruct)).not.toThrow(
         Error,
       );
       expect(() =>
-        assert('0.0023', superstruct.positiveStringStruct),
+        assert('0.0023', superstruct.PositiveStringStruct),
       ).not.toThrow();
-      expect(() => assert('0101', superstruct.positiveStringStruct)).toThrow(
+      expect(() => assert('0101', superstruct.PositiveStringStruct)).toThrow(
         Error,
       );
-      expect(() => assert('0101.1', superstruct.positiveStringStruct)).toThrow(
+      expect(() => assert('0101.1', superstruct.PositiveStringStruct)).toThrow(
         Error,
       );
-      expect(() => assert('-0101', superstruct.positiveStringStruct)).toThrow(
+      expect(() => assert('-0101', superstruct.PositiveStringStruct)).toThrow(
         Error,
       );
-      expect(() => assert('-1.3', superstruct.positiveStringStruct)).toThrow(
+      expect(() => assert('-1.3', superstruct.PositiveStringStruct)).toThrow(
         Error,
       );
-      expect(() => assert(' 1.3', superstruct.positiveStringStruct)).toThrow(
+      expect(() => assert(' 1.3', superstruct.PositiveStringStruct)).toThrow(
         Error,
       );
-      expect(() => assert('+1-3', superstruct.positiveStringStruct)).toThrow(
+      expect(() => assert('+1-3', superstruct.PositiveStringStruct)).toThrow(
         Error,
       );
-      expect(() => assert('abc', superstruct.positiveStringStruct)).toThrow(
+      expect(() => assert('abc', superstruct.PositiveStringStruct)).toThrow(
         Error,
       );
     });
   });
 
-  describe('scopeStruct', () => {
+  describe('ScopeStruct', () => {
     it('validates correctly', () => {
       expect(() =>
-        assert(Config.avaliableNetworks[0], superstruct.scopeStruct),
+        assert(Config.avaliableNetworks[0], superstruct.ScopeStruct),
       ).not.toThrow();
-      expect(() => assert('custom scope', superstruct.scopeStruct)).toThrow(
+      expect(() => assert('custom scope', superstruct.ScopeStruct)).toThrow(
         Error,
       );
     });
   });
 
-  describe('assetsStruct', () => {
+  describe('AssetsStruct', () => {
     it('validates correctly', () => {
       expect(() =>
-        assert(Config.avaliableAssets[0], superstruct.assetsStruct),
+        assert(Config.avaliableAssets[0], superstruct.AssetsStruct),
       ).not.toThrow();
-      expect(() => assert('custom scope', superstruct.assetsStruct)).toThrow(
+      expect(() => assert('custom scope', superstruct.AssetsStruct)).toThrow(
         Error,
       );
     });
