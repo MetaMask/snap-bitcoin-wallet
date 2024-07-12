@@ -1,18 +1,21 @@
 import { networks } from 'bitcoinjs-lib';
 
 import {
-  generateAccounts,
   generateBlockChairBroadcastTransactionResp,
   generateBlockChairGetBalanceResp,
   generateBlockChairGetUtxosResp,
   generateBlockChairGetStatsResp,
   generateBlockChairTransactionDashboard,
 } from '../../../../test/utils';
+import { Config } from '../../../config';
+import type { BtcAccount } from '../../wallet';
+import { BtcAccountDeriver, BtcWallet } from '../../wallet';
 import { FeeRatio, TransactionStatus } from '../constants';
 import { DataClientError } from '../exceptions';
 import { BlockChairClient } from './blockchair';
 
 jest.mock('../../../utils/logger');
+jest.mock('../../../utils/snap');
 
 describe('BlockChairClient', () => {
   const createMockFetch = () => {
@@ -27,6 +30,26 @@ describe('BlockChairClient', () => {
 
     return {
       fetchSpy,
+    };
+  };
+
+  const createMockDeriver = (network) => {
+    return {
+      instance: new BtcAccountDeriver(network),
+    };
+  };
+
+  const createAccounts = async (network, recipientCnt: number) => {
+    const { instance } = createMockDeriver(network);
+    const wallet = new BtcWallet(instance, network);
+
+    const accounts: BtcAccount[] = [];
+    for (let i = 0; i < recipientCnt; i++) {
+      accounts.push(await wallet.unlock(i, Config.wallet.defaultAccountType));
+    }
+
+    return {
+      accounts,
     };
   };
 
@@ -52,7 +75,8 @@ describe('BlockChairClient', () => {
   describe('getApiUrl', () => {
     it('append api key to query url if option `apiKey` is present', async () => {
       const { fetchSpy } = createMockFetch();
-      const accounts = generateAccounts(1);
+      const network = networks.testnet;
+      const { accounts } = await createAccounts(network, 1);
       const addresses = accounts.map((account) => account.address);
       const mockResponse = generateBlockChairGetBalanceResp(addresses);
       fetchSpy.mockResolvedValueOnce({
@@ -68,7 +92,7 @@ describe('BlockChairClient', () => {
 
       expect(fetchSpy).toHaveBeenCalledWith(
         `https://api.blockchair.com/bitcoin/testnet/addresses/balances?addresses=${addresses.join(
-          ',',
+          '%2C',
         )}&key=key`,
         { method: 'GET' },
       );
@@ -76,7 +100,8 @@ describe('BlockChairClient', () => {
 
     it('does not append api key if option `apiKey` is absent', async () => {
       const { fetchSpy } = createMockFetch();
-      const accounts = generateAccounts(1);
+      const network = networks.testnet;
+      const { accounts } = await createAccounts(network, 1);
       const addresses = accounts.map((account) => account.address);
       const mockResponse = generateBlockChairGetBalanceResp(addresses);
       fetchSpy.mockResolvedValueOnce({
@@ -99,7 +124,8 @@ describe('BlockChairClient', () => {
   describe('getBalances', () => {
     it('returns balances', async () => {
       const { fetchSpy } = createMockFetch();
-      const accounts = generateAccounts(10);
+      const network = networks.testnet;
+      const { accounts } = await createAccounts(network, 10);
       const addresses = accounts.map((account) => account.address);
       const mockResponse = generateBlockChairGetBalanceResp(addresses);
       const expectedResult = mockResponse.data;
@@ -117,8 +143,10 @@ describe('BlockChairClient', () => {
 
     it('assigns balance to 0 if account is not exist', async () => {
       const { fetchSpy } = createMockFetch();
-      const accounts = generateAccounts(2);
-      const accountWithNoBalance = generateAccounts(1, 'notexist')[0];
+      const network = networks.testnet;
+      const {
+        accounts: [accountWithNoBalance, ...accounts],
+      } = await createAccounts(network, 3);
       const addresses = accounts.map((account) => account.address);
       const mockResponse = generateBlockChairGetBalanceResp(addresses);
 
@@ -148,7 +176,8 @@ describe('BlockChairClient', () => {
         json: jest.fn().mockRejectedValue(new Error('error')),
       });
 
-      const accounts = generateAccounts(1);
+      const network = networks.testnet;
+      const { accounts } = await createAccounts(network, 1);
       const addresses = accounts.map((account) => account.address);
 
       const instance = new BlockChairClient({ network: networks.testnet });
@@ -166,7 +195,8 @@ describe('BlockChairClient', () => {
         json: jest.fn().mockResolvedValue(null),
       });
 
-      const accounts = generateAccounts(1);
+      const network = networks.testnet;
+      const { accounts } = await createAccounts(network, 1);
       const addresses = accounts.map((account) => account.address);
 
       const instance = new BlockChairClient({ network: networks.testnet });
@@ -226,7 +256,8 @@ describe('BlockChairClient', () => {
   describe('getUtxos', () => {
     it('returns utxos', async () => {
       const { fetchSpy } = createMockFetch();
-      const accounts = generateAccounts(1);
+      const network = networks.testnet;
+      const { accounts } = await createAccounts(network, 1);
       const { address } = accounts[0];
       const mockResponse = generateBlockChairGetUtxosResp(address, 10);
       const expectedResult = mockResponse.data[address].utxo.map((utxo) => ({
@@ -249,7 +280,8 @@ describe('BlockChairClient', () => {
 
     it('fetchs with pagination if utxos more than limit', async () => {
       const { fetchSpy } = createMockFetch();
-      const accounts = generateAccounts(1);
+      const network = networks.testnet;
+      const { accounts } = await createAccounts(network, 1);
       const { address } = accounts[0];
 
       const pagesToTest = 3;
@@ -284,7 +316,8 @@ describe('BlockChairClient', () => {
 
     it('throws `Data not avaiable` error if given address not found from the result', async () => {
       const { fetchSpy } = createMockFetch();
-      const accounts = generateAccounts(2);
+      const network = networks.testnet;
+      const { accounts } = await createAccounts(network, 2);
       const requestAddress = accounts[0].address;
       const actualRespAddress = accounts[1].address;
       const mockResponse = generateBlockChairGetUtxosResp(actualRespAddress, 1);
