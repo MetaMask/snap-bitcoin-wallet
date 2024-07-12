@@ -86,19 +86,19 @@ describe('BtcAccountDeriver', () => {
     });
 
     it.each([
-      [`m`, `1''`, `0`, `0`],
-      [`m`, `-1'`, `0`, `0`],
-      [`m`, `0'`, `-1`, `0`],
-      [`m`, `0'`, `1a`, `0`],
+      [`m`, `1''`, `0`, `0`].join('/'),
+      [`m`, `-1'`, `0`, `0`].join('/'),
+      [`m`, `0'`, `-1`, `0`].join('/'),
+      [`m`, `0'`, `1a`, `0`].join('/'),
     ])(
       'throws `Invalid index` if hdPath is invalid: %s',
-      async (path: string[]) => {
+      async (path: string) => {
         const network = networks.testnet;
         const { deriver, pkBuffer, ccBuffer } = await prepareBip32Deriver(
           network,
         );
         const node = deriver.createBip32FromPrivateKey(pkBuffer, ccBuffer);
-        await expect(deriver.getChild(node, path)).rejects.toThrow(
+        await expect(deriver.getChild(node, path.split('/'))).rejects.toThrow(
           'Invalid index',
         );
       },
