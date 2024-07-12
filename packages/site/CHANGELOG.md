@@ -9,10 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.4]
 
-### Uncategorized
-
-- chore: update MetaMask dependencies ([#162](https://github.com/MetaMask/snap-bitcoin-wallet/pull/162))
-
 ## [0.2.3]
 
 ### Added
