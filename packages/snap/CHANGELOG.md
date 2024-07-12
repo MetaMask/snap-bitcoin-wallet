@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.4]
+
+### Uncategorized
+
+- fix: audit 4.24 & 4.12 - derive accounts with different HD path by network ([#118](https://github.com/MetaMask/snap-bitcoin-wallet/pull/118))
+- fix: audit report 4.5 - show origin on `btc_sendmany` confirmation dialog ([#152](https://github.com/MetaMask/snap-bitcoin-wallet/pull/152))
+- fix: audit report 4.19 - implement keyring method filterAccountChains ([#122](https://github.com/MetaMask/snap-bitcoin-wallet/pull/122))
+- fix: audit report 4.7 - potential URL injections in Blockchair API calls ([#132](https://github.com/MetaMask/snap-bitcoin-wallet/pull/132))
+- chore: update MetaMask dependencies ([#162](https://github.com/MetaMask/snap-bitcoin-wallet/pull/162))
+
 ## [0.2.3]
 
 ### Changed
@@ -113,7 +123,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add CI for lint and test ([#2](https://github.com/MetaMask/bitcoin/pull/2))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.2.3...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.2.4...HEAD
+[0.2.4]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.2.0...v0.2.1
