@@ -8,14 +8,14 @@ import {
 } from './string';
 
 describe('hexToBuffer', () => {
-  it('converts a hex string to buffer with trimed prefix', () => {
+  it('converts a hex string to buffer with trimmed prefix', () => {
     const key = '0x1234';
     const result = hexToBuffer(key);
 
     expect(result).toStrictEqual(Buffer.from('1234', 'hex'));
   });
 
-  it('converts a hex string to buffer without trimed prefix', () => {
+  it('converts a hex string to buffer without trimmed prefix', () => {
     const key = '0x1234';
     const result = hexToBuffer(key, false);
 

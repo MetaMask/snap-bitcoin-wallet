@@ -328,10 +328,10 @@ export function generateBlockChairTransactionDashboard(
 }
 
 /**
- * Method to generate formated utxos with blockchair resp.
+ * Method to generate formatted utxos with blockchair resp.
  *
  * @param address - the utxos owner address.
- * @param utxoCnt - count of the utox to be generated.
+ * @param utxoCnt - count of the utxo to be generated.
  * @param minAmt - min amount of the utxo array.
  * @param maxAmt - max amount of the utxo array.
  * @returns An formatted utxo array.

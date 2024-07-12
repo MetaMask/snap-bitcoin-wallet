@@ -12,8 +12,8 @@ export type SnapConfig = {
     defaultAccountIndex: number;
     defaultAccountType: string;
   };
-  avaliableNetworks: string[];
-  avaliableAssets: string[];
+  availableNetworks: string[];
+  availableAssets: string[];
   unit: string;
   explorer: {
     [network in string]: string;
@@ -34,8 +34,8 @@ export const Config: SnapConfig = {
     defaultAccountIndex: 0,
     defaultAccountType: 'bip122:p2wpkh',
   },
-  avaliableNetworks: Object.values(Caip2ChainId),
-  avaliableAssets: Object.values(Caip2Asset),
+  availableNetworks: Object.values(Caip2ChainId),
+  availableAssets: Object.values(Caip2Asset),
   unit: 'BTC',
   explorer: {
     // eslint-disable-next-line no-template-curly-in-string

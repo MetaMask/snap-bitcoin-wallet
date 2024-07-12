@@ -2,9 +2,9 @@ import { enums, string, pattern } from 'superstruct';
 
 import { Config } from '../config';
 
-export const assetsStruct = enums(Config.avaliableAssets);
+export const assetsStruct = enums(Config.availableAssets);
 
-export const scopeStruct = enums(Config.avaliableNetworks);
+export const scopeStruct = enums(Config.availableNetworks);
 
 export const positiveStringStruct = pattern(
   string(),

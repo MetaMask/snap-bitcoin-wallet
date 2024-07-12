@@ -58,7 +58,7 @@ describe('onRpcRequest', () => {
       request: {
         method,
         params: {
-          scope: Config.avaliableNetworks[0],
+          scope: Config.availableNetworks[0],
         },
       } as unknown as JsonRpcRequest,
     });
@@ -110,7 +110,7 @@ describe('onKeyringRequest', () => {
       request: {
         method: keyringApi.KeyringRpcMethod.ListAccounts,
         params: {
-          scope: Config.avaliableNetworks[0],
+          scope: Config.availableNetworks[0],
         },
       } as unknown as JsonRpcRequest,
     });
@@ -124,7 +124,7 @@ describe('onKeyringRequest', () => {
     expect(handler).toHaveBeenCalledWith(expect.any(BtcKeyring), {
       method: keyringApi.KeyringRpcMethod.ListAccounts,
       params: {
-        scope: Config.avaliableNetworks[0],
+        scope: Config.availableNetworks[0],
       },
     });
   });
@@ -145,7 +145,7 @@ describe('onKeyringRequest', () => {
         request: {
           method,
           params: {
-            scope: Config.avaliableNetworks[0],
+            scope: Config.availableNetworks[0],
           },
         } as unknown as JsonRpcRequest,
       });
@@ -170,7 +170,7 @@ describe('onKeyringRequest', () => {
         request: {
           method,
           params: {
-            scope: Config.avaliableNetworks[0],
+            scope: Config.availableNetworks[0],
           },
         } as unknown as JsonRpcRequest,
       });
@@ -212,7 +212,7 @@ describe('onKeyringRequest', () => {
           request: {
             method,
             params: {
-              scope: Config.avaliableNetworks[0],
+              scope: Config.availableNetworks[0],
             },
           } as unknown as JsonRpcRequest,
         }),
@@ -237,7 +237,7 @@ describe('onKeyringRequest', () => {
           request: {
             method,
             params: {
-              scope: Config.avaliableNetworks[0],
+              scope: Config.availableNetworks[0],
             },
           } as unknown as JsonRpcRequest,
         }),

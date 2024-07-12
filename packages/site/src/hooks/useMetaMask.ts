@@ -7,7 +7,8 @@ import { useRequest } from './useRequest';
 
 /**
  * A Hook to retrieve useful data from MetaMask.
- * @returns The informations.
+ *
+ * @returns The information returned by MetaMask.
  */
 export const useMetaMask = () => {
   const { provider, setInstalledSnap, installedSnap } = useMetaMaskContext();
@@ -31,7 +32,7 @@ export const useMetaMask = () => {
   };
 
   /**
-   * Get the Snap informations from MetaMask.
+   * Get the Snap information from MetaMask.
    */
   const getSnap = async () => {
     const snaps = (await request({
