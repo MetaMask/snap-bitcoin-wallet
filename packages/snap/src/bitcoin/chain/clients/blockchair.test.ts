@@ -144,9 +144,10 @@ describe('BlockChairClient', () => {
     it('assigns balance to 0 if account is not exist', async () => {
       const { fetchSpy } = createMockFetch();
       const network = networks.testnet;
-      const { accounts } = await createAccounts(network, 3);
-      const addresses = accounts.slice(1).map((account) => account.address);
-      const accountWithNoBalance = accounts[0];
+      const {
+        accounts: [accountWithNoBalance, ...accounts],
+      } = await createAccounts(network, 3);
+      const addresses = accounts.map((account) => account.address);
       const mockResponse = generateBlockChairGetBalanceResp(addresses);
 
       const expectedResult = {
