@@ -2,6 +2,8 @@ import type { BIP32Interface } from 'bip32';
 import type { HDSignerAsync } from 'bitcoinjs-lib';
 import type { Buffer } from 'buffer';
 
+import { deriveByPath } from './utils/deriver';
+
 /**
  * An Signer object that defines methods and properties for signing transactions and verifying signatures in PSBT sign process.
  */
@@ -32,19 +34,7 @@ export class AccountSigner implements HDSignerAsync {
    */
   derivePath(path: string): AccountSigner {
     try {
-      let splitPath = path.split('/');
-      if (splitPath[0] === 'm') {
-        splitPath = splitPath.slice(1);
-      }
-      const childNode = splitPath.reduce((prevHd, indexStr) => {
-        let index;
-        if (indexStr.endsWith(`'`)) {
-          index = parseInt(indexStr.slice(0, -1), 10);
-          return prevHd.deriveHardened(index);
-        }
-        index = parseInt(indexStr, 10);
-        return prevHd.derive(index);
-      }, this._node);
+      const childNode = deriveByPath(this._node, path.split('/'));
       return new AccountSigner(childNode, this.fingerprint);
     } catch (error) {
       throw new Error('Unable to derive path');

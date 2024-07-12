@@ -6,6 +6,7 @@ import type { Buffer } from 'buffer';
 
 import { compactError, hexToBuffer, getBip32Deriver } from '../../utils';
 import { DeriverError } from './exceptions';
+import { deriveByPath } from './utils/deriver';
 
 /**
  * This class provides a mechanism for deriving Bitcoin accounts using BIP32.
@@ -32,7 +33,7 @@ export class BtcAccountDeriver {
    * @returns The root node of the BIP32 account.
    * @throws {DeriverError} Throws a DeriverError if the private key is missing or if the BIP32 node cannot be constructed from the private key.
    */
-  async getRoot(path: string[]) {
+  async getRoot(path: string[]): Promise<BIP32Interface> {
     try {
       const deriver = await getBip32Deriver(path, this.curve);
 
@@ -50,11 +51,11 @@ export class BtcAccountDeriver {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       // ignore checking since no function to set depth for node
-      root.DEPTH = deriver.depth;
+      root.__DEPTH = deriver.depth;
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       // ignore checking since no function to set index for node
-      root.INDEX = deriver.index;
+      root.__INDEX = deriver.index;
 
       return root;
     } catch (error) {
@@ -89,10 +90,13 @@ export class BtcAccountDeriver {
    * Gets a child node of a BIP32 account given an index.
    *
    * @param root - The root node of the BIP32 account.
-   * @param idx - The index of the child node to get.
+   * @param hdPath - The HD path to derive.
    * @returns A promise that resolves to the child node.
    */
-  async getChild(root: BIP32Interface, idx: number): Promise<BIP32Interface> {
-    return Promise.resolve(root.deriveHardened(0).derive(0).derive(idx));
+  async getChild(
+    root: BIP32Interface,
+    hdPath: string[],
+  ): Promise<BIP32Interface> {
+    return Promise.resolve(deriveByPath(root, hdPath));
   }
 }
