@@ -33,3 +33,5 @@ export const AmountStruct = refine(
     return true;
   },
 );
+
+export const txIdStruct = pattern(string(), /^[0-9a-fA-F]{64}$/u);

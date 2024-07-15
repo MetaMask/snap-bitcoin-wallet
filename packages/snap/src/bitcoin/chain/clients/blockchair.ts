@@ -1,7 +1,9 @@
+import { BtcP2wpkhAddressStruct } from '@metamask/keyring-api';
 import type { Json } from '@metamask/snaps-sdk';
 import { type Network, networks } from 'bitcoinjs-lib';
+import { array, assert } from 'superstruct';
 
-import { compactError, logger } from '../../../utils';
+import { compactError, logger, txIdStruct } from '../../../utils';
 import { FeeRatio, TransactionStatus } from '../constants';
 import type {
   IDataClient,
@@ -272,6 +274,8 @@ export class BlockChairClient implements IDataClient {
     txHash: string,
   ): Promise<GetTransactionDashboardDataResponse> {
     try {
+      assert(txHash, txIdStruct);
+
       logger.info(`[BlockChairClient.getTxDashboardData] start:`);
       const response = await this.get<GetTransactionDashboardDataResponse>(
         `/dashboards/transaction/${txHash}`,
@@ -292,6 +296,8 @@ export class BlockChairClient implements IDataClient {
 
   async getBalances(addresses: string[]): Promise<DataClientGetBalancesResp> {
     try {
+      assert(addresses, array(BtcP2wpkhAddressStruct));
+
       logger.info(
         `[BlockChairClient.getBalance] start: { addresses : ${JSON.stringify(
           addresses,
@@ -324,6 +330,8 @@ export class BlockChairClient implements IDataClient {
     includeUnconfirmed?: boolean,
   ): Promise<DataClientGetUtxosResp> {
     try {
+      assert(address, BtcP2wpkhAddressStruct);
+
       let process = true;
       let offset = 0;
       const limit = 1000;

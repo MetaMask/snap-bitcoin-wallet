@@ -24,6 +24,7 @@ import { getProvider, scopeStruct, logger } from './utils';
 export type KeyringOptions = Record<string, Json> & {
   defaultIndex: number;
   multiAccount?: boolean;
+  origin: string;
 };
 
 export const CreateAccountOptionsStruct = object({
@@ -113,9 +114,11 @@ export class BtcKeyring implements Keyring {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async filterAccountChains(id: string, chains: string[]): Promise<string[]> {
-    throw new Error('Method not implemented.');
+    const walletData = await this._stateMgr.getWallet(id);
+    return walletData && chains.includes(walletData.scope)
+      ? [walletData.scope]
+      : [];
   }
 
   async updateAccount(_account: KeyringAccount): Promise<void> {
@@ -166,7 +169,7 @@ export class BtcKeyring implements Keyring {
 
     switch (method) {
       case 'btc_sendmany':
-        return (await sendMany(account, {
+        return (await sendMany(account, this._options.origin, {
           ...params,
           scope: walletData.scope,
         } as unknown as SendManyParams)) as unknown as Json;

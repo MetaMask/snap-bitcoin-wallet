@@ -80,10 +80,15 @@ export type SendManyResponse = Infer<typeof sendManyResponseStruct>;
  * Send BTC to multiple account.
  *
  * @param account - The account to send the transaction.
+ * @param origin - The origin of the request.
  * @param params - The parameters for send the transaction.
  * @returns A Promise that resolves to an SendManyResponse object.
  */
-export async function sendMany(account: BtcAccount, params: SendManyParams) {
+export async function sendMany(
+  account: BtcAccount,
+  origin: string,
+  params: SendManyParams,
+) {
   try {
     validateRequest(params, sendManyParamsStruct);
 
@@ -118,7 +123,7 @@ export async function sendMany(account: BtcAccount, params: SendManyParams) {
       replaceable: params.replaceable,
     });
 
-    if (!(await getTxConsensus(txInfo, params.comment, scope))) {
+    if (!(await getTxConsensus(txInfo, params.comment, scope, origin))) {
       throw new UserRejectedRequestError() as unknown as Error;
     }
 
@@ -161,12 +166,14 @@ export async function sendMany(account: BtcAccount, params: SendManyParams) {
  * @param info - The transaction data object contains the transaction information.
  * @param comment - The comment text to display.
  * @param scope - The CAIP-2 Chain ID.
+ * @param origin - The origin of the request.
  * @returns A Promise that resolves to the response of the confirmation dialog.
  */
 export async function getTxConsensus(
   info: ITxInfo,
   comment: string,
   scope: string,
+  origin: string,
 ): Promise<boolean> {
   const header = `Send Request`;
   const intro = `Review the request before proceeding. Once the transaction is made, it's irreversible.`;
@@ -176,16 +183,13 @@ export async function getTxConsensus(
   // const networkFeeRateLabel = `Network fee rate`;
   const networkFeeLabel = `Network fee`;
   const totalLabel = `Total`;
-  const requestedByLable = `Requested by`;
+  const requestedByLabel = `Requested by`;
 
   const components: Component[] = [
     panel([
       heading(header),
       text(intro),
-      row(
-        requestedByLable,
-        text(`[portfolio.metamask.io](https://portfolio.metamask.io/)`),
-      ),
+      row(requestedByLabel, text(`${origin}`, false)),
     ]),
     divider(),
   ];

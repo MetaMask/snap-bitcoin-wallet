@@ -1,6 +1,6 @@
 {
   "name": "@metamask/bitcoin-wallet-test-dapp",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "private": true,
   "description": "A sample dapp to test the Bitcoin wallet Snap.",
   "license": "(MIT-0 OR Apache-2.0)",
@@ -29,8 +29,8 @@
     ]
   },
   "dependencies": {
-    "@metamask/keyring-api": "^6.0.0",
-    "@metamask/providers": "^16.0.0",
+    "@metamask/keyring-api": "^8.0.0",
+    "@metamask/providers": "^17.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-is": "^18.2.0",

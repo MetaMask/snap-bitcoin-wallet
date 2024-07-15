@@ -1,5 +1,5 @@
 import type { Infer } from 'superstruct';
-import { object, string, enums } from 'superstruct';
+import { object, enums, nonempty } from 'superstruct';
 
 import { TransactionStatus } from '../bitcoin/chain';
 import { Factory } from '../factory';
@@ -9,10 +9,11 @@ import {
   validateRequest,
   validateResponse,
   logger,
+  txIdStruct,
 } from '../utils';
 
 export const getTransactionStatusParamsRequestStruct = object({
-  transactionId: string(),
+  transactionId: nonempty(txIdStruct),
   scope: scopeStruct,
 });
 

@@ -1,5 +1,5 @@
 import type { BIP32Interface } from 'bip32';
-import { type Network } from 'bitcoinjs-lib';
+import { networks, type Network } from 'bitcoinjs-lib';
 import { type Buffer } from 'buffer';
 
 import { bufferToString, compactError, hexToBuffer, logger } from '../../utils';
@@ -7,7 +7,7 @@ import type { Utxo } from '../chain';
 import type { BtcAccount } from './account';
 import {
   P2WPKHAccount,
-  P2SHP2WPKHAccount,
+  P2WPKHTestnetAccount,
   type IStaticBtcAccount,
 } from './account';
 import type { SelectionResult } from './coin-select';
@@ -66,19 +66,19 @@ export class BtcWallet {
    *
    * @param index - The index to derive from the node.
    * @param type - The script type of the unlocked account, e.g. `bip122:p2pkh`.
-   * @returns A promise that resolves to an `IAccount` object.
+   * @returns A promise that resolves to a `BtcAccount` object.
    */
   async unlock(index: number, type?: string): Promise<BtcAccount> {
     try {
       const AccountCtor = this.getAccountCtor(type ?? ScriptType.P2wpkh);
+      const childNodeHdPath = [`m`, `0'`, `0`, `${index}`];
       const rootNode = await this._deriver.getRoot(AccountCtor.path);
-      const childNode = await this._deriver.getChild(rootNode, index);
-      const hdPath = [`m`, `0'`, `0`, `${index}`].join('/');
+      const childNode = await this._deriver.getChild(rootNode, childNodeHdPath);
 
       return new AccountCtor(
         bufferToString(rootNode.fingerprint, 'hex'),
         index,
-        hdPath,
+        childNodeHdPath.join('/'),
         bufferToString(childNode.publicKey, 'hex'),
         this._network,
         AccountCtor.scriptType,
@@ -206,7 +206,7 @@ export class BtcWallet {
     return psbtService.finalize();
   }
 
-  protected getHdSigner(rootNode: BIP32Interface) {
+  protected getHdSigner(rootNode: BIP32Interface): AccountSigner {
     return new AccountSigner(rootNode, rootNode.fingerprint);
   }
 
@@ -215,11 +215,10 @@ export class BtcWallet {
     if (type.includes('bip122:')) {
       scriptType = type.split(':')[1];
     }
+
     switch (scriptType.toLowerCase()) {
       case ScriptType.P2wpkh.toLowerCase():
-        return P2WPKHAccount;
-      case ScriptType.P2shP2wkh.toLowerCase():
-        return P2SHP2WPKHAccount;
+        return this.getP2WPKHAccountCtorByNetwork();
       default:
         throw new WalletError('Invalid script type');
     }
@@ -260,5 +259,16 @@ export class BtcWallet {
     const feeRate = Math.max(1, fee);
     const coinSelectService = new CoinSelectService(feeRate);
     return coinSelectService.selectCoins(inputs, outputs, change);
+  }
+
+  protected getP2WPKHAccountCtorByNetwork(): IStaticBtcAccount {
+    switch (this._network) {
+      case networks.bitcoin:
+        return P2WPKHAccount;
+      case networks.testnet:
+        return P2WPKHTestnetAccount;
+      default:
+        throw new WalletError('Invalid network');
+    }
   }
 }

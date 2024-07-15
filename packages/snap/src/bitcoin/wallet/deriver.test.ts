@@ -67,11 +67,11 @@ describe('BtcAccountDeriver', () => {
         network,
       );
 
-      const idx = 0;
+      const hdPath = [`m`, `0'`, `0`, `0`];
 
       const node = deriver.createBip32FromPrivateKey(pkBuffer, ccBuffer);
 
-      const result = await deriver.getChild(node, idx);
+      const result = await deriver.getChild(node, hdPath);
 
       expect(result.chainCode).toBeDefined();
       expect(result.chainCode).not.toBeNull();
@@ -84,6 +84,20 @@ describe('BtcAccountDeriver', () => {
       expect(result.index).toBeDefined();
       expect(result.index).not.toBeNull();
     });
+
+    it.each(["m/1''/0/0", "m/-1'/0/0", "m/0'/-1/0", "m/0'/1a/0"])(
+      'throws `Invalid index` if hdPath is invalid: %s',
+      async (path: string) => {
+        const network = networks.testnet;
+        const { deriver, pkBuffer, ccBuffer } = await prepareBip32Deriver(
+          network,
+        );
+        const node = deriver.createBip32FromPrivateKey(pkBuffer, ccBuffer);
+        await expect(deriver.getChild(node, path.split('/'))).rejects.toThrow(
+          'Invalid index',
+        );
+      },
+    );
   });
 
   describe('getRoot', () => {
