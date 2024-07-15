@@ -1,6 +1,5 @@
 import coinSelect from 'coinselect';
 
-import { TxValidationError } from './exceptions';
 import type { TxInput } from './transaction-input';
 import type { TxOutput } from './transaction-output';
 
