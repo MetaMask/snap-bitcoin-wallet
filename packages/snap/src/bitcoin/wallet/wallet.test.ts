@@ -149,7 +149,12 @@ describe('BtcWallet', () => {
       const wallet = new BtcWallet(instance, network);
       const account = await wallet.unlock(0, ScriptType.P2wpkh);
 
-      const utxos = generateFormatedUtxos(account.address, 200, 100000, 100000);
+      const utxos = generateFormattedUtxos(
+        account.address,
+        200,
+        100000,
+        100000,
+      );
 
       const result = await wallet.createTransaction(
         account,
@@ -179,7 +184,7 @@ describe('BtcWallet', () => {
       const { instance } = createMockDeriver(network);
       const wallet = new BtcWallet(instance, network);
       const account = await wallet.unlock(0, ScriptType.P2wpkh);
-      const utxos = generateFormatedUtxos(account.address, 200, 10000, 10000);
+      const utxos = generateFormattedUtxos(account.address, 200, 10000, 10000);
 
       const result = await wallet.createTransaction(
         account,
@@ -209,7 +214,7 @@ describe('BtcWallet', () => {
       const { instance } = createMockDeriver(network);
       const wallet = new BtcWallet(instance, network);
       const account = await wallet.unlock(0, ScriptType.P2wpkh);
-      const utxos = generateFormatedUtxos(account.address, 2);
+      const utxos = generateFormattedUtxos(account.address, 2);
       const coinSelectServiceSpy = jest.spyOn(
         CoinSelectService.prototype,
         'selectCoins',
@@ -247,7 +252,7 @@ describe('BtcWallet', () => {
       const wallet = new BtcWallet(instance, network);
       const chgAccount = await wallet.unlock(0, ScriptType.P2wpkh);
       const recipient = await wallet.unlock(1, ScriptType.P2wpkh);
-      const utxos = generateFormatedUtxos(chgAccount.address, 2, 10000, 10000);
+      const utxos = generateFormattedUtxos(chgAccount.address, 2, 10000, 10000);
       const coinSelectServiceSpy = jest.spyOn(
         CoinSelectService.prototype,
         'selectCoins',
@@ -288,7 +293,7 @@ describe('BtcWallet', () => {
       const { instance } = createMockDeriver(network);
       const wallet = new BtcWallet(instance, network);
       const account = await wallet.unlock(0, ScriptType.P2wpkh);
-      const utxos = generateFormatedUtxos(account.address, 2, 8000, 8000);
+      const utxos = generateFormattedUtxos(account.address, 2, 8000, 8000);
 
       await expect(
         wallet.createTransaction(
@@ -311,7 +316,7 @@ describe('BtcWallet', () => {
       const { instance } = createMockDeriver(network);
       const wallet = new BtcWallet(instance, network);
       const account = await wallet.unlock(0, ScriptType.P2wpkh);
-      const utxos = generateFormatedUtxos(account.address, 2, 10000, 10000);
+      const utxos = generateFormattedUtxos(account.address, 2, 10000, 10000);
 
       const { tx } = await wallet.createTransaction(
         account,

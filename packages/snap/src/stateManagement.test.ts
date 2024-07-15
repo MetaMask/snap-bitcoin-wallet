@@ -346,7 +346,7 @@ describe('KeyringStateManager', () => {
       expect(result).toBeNull();
     });
 
-    it('throw Error if an error catched', async () => {
+    it('throws when getData fails', async () => {
       const { instance, getDataSpy } = createMockStateManager();
       getDataSpy.mockRejectedValue(new Error('error'));
       const state = createInitState(20);

@@ -1,6 +1,6 @@
 import { networks } from 'bitcoinjs-lib';
 
-import { generateFormatedUtxos } from '../../../test/utils';
+import { generateFormattedUtxos } from '../../../test/utils';
 import { ScriptType } from './constants';
 import { BtcAccountDeriver } from './deriver';
 import { TxInput } from './transaction-input';
@@ -21,7 +21,7 @@ describe('TxInput', () => {
     const account = await wallet.instance.unlock(0, ScriptType.P2wpkh);
     const { script } = account;
 
-    const utxo = generateFormatedUtxos(account.address, 1)[0];
+    const utxo = generateFormattedUtxos(account.address, 1)[0];
 
     const input = new TxInput(utxo, script);
 
@@ -37,7 +37,7 @@ describe('TxInput', () => {
     const account = await wallet.instance.unlock(0, ScriptType.P2wpkh);
     const { script } = account;
 
-    const utxo = generateFormatedUtxos(account.address, 1)[0];
+    const utxo = generateFormattedUtxos(account.address, 1)[0];
 
     const input = new TxInput(utxo, script);
 

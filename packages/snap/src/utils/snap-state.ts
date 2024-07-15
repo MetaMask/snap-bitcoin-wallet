@@ -134,7 +134,7 @@ export abstract class SnapStateManager<State> {
         logger.info(
           `SnapStateManager.rollback [${
             this.#transactionId
-          }]: attemp to rollback state`,
+          }]: attempt to rollback state`,
         );
         this.#transaction.isRollingBack = true;
         await this.set(this.#transaction.orgState);

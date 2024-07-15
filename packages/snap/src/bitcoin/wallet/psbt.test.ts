@@ -1,6 +1,6 @@
 import { Psbt, Transaction, networks } from 'bitcoinjs-lib';
 
-import { generateFormatedUtxos } from '../../../test/utils';
+import { generateFormattedUtxos } from '../../../test/utils';
 import { hexToBuffer } from '../../utils';
 import { MaxStandardTxWeight, ScriptType } from './constants';
 import { BtcAccountDeriver } from './deriver';
@@ -46,7 +46,7 @@ describe('PsbtService', () => {
     const outputs = receivers.map(
       (account) => new TxOutput(outputVal, account.address, account.script),
     );
-    const utxos = generateFormatedUtxos(
+    const utxos = generateFormattedUtxos(
       sender.address,
       inputsCnt,
       outputVal * outputs.length + fee,
