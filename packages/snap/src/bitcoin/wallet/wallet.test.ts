@@ -267,6 +267,28 @@ describe('BtcWallet', () => {
         ),
       ).rejects.toThrow('Transaction amount too small');
     });
+
+    it('throws `Insufficient funds` error if the given utxos is not sufficient', async () => {
+      const network = networks.testnet;
+      const { instance } = createMockDeriver(network);
+      const wallet = new BtcWallet(instance, network);
+      const chgAccount = await wallet.unlock(0, ScriptType.P2wpkh);
+      const recipient = await wallet.unlock(1, ScriptType.P2wpkh);
+      const utxos = generateFormatedUtxos(chgAccount.address, 2, 1000, 1000);
+
+      await expect(
+        wallet.createTransaction(
+          chgAccount,
+          createMockTxIndent(recipient.address, 50000),
+          {
+            utxos,
+            fee: 20,
+            subtractFeeFrom: [],
+            replaceable: false,
+          },
+        ),
+      ).rejects.toThrow('Insufficient funds');
+    });
   });
 
   describe('signTransaction', () => {

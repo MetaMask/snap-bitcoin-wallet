@@ -5,3 +5,9 @@ export class AccountNotFoundError extends CustomError {
     super(errMsg ?? `Account not found`);
   }
 }
+
+export class FeeRateUnavailableError extends CustomError {
+  constructor(errMsg?: string) {
+    super(errMsg ?? `No fee rates available`);
+  }
+}

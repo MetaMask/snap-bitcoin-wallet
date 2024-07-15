@@ -69,25 +69,5 @@ describe('CoinSelectService', () => {
       expect(result.inputs.length).toBeGreaterThan(0);
       expect(result.outputs.length).toBeGreaterThan(0);
     });
-
-    it('throws `Insufficient funds` error if the given utxos is not sufficient', async () => {
-      const network = networks.testnet;
-      const { inputs, outputs, sender } = await prepareCoinSlect(
-        network,
-        100000,
-        1,
-        10,
-      );
-
-      const coinSelectService = new CoinSelectService(100);
-
-      expect(() =>
-        coinSelectService.selectCoins(
-          inputs,
-          outputs,
-          new TxOutput(0, sender.address, sender.script),
-        ),
-      ).toThrow('Insufficient funds');
-    });
   });
 });

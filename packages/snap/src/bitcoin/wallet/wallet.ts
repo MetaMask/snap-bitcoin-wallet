@@ -125,6 +125,10 @@ export class BtcWallet {
       feeRate,
     );
 
+    if (!selectionResult.inputs || !selectionResult.outputs) {
+      throw new TxValidationError('Insufficient funds');
+    }
+
     const psbtService = new PsbtService(this._network);
     psbtService.addInputs(
       selectionResult.inputs,
@@ -175,20 +179,18 @@ export class BtcWallet {
     account: BtcAccount,
     recipients: Recipient[],
     options: CreateTransactionOptions,
-  ): Promise<bigint> {
+  ): Promise<SelectionResult> {
     const { scriptType, script: scriptOutput } = account;
 
     const inputs = this.createTxInput(options.utxos, scriptOutput);
     const outputs = this.createTxOutput(recipients, scriptType);
 
-    const selectionResult = this.selectCoins(
+    return this.selectCoins(
       inputs,
       outputs,
       new TxOutput(0, account.address, scriptOutput),
       options.fee,
     );
-
-    return BigInt(selectionResult.fee);
   }
 
   /**

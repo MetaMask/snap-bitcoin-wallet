@@ -1,12 +1,18 @@
-import { object, string, type Infer, nonempty, enums } from 'superstruct';
+import {
+  object,
+  string,
+  type Infer,
+  nonempty,
+  enums,
+  boolean,
+} from 'superstruct';
 
 import { TxValidationError } from '../bitcoin/wallet';
 import { Config } from '../config';
-import { AccountNotFoundError } from '../exceptions';
+import { AccountNotFoundError, FeeRateUnavailableError } from '../exceptions';
 import { Factory } from '../factory';
 import { KeyringStateManager } from '../stateManagement';
 import {
-  scopeStruct,
   isSnapRpcError,
   btcToSats,
   validateRequest,
@@ -20,7 +26,6 @@ import {
 export const EstimateFeeParamsStruct = object({
   account: nonempty(string()),
   amount: AmountStruct,
-  scope: scopeStruct,
 });
 
 export const EstimateFeeResponseStruct = object({
@@ -28,6 +33,7 @@ export const EstimateFeeResponseStruct = object({
     amount: nonempty(positiveStringStruct),
     unit: enums([Config.unit]),
   }),
+  isInsufficientFunds: boolean(),
 });
 
 export type EstimateFeeParams = Infer<typeof EstimateFeeParamsStruct>;
@@ -44,17 +50,16 @@ export async function estimateFee(params: EstimateFeeParams) {
   try {
     validateRequest(params, EstimateFeeParamsStruct);
 
-    const { scope, account: accountId, amount } = params;
+    const { account: accountId, amount } = params;
 
-    const chainApi = Factory.createOnChainServiceProvider(scope);
-
-    const wallet = Factory.createWallet(scope);
     const stateManager = new KeyringStateManager();
     const walletData = await stateManager.getWallet(accountId);
 
     if (!walletData) {
       throw new AccountNotFoundError();
     }
+
+    const wallet = Factory.createWallet(walletData.scope);
 
     const account = await wallet.unlock(
       walletData.index,
@@ -65,10 +70,12 @@ export async function estimateFee(params: EstimateFeeParams) {
       throw new AccountNotFoundError();
     }
 
+    const chainApi = Factory.createOnChainServiceProvider(walletData.scope);
+
     const feesResp = await chainApi.getFeeRates();
 
     if (feesResp.fees.length === 0) {
-      throw new Error('No fee rates available');
+      throw new FeeRateUnavailableError();
     }
 
     const fee = Math.max(
@@ -76,26 +83,29 @@ export async function estimateFee(params: EstimateFeeParams) {
       1,
     );
 
+    const metadata = await chainApi.getDataForTransaction(account.address);
+
     // TODO: when multi address support, change this to pull first address from account
-    // Estimate fee doesnt require an recipitent address, so we can just use the account address
+    // Estimate fee doesnt require an recipitent address, so we have to use the account address
     const recipients = [
       {
         address: account.address,
         value: btcToSats(amount),
       },
     ];
-    const metadata = await chainApi.getDataForTransaction(account.address);
-
-    const feeAmount = await wallet.estimateFee(account, recipients, {
+    const estimateResult = await wallet.estimateFee(account, recipients, {
       utxos: metadata.data.utxos,
       fee,
     });
 
     const resp: EstimateFeeResponse = {
       fee: {
-        amount: satsToBtc(feeAmount),
+        amount: satsToBtc(estimateResult.fee),
         unit: Config.unit,
       },
+      // when isInsufficientFunds is true, it means the fee amount is inaccuary,
+      // due to the estimateFee function is unable to estimate a fee for a amount that is insufficient to cover the fee
+      isInsufficientFunds: estimateResult.outputs.length === 0,
     };
 
     validateResponse(resp, EstimateFeeResponseStruct);

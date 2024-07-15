@@ -26,6 +26,7 @@ import {
   type ITxInfo,
   TxValidationError,
 } from '../bitcoin/wallet';
+import { FeeRateUnavailableError } from '../exceptions';
 import { Factory } from '../factory';
 import {
   scopeStruct,
@@ -93,7 +94,7 @@ export async function sendMany(account: BtcAccount, params: SendManyParams) {
     const feesResp = await chainApi.getFeeRates();
 
     if (feesResp.fees.length === 0) {
-      throw new Error('No fee rates available');
+      throw new FeeRateUnavailableError();
     }
 
     const fee = Math.max(
