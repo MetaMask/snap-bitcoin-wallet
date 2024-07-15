@@ -168,7 +168,7 @@ describe('BlockChairClient', () => {
       expect(result).toStrictEqual(expectedResult);
     });
 
-    it('throws DataClientError error if an non DataClientError catched', async () => {
+    it('throws DataClientError error if an non DataClientError was thrown', async () => {
       const { fetchSpy } = createMockFetch();
 
       fetchSpy.mockResolvedValueOnce({
@@ -226,7 +226,7 @@ describe('BlockChairClient', () => {
       });
     });
 
-    it('throws DataClientError error if an non DataClientError catched', async () => {
+    it('throws DataClientError error if an non DataClientError was thrown', async () => {
       const { fetchSpy } = createMockFetch();
 
       fetchSpy.mockResolvedValueOnce({
@@ -239,7 +239,7 @@ describe('BlockChairClient', () => {
       await expect(instance.getFeeRates()).rejects.toThrow(DataClientError);
     });
 
-    it('throws DataClientError error if an DataClientError catched', async () => {
+    it('throws DataClientError error if an DataClientError was thrown', async () => {
       const { fetchSpy } = createMockFetch();
 
       fetchSpy.mockResolvedValueOnce({
@@ -462,7 +462,7 @@ describe('BlockChairClient', () => {
       });
     });
 
-    it('throws DataClientError error if an DataClientError catched', async () => {
+    it('throws DataClientError error if an DataClientError was thrown', async () => {
       const { fetchSpy } = createMockFetch();
 
       fetchSpy.mockResolvedValueOnce({

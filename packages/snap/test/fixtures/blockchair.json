@@ -198,7 +198,7 @@
         "last_major_update": "2022-11-07 02:00:00",
         "next_major_update": "2023-11-12 02:00:00",
         "documentation": "https://blockchair.com/api/docs",
-        "notice": "Plaese note that on November 12th, 2023 public support for the following blockchains will be dropped: Mixin, Ethereum Testnet (Goerli)"
+        "notice": "Please note that on November 12th, 2023 public support for the following blockchains will be dropped: Mixin, Ethereum Testnet (Goerli)"
       },
       "servers": "API4,TBTC3",
       "time": 2.340773820877075,

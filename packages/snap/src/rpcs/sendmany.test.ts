@@ -3,7 +3,7 @@ import {
   UserRejectedRequestError,
 } from '@metamask/snaps-sdk';
 import { networks } from 'bitcoinjs-lib';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidV4 } from 'uuid';
 
 import {
   generateBlockChairBroadcastTransactionResp,
@@ -68,7 +68,7 @@ describe('SendManyHandler', () => {
 
       const keyringAccount = {
         type: sender.type,
-        id: uuidv4(),
+        id: uuidV4(),
         address: sender.address,
         options: {
           scope: caip2ChainId,
@@ -542,7 +542,7 @@ describe('SendManyHandler', () => {
       ).rejects.toThrow('Failed to send the transaction');
     });
 
-    it('throws DisplayableError error meesage if the DisplayableError throwed', async () => {
+    it('throws DisplayableError error message if the DisplayableError is thrown', async () => {
       const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
       const { broadcastTransactionSpy, sender, recipients } =

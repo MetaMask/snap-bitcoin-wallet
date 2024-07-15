@@ -39,9 +39,9 @@ import {
   logger,
 } from '../utils';
 
-export const TransactionAmountStuct = refine(
+export const TransactionAmountStruct = refine(
   record(BtcP2wpkhAddressStruct, string()),
-  'TransactionAmountStuct',
+  'TransactionAmountStruct',
   (value: Record<string, string>) => {
     if (Object.entries(value).length === 0) {
       return 'Transaction must have at least one recipient';
@@ -69,7 +69,7 @@ export const TransactionAmountStuct = refine(
 );
 
 export const sendManyParamsStruct = object({
-  amounts: TransactionAmountStuct,
+  amounts: TransactionAmountStruct,
   comment: string(),
   subtractFeeFrom: array(BtcP2wpkhAddressStruct),
   replaceable: boolean(),
@@ -209,7 +209,7 @@ export async function getTxConsensus(
 
   let i = 0;
 
-  const addReciptentsToComponents = (data: {
+  const addRecipientsToComponents = (data: {
     address: string;
     value: bigint;
   }) => {
@@ -235,10 +235,10 @@ export async function getTxConsensus(
     components.push(divider());
   };
 
-  info.recipients.forEach(addReciptentsToComponents);
+  info.recipients.forEach(addRecipientsToComponents);
 
   if (info.change) {
-    [info.change].forEach(addReciptentsToComponents);
+    [info.change].forEach(addRecipientsToComponents);
   }
 
   const bottomPanel: Component[] = [];

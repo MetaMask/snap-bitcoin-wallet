@@ -26,7 +26,7 @@ describe('AccountSigner', () => {
       expect(signer).toBeInstanceOf(AccountSigner);
     });
 
-    it('throws error if an error catched', async () => {
+    it('throws an Error if another error was thrown', async () => {
       const network = networks.testnet;
       const { instance: node, deriveHardenedSpy } =
         createMockBip32Instance(network);
