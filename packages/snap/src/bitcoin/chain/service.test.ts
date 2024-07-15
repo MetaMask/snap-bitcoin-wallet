@@ -189,7 +189,7 @@ describe('BtcOnChainService', () => {
       });
     });
 
-    it('throws BtcOnChainServiceError error if an error was thrown', async () => {
+    it('throws BtcOnChainServiceError error if another error was thrown', async () => {
       const { instance, getFeeRatesSpy } = createMockDataClient();
       const { instance: txMgr } = createMockBtcService(instance);
 
