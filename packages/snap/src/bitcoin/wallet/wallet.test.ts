@@ -1,6 +1,5 @@
 import { networks } from 'bitcoinjs-lib';
 
-import { generateFormatedUtxos } from '../../../test/utils';
 import { P2WPKHAccount, P2WPKHTestnetAccount } from './account';
 import { CoinSelectService } from './coin-select';
 import { DustLimit, ScriptType } from './constants';
