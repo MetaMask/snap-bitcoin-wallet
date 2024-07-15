@@ -562,7 +562,7 @@ describe('SnapStateManager', () => {
       ).rejects.toThrow('Failed to begin transaction');
     });
 
-    it('throws Error error, if an Error catched', async () => {
+    it('throws an Error if another Error was thrown', async () => {
       const initState = {
         transaction: [],
         transactionDetails: {},

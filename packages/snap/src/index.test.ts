@@ -178,14 +178,14 @@ describe('onKeyringRequest', () => {
     }
   });
 
-  it('throws SnapError if an error catched', async () => {
+  it('throws SnapError if an error was thrown', async () => {
     const { handler } = createMockHandleKeyringRequest();
     handler.mockRejectedValue(new Error('error'));
 
     await expect(executeRequest()).rejects.toThrow(SnapError);
   });
 
-  it('throws SnapError if an SnapError catched', async () => {
+  it('throws SnapError if an SnapError was thrown', async () => {
     const { handler } = createMockHandleKeyringRequest();
     handler.mockRejectedValue(new SnapError('error'));
 

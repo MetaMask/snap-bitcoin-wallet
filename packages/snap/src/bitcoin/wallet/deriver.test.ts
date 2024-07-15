@@ -48,7 +48,7 @@ describe('BtcAccountDeriver', () => {
       expect(result.index).not.toBeNull();
     });
 
-    it('throws `Unable to construct BIP32 node from private key` if an error catched', async () => {
+    it('throws `Unable to construct BIP32 node from private key` if another error was thrown', async () => {
       const network = networks.testnet;
       const deriver = new BtcAccountDeriver(network);
       const pkBuffer = Buffer.from('');

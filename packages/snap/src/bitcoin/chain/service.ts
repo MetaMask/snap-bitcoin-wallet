@@ -48,7 +48,7 @@ export type TransactionData = {
   };
 };
 
-export type CommitedTransaction = {
+export type CommittedTransaction = {
   transactionId: string;
 };
 
@@ -173,11 +173,11 @@ export class BtcOnChainService {
    * Broadcasts a signed transaction on the blockchain network.
    *
    * @param signedTransaction - A signed transaction string.
-   * @returns A promise that resolves to a `CommitedTransaction` object.
+   * @returns A promise that resolves to a `CommittedTransaction` object.
    */
   async broadcastTransaction(
     signedTransaction: string,
-  ): Promise<CommitedTransaction> {
+  ): Promise<CommittedTransaction> {
     try {
       const transactionId = await this._dataClient.sendTransaction(
         signedTransaction,

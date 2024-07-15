@@ -134,7 +134,7 @@ describe('BtcKeyring', () => {
       });
     });
 
-    it('throws Error if an error catched', async () => {
+    it('throws an Error if another Error was thrown', async () => {
       const { unlockSpy } = createMockWallet();
       const { instance: stateMgr } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);
@@ -232,7 +232,7 @@ describe('BtcKeyring', () => {
       expect(listAccountsSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('throws Error if an error catched', async () => {
+    it('throws an Error if another Error was thrown', async () => {
       const { instance: stateMgr, listAccountsSpy } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);
       listAccountsSpy.mockRejectedValue(new Error('error'));
@@ -266,7 +266,7 @@ describe('BtcKeyring', () => {
       expect(getAccountSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('throws Error if an error catched', async () => {
+    it('throws an Error if another Error was thrown', async () => {
       const { instance: stateMgr, getAccountSpy } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);
       getAccountSpy.mockRejectedValue(new Error('error'));
@@ -300,7 +300,7 @@ describe('BtcKeyring', () => {
       expect(removeAccountsSpy).toHaveBeenCalledWith([account.id]);
     });
 
-    it('throws Error if an error catched', async () => {
+    it('throws an Error if another Error was thrown', async () => {
       const { instance: stateMgr, removeAccountsSpy } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);
       removeAccountsSpy.mockRejectedValue(new Error('error'));
@@ -508,7 +508,7 @@ describe('BtcKeyring', () => {
       });
     });
 
-    it('throws Error if an error catched', async () => {
+    it('throws an Error if another Error was thrown', async () => {
       const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);
       getWalletSpy.mockRejectedValue(new Error('error'));
