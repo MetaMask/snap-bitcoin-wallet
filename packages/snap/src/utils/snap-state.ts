@@ -10,7 +10,7 @@ export type Transaction<State> = {
   orgState?: State;
   current?: State;
   isRollingBack: boolean;
-  hasCommited: boolean;
+  hasCommitted: boolean;
 };
 
 export abstract class SnapStateManager<State> {
@@ -25,7 +25,7 @@ export abstract class SnapStateManager<State> {
       orgState: undefined,
       current: undefined,
       isRollingBack: false,
-      hasCommited: false,
+      hasCommitted: false,
     };
   }
 
@@ -109,7 +109,7 @@ export abstract class SnapStateManager<State> {
     if (!this.#transaction.current || !this.#transaction.orgState) {
       throw new Error('Failed to commit transaction');
     }
-    this.#transaction.hasCommited = true;
+    this.#transaction.hasCommitted = true;
     await this.set(this.#transaction.current);
   }
 
@@ -119,7 +119,7 @@ export abstract class SnapStateManager<State> {
       orgState: await this.get(),
       current: await this.get(), // make sure the current is not referenced to orgState
       isRollingBack: false,
-      hasCommited: false,
+      hasCommitted: false,
     };
   }
 
@@ -127,14 +127,14 @@ export abstract class SnapStateManager<State> {
     try {
       // we only need to rollback if the transaction is committed
       if (
-        this.#transaction.hasCommited &&
+        this.#transaction.hasCommitted &&
         !this.#transaction.isRollingBack &&
         this.#transaction.orgState
       ) {
         logger.info(
           `SnapStateManager.rollback [${
             this.#transactionId
-          }]: attemp to rollback state`,
+          }]: attempt to rollback state`,
         );
         this.#transaction.isRollingBack = true;
         await this.set(this.#transaction.orgState);
@@ -155,7 +155,7 @@ export abstract class SnapStateManager<State> {
     this.#transaction.current = undefined;
     this.#transaction.id = undefined;
     this.#transaction.isRollingBack = false;
-    this.#transaction.hasCommited = false;
+    this.#transaction.hasCommitted = false;
   }
 
   get #transactionId(): string {

@@ -82,7 +82,7 @@ describe('KeyringStateManager', () => {
       expect(result).toStrictEqual([]);
     });
 
-    it('throw Error if an error catched', async () => {
+    it('throws an Error if another Error was thrown', async () => {
       const { instance, getDataSpy } = createMockStateManager();
       getDataSpy.mockRejectedValue(new Error('error'));
 
@@ -208,7 +208,7 @@ describe('KeyringStateManager', () => {
       );
     });
 
-    it('throw Error if an error catched', async () => {
+    it('throws an Error if another Error was thrown', async () => {
       const { instance, getDataSpy } = createMockStateManager();
       getDataSpy.mockRejectedValue(new Error('error'));
       const state = createInitState(1);
@@ -244,7 +244,7 @@ describe('KeyringStateManager', () => {
       expect(result).toBeNull();
     });
 
-    it('throw Error if an error catched', async () => {
+    it('throws an Error if another Error was thrown', async () => {
       const { instance, getDataSpy } = createMockStateManager();
       getDataSpy.mockRejectedValue(new Error('error'));
       const { id } = generateAccounts(1)[0];
@@ -346,7 +346,7 @@ describe('KeyringStateManager', () => {
       expect(result).toBeNull();
     });
 
-    it('throw Error if an error catched', async () => {
+    it('throws when getData fails', async () => {
       const { instance, getDataSpy } = createMockStateManager();
       getDataSpy.mockRejectedValue(new Error('error'));
       const state = createInitState(20);

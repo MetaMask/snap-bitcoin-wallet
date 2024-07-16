@@ -14,7 +14,7 @@ jest.mock('../utils/logger');
 jest.mock('../utils/snap');
 
 describe('getBalances', () => {
-  const asset = Config.avaliableAssets[0];
+  const asset = Config.availableAssets[0];
 
   const createMockChainService = () => {
     const getBalancesSpy = jest.spyOn(

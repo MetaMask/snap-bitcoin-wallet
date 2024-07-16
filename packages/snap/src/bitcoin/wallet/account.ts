@@ -82,9 +82,9 @@ export abstract class BtcAccount {
   }
 
   /**
-   * A getter function to return the correcsponing account type's output script.
+   * A getter function to return the corresponding account type's output script.
    *
-   * @returns The correcsponing account type's output script.
+   * @returns The corresponding account type's output script.
    */
   get script(): Buffer {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -92,9 +92,9 @@ export abstract class BtcAccount {
   }
 
   /**
-   * A getter function to return the correcsponing account type's address.
+   * A getter function to return the corresponding account type's address.
    *
-   * @returns The correcsponing account type's address.
+   * @returns The corresponding account type's address.
    */
   get address(): string {
     if (!this.#address) {
@@ -107,9 +107,9 @@ export abstract class BtcAccount {
   }
 
   /**
-   * A getter function to return the correcsponing account type's payment instance.
+   * A getter function to return the corresponding account type's payment instance.
    *
-   * @returns The correcsponing account type's payment instance.
+   * @returns The corresponding account type's payment instance.
    */
   get payment(): Payment {
     if (!this.#payment) {

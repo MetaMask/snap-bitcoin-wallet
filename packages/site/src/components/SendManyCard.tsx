@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidV4 } from 'uuid';
 
 import { Card, SendManyButton } from '.';
 import { useInvokeKeyring } from '../hooks';
@@ -23,7 +23,7 @@ export const SendManyCard = ({
       method: 'keyring_submitRequest',
       params: {
         account,
-        id: uuidv4(),
+        id: uuidV4(),
         scope,
         request: {
           method: 'btc_sendmany',

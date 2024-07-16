@@ -3,7 +3,7 @@ import { BIP32Factory, type BIP32Interface } from 'bip32';
 import type { Network } from 'bitcoinjs-lib';
 import { Buffer } from 'buffer';
 import ECPairFactory from 'ecpair';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidV4 } from 'uuid';
 
 import { Caip2ChainId } from '../src/constants';
 import blockChairData from './fixtures/blockchair.json';
@@ -27,7 +27,7 @@ export function generateAccounts(cnt = 1, addressPrefix = '') {
   for (let i = 0; i < cnt; i++) {
     accounts.push({
       type: 'bip122:p2wpkh',
-      id: uuidv4(),
+      id: uuidV4(),
       address:
         baseAddress.slice(0, baseAddress.length - i.toString().length) +
         i.toString(),
@@ -328,15 +328,15 @@ export function generateBlockChairTransactionDashboard(
 }
 
 /**
- * Method to generate formated utxos with blockchair resp.
+ * Method to generate formatted utxos with blockchair resp.
  *
  * @param address - the utxos owner address.
- * @param utxoCnt - count of the utox to be generated.
+ * @param utxoCnt - count of the utxo to be generated.
  * @param minAmt - min amount of the utxo array.
  * @param maxAmt - max amount of the utxo array.
  * @returns An formatted utxo array.
  */
-export function generateFormatedUtxos(
+export function generateFormattedUtxos(
   address: string,
   utxoCnt: number,
   minAmt?: number,

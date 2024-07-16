@@ -19,7 +19,7 @@ type MockTransactions = string[];
 
 type MockState = {
   transaction: MockTransactions;
-  trasansactionDetails: MockTransactionDetails;
+  transactionDetails: MockTransactionDetails;
 };
 
 type MockExecuteTransactionInput = {
@@ -49,7 +49,7 @@ describe('SnapStateManager', () => {
 
     const instance = new MockSnapStateManager();
 
-    const executeTransationFn = async (
+    const executeTransactionFn = async (
       data: StateDataInput,
       delay: number,
       isThrowError?: boolean,
@@ -63,7 +63,7 @@ describe('SnapStateManager', () => {
         }
         await new Promise((resolve) => setTimeout(resolve, delay));
         if (isThrowError) {
-          throw new Error('executeTransationFn error');
+          throw new Error('executeTransactionFn error');
         }
       });
     };
@@ -79,7 +79,7 @@ describe('SnapStateManager', () => {
     return {
       instance,
       updateDataSpy,
-      executeTransationFn,
+      executeTransactionFn,
       executeFn,
     };
   };
@@ -87,8 +87,8 @@ describe('SnapStateManager', () => {
   const createMockState = (initState: MockState) => {
     const setStateDataFn = async (data: MockState) => {
       initState.transaction = [...data.transaction];
-      initState.trasansactionDetails = Object.entries(
-        data.trasansactionDetails,
+      initState.transactionDetails = Object.entries(
+        data.transactionDetails,
       ).reduce(
         (acc, [key, value]: [key: string, value: MockTransactionDetail]) => {
           acc[key] = {
@@ -106,19 +106,19 @@ describe('SnapStateManager', () => {
     ) => {
       if (
         Object.prototype.hasOwnProperty.call(
-          state.trasansactionDetails,
+          state.transactionDetails,
           data.id,
         ) === false
       ) {
         state.transaction.push(data.id);
-        state.trasansactionDetails[data.id] = {
+        state.transactionDetails[data.id] = {
           txHash: data.txHash,
           cnt: data.cnt,
         };
       } else {
-        state.trasansactionDetails[data.id] = {
+        state.transactionDetails[data.id] = {
           txHash: data.txHash,
-          cnt: state.trasansactionDetails[data.id].cnt + data.cnt,
+          cnt: state.transactionDetails[data.id].cnt + data.cnt,
         };
       }
     };
@@ -128,8 +128,8 @@ describe('SnapStateManager', () => {
       .mockImplementation(async () => {
         return {
           transaction: [...initState.transaction],
-          trasansactionDetails: Object.entries(
-            initState.trasansactionDetails,
+          transactionDetails: Object.entries(
+            initState.transactionDetails,
           ).reduce(
             (
               acc,
@@ -233,7 +233,7 @@ describe('SnapStateManager', () => {
     it('executes callback code', async () => {
       const initState = {
         transaction: ['id'],
-        trasansactionDetails: {
+        transactionDetails: {
           id: {
             txHash: 'hash',
             cnt: 4,
@@ -243,7 +243,7 @@ describe('SnapStateManager', () => {
 
       const { getStateDataSpy, updateDataFn } = createMockState(initState);
 
-      const { updateDataSpy, executeTransationFn } = createMockStateManager<
+      const { updateDataSpy, executeTransactionFn } = createMockStateManager<
         MockState,
         MockExecuteTransactionInput
       >();
@@ -251,7 +251,7 @@ describe('SnapStateManager', () => {
       updateDataSpy.mockImplementation(updateDataFn);
 
       const promiseArr = [
-        executeTransationFn(
+        executeTransactionFn(
           {
             txHash: 'hash-final',
             id: 'id',
@@ -259,7 +259,7 @@ describe('SnapStateManager', () => {
           },
           30,
         ),
-        executeTransationFn(
+        executeTransactionFn(
           {
             txHash: 'hash2',
             id: 'id2',
@@ -272,7 +272,7 @@ describe('SnapStateManager', () => {
       await Promise.all(promiseArr);
       expect(initState.transaction).toStrictEqual(['id', 'id2']);
 
-      expect(initState.trasansactionDetails).toStrictEqual({
+      expect(initState.transactionDetails).toStrictEqual({
         id: {
           txHash: 'hash-final',
           cnt: 6,
@@ -287,10 +287,10 @@ describe('SnapStateManager', () => {
       expect(updateDataSpy).toHaveBeenCalledTimes(promiseArr.length);
     });
 
-    it('does rollback if an error catched and has committed', async () => {
+    it('rolls back if an error is caught after a commit', async () => {
       const initState = {
         transaction: ['id'],
-        trasansactionDetails: {
+        transactionDetails: {
           id: {
             txHash: 'hash',
             cnt: 4,
@@ -298,14 +298,14 @@ describe('SnapStateManager', () => {
         },
       };
       const { getStateDataSpy, updateDataFn } = createMockState(initState);
-      const { updateDataSpy, executeTransationFn } = createMockStateManager<
+      const { updateDataSpy, executeTransactionFn } = createMockStateManager<
         MockState,
         MockExecuteTransactionInput
       >();
       updateDataSpy.mockImplementation(updateDataFn);
 
       const promiseArr = [
-        executeTransationFn(
+        executeTransactionFn(
           {
             txHash: 'hash4',
             id: 'id',
@@ -313,7 +313,7 @@ describe('SnapStateManager', () => {
           },
           10,
         ),
-        executeTransationFn(
+        executeTransactionFn(
           {
             txHash: 'hash-final',
             id: 'id',
@@ -323,7 +323,7 @@ describe('SnapStateManager', () => {
           true,
           true,
         ),
-        executeTransationFn(
+        executeTransactionFn(
           {
             txHash: 'hash2',
             id: 'id2',
@@ -336,7 +336,7 @@ describe('SnapStateManager', () => {
       await Promise.allSettled(promiseArr);
 
       expect(initState.transaction).toStrictEqual(['id', 'id2']);
-      expect(initState.trasansactionDetails).toStrictEqual({
+      expect(initState.transactionDetails).toStrictEqual({
         id: {
           txHash: 'hash4',
           cnt: 5,
@@ -350,11 +350,11 @@ describe('SnapStateManager', () => {
       expect(updateDataSpy).toHaveBeenCalledTimes(promiseArr.length);
     });
 
-    it('does not trigger rollback if an error catched and has not committed', async () => {
-      const hasCommited = false;
+    it('does not trigger rollback if an error is caught and has not been committed', async () => {
+      const hasCommitted = false;
       const initState: MockState = {
         transaction: ['id'],
-        trasansactionDetails: {
+        transactionDetails: {
           id: {
             txHash: 'hash',
             cnt: 4,
@@ -362,7 +362,7 @@ describe('SnapStateManager', () => {
         },
       };
       const { setStateDataSpy, updateDataFn } = createMockState(initState);
-      const { updateDataSpy, executeTransationFn } = createMockStateManager<
+      const { updateDataSpy, executeTransactionFn } = createMockStateManager<
         MockState,
         MockExecuteTransactionInput
       >();
@@ -370,7 +370,7 @@ describe('SnapStateManager', () => {
 
       let expectedError;
       try {
-        await executeTransationFn(
+        await executeTransactionFn(
           {
             txHash: 'hash-final',
             id: 'id',
@@ -378,7 +378,7 @@ describe('SnapStateManager', () => {
           },
           30,
           true,
-          hasCommited,
+          hasCommitted,
         );
       } catch (error) {
         expectedError = error;
@@ -386,7 +386,7 @@ describe('SnapStateManager', () => {
         expect(expectedError).toBeInstanceOf(Error);
         expect(initState.transaction).toStrictEqual(['id']);
         expect(setStateDataSpy).toHaveBeenCalledTimes(0);
-        expect(initState.trasansactionDetails).toStrictEqual({
+        expect(initState.transactionDetails).toStrictEqual({
           id: {
             txHash: 'hash',
             cnt: 4,
@@ -399,7 +399,7 @@ describe('SnapStateManager', () => {
       const committed = true;
       const initState: MockState = {
         transaction: ['id'],
-        trasansactionDetails: {
+        transactionDetails: {
           id: {
             txHash: 'hash',
             cnt: 4,
@@ -408,7 +408,7 @@ describe('SnapStateManager', () => {
       };
       const { setStateDataSpy, updateDataFn, setStateDataFn } =
         createMockState(initState);
-      const { updateDataSpy, executeTransationFn } = createMockStateManager<
+      const { updateDataSpy, executeTransactionFn } = createMockStateManager<
         MockState,
         MockExecuteTransactionInput
       >();
@@ -420,7 +420,7 @@ describe('SnapStateManager', () => {
       updateDataSpy.mockImplementation(updateDataFn);
 
       const promiseArr = [
-        executeTransationFn(
+        executeTransactionFn(
           {
             txHash: 'hash-final',
             id: 'id',
@@ -430,7 +430,7 @@ describe('SnapStateManager', () => {
           true,
           committed,
         ),
-        executeTransationFn(
+        executeTransactionFn(
           {
             txHash: 'hash-final',
             id: 'id',
@@ -444,7 +444,7 @@ describe('SnapStateManager', () => {
       await Promise.allSettled(promiseArr);
 
       expect(initState.transaction).toStrictEqual(['id']);
-      expect(initState.trasansactionDetails).toStrictEqual({
+      expect(initState.transactionDetails).toStrictEqual({
         id: {
           txHash: 'hash-final',
           cnt: 6,
@@ -455,16 +455,16 @@ describe('SnapStateManager', () => {
     it('does not have racing condition', async () => {
       const initState = {
         transaction: [],
-        trasansactionDetails: {},
+        transactionDetails: {},
       };
       const { getStateDataSpy, updateDataFn } = createMockState(initState);
-      const { updateDataSpy, executeTransationFn, executeFn } =
+      const { updateDataSpy, executeTransactionFn, executeFn } =
         createMockStateManager<MockState, MockExecuteTransactionInput>();
 
       updateDataSpy.mockImplementation(updateDataFn);
 
       const promiseArr = [
-        executeTransationFn(
+        executeTransactionFn(
           {
             txHash: 'hash',
             id: 'id',
@@ -472,7 +472,7 @@ describe('SnapStateManager', () => {
           },
           30,
         ),
-        executeTransationFn(
+        executeTransactionFn(
           {
             txHash: 'hash2',
             id: 'id2',
@@ -488,7 +488,7 @@ describe('SnapStateManager', () => {
           },
           0,
         ),
-        executeTransationFn(
+        executeTransactionFn(
           {
             txHash: 'hash-updated',
             id: 'id',
@@ -496,7 +496,7 @@ describe('SnapStateManager', () => {
           },
           30,
         ),
-        executeTransationFn(
+        executeTransactionFn(
           {
             txHash: 'hash3',
             id: 'id3',
@@ -504,7 +504,7 @@ describe('SnapStateManager', () => {
           },
           10,
         ),
-        executeTransationFn(
+        executeTransactionFn(
           {
             txHash: 'hash-updated-final',
             id: 'id',
@@ -517,7 +517,7 @@ describe('SnapStateManager', () => {
       await Promise.all(promiseArr);
 
       expect(initState.transaction).toStrictEqual(['id', 'id2', 'id3']);
-      expect(initState.trasansactionDetails).toStrictEqual({
+      expect(initState.transactionDetails).toStrictEqual({
         id: {
           txHash: 'hash-updated-final',
           cnt: 6,
@@ -538,12 +538,12 @@ describe('SnapStateManager', () => {
     it('throws `Failed to begin transaction` error, if the transaction can not init', async () => {
       const initState = {
         transaction: [],
-        trasansactionDetails: {},
+        transactionDetails: {},
       };
 
       const { getStateDataSpy } = createMockState(initState);
 
-      const { executeTransationFn } = createMockStateManager<
+      const { executeTransactionFn } = createMockStateManager<
         MockState,
         MockExecuteTransactionInput
       >();
@@ -551,7 +551,7 @@ describe('SnapStateManager', () => {
       getStateDataSpy.mockResolvedValue(undefined);
 
       await expect(
-        executeTransationFn(
+        executeTransactionFn(
           {
             txHash: 'hash-final',
             id: 'id',
@@ -562,32 +562,32 @@ describe('SnapStateManager', () => {
       ).rejects.toThrow('Failed to begin transaction');
     });
 
-    it('throws Error error, if an Error catched', async () => {
+    it('throws an Error if another Error was thrown', async () => {
       const initState = {
         transaction: [],
-        trasansactionDetails: {},
+        transactionDetails: {},
       };
 
       const { setStateDataSpy, setStateDataFn, updateDataFn } =
         createMockState(initState);
 
-      const { executeTransationFn, updateDataSpy } = createMockStateManager<
+      const { executeTransactionFn, updateDataSpy } = createMockStateManager<
         MockState,
         MockExecuteTransactionInput
       >();
 
       updateDataSpy.mockImplementation(updateDataFn);
 
-      // firsy mockImplementation is to mock the set data actions
+      // first mockImplementation mocks the set data actions
       setStateDataSpy
         .mockImplementationOnce(async () => {
           throw new Error('setStateDataSpy');
-          // second mockImplementation is to mock the rollback actions
+          // second mockImplementation mocks the rollback actions
         })
         .mockImplementationOnce(setStateDataFn);
 
       await expect(
-        executeTransationFn(
+        executeTransactionFn(
           {
             txHash: 'hash-final',
             id: 'id',

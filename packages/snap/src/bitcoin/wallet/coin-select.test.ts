@@ -1,6 +1,6 @@
 import { networks, address as addressUtils } from 'bitcoinjs-lib';
 
-import { generateFormatedUtxos } from '../../../test/utils';
+import { generateFormattedUtxos } from '../../../test/utils';
 import { CoinSelectService } from './coin-select';
 import { ScriptType } from './constants';
 import { BtcAccountDeriver } from './deriver';
@@ -29,7 +29,7 @@ describe('CoinSelectService', () => {
     const receiver1 = await wallet.instance.unlock(1, ScriptType.P2wpkh);
     const receiver2 = await wallet.instance.unlock(2, ScriptType.P2wpkh);
 
-    const utxos = generateFormatedUtxos(sender.address, 2, inputMin, inputMax);
+    const utxos = generateFormattedUtxos(sender.address, 2, inputMin, inputMax);
 
     const outputs = [
       new TxOutput(

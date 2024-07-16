@@ -45,7 +45,7 @@ describe('superstruct', () => {
   describe('ScopeStruct', () => {
     it('validates correctly', () => {
       expect(() =>
-        assert(Config.avaliableNetworks[0], superstruct.ScopeStruct),
+        assert(Config.availableNetworks[0], superstruct.ScopeStruct),
       ).not.toThrow();
       expect(() => assert('custom scope', superstruct.ScopeStruct)).toThrow(
         Error,
@@ -56,7 +56,7 @@ describe('superstruct', () => {
   describe('AssetsStruct', () => {
     it('validates correctly', () => {
       expect(() =>
-        assert(Config.avaliableAssets[0], superstruct.AssetsStruct),
+        assert(Config.availableAssets[0], superstruct.AssetsStruct),
       ).not.toThrow();
       expect(() => assert('custom scope', superstruct.AssetsStruct)).toThrow(
         Error,
