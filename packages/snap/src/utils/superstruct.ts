@@ -3,9 +3,9 @@ import { enums, string, pattern, refine } from 'superstruct';
 import { Config } from '../config';
 import { btcToSats } from './unit';
 
-export const assetsStruct = enums(Config.avaliableAssets);
+export const assetsStruct = enums(Config.availableAssets);
 
-export const scopeStruct = enums(Config.avaliableNetworks);
+export const scopeStruct = enums(Config.availableNetworks);
 
 export const positiveStringStruct = pattern(
   string(),
