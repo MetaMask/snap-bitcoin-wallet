@@ -4,41 +4,41 @@ import { Config } from '../config';
 import * as superstruct from './superstruct';
 
 describe('superstruct', () => {
-  describe('PositiveStringStruct', () => {
+  describe('PositiveNumberStringStruct', () => {
     it('validates correctly', () => {
-      expect(() => assert('1', superstruct.PositiveStringStruct)).not.toThrow(
-        Error,
-      );
-      expect(() => assert('1.2', superstruct.PositiveStringStruct)).not.toThrow(
-        Error,
-      );
-      expect(() => assert('0', superstruct.PositiveStringStruct)).not.toThrow(
-        Error,
-      );
       expect(() =>
-        assert('0.0023', superstruct.PositiveStringStruct),
+        assert('1', superstruct.PositiveNumberStringStruct),
+      ).not.toThrow(Error);
+      expect(() =>
+        assert('1.2', superstruct.PositiveNumberStringStruct),
+      ).not.toThrow(Error);
+      expect(() =>
+        assert('0', superstruct.PositiveNumberStringStruct),
+      ).not.toThrow(Error);
+      expect(() =>
+        assert('0.0023', superstruct.PositiveNumberStringStruct),
       ).not.toThrow();
-      expect(() => assert('0101', superstruct.PositiveStringStruct)).toThrow(
-        Error,
-      );
-      expect(() => assert('0101.1', superstruct.PositiveStringStruct)).toThrow(
-        Error,
-      );
-      expect(() => assert('-0101', superstruct.PositiveStringStruct)).toThrow(
-        Error,
-      );
-      expect(() => assert('-1.3', superstruct.PositiveStringStruct)).toThrow(
-        Error,
-      );
-      expect(() => assert(' 1.3', superstruct.PositiveStringStruct)).toThrow(
-        Error,
-      );
-      expect(() => assert('+1-3', superstruct.PositiveStringStruct)).toThrow(
-        Error,
-      );
-      expect(() => assert('abc', superstruct.PositiveStringStruct)).toThrow(
-        Error,
-      );
+      expect(() =>
+        assert('0101', superstruct.PositiveNumberStringStruct),
+      ).toThrow(Error);
+      expect(() =>
+        assert('0101.1', superstruct.PositiveNumberStringStruct),
+      ).toThrow(Error);
+      expect(() =>
+        assert('-0101', superstruct.PositiveNumberStringStruct),
+      ).toThrow(Error);
+      expect(() =>
+        assert('-1.3', superstruct.PositiveNumberStringStruct),
+      ).toThrow(Error);
+      expect(() =>
+        assert(' 1.3', superstruct.PositiveNumberStringStruct),
+      ).toThrow(Error);
+      expect(() =>
+        assert('+1-3', superstruct.PositiveNumberStringStruct),
+      ).toThrow(Error);
+      expect(() =>
+        assert('abc', superstruct.PositiveNumberStringStruct),
+      ).toThrow(Error);
     });
   });
 

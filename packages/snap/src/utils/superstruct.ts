@@ -6,7 +6,7 @@ export const AssetsStruct = enums(Config.availableAssets);
 
 export const ScopeStruct = enums(Config.availableNetworks);
 
-export const PositiveStringStruct = pattern(
+export const PositiveNumberStringStruct = pattern(
   string(),
   /^(?!0\d)(\d+(\.\d+)?)$/u,
 );

@@ -13,7 +13,7 @@ import {
 } from '../utils';
 import {
   AssetsStruct,
-  PositiveStringStruct,
+  PositiveNumberStringStruct,
   ScopeStruct,
 } from '../utils/superstruct';
 
@@ -25,7 +25,7 @@ export const GetBalancesRequestStruct = object({
 export const GetBalancesResponseStruct = record(
   AssetsStruct,
   object({
-    amount: PositiveStringStruct,
+    amount: PositiveNumberStringStruct,
     unit: enums([Config.unit]),
   }),
 );
