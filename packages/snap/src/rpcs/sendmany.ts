@@ -29,7 +29,7 @@ import {
 import { FeeRateUnavailableError } from '../exceptions';
 import { Factory } from '../factory';
 import {
-  scopeStruct,
+  ScopeStruct,
   confirmDialog,
   isSnapRpcError,
   shortenAddress,
@@ -58,23 +58,23 @@ export const TransactionAmountStruct = refine(
   },
 );
 
-export const sendManyParamsStruct = object({
+export const SendManyParamsStruct = object({
   amounts: TransactionAmountStruct,
   comment: string(),
   subtractFeeFrom: array(BtcP2wpkhAddressStruct),
   replaceable: boolean(),
   dryrun: optional(boolean()),
-  scope: scopeStruct,
+  scope: ScopeStruct,
 });
 
-export const sendManyResponseStruct = object({
+export const SendManyResponseStruct = object({
   txId: nonempty(string()),
   signedTransaction: optional(string()),
 });
 
-export type SendManyParams = Infer<typeof sendManyParamsStruct>;
+export type SendManyParams = Infer<typeof SendManyParamsStruct>;
 
-export type SendManyResponse = Infer<typeof sendManyResponseStruct>;
+export type SendManyResponse = Infer<typeof SendManyResponseStruct>;
 
 /**
  * Send BTC to multiple account.
@@ -90,7 +90,7 @@ export async function sendMany(
   params: SendManyParams,
 ) {
   try {
-    validateRequest(params, sendManyParamsStruct);
+    validateRequest(params, SendManyParamsStruct);
 
     const { dryrun, scope } = params;
     const chainApi = Factory.createOnChainServiceProvider(scope);
@@ -142,7 +142,7 @@ export async function sendMany(
       txId: result.transactionId,
     };
 
-    validateResponse(resp, sendManyResponseStruct);
+    validateResponse(resp, SendManyResponseStruct);
 
     return resp;
   } catch (error) {

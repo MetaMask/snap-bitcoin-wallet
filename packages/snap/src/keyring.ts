@@ -19,7 +19,7 @@ import { AccountNotFoundError } from './exceptions';
 import { Factory } from './factory';
 import { getBalances, type SendManyParams, sendMany } from './rpcs';
 import type { KeyringStateManager, Wallet } from './stateManagement';
-import { getProvider, scopeStruct, logger } from './utils';
+import { getProvider, ScopeStruct, logger } from './utils';
 
 export type KeyringOptions = Record<string, Json> & {
   defaultIndex: number;
@@ -28,7 +28,7 @@ export type KeyringOptions = Record<string, Json> & {
 };
 
 export const CreateAccountOptionsStruct = object({
-  scope: scopeStruct,
+  scope: ScopeStruct,
 });
 
 export type CreateAccountOptions = Record<string, Json> &

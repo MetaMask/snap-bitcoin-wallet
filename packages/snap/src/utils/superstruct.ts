@@ -3,11 +3,11 @@ import { enums, string, pattern, refine } from 'superstruct';
 import { Config } from '../config';
 import { btcToSats } from './unit';
 
-export const assetsStruct = enums(Config.availableAssets);
+export const AssetsStruct = enums(Config.availableAssets);
 
-export const scopeStruct = enums(Config.availableNetworks);
+export const ScopeStruct = enums(Config.availableNetworks);
 
-export const positiveStringStruct = pattern(
+export const PositiveNumberStringStruct = pattern(
   string(),
   /^(?!0\d)(\d+(\.\d+)?)$/u,
 );
@@ -34,4 +34,4 @@ export const AmountStruct = refine(
   },
 );
 
-export const txIdStruct = pattern(string(), /^[0-9a-fA-F]{64}$/u);
+export const TxIdStruct = pattern(string(), /^[0-9a-fA-F]{64}$/u);

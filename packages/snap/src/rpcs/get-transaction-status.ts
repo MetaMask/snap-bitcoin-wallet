@@ -5,28 +5,28 @@ import { TransactionStatus } from '../bitcoin/chain';
 import { Factory } from '../factory';
 import {
   isSnapRpcError,
-  scopeStruct,
+  ScopeStruct,
   validateRequest,
   validateResponse,
   logger,
-  txIdStruct,
+  TxIdStruct,
 } from '../utils';
 
-export const getTransactionStatusParamsRequestStruct = object({
-  transactionId: nonempty(txIdStruct),
-  scope: scopeStruct,
+export const GetTransactionStatusParamsRequestStruct = object({
+  transactionId: nonempty(TxIdStruct),
+  scope: ScopeStruct,
 });
 
-export const getTransactionStatusParamsResponseStruct = object({
+export const GetTransactionStatusParamsResponseStruct = object({
   status: enums(Object.values(TransactionStatus)),
 });
 
 export type GetTransactionStatusParams = Infer<
-  typeof getTransactionStatusParamsRequestStruct
+  typeof GetTransactionStatusParamsRequestStruct
 >;
 
 export type GetTransactionStatusResponse = Infer<
-  typeof getTransactionStatusParamsResponseStruct
+  typeof GetTransactionStatusParamsResponseStruct
 >;
 
 /**
@@ -39,7 +39,7 @@ export async function getTransactionStatus(
   params: GetTransactionStatusParams,
 ): Promise<GetTransactionStatusResponse> {
   try {
-    validateRequest(params, getTransactionStatusParamsRequestStruct);
+    validateRequest(params, GetTransactionStatusParamsRequestStruct);
 
     const { scope, transactionId } = params;
 
@@ -51,7 +51,7 @@ export async function getTransactionStatus(
       status: txStatusResp.status,
     };
 
-    validateResponse(resp, getTransactionStatusParamsResponseStruct);
+    validateResponse(resp, GetTransactionStatusParamsResponseStruct);
 
     return resp;
   } catch (error) {
