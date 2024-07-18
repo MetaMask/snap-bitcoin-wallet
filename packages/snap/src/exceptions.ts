@@ -6,6 +6,12 @@ export class AccountNotFoundError extends CustomError {
   }
 }
 
+export class MethodNotImplementedError extends CustomError {
+  constructor(errMsg?: string) {
+    super(errMsg ?? `Method not implemented`);
+  }
+}
+
 export class FeeRateUnavailableError extends CustomError {
   constructor(errMsg?: string) {
     super(errMsg ?? `No fee rates available`);
