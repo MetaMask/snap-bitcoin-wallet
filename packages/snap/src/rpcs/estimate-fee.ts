@@ -1,11 +1,4 @@
-import {
-  object,
-  string,
-  type Infer,
-  nonempty,
-  enums,
-  boolean,
-} from 'superstruct';
+import { object, string, type Infer, nonempty, enums } from 'superstruct';
 
 import { TxValidationError } from '../bitcoin/wallet';
 import { Config } from '../config';
@@ -18,7 +11,7 @@ import {
   validateRequest,
   validateResponse,
   logger,
-  positiveStringStruct,
+  PositiveNumberStringStruct,
   AmountStruct,
   satsToBtc,
 } from '../utils';
@@ -30,10 +23,9 @@ export const EstimateFeeParamsStruct = object({
 
 export const EstimateFeeResponseStruct = object({
   fee: object({
-    amount: nonempty(positiveStringStruct),
+    amount: nonempty(PositiveNumberStringStruct),
     unit: enums([Config.unit]),
   }),
-  isInsufficientFunds: boolean(),
 });
 
 export type EstimateFeeParams = Infer<typeof EstimateFeeParamsStruct>;
@@ -86,26 +78,24 @@ export async function estimateFee(params: EstimateFeeParams) {
     const metadata = await chainApi.getDataForTransaction(account.address);
 
     // TODO: when multi address support, change this to pull first address from account
-    // Estimate fee doesnt require an recipitent address, so we have to use the account address
+    // As Estimate fee does not require an recipitent address, so we have to use the account address
     const recipients = [
       {
         address: account.address,
         value: btcToSats(amount),
       },
     ];
-    const estimateResult = await wallet.estimateFee(account, recipients, {
+
+    const result = await wallet.estimateFee(account, recipients, {
       utxos: metadata.data.utxos,
       fee,
     });
 
     const resp: EstimateFeeResponse = {
       fee: {
-        amount: satsToBtc(estimateResult.fee),
+        amount: satsToBtc(result.fee),
         unit: Config.unit,
       },
-      // when isInsufficientFunds is true, it means the fee amount is inaccuary,
-      // due to the estimateFee function is unable to estimate a fee for a amount that is insufficient to cover the fee
-      isInsufficientFunds: estimateResult.outputs.length === 0,
     };
 
     validateResponse(resp, EstimateFeeResponseStruct);
