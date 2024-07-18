@@ -8,13 +8,18 @@ import {
   type Balance,
   type CaipAssetType,
 } from '@metamask/keyring-api';
-import { MethodNotFoundError, type Json } from '@metamask/snaps-sdk';
+import {
+  MethodNotFoundError,
+  UnauthorizedError,
+  type Json,
+} from '@metamask/snaps-sdk';
 import type { Infer } from 'superstruct';
 import { assert, object, StructError } from 'superstruct';
 import { v4 as uuidv4 } from 'uuid';
 
 import type { BtcAccount, BtcWallet } from './bitcoin/wallet';
 import { Config } from './config';
+import { AccountNotFoundError, MethodNotImplementedError } from './exceptions';
 import { Factory } from './factory';
 import { getBalances, type SendManyParams, sendMany } from './rpcs';
 import type { KeyringStateManager, Wallet } from './stateManagement';
@@ -121,7 +126,7 @@ export class BtcKeyring implements Keyring {
   }
 
   async updateAccount(_account: KeyringAccount): Promise<void> {
-    throw new Error('Method not implemented.');
+    throw new MethodNotImplementedError();
   }
 
   async deleteAccount(id: string): Promise<void> {
@@ -214,7 +219,7 @@ export class BtcKeyring implements Keyring {
     const walletData = await this._stateMgr.getWallet(id);
 
     if (!walletData) {
-      throw new Error('Account not found');
+      throw new AccountNotFoundError();
     }
 
     return walletData;
@@ -237,7 +242,7 @@ export class BtcKeyring implements Keyring {
     keyringAccount: KeyringAccount,
   ): void {
     if (!account || account.address !== keyringAccount.address) {
-      throw new Error('Account not found');
+      throw new AccountNotFoundError();
     }
   }
 
@@ -246,7 +251,7 @@ export class BtcKeyring implements Keyring {
     keyringAccount: KeyringAccount,
   ): void {
     if (!keyringAccount.methods.includes(method)) {
-      throw new Error('Forbidden method');
+      throw new UnauthorizedError(`Permission denied`) as unknown as Error;
     }
   }
 
