@@ -24,13 +24,13 @@ export const AmountStruct = refine(
       parsedVal <= 0 ||
       !Number.isFinite(parsedVal)
     ) {
-      return 'Invalid amount for send';
+      return 'Invalid amount, must be a positive finite number';
     }
 
     try {
       btcToSats(value);
     } catch (error) {
-      return 'Invalid amount for send';
+      return 'Invalid amount, out of bounds';
     }
     return true;
   },
