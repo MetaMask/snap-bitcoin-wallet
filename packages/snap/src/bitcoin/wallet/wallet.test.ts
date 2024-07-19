@@ -357,4 +357,56 @@ describe('BtcWallet', () => {
       expect(sign).not.toBe('');
     });
   });
+
+  describe('estimateFee', () => {
+    it('estimates fee', async () => {
+      const network = networks.testnet;
+      const { instance } = createMockDeriver(network);
+      const wallet = new BtcWallet(instance, network);
+      const chgAccount = await wallet.unlock(0, ScriptType.P2wpkh);
+      const utxos = generateFormattedUtxos(
+        chgAccount.address,
+        10,
+        10000,
+        10000,
+      );
+      const coinSelectServiceSpy = jest.spyOn(
+        CoinSelectService.prototype,
+        'selectCoins',
+      );
+
+      const selectionResult = {
+        change: new TxOutput(
+          DustLimit[chgAccount.scriptType] - 1,
+          chgAccount.address,
+          chgAccount.script,
+        ),
+        fee: 100,
+        inputs: utxos.map((utxo) => new TxInput(utxo, chgAccount.script)),
+        outputs: [new TxOutput(500, chgAccount.address, chgAccount.script)],
+      };
+
+      coinSelectServiceSpy.mockReturnValue(selectionResult);
+
+      const result = await wallet.estimateFee(
+        chgAccount,
+        createMockTxIndent(
+          chgAccount.address,
+          DustLimit[chgAccount.scriptType] + 1,
+        ),
+        {
+          utxos,
+          fee: 1,
+        },
+      );
+
+      expect(coinSelectServiceSpy).toHaveBeenCalledWith(
+        expect.any(Array<TxInput>),
+        expect.any(Array<TxOutput>),
+        expect.any(TxOutput),
+      );
+
+      expect(result).toStrictEqual(selectionResult);
+    });
+  });
 });
