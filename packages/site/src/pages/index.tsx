@@ -13,6 +13,7 @@ import {
   GetTransactionStatusCard,
   GetBalancesCard,
   EstimateFeeCard,
+  GetMaxSpendableBalanceCard,
 } from '../components';
 import { defaultSnapOrigin } from '../config';
 import {
@@ -334,6 +335,16 @@ const Index = () => {
         />
 
         <EstimateFeeCard
+          enabled={!(!installedSnap || !btcAccount)}
+          account={btcAccount?.id ?? ''}
+          fullWidth={
+            isMetaMaskReady &&
+            Boolean(installedSnap) &&
+            !shouldDisplayReconnectButton(installedSnap)
+          }
+        />
+
+        <GetMaxSpendableBalanceCard
           scope={scope}
           enabled={!(!installedSnap || !btcAccount)}
           account={btcAccount?.id ?? ''}
