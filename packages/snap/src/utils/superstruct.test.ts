@@ -48,7 +48,7 @@ describe('superstruct', () => {
     );
 
     it('throws error if the value is invalid', () => {
-      expect(() => assert('custom asset', superstruct.ScopeStruct)).toThrow(
+      expect(() => assert('custom asset', superstruct.AssetsStruct)).toThrow(
         Error,
       );
     });
