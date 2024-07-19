@@ -15,7 +15,7 @@ import { Config } from '../config';
 import { Caip2ChainId } from '../constants';
 import { AccountNotFoundError } from '../exceptions';
 import { KeyringStateManager } from '../stateManagement';
-import { btcToSats, satsToBtc } from '../utils';
+import { satsToBtc } from '../utils';
 import type { EstimateFeeParams } from './estimate-fee';
 import { estimateFee } from './estimate-fee';
 
