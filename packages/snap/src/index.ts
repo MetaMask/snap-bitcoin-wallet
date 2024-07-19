@@ -44,7 +44,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
           request.params as GetTransactionStatusParams,
         );
       default:
-        throw new MethodNotFoundError(method) as unknown as Error;
+        throw new MethodNotFoundError() as unknown as Error;
     }
   } catch (error) {
     let snapError = error;
