@@ -102,16 +102,19 @@ export async function estimateFee(params: EstimateFeeParams) {
 
     return resp;
   } catch (error) {
-    logger.error('Failed to estimate the fee', error);
+    logger.error('Failed to estimate fee', error);
 
     if (isSnapRpcError(error)) {
       throw error as unknown as Error;
     }
 
-    if (error instanceof TxValidationError) {
+    if (
+      error instanceof TxValidationError ||
+      error instanceof AccountNotFoundError
+    ) {
       throw error;
     }
 
-    throw new Error('Failed to estimate the fee');
+    throw new Error('Failed to estimate fee');
   }
 }
