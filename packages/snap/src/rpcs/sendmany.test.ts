@@ -424,7 +424,7 @@ describe('SendManyHandler', () => {
       ).rejects.toThrow('Transaction must have at least one recipient');
     });
 
-    it('throws `Invalid amount for send` error if receive amount is not valid', async () => {
+    it('throws `Invalid amount, must be a positive finite number` error if receive amount is not valid', async () => {
       createMockChainApiFactory();
       const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
@@ -441,7 +441,7 @@ describe('SendManyHandler', () => {
             [recipients[1].address]: '0.1',
           },
         }),
-      ).rejects.toThrow('Invalid amount for send');
+      ).rejects.toThrow('Invalid amount, must be a positive finite number');
 
       await expect(
         sendMany(sender, origin, {
@@ -451,7 +451,7 @@ describe('SendManyHandler', () => {
             [recipients[1].address]: '0.1',
           },
         }),
-      ).rejects.toThrow('Invalid amount for send');
+      ).rejects.toThrow('Invalid amount, must be a positive finite number');
 
       await expect(
         sendMany(sender, origin, {
@@ -461,7 +461,18 @@ describe('SendManyHandler', () => {
             [recipients[1].address]: '0.000000019',
           },
         }),
-      ).rejects.toThrow('Invalid amount for send');
+      ).rejects.toThrow('Invalid amount, must be a positive finite number');
+    });
+
+    it('throws `Invalid amount, out of bounds` error if receive amount is out of bounds', async () => {
+      createMockChainApiFactory();
+      const network = networks.testnet;
+      const caip2ChainId = Caip2ChainId.Testnet;
+      const { recipients, sender } = await createSenderNRecipients(
+        network,
+        caip2ChainId,
+        2,
+      );
 
       await expect(
         sendMany(sender, origin, {
@@ -471,7 +482,7 @@ describe('SendManyHandler', () => {
             [recipients[1].address]: '999999999.99999999',
           },
         }),
-      ).rejects.toThrow('Invalid amount for send');
+      ).rejects.toThrow('Invalid amount, out of bounds');
     });
 
     it('throws `Invalid response` error if the response is unexpected', async () => {

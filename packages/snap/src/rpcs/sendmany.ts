@@ -18,6 +18,7 @@ import {
   refine,
   optional,
   nonempty,
+  assert,
 } from 'superstruct';
 
 import {
@@ -37,6 +38,7 @@ import {
   validateRequest,
   validateResponse,
   logger,
+  AmountStruct,
 } from '../utils';
 
 export const TransactionAmountStruct = refine(
@@ -48,20 +50,7 @@ export const TransactionAmountStruct = refine(
     }
 
     for (const val of Object.values(value)) {
-      const parsedVal = parseFloat(val);
-      if (
-        Number.isNaN(parsedVal) ||
-        parsedVal <= 0 ||
-        !Number.isFinite(parsedVal)
-      ) {
-        return 'Invalid amount for send';
-      }
-
-      try {
-        btcToSats(val);
-      } catch (error) {
-        return 'Invalid amount for send';
-      }
+      assert(val, AmountStruct);
     }
 
     return true;
@@ -163,7 +152,7 @@ export async function sendMany(
     }
 
     if (error instanceof TxValidationError) {
-      throw error as unknown as Error;
+      throw error;
     }
 
     throw new Error('Failed to send the transaction');
