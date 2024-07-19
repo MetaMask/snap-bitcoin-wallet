@@ -345,7 +345,6 @@ const Index = () => {
         />
 
         <GetMaxSpendableBalanceCard
-          scope={scope}
           enabled={!(!installedSnap || !btcAccount)}
           account={btcAccount?.id ?? ''}
           fullWidth={
