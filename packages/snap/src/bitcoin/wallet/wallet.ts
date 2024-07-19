@@ -14,7 +14,11 @@ import type { SelectionResult } from './coin-select';
 import { CoinSelectService } from './coin-select';
 import { ScriptType } from './constants';
 import type { BtcAccountDeriver } from './deriver';
-import { WalletError, TxValidationError } from './exceptions';
+import {
+  WalletError,
+  TransactionDustError,
+  InsufficientFundsError,
+} from './exceptions';
 import { PsbtService } from './psbt';
 import { AccountSigner } from './signer';
 import { TxInfo } from './transaction-info';
@@ -126,7 +130,7 @@ export class BtcWallet {
     );
 
     if (!selectionResult.inputs || !selectionResult.outputs) {
-      throw new TxValidationError('Insufficient funds');
+      throw new InsufficientFundsError();
     }
 
     const psbtService = new PsbtService(this._network);
@@ -234,7 +238,7 @@ export class BtcWallet {
   ): TxOutput[] {
     return recipients.map((recipient) => {
       if (isDust(recipient.value, scriptType)) {
-        throw new TxValidationError('Transaction amount too small');
+        throw new TransactionDustError();
       }
       const destinationScriptOutput = getScriptForDestination(
         recipient.address,
