@@ -32,12 +32,11 @@ describe('superstruct', () => {
       },
     );
 
-    it.each(['custom scope'])(
-      'throws error if the value is invalid: %s',
-      (val: string) => {
-        expect(() => assert(val, superstruct.ScopeStruct)).toThrow(Error);
-      },
-    );
+    it('throws error if the value is invalid', () => {
+      expect(() => assert('custom scope', superstruct.ScopeStruct)).toThrow(
+        Error,
+      );
+    });
   });
 
   describe('AssetsStruct', () => {
@@ -48,12 +47,11 @@ describe('superstruct', () => {
       },
     );
 
-    it.each(['custom asset'])(
-      'throws error if the value is invalid: %s',
-      (val: string) => {
-        expect(() => assert(val, superstruct.AssetsStruct)).toThrow(Error);
-      },
-    );
+    it('throws error if the value is invalid', () => {
+      expect(() => assert('custom asset', superstruct.ScopeStruct)).toThrow(
+        Error,
+      );
+    });
   });
 
   describe('TxIdStruct', () => {
