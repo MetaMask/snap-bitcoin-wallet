@@ -14,12 +14,10 @@ const InputText = styled.input`
 export const EstimateFeeCard = ({
   enabled,
   fullWidth,
-  scope,
   account,
 }: {
   enabled: boolean;
   fullWidth: boolean;
-  scope: string;
   account: string;
 }) => {
   const invokeSnap = useInvokeSnap();
@@ -34,7 +32,6 @@ export const EstimateFeeCard = ({
     await invokeSnap({
       method: 'estimateFee',
       params: {
-        scope,
         account,
         amount,
       },

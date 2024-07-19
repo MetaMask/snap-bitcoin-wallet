@@ -334,7 +334,6 @@ const Index = () => {
         />
 
         <EstimateFeeCard
-          scope={scope}
           enabled={!(!installedSnap || !btcAccount)}
           account={btcAccount?.id ?? ''}
           fullWidth={
