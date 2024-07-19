@@ -32,7 +32,7 @@ export const EstimateFeeCard = ({
 
   const handleClick = async () => {
     await invokeSnap({
-      method: 'chain_estimateFee',
+      method: 'estimateFee',
       params: {
         scope,
         account,
