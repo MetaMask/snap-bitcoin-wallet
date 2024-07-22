@@ -1,4 +1,5 @@
 import { networks } from 'bitcoinjs-lib';
+import { Buffer } from 'buffer';
 
 import { generateFormattedUtxos } from '../../../test/utils';
 import { P2WPKHAccount, P2WPKHTestnetAccount } from './account';
