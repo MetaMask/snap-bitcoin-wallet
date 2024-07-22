@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import styled from 'styled-components';
 
-import { Card, EstimateFeesButton } from '.';
+import { Card, EstimateFeeButton } from '.';
 import { useInvokeSnap } from '../hooks';
 
 const InputText = styled.input`
@@ -46,7 +46,7 @@ export const EstimateFeeCard = ({
         button: (
           <>
             <InputText onChange={handleOnChange}></InputText>
-            <EstimateFeesButton onClick={handleClick} disabled={!enabled} />
+            <EstimateFeeButton onClick={handleClick} disabled={!enabled} />
           </>
         ),
       }}
