@@ -99,34 +99,14 @@ export const SendHelloButton = (props: ComponentProps<typeof Button>) => {
   return <Button {...props}>Send message</Button>;
 };
 
-export const CreateBTCAccountButton = (
-  props: ComponentProps<typeof Button>,
-) => {
-  return <Button {...props}>Create BTC Account</Button>;
-};
-
 export const GetBTCAccountBalanceButton = (
   props: ComponentProps<typeof Button>,
 ) => {
   return <Button {...props}>Get BTC Account balance</Button>;
 };
 
-export const GetDataForTransactionButton = (
-  props: ComponentProps<typeof Button>,
-) => {
-  return <Button {...props}>Get Data for Transaction</Button>;
-};
-
-export const EstimateFeesButton = (props: ComponentProps<typeof Button>) => {
-  return <Button {...props}>Estimate Fees</Button>;
-};
-
 export const ListAccountsButton = (props: ComponentProps<typeof Button>) => {
   return <Button {...props}>List Accounts</Button>;
-};
-
-export const BroadcastTxnButton = (props: ComponentProps<typeof Button>) => {
-  return <Button {...props}>Broadcast txn</Button>;
 };
 
 export const GetTransactionStatus = (props: ComponentProps<typeof Button>) => {

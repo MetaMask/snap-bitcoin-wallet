@@ -7,7 +7,6 @@ import {
   InstallFlaskButton,
   ReconnectButton,
   Card,
-  CreateBTCAccountButton,
   ListAccountsButton,
   SendManyCard,
   GetTransactionStatusCard,
@@ -154,19 +153,6 @@ const Index = () => {
     ? isFlask
     : snapsDetected;
 
-  const handleCreateAccountClick = async () => {
-    const account = (await invokeKeyring({
-      method: 'keyring_createAccount',
-      params: {
-        options: {
-          scope,
-        },
-      },
-    })) as KeyringAccount;
-
-    setBtcAccount(account);
-  };
-
   const handleListAccountClick = async () => {
     const accounts = (await invokeKeyring({
       method: 'keyring_listAccounts',
@@ -287,24 +273,6 @@ const Index = () => {
 
         <Card
           content={{
-            title: 'Create Account',
-            description: `Create BTC Account - ${btcAccount?.address ?? ''}`,
-            button: (
-              <CreateBTCAccountButton
-                onClick={handleCreateAccountClick}
-                disabled={!installedSnap}
-              />
-            ),
-          }}
-          disabled={!installedSnap}
-          fullWidth={
-            isMetaMaskReady &&
-            Boolean(installedSnap) &&
-            !shouldDisplayReconnectButton(installedSnap)
-          }
-        />
-        <Card
-          content={{
             title: 'List Account',
             description: `List BTC Account from Snap state`,
             button: (
@@ -331,37 +299,6 @@ const Index = () => {
             !shouldDisplayReconnectButton(installedSnap)
           }
         />
-
-        {/* <GetDataForTransactionCard
-          account={btcAccount?.address || ''}
-          scope={scope}
-          enabled={!(!installedSnap || !btcAccount)}
-          fullWidth={
-            isMetaMaskReady &&
-            Boolean(installedSnap) &&
-            !shouldDisplayReconnectButton(installedSnap)
-          }
-        />
-
-        <EstimateFeesCard
-          scope={scope}
-          enabled={!(!installedSnap || !btcAccount)}
-          fullWidth={
-            isMetaMaskReady &&
-            Boolean(installedSnap) &&
-            !shouldDisplayReconnectButton(installedSnap)
-          }
-        />
-
-        <BroadcastTxnCard
-          enabled={!(!installedSnap || !btcAccount)}
-          scope={scope}
-          fullWidth={
-            isMetaMaskReady &&
-            Boolean(installedSnap) &&
-            !shouldDisplayReconnectButton(installedSnap)
-          }
-        /> */}
 
         <SendManyCard
           enabled={!(!installedSnap || !btcAccount)}
