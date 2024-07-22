@@ -178,7 +178,7 @@ export class BtcKeyring implements Keyring {
           scope: walletData.scope,
         } as unknown as SendManyParams)) as unknown as Json;
       default:
-        throw new MethodNotFoundError(method) as unknown as Error;
+        throw new MethodNotFoundError() as unknown as Error;
     }
   }
 
