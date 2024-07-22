@@ -6,6 +6,7 @@ import { CoinSelectService } from './coin-select';
 import { DustLimit, ScriptType } from './constants';
 import { BtcAccountDeriver } from './deriver';
 import { WalletError } from './exceptions';
+import { PsbtService } from './psbt';
 import { TxInfo } from './transaction-info';
 import { TxInput } from './transaction-input';
 import { TxOutput } from './transaction-output';
@@ -244,6 +245,34 @@ describe('BtcWallet', () => {
       for (const output of coinSelectServiceSpy.mock.calls[0][1]) {
         expect(output).toBeInstanceOf(TxOutput);
       }
+    });
+
+    it('assigns a default value of False to `replaceable` if it is not defined', async () => {
+      const network = networks.testnet;
+      const { instance } = createMockDeriver(network);
+      const wallet = new BtcWallet(instance, network);
+      const chgAccount = await wallet.unlock(0, ScriptType.P2wpkh);
+      const recipient = await wallet.unlock(1, ScriptType.P2wpkh);
+      const utxos = generateFormattedUtxos(chgAccount.address, 1, 10000, 10000);
+      const psbtSpy = jest.spyOn(PsbtService.prototype, 'addInputs');
+
+      await wallet.createTransaction(
+        chgAccount,
+        createMockTxIndent(recipient.address, 500),
+        {
+          utxos,
+          fee: 1,
+          subtractFeeFrom: [],
+        },
+      );
+
+      expect(psbtSpy).toHaveBeenCalledWith(
+        expect.any(Array<TxInput>),
+        false,
+        expect.any(String),
+        expect.any(Buffer),
+        expect.any(Buffer),
+      );
     });
 
     it('remove dist change', async () => {
