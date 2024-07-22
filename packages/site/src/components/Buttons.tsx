@@ -109,7 +109,9 @@ export const ListAccountsButton = (props: ComponentProps<typeof Button>) => {
   return <Button {...props}>List Accounts</Button>;
 };
 
-export const GetTransactionStatus = (props: ComponentProps<typeof Button>) => {
+export const GetTransactionStatusButton = (
+  props: ComponentProps<typeof Button>,
+) => {
   return <Button {...props}>Get Status</Button>;
 };
 
