@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import styled from 'styled-components';
 
-import { Card, GetDataForTransactionButton } from '.';
+import { Card, GetTransactionStatusButton } from '.';
 import { useInvokeSnap } from '../hooks';
 
 const InputText = styled.input`
@@ -47,7 +47,7 @@ export const GetTransactionStatusCard = ({
         button: (
           <>
             <InputText onChange={handleOnChange}></InputText>
-            <GetDataForTransactionButton
+            <GetTransactionStatusButton
               onClick={handleClick}
               disabled={!enabled || !transactionId}
             />
