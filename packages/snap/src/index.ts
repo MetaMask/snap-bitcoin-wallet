@@ -46,7 +46,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       case InternalRpcMethod.EstimateFee:
         return await estimateFee(request.params as EstimateFeeParams);
       default:
-        throw new MethodNotFoundError(method) as unknown as Error;
+        throw new MethodNotFoundError() as unknown as Error;
     }
   } catch (error) {
     let snapError = error;
