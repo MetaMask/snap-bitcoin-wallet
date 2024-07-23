@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Use custom superstruct validator for `AmountStruct` ([#184](https://github.com/MetaMask/snap-bitcoin-wallet/pull/184))
+- Use custom `superstruct` validator for `AmountStruct` ([#184](https://github.com/MetaMask/snap-bitcoin-wallet/pull/184))
 
 ### Fixed
 
