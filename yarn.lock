@@ -2472,36 +2472,36 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lavamoat/aa@npm:^4.2.0":
-  version: 4.2.0
-  resolution: "@lavamoat/aa@npm:4.2.0"
+"@lavamoat/aa@npm:^4.3.0":
+  version: 4.3.0
+  resolution: "@lavamoat/aa@npm:4.3.0"
   dependencies:
     resolve: 1.22.8
   bin:
     lavamoat-ls: src/cli.js
-  checksum: bfc21f7d3f3310c1faddbb08f69d5f4cb23b819f85aceccfa516d3e8abcc8bcd547cf5d0ecf44fe195b8d7e61cc0566ebc564e532f1250d70b57a9db18d9a983
+  checksum: 41d83b512a88db71bbb3634febd5840614f1f39fa0b614499af2d6e9963180891b0350d8c38ce8d499142c9a6663711f983a3960f232f0d20f601c2a64912c30
   languageName: node
   linkType: hard
 
-"@lavamoat/allow-scripts@npm:^3.0.4":
-  version: 3.0.4
-  resolution: "@lavamoat/allow-scripts@npm:3.0.4"
+"@lavamoat/allow-scripts@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "@lavamoat/allow-scripts@npm:3.1.0"
   dependencies:
-    "@lavamoat/aa": ^4.2.0
+    "@lavamoat/aa": ^4.3.0
     "@npmcli/run-script": 7.0.4
-    bin-links: 4.0.3
+    bin-links: 4.0.4
     npm-normalize-package-bin: 3.0.1
     yargs: 17.7.2
   bin:
     allow-scripts: src/cli.js
-  checksum: ae40af4f152833d15f106aa0223c44abb8d7ba650e0c7e2189634860b8e7d3aaa6a6882ce278bfe17a1e33e77579c2fded36e935d57825ea852148324c7d5848
+  checksum: 1fa4f95e8696d29cf5bcd1c6a2f42e878786c0fdbaae61a2b3340cfd9783b9ed06f623a4359040792b0256da751c9eb0d2b984c7089bfdfac35bbc3fdd3152db
   languageName: node
   linkType: hard
 
-"@lavamoat/preinstall-always-fail@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "@lavamoat/preinstall-always-fail@npm:2.0.0"
-  checksum: a69c712e9a01029cacc8f77f7b9a944a285d9532583c09fc6050baef098d962d7dea18f17f446ca1f0ec3cd1eea07bfaedd583a704e016889cae1eba7f3552fd
+"@lavamoat/preinstall-always-fail@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "@lavamoat/preinstall-always-fail@npm:2.1.0"
+  checksum: 385c3fac828b9edff2d8b5825bd29ea475206046984cdb3217518ad655f145ff37046414041534960d92cbe0759f0dc675f7c7dcf39a95003ae715a834fbd750
   languageName: node
   linkType: hard
 
@@ -2668,7 +2668,7 @@ __metadata:
     "@metamask/keyring-api": ^8.0.1
     "@metamask/snaps-cli": ^6.2.1
     "@metamask/snaps-jest": ^8.2.0
-    "@metamask/snaps-sdk": ^6.0.0
+    "@metamask/snaps-sdk": ^6.1.0
     "@metamask/utils": ^9.1.0
     "@typescript-eslint/eslint-plugin": ^5.42.1
     "@typescript-eslint/parser": ^5.42.1
@@ -3320,7 +3320,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/snaps-sdk@npm:^6.0.0":
+"@metamask/snaps-sdk@npm:^6.0.0, @metamask/snaps-sdk@npm:^6.1.0":
   version: 6.1.0
   resolution: "@metamask/snaps-sdk@npm:6.1.0"
   dependencies:
@@ -6790,15 +6790,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bin-links@npm:4.0.3":
-  version: 4.0.3
-  resolution: "bin-links@npm:4.0.3"
+"bin-links@npm:4.0.4":
+  version: 4.0.4
+  resolution: "bin-links@npm:4.0.4"
   dependencies:
     cmd-shim: ^6.0.0
     npm-normalize-package-bin: ^3.0.0
     read-cmd-shim: ^4.0.0
     write-file-atomic: ^5.0.0
-  checksum: 3b3ee22efc38d608479d51675c8958a841b8b55b8975342ce86f28ac4e0bb3aef46e9dbdde976c6dc1fe1bd2aa00d42e00869ad35b57ee6d868f39f662858911
+  checksum: 9fca1fddaa3c1c9f7efd6fd7a6d991e3d8f6aaa9de5d0b9355469c2c594d8d06c9b2e0519bb0304202c14ddbe832d27b6d419d55cea4340e2c26116f9190e5c9
   languageName: node
   linkType: hard
 
@@ -6832,8 +6832,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "bitcoin-wallet-snap-monorepo@workspace:."
   dependencies:
-    "@lavamoat/allow-scripts": ^3.0.4
-    "@lavamoat/preinstall-always-fail": ^2.0.0
+    "@lavamoat/allow-scripts": ^3.1.0
+    "@lavamoat/preinstall-always-fail": ^2.1.0
     "@metamask/eslint-config": ^12.2.0
     "@metamask/eslint-config-jest": ^12.1.0
     "@metamask/eslint-config-nodejs": ^12.1.0
