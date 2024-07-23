@@ -9,11 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.5]
 
-### Uncategorized
+### Changed
 
-- chore: remove unused code for example dapp ([#192](https://github.com/MetaMask/snap-bitcoin-wallet/pull/192))
-- chore: update '@metamask/\*' dependencies ([#183](https://github.com/MetaMask/snap-bitcoin-wallet/pull/183))
-- chore: fix typos ([#176](https://github.com/MetaMask/snap-bitcoin-wallet/pull/176))
+- Remove unused code for example dapp ([#192](https://github.com/MetaMask/snap-bitcoin-wallet/pull/192))
+  - It's no longer possible to create accounts from the example dapp, it must be done from the extension.
 
 ## [0.2.4]
 

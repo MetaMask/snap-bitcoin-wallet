@@ -9,15 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.5]
 
-### Uncategorized
+### Added
 
-- chore: update internal dependencies ([#197](https://github.com/MetaMask/snap-bitcoin-wallet/pull/197))
-- chore: fix overrided message in MethodNotFoundError ([#189](https://github.com/MetaMask/snap-bitcoin-wallet/pull/189))
-- chore: add reusable error ([#185](https://github.com/MetaMask/snap-bitcoin-wallet/pull/185))
-- refactor: use custom superstruct validator for AmountStruct ([#184](https://github.com/MetaMask/snap-bitcoin-wallet/pull/184))
-- chore: update '@metamask/\*' dependencies ([#183](https://github.com/MetaMask/snap-bitcoin-wallet/pull/183))
-- chore: rename struct to pascal case ([#172](https://github.com/MetaMask/snap-bitcoin-wallet/pull/172))
-- chore: fix typos ([#176](https://github.com/MetaMask/snap-bitcoin-wallet/pull/176))
+- Add reusable error type ([#185](https://github.com/MetaMask/snap-bitcoin-wallet/pull/185))
+
+### Fixed
+
+- Fix overridden message in `MethodNotFoundError` ([#189](https://github.com/MetaMask/snap-bitcoin-wallet/pull/189))
+
+### Changed
+
+- Use custom superstruct validator for `AmountStruct` ([#184](https://github.com/MetaMask/snap-bitcoin-wallet/pull/184))
 
 ## [0.2.4]
 
