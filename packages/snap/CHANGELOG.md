@@ -13,13 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add reusable error type ([#185](https://github.com/MetaMask/snap-bitcoin-wallet/pull/185))
 
-### Fixed
-
-- Fix overridden message in `MethodNotFoundError` ([#189](https://github.com/MetaMask/snap-bitcoin-wallet/pull/189))
-
 ### Changed
 
 - Use custom superstruct validator for `AmountStruct` ([#184](https://github.com/MetaMask/snap-bitcoin-wallet/pull/184))
+
+### Fixed
+
+- Fix overridden message in `MethodNotFoundError` ([#189](https://github.com/MetaMask/snap-bitcoin-wallet/pull/189))
 
 ## [0.2.4]
 
