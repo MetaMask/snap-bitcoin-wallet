@@ -115,6 +115,7 @@ export class BtcWallet {
 
     const inputs = this.createTxInput(options.utxos, scriptOutput);
     const outputs = this.createTxOutput(recipients, scriptType);
+    // TODO: We could have the minimum fee rate coming from the parameter and use it here:
     const feeRate = this.getAndCheckFeeRate(options.fee);
 
     const selectionResult = this.selectCoins(
@@ -183,6 +184,7 @@ export class BtcWallet {
 
     const inputs = this.createTxInput(options.utxos, scriptOutput);
     const outputs = this.createTxOutput(recipients, scriptType);
+    // TODO: We could have the minimum fee rate coming from the parameter and use it here:
     const feeRate = this.getAndCheckFeeRate(options.fee);
 
     return this.selectCoins(
@@ -269,14 +271,15 @@ export class BtcWallet {
     }
   }
 
-  protected getAndCheckFeeRate(feeRate: number, minFeeRate = 1) {
+  protected getAndCheckFeeRate(feeRate: number) {
     // READ THIS CAREFULLY:
     // Do not ever accept a 0 fee rate, we need to ensure it is at least 1
-    if (feeRate < 0) {
+    if (feeRate <= 0) {
       logger.warn(
-        `Tried to use a fee rate lower than the minimum supported: ${feeRate} < 0`,
+        `Tried to use a fee rate lower than the minimum supported: ${feeRate} <= 0`,
       );
+      return 1;
     }
-    return Math.max(minFeeRate, feeRate);
+    return feeRate;
   }
 }
