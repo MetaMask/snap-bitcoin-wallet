@@ -115,9 +115,8 @@ export class BtcWallet {
 
     const inputs = this.createTxInput(options.utxos, scriptOutput);
     const outputs = this.createTxOutput(recipients, scriptType);
+    const feeRate = this.getAndCheckFeeRate(options.fee);
 
-    // Do not ever accept zero fee rate, we need to ensure it is at least 1
-    const feeRate = Math.max(1, options.fee);
     const selectionResult = this.selectCoins(
       inputs,
       outputs,
@@ -184,12 +183,13 @@ export class BtcWallet {
 
     const inputs = this.createTxInput(options.utxos, scriptOutput);
     const outputs = this.createTxOutput(recipients, scriptType);
+    const feeRate = this.getAndCheckFeeRate(options.fee);
 
     return this.selectCoins(
       inputs,
       outputs,
       new TxOutput(0, account.address, scriptOutput),
-      options.fee,
+      feeRate,
     );
   }
 
@@ -252,11 +252,8 @@ export class BtcWallet {
     inputs: TxInput[],
     outputs: TxOutput[],
     change: TxOutput,
-    fee: number,
+    feeRate: number,
   ): SelectionResult {
-    // TODO: The min fee rate should be setting from parameter
-    // Do not ever accept zero fee rate, we need to ensure it is at least 1
-    const feeRate = Math.max(1, fee);
     const coinSelectService = new CoinSelectService(feeRate);
     return coinSelectService.selectCoins(inputs, outputs, change);
   }
@@ -270,5 +267,16 @@ export class BtcWallet {
       default:
         throw new WalletError('Invalid network');
     }
+  }
+
+  protected getAndCheckFeeRate(feeRate: number, minFeeRate = 1) {
+    // READ THIS CAREFULLY:
+    // Do not ever accept a 0 fee rate, we need to ensure it is at least 1
+    if (feeRate < 0) {
+      logger.warn(
+        `Tried to use a fee rate lower than the minimum supported: ${feeRate} < 0`,
+      );
+    }
+    return Math.max(minFeeRate, feeRate);
   }
 }
