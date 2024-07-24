@@ -153,6 +153,13 @@ const Index = () => {
     ? isFlask
     : snapsDetected;
 
+  const isSnapReady =
+    isMetaMaskReady &&
+    Boolean(installedSnap) &&
+    !shouldDisplayReconnectButton(installedSnap);
+
+  const isAccountReady = Boolean(installedSnap) && btcAccount !== undefined;
+
   const handleListAccountClick = async () => {
     const accounts = (await invokeKeyring({
       method: 'keyring_listAccounts',
@@ -264,11 +271,7 @@ const Index = () => {
             ),
           }}
           disabled={!installedSnap}
-          fullWidth={
-            isMetaMaskReady &&
-            Boolean(installedSnap) &&
-            !shouldDisplayReconnectButton(installedSnap)
-          }
+          fullWidth={isSnapReady}
         />
 
         <Card
@@ -283,43 +286,27 @@ const Index = () => {
             ),
           }}
           disabled={!installedSnap}
-          fullWidth={
-            isMetaMaskReady &&
-            Boolean(installedSnap) &&
-            !shouldDisplayReconnectButton(installedSnap)
-          }
+          fullWidth={isSnapReady}
         />
         <GetBalancesCard
-          enabled={!(!installedSnap || !btcAccount)}
+          enabled={isAccountReady}
           account={btcAccount?.id ?? ''}
           scope={scope}
-          fullWidth={
-            isMetaMaskReady &&
-            Boolean(installedSnap) &&
-            !shouldDisplayReconnectButton(installedSnap)
-          }
+          fullWidth={isSnapReady}
         />
 
         <SendManyCard
-          enabled={!(!installedSnap || !btcAccount)}
+          enabled={isAccountReady}
           account={btcAccount?.id ?? ''}
           address={btcAccount?.address ?? ''}
           scope={scope}
-          fullWidth={
-            isMetaMaskReady &&
-            Boolean(installedSnap) &&
-            !shouldDisplayReconnectButton(installedSnap)
-          }
+          fullWidth={isSnapReady}
         />
 
         <GetTransactionStatusCard
-          enabled={!(!installedSnap || !btcAccount)}
+          enabled={isAccountReady}
           scope={scope}
-          fullWidth={
-            isMetaMaskReady &&
-            Boolean(installedSnap) &&
-            !shouldDisplayReconnectButton(installedSnap)
-          }
+          fullWidth={isSnapReady}
         />
       </CardContainer>
     </Container>
