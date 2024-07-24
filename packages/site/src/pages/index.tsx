@@ -158,7 +158,7 @@ const Index = () => {
     Boolean(installedSnap) &&
     !shouldDisplayReconnectButton(installedSnap);
 
-  const isAccountReady = installedSnap !== null && btcAccount !== undefined;
+  const isAccountReady = Boolean(installedSnap) && btcAccount !== undefined;
 
   const handleListAccountClick = async () => {
     const accounts = (await invokeKeyring({
