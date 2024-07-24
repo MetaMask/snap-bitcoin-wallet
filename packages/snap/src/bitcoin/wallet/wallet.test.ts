@@ -42,7 +42,7 @@ describe('BtcWallet', () => {
     };
   };
 
-  const createMockTxIndent = (address: string, amount: number) => {
+  const createMockTxIntent = (address: string, amount: number) => {
     return [
       {
         address,
@@ -160,7 +160,7 @@ describe('BtcWallet', () => {
 
       const result = await wallet.createTransaction(
         account,
-        createMockTxIndent(account.address, 100000),
+        createMockTxIntent(account.address, 100000),
         {
           utxos,
           fee: 56,
@@ -190,7 +190,7 @@ describe('BtcWallet', () => {
 
       const result = await wallet.createTransaction(
         account,
-        createMockTxIndent(account.address, 100000),
+        createMockTxIntent(account.address, 100000),
         {
           utxos,
           fee: 50,
@@ -224,7 +224,7 @@ describe('BtcWallet', () => {
 
       await wallet.createTransaction(
         account,
-        createMockTxIndent(account.address, DustLimit[account.scriptType] + 1),
+        createMockTxIntent(account.address, DustLimit[account.scriptType] + 1),
         {
           utxos,
           fee: 1,
@@ -248,7 +248,7 @@ describe('BtcWallet', () => {
       }
     });
 
-    it('assigns a default value of False to `replaceable` if it is not defined', async () => {
+    it('uses `replaceable = false` if not provided', async () => {
       const network = networks.testnet;
       const { instance } = createMockDeriver(network);
       const wallet = new BtcWallet(instance, network);
@@ -259,7 +259,7 @@ describe('BtcWallet', () => {
 
       await wallet.createTransaction(
         chgAccount,
-        createMockTxIndent(recipient.address, 500),
+        createMockTxIntent(recipient.address, 500),
         {
           utxos,
           fee: 1,
@@ -303,7 +303,7 @@ describe('BtcWallet', () => {
 
       const result = await wallet.createTransaction(
         chgAccount,
-        createMockTxIndent(recipient.address, 500),
+        createMockTxIntent(recipient.address, 500),
         {
           utxos,
           fee: 1,
@@ -328,7 +328,7 @@ describe('BtcWallet', () => {
       await expect(
         wallet.createTransaction(
           account,
-          createMockTxIndent(account.address, 1),
+          createMockTxIntent(account.address, 1),
           {
             utxos,
             fee: 20,
@@ -339,7 +339,7 @@ describe('BtcWallet', () => {
       ).rejects.toThrow('Transaction amount too small');
     });
 
-    it('throws `Insufficient funds` error if the given utxos is insufficient', async () => {
+    it('throws `Insufficient funds` error if the given utxos total amount is insufficient', async () => {
       const network = networks.testnet;
       const { instance } = createMockDeriver(network);
       const wallet = new BtcWallet(instance, network);
@@ -350,7 +350,7 @@ describe('BtcWallet', () => {
       await expect(
         wallet.createTransaction(
           chgAccount,
-          createMockTxIndent(recipient.address, 50000),
+          createMockTxIntent(recipient.address, 50000),
           {
             utxos,
             fee: 20,
@@ -372,7 +372,7 @@ describe('BtcWallet', () => {
 
       const { tx } = await wallet.createTransaction(
         account,
-        createMockTxIndent(account.address, DustLimit[account.scriptType] + 1),
+        createMockTxIntent(account.address, DustLimit[account.scriptType] + 1),
         {
           utxos,
           fee: 1,
@@ -420,7 +420,7 @@ describe('BtcWallet', () => {
 
       const result = await wallet.estimateFee(
         chgAccount,
-        createMockTxIndent(
+        createMockTxIntent(
           chgAccount.address,
           DustLimit[chgAccount.scriptType] + 1,
         ),

@@ -40,7 +40,7 @@ export class CoinSelectService {
     };
 
     if (result.outputs) {
-      // restructure outputs to avoid depends on coinselect output format
+      // Re-structure outputs to avoid depending on `coinSelect` output structure
       for (const output of result.outputs) {
         if (output.address) {
           selectedResult.outputs.push(output);

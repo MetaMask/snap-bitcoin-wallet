@@ -47,7 +47,7 @@ describe('EstimateFeeHandler', () => {
     };
 
     const getHdPath = (index: number) => {
-      return `m/0'.0/${index}`;
+      return `m/0'/0/${index}`;
     };
 
     const createAccount = async (network, caip2ChainId: string) => {
@@ -225,7 +225,7 @@ describe('EstimateFeeHandler', () => {
       ).rejects.toThrow(AccountNotFoundError);
     });
 
-    it('throws `Failed to estimate fee` error if no fee rate returns from chain service', async () => {
+    it('throws `Failed to estimate fee` error if no fee rate is returned from the chain service', async () => {
       const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
       const { keyringAccount } = await createAccount(network, caip2ChainId);

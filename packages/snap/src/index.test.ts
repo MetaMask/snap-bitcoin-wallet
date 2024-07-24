@@ -68,27 +68,27 @@ describe('onRpcRequest', () => {
 
   it.each([
     {
-      rpcKey: InternalRpcMethod.EstimateFee,
-      fnKey: 'estimateFee',
+      rpcMethod: InternalRpcMethod.EstimateFee,
+      method: 'estimateFee',
       mockUtil: estimateFeeRpc,
     },
     {
-      rpcKey: InternalRpcMethod.GetTransactionStatus,
-      fnKey: 'getTransactionStatus',
+      rpcMethod: InternalRpcMethod.GetTransactionStatus,
+      method: 'getTransactionStatus',
       mockUtil: getTxStatusRpc,
     },
   ])(
     'executes the rpc request with method: $rpcKey',
-    async (method: {
-      rpcKey: InternalRpcMethod;
-      fnKey: string;
+    async (testData: {
+      rpcMethod: InternalRpcMethod;
+      method: string;
       mockUtil: any;
     }) => {
-      const spy = jest.spyOn(method.mockUtil, method.fnKey);
+      const spy = jest.spyOn(testData.mockUtil, testData.method);
 
       spy.mockReturnThis();
 
-      await executeRequest(method.rpcKey);
+      await executeRequest(testData.rpcMethod);
 
       expect(spy).toHaveBeenCalled();
     },

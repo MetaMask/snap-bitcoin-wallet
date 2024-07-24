@@ -13,6 +13,7 @@ const dappPermissions = new Set([
   KeyringRpcMethod.SubmitRequest,
   // Chain API methods
   InternalRpcMethod.GetTransactionStatus,
+  // Internal methods
   InternalRpcMethod.EstimateFee,
 ]);
 

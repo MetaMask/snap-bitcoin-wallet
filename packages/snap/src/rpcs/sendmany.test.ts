@@ -517,7 +517,7 @@ describe('SendManyHandler', () => {
       ).rejects.toThrow(UserRejectedRequestError);
     });
 
-    it('throws `Failed to send the transaction` error if no fee rate returns from chain service', async () => {
+    it('throws `Failed to send the transaction` error if no fee rate is returned from the chain service', async () => {
       const { getFeeRatesSpy } = createMockChainApiFactory();
       const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
