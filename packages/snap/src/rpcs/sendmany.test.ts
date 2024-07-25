@@ -9,7 +9,7 @@ import {
   generateBlockChairBroadcastTransactionResp,
   generateBlockChairGetUtxosResp,
 } from '../../test/utils';
-import { BtcOnChainService, FeeRatio } from '../bitcoin/chain';
+import { BtcOnChainService } from '../bitcoin/chain';
 import type { BtcAccount } from '../bitcoin/wallet';
 import {
   BtcAccountDeriver,
