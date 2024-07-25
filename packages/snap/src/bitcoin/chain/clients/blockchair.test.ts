@@ -10,7 +10,7 @@ import {
 import { Config } from '../../../config';
 import type { BtcAccount } from '../../wallet';
 import { BtcAccountDeriver, BtcWallet } from '../../wallet';
-import { FeeRatio, TransactionStatus } from '../constants';
+import { TransactionStatus } from '../constants';
 import { DataClientError } from '../exceptions';
 import { BlockChairClient } from './blockchair';
 
@@ -221,7 +221,7 @@ describe('BlockChairClient', () => {
       const result = await instance.getFeeRates();
 
       expect(result).toStrictEqual({
-        [FeeRatio.Fast]:
+        [Config.defaultFeeRate]:
           mockResponse.data.suggested_transaction_fee_per_byte_sat,
       });
     });

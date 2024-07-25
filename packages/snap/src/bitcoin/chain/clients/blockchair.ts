@@ -3,8 +3,9 @@ import type { Json } from '@metamask/snaps-sdk';
 import { type Network, networks } from 'bitcoinjs-lib';
 import { array, assert } from 'superstruct';
 
+import { Config } from '../../../config';
 import { compactError, logger, TxIdStruct } from '../../../utils';
-import { FeeRatio, TransactionStatus } from '../constants';
+import { TransactionStatus } from '../constants';
 import type {
   IDataClient,
   DataClientGetBalancesResp,
@@ -384,7 +385,7 @@ export class BlockChairClient implements IDataClient {
         `[BlockChairClient.getFeeRates] response: ${JSON.stringify(response)}`,
       );
       return {
-        [FeeRatio.Fast]: response.data.suggested_transaction_fee_per_byte_sat,
+        [Config.defaultFeeRate]: response.data.suggested_transaction_fee_per_byte_sat,
       };
     } catch (error) {
       logger.info(`[BlockChairClient.getFeeRates] error: ${error.message}`);

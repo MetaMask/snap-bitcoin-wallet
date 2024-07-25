@@ -29,10 +29,7 @@ export type Fee = {
 };
 
 export type Fees = {
-  fees: {
-    type: FeeRatio;
-    rate: bigint;
-  }[];
+  fees: Fee[];
 };
 
 export type Utxo = {
