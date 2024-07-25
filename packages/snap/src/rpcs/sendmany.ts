@@ -39,8 +39,8 @@ import {
   validateResponse,
   logger,
   AmountStruct,
+  getFeeRate,
 } from '../utils';
-import { getFeeRate } from '../utils/fee';
 
 export const TransactionAmountStruct = refine(
   record(BtcP2wpkhAddressStruct, string()),
