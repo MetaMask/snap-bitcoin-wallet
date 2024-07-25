@@ -7,7 +7,7 @@ import {
   generateBlockChairGetUtxosResp,
 } from '../../../test/utils';
 import { Caip2Asset } from '../../constants';
-import { FeeRatio, TransactionStatus } from './constants';
+import { FeeRate, TransactionStatus } from './constants';
 import type { IDataClient } from './data-client';
 import { BtcOnChainServiceError } from './exceptions';
 import { BtcOnChainService } from './service';
@@ -168,8 +168,8 @@ describe('BtcOnChainService', () => {
       const { instance, getFeeRatesSpy } = createMockDataClient();
       const { instance: txMgr } = createMockBtcService(instance);
       getFeeRatesSpy.mockResolvedValue({
-        [FeeRatio.Fast]: 1,
-        [FeeRatio.Medium]: 2,
+        [FeeRate.Fast]: 1,
+        [FeeRate.Medium]: 2,
       });
 
       const result = await txMgr.getFeeRates();
@@ -178,11 +178,11 @@ describe('BtcOnChainService', () => {
       expect(result).toStrictEqual({
         fees: [
           {
-            type: FeeRatio.Fast,
+            type: FeeRate.Fast,
             rate: BigInt(1),
           },
           {
-            type: FeeRatio.Medium,
+            type: FeeRate.Medium,
             rate: BigInt(2),
           },
         ],
