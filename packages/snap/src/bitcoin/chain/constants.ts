@@ -1,4 +1,4 @@
-export enum FeeRatio {
+export enum FeeRate {
   Fast = 'fast',
   Medium = 'medium',
   Slow = 'slow',

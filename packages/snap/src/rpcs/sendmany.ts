@@ -26,7 +26,6 @@ import {
   type ITxInfo,
   TxValidationError,
 } from '../bitcoin/wallet';
-import { FeeRateUnavailableError } from '../exceptions';
 import { Factory } from '../factory';
 import {
   ScopeStruct,
@@ -40,6 +39,7 @@ import {
   validateResponse,
   logger,
   AmountStruct,
+  getFeeRate,
 } from '../utils';
 
 export const TransactionAmountStruct = refine(
@@ -98,14 +98,7 @@ export async function sendMany(
 
     const feesResp = await chainApi.getFeeRates();
 
-    if (feesResp.fees.length === 0) {
-      throw new FeeRateUnavailableError();
-    }
-
-    const fee = Math.max(
-      Number(feesResp.fees[feesResp.fees.length - 1].rate),
-      1,
-    );
+    const fee = getFeeRate(feesResp.fees);
 
     const recipients = Object.entries(params.amounts).map(
       ([address, value]) => ({
