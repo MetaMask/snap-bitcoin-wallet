@@ -10,3 +10,4 @@ export * from './explorer';
 export * from './unit';
 export * from './logger';
 export * from './fee';
+export * from './account';

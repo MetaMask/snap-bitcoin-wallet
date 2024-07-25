@@ -4,7 +4,7 @@ import { networks } from 'bitcoinjs-lib';
 import { v4 as uuidV4 } from 'uuid';
 
 import { generateBlockChairGetUtxosResp } from '../../test/utils';
-import { BtcOnChainService, FeeRatio } from '../bitcoin/chain';
+import { BtcOnChainService } from '../bitcoin/chain';
 import {
   BtcAccountDeriver,
   BtcWallet,
@@ -146,7 +146,7 @@ describe('EstimateFeeHandler', () => {
       getFeeRatesSpy.mockResolvedValue({
         fees: [
           {
-            type: FeeRatio.Fast,
+            type: Config.defaultFeeRate,
             rate: BigInt(1),
           },
         ],
@@ -263,7 +263,7 @@ describe('EstimateFeeHandler', () => {
       getFeeRatesSpy.mockResolvedValue({
         fees: [
           {
-            type: FeeRatio.Fast,
+            type: Config.defaultFeeRate,
             rate: BigInt(1),
           },
         ],

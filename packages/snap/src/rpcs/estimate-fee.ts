@@ -15,6 +15,7 @@ import {
   AmountStruct,
   satsToBtc,
   getFeeRate,
+  verifyIfAccountValid,
 } from '../utils';
 
 export const EstimateFeeParamsStruct = object({
@@ -61,9 +62,7 @@ export async function estimateFee(params: EstimateFeeParams) {
       walletData.account.type,
     );
 
-    if (!account || account.address !== walletData.account.address) {
-      throw new AccountNotFoundError();
-    }
+    verifyIfAccountValid(account, walletData.account);
 
     const chainApi = Factory.createOnChainServiceProvider(walletData.scope);
 
