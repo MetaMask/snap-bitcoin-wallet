@@ -35,7 +35,9 @@ export type EstimateFeeResponse = Infer<typeof EstimateFeeResponseStruct>;
 /**
  * Estimate transaction fee.
  *
- * @param params - The parameters for estimate the fee.
+ * This function will traverse account's UTXOs to verify the amount and compute the fee estimation.
+ *
+ * @param params - The parameters to use when estimating the fee.
  * @returns A Promise that resolves to an EstimateFeeResponse object.
  */
 export async function estimateFee(params: EstimateFeeParams) {

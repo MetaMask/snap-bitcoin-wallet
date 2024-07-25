@@ -296,13 +296,9 @@ const Index = () => {
           fullWidth={isSnapReady}
         />
         <EstimateFeeCard
-          enabled={!(!installedSnap || !btcAccount)}
+          enabled={isAccountReady}
           account={btcAccount?.id ?? ''}
-          fullWidth={
-            isMetaMaskReady &&
-            Boolean(installedSnap) &&
-            !shouldDisplayReconnectButton(installedSnap)
-          }
+          fullWidth={isSnapReady}
         />
         <SendManyCard
           enabled={isAccountReady}
