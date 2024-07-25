@@ -3,7 +3,7 @@ import { networks } from 'bitcoinjs-lib';
 
 import { Caip2Asset } from '../../constants';
 import { compactError } from '../../utils';
-import type { FeeRatio, TransactionStatus } from './constants';
+import type { FeeRate, TransactionStatus } from './constants';
 import type { IDataClient } from './data-client';
 import { BtcOnChainServiceError } from './exceptions';
 
@@ -24,7 +24,7 @@ export type AssetBalances = {
 };
 
 export type Fee = {
-  type: FeeRatio;
+  type: FeeRate;
   rate: bigint;
 };
 
@@ -122,7 +122,7 @@ export class BtcOnChainService {
 
       return {
         fees: Object.entries(result).map(
-          ([key, value]: [key: FeeRatio, value: number]) => ({
+          ([key, value]: [key: FeeRate, value: number]) => ({
             type: key,
             rate: BigInt(value),
           }),

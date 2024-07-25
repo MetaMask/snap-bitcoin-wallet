@@ -1,7 +1,7 @@
 import { assert, enums } from 'superstruct';
 
 import type { Fee } from '../bitcoin/chain';
-import { FeeRatio } from '../bitcoin/chain/constants';
+import { FeeRate } from '../bitcoin/chain/constants';
 import { Config } from '../config';
 import { FeeRateUnavailableError } from '../exceptions';
 
@@ -16,9 +16,9 @@ import { FeeRateUnavailableError } from '../exceptions';
  */
 export function getFeeRate(
   fees: Fee[],
-  feeType: FeeRatio = Config.defaultFeeRate,
+  feeType: FeeRate = Config.defaultFeeRate,
 ) {
-  assert(feeType, enums(Object.values(FeeRatio)));
+  assert(feeType, enums(Object.values(FeeRate)));
 
   const selectedFees = fees.find((fee) => fee.type === feeType);
 

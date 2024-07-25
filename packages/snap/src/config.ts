@@ -1,6 +1,6 @@
 import type { Json } from '@metamask/snaps-sdk';
 
-import { FeeRatio } from './bitcoin/chain/constants';
+import { FeeRate } from './bitcoin/chain/constants';
 import { Caip2ChainId, Caip2Asset } from './constants';
 
 export type SnapConfig = {
@@ -15,7 +15,7 @@ export type SnapConfig = {
   };
   availableNetworks: string[];
   availableAssets: string[];
-  defaultFeeRate: FeeRatio;
+  defaultFeeRate: FeeRate;
   unit: string;
   explorer: {
     [network in string]: string;
@@ -38,7 +38,7 @@ export const Config: SnapConfig = {
   },
   availableNetworks: Object.values(Caip2ChainId),
   availableAssets: Object.values(Caip2Asset),
-  defaultFeeRate: FeeRatio.Medium,
+  defaultFeeRate: FeeRate.Medium,
   unit: 'BTC',
   explorer: {
     // eslint-disable-next-line no-template-curly-in-string

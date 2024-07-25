@@ -1,4 +1,4 @@
-import type { FeeRatio } from './constants';
+import type { FeeRate } from './constants';
 import type { TransactionStatusData, Utxo } from './service';
 
 export type DataClientGetBalancesResp = Record<string, number>;
@@ -6,7 +6,7 @@ export type DataClientGetBalancesResp = Record<string, number>;
 export type DataClientGetUtxosResp = Utxo[];
 
 export type DataClientGetFeeRatesResp = {
-  [key in FeeRatio]?: number;
+  [key in FeeRate]?: number;
 };
 
 export type DataClientGetTxStatusResp = TransactionStatusData;
