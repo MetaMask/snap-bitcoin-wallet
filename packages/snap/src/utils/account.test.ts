@@ -71,7 +71,7 @@ describe('verifyIfAccountValid', function () {
     ).toThrow(AccountNotFoundError);
   });
 
-  it("throws `Inconsistent account found` error if the BtcAccount'address is not match with the KeyringAccount's address", async function () {
+  it("throws `Inconsistent account found` error if the BtcAccount's address is not matching the KeyringAccount's address", async function () {
     const btcAccount = await createBtcAccount(networks.testnet, 0);
     const inconsistentBtcAccount = await createBtcAccount(networks.testnet, 1);
     const keyringAccount = createKeyringAccount(
