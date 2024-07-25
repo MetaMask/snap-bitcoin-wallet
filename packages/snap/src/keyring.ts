@@ -24,6 +24,7 @@ import { Factory } from './factory';
 import { getBalances, type SendManyParams, sendMany } from './rpcs';
 import type { KeyringStateManager, Wallet } from './stateManagement';
 import { getProvider, ScopeStruct, logger } from './utils';
+import { verifyIfAccountValid } from './utils/account';
 
 export type KeyringOptions = Record<string, Json> & {
   defaultIndex: number;
@@ -168,7 +169,8 @@ export class BtcKeyring implements Keyring {
       walletData.account.type,
     );
 
-    this.verifyIfAccountValid(account, walletData.account);
+    verifyIfAccountValid(account, walletData.account);
+
     this.verifyIfMethodValid(method, walletData.account);
 
     switch (method) {
@@ -202,7 +204,7 @@ export class BtcKeyring implements Keyring {
         walletData.account.type,
       );
 
-      this.verifyIfAccountValid(account, walletData.account);
+      verifyIfAccountValid(account, walletData.account);
 
       return await getBalances(account, {
         assets,
@@ -235,15 +237,6 @@ export class BtcKeyring implements Keyring {
     type: string,
   ): Promise<BtcAccount> {
     return await wallet.unlock(index, type);
-  }
-
-  protected verifyIfAccountValid(
-    account: BtcAccount,
-    keyringAccount: KeyringAccount,
-  ): void {
-    if (!account || account.address !== keyringAccount.address) {
-      throw new AccountNotFoundError();
-    }
   }
 
   protected verifyIfMethodValid(
