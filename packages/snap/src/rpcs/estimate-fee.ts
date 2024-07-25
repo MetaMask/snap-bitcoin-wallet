@@ -2,7 +2,7 @@ import { object, string, type Infer, nonempty, enums } from 'superstruct';
 
 import { TxValidationError } from '../bitcoin/wallet';
 import { Config } from '../config';
-import { AccountNotFoundError, FeeRateUnavailableError } from '../exceptions';
+import { AccountNotFoundError } from '../exceptions';
 import { Factory } from '../factory';
 import { KeyringStateManager } from '../stateManagement';
 import {
@@ -14,6 +14,7 @@ import {
   PositiveNumberStringStruct,
   AmountStruct,
   satsToBtc,
+  getFeeRate,
 } from '../utils';
 
 export const EstimateFeeParamsStruct = object({
@@ -68,14 +69,7 @@ export async function estimateFee(params: EstimateFeeParams) {
 
     const feesResp = await chainApi.getFeeRates();
 
-    if (feesResp.fees.length === 0) {
-      throw new FeeRateUnavailableError();
-    }
-
-    const fee = Math.max(
-      Number(feesResp.fees[feesResp.fees.length - 1].rate),
-      1,
-    );
+    const fee = getFeeRate(feesResp.fees);
 
     const metadata = await chainApi.getDataForTransaction(account.address);
 
