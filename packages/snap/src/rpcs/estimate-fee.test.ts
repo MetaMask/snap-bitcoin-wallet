@@ -196,7 +196,7 @@ describe('EstimateFeeHandler', () => {
       ).rejects.toThrow(AccountNotFoundError);
     });
 
-    it('throws `AccountNotFoundError` if the derived account is not match with the state', async () => {
+    it('throws `AccountNotFoundError` if the derived account is not matching with the account from state', async () => {
       const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
       const { getWalletSpy, keyringAccount, wallet, sender } =
@@ -242,7 +242,7 @@ describe('EstimateFeeHandler', () => {
       ).rejects.toThrow('Failed to estimate fee');
     });
 
-    it('throws `Transaction amount too small` error if estimate amount is dust', async () => {
+    it('throws `Transaction amount too small` error if amount to estimate for is considered dust', async () => {
       const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
       const { sender, keyringAccount } = await createAccount(
