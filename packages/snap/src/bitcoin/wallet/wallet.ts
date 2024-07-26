@@ -101,6 +101,7 @@ export class BtcWallet {
    * @param recipients - The transaction recipients.
    * @param options - The options to use when creating the transaction.
    * @returns A promise that resolves to an object containing the transaction hash and transaction info.
+   * @throws {TxValidationError} Throws a TxValidationError if there are insufficient funds to complete the transaction.
    */
   async createTransaction(
     account: BtcAccount,
@@ -119,9 +120,9 @@ export class BtcWallet {
 
     const inputs = this.createTxInput(options.utxos, scriptOutput);
     const outputs = this.createTxOutput(recipients, scriptType);
+    // TODO: We could have the minimum fee rate coming from the parameter and use it here:
+    const feeRate = this.getFeeRate(options.fee);
 
-    // Do not ever accept zero fee rate, we need to ensure it is at least 1
-    const feeRate = Math.max(1, options.fee);
     const selectionResult = this.selectCoins(
       inputs,
       outputs,
@@ -188,12 +189,14 @@ export class BtcWallet {
 
     const inputs = this.createTxInput(options.utxos, scriptOutput);
     const outputs = this.createTxOutput(recipients, scriptType);
+    // TODO: We could have the minimum fee rate coming from the parameter and use it here:
+    const feeRate = this.getFeeRate(options.fee);
 
     return this.selectCoins(
       inputs,
       outputs,
       new TxOutput(0, account.address, scriptOutput),
-      options.fee,
+      feeRate,
     );
   }
 
@@ -256,11 +259,8 @@ export class BtcWallet {
     inputs: TxInput[],
     outputs: TxOutput[],
     change: TxOutput,
-    fee: number,
+    feeRate: number,
   ): SelectionResult {
-    // TODO: The min fee rate should be setting from parameter
-    // Do not ever accept zero fee rate, we need to ensure it is at least 1
-    const feeRate = Math.max(1, fee);
     const coinSelectService = new CoinSelectService(feeRate);
     return coinSelectService.selectCoins(inputs, outputs, change);
   }
@@ -274,5 +274,11 @@ export class BtcWallet {
       default:
         throw new WalletError('Invalid network');
     }
+  }
+
+  protected getFeeRate(feeRate: number) {
+    // READ THIS CAREFULLY:
+    // Do not ever accept a 0 fee rate, we need to ensure it is at least 1
+    return Math.max(feeRate, 1);
   }
 }

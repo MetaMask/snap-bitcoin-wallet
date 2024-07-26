@@ -2,7 +2,7 @@ import { object, string, type Infer, nonempty, enums } from 'superstruct';
 
 import { TxValidationError } from '../bitcoin/wallet';
 import { Config } from '../config';
-import { AccountNotFoundError, FeeRateUnavailableError } from '../exceptions';
+import { AccountNotFoundError } from '../exceptions';
 import { Factory } from '../factory';
 import { KeyringStateManager } from '../stateManagement';
 import {
@@ -14,6 +14,8 @@ import {
   PositiveNumberStringStruct,
   AmountStruct,
   satsToBtc,
+  getFeeRate,
+  verifyIfAccountValid,
 } from '../utils';
 
 export const EstimateFeeParamsStruct = object({
@@ -35,7 +37,9 @@ export type EstimateFeeResponse = Infer<typeof EstimateFeeResponseStruct>;
 /**
  * Estimate transaction fee.
  *
- * @param params - The parameters for estimate the fee.
+ * This function will traverse account's UTXOs to verify the amount and compute the fee estimation.
+ *
+ * @param params - The parameters to use when estimating the fee.
  * @returns A Promise that resolves to an EstimateFeeResponse object.
  */
 export async function estimateFee(params: EstimateFeeParams) {
@@ -58,27 +62,18 @@ export async function estimateFee(params: EstimateFeeParams) {
       walletData.account.type,
     );
 
-    if (!account || account.address !== walletData.account.address) {
-      throw new AccountNotFoundError();
-    }
+    verifyIfAccountValid(account, walletData.account);
 
     const chainApi = Factory.createOnChainServiceProvider(walletData.scope);
 
     const feesResp = await chainApi.getFeeRates();
 
-    if (feesResp.fees.length === 0) {
-      throw new FeeRateUnavailableError();
-    }
-
-    const fee = Math.max(
-      Number(feesResp.fees[feesResp.fees.length - 1].rate),
-      1,
-    );
+    const fee = getFeeRate(feesResp.fees);
 
     const metadata = await chainApi.getDataForTransaction(account.address);
 
-    // TODO: when multi address support, change this to pull first address from account
-    // As Estimate fee does not require an recipitent address, so we have to use the account address
+    // TODO: change this to use the first address from account when we support multi-addresses per accounts
+    // We do not need the real recipient address when estimating the fees, so we just use our account's address here
     const recipients = [
       {
         address: account.address,
@@ -90,6 +85,18 @@ export async function estimateFee(params: EstimateFeeParams) {
       utxos: metadata.data.utxos,
       fee,
     });
+
+    // The fee estimation will be inaccurate when:
+    // - The account has no input (no UTXOs)
+    // - The account does not have enough funds to cover the requested amount
+    // - There is no output when computing the estimation
+    //
+    // NOTE: It is by design that we do not raise any error for now
+    if (!result.inputs || !result.outputs) {
+      logger.warn(
+        'No input or output found, fee estimation might be inaccurate',
+      );
+    }
 
     const resp: EstimateFeeResponse = {
       fee: {

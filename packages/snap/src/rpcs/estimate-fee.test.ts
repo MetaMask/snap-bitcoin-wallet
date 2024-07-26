@@ -4,7 +4,7 @@ import { networks } from 'bitcoinjs-lib';
 import { v4 as uuidV4 } from 'uuid';
 
 import { generateBlockChairGetUtxosResp } from '../../test/utils';
-import { BtcOnChainService, FeeRatio } from '../bitcoin/chain';
+import { BtcOnChainService } from '../bitcoin/chain';
 import {
   BtcAccountDeriver,
   BtcWallet,
@@ -47,7 +47,7 @@ describe('EstimateFeeHandler', () => {
     };
 
     const getHdPath = (index: number) => {
-      return `m/0'.0/${index}`;
+      return `m/0'/0/${index}`;
     };
 
     const createAccount = async (network, caip2ChainId: string) => {
@@ -146,7 +146,7 @@ describe('EstimateFeeHandler', () => {
       getFeeRatesSpy.mockResolvedValue({
         fees: [
           {
-            type: FeeRatio.Fast,
+            type: Config.defaultFeeRate,
             rate: BigInt(1),
           },
         ],
@@ -196,7 +196,7 @@ describe('EstimateFeeHandler', () => {
       ).rejects.toThrow(AccountNotFoundError);
     });
 
-    it('throws `AccountNotFoundError` if the derived account is not match with the state', async () => {
+    it('throws `AccountNotFoundError` if the derived account is not matching with the account from state', async () => {
       const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
       const { getWalletSpy, keyringAccount, wallet, sender } =
@@ -225,7 +225,7 @@ describe('EstimateFeeHandler', () => {
       ).rejects.toThrow(AccountNotFoundError);
     });
 
-    it('throws `Failed to estimate fee` error if no fee rate returns from chain service', async () => {
+    it('throws `Failed to estimate fee` error if no fee rate is returned from the chain service', async () => {
       const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
       const { keyringAccount } = await createAccount(network, caip2ChainId);
@@ -242,7 +242,7 @@ describe('EstimateFeeHandler', () => {
       ).rejects.toThrow('Failed to estimate fee');
     });
 
-    it('throws `Transaction amount too small` error if estimate amount is dust', async () => {
+    it('throws `Transaction amount too small` error if amount to estimate for is considered dust', async () => {
       const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
       const { sender, keyringAccount } = await createAccount(
@@ -263,7 +263,7 @@ describe('EstimateFeeHandler', () => {
       getFeeRatesSpy.mockResolvedValue({
         fees: [
           {
-            type: FeeRatio.Fast,
+            type: Config.defaultFeeRate,
             rate: BigInt(1),
           },
         ],

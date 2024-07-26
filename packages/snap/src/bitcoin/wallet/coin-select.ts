@@ -24,7 +24,6 @@ export class CoinSelectService {
    * @param outputs - An array of output objects.
    * @param changeTo - The change output object.
    * @returns A SelectionResult object that includes the calculated transaction fee, selected inputs, outputs, and change (if any).
-   * @throws {TxValidationError} Throws a TxValidationError if there are insufficient funds to complete the transaction.
    */
   selectCoins(
     inputs: TxInput[],
@@ -40,7 +39,7 @@ export class CoinSelectService {
     };
 
     if (result.outputs) {
-      // restructure outputs to avoid depends on coinselect output format
+      // Re-structure outputs to avoid depending on `coinSelect` output structure
       for (const output of result.outputs) {
         if (output.address) {
           selectedResult.outputs.push(output);

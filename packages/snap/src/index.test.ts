@@ -7,10 +7,10 @@ import {
 
 import { onRpcRequest, validateOrigin, onKeyringRequest } from '.';
 import * as entry from '.';
-import { TransactionStatus } from './bitcoin/chain';
 import { Config } from './config';
 import { BtcKeyring } from './keyring';
 import { InternalRpcMethod, originPermissions } from './permissions';
+import * as estimateFeeRpc from './rpcs/estimate-fee';
 import * as getTxStatusRpc from './rpcs/get-transaction-status';
 
 jest.mock('./utils/logger');
@@ -50,7 +50,9 @@ describe('validateOrigin', () => {
 });
 
 describe('onRpcRequest', () => {
-  const executeRequest = async (method = 'chain_getTransactionStatus') => {
+  const executeRequest = async (
+    method = InternalRpcMethod.GetTransactionStatus,
+  ) => {
     jest.spyOn(entry, 'validateOrigin').mockReturnThis();
 
     return onRpcRequest({
@@ -64,20 +66,39 @@ describe('onRpcRequest', () => {
     });
   };
 
-  it('executes the rpc request', async () => {
-    jest.spyOn(getTxStatusRpc, 'getTransactionStatus').mockResolvedValue({
-      status: TransactionStatus.Confirmed,
-    } as unknown as getTxStatusRpc.GetTransactionStatusResponse);
+  it.each([
+    {
+      rpcMethod: InternalRpcMethod.EstimateFee,
+      method: 'estimateFee',
+      mockRpcModule: estimateFeeRpc,
+    },
+    {
+      rpcMethod: InternalRpcMethod.GetTransactionStatus,
+      method: 'getTransactionStatus',
+      mockRpcModule: getTxStatusRpc,
+    },
+  ])(
+    'executes the rpc request with method: $rpcKey',
+    async (testData: {
+      rpcMethod: InternalRpcMethod;
+      method: string;
+      mockRpcModule: any;
+    }) => {
+      const spy = jest.spyOn(testData.mockRpcModule, testData.method);
 
-    const resposne = await executeRequest();
+      spy.mockReturnThis();
 
-    expect(resposne).toStrictEqual({ status: TransactionStatus.Confirmed });
-  });
+      await executeRequest(testData.rpcMethod);
+
+      expect(spy).toHaveBeenCalled();
+    },
+  );
 
   it('throws MethodNotFoundError if an method not found', async () => {
-    await expect(executeRequest('some-not')).rejects.toThrow(
-      MethodNotFoundError,
-    );
+    // test a method that is not handled from the `onRpcRequest`
+    await expect(
+      executeRequest('not_aMethod' as unknown as InternalRpcMethod),
+    ).rejects.toThrow(MethodNotFoundError);
   });
 
   it('throws SnapError if the request is failed to execute', async () => {

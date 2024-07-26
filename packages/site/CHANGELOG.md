@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.5]
+
+### Changed
+
+- Remove unused code for example dapp ([#192](https://github.com/MetaMask/snap-bitcoin-wallet/pull/192))
+  - It's no longer possible to create accounts from the example dapp, it must be done from the extension.
+
 ## [0.2.4]
 
 ## [0.2.3]
@@ -60,7 +67,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - build(deps): bump @metamask/keyring-api from 5.1.0 to 6.0.0 ([#6](https://github.com/MetaMask/bitcoin/pull/6))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.2.4...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.2.5...HEAD
+[0.2.5]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.2.1...v0.2.2

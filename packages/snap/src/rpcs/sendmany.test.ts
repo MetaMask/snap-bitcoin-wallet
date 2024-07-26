@@ -9,7 +9,7 @@ import {
   generateBlockChairBroadcastTransactionResp,
   generateBlockChairGetUtxosResp,
 } from '../../test/utils';
-import { BtcOnChainService, FeeRatio } from '../bitcoin/chain';
+import { BtcOnChainService } from '../bitcoin/chain';
 import type { BtcAccount } from '../bitcoin/wallet';
 import {
   BtcAccountDeriver,
@@ -152,7 +152,7 @@ describe('SendManyHandler', () => {
       getFeeRatesSpy.mockResolvedValue({
         fees: [
           {
-            type: FeeRatio.Fast,
+            type: Config.defaultFeeRate,
             rate: BigInt(1),
           },
         ],
@@ -517,7 +517,7 @@ describe('SendManyHandler', () => {
       ).rejects.toThrow(UserRejectedRequestError);
     });
 
-    it('throws `Failed to send the transaction` error if no fee rate returns from chain service', async () => {
+    it('throws `Failed to send the transaction` error if no fee rate is returned from the chain service', async () => {
       const { getFeeRatesSpy } = createMockChainApiFactory();
       const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;

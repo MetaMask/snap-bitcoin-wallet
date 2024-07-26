@@ -14,7 +14,7 @@ const dappPermissions = new Set([
   KeyringRpcMethod.SubmitRequest,
   // Chain API methods
   InternalRpcMethod.GetTransactionStatus,
-  // Snap API methods
+  // Internal methods
   InternalRpcMethod.EstimateFee,
   InternalRpcMethod.GetMaxSpendableBalance,
 ]);

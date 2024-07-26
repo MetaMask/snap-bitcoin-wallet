@@ -7,7 +7,6 @@ import {
   InstallFlaskButton,
   ReconnectButton,
   Card,
-  CreateBTCAccountButton,
   ListAccountsButton,
   SendManyCard,
   GetTransactionStatusCard,
@@ -156,18 +155,12 @@ const Index = () => {
     ? isFlask
     : snapsDetected;
 
-  const handleCreateAccountClick = async () => {
-    const account = (await invokeKeyring({
-      method: 'keyring_createAccount',
-      params: {
-        options: {
-          scope,
-        },
-      },
-    })) as KeyringAccount;
+  const isSnapReady =
+    isMetaMaskReady &&
+    Boolean(installedSnap) &&
+    !shouldDisplayReconnectButton(installedSnap);
 
-    setBtcAccount(account);
-  };
+  const isAccountReady = Boolean(installedSnap) && btcAccount !== undefined;
 
   const handleListAccountClick = async () => {
     const accounts = (await invokeKeyring({
@@ -280,31 +273,9 @@ const Index = () => {
             ),
           }}
           disabled={!installedSnap}
-          fullWidth={
-            isMetaMaskReady &&
-            Boolean(installedSnap) &&
-            !shouldDisplayReconnectButton(installedSnap)
-          }
+          fullWidth={isSnapReady}
         />
 
-        <Card
-          content={{
-            title: 'Create Account',
-            description: `Create BTC Account - ${btcAccount?.address ?? ''}`,
-            button: (
-              <CreateBTCAccountButton
-                onClick={handleCreateAccountClick}
-                disabled={!installedSnap}
-              />
-            ),
-          }}
-          disabled={!installedSnap}
-          fullWidth={
-            isMetaMaskReady &&
-            Boolean(installedSnap) &&
-            !shouldDisplayReconnectButton(installedSnap)
-          }
-        />
         <Card
           content={{
             title: 'List Account',
@@ -317,84 +288,36 @@ const Index = () => {
             ),
           }}
           disabled={!installedSnap}
-          fullWidth={
-            isMetaMaskReady &&
-            Boolean(installedSnap) &&
-            !shouldDisplayReconnectButton(installedSnap)
-          }
+          fullWidth={isSnapReady}
         />
         <GetBalancesCard
-          enabled={!(!installedSnap || !btcAccount)}
+          enabled={isAccountReady}
           account={btcAccount?.id ?? ''}
           scope={scope}
-          fullWidth={
-            isMetaMaskReady &&
-            Boolean(installedSnap) &&
-            !shouldDisplayReconnectButton(installedSnap)
-          }
+          fullWidth={isSnapReady}
         />
-
         <EstimateFeeCard
-          enabled={!(!installedSnap || !btcAccount)}
+          enabled={isAccountReady}
           account={btcAccount?.id ?? ''}
-          fullWidth={
-            isMetaMaskReady &&
-            Boolean(installedSnap) &&
-            !shouldDisplayReconnectButton(installedSnap)
-          }
+          fullWidth={isSnapReady}
         />
-
         <GetMaxSpendableBalanceCard
-          enabled={!(!installedSnap || !btcAccount)}
+          enabled={isAccountReady}
           account={btcAccount?.id ?? ''}
-          fullWidth={
-            isMetaMaskReady &&
-            Boolean(installedSnap) &&
-            !shouldDisplayReconnectButton(installedSnap)
-          }
+          fullWidth={isSnapReady}
         />
-
-        {/* <GetDataForTransactionCard
-          account={btcAccount?.address || ''}
-          scope={scope}
-          enabled={!(!installedSnap || !btcAccount)}
-          fullWidth={
-            isMetaMaskReady &&
-            Boolean(installedSnap) &&
-            !shouldDisplayReconnectButton(installedSnap)
-          }
-        />
-
-        <BroadcastTxnCard
-          enabled={!(!installedSnap || !btcAccount)}
-          scope={scope}
-          fullWidth={
-            isMetaMaskReady &&
-            Boolean(installedSnap) &&
-            !shouldDisplayReconnectButton(installedSnap)
-          }
-        /> */}
-
         <SendManyCard
-          enabled={!(!installedSnap || !btcAccount)}
+          enabled={isAccountReady}
           account={btcAccount?.id ?? ''}
           address={btcAccount?.address ?? ''}
           scope={scope}
-          fullWidth={
-            isMetaMaskReady &&
-            Boolean(installedSnap) &&
-            !shouldDisplayReconnectButton(installedSnap)
-          }
+          fullWidth={isSnapReady}
         />
 
         <GetTransactionStatusCard
-          enabled={!(!installedSnap || !btcAccount)}
+          enabled={isAccountReady}
           scope={scope}
-          fullWidth={
-            isMetaMaskReady &&
-            Boolean(installedSnap) &&
-            !shouldDisplayReconnectButton(installedSnap)
-          }
+          fullWidth={isSnapReady}
         />
       </CardContainer>
     </Container>
