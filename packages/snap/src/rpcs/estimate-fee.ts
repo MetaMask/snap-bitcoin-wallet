@@ -86,6 +86,12 @@ export async function estimateFee(params: EstimateFeeParams) {
       fee,
     });
 
+    if (!result.inputs || !result.outputs) {
+      logger.warn(
+        'No input or output found, fee estimation might be inaccurate',
+      );
+    }
+
     const resp: EstimateFeeResponse = {
       fee: {
         amount: satsToBtc(result.fee),
