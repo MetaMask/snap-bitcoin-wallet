@@ -1,4 +1,5 @@
 import { networks } from 'bitcoinjs-lib';
+import { Buffer } from 'buffer';
 
 import { generateFormattedUtxos } from '../../../test/utils';
 import { P2WPKHAccount, P2WPKHTestnetAccount } from './account';
@@ -6,6 +7,7 @@ import { CoinSelectService } from './coin-select';
 import { DustLimit, ScriptType } from './constants';
 import { BtcAccountDeriver } from './deriver';
 import { WalletError } from './exceptions';
+import { PsbtService } from './psbt';
 import { TxInfo } from './transaction-info';
 import { TxInput } from './transaction-input';
 import { TxOutput } from './transaction-output';
@@ -40,7 +42,7 @@ describe('BtcWallet', () => {
     };
   };
 
-  const createMockTxIndent = (address: string, amount: number) => {
+  const createMockTxIntent = (address: string, amount: number) => {
     return [
       {
         address,
@@ -158,7 +160,7 @@ describe('BtcWallet', () => {
 
       const result = await wallet.createTransaction(
         account,
-        createMockTxIndent(account.address, 100000),
+        createMockTxIntent(account.address, 100000),
         {
           utxos,
           fee: 56,
@@ -188,7 +190,7 @@ describe('BtcWallet', () => {
 
       const result = await wallet.createTransaction(
         account,
-        createMockTxIndent(account.address, 100000),
+        createMockTxIntent(account.address, 100000),
         {
           utxos,
           fee: 50,
@@ -222,7 +224,7 @@ describe('BtcWallet', () => {
 
       await wallet.createTransaction(
         account,
-        createMockTxIndent(account.address, DustLimit[account.scriptType] + 1),
+        createMockTxIntent(account.address, DustLimit[account.scriptType] + 1),
         {
           utxos,
           fee: 1,
@@ -244,6 +246,34 @@ describe('BtcWallet', () => {
       for (const output of coinSelectServiceSpy.mock.calls[0][1]) {
         expect(output).toBeInstanceOf(TxOutput);
       }
+    });
+
+    it('uses `replaceable = false` if not provided', async () => {
+      const network = networks.testnet;
+      const { instance } = createMockDeriver(network);
+      const wallet = new BtcWallet(instance, network);
+      const chgAccount = await wallet.unlock(0, ScriptType.P2wpkh);
+      const recipient = await wallet.unlock(1, ScriptType.P2wpkh);
+      const utxos = generateFormattedUtxos(chgAccount.address, 1, 10000, 10000);
+      const psbtSpy = jest.spyOn(PsbtService.prototype, 'addInputs');
+
+      await wallet.createTransaction(
+        chgAccount,
+        createMockTxIntent(recipient.address, 500),
+        {
+          utxos,
+          fee: 1,
+          subtractFeeFrom: [],
+        },
+      );
+
+      expect(psbtSpy).toHaveBeenCalledWith(
+        expect.any(Array<TxInput>),
+        false,
+        expect.any(String),
+        expect.any(Buffer),
+        expect.any(Buffer),
+      );
     });
 
     it('remove dist change', async () => {
@@ -273,7 +303,7 @@ describe('BtcWallet', () => {
 
       const result = await wallet.createTransaction(
         chgAccount,
-        createMockTxIndent(recipient.address, 500),
+        createMockTxIntent(recipient.address, 500),
         {
           utxos,
           fee: 1,
@@ -298,7 +328,7 @@ describe('BtcWallet', () => {
       await expect(
         wallet.createTransaction(
           account,
-          createMockTxIndent(account.address, 1),
+          createMockTxIntent(account.address, 1),
           {
             utxos,
             fee: 20,
@@ -307,6 +337,28 @@ describe('BtcWallet', () => {
           },
         ),
       ).rejects.toThrow('Transaction amount too small');
+    });
+
+    it('throws `Insufficient funds` error if the given utxos total amount is insufficient', async () => {
+      const network = networks.testnet;
+      const { instance } = createMockDeriver(network);
+      const wallet = new BtcWallet(instance, network);
+      const chgAccount = await wallet.unlock(0, ScriptType.P2wpkh);
+      const recipient = await wallet.unlock(1, ScriptType.P2wpkh);
+      const utxos = generateFormattedUtxos(chgAccount.address, 2, 1000, 1000);
+
+      await expect(
+        wallet.createTransaction(
+          chgAccount,
+          createMockTxIntent(recipient.address, 50000),
+          {
+            utxos,
+            fee: 20,
+            subtractFeeFrom: [],
+            replaceable: false,
+          },
+        ),
+      ).rejects.toThrow('Insufficient funds');
     });
   });
 
@@ -320,7 +372,7 @@ describe('BtcWallet', () => {
 
       const { tx } = await wallet.createTransaction(
         account,
-        createMockTxIndent(account.address, DustLimit[account.scriptType] + 1),
+        createMockTxIntent(account.address, DustLimit[account.scriptType] + 1),
         {
           utxos,
           fee: 1,
@@ -333,6 +385,58 @@ describe('BtcWallet', () => {
 
       expect(sign).not.toBeNull();
       expect(sign).not.toBe('');
+    });
+  });
+
+  describe('estimateFee', () => {
+    it('estimates fee', async () => {
+      const network = networks.testnet;
+      const { instance } = createMockDeriver(network);
+      const wallet = new BtcWallet(instance, network);
+      const chgAccount = await wallet.unlock(0, ScriptType.P2wpkh);
+      const utxos = generateFormattedUtxos(
+        chgAccount.address,
+        10,
+        10000,
+        10000,
+      );
+      const coinSelectServiceSpy = jest.spyOn(
+        CoinSelectService.prototype,
+        'selectCoins',
+      );
+
+      const selectionResult = {
+        change: new TxOutput(
+          DustLimit[chgAccount.scriptType] - 1,
+          chgAccount.address,
+          chgAccount.script,
+        ),
+        fee: 100,
+        inputs: utxos.map((utxo) => new TxInput(utxo, chgAccount.script)),
+        outputs: [new TxOutput(500, chgAccount.address, chgAccount.script)],
+      };
+
+      coinSelectServiceSpy.mockReturnValue(selectionResult);
+
+      const result = await wallet.estimateFee(
+        chgAccount,
+        createMockTxIntent(
+          chgAccount.address,
+          DustLimit[chgAccount.scriptType] + 1,
+        ),
+        {
+          utxos,
+          fee: 1,
+        },
+      );
+
+      expect(coinSelectServiceSpy).toHaveBeenCalledWith(
+        expect.any(Array<TxInput>),
+        expect.any(Array<TxOutput>),
+        expect.any(TxOutput),
+      );
+
+      expect(result).toStrictEqual(selectionResult);
     });
   });
 });

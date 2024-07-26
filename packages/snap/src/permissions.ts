@@ -2,6 +2,7 @@ import { KeyringRpcMethod } from '@metamask/keyring-api';
 
 export enum InternalRpcMethod {
   GetTransactionStatus = 'chain_getTransactionStatus',
+  EstimateFee = 'estimateFee',
 }
 
 const dappPermissions = new Set([
@@ -12,6 +13,8 @@ const dappPermissions = new Set([
   KeyringRpcMethod.SubmitRequest,
   // Chain API methods
   InternalRpcMethod.GetTransactionStatus,
+  // Internal methods
+  InternalRpcMethod.EstimateFee,
 ]);
 
 const metamaskPermissions = new Set([

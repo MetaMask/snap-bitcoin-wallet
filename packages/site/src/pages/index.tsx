@@ -11,6 +11,7 @@ import {
   SendManyCard,
   GetTransactionStatusCard,
   GetBalancesCard,
+  EstimateFeeCard,
 } from '../components';
 import { defaultSnapOrigin } from '../config';
 import {
@@ -294,7 +295,11 @@ const Index = () => {
           scope={scope}
           fullWidth={isSnapReady}
         />
-
+        <EstimateFeeCard
+          enabled={isAccountReady}
+          account={btcAccount?.id ?? ''}
+          fullWidth={isSnapReady}
+        />
         <SendManyCard
           enabled={isAccountReady}
           account={btcAccount?.id ?? ''}

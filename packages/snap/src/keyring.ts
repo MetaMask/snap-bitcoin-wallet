@@ -23,8 +23,12 @@ import { AccountNotFoundError, MethodNotImplementedError } from './exceptions';
 import { Factory } from './factory';
 import { getBalances, type SendManyParams, sendMany } from './rpcs';
 import type { KeyringStateManager, Wallet } from './stateManagement';
-import { getProvider, ScopeStruct, logger } from './utils';
-import { verifyIfAccountValid } from './utils/account';
+import {
+  getProvider,
+  ScopeStruct,
+  logger,
+  verifyIfAccountValid,
+} from './utils';
 
 export type KeyringOptions = Record<string, Json> & {
   defaultIndex: number;
