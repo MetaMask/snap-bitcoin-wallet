@@ -2,7 +2,7 @@ import { object, string, type Infer, nonempty, enums } from 'superstruct';
 
 import { TransactionDustError, TxValidationError } from '../bitcoin/wallet';
 import { Config } from '../config';
-import { AccountNotFoundError, FeeRateUnavailableError } from '../exceptions';
+import { AccountNotFoundError } from '../exceptions';
 import { Factory } from '../factory';
 import { KeyringStateManager } from '../stateManagement';
 import {
@@ -12,6 +12,8 @@ import {
   logger,
   PositiveNumberStringStruct,
   satsToBtc,
+  verifyIfAccountValid,
+  getFeeRate,
 } from '../utils';
 
 export const GetMaxSpendableBalanceParamsStruct = object({
@@ -65,22 +67,13 @@ export async function getMaxSpendableBalance(
       walletData.account.type,
     );
 
-    if (!account || account.address !== walletData.account.address) {
-      throw new AccountNotFoundError();
-    }
+    verifyIfAccountValid(account, walletData.account);
 
     const chainApi = Factory.createOnChainServiceProvider(walletData.scope);
 
     const feesResp = await chainApi.getFeeRates();
 
-    if (feesResp.fees.length === 0) {
-      throw new FeeRateUnavailableError();
-    }
-
-    const fee = Math.max(
-      Number(feesResp.fees[feesResp.fees.length - 1].rate),
-      1,
-    );
+    const fee = getFeeRate(feesResp.fees);
 
     const metadata = await chainApi.getDataForTransaction(account.address);
 
