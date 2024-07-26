@@ -9,11 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.3.0]
 
-### Uncategorized
+### Added
 
-- feat: add `estimateFee` RPC endpoint ([#169](https://github.com/MetaMask/snap-bitcoin-wallet/pull/169))
-- refactor: consolidate account address verify logic ([#207](https://github.com/MetaMask/snap-bitcoin-wallet/pull/207))
-- refactor: consolidate get fee rate logic into a util function ([#206](https://github.com/MetaMask/snap-bitcoin-wallet/pull/206))
+- Add `estimateFee` RPC endpoint ([#169](https://github.com/MetaMask/snap-bitcoin-wallet/pull/169))
 
 ## [0.2.5]
 

@@ -9,10 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.3.0]
 
-### Uncategorized
+### Added
 
-- feat: add `estimateFee` RPC endpoint ([#169](https://github.com/MetaMask/snap-bitcoin-wallet/pull/169))
-- refactor: consolidate card component visible condition in example dapp ([#199](https://github.com/MetaMask/snap-bitcoin-wallet/pull/199))
+- Add `estimateFee` card ([#169](https://github.com/MetaMask/snap-bitcoin-wallet/pull/169))
 
 ## [0.2.5]
 
