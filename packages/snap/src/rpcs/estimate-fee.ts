@@ -86,6 +86,12 @@ export async function estimateFee(params: EstimateFeeParams) {
       fee,
     });
 
+    // The fee estimation will be inaccurate when:
+    // - The account has no input (no UTXOs)
+    // - The account does not have enough funds to cover the requested amount
+    // - There is no output when computing the estimation
+    //
+    // NOTE: It is by design that we do not raise any error for now
     if (!result.inputs || !result.outputs) {
       logger.warn(
         'No input or output found, fee estimation might be inaccurate',
