@@ -97,6 +97,7 @@ export class BtcWallet {
    * @param recipients - The transaction recipients.
    * @param options - The options to use when creating the transaction.
    * @returns A promise that resolves to an object containing the transaction hash and transaction info.
+   * @throws {TxValidationError} Throws a TxValidationError if there are insufficient funds to complete the transaction.
    */
   async createTransaction(
     account: BtcAccount,

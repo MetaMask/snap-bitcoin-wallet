@@ -97,7 +97,7 @@ describe('onRpcRequest', () => {
   it('throws MethodNotFoundError if an method not found', async () => {
     // test a method that is not handled from the `onRpcRequest`
     await expect(
-      executeRequest('some-not' as unknown as InternalRpcMethod),
+      executeRequest('not_aMethod' as unknown as InternalRpcMethod),
     ).rejects.toThrow(MethodNotFoundError);
   });
 
