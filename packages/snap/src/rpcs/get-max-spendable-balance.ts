@@ -42,7 +42,9 @@ export type GetMaxSpendableBalanceResponse = Infer<
 /**
  * Get max spendable balance.
  *
- * @param params - The parameters for get max spendable balance.
+ * This function will use the binary search algorithm to measure the max spendable balance of the account.
+ *
+ * @param params - The parameters to use when estimating the max spendable balance.
  * @returns A Promise that resolves to an GetMaxSpendableBalanceResponse object.
  */
 export async function getMaxSpendableBalance(
@@ -80,9 +82,11 @@ export async function getMaxSpendableBalance(
     let spendable = 0;
     let estimatedFee = 0;
     let low = 0;
+    // Using the sum of all UTXOs value as the high value rather than directly using the balance is more accurate due to balance data may delay.
     let high = metadata.data.utxos.reduce((acc, utxo) => acc + utxo.value, 0);
 
     while (low <= high) {
+      // Test the middle value.
       const mid = Math.floor((low + high) / 2);
       try {
         const estimateResult = await wallet.estimateFee(
@@ -99,18 +103,21 @@ export async function getMaxSpendableBalance(
           },
         );
 
+        // If the middle value is valid, then we can increase the low value to test the higher amount.
         if (estimateResult.outputs && estimateResult.outputs.length > 0) {
           low = mid + 1;
 
           if (mid > spendable) {
+            // Update the spendable amount if it is larger than the previous one, as well as the estimated fee.
             spendable = mid;
-            // same transaction amount will always result the same fee
             estimatedFee = estimateResult.fee;
           }
         } else {
+          // If the middle value is out of bound, then we need to decrease the high value to test the lower amount.
           high = mid - 1;
         }
       } catch (error) {
+        // Edge case, whem the middle value is too small, then we can increase the low value to test the higher amount, it usually happen when the sum of account's utxo is too small.
         if (error instanceof TransactionDustError) {
           low = mid + 1;
         } else {

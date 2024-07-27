@@ -110,7 +110,7 @@ describe('GetMaxSpendableBalanceHandler', () => {
       };
     };
 
-    it('return correct result', async () => {
+    it('returns the maximum spendable balance correctly', async () => {
       const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
       const { sender, keyringAccount } = await createAccount(
@@ -155,7 +155,7 @@ describe('GetMaxSpendableBalanceHandler', () => {
       ).toStrictEqual(BigInt(utxoTotalValue));
     });
 
-    it('does not use an utxo when it is less than a dust theshold', async () => {
+    it('estimates the maximum spendable balance by excluding any UTXO whose value is equal to or less than the dust threshold', async () => {
       const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
       const { sender, keyringAccount } = await createAccount(
@@ -166,7 +166,11 @@ describe('GetMaxSpendableBalanceHandler', () => {
         sender.address,
         10,
       );
-      const discardVal = 6552;
+      // when with 104 sats/byte, 1 input contains 63 bytes,
+      // hence the dust threshold will be 104 * 63 bytes = 6552 sats,
+      // if an utxo less than this amount will be discard, as it is waste to use it
+      const feeRate = 104;
+      const discardVal = 63 * feeRate;
       utxoDataList[0].value = discardVal;
       const utxoTotalValue = utxoDataList.reduce(
         (acc, utxo) => acc + utxo.value,
@@ -184,8 +188,7 @@ describe('GetMaxSpendableBalanceHandler', () => {
         fees: [
           {
             type: Config.defaultFeeRate,
-            // with 104 sats/byte, 1 input contains 63 bytes, hence the fee will be at least 104 * 63 bytes = 6552 sats, which means if an utxo less than this amount will be discard, as it is waste to use it
-            rate: BigInt(104),
+            rate: BigInt(feeRate),
           },
         ],
       });
@@ -277,7 +280,7 @@ describe('GetMaxSpendableBalanceHandler', () => {
       ).rejects.toThrow(AccountNotFoundError);
     });
 
-    it('throws `AccountNotFoundError` if the derived account is not match with the state', async () => {
+    it('throws `AccountNotFoundError` if the derived account if the derived account is not matching with the account from state', async () => {
       const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
       const { getWalletSpy, keyringAccount, wallet, sender } =
@@ -305,7 +308,7 @@ describe('GetMaxSpendableBalanceHandler', () => {
       ).rejects.toThrow(AccountNotFoundError);
     });
 
-    it('throws `Failed to get max spendable balance` error if no fee rate returns from chain service', async () => {
+    it('throws `Failed to get max spendable balance` error if no fee rate is returned from the chain service', async () => {
       const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
       const { keyringAccount } = await createAccount(network, caip2ChainId);
