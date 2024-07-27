@@ -1,4 +1,4 @@
-import { Card, EstimateFeesButton } from '.';
+import { Card, EstimateFeeButton } from '.';
 import { useInvokeSnap } from '../hooks';
 
 export const GetMaxSpendableBalanceCard = ({
@@ -26,9 +26,7 @@ export const GetMaxSpendableBalanceCard = ({
       content={{
         title: 'Get Max Spendable Balance',
         description: `Get Max Spendable Balance`,
-        button: (
-          <EstimateFeesButton onClick={handleClick} disabled={!enabled} />
-        ),
+        button: <EstimateFeeButton onClick={handleClick} disabled={!enabled} />,
       }}
       disabled={!enabled}
       fullWidth={fullWidth}
