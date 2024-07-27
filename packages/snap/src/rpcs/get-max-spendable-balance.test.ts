@@ -4,7 +4,7 @@ import { networks } from 'bitcoinjs-lib';
 import { v4 as uuidV4 } from 'uuid';
 
 import { generateBlockChairGetUtxosResp } from '../../test/utils';
-import { BtcOnChainService, FeeRatio } from '../bitcoin/chain';
+import { BtcOnChainService } from '../bitcoin/chain';
 import { BtcAccountDeriver, BtcWallet } from '../bitcoin/wallet';
 import { Config } from '../config';
 import { Caip2ChainId } from '../constants';
@@ -42,7 +42,7 @@ describe('GetMaxSpendableBalanceHandler', () => {
     };
 
     const getHdPath = (index: number) => {
-      return `m/0'.0/${index}`;
+      return `m/0'/0/${index}`;
     };
 
     const createAccount = async (network, caip2ChainId: string) => {
@@ -129,7 +129,7 @@ describe('GetMaxSpendableBalanceHandler', () => {
       getFeeRatesSpy.mockResolvedValue({
         fees: [
           {
-            type: FeeRatio.Fast,
+            type: Config.defaultFeeRate,
             rate: BigInt(1),
           },
         ],
@@ -183,7 +183,7 @@ describe('GetMaxSpendableBalanceHandler', () => {
       getFeeRatesSpy.mockResolvedValue({
         fees: [
           {
-            type: FeeRatio.Fast,
+            type: Config.defaultFeeRate,
             // with 104 sats/byte, 1 input contains 63 bytes, hence the fee will be at least 104 * 63 bytes = 6552 sats, which means if an utxo less than this amount will be discard, as it is waste to use it
             rate: BigInt(104),
           },
@@ -234,7 +234,7 @@ describe('GetMaxSpendableBalanceHandler', () => {
         getFeeRatesSpy.mockResolvedValue({
           fees: [
             {
-              type: FeeRatio.Fast,
+              type: Config.defaultFeeRate,
               rate: BigInt(1),
             },
           ],
@@ -341,7 +341,7 @@ describe('GetMaxSpendableBalanceHandler', () => {
       getFeeRatesSpy.mockResolvedValue({
         fees: [
           {
-            type: FeeRatio.Fast,
+            type: Config.defaultFeeRate,
             rate: BigInt(1),
           },
         ],
