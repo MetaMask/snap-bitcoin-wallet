@@ -25,7 +25,7 @@ export const GetMaxSpendableBalanceResponseStruct = object({
     amount: nonempty(PositiveNumberStringStruct),
     unit: enums([Config.unit]),
   }),
-  spendable: object({
+  balance: object({
     amount: nonempty(PositiveNumberStringStruct),
     unit: enums([Config.unit]),
   }),
@@ -79,22 +79,30 @@ export async function getMaxSpendableBalance(
 
     const metadata = await chainApi.getDataForTransaction(account.address);
 
-    let spendable = 0;
-    let estimatedFee = 0;
-    let low = 0;
+    let spendable = BigInt(0);
+    let estimatedFee = BigInt(0);
+    let low = BigInt(0);
     // Using the sum of all UTXOs value as the high value rather than directly using the balance is more accurate due to balance data may delay.
-    let high = metadata.data.utxos.reduce((acc, utxo) => acc + utxo.value, 0);
+    let high = metadata.data.utxos.reduce(
+      (acc, utxo) => acc + BigInt(utxo.value),
+      BigInt(0),
+    );
 
     while (low <= high) {
+      // Calculate the Math.floor in big int.
+      const divisor = BigInt(2);
+      const sum = low + high;
+      const remainder = sum % divisor;
+      const mid = (sum - remainder) / divisor;
+
       // Test the middle value.
-      const mid = Math.floor((low + high) / 2);
       try {
         const estimateResult = await wallet.estimateFee(
           account,
           [
             {
               address: account.address,
-              value: BigInt(mid),
+              value: mid,
             },
           ],
           {
@@ -105,21 +113,21 @@ export async function getMaxSpendableBalance(
 
         // If the middle value is valid, then we can increase the low value to test the higher amount.
         if (estimateResult.outputs && estimateResult.outputs.length > 0) {
-          low = mid + 1;
+          low = mid + BigInt(1);
 
           if (mid > spendable) {
             // Update the spendable amount if it is larger than the previous one, as well as the estimated fee.
             spendable = mid;
-            estimatedFee = estimateResult.fee;
+            estimatedFee = BigInt(estimateResult.fee);
           }
         } else {
           // If the middle value is out of bound, then we need to decrease the high value to test the lower amount.
-          high = mid - 1;
+          high = mid - BigInt(1);
         }
       } catch (error) {
         // Edge case, whem the middle value is too small, then we can increase the low value to test the higher amount, it usually happen when the sum of account's utxo is too small.
         if (error instanceof TransactionDustError) {
-          low = mid + 1;
+          low = mid + BigInt(1);
         } else {
           throw error;
         }
@@ -131,7 +139,7 @@ export async function getMaxSpendableBalance(
         amount: satsToBtc(estimatedFee),
         unit: Config.unit,
       },
-      spendable: {
+      balance: {
         amount: satsToBtc(spendable),
         unit: Config.unit,
       },
