@@ -91,9 +91,9 @@ export async function getMaxSpendableBalance(
     while (low <= high) {
       // Calculate the Math.floor in big int.
       const divisor = BigInt(2);
-      const sum = low + high;
-      const remainder = sum % divisor;
-      const mid = (sum - remainder) / divisor;
+      const sumOfLowNHigh = low + high;
+      const remainder = sumOfLowNHigh % divisor;
+      const mid = (sumOfLowNHigh - remainder) / divisor;
 
       // Test the middle value.
       try {
