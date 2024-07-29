@@ -118,7 +118,12 @@ describe('GetMaxSpendableBalanceHandler', () => {
         caip2ChainId,
       );
       const { data: utxoDataList, total: utxoTotalValue } =
-        createMockGetDataForTransactionResp(sender.address, 10);
+        createMockGetDataForTransactionResp(
+          sender.address,
+          100,
+          10000,
+          10000000000,
+        );
       const { getDataForTransactionSpy, getFeeRatesSpy } =
         createMockChainApiFactory();
       getDataForTransactionSpy.mockResolvedValue({
@@ -130,7 +135,7 @@ describe('GetMaxSpendableBalanceHandler', () => {
         fees: [
           {
             type: Config.defaultFeeRate,
-            rate: BigInt(1),
+            rate: BigInt(15),
           },
         ],
       });
@@ -150,6 +155,7 @@ describe('GetMaxSpendableBalanceHandler', () => {
         },
       });
 
+      // If there are no UTXOs that meet the dust threshold, then the total balance should equal the sum of the fee and the spendable balance.
       expect(
         btcToSats(result.fee.amount) + btcToSats(result.balance.amount),
       ).toStrictEqual(BigInt(utxoTotalValue));
@@ -197,6 +203,7 @@ describe('GetMaxSpendableBalanceHandler', () => {
         account: keyringAccount.id,
       });
 
+      // If there is a UTXO that meets the dust threshold, then the total balance should equal the sum of the fee, the spendable balance, and the value of the dust UTXO.
       expect(
         BigInt(utxoTotalValue) -
           (btcToSats(result.fee.amount) + btcToSats(result.balance.amount)),
