@@ -42,7 +42,7 @@ export type GetMaxSpendableBalanceResponse = Infer<
 /**
  * Get max spendable balance.
  *
- * This function will use the binary search algorithm to measure the max spendable balance of the account.
+ * This function will use the binary search algorithm to calculate the maximum spendable balance of the account.
  *
  * @param params - The parameters to use when estimating the max spendable balance.
  * @returns A Promise that resolves to an GetMaxSpendableBalanceResponse object.
@@ -82,7 +82,7 @@ export async function getMaxSpendableBalance(
     let spendable = BigInt(0);
     let estimatedFee = BigInt(0);
     let low = BigInt(0);
-    // Using the sum of all UTXOs value as the high value rather than directly using the balance is more accurate due to balance data may delay.
+    // Using the sum of all UTXO values as the high value, instead of directly using the balance, is more accurate because balance data may be delayed.
     let high = metadata.data.utxos.reduce(
       (acc, utxo) => acc + BigInt(utxo.value),
       BigInt(0),
@@ -111,21 +111,21 @@ export async function getMaxSpendableBalance(
           },
         );
 
-        // If the middle value is valid, then we can increase the low value to test the higher amount.
+        // If the middle value is valid, we can increase the low value to test a higher amount.
         if (estimateResult.outputs && estimateResult.outputs.length > 0) {
           low = mid + BigInt(1);
 
           if (mid > spendable) {
-            // Update the spendable amount if it is larger than the previous one, as well as the estimated fee.
+            // If the updated spendable amount is larger than the previous amount, then update both the spendable amount and the estimated fee.
             spendable = mid;
             estimatedFee = BigInt(estimateResult.fee);
           }
         } else {
-          // If the middle value is out of bound, then we need to decrease the high value to test the lower amount.
+          // If the middle value is out of bounds, we need to decrease the high value to test a lower amount.
           high = mid - BigInt(1);
         }
       } catch (error) {
-        // Edge case, whem the middle value is too small, then we can increase the low value to test the higher amount, it usually happen when the sum of account's utxo is too small.
+        // In the case where the middle value is too small, we can increase the low value to test a higher amount. This scenario typically occurs when the sum of the account's UTXOs is too small.
         if (error instanceof TransactionDustError) {
           low = mid + BigInt(1);
         } else {

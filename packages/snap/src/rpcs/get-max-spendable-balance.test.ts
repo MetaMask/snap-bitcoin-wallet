@@ -172,9 +172,7 @@ describe('GetMaxSpendableBalanceHandler', () => {
         sender.address,
         10,
       );
-      // when with 104 sats/byte, 1 input contains 63 bytes,
-      // hence the dust threshold (fee of using this UTXO) will be 104 * 63 bytes = 6552 sats,
-      // if an utxo less than this amount will be discard, as it is waste to use it
+      // When using 104 satoshis per byte and 1 input contains 63 bytes, the dust threshold (fee for using this UTXO) will be 104 * 63 bytes = 6552 satoshis. Any UTXO less than this amount will be discarded as it would be a waste to use it.
       const feeRate = 104;
       const discardVal = 63 * feeRate;
       utxoDataList[0].value = discardVal;
