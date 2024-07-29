@@ -144,14 +144,14 @@ describe('GetMaxSpendableBalanceHandler', () => {
           amount: result.fee.amount,
           unit: 'BTC',
         },
-        spendable: {
-          amount: result.spendable.amount,
+        balance: {
+          amount: result.balance.amount,
           unit: 'BTC',
         },
       });
 
       expect(
-        btcToSats(result.fee.amount) + btcToSats(result.spendable.amount),
+        btcToSats(result.fee.amount) + btcToSats(result.balance.amount),
       ).toStrictEqual(BigInt(utxoTotalValue));
     });
 
@@ -199,7 +199,7 @@ describe('GetMaxSpendableBalanceHandler', () => {
 
       expect(
         BigInt(utxoTotalValue) -
-          (btcToSats(result.fee.amount) + btcToSats(result.spendable.amount)),
+          (btcToSats(result.fee.amount) + btcToSats(result.balance.amount)),
       ).toStrictEqual(BigInt(discardVal));
     });
 
@@ -252,7 +252,7 @@ describe('GetMaxSpendableBalanceHandler', () => {
             amount: satsToBtc(0),
             unit: 'BTC',
           },
-          spendable: {
+          balance: {
             amount: satsToBtc(0),
             unit: 'BTC',
           },
