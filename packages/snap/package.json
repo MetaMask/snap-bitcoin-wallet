@@ -1,6 +1,6 @@
 {
   "name": "@metamask/bitcoin-wallet-snap",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "A Bitcoin wallet Snap.",
   "repository": {
     "type": "git",
