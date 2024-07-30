@@ -19,6 +19,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import type { BtcAccount, BtcWallet } from './bitcoin/wallet';
 import { Config } from './config';
+import { Caip2ChainId } from './constants';
 import { AccountNotFoundError, MethodNotImplementedError } from './exceptions';
 import { Factory } from './factory';
 import { getBalances, type SendManyParams, sendMany } from './rpcs';
@@ -109,6 +110,7 @@ export class BtcKeyring implements Keyring {
 
         await this.#emitEvent(KeyringEvent.AccountCreated, {
           account: keyringAccount,
+          accountNameSuggestion: this.getKeyringAccountNameSuggestion(options),
         });
       });
 
@@ -265,5 +267,20 @@ export class BtcKeyring implements Keyring {
       },
       methods: this._methods,
     } as unknown as KeyringAccount;
+  }
+
+  protected getKeyringAccountNameSuggestion(
+    options?: CreateAccountOptions,
+  ): string {
+    switch (options?.scope) {
+      case Caip2ChainId.Mainnet:
+        return 'Bitcoin Account';
+      case Caip2ChainId.Testnet:
+        return 'Bitcoin Testnet Account';
+
+      default:
+        // Leave it blank to fallback to auto-suggested name on the extension side
+        return '';
+    }
   }
 }
