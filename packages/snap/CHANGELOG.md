@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Emit account suggested name when creating account ([#210](https://github.com/MetaMask/snap-bitcoin-wallet/pull/210))
-    - This name suggestion can then be used by the client to name the account accordingly.
+  - This name suggestion can then be used by the client to name the account accordingly.
 
 ### Changed
 
