@@ -9,10 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.0]
 
-### Uncategorized
+### Added
 
-- feat: emit acccount suggested name from Snap ([#210](https://github.com/MetaMask/snap-bitcoin-wallet/pull/210))
-- fix: audit 4.6 - pin Bitcoin and cryptographic dependencies ([#205](https://github.com/MetaMask/snap-bitcoin-wallet/pull/205))
+- Emit account suggested name when creating account ([#210](https://github.com/MetaMask/snap-bitcoin-wallet/pull/210))
+    - This name suggestion can then be used by the extension to name the account accordingly.
+
+### Changed
+
+- Audit 4.6: Pin Bitcoin and cryptographic dependencies ([#205](https://github.com/MetaMask/snap-bitcoin-wallet/pull/205))
 
 ## [0.3.0]
 
