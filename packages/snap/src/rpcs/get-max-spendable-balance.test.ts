@@ -206,6 +206,7 @@ describe('GetMaxSpendableBalanceHandler', () => {
       expect(
         btcToSats(result.fee.amount) + btcToSats(result.balance.amount),
       ).toStrictEqual(BigInt(utxoTotalValue) - BigInt(dustThreshold));
+    });
 
     it.each([
       {
