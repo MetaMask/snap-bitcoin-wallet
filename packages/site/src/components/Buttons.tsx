@@ -126,7 +126,7 @@ export const EstimateFeeButton = (props: ComponentProps<typeof Button>) => {
 export const GetMaxSpendableBalanceButton = (
   props: ComponentProps<typeof Button>,
 ) => {
-  return <Button {...props}>Get Max Balance</Button>;
+  return <Button {...props}>Get Max Spendable Balance</Button>;
 };
 
 export const SellBTCButton = (props: ComponentProps<typeof Button>) => {

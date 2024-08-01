@@ -173,7 +173,7 @@ describe('EstimateFeeHandler', () => {
       expect(result.fee.amount).toBe(satsToBtc(expectedFee));
     });
 
-    it('throws `InvalidParamsError` when request parameter is not correct', async () => {
+    it('throws `InvalidParamsError` when the request parameter is not correct', async () => {
       await expect(
         estimateFee({
           amount: '0.0001',

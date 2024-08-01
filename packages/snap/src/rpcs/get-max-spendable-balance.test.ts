@@ -155,7 +155,7 @@ describe('GetMaxSpendableBalanceHandler', () => {
         },
       });
 
-      // If there are no UTXOs that meet the dust threshold, then the total balance should be equal to the sum of the fee and the spendable balance.
+      // If all UTXOs are above the dust threshold, then the total balance should be equal to the sum of the fee and the spendable balance.
       expect(
         btcToSats(result.fee.amount) + btcToSats(result.balance.amount),
       ).toStrictEqual(BigInt(utxoTotalValue));
@@ -174,8 +174,9 @@ describe('GetMaxSpendableBalanceHandler', () => {
       );
       // When using 104 satoshis per byte and 1 input contains 63 bytes, the dust threshold (fee for using this UTXO) will be 104 * 63 bytes = 6552 satoshis. Any UTXO less than this amount will be discarded as it would be a waste to use it.
       const feeRate = 104;
-      const discardVal = 63 * feeRate;
-      utxoDataList[0].value = discardVal;
+      const utxoInputBytesSize = 63;
+      const dustThreshold = utxoInputBytesSize * feeRate;
+      utxoDataList[0].value = dustThreshold;
       const utxoTotalValue = utxoDataList.reduce(
         (acc, utxo) => acc + utxo.value,
         0,
@@ -201,12 +202,10 @@ describe('GetMaxSpendableBalanceHandler', () => {
         account: keyringAccount.id,
       });
 
-      // If there is a UTXO that meets the dust threshold, then the total balance should equal the sum of the fee, the spendable balance, and the value of the dust UTXO.
+      // One of our UTXO was below the dust threshold, then the total balance will not count this UTXO, thus we need to subtract it from the total UTXO balance.
       expect(
-        BigInt(utxoTotalValue) -
-          (btcToSats(result.fee.amount) + btcToSats(result.balance.amount)),
-      ).toStrictEqual(BigInt(discardVal));
-    });
+        btcToSats(result.fee.amount) + btcToSats(result.balance.amount),
+      ).toStrictEqual(BigInt(utxoTotalValue) - BigInt(dustThreshold));
 
     it.each([
       {
@@ -218,7 +217,7 @@ describe('GetMaxSpendableBalanceHandler', () => {
         utxoVal: 1,
       },
     ])(
-      "returns 0 spendable balance if the account's balance is too small or the account does not have utxo",
+      "returns a zero-spendable-balance if the account's balance is too small or the account does not have UTXO",
       async ({ utxoCnt, utxoVal }: { utxoCnt: number; utxoVal: number }) => {
         const network = networks.testnet;
         const caip2ChainId = Caip2ChainId.Testnet;
@@ -265,7 +264,7 @@ describe('GetMaxSpendableBalanceHandler', () => {
       },
     );
 
-    it('throws `InvalidParamsError` when request parameter is not correct', async () => {
+    it('throws `InvalidParamsError` when the request parameter is not correct', async () => {
       await expect(
         getMaxSpendableBalance({} as unknown as GetMaxSpendableBalanceParams),
       ).rejects.toThrow(InvalidParamsError);
