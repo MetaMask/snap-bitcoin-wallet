@@ -161,6 +161,7 @@ describe('onKeyringRequest', () => {
       keyringApi.KeyringRpcMethod.SubmitRequest,
       InternalRpcMethod.GetTransactionStatus,
       InternalRpcMethod.EstimateFee,
+      InternalRpcMethod.GetMaxSpendableBalance,
     ]) {
       const result = await onKeyringRequest({
         origin: 'https://portfolio.metamask.io',
@@ -253,6 +254,7 @@ describe('onKeyringRequest', () => {
       keyringApi.KeyringRpcMethod.UpdateAccount,
       InternalRpcMethod.GetTransactionStatus,
       InternalRpcMethod.EstimateFee,
+      InternalRpcMethod.GetMaxSpendableBalance,
     ]) {
       await expect(
         onKeyringRequest({

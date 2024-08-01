@@ -107,10 +107,12 @@ export async function sendMany(
       }),
     );
 
-    const metadata = await chainApi.getDataForTransaction(account.address);
+    const {
+      data: { utxos },
+    } = await chainApi.getDataForTransaction(account.address);
 
     const { tx, txInfo } = await wallet.createTransaction(account, recipients, {
-      utxos: metadata.data.utxos,
+      utxos,
       fee,
       subtractFeeFrom: params.subtractFeeFrom,
       replaceable: params.replaceable,

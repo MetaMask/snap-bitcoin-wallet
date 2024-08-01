@@ -10,3 +10,4 @@ export * from './SendManyCard';
 export * from './GetTransactionStatusCard';
 export * from './GetBalancesCard';
 export * from './EstimateFeeCard';
+export * from './GetMaxSpendableBalanceCard';

@@ -11,8 +11,16 @@ import {
 import { Config } from './config';
 import { BtcKeyring } from './keyring';
 import { InternalRpcMethod, originPermissions } from './permissions';
-import type { GetTransactionStatusParams, EstimateFeeParams } from './rpcs';
-import { getTransactionStatus, estimateFee } from './rpcs';
+import type {
+  GetTransactionStatusParams,
+  EstimateFeeParams,
+  GetMaxSpendableBalanceParams,
+} from './rpcs';
+import {
+  getTransactionStatus,
+  estimateFee,
+  getMaxSpendableBalance,
+} from './rpcs';
 import { KeyringStateManager } from './stateManagement';
 import { isSnapRpcError, logger } from './utils';
 
@@ -45,6 +53,10 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         );
       case InternalRpcMethod.EstimateFee:
         return await estimateFee(request.params as EstimateFeeParams);
+      case InternalRpcMethod.GetMaxSpendableBalance:
+        return await getMaxSpendableBalance(
+          request.params as GetMaxSpendableBalanceParams,
+        );
       default:
         throw new MethodNotFoundError() as unknown as Error;
     }

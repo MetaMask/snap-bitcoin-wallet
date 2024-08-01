@@ -5,25 +5,20 @@ import { v4 as uuidV4 } from 'uuid';
 
 import { generateBlockChairGetUtxosResp } from '../../test/utils';
 import { BtcOnChainService } from '../bitcoin/chain';
-import {
-  BtcAccountDeriver,
-  BtcWallet,
-  CoinSelectService,
-  TxValidationError,
-} from '../bitcoin/wallet';
+import { BtcAccountDeriver, BtcWallet } from '../bitcoin/wallet';
 import { Config } from '../config';
 import { Caip2ChainId } from '../constants';
 import { AccountNotFoundError } from '../exceptions';
 import { KeyringStateManager } from '../stateManagement';
-import { satsToBtc } from '../utils';
-import type { EstimateFeeParams } from './estimate-fee';
-import { estimateFee } from './estimate-fee';
+import { btcToSats, satsToBtc } from '../utils';
+import type { GetMaxSpendableBalanceParams } from './get-max-spendable-balance';
+import { getMaxSpendableBalance } from './get-max-spendable-balance';
 
 jest.mock('../utils/logger');
 jest.mock('../utils/snap');
 
-describe('EstimateFeeHandler', () => {
-  describe('estimateFee', () => {
+describe('GetMaxSpendableBalanceHandler', () => {
+  describe('getMaxSpendableBalance', () => {
     const createMockChainApiFactory = () => {
       const getFeeRatesSpy = jest.spyOn(
         BtcOnChainService.prototype,
@@ -88,12 +83,14 @@ describe('EstimateFeeHandler', () => {
     const createMockGetDataForTransactionResp = (
       address: string,
       counter: number,
+      minVal = 10000,
+      maxVal = 100000,
     ) => {
       const mockResponse = generateBlockChairGetUtxosResp(
         address,
         counter,
-        100000,
-        100000,
+        minVal,
+        maxVal,
       );
       let total = 0;
       const data = mockResponse.data[address].utxo.map((utxo) => {
@@ -113,29 +110,20 @@ describe('EstimateFeeHandler', () => {
       };
     };
 
-    const createMockCoinSelectService = () => {
-      const coinSelectServiceSpy = jest.spyOn(
-        CoinSelectService.prototype,
-        'selectCoins',
-      );
-
-      return {
-        coinSelectServiceSpy,
-      };
-    };
-
-    it('returns fee correctly', async () => {
+    it('returns the maximum spendable balance correctly', async () => {
       const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
-      const { coinSelectServiceSpy } = createMockCoinSelectService();
       const { sender, keyringAccount } = await createAccount(
         network,
         caip2ChainId,
       );
-      const { data: utxoDataList } = createMockGetDataForTransactionResp(
-        sender.address,
-        10,
-      );
+      const { data: utxoDataList, total: utxoTotalValue } =
+        createMockGetDataForTransactionResp(
+          sender.address,
+          100,
+          10000,
+          10000000000,
+        );
       const { getDataForTransactionSpy, getFeeRatesSpy } =
         createMockChainApiFactory();
       getDataForTransactionSpy.mockResolvedValue({
@@ -147,37 +135,139 @@ describe('EstimateFeeHandler', () => {
         fees: [
           {
             type: Config.defaultFeeRate,
-            rate: BigInt(1),
+            rate: BigInt(15),
           },
         ],
       });
-      const expectedFee = 200;
-      coinSelectServiceSpy.mockReturnValue({
-        inputs: [],
-        outputs: [],
-        fee: expectedFee,
-      });
 
-      const result = await estimateFee({
+      const result = await getMaxSpendableBalance({
         account: keyringAccount.id,
-        amount: '0.0001',
       });
 
       expect(result).toStrictEqual({
         fee: {
-          amount: expect.any(String),
+          amount: result.fee.amount,
+          unit: 'BTC',
+        },
+        balance: {
+          amount: result.balance.amount,
           unit: 'BTC',
         },
       });
 
-      expect(result.fee.amount).toBe(satsToBtc(expectedFee));
+      // If all UTXOs are above the dust threshold, then the total balance should be equal to the sum of the fee and the spendable balance.
+      expect(
+        btcToSats(result.fee.amount) + btcToSats(result.balance.amount),
+      ).toStrictEqual(BigInt(utxoTotalValue));
     });
+
+    it('estimates the maximum spendable balance by excluding any UTXO whose value is equal to or less than the dust threshold', async () => {
+      const network = networks.testnet;
+      const caip2ChainId = Caip2ChainId.Testnet;
+      const { sender, keyringAccount } = await createAccount(
+        network,
+        caip2ChainId,
+      );
+      const { data: utxoDataList } = createMockGetDataForTransactionResp(
+        sender.address,
+        10,
+      );
+      // When using 104 satoshis per byte and 1 input contains 63 bytes, the dust threshold (fee for using this UTXO) will be 104 * 63 bytes = 6552 satoshis. Any UTXO less than this amount will be discarded as it would be a waste to use it.
+      const feeRate = 104;
+      const utxoInputBytesSize = 63;
+      const dustThreshold = utxoInputBytesSize * feeRate;
+      utxoDataList[0].value = dustThreshold;
+      const utxoTotalValue = utxoDataList.reduce(
+        (acc, utxo) => acc + utxo.value,
+        0,
+      );
+
+      const { getDataForTransactionSpy, getFeeRatesSpy } =
+        createMockChainApiFactory();
+      getDataForTransactionSpy.mockResolvedValue({
+        data: {
+          utxos: utxoDataList,
+        },
+      });
+      getFeeRatesSpy.mockResolvedValue({
+        fees: [
+          {
+            type: Config.defaultFeeRate,
+            rate: BigInt(feeRate),
+          },
+        ],
+      });
+
+      const result = await getMaxSpendableBalance({
+        account: keyringAccount.id,
+      });
+
+      // One of our UTXO was below the dust threshold, then the total balance will not count this UTXO, thus we need to subtract it from the total UTXO balance.
+      expect(
+        btcToSats(result.fee.amount) + btcToSats(result.balance.amount),
+      ).toStrictEqual(BigInt(utxoTotalValue) - BigInt(dustThreshold));
+    });
+
+    it.each([
+      {
+        utxoCnt: 1,
+        utxoVal: 200,
+      },
+      {
+        utxoCnt: 0,
+        utxoVal: 1,
+      },
+    ])(
+      "returns a zero-spendable-balance if the account's balance is too small or the account does not have UTXO",
+      async ({ utxoCnt, utxoVal }: { utxoCnt: number; utxoVal: number }) => {
+        const network = networks.testnet;
+        const caip2ChainId = Caip2ChainId.Testnet;
+        const { sender, keyringAccount } = await createAccount(
+          network,
+          caip2ChainId,
+        );
+        const { data: utxoDataList } = createMockGetDataForTransactionResp(
+          sender.address,
+          utxoCnt,
+          utxoVal,
+          utxoVal,
+        );
+        const { getDataForTransactionSpy, getFeeRatesSpy } =
+          createMockChainApiFactory();
+        getDataForTransactionSpy.mockResolvedValue({
+          data: {
+            utxos: utxoDataList,
+          },
+        });
+        getFeeRatesSpy.mockResolvedValue({
+          fees: [
+            {
+              type: Config.defaultFeeRate,
+              rate: BigInt(1),
+            },
+          ],
+        });
+
+        const result = await getMaxSpendableBalance({
+          account: keyringAccount.id,
+        });
+
+        expect(result).toStrictEqual({
+          fee: {
+            amount: satsToBtc(0),
+            unit: 'BTC',
+          },
+          balance: {
+            amount: satsToBtc(0),
+            unit: 'BTC',
+          },
+        });
+      },
+    );
 
     it('throws `InvalidParamsError` when the request parameter is not correct', async () => {
       await expect(
-        estimateFee({
-          amount: '0.0001',
-        } as unknown as EstimateFeeParams),
+        getMaxSpendableBalance({} as unknown as GetMaxSpendableBalanceParams),
       ).rejects.toThrow(InvalidParamsError);
     });
 
@@ -189,14 +279,13 @@ describe('EstimateFeeHandler', () => {
       getWalletSpy.mockReset().mockResolvedValue(null);
 
       await expect(
-        estimateFee({
+        getMaxSpendableBalance({
           account: uuidV4(),
-          amount: '0.0001',
         }),
       ).rejects.toThrow(AccountNotFoundError);
     });
 
-    it('throws `AccountNotFoundError` if the derived account is not matching with the account from state', async () => {
+    it('throws `AccountNotFoundError` if the derived account if the derived account is not matching with the account from state', async () => {
       const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
       const { getWalletSpy, keyringAccount, wallet, sender } =
@@ -218,14 +307,13 @@ describe('EstimateFeeHandler', () => {
       });
 
       await expect(
-        estimateFee({
+        getMaxSpendableBalance({
           account: keyringAccount.id,
-          amount: '0.0001',
         }),
       ).rejects.toThrow(AccountNotFoundError);
     });
 
-    it('throws `Failed to estimate fee` error if no fee rate is returned from the chain service', async () => {
+    it('throws `Failed to get max spendable balance` error if no fee rate is returned from the chain service', async () => {
       const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
       const { keyringAccount } = await createAccount(network, caip2ChainId);
@@ -235,23 +323,21 @@ describe('EstimateFeeHandler', () => {
       });
 
       await expect(
-        estimateFee({
+        getMaxSpendableBalance({
           account: keyringAccount.id,
-          amount: '0.0001',
         }),
-      ).rejects.toThrow('Failed to estimate fee');
+      ).rejects.toThrow('Failed to get max spendable balance');
     });
 
-    it('throws `Transaction amount too small` error if amount to estimate for is considered dust', async () => {
+    it('throws `Failed to get max spendable balance` error if another error was thrown during the estimation', async () => {
       const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
-      const { sender, keyringAccount } = await createAccount(
-        network,
-        caip2ChainId,
-      );
+      const { sender } = await createAccount(network, caip2ChainId);
       const { data: utxoDataList } = createMockGetDataForTransactionResp(
         sender.address,
-        10,
+        1,
+        10000,
+        10000,
       );
       const { getDataForTransactionSpy, getFeeRatesSpy } =
         createMockChainApiFactory();
@@ -268,13 +354,15 @@ describe('EstimateFeeHandler', () => {
           },
         ],
       });
+      jest
+        .spyOn(BtcWallet.prototype, 'estimateFee')
+        .mockRejectedValue(new Error('error'));
 
       await expect(
-        estimateFee({
-          account: keyringAccount.id,
-          amount: satsToBtc(1),
+        getMaxSpendableBalance({
+          account: uuidV4(),
         }),
-      ).rejects.toThrow(new TxValidationError('Transaction amount too small'));
+      ).rejects.toThrow('Failed to get max spendable balance');
     });
   });
 });
