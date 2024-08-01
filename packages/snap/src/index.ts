@@ -11,10 +11,16 @@ import {
 import { Config } from './config';
 import { BtcKeyring } from './keyring';
 import { InternalRpcMethod, originPermissions } from './permissions';
-import type { GetTransactionStatusParams, EstimateFeeParams } from './rpcs';
-import { getTransactionStatus, estimateFee } from './rpcs';
-import type { GetMaxSpendableBalanceParams } from './rpcs/get-max-spendable-balance';
-import { getMaxSpendableBalance } from './rpcs/get-max-spendable-balance';
+import type {
+  GetTransactionStatusParams,
+  EstimateFeeParams,
+  GetMaxSpendableBalanceParams,
+} from './rpcs';
+import {
+  getTransactionStatus,
+  estimateFee,
+  getMaxSpendableBalance,
+} from './rpcs';
 import { KeyringStateManager } from './stateManagement';
 import { isSnapRpcError, logger } from './utils';
 

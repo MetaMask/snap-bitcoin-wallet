@@ -42,9 +42,9 @@ export type GetMaxSpendableBalanceResponse = Infer<
 /**
  * Get max spendable balance.
  *
- * This function will use the binary search algorithm to calculate the maximum spendable balance of the account.
+ * This function uses a binary search algorithm to compute the maximum spendable balance of the given account.
  *
- * @param params - The parameters to use when estimating the max spendable balance.
+ * @param params - The parameters to use when computing the max spendable balance.
  * @returns A Promise that resolves to an GetMaxSpendableBalanceResponse object.
  */
 export async function getMaxSpendableBalance(
@@ -77,16 +77,16 @@ export async function getMaxSpendableBalance(
 
     const fee = getFeeRate(feesResp.fees);
 
-    const metadata = await chainApi.getDataForTransaction(account.address);
+    const {
+      data: { utxos },
+    } = await chainApi.getDataForTransaction(account.address);
 
     let spendable = BigInt(0);
     let estimatedFee = BigInt(0);
     let low = BigInt(0);
-    // Using the sum of all UTXO values as the high value, instead of directly using the balance, is more accurate because balance data may be delayed.
-    let high = metadata.data.utxos.reduce(
-      (acc, utxo) => acc + BigInt(utxo.value),
-      BigInt(0),
-    );
+    // Using the sum of all UTXO values as the high value, instead of directly using the balance.
+    // This is more accurate because balance data may be outdated.
+    let high = utxos.reduce((acc, utxo) => acc + BigInt(utxo.value), BigInt(0));
 
     while (low <= high) {
       // Calculate the Math.floor in big int.
@@ -106,7 +106,7 @@ export async function getMaxSpendableBalance(
             },
           ],
           {
-            utxos: metadata.data.utxos,
+            utxos,
             fee,
           },
         );

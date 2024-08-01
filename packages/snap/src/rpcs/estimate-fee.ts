@@ -70,7 +70,9 @@ export async function estimateFee(params: EstimateFeeParams) {
 
     const fee = getFeeRate(feesResp.fees);
 
-    const metadata = await chainApi.getDataForTransaction(account.address);
+    const {
+      data: { utxos },
+    } = await chainApi.getDataForTransaction(account.address);
 
     // TODO: change this to use the first address from account when we support multi-addresses per accounts
     // We do not need the real recipient address when estimating the fees, so we just use our account's address here
@@ -82,7 +84,7 @@ export async function estimateFee(params: EstimateFeeParams) {
     ];
 
     const result = await wallet.estimateFee(account, recipients, {
-      utxos: metadata.data.utxos,
+      utxos,
       fee,
     });
 

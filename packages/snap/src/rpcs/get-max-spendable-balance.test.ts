@@ -155,7 +155,7 @@ describe('GetMaxSpendableBalanceHandler', () => {
         },
       });
 
-      // If there are no UTXOs that meet the dust threshold, then the total balance should equal the sum of the fee and the spendable balance.
+      // If there are no UTXOs that meet the dust threshold, then the total balance should be equal to the sum of the fee and the spendable balance.
       expect(
         btcToSats(result.fee.amount) + btcToSats(result.balance.amount),
       ).toStrictEqual(BigInt(utxoTotalValue));
