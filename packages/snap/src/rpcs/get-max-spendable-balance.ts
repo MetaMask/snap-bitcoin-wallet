@@ -89,11 +89,8 @@ export async function getMaxSpendableBalance(
     let high = utxos.reduce((acc, utxo) => acc + BigInt(utxo.value), BigInt(0));
 
     while (low <= high) {
-      // Calculate the Math.floor in big int.
-      const divisor = BigInt(2);
-      const sumOfLowNHigh = low + high;
-      const remainder = sumOfLowNHigh % divisor;
-      const mid = (sumOfLowNHigh - remainder) / divisor;
+      // Compute the middle value.
+      const mid = (low + high) / BigInt(2);
 
       // Test the middle value.
       try {
