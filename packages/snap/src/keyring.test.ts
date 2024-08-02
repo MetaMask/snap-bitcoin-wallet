@@ -8,6 +8,7 @@ import { Config } from './config';
 import { Caip2Asset, Caip2ChainId } from './constants';
 import { AccountNotFoundError, MethodNotImplementedError } from './exceptions';
 import { Factory } from './factory';
+import type { CreateAccountOptions } from './keyring';
 import { BtcKeyring } from './keyring';
 import * as getBalanceRpc from './rpcs/get-balances';
 import * as sendManyRpc from './rpcs/sendmany';
@@ -20,6 +21,13 @@ jest.mock('@metamask/keyring-api', () => ({
   ...jest.requireActual('@metamask/keyring-api'),
   emitSnapKeyringEvent: jest.fn(),
 }));
+
+class MockBtcKeyring extends BtcKeyring {
+  // Mock protected method getKeyringAccountNameSuggestion to public for test purpose
+  public getKeyringAccountNameSuggestion(options?: CreateAccountOptions) {
+    return super.getKeyringAccountNameSuggestion(options);
+  }
+}
 
 describe('BtcKeyring', () => {
   const origin = 'http://localhost:3000';
@@ -73,8 +81,9 @@ describe('BtcKeyring', () => {
   const createMockKeyring = (stateMgr: KeyringStateManager) => {
     const sendManySpy = jest.spyOn(sendManyRpc, 'sendMany');
     const getBalanceRpcSpy = jest.spyOn(getBalanceRpc, 'getBalances');
+
     return {
-      instance: new BtcKeyring(stateMgr, {
+      instance: new MockBtcKeyring(stateMgr, {
         defaultIndex: 0,
         origin,
         multiAccount: false,
@@ -519,5 +528,41 @@ describe('BtcKeyring', () => {
         keyring.getAccountBalances(account.id, [Caip2Asset.TBtc]),
       ).rejects.toThrow(Error);
     });
+  });
+
+  describe('getKeyringAccountNameSuggestion', () => {
+    it.each([
+      {
+        scope: Caip2ChainId.Mainnet,
+        accountName: 'Bitcoin Account',
+      },
+      {
+        scope: Caip2ChainId.Testnet,
+        accountName: 'Bitcoin Testnet Account',
+      },
+    ])(
+      'returns "$accountName" if the Caip 2 ChainId is $scope',
+      ({ scope, accountName }: { scope: string; accountName: string }) => {
+        const { instance: stateMgr } = createMockStateMgr();
+        const { instance: keyring } = createMockKeyring(stateMgr);
+
+        expect(
+          keyring.getKeyringAccountNameSuggestion({
+            scope,
+          }),
+        ).toStrictEqual(accountName);
+      },
+    );
+  });
+
+  it('returns empty string if the Caip 2 ChainId is neither Testnet or Mainnet', () => {
+    const { instance: stateMgr } = createMockStateMgr();
+    const { instance: keyring } = createMockKeyring(stateMgr);
+
+    expect(
+      keyring.getKeyringAccountNameSuggestion({
+        scope: 'Other Caip 2 Chain Id',
+      }),
+    ).toBe('');
   });
 });
