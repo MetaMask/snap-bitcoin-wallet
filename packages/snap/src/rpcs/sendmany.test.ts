@@ -2,25 +2,13 @@ import {
   InvalidParamsError,
   UserRejectedRequestError,
 } from '@metamask/snaps-sdk';
-import { networks } from 'bitcoinjs-lib';
-import { v4 as uuidV4 } from 'uuid';
 
-import {
-  generateBlockChairBroadcastTransactionResp,
-  generateBlockChairGetUtxosResp,
-} from '../../test/utils';
-import { BtcOnChainService } from '../bitcoin/chain';
 import type { BtcAccount } from '../bitcoin/wallet';
-import {
-  BtcAccountDeriver,
-  BtcWallet,
-  type ITxInfo,
-  TxValidationError,
-} from '../bitcoin/wallet';
-import { Config } from '../config';
+import { TxValidationError } from '../bitcoin/wallet';
 import { Caip2ChainId } from '../constants';
 import { getExplorerUrl, shortenAddress, satsToBtc } from '../utils';
 import * as snapUtils from '../utils/snap';
+import { SendManyTest } from './__test__/helper';
 import { type SendManyParams, sendMany } from './sendmany';
 
 jest.mock('../utils/logger');
@@ -29,66 +17,6 @@ jest.mock('../utils/snap');
 describe('SendManyHandler', () => {
   describe('sendMany', () => {
     const origin = 'http://localhost:3000';
-
-    const createMockChainApiFactory = () => {
-      const getFeeRatesSpy = jest.spyOn(
-        BtcOnChainService.prototype,
-        'getFeeRates',
-      );
-      const broadcastTransactionSpy = jest.spyOn(
-        BtcOnChainService.prototype,
-        'broadcastTransaction',
-      );
-      const getDataForTransactionSpy = jest.spyOn(
-        BtcOnChainService.prototype,
-        'getDataForTransaction',
-      );
-
-      return {
-        getDataForTransactionSpy,
-        getFeeRatesSpy,
-        broadcastTransactionSpy,
-      };
-    };
-
-    const createMockDeriver = (network) => {
-      return {
-        instance: new BtcAccountDeriver(network),
-      };
-    };
-
-    const createSenderNRecipients = async (
-      network,
-      caip2ChainId: string,
-      recipientCnt: number,
-    ) => {
-      const { instance } = createMockDeriver(network);
-      const wallet = new BtcWallet(instance, network);
-      const sender = await wallet.unlock(0, Config.wallet.defaultAccountType);
-
-      const keyringAccount = {
-        type: sender.type,
-        id: uuidV4(),
-        address: sender.address,
-        options: {
-          scope: caip2ChainId,
-          index: sender.index,
-        },
-        methods: ['btc_sendmany'],
-      };
-      const recipients: BtcAccount[] = [];
-      for (let i = 1; i < recipientCnt + 1; i++) {
-        recipients.push(
-          await wallet.unlock(i, Config.wallet.defaultAccountType),
-        );
-      }
-
-      return {
-        sender,
-        keyringAccount,
-        recipients,
-      };
-    };
 
     const createSendManyParams = (
       recipients: BtcAccount[],
@@ -109,122 +37,75 @@ describe('SendManyHandler', () => {
       } as unknown as SendManyParams;
     };
 
-    const createMockGetDataForTransactionResp = (
-      address: string,
-      counter: number,
+    const prepareSendMany = async (
+      caip2ChainId: string,
+      recipientCnt = 10,
+      feeRate = 1,
+      utxoCount = 10,
+      utxoMinVal = 100000,
+      utxoMaxVal = 100000,
     ) => {
-      const mockResponse = generateBlockChairGetUtxosResp(
-        address,
-        counter,
-        100000,
-        100000,
-      );
-      return mockResponse.data[address].utxo.map((utxo) => ({
-        block: utxo.block_id,
-        txHash: utxo.transaction_hash,
-        index: utxo.index,
-        value: utxo.value,
-      }));
-    };
+      const test = new SendManyTest({
+        caip2ChainId,
+        utxoCount,
+        utxoMinVal,
+        utxoMaxVal,
+        feeRate,
+        recipientCnt,
+      });
+      await test.setup();
 
-    const createMockBroadcastTransactionResp = () => {
-      return generateBlockChairBroadcastTransactionResp().data.transaction_hash;
-    };
-
-    const prepareSendMany = async (network, caip2ChainId) => {
-      const {
-        getDataForTransactionSpy,
-        getFeeRatesSpy,
-        broadcastTransactionSpy,
-      } = createMockChainApiFactory();
       const snapHelperSpy = jest.spyOn(snapUtils, 'confirmDialog');
-
-      const { sender, keyringAccount, recipients } =
-        await createSenderNRecipients(network, caip2ChainId, 2);
-
-      const broadcastResp = createMockBroadcastTransactionResp();
-
-      getDataForTransactionSpy.mockResolvedValue({
-        data: {
-          utxos: createMockGetDataForTransactionResp(sender.address, 10),
-        },
-      });
-      getFeeRatesSpy.mockResolvedValue({
-        fees: [
-          {
-            type: Config.defaultFeeRate,
-            rate: BigInt(1),
-          },
-        ],
-      });
-      broadcastTransactionSpy.mockResolvedValue({
-        transactionId: broadcastResp,
-      });
       snapHelperSpy.mockResolvedValue(true);
 
       return {
-        sender,
-        keyringAccount,
-        recipients,
-        broadcastResp,
-        getDataForTransactionSpy,
-        getFeeRatesSpy,
-        broadcastTransactionSpy,
+        testHelper: test,
         snapHelperSpy,
       };
     };
 
     it('returns correct result', async () => {
-      const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
-      const {
-        sender,
-        recipients,
-        broadcastResp,
-        getDataForTransactionSpy,
-        getFeeRatesSpy,
-        broadcastTransactionSpy,
-      } = await prepareSendMany(network, caip2ChainId);
+      const { testHelper } = await prepareSendMany(caip2ChainId);
 
       const result = await sendMany(
-        sender,
+        testHelper.sender,
         origin,
-        createSendManyParams(recipients, caip2ChainId, false),
+        createSendManyParams(testHelper.recipients, caip2ChainId, false),
       );
 
-      expect(result).toStrictEqual({ txId: broadcastResp });
-      expect(getFeeRatesSpy).toHaveBeenCalledTimes(1);
-      expect(getDataForTransactionSpy).toHaveBeenCalledTimes(1);
-      expect(broadcastTransactionSpy).toHaveBeenCalledTimes(1);
+      expect(result).toStrictEqual({ txId: testHelper.broadCastTxResp });
+      expect(testHelper.getFeeRatesSpy).toHaveBeenCalledTimes(1);
+      expect(testHelper.getDataForTransactionSpy).toHaveBeenCalledTimes(1);
+      expect(testHelper.broadcastTransactionSpy).toHaveBeenCalledTimes(1);
     });
 
     it('does not broadcast transaction if in dryrun mode', async () => {
-      const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
-      const { recipients, sender, broadcastTransactionSpy } =
-        await prepareSendMany(network, caip2ChainId);
+      const { testHelper } = await prepareSendMany(caip2ChainId);
 
       await sendMany(
-        sender,
+        testHelper.sender,
         origin,
-        createSendManyParams(recipients, caip2ChainId, true),
+        createSendManyParams(testHelper.recipients, caip2ChainId, true),
       );
 
-      expect(broadcastTransactionSpy).toHaveBeenCalledTimes(0);
+      expect(testHelper.broadcastTransactionSpy).toHaveBeenCalledTimes(0);
     });
 
     it('does create comment component in dialog if consumer has provide the comment', async () => {
-      const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
-      const { sender, recipients, snapHelperSpy } = await prepareSendMany(
-        network,
-        caip2ChainId,
-      );
+      const { testHelper, snapHelperSpy } = await prepareSendMany(caip2ChainId);
 
       await sendMany(
-        sender,
+        testHelper.sender,
         origin,
-        createSendManyParams(recipients, caip2ChainId, true, 'test comment'),
+        createSendManyParams(
+          testHelper.recipients,
+          caip2ChainId,
+          true,
+          'test comment',
+        ),
       );
 
       const calls = snapHelperSpy.mock.calls[0][0];
@@ -254,45 +135,22 @@ describe('SendManyHandler', () => {
     });
 
     it('display `Recipient` as label in dialog if there is only 1 recipient', async () => {
-      const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
-      const { recipients, snapHelperSpy, sender } = await prepareSendMany(
-        network,
-        caip2ChainId,
-      );
-      const walletCreateTxSpy = jest.spyOn(
-        BtcWallet.prototype,
-        'createTransaction',
-      );
-      const walletSignTxSpy = jest.spyOn(
-        BtcWallet.prototype,
-        'signTransaction',
-      );
-
-      const info: ITxInfo = {
-        feeRate: BigInt('1'),
-        txFee: BigInt('1'),
-        sender: sender.address,
-        recipients: [
-          {
-            address: recipients[0].address,
-            value: BigInt('1000'),
-          },
-        ],
-        total: BigInt('1000'),
-      };
-
-      walletCreateTxSpy.mockResolvedValue({
-        tx: 'transaction',
-        txInfo: info,
-      });
-
-      walletSignTxSpy.mockResolvedValue('txId');
+      const {
+        testHelper,
+        snapHelperSpy,
+        // Reduce utxo value to avoid change output
+      } = await prepareSendMany(caip2ChainId, 1, 1, 1, 800, 800);
 
       await sendMany(
-        sender,
+        testHelper.sender,
         origin,
-        createSendManyParams([recipients[0]], caip2ChainId, true),
+        createSendManyParams(
+          testHelper.recipients,
+          caip2ChainId,
+          true,
+          'test comment',
+        ),
       );
 
       const calls = snapHelperSpy.mock.calls[0][0];
@@ -308,59 +166,34 @@ describe('SendManyHandler', () => {
             value: {
               type: 'text',
               value: `[${shortenAddress(
-                recipients[0].address,
-              )}](${getExplorerUrl(recipients[0].address, caip2ChainId)})`,
+                testHelper.recipients[0].address,
+              )}](${getExplorerUrl(
+                testHelper.recipients[0].address,
+                caip2ChainId,
+              )})`,
             },
           },
           {
             type: 'row',
             label: 'Amount',
-            value: { markdown: false, type: 'text', value: '0.00001000 BTC' },
+            value: { markdown: false, type: 'text', value: '0.00000500 BTC' },
           },
         ],
       });
     });
 
     it('display `Origin` in dialog', async () => {
-      const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
-      const { recipients, snapHelperSpy, sender } = await prepareSendMany(
-        network,
-        caip2ChainId,
-      );
-      const walletCreateTxSpy = jest.spyOn(
-        BtcWallet.prototype,
-        'createTransaction',
-      );
-      const walletSignTxSpy = jest.spyOn(
-        BtcWallet.prototype,
-        'signTransaction',
-      );
-
-      const info: ITxInfo = {
-        feeRate: BigInt('1'),
-        txFee: BigInt('1'),
-        sender: sender.address,
-        recipients: [
-          {
-            address: recipients[0].address,
-            value: BigInt('1000'),
-          },
-        ],
-        total: BigInt('1000'),
-      };
-
-      walletCreateTxSpy.mockResolvedValue({
-        tx: 'transaction',
-        txInfo: info,
-      });
-
-      walletSignTxSpy.mockResolvedValue('txId');
+      const {
+        testHelper,
+        snapHelperSpy,
+        // Reduce utxo value to avoid change output
+      } = await prepareSendMany(caip2ChainId);
 
       await sendMany(
-        sender,
+        testHelper.sender,
         origin,
-        createSendManyParams([recipients[0]], caip2ChainId, true),
+        createSendManyParams(testHelper.recipients, caip2ChainId, true),
       );
 
       const calls = snapHelperSpy.mock.calls[0][0];
@@ -393,179 +226,138 @@ describe('SendManyHandler', () => {
     });
 
     it('throws InvalidParamsError when request parameter is not correct', async () => {
-      const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
-      const { sender } = await prepareSendMany(network, caip2ChainId);
+      const { testHelper } = await prepareSendMany(caip2ChainId);
 
       await expect(
-        sendMany(sender, origin, {
+        sendMany(testHelper.sender, origin, {
           amounts: {
-            'some-address': '1',
+            'invalid-address': '1',
           },
         } as unknown as SendManyParams),
       ).rejects.toThrow(InvalidParamsError);
     });
 
     it('throws `Transaction must have at least one recipient` error if no recipient provided', async () => {
-      createMockChainApiFactory();
-      const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
-      const { recipients, sender } = await createSenderNRecipients(
-        network,
-        caip2ChainId,
-        0,
-      );
+      const { testHelper } = await prepareSendMany(caip2ChainId, 0);
+
       await expect(
         sendMany(
-          sender,
+          testHelper.sender,
           origin,
-          createSendManyParams(recipients, caip2ChainId, false),
+          createSendManyParams([], caip2ChainId, false),
         ),
       ).rejects.toThrow('Transaction must have at least one recipient');
     });
 
     it('throws `Invalid amount, must be a positive finite number` error if receive amount is not valid', async () => {
-      createMockChainApiFactory();
-      const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
-      const { recipients, sender } = await createSenderNRecipients(
-        network,
-        caip2ChainId,
-        2,
-      );
-      await expect(
-        sendMany(sender, origin, {
-          ...createSendManyParams(recipients, caip2ChainId, false),
-          amounts: {
-            [recipients[0].address]: 'invalid',
-            [recipients[1].address]: '0.1',
-          },
-        }),
-      ).rejects.toThrow('Invalid amount, must be a positive finite number');
+      const { testHelper } = await prepareSendMany(caip2ChainId, 2);
 
       await expect(
-        sendMany(sender, origin, {
-          ...createSendManyParams(recipients, caip2ChainId, false),
+        sendMany(testHelper.sender, origin, {
+          ...createSendManyParams(testHelper.recipients, caip2ChainId, false),
           amounts: {
-            [recipients[0].address]: '0',
-            [recipients[1].address]: '0.1',
-          },
-        }),
-      ).rejects.toThrow('Invalid amount, must be a positive finite number');
-
-      await expect(
-        sendMany(sender, origin, {
-          ...createSendManyParams(recipients, caip2ChainId, false),
-          amounts: {
-            [recipients[0].address]: 'invalid',
-            [recipients[1].address]: '0.000000019',
+            [testHelper.recipients[0].address]: 'invalid',
+            [testHelper.recipients[1].address]: '0.1',
           },
         }),
       ).rejects.toThrow('Invalid amount, must be a positive finite number');
     });
 
     it('throws `Invalid amount, out of bounds` error if receive amount is out of bounds', async () => {
-      createMockChainApiFactory();
-      const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
-      const { recipients, sender } = await createSenderNRecipients(
-        network,
-        caip2ChainId,
-        2,
-      );
+      const { testHelper } = await prepareSendMany(caip2ChainId, 2);
 
       await expect(
-        sendMany(sender, origin, {
-          ...createSendManyParams(recipients, caip2ChainId, false),
+        sendMany(testHelper.sender, origin, {
+          ...createSendManyParams(testHelper.recipients, caip2ChainId, false),
           amounts: {
-            [recipients[0].address]: '1',
-            [recipients[1].address]: '999999999.99999999',
+            [testHelper.recipients[0].address]: '999999999.99999999',
+            [testHelper.recipients[1].address]: '0.1',
           },
         }),
       ).rejects.toThrow('Invalid amount, out of bounds');
     });
 
     it('throws `Invalid response` error if the response is unexpected', async () => {
-      const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
-      const { sender, recipients, broadcastTransactionSpy } =
-        await prepareSendMany(network, caip2ChainId);
+      const { testHelper } = await prepareSendMany(caip2ChainId);
 
-      broadcastTransactionSpy.mockResolvedValue({
+      testHelper.broadcastTransactionSpy.mockReset().mockResolvedValue({
         transactionId: '',
-      });
-      await expect(
-        sendMany(sender, origin, {
-          ...createSendManyParams(recipients, caip2ChainId, false),
-        }),
-      ).rejects.toThrow('Invalid Response');
-    });
-
-    it('throws UserRejectedRequestError error if user denied the transaction', async () => {
-      const network = networks.testnet;
-      const caip2ChainId = Caip2ChainId.Testnet;
-      const { snapHelperSpy, sender, recipients } = await prepareSendMany(
-        network,
-        caip2ChainId,
-      );
-      snapHelperSpy.mockResolvedValue(false);
-
-      await expect(
-        sendMany(sender, origin, {
-          ...createSendManyParams(recipients, caip2ChainId, false),
-        }),
-      ).rejects.toThrow(UserRejectedRequestError);
-    });
-
-    it('throws `Failed to send the transaction` error if no fee rate is returned from the chain service', async () => {
-      const { getFeeRatesSpy } = createMockChainApiFactory();
-      const network = networks.testnet;
-      const caip2ChainId = Caip2ChainId.Testnet;
-      const { sender, recipients } = await createSenderNRecipients(
-        network,
-        caip2ChainId,
-        10,
-      );
-      getFeeRatesSpy.mockResolvedValue({
-        fees: [],
       });
 
       await expect(
         sendMany(
-          sender,
+          testHelper.sender,
           origin,
-          createSendManyParams(recipients, caip2ChainId, false),
+          createSendManyParams(testHelper.recipients, caip2ChainId, false),
+        ),
+      ).rejects.toThrow('Invalid Response');
+    });
+
+    it('throws UserRejectedRequestError error if user denied the transaction', async () => {
+      const caip2ChainId = Caip2ChainId.Testnet;
+      const { testHelper, snapHelperSpy } = await prepareSendMany(caip2ChainId);
+      snapHelperSpy.mockResolvedValue(false);
+
+      await expect(
+        sendMany(
+          testHelper.sender,
+          origin,
+          createSendManyParams(testHelper.recipients, caip2ChainId, false),
+        ),
+      ).rejects.toThrow(UserRejectedRequestError);
+    });
+
+    it('throws `Failed to send the transaction` error if no fee rate is returned from the chain service', async () => {
+      const caip2ChainId = Caip2ChainId.Testnet;
+      const { testHelper } = await prepareSendMany(caip2ChainId);
+
+      await testHelper.createNoFeeAvailableTest();
+
+      await expect(
+        sendMany(
+          testHelper.sender,
+          origin,
+          createSendManyParams(testHelper.recipients, caip2ChainId, false),
         ),
       ).rejects.toThrow('Failed to send the transaction');
     });
 
     it('throws `Failed to send the transaction` error if the transaction is fail to commit', async () => {
-      const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
-      const { broadcastTransactionSpy, sender, recipients } =
-        await prepareSendMany(network, caip2ChainId);
-      broadcastTransactionSpy.mockRejectedValue(new Error('error'));
+      const { testHelper } = await prepareSendMany(caip2ChainId);
+
+      testHelper.broadcastTransactionSpy
+        .mockReset()
+        .mockRejectedValue(new Error('error'));
 
       await expect(
-        sendMany(sender, origin, {
-          ...createSendManyParams(recipients, caip2ChainId, false),
-        }),
+        sendMany(
+          testHelper.sender,
+          origin,
+          createSendManyParams(testHelper.recipients, caip2ChainId, false),
+        ),
       ).rejects.toThrow('Failed to send the transaction');
     });
 
     it('throws DisplayableError error message if the DisplayableError is thrown', async () => {
-      const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
-      const { broadcastTransactionSpy, sender, recipients } =
-        await prepareSendMany(network, caip2ChainId);
-      broadcastTransactionSpy.mockRejectedValue(
-        new TxValidationError('some tx error'),
-      );
+      const { testHelper } = await prepareSendMany(caip2ChainId);
+
+      testHelper.broadcastTransactionSpy
+        .mockReset()
+        .mockRejectedValue(new TxValidationError('some tx error'));
 
       await expect(
-        sendMany(sender, origin, {
-          ...createSendManyParams(recipients, caip2ChainId, false),
-        }),
+        sendMany(
+          testHelper.sender,
+          origin,
+          createSendManyParams(testHelper.recipients, caip2ChainId, false),
+        ),
       ).rejects.toThrow('some tx error');
     });
   });
