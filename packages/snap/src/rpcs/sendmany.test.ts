@@ -8,7 +8,7 @@ import { TxValidationError } from '../bitcoin/wallet';
 import { Caip2ChainId } from '../constants';
 import { getExplorerUrl, shortenAddress, satsToBtc } from '../utils';
 import * as snapUtils from '../utils/snap';
-import { SendManyTest } from './__test__/helper';
+import { SendManyTest } from './__tests__/helper';
 import { type SendManyParams, sendMany } from './sendmany';
 
 jest.mock('../utils/logger');

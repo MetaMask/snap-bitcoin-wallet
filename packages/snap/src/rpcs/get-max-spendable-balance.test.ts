@@ -5,7 +5,7 @@ import { BtcWallet } from '../bitcoin/wallet';
 import { Caip2ChainId } from '../constants';
 import { AccountNotFoundError } from '../exceptions';
 import { btcToSats, satsToBtc } from '../utils';
-import { GetMaxSpendableBalanceTest } from './__test__/helper';
+import { GetMaxSpendableBalanceTest } from './__tests__/helper';
 import type { GetMaxSpendableBalanceParams } from './get-max-spendable-balance';
 import { getMaxSpendableBalance } from './get-max-spendable-balance';
 
@@ -175,8 +175,6 @@ describe('GetMaxSpendableBalanceHandler', () => {
       const { testHelper } = await prepareGetMaxSpendableBalance(
         Caip2ChainId.Testnet,
       );
-      await testHelper.createNoFeeAvailableTest();
-
       jest
         .spyOn(BtcWallet.prototype, 'estimateFee')
         .mockRejectedValue(new Error('error'));

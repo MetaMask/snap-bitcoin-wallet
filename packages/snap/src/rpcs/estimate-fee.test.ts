@@ -4,8 +4,8 @@ import { v4 as uuidV4 } from 'uuid';
 import { CoinSelectService, TxValidationError } from '../bitcoin/wallet';
 import { Caip2ChainId } from '../constants';
 import { AccountNotFoundError } from '../exceptions';
-import { satsToBtc } from '../utils';
-import { EstimateFeeTest } from './__test__/helper';
+import { logger, satsToBtc } from '../utils';
+import { EstimateFeeTest } from './__tests__/helper';
 import type { EstimateFeeParams } from './estimate-fee';
 import { estimateFee } from './estimate-fee';
 
@@ -36,14 +36,50 @@ describe('EstimateFeeHandler', () => {
     };
 
     it('returns fee correctly', async () => {
-      const { testHelper } = await prepareEstimateFee(Caip2ChainId.Testnet);
+      // Create test with 1 utxos of 100000 sats
+      const { testHelper } = await prepareEstimateFee(
+        Caip2ChainId.Testnet,
+        1,
+        1,
+        100000,
+        100000,
+      );
+
+      const result = await estimateFee({
+        account: testHelper.keyringAccount.id,
+        // spend 10000 sats to make sure we have change
+        amount: satsToBtc(10000),
+      });
+
+      expect(result).toStrictEqual({
+        fee: {
+          // 1 input = 63 bytes
+          // 1 output = 31 bytes
+          // 1 change = 34 bytes
+          // 1 overhead = 10
+          // FeeRate * (1 input bytes + 1 output bytes + overhead) = 1 * (63 + 34 + 10) = 138 sats
+          amount: satsToBtc(138),
+          unit: 'BTC',
+        },
+      });
+    });
+
+    it('does not throw error if the account has insufficient funds to pay the tx fee', async () => {
+      // Create test with 1 utxos of 1000 sats, to make sure the account has insufficient funds to pay the tx fee
+      const { testHelper } = await prepareEstimateFee(
+        Caip2ChainId.Testnet,
+        1,
+        1,
+        1000,
+        1000,
+      );
 
       const coinSelectServiceSpy = jest.spyOn(
         CoinSelectService.prototype,
         'selectCoins',
       );
 
-      const expectedFee = 200;
+      const expectedFee = 2000;
       coinSelectServiceSpy.mockReturnValue({
         inputs: [],
         outputs: [],
@@ -52,17 +88,18 @@ describe('EstimateFeeHandler', () => {
 
       const result = await estimateFee({
         account: testHelper.keyringAccount.id,
-        amount: '0.0001',
+        amount: '1',
       });
 
+      expect(logger.warn).toHaveBeenCalledWith(
+        'No input or output found, fee estimation might be inaccurate',
+      );
       expect(result).toStrictEqual({
         fee: {
-          amount: expect.any(String),
+          amount: satsToBtc(expectedFee),
           unit: 'BTC',
         },
       });
-
-      expect(result.fee.amount).toBe(satsToBtc(expectedFee));
     });
 
     it('throws `InvalidParamsError` when the request parameter is not correct', async () => {

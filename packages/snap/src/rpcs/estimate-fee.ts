@@ -94,7 +94,7 @@ export async function estimateFee(params: EstimateFeeParams) {
     // - There is no output when computing the estimation
     //
     // NOTE: It is by design that we do not raise any error for now
-    if (!result.inputs || !result.outputs) {
+    if (result.inputs.length === 0 || result.outputs.length === 0) {
       logger.warn(
         'No input or output found, fee estimation might be inaccurate',
       );
