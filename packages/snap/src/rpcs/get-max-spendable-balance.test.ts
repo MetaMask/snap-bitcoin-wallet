@@ -74,13 +74,10 @@ describe('GetMaxSpendableBalanceHandler', () => {
       // When using 104 satoshis per byte and 1 input contains 63 bytes, the dust threshold (fee for using this UTXO) will be 104 * 63 bytes = 6552 satoshis. Any UTXO less than this amount will be discarded as it would be a waste to use it.
       const utxoInputBytesSize = 63;
       const dustThreshold = utxoInputBytesSize * feeRate;
-      // Override the first UTXO to be below the dust threshold
+      // We set the first UTXO to be the dust threshold and re-calculate the total.
+      testHelper.utxos.total =
+        testHelper.utxos.total - testHelper.utxos.list[0].value + dustThreshold;
       testHelper.utxos.list[0].value = dustThreshold;
-      // Re-calculate the total value of the UTXOs
-      testHelper.utxos.total = testHelper.utxos.list.reduce(
-        (acc, utxo) => acc + utxo.value,
-        0,
-      );
 
       const result = await getMaxSpendableBalance({
         account: testHelper.keyringAccount.id,
