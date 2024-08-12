@@ -21,17 +21,17 @@ describe('GetMaxSpendableBalanceHandler', () => {
       utxoMinVal = 100000,
       utxoMaxVal = 100000,
     ) => {
-      const test = new GetMaxSpendableBalanceTest({
+      const testHelper = new GetMaxSpendableBalanceTest({
         caip2ChainId,
         utxoCount,
         utxoMinVal,
         utxoMaxVal,
         feeRate,
       });
-      await test.setup();
+      await testHelper.setup();
 
       return {
-        testHelper: test,
+        testHelper,
       };
     };
 

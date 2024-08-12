@@ -45,7 +45,7 @@ describe('SendManyHandler', () => {
       utxoMinVal = 100000,
       utxoMaxVal = 100000,
     ) => {
-      const test = new SendManyTest({
+      const testHelper = new SendManyTest({
         caip2ChainId,
         utxoCount,
         utxoMinVal,
@@ -53,13 +53,13 @@ describe('SendManyHandler', () => {
         feeRate,
         recipientCnt,
       });
-      await test.setup();
+      await testHelper.setup();
 
       const snapHelperSpy = jest.spyOn(snapUtils, 'confirmDialog');
       snapHelperSpy.mockResolvedValue(true);
 
       return {
-        testHelper: test,
+        testHelper,
         snapHelperSpy,
       };
     };
