@@ -168,7 +168,6 @@ export class AccountTest {
 
     this.keyringAccount = keyringAccount;
     this.getWalletSpy = getWalletSpy;
-
   }
 
   async createAccountNotFoundTest() {
@@ -251,7 +250,6 @@ export class EstimateFeeTest extends AccountTest {
         },
       ],
     });
-
   }
 
   async createNoFeeAvailableTest() {
@@ -261,7 +259,7 @@ export class EstimateFeeTest extends AccountTest {
   }
 }
 
-export class GetMaxSpendableBalanceTest extends EstimateFeeTest { }
+export class GetMaxSpendableBalanceTest extends EstimateFeeTest {}
 
 export class SendManyTest extends EstimateFeeTest {
   recipients: BtcAccount[];
