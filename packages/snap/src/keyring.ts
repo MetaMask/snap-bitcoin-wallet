@@ -221,7 +221,7 @@ export class BtcKeyring implements Keyring {
             comment: updatedSendRequest.transaction.comment,
             subtractFeeFrom: updatedSendRequest.transaction.subtractFeeFrom,
             replaceable: updatedSendRequest.transaction.replaceable,
-            dryrun: true,
+            dryrun: false,
             scope: walletData.scope,
           } as unknown as SendManyParams)) as unknown as Json;
         }
