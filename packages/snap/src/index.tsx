@@ -1,12 +1,18 @@
-import { handleKeyringRequest } from '@metamask/keyring-api';
+import {
+  BtcP2wpkhAddressStruct,
+  handleKeyringRequest,
+} from '@metamask/keyring-api';
 import {
   type OnRpcRequestHandler,
   type OnKeyringRequestHandler,
+  type OnUserInputHandler,
   type Json,
   UnauthorizedError,
   SnapError,
   MethodNotFoundError,
+  UserInputEventType,
 } from '@metamask/snaps-sdk';
+import { is } from 'superstruct';
 
 import { Config } from './config';
 import { BtcKeyring } from './keyring';
@@ -22,6 +28,8 @@ import {
   getMaxSpendableBalance,
 } from './rpcs';
 import { KeyringStateManager } from './stateManagement';
+import { generateSendFlowComponent } from './ui/components';
+import { SendFlowNames } from './ui/SendFlow';
 import { isSnapRpcError, logger } from './utils';
 
 export const validateOrigin = (origin: string, method: string): void => {
@@ -57,6 +65,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         return await getMaxSpendableBalance(
           request.params as GetMaxSpendableBalanceParams,
         );
+
       default:
         throw new MethodNotFoundError() as unknown as Error;
     }
@@ -77,7 +86,8 @@ export const onKeyringRequest: OnKeyringRequestHandler = async ({
   origin,
   request,
 }): Promise<Json> => {
-  logger.logLevel = parseInt(Config.logLevel, 10);
+  logger.logLevel = 6;
+  logger.log('onKeyringRequest', request, origin);
 
   try {
     validateOrigin(origin, request.method);
@@ -101,5 +111,45 @@ export const onKeyringRequest: OnKeyringRequestHandler = async ({
       `onKeyringRequest error: ${JSON.stringify(snapError.toJSON(), null, 2)}`,
     );
     throw snapError;
+  }
+};
+
+export const onUserInput: OnUserInputHandler = async ({ id, event }) => {
+  // TODO: refactor to another function
+  // get existing values from request id
+  const stateManager = new KeyringStateManager();
+  const existingRequest = await stateManager.getRequest(id);
+
+  if (!existingRequest) {
+    throw new Error(`missing request id: ${id}`);
+  }
+
+  // validate values
+  if (event.type === UserInputEventType.InputChangeEvent) {
+    if (event.name === SendFlowNames.AmountInput) {
+      const amount = parseFloat(event.value as string);
+      if (isNaN(amount) || amount < 0) {
+        existingRequest.validation.amount = false;
+      }
+      existingRequest.transaction.amount = amount.toString();
+      existingRequest.validation.amount = true;
+    } else if (event.name === SendFlowNames.RecipientInput) {
+      const address = event.value as string;
+
+      // TODO: validate other btc address types
+      if (!is(address, BtcP2wpkhAddressStruct)) {
+        existingRequest.validation.recipient = false;
+      }
+      existingRequest.validation.recipient = true;
+    }
+
+    await stateManager.upsertRequest(existingRequest);
+    await snap.request({
+      method: 'snap_updateInterface',
+      params: {
+        id,
+        ui: generateSendFlowComponent(existingRequest),
+      },
+    });
   }
 };

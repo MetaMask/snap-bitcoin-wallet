@@ -4,6 +4,7 @@ export enum InternalRpcMethod {
   GetTransactionStatus = 'chain_getTransactionStatus',
   EstimateFee = 'estimateFee',
   GetMaxSpendableBalance = 'getMaxSpendableBalance',
+  GetSendFlowRequest = 'getSendFlowRequest',
 }
 
 const dappPermissions = new Set([
@@ -27,6 +28,7 @@ const metamaskPermissions = new Set([
   KeyringRpcMethod.FilterAccountChains,
   KeyringRpcMethod.DeleteAccount,
   KeyringRpcMethod.GetAccountBalances,
+  KeyringRpcMethod.SubmitRequest,
 ]);
 
 const allowedOrigins = [

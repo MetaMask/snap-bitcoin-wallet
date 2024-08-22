@@ -19,11 +19,12 @@ import { v4 as uuidv4 } from 'uuid';
 
 import type { BtcAccount, BtcWallet } from './bitcoin/wallet';
 import { Config } from './config';
-import { Caip2ChainId } from './constants';
+import { Caip2Asset, Caip2ChainId } from './constants';
 import { AccountNotFoundError, MethodNotImplementedError } from './exceptions';
 import { Factory } from './factory';
 import { getBalances, type SendManyParams, sendMany } from './rpcs';
 import type { KeyringStateManager, Wallet } from './stateManagement';
+import { createInterface } from './ui/ui';
 import {
   getProvider,
   ScopeStruct,
@@ -180,11 +181,52 @@ export class BtcKeyring implements Keyring {
     this.verifyIfMethodValid(method, walletData.account);
 
     switch (method) {
-      case 'btc_sendmany':
-        return (await sendMany(account, this._options.origin, {
-          ...params,
+      case 'btc_sendmany': {
+        // TODO: refactor to another function
+        const balance = await getBalances(account, {
+          assets: [Caip2Asset.TBtc],
           scope: walletData.scope,
-        } as unknown as SendManyParams)) as unknown as Json;
+        });
+
+        const sendFlowRequest = await createInterface(
+          scope,
+          id,
+          account.address,
+          balance[Caip2Asset.TBtc].amount, // in btc
+        );
+        await this._stateMgr.upsertRequest(sendFlowRequest);
+
+        const userResult = await snap.request({
+          method: 'snap_dialog',
+          params: {
+            type: 'confirmation',
+            id: sendFlowRequest.id,
+          },
+        });
+
+        const updatedSendRequest = await this._stateMgr.getRequest(
+          sendFlowRequest.id,
+        );
+
+        if (!updatedSendRequest) {
+          throw new Error('[SendMany]: Error Request not found');
+        }
+
+        if (userResult) {
+          return (await sendMany(account, this._options.origin, {
+            // TODO: refactor to support multiple receivers?
+            amounts: {
+              [account.address]: updatedSendRequest.transaction.amount,
+            },
+            comment: updatedSendRequest.transaction.comment,
+            subtractFeeFrom: updatedSendRequest.transaction.subtractFeeFrom,
+            replaceable: updatedSendRequest.transaction.replaceable,
+            dryrun: true,
+            scope: walletData.scope,
+          } as unknown as SendManyParams)) as unknown as Json;
+        }
+        throw new Error('User rejected the request');
+      }
       default:
         throw new MethodNotFoundError() as unknown as Error;
     }

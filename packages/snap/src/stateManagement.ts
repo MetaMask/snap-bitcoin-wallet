@@ -1,5 +1,6 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
 
+import type { EstimateFeeResponse, SendManyParams } from './rpcs';
 import { compactError, SnapStateManager } from './utils';
 
 export type Wallet = {
@@ -11,9 +12,38 @@ export type Wallet = {
 
 export type Wallets = Record<string, Wallet>;
 
+export type SendEstimate = {
+  /* The estimated fee in BTC*/
+  fees: EstimateFeeResponse;
+  /* The estimated time to confirmation*/
+  confirmationTime: string;
+};
+
+export type Transaction = SendManyParams & {
+  sender: string;
+  recipient?: string;
+  amount?: string;
+};
+
+export type SendFlowRequest = {
+  id: string;
+  account: string;
+  scope: string;
+  balance: string;
+  transaction: Transaction;
+  estimates: SendEstimate;
+  validation: {
+    amount: boolean;
+    recipient: boolean;
+  };
+};
+
 export type SnapState = {
   walletIds: string[];
   wallets: Wallets;
+  requests: {
+    [id: string]: SendFlowRequest;
+  };
 };
 
 export class KeyringStateManager extends SnapStateManager<SnapState> {
@@ -24,6 +54,7 @@ export class KeyringStateManager extends SnapStateManager<SnapState> {
         state = {
           walletIds: [],
           wallets: {},
+          requests: {},
         };
       }
 
@@ -33,6 +64,10 @@ export class KeyringStateManager extends SnapStateManager<SnapState> {
 
       if (!state.wallets) {
         state.wallets = {};
+      }
+
+      if (!state.requests) {
+        state.requests = {};
       }
 
       return state;
@@ -130,6 +165,38 @@ export class KeyringStateManager extends SnapStateManager<SnapState> {
     }
   }
 
+  async getRequest(id: string): Promise<SendFlowRequest | null> {
+    try {
+      const state = await this.get();
+      return state.requests[id] ?? null;
+    } catch (error) {
+      throw compactError(error, Error);
+    }
+  }
+
+  async upsertRequest(sendFlowRequest: SendFlowRequest): Promise<void> {
+    try {
+      await this.update(async (state: SnapState) => {
+        state.requests[sendFlowRequest.id] = {
+          ...state.requests[sendFlowRequest.id],
+          ...sendFlowRequest,
+        };
+      });
+    } catch (error) {
+      throw compactError(error, Error);
+    }
+  }
+
+  async removeRequest(id: string): Promise<void> {
+    try {
+      await this.update(async (state: SnapState) => {
+        delete state.requests[id];
+      });
+    } catch (error) {
+      throw compactError(error, Error);
+    }
+  }
+
   protected getAccountByAddress(
     state: SnapState,
     address: string,
@@ -143,5 +210,9 @@ export class KeyringStateManager extends SnapStateManager<SnapState> {
 
   protected isAccountExist(state: SnapState, id: string): boolean {
     return Object.prototype.hasOwnProperty.call(state.wallets, id);
+  }
+
+  protected isRequestExist(state: SnapState, id: string): boolean {
+    return Object.prototype.hasOwnProperty.call(state.requests, id);
   }
 }
