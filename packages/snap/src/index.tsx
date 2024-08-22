@@ -137,10 +137,11 @@ export const onUserInput: OnUserInputHandler = async ({ id, event }) => {
       const address = event.value as string;
 
       // TODO: validate other btc address types
-      if (!is(address, BtcP2wpkhAddressStruct)) {
+      if (is(address, BtcP2wpkhAddressStruct)) {
+        existingRequest.validation.recipient = true;
+      } else {
         existingRequest.validation.recipient = false;
       }
-      existingRequest.validation.recipient = true;
     }
 
     await stateManager.upsertRequest(existingRequest);
