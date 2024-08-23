@@ -106,3 +106,41 @@ provider.request({
   },
 });
 ```
+
+### API `estimateFee`
+
+example:
+
+```typescript
+provider.request({
+  method: 'wallet_invokeSnap',
+  params: {
+    snapId,
+    request: {
+      method: 'estimateFee',
+      params: {
+        account: '9506e13e-d343-406f-8408-fad033ab7c0d', // the uuid account id of the current account
+        amount: '0.00001', // transaction amount in BTC
+      },
+    },
+  },
+});
+```
+
+### API `getMaxSpendableBalance`
+
+example:
+
+```typescript
+provider.request({
+  method: 'wallet_invokeSnap',
+  params: {
+    snapId,
+    request: {
+      method: 'getMaxSpendableBalance',
+       params: {
+          account: "9506e13e-d343-406f-8408-fad033ab7c0d", // the uuid account id of the current account
+    },
+  },
+});
+```
