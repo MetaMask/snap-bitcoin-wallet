@@ -129,17 +129,19 @@ export async function sendMany(
       replaceable: params.replaceable,
     });
 
-    if (!(await getTxConsensus(txInfo, params.comment, scope, origin))) {
-      throw new UserRejectedRequestError() as unknown as Error;
-    }
+    // if (!(await getTxConsensus(txInfo, params.comment, scope, origin))) {
+    //   throw new UserRejectedRequestError() as unknown as Error;
+    // }
 
     const signedTransaction = await wallet.signTransaction(account.signer, tx);
 
     if (dryrun) {
-      return {
+      const result = {
         txId: '',
         signedTransaction,
       };
+      console.log('dryrun', result);
+      return result;
     }
 
     const result = await chainApi.broadcastTransaction(signedTransaction);
@@ -147,6 +149,8 @@ export async function sendMany(
     const resp = {
       txId: result.transactionId,
     };
+
+    console.log('submitted txid', resp.txId);
 
     validateResponse(resp, SendManyResponseStruct);
 
