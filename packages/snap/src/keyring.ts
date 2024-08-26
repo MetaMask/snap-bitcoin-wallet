@@ -206,17 +206,22 @@ export class BtcKeyring implements Keyring {
         }
 
         if (userResult) {
-          return (await sendMany(account, this._options.origin, {
-            // TODO: refactor to support multiple receivers?
-            amounts: {
-              [account.address]: updatedSendRequest.transaction.amount,
-            },
-            comment: updatedSendRequest.transaction.comment,
-            subtractFeeFrom: updatedSendRequest.transaction.subtractFeeFrom,
-            replaceable: updatedSendRequest.transaction.replaceable,
-            dryrun: false,
-            scope: walletData.scope,
-          } as unknown as SendManyParams)) as unknown as Json;
+          return (await sendMany(
+            account,
+            this._options.origin,
+            {
+              // TODO: refactor to support multiple receivers?
+              amounts: {
+                [account.address]: updatedSendRequest.transaction.amount,
+              },
+              comment: updatedSendRequest.transaction.comment,
+              subtractFeeFrom: updatedSendRequest.transaction.subtractFeeFrom,
+              replaceable: updatedSendRequest.transaction.replaceable,
+              dryrun: false,
+              scope: walletData.scope,
+            } as unknown as SendManyParams,
+            sendFlowRequest.id,
+          )) as unknown as Json;
         }
         throw new Error('User rejected the request');
       }

@@ -142,6 +142,8 @@ export const onUserInput: OnUserInputHandler = async ({ id, event }) => {
           ui: generateSendFlowComponent(existingRequest),
         },
       });
+
+      // TODO: error handling
       const fees = await estimateFee({
         account: existingRequest.account,
         amount: event.value as string,
@@ -153,6 +155,10 @@ export const onUserInput: OnUserInputHandler = async ({ id, event }) => {
         },
         loading: false,
       };
+      existingRequest.transaction.total = (
+        parseFloat(existingRequest.transaction.amount) +
+        parseFloat(fees.fee.amount)
+      ).toString();
     } else if (event.name === SendFlowNames.RecipientInput) {
       const address = event.value as string;
 

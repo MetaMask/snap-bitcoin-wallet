@@ -1,13 +1,6 @@
 import { BtcP2wpkhAddressStruct } from '@metamask/keyring-api';
 import type { Component } from '@metamask/snaps-sdk';
-import {
-  UserRejectedRequestError,
-  divider,
-  text,
-  heading,
-  row,
-  panel,
-} from '@metamask/snaps-sdk';
+import { divider, text, heading, row, panel } from '@metamask/snaps-sdk';
 import {
   object,
   string,
@@ -99,6 +92,7 @@ export async function sendMany(
   account: BtcAccount,
   origin: string,
   params: SendManyParams,
+  interfaceId: string,
 ) {
   try {
     validateRequest(params, SendManyParamsStruct);
