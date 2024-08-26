@@ -29,7 +29,8 @@ import {
 } from './rpcs';
 import { KeyringStateManager } from './stateManagement';
 import { generateSendFlowComponent } from './ui/components';
-import { SendFlowNames } from './ui/SendFlow';
+import { ConfirmationNames } from './ui/components/Confirmations';
+import { SendFlowNames } from './ui/components/SendFlowInput';
 import { isSnapRpcError, logger } from './utils';
 
 export const validateOrigin = (origin: string, method: string): void => {
@@ -132,25 +133,56 @@ export const onUserInput: OnUserInputHandler = async ({ id, event }) => {
         existingRequest.validation.amount = false;
       }
       existingRequest.transaction.amount = amount.toString();
+      existingRequest.estimates.fees.loading = true;
       existingRequest.validation.amount = true;
+      await snap.request({
+        method: 'snap_updateInterface',
+        params: {
+          id,
+          ui: generateSendFlowComponent(existingRequest),
+        },
+      });
+      const fees = await estimateFee({
+        account: existingRequest.account,
+        amount: event.value as string,
+      });
+      existingRequest.estimates.fees = {
+        fee: {
+          amount: fees.fee.amount,
+          unit: fees.fee.unit,
+        },
+        loading: false,
+      };
     } else if (event.name === SendFlowNames.RecipientInput) {
       const address = event.value as string;
 
       // TODO: validate other btc address types
       if (is(address, BtcP2wpkhAddressStruct)) {
         existingRequest.validation.recipient = true;
+        existingRequest.transaction.recipient = address;
       } else {
         existingRequest.validation.recipient = false;
       }
     }
-
-    await stateManager.upsertRequest(existingRequest);
-    await snap.request({
-      method: 'snap_updateInterface',
-      params: {
-        id,
-        ui: generateSendFlowComponent(existingRequest),
-      },
-    });
   }
+
+  if (event.type === UserInputEventType.ButtonClickEvent) {
+    if (event.name === ConfirmationNames.ReviewButton) {
+      existingRequest.step = 'send';
+    } else if (event.name === ConfirmationNames.SendButton) {
+      existingRequest.step = 'send';
+      existingRequest.status = 'pending';
+    } else if (event.name === ConfirmationNames.CancelButton) {
+      existingRequest.step = 'review';
+    }
+  }
+
+  await stateManager.upsertRequest(existingRequest);
+  await snap.request({
+    method: 'snap_updateInterface',
+    params: {
+      id,
+      ui: generateSendFlowComponent(existingRequest),
+    },
+  });
 };

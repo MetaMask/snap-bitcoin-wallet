@@ -1,42 +1,44 @@
-import { defaultSendManyParams, estimateFee } from '../rpcs';
-import type { SendFlowRequest } from '../stateManagement';
+import type { BtcAccount } from '../bitcoin/wallet';
+import { Caip2Asset, Caip2ChainId } from '../constants';
+import type { SendManyParams } from '../rpcs';
+import { defaultSendManyParams, getBalances } from '../rpcs';
+import type { SendFlowRequest, Wallet } from '../stateManagement';
 import { generateSendFlowComponent } from './components';
-import type { SendFlowProps } from './SendFlow';
+import type { SendFlowProps } from './components/SendFlowInput';
 
-/**
- * Initiate a new interface with the starting screen.
- *
- * @param scope - The scope of the interface.
- * @param accountId - The ID of the account.
- * @param sender - The Bitcoin account address.
- * @param balance - The balance of the account.
- * @returns The SendFlowRequest object.
- */
-export async function createInterface(
-  scope: string,
-  accountId: string,
-  sender: string,
-  balance,
-): Promise<SendFlowRequest> {
-  const fees = await estimateFee({
-    account: accountId,
-    amount: balance,
-  });
-
+// TODO: merge wallet and account
+export async function createBtcSendFlow(
+  wallet: Wallet,
+  account: BtcAccount,
+  sendManyParams: SendManyParams,
+) {
   const sendFlowProps: SendFlowProps = {
-    balance,
+    balance: '0',
     transaction: {
-      sender,
-      ...defaultSendManyParams(scope),
+      sender: wallet.account.address,
+      recipient: '',
+      amount: '',
+      total: '',
+      ...defaultSendManyParams(wallet.scope),
+      ...sendManyParams,
     },
     estimates: {
-      fees,
+      fees: {
+        fee: {
+          amount: '',
+          unit: 'BTC',
+        },
+        loading: false,
+      },
       confirmationTime: '15 minutes',
     },
     validation: {
       amount: true,
       recipient: true,
     },
+    step: 'review',
+    status: 'creation',
+    scope: wallet.scope,
   };
 
   const interfaceId = await snap.request({
@@ -46,11 +48,20 @@ export async function createInterface(
     },
   });
 
+  const asset =
+    wallet.scope === Caip2ChainId.Mainnet ? Caip2Asset.Btc : Caip2Asset.TBtc;
+
+  const balances = await getBalances(account, {
+    assets: [asset],
+    scope: wallet.scope,
+  });
+
   const sendFlowRequest: SendFlowRequest = {
-    id: interfaceId,
-    account: accountId,
-    scope,
     ...sendFlowProps,
+    id: interfaceId,
+    account: wallet.account.id,
+    scope: wallet.scope,
+    balance: balances[asset].amount,
   };
 
   return sendFlowRequest;

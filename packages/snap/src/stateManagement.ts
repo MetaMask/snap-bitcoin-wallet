@@ -14,15 +14,16 @@ export type Wallets = Record<string, Wallet>;
 
 export type SendEstimate = {
   /* The estimated fee in BTC*/
-  fees: EstimateFeeResponse;
+  fees: EstimateFeeResponse & { loading: boolean };
   /* The estimated time to confirmation*/
   confirmationTime: string;
 };
 
 export type Transaction = SendManyParams & {
   sender: string;
-  recipient?: string;
-  amount?: string;
+  recipient: string;
+  amount: string;
+  total: string;
 };
 
 export type SendFlowRequest = {
@@ -36,6 +37,8 @@ export type SendFlowRequest = {
     amount: boolean;
     recipient: boolean;
   };
+  step: 'send' | 'review';
+  status: 'creation' | 'pending' | 'success' | 'failure';
 };
 
 export type SnapState = {

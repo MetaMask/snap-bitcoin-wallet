@@ -19,12 +19,12 @@ import { v4 as uuidv4 } from 'uuid';
 
 import type { BtcAccount, BtcWallet } from './bitcoin/wallet';
 import { Config } from './config';
-import { Caip2Asset, Caip2ChainId } from './constants';
+import { Caip2ChainId } from './constants';
 import { AccountNotFoundError, MethodNotImplementedError } from './exceptions';
 import { Factory } from './factory';
 import { getBalances, type SendManyParams, sendMany } from './rpcs';
 import type { KeyringStateManager, Wallet } from './stateManagement';
-import { createInterface } from './ui/ui';
+import { createBtcSendFlow } from './ui/ui';
 import {
   getProvider,
   ScopeStruct,
@@ -182,17 +182,10 @@ export class BtcKeyring implements Keyring {
 
     switch (method) {
       case 'btc_sendmany': {
-        // TODO: refactor to another function
-        const balance = await getBalances(account, {
-          assets: [Caip2Asset.TBtc],
-          scope: walletData.scope,
-        });
-
-        const sendFlowRequest = await createInterface(
-          scope,
-          id,
-          account.address,
-          balance[Caip2Asset.TBtc].amount, // in btc
+        const sendFlowRequest = await createBtcSendFlow(
+          walletData,
+          account,
+          (params as SendManyParams) ?? {},
         );
         await this._stateMgr.upsertRequest(sendFlowRequest);
 

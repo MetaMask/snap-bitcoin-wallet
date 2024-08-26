@@ -1,5 +1,6 @@
-import type { SendFlowProps } from '../SendFlow';
-import { SendFlow } from '../SendFlow';
+import { SendFlowConfirmation } from './SendFlowConfirmation';
+import type { SendFlowProps } from './SendFlowInput';
+import { SendFlowInput } from './SendFlowInput';
 
 /**
  * Generate the send flow form component.
@@ -10,5 +11,9 @@ import { SendFlow } from '../SendFlow';
 export function generateSendFlowComponent(
   sendFlowProps: SendFlowProps,
 ): JSX.Element {
-  return <SendFlow {...sendFlowProps} />;
+  return sendFlowProps.step === 'review' ? (
+    <SendFlowInput {...sendFlowProps} />
+  ) : (
+    <SendFlowConfirmation {...sendFlowProps} />
+  );
 }
