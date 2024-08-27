@@ -19,11 +19,12 @@ export const Confirmation: SnapComponent<ConfirmationProps> = ({
   step,
   transaction,
 }) => {
-  console.log('confirmationProps', step, JSON.stringify(transaction, null, 2));
   return (
     <Box direction="horizontal">
-      <Button name={ConfirmationNames.CancelButton}>Cancel</Button>
-      {step === 'review' ? (
+      <Button name={ConfirmationNames.CancelButton}>
+        {step === 'review' ? 'Cancel' : 'Back'}
+      </Button>
+      {step === 'review' && (
         <Button
           name={ConfirmationNames.ReviewButton}
           disabled={
@@ -31,10 +32,8 @@ export const Confirmation: SnapComponent<ConfirmationProps> = ({
             transaction.recipient.length === 0
           }
         >
-          Confirm
+          Proceed to confirm
         </Button>
-      ) : (
-        <Button name={ConfirmationNames.SendButton}>Send</Button>
       )}
     </Box>
   );

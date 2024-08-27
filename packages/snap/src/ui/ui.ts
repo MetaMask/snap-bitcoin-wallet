@@ -6,7 +6,14 @@ import type { SendFlowRequest, Wallet } from '../stateManagement';
 import { generateSendFlowComponent } from './components';
 import type { SendFlowProps } from './components/SendFlowInput';
 
-// TODO: merge wallet and account
+/**
+ * Creates a Bitcoin send flow.
+ *
+ * @param wallet - The wallet object.
+ * @param account - The Bitcoin account object.
+ * @param sendManyParams - The parameters for sending multiple transactions.
+ * @returns The send flow request object.
+ */
 export async function createBtcSendFlow(
   wallet: Wallet,
   account: BtcAccount,
@@ -35,6 +42,10 @@ export async function createBtcSendFlow(
     validation: {
       amount: true,
       recipient: true,
+    },
+    errors: {
+      fees: '',
+      recipient: '',
     },
     step: 'review',
     status: 'creation',

@@ -75,7 +75,7 @@ export const defaultSendManyParams = (
   amounts: {},
   comment: '',
   subtractFeeFrom: [],
-  replaceable: false,
+  replaceable: true,
   dryrun: false,
   scope,
 });
@@ -92,7 +92,6 @@ export async function sendMany(
   account: BtcAccount,
   origin: string,
   params: SendManyParams,
-  interfaceId: string,
 ) {
   try {
     validateRequest(params, SendManyParamsStruct);
@@ -122,10 +121,6 @@ export async function sendMany(
       subtractFeeFrom: params.subtractFeeFrom,
       replaceable: params.replaceable,
     });
-
-    // if (!(await getTxConsensus(txInfo, params.comment, scope, origin))) {
-    //   throw new UserRejectedRequestError() as unknown as Error;
-    // }
 
     const signedTransaction = await wallet.signTransaction(account.signer, tx);
 

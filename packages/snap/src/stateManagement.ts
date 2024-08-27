@@ -37,8 +37,12 @@ export type SendFlowRequest = {
     amount: boolean;
     recipient: boolean;
   };
+  errors: {
+    fees: string;
+    recipient: string;
+  };
   step: 'send' | 'review';
-  status: 'creation' | 'pending' | 'success' | 'failure';
+  status: 'creation' | 'pending' | 'success' | 'failure' | 'rejected';
 };
 
 export type SnapState = {

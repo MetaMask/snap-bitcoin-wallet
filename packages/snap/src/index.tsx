@@ -1,7 +1,4 @@
-import {
-  BtcP2wpkhAddressStruct,
-  handleKeyringRequest,
-} from '@metamask/keyring-api';
+import { handleKeyringRequest } from '@metamask/keyring-api';
 import {
   type OnRpcRequestHandler,
   type OnKeyringRequestHandler,
@@ -10,9 +7,7 @@ import {
   UnauthorizedError,
   SnapError,
   MethodNotFoundError,
-  UserInputEventType,
 } from '@metamask/snaps-sdk';
-import { is } from 'superstruct';
 
 import { Config } from './config';
 import { BtcKeyring } from './keyring';
@@ -29,8 +24,7 @@ import {
 } from './rpcs';
 import { KeyringStateManager } from './stateManagement';
 import { generateSendFlowComponent } from './ui/components';
-import { ConfirmationNames } from './ui/components/Confirmations';
-import { SendFlowNames } from './ui/components/SendFlowInput';
+import { sendManyInputHandler } from './ui/controllers/send-many.controller';
 import { isSnapRpcError, logger } from './utils';
 
 export const validateOrigin = (origin: string, method: string): void => {
@@ -126,69 +120,74 @@ export const onUserInput: OnUserInputHandler = async ({ id, event }) => {
   }
 
   // validate values
-  if (event.type === UserInputEventType.InputChangeEvent) {
-    if (event.name === SendFlowNames.AmountInput) {
-      const amount = parseFloat(event.value as string);
-      if (isNaN(amount) || amount < 0) {
-        existingRequest.validation.amount = false;
-      }
-      existingRequest.transaction.amount = amount.toString();
-      existingRequest.estimates.fees.loading = true;
-      existingRequest.validation.amount = true;
-      await snap.request({
-        method: 'snap_updateInterface',
-        params: {
-          id,
-          ui: generateSendFlowComponent(existingRequest),
-        },
-      });
+  // if (event.type === UserInputEventType.InputChangeEvent) {
+  //   if (event.name === SendFlowNames.AmountInput) {
+  //     const amount = parseFloat(event.value as string);
+  //     if (isNaN(amount) || amount < 0) {
+  //       existingRequest.validation.amount = false;
+  //     }
+  //     existingRequest.transaction.amount = amount.toString();
+  //     existingRequest.estimates.fees.loading = true;
+  //     existingRequest.validation.amount = true;
+  //     await snap.request({
+  //       method: 'snap_updateInterface',
+  //       params: {
+  //         id,
+  //         ui: generateSendFlowComponent(existingRequest),
+  //       },
+  //     });
 
-      // TODO: error handling
-      const fees = await estimateFee({
-        account: existingRequest.account,
-        amount: event.value as string,
-      });
-      existingRequest.estimates.fees = {
-        fee: {
-          amount: fees.fee.amount,
-          unit: fees.fee.unit,
-        },
-        loading: false,
-      };
-      existingRequest.transaction.total = (
-        parseFloat(existingRequest.transaction.amount) +
-        parseFloat(fees.fee.amount)
-      ).toString();
-    } else if (event.name === SendFlowNames.RecipientInput) {
-      const address = event.value as string;
+  //     // TODO: error handling
+  //     const fees = await estimateFee({
+  //       account: existingRequest.account,
+  //       amount: event.value as string,
+  //     });
+  //     existingRequest.estimates.fees = {
+  //       fee: {
+  //         amount: fees.fee.amount,
+  //         unit: fees.fee.unit,
+  //       },
+  //       loading: false,
+  //     };
+  //     existingRequest.transaction.total = (
+  //       parseFloat(existingRequest.transaction.amount) +
+  //       parseFloat(fees.fee.amount)
+  //     ).toString();
+  //   } else if (event.name === SendFlowNames.RecipientInput) {
+  //     const address = event.value as string;
 
-      // TODO: validate other btc address types
-      if (is(address, BtcP2wpkhAddressStruct)) {
-        existingRequest.validation.recipient = true;
-        existingRequest.transaction.recipient = address;
-      } else {
-        existingRequest.validation.recipient = false;
-      }
-    }
-  }
+  //     // TODO: validate other btc address types
+  //     if (is(address, BtcP2wpkhAddressStruct)) {
+  //       existingRequest.validation.recipient = true;
+  //       existingRequest.transaction.recipient = address;
+  //     } else {
+  //       existingRequest.validation.recipient = false;
+  //     }
+  //   }
+  // }
 
-  if (event.type === UserInputEventType.ButtonClickEvent) {
-    if (event.name === ConfirmationNames.ReviewButton) {
-      existingRequest.step = 'send';
-    } else if (event.name === ConfirmationNames.SendButton) {
-      existingRequest.step = 'send';
-      existingRequest.status = 'pending';
-    } else if (event.name === ConfirmationNames.CancelButton) {
-      existingRequest.step = 'review';
-    }
-  }
+  // if (event.type === UserInputEventType.ButtonClickEvent) {
+  //   if (event.name === ConfirmationNames.ReviewButton) {
+  //     existingRequest.step = 'send';
+  //   } else if (event.name === ConfirmationNames.SendButton) {
+  //     existingRequest.step = 'send';
+  //     existingRequest.status = 'pending';
+  //   } else if (event.name === ConfirmationNames.CancelButton) {
+  //     existingRequest.step = 'review';
+  //   }
+  // }
 
-  await stateManager.upsertRequest(existingRequest);
+  const updatedRequest = await sendManyInputHandler({
+    sendRequest: existingRequest,
+    event,
+  });
+
+  await stateManager.upsertRequest(updatedRequest);
   await snap.request({
     method: 'snap_updateInterface',
     params: {
       id,
-      ui: generateSendFlowComponent(existingRequest),
+      ui: generateSendFlowComponent(updatedRequest),
     },
   });
 };
