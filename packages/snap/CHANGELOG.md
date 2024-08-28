@@ -9,12 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0]
 
-### Uncategorized
+### Added
 
-- doc: update snap read me ([#230](https://github.com/MetaMask/snap-bitcoin-wallet/pull/230))
-- chore: increase keyring test coverage ([#220](https://github.com/MetaMask/snap-bitcoin-wallet/pull/220))
-- chore: update metamask/\* dep ([#218](https://github.com/MetaMask/snap-bitcoin-wallet/pull/218))
-- feat: add `getMaxSpendableBalance` RPC endpoint ([#188](https://github.com/MetaMask/snap-bitcoin-wallet/pull/188))
+- Add `getMaxSpendableBalance` RPC endpoint ([#188](https://github.com/MetaMask/snap-bitcoin-wallet/pull/188))
+
+### Changed
+
+- Improve keyring tests coverage ([#220](https://github.com/MetaMask/snap-bitcoin-wallet/pull/220))
 
 ## [0.4.0]
 
