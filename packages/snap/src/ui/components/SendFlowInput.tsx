@@ -6,6 +6,7 @@ import {
   Form,
   Input,
   Text,
+  Divider,
 } from '@metamask/snaps-sdk/jsx';
 
 import type { SendFlowRequest } from '../../stateManagement';
@@ -59,6 +60,7 @@ export const SendFlowInput: SnapComponent<SendFlowProps> = ({
         </Field>
         {!validation.recipient && <Text>Invalid recipient address</Text>}
       </Form>
+      <Divider />
       <EstimatedFee
         isLoading={estimates.fees.loading}
         amount={estimates.fees.fee.amount}

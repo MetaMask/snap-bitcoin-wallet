@@ -16,7 +16,16 @@ export const EstimatedFee: SnapComponent<EstimatedFeeProps> = ({
 }: EstimatedFeeProps) => {
   return (
     <Box>
-      {isLoading && <Spinner />}
+      {isLoading && (
+        <Box>
+          <Box direction="horizontal" alignment="center">
+            <Spinner />
+          </Box>
+          <Box direction="horizontal" alignment="center">
+            <Text>Preparing Transaction</Text>
+          </Box>
+        </Box>
+      )}
       {!isLoading && amount.length > 0 && (
         <Box>
           <Divider />

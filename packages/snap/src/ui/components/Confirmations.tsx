@@ -1,5 +1,5 @@
 import type { SnapComponent } from '@metamask/snaps-sdk/jsx';
-import { Box, Button } from '@metamask/snaps-sdk/jsx';
+import { Box, Button, Text, Row } from '@metamask/snaps-sdk/jsx';
 
 import type { SendFlowRequest } from '../../stateManagement';
 
@@ -20,21 +20,26 @@ export const Confirmation: SnapComponent<ConfirmationProps> = ({
   transaction,
 }) => {
   return (
-    <Box direction="horizontal">
-      <Button name={ConfirmationNames.CancelButton}>
-        {step === 'review' ? 'Cancel' : 'Back'}
-      </Button>
-      {step === 'review' && (
-        <Button
-          name={ConfirmationNames.ReviewButton}
-          disabled={
-            transaction.amount.length === 0 ||
-            transaction.recipient.length === 0
-          }
-        >
-          Proceed to confirm
-        </Button>
-      )}
+    <Box direction="vertical">
+      <Text>
+        This is only temporary until footer components supports multiple pages
+      </Text>
+      <Box direction="horizontal">
+        {step !== 'review' && (
+          <Button name={ConfirmationNames.CancelButton}>Back</Button>
+        )}
+        {step === 'review' && (
+          <Button
+            name={ConfirmationNames.ReviewButton}
+            disabled={
+              transaction.amount.length === 0 ||
+              transaction.recipient.length === 0
+            }
+          >
+            Proceed to confirm
+          </Button>
+        )}
+      </Box>
     </Box>
   );
 };

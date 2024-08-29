@@ -55,9 +55,9 @@ const handleSendManyInputEvent = async (
         return sendRequest;
       }
 
+      updatedRequest.validation.amount = true;
       updatedRequest.transaction.amount = amount.toString();
-      const loading = true;
-      updatedRequest.estimates.fees.loading = loading;
+      updatedRequest.estimates.fees.loading = true;
       await snap.request({
         method: 'snap_updateInterface',
         params: {
