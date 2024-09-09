@@ -184,7 +184,7 @@ describe('SendManyHandler', () => {
     };
 
     // this method is to create a expected response of a recipient list component
-    const createExpectedRecipientComponents = (
+    const createExpectedRecipientListComponent = (
       recipients: Recipient[],
       caip2ChainId: string,
     ): unknown[] => {
@@ -332,7 +332,7 @@ describe('SendManyHandler', () => {
         // divider
         createExpectedDividerComponent(),
         // recipient panel
-        ...createExpectedRecipientComponents(
+        ...createExpectedRecipientListComponent(
           mockTxInfo.recipients,
           caip2ChainId,
         ),
@@ -461,7 +461,7 @@ describe('SendManyHandler', () => {
         // divider
         createExpectedDividerComponent(),
         // recipient panel
-        ...createExpectedRecipientComponents(
+        ...createExpectedRecipientListComponent(
           [
             {
               address: recipient.address,
