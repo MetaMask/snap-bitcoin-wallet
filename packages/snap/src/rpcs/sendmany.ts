@@ -118,11 +118,17 @@ export async function sendMany(
       replaceable: params.replaceable,
     });
 
-    if (!(await getTxConsensus(txInfo, params.comment, scope, origin))) {
+    if (
+      // skip this confirmation if the origin is metamask
+      origin === 'metamask' &&
+      !(await getTxConsensus(txInfo, params.comment, scope, origin))
+    ) {
       throw new UserRejectedRequestError() as unknown as Error;
     }
 
     const signedTransaction = await wallet.signTransaction(account.signer, tx);
+
+    logger.log('Signed transaction:', signedTransaction);
 
     if (dryrun) {
       return {
