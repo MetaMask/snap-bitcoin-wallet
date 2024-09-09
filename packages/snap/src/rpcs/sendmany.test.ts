@@ -268,6 +268,7 @@ describe('SendManyHandler', () => {
         caip2ChainId,
       );
       const sendAmtInSats = 500;
+      const txFee = 1;
       const sendParams = createSendManyParams(
         recipients,
         caip2ChainId,
@@ -276,14 +277,14 @@ describe('SendManyHandler', () => {
         sendAmtInSats,
       );
       const mockTxInfo: ITxInfo = {
-        feeRate: BigInt('1'),
-        txFee: BigInt('1'),
+        feeRate: BigInt(1),
+        txFee: BigInt(txFee),
         sender: sender.address,
         recipients: recipients.map((recipient) => ({
           address: recipient.address,
           value: BigInt(sendAmtInSats),
         })),
-        total: BigInt(sendAmtInSats * recipients.length + 1),
+        total: BigInt(sendAmtInSats * recipients.length + txFee),
       };
 
       // mock createTransaction and signTransaction response
