@@ -124,7 +124,9 @@ export async function sendMany(
         replaceable,
       });
     } catch (createTxError) {
-      // Display the alert dialohg if the error is due to insufficient funds, as it is the only case that the end-user expected to known.
+      // Wallet.createTransaction may throw an insufficient funds error
+      // And end-user is expected to know about it.
+      // Hence we display an alert dialog to indicate the issue.
       if (createTxError instanceof InsufficientFundsError) {
         await displayInsufficientFundsWarning(recipients, scope, origin);
       }
@@ -231,7 +233,7 @@ export async function getTxConsensus(
 }
 
 /**
- * Displays an alert dialog to inform the end-user they have insufficient fund to pay the transaction.
+ * Displays an alert dialog to display the warning message of insufficient funds to pay the transaction.
  *
  * @param recipients - The recipient list of the request.
  * @param scope - The Caip2 Chain Id of the request.
