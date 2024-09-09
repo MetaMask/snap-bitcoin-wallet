@@ -21,10 +21,12 @@ import {
   assert,
 } from 'superstruct';
 
+import type { Recipient, Transaction } from '../bitcoin/wallet';
 import {
   type BtcAccount,
   type ITxInfo,
   TxValidationError,
+  InsufficientFundsError,
 } from '../bitcoin/wallet';
 import { Factory } from '../factory';
 import {
@@ -40,6 +42,7 @@ import {
   logger,
   AmountStruct,
   getFeeRate,
+  alertDialog,
 } from '../utils';
 
 export const TransactionAmountStruct = refine(
@@ -92,7 +95,7 @@ export async function sendMany(
   try {
     validateRequest(params, SendManyParamsStruct);
 
-    const { dryrun, scope } = params;
+    const { dryrun, scope, subtractFeeFrom, replaceable, comment } = params;
     const chainApi = Factory.createOnChainServiceProvider(scope);
     const wallet = Factory.createWallet(scope);
 
@@ -111,18 +114,31 @@ export async function sendMany(
       data: { utxos },
     } = await chainApi.getDataForTransaction(account.address);
 
-    const { tx, txInfo } = await wallet.createTransaction(account, recipients, {
-      utxos,
-      fee,
-      subtractFeeFrom: params.subtractFeeFrom,
-      replaceable: params.replaceable,
-    });
+    let txResp: Transaction;
 
-    if (!(await getTxConsensus(txInfo, params.comment, scope, origin))) {
+    try {
+      txResp = await wallet.createTransaction(account, recipients, {
+        utxos,
+        fee,
+        subtractFeeFrom,
+        replaceable,
+      });
+    } catch (createTxError) {
+      // Display the alert dialohg if the error is due to insufficient funds, as it is the only case that the end-user expected to known.
+      if (createTxError instanceof InsufficientFundsError) {
+        await displayInsufficientFundsWarning(recipients, scope, origin);
+      }
+      throw createTxError;
+    }
+
+    if (!(await getTxConsensus(txResp.txInfo, comment, scope, origin))) {
       throw new UserRejectedRequestError() as unknown as Error;
     }
 
-    const signedTransaction = await wallet.signTransaction(account.signer, tx);
+    const signedTransaction = await wallet.signTransaction(
+      account.signer,
+      txResp.tx,
+    );
 
     if (dryrun) {
       return {
@@ -156,7 +172,7 @@ export async function sendMany(
 }
 
 /**
- * Display an confirmation dialog to confirm an transaction.
+ * Display a confirmation dialog to confirm an transaction.
  *
  * @param info - The transaction data object contains the transaction information.
  * @param comment - The comment text to display.
@@ -172,15 +188,13 @@ export async function getTxConsensus(
 ): Promise<boolean> {
   const header = `Send Request`;
   const intro = `Review the request before proceeding. Once the transaction is made, it's irreversible.`;
-  const recipientsLabel = `Recipient`;
-  const amountLabel = `Amount`;
   const commentLabel = `Comment`;
   // const networkFeeRateLabel = `Network fee rate`;
   const networkFeeLabel = `Network fee`;
   const totalLabel = `Total`;
   const requestedByLabel = `Requested by`;
 
-  const components: Component[] = [
+  let components: Component[] = [
     panel([
       heading(header),
       text(intro),
@@ -189,42 +203,12 @@ export async function getTxConsensus(
     divider(),
   ];
 
-  const isMoreThanOneRecipient =
-    info.recipients.length + (info.change ? 1 : 0) > 1;
-
-  let i = 0;
-
-  const addRecipientsToComponents = (data: {
-    address: string;
-    value: bigint;
-  }) => {
-    const recipientsPanel: Component[] = [];
-    recipientsPanel.push(
-      row(
-        isMoreThanOneRecipient
-          ? `${recipientsLabel} ${i + 1}`
-          : recipientsLabel,
-        text(
-          `[${shortenAddress(data.address)}](${getExplorerUrl(
-            data.address,
-            scope,
-          )})`,
-        ),
-      ),
-    );
-    recipientsPanel.push(
-      row(amountLabel, text(satsToBtc(data.value, true), false)),
-    );
-    i += 1;
-    components.push(panel(recipientsPanel));
-    components.push(divider());
-  };
-
-  info.recipients.forEach(addRecipientsToComponents);
-
-  if (info.change) {
-    [info.change].forEach(addRecipientsToComponents);
-  }
+  components = components.concat(
+    buildRecipientsComponent(
+      info.change ? info.recipients.concat(info.change) : info.recipients,
+      scope,
+    ),
+  );
 
   const bottomPanel: Component[] = [];
   if (comment.trim().length > 0) {
@@ -244,4 +228,79 @@ export async function getTxConsensus(
   components.push(panel(bottomPanel));
 
   return (await confirmDialog(components)) as boolean;
+}
+
+/**
+ * Displays an alert dialog to inform the end-user they have insufficient fund to pay the transaction.
+ *
+ * @param recipients - The recipient list of the request.
+ * @param scope - The Caip2 Chain Id of the request.
+ * @param origin - The origin of the request.
+ */
+export async function displayInsufficientFundsWarning(
+  recipients: Recipient[],
+  scope: string,
+  origin: string,
+): Promise<void> {
+  const header = `Send Request`;
+  const requestedByLabel = `Requested by`;
+  const insufficientFundsMsg = `You do not have enough BTC in your account to pay for transaction amount or transaction fees on Bitcoin network.`;
+
+  let components: Component[] = [
+    panel([heading(header), row(requestedByLabel, text(`${origin}`, false))]),
+    divider(),
+  ];
+
+  components = components.concat(buildRecipientsComponent(recipients, scope));
+
+  components.push(text(`${insufficientFundsMsg}`, false));
+
+  await alertDialog(components);
+}
+
+/**
+ * Builds a snap component to display the transcation recipient list.
+ *
+ * @param recipients - The recipient list of request.
+ * @param scope - The Caip2 Chain Id of request.
+ * @returns An array of Snap component.
+ */
+export function buildRecipientsComponent(
+  recipients: Recipient[],
+  scope: string,
+): Component[] {
+  const recipientsLabel = `Recipient`;
+  const amountLabel = `Amount`;
+
+  const isMoreThanOneRecipient = recipients.length > 1;
+  let idx = 0;
+
+  const components: Component[] = [];
+  for (const data of recipients) {
+    const recipientsPanel: Component[] = [];
+
+    recipientsPanel.push(
+      row(
+        isMoreThanOneRecipient
+          ? `${recipientsLabel} ${idx + 1}`
+          : recipientsLabel,
+        text(
+          `[${shortenAddress(data.address)}](${getExplorerUrl(
+            data.address,
+            scope,
+          )})`,
+        ),
+      ),
+    );
+    recipientsPanel.push(
+      row(amountLabel, text(satsToBtc(data.value, true), false)),
+    );
+
+    components.push(panel(recipientsPanel));
+    components.push(divider());
+
+    idx += 1;
+  }
+
+  return components;
 }
