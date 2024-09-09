@@ -120,7 +120,7 @@ export async function sendMany(
 
     if (
       // skip this confirmation if the origin is metamask
-      origin === 'metamask' &&
+      origin !== 'metamask' &&
       !(await getTxConsensus(txInfo, params.comment, scope, origin))
     ) {
       throw new UserRejectedRequestError() as unknown as Error;
