@@ -119,7 +119,8 @@ export async function sendMany(
     });
 
     if (
-      // skip this confirmation if the origin is metamask
+      // Skip this confirmation if the origin is metamask
+      // Native ui confirmation will be used instead.
       origin !== 'metamask' &&
       !(await getTxConsensus(txInfo, params.comment, scope, origin))
     ) {
@@ -127,8 +128,6 @@ export async function sendMany(
     }
 
     const signedTransaction = await wallet.signTransaction(account.signer, tx);
-
-    logger.log('Signed transaction:', signedTransaction);
 
     if (dryrun) {
       return {
