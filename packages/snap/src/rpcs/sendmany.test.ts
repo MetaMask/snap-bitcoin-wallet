@@ -189,20 +189,23 @@ describe('SendManyHandler', () => {
       caip2ChainId: string,
     ): unknown[] => {
       const expectedComponents: unknown[] = [];
+      const recipientsLen = recipients.length;
 
-      for (let idx = 0; idx < recipients.length; idx++) {
+      for (let idx = 0; idx < recipientsLen; idx++) {
+        const recipient = recipients[idx];
+
         expectedComponents.push({
           type: 'panel',
           children: [
             {
               type: 'row',
-              label:
-                recipients.length > 1 ? `Recipient ${idx + 1}` : `Recipient`,
+              label: recipientsLen > 1 ? `Recipient ${idx + 1}` : `Recipient`,
               value: {
                 type: 'text',
-                value: `[${shortenAddress(
-                  recipients[idx].address,
-                )}](${getExplorerUrl(recipients[idx].address, caip2ChainId)})`,
+                value: `[${shortenAddress(recipient.address)}](${getExplorerUrl(
+                  recipient.address,
+                  caip2ChainId,
+                )})`,
               },
             },
             {
@@ -211,7 +214,7 @@ describe('SendManyHandler', () => {
               value: {
                 markdown: false,
                 type: 'text',
-                value: satsToBtc(recipients[idx].value, true),
+                value: satsToBtc(recipient.value, true),
               },
             },
           ],
@@ -219,6 +222,44 @@ describe('SendManyHandler', () => {
         expectedComponents.push(createExpectedDividerComponent());
       }
       return expectedComponents;
+    };
+
+    // this method is to create a expected response of a header panel component
+    const createExpectedHeadingPanelComponent = (
+      requestBy: string,
+      includeReviewText = true,
+    ): unknown => {
+      const headingComponent = {
+        type: 'heading',
+        value: 'Send Request',
+      };
+
+      const reviewTextComponent = {
+        type: 'text',
+        value:
+          "Review the request before proceeding. Once the transaction is made, it's irreversible.",
+      };
+
+      const requestByComponent = {
+        type: 'row',
+        label: 'Requested by',
+        value: {
+          type: 'text',
+          value: requestBy,
+          markdown: false,
+        },
+      };
+
+      const panelChilds: unknown[] = [headingComponent];
+      if (includeReviewText) {
+        panelChilds.push(reviewTextComponent);
+      }
+      panelChilds.push(requestByComponent);
+
+      return {
+        type: 'panel',
+        children: panelChilds,
+      };
     };
 
     it('returns correct result', async () => {
@@ -260,7 +301,7 @@ describe('SendManyHandler', () => {
       expect(broadcastTransactionSpy).toHaveBeenCalledTimes(0);
     });
 
-    it('displays a transaction confirmation dialog if the bitcoin transaction is create successfully', async () => {
+    it('displays a transaction confirmation dialog if the bitcoin transaction has been created successfully', async () => {
       const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
       const { recipients, confirmDialogSpy, sender } = await prepareSendMany(
@@ -307,29 +348,7 @@ describe('SendManyHandler', () => {
       expect(confirmDialogSpy).toHaveBeenCalledTimes(1);
       expect(confirmDialogSpy).toHaveBeenCalledWith([
         // heading panel
-        {
-          type: 'panel',
-          children: [
-            {
-              type: 'heading',
-              value: 'Send Request',
-            },
-            {
-              type: 'text',
-              value:
-                "Review the request before proceeding. Once the transaction is made, it's irreversible.",
-            },
-            {
-              type: 'row',
-              label: 'Requested by',
-              value: {
-                type: 'text',
-                value: origin,
-                markdown: false,
-              },
-            },
-          ],
-        },
+        createExpectedHeadingPanelComponent(origin),
         // divider
         createExpectedDividerComponent(),
         // recipient panel
@@ -364,7 +383,7 @@ describe('SendManyHandler', () => {
       ]);
     });
 
-    it('creates a comment component in the transaction confirmation dialog if the comment has provided', async () => {
+    it('creates a comment component in the transaction confirmation dialog if a comment has been provided', async () => {
       const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
       const { sender, recipients, confirmDialogSpy } = await prepareSendMany(
@@ -381,6 +400,7 @@ describe('SendManyHandler', () => {
 
       const calls = confirmDialogSpy.mock.calls[0][0];
 
+      expect(calls.length).toBeGreaterThan(0);
       const lastPanel = calls[calls.length - 1];
 
       expect(lastPanel).toStrictEqual({
@@ -441,24 +461,7 @@ describe('SendManyHandler', () => {
       expect(alertDialogSpy).toHaveBeenCalledTimes(1);
       expect(alertDialogSpy).toHaveBeenCalledWith([
         // heading panel
-        {
-          type: 'panel',
-          children: [
-            {
-              type: 'heading',
-              value: 'Send Request',
-            },
-            {
-              type: 'row',
-              label: 'Requested by',
-              value: {
-                type: 'text',
-                value: origin,
-                markdown: false,
-              },
-            },
-          ],
-        },
+        createExpectedHeadingPanelComponent(origin, false),
         // divider
         createExpectedDividerComponent(),
         // recipient panel

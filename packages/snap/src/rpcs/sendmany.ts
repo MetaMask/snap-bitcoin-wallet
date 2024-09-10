@@ -213,15 +213,14 @@ export async function getTxConsensus(
   );
 
   const bottomPanel: Component[] = [];
-  if (comment.trim().length > 0) {
-    bottomPanel.push(row(commentLabel, text(comment.trim(), false)));
+  const commentText = comment.trim();
+  if (commentText.length > 0) {
+    bottomPanel.push(row(commentLabel, text(commentText, false)));
   }
 
   bottomPanel.push(
     row(networkFeeLabel, text(`${satsToBtc(info.txFee, true)}`, false)),
   );
-
-  // bottomPanel.push(row(networkFeeRateLabel, text(`${info.feeRate}`, false)));
 
   bottomPanel.push(
     row(totalLabel, text(`${satsToBtc(info.total, true)}`, false)),
@@ -274,11 +273,12 @@ export function buildRecipientsComponent(
   const recipientsLabel = `Recipient`;
   const amountLabel = `Amount`;
 
-  const isMoreThanOneRecipient = recipients.length > 1;
-  let idx = 0;
+  const recipientsLen = recipients.length;
+  const isMoreThanOneRecipient = recipientsLen > 1;
 
   const components: Component[] = [];
-  for (const data of recipients) {
+  for (let idx = 0; idx < recipientsLen; idx++) {
+    const recipient = recipients[idx];
     const recipientsPanel: Component[] = [];
 
     recipientsPanel.push(
@@ -287,21 +287,19 @@ export function buildRecipientsComponent(
           ? `${recipientsLabel} ${idx + 1}`
           : recipientsLabel,
         text(
-          `[${shortenAddress(data.address)}](${getExplorerUrl(
-            data.address,
+          `[${shortenAddress(recipient.address)}](${getExplorerUrl(
+            recipient.address,
             scope,
           )})`,
         ),
       ),
     );
     recipientsPanel.push(
-      row(amountLabel, text(satsToBtc(data.value, true), false)),
+      row(amountLabel, text(satsToBtc(recipient.value, true), false)),
     );
 
     components.push(panel(recipientsPanel));
     components.push(divider());
-
-    idx += 1;
   }
 
   return components;
