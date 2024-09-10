@@ -187,6 +187,10 @@ describe('onKeyringRequest', () => {
       keyringApi.KeyringRpcMethod.FilterAccountChains,
       keyringApi.KeyringRpcMethod.DeleteAccount,
       keyringApi.KeyringRpcMethod.GetAccountBalances,
+      keyringApi.KeyringRpcMethod.SubmitRequest,
+      InternalRpcMethod.GetTransactionStatus,
+      InternalRpcMethod.EstimateFee,
+      InternalRpcMethod.GetMaxSpendableBalance,
     ]) {
       const result = await onKeyringRequest({
         origin: 'metamask',

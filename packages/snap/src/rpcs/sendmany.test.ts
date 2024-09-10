@@ -568,5 +568,22 @@ describe('SendManyHandler', () => {
         }),
       ).rejects.toThrow('some tx error');
     });
+
+    it('skips the transaction confirmation dialog if the origin is `metamask`', async () => {
+      const network = networks.testnet;
+      const caip2ChainId = Caip2ChainId.Testnet;
+      const { recipients, snapHelperSpy, sender } = await prepareSendMany(
+        network,
+        caip2ChainId,
+      );
+
+      await sendMany(
+        sender,
+        'metamask',
+        createSendManyParams(recipients, caip2ChainId, true),
+      );
+
+      expect(snapHelperSpy).toHaveBeenCalledTimes(0);
+    });
   });
 });
