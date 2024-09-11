@@ -6,13 +6,13 @@ import { Config } from '../config';
 import { FeeRateUnavailableError } from '../exceptions';
 
 /**
- * Retrieves the fee rate from an array of Fee objects based on the fee type provided.
+ * Retrieves the fee rate from an array of `Fee` objects based on the fee type provided.
  * If no fee type is provided, the default fee rate specified in the configuration will be used.
  *
- * @param fees - The array of Fee objects.
+ * @param fees - The array of `Fee` objects.
  * @param feeType - The fee type to retrieve the fee rate for. Default is `Config.defaultFeeRate`
  * @returns The fee rate for the given fee type or default fee rate.
- * @throws {FeeRateUnavailableError} If no fee object is found for the provided fee type.
+ * @throws {FeeRateUnavailableError} If no `Fee` object is found for the provided fee type.
  */
 export function getFeeRate(
   fees: Fee[],

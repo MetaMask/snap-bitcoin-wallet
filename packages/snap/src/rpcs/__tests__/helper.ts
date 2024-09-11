@@ -11,6 +11,7 @@ import type { BtcAccount, BtcWallet } from '../../bitcoin/wallet';
 import { Config } from '../../config';
 import { Factory } from '../../factory';
 import { KeyringStateManager } from '../../stateManagement';
+import * as snapUtils from '../../utils/snap';
 
 jest.mock('../../utils/snap');
 
@@ -89,11 +90,11 @@ export function createMockGetDataForTransactionResp(
 }
 
 /**
- * Create a mock keyringAccount.
+ * Create a mock `keyringAccount`.
  *
- * @param account - The BtcAccount object.
+ * @param account - The `BtcAccount` object.
  * @param caip2ChainId - The Caip2 Chain ID.
- * @returns The keyringAccount and getWalletSpy.
+ * @returns The `keyringAccount` and `getWalletSpy`.
  */
 export async function createMockKeyringAccount(
   account: BtcAccount,
@@ -125,20 +126,39 @@ export async function createMockKeyringAccount(
   };
 }
 
+/**
+ * Create a mock `confirmDialog`.
+ *
+ * @returns The `confirmDialogSpy`.
+ */
+export function createMockConfirmDialog() {
+  const confirmDialogSpy = jest.spyOn(snapUtils, 'confirmDialog');
+  return confirmDialogSpy;
+}
+
+/**
+ * Create a mock `alertDialog`.
+ *
+ * @returns The `alertDialogSpy`.
+ */
+export function createMockAlertDialog() {
+  const alertDialogSpy = jest.spyOn(snapUtils, 'alertDialog');
+  return alertDialogSpy;
+}
+
 export type AccountTestCreateOption = {
   caip2ChainId: string;
 };
 
-export type EstimateFeeTestCreateOption = {
+export type EstimateFeeTestCreateOption = AccountTestCreateOption & {
   feeRate: number;
   utxoCount: number;
   utxoMinVal: number;
   utxoMaxVal: number;
-  caip2ChainId: string;
 };
 
 export type SendManyCreateOption = EstimateFeeTestCreateOption & {
-  recipientCnt: number;
+  recipientCount: number;
 };
 
 export class AccountTest {
@@ -170,11 +190,11 @@ export class AccountTest {
     this.getWalletSpy = getWalletSpy;
   }
 
-  async createAccountNotFoundTest() {
+  async setupAccountNotFoundTest() {
     this.getWalletSpy.mockReset().mockResolvedValue(null);
   }
 
-  async createAccountNotMatchTest() {
+  async setupAccountNotMatchingTest() {
     const unmatchAccount = await this.wallet.unlock(
       this.sender.index + 1,
       Config.wallet.defaultAccountType,
@@ -185,7 +205,6 @@ export class AccountTest {
         ...this.keyringAccount,
         address: unmatchAccount.address,
       },
-
       hdPath: `m/0'/0/${this.sender.index}`,
       index: this.sender.index,
       scope: this.testCase.caip2ChainId,
@@ -206,10 +225,7 @@ export class EstimateFeeTest extends AccountTest {
   };
 
   constructor(testCase: EstimateFeeTestCreateOption) {
-    super({
-      caip2ChainId: testCase.caip2ChainId,
-    });
-    this.testCase = testCase;
+    super(testCase);
     const { getDataForTransactionSpy, getFeeRatesSpy } =
       createMockChainApiFactory();
     this.getFeeRatesSpy = getFeeRatesSpy;
@@ -252,7 +268,7 @@ export class EstimateFeeTest extends AccountTest {
     });
   }
 
-  async createNoFeeAvailableTest() {
+  async setupNoFeeAvailableTest() {
     this.getFeeRatesSpy.mockReset().mockResolvedValue({
       fees: [],
     });
@@ -268,25 +284,46 @@ export class SendManyTest extends EstimateFeeTest {
 
   broadcastTransactionSpy: jest.SpyInstance;
 
+  confirmDialogSpy: jest.SpyInstance;
+
+  alertDialogSpy: jest.SpyInstance;
+
   constructor(testCase: SendManyCreateOption) {
     super(testCase);
     const { broadcastTransactionSpy } = createMockChainApiFactory();
     this.broadcastTransactionSpy = broadcastTransactionSpy;
+    this.confirmDialogSpy = createMockConfirmDialog();
+    this.alertDialogSpy = createMockAlertDialog();
   }
 
   async setup() {
     await super.setup();
     this.recipients = await this.createMockRecipients(
-      this.testCase.recipientCnt,
+      this.testCase.recipientCount,
     );
     this.broadcastTransactionSpy.mockResolvedValue({
       transactionId: this.broadCastTxResp,
     });
+    // expect to be override by the test case
+    this.confirmDialogSpy.mockResolvedValue(true);
+    this.alertDialogSpy.mockReturnThis();
   }
 
-  async createMockRecipients(recipientCnt: number) {
+  async setupUserDeniedTest() {
+    this.confirmDialogSpy.mockReset().mockResolvedValue(false);
+  }
+
+  async setupInsufficientFundsTest() {
+    this.getDataForTransactionSpy.mockReset().mockResolvedValue({
+      data: {
+        utxos: [],
+      },
+    });
+  }
+
+  async createMockRecipients(recipientCount: number) {
     const recipients: BtcAccount[] = [];
-    for (let i = 1; i < recipientCnt + 1; i++) {
+    for (let i = 1; i < recipientCount + 1; i++) {
       recipients.push(
         await this.wallet.unlock(i, Config.wallet.defaultAccountType),
       );

@@ -42,7 +42,7 @@ describe('verifyIfAccountValid', function () {
     } as unknown as KeyringAccount;
   };
 
-  it('does not throw error if BtcAccount and KeyringAccount are valid and consistent', async function () {
+  it('does not throw error if `BtcAccount` object and the `KeyringAccount` object are valid and consistent', async function () {
     const btcAccount = await createBtcAccount(networks.testnet);
     const keyringAccount = createKeyringAccount(
       btcAccount.address,
@@ -55,7 +55,7 @@ describe('verifyIfAccountValid', function () {
     ).not.toThrow();
   });
 
-  it('throws AccountNotFoundError if either the BtcAccount object or the KeyringAccount object is not provided', async function () {
+  it('throws AccountNotFoundError if either the `BtcAccount` object or the `KeyringAccount` object is not provided', async function () {
     const btcAccount = await createBtcAccount(networks.testnet);
     const keyringAccount = createKeyringAccount(
       btcAccount.address,

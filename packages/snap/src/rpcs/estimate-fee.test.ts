@@ -30,14 +30,12 @@ describe('EstimateFeeHandler', () => {
       });
       await testHelper.setup();
 
-      return {
-        testHelper,
-      };
+      return testHelper;
     };
 
     it('returns fee correctly', async () => {
       // Create test with 1 utxos of 100000 sats
-      const { testHelper } = await prepareEstimateFee(
+      const { keyringAccount } = await prepareEstimateFee(
         Caip2ChainId.Testnet,
         1,
         1,
@@ -46,7 +44,7 @@ describe('EstimateFeeHandler', () => {
       );
 
       const result = await estimateFee({
-        account: testHelper.keyringAccount.id,
+        account: keyringAccount.id,
         // spend 10000 sats to make sure we have change
         amount: satsToBtc(10000),
       });
@@ -66,7 +64,7 @@ describe('EstimateFeeHandler', () => {
 
     it('does not throw error if the account has insufficient funds to pay the tx fee', async () => {
       // Create test with 1 utxos of 1000 sats, to make sure the account has insufficient funds to pay the tx fee
-      const { testHelper } = await prepareEstimateFee(
+      const { keyringAccount } = await prepareEstimateFee(
         Caip2ChainId.Testnet,
         1,
         1,
@@ -87,7 +85,7 @@ describe('EstimateFeeHandler', () => {
       });
 
       const result = await estimateFee({
-        account: testHelper.keyringAccount.id,
+        account: keyringAccount.id,
         amount: '1',
       });
 
@@ -111,8 +109,8 @@ describe('EstimateFeeHandler', () => {
     });
 
     it('throws `AccountNotFoundError` if the account does not exist', async () => {
-      const { testHelper } = await prepareEstimateFee(Caip2ChainId.Testnet);
-      await testHelper.createAccountNotFoundTest();
+      const helper = await prepareEstimateFee(Caip2ChainId.Testnet);
+      await helper.setupAccountNotFoundTest();
 
       await expect(
         estimateFee({
@@ -123,35 +121,35 @@ describe('EstimateFeeHandler', () => {
     });
 
     it('throws `AccountNotFoundError` if the derived account is not matching with the account from state', async () => {
-      const { testHelper } = await prepareEstimateFee(Caip2ChainId.Testnet);
-      await testHelper.createAccountNotMatchTest();
+      const helper = await prepareEstimateFee(Caip2ChainId.Testnet);
+      await helper.setupAccountNotMatchingTest();
 
       await expect(
         estimateFee({
-          account: testHelper.keyringAccount.id,
+          account: helper.keyringAccount.id,
           amount: '0.0001',
         }),
       ).rejects.toThrow(AccountNotFoundError);
     });
 
     it('throws `Failed to estimate fee` error if no fee rate is returned from the chain service', async () => {
-      const { testHelper } = await prepareEstimateFee(Caip2ChainId.Testnet);
-      await testHelper.createNoFeeAvailableTest();
+      const helper = await prepareEstimateFee(Caip2ChainId.Testnet);
+      await helper.setupNoFeeAvailableTest();
 
       await expect(
         estimateFee({
-          account: testHelper.keyringAccount.id,
+          account: helper.keyringAccount.id,
           amount: '0.0001',
         }),
       ).rejects.toThrow('Failed to estimate fee');
     });
 
     it('throws `Transaction amount too small` error if amount to estimate for is considered dust', async () => {
-      const { testHelper } = await prepareEstimateFee(Caip2ChainId.Testnet);
+      const { keyringAccount } = await prepareEstimateFee(Caip2ChainId.Testnet);
 
       await expect(
         estimateFee({
-          account: testHelper.keyringAccount.id,
+          account: keyringAccount.id,
           amount: satsToBtc(1),
         }),
       ).rejects.toThrow(new TxValidationError('Transaction amount too small'));
