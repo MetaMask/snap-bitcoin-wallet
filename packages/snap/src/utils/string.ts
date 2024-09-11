@@ -74,5 +74,5 @@ export function replaceMiddleChar(
  * @returns The formatted address.
  */
 export function shortenAddress(address: string) {
-  return replaceMiddleChar(address, 5, 3);
+  return replaceMiddleChar(address, 7, 5);
 }

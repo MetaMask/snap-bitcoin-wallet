@@ -80,6 +80,6 @@ describe('replaceMiddleChar', () => {
 describe('shortenAddress', () => {
   const str = 'tb1qt2mpt38wmgw3j0hnr9mp5hsa7kxf2a3ktdxaeu';
   it('shorten an address', () => {
-    expect(shortenAddress(str)).toBe('tb1qt...aeu');
+    expect(shortenAddress(str)).toBe('tb1qt2m...dxaeu');
   });
 });
