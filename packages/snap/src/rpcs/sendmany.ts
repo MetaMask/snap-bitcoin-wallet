@@ -79,23 +79,36 @@ export type SendManyParams = Infer<typeof SendManyParamsStruct>;
 
 export type SendManyResponse = Infer<typeof SendManyResponseStruct>;
 
+export type SendManyConfiguration = {
+  showConfirmation: boolean;
+  showWarning: boolean;
+};
+
 /**
  * Send BTC to multiple account.
  *
  * @param account - The account to send the transaction.
  * @param origin - The origin of the request.
  * @param params - The parameters for send the transaction.
+ * @param [configuration] - The parameters to configuration the sendmany rpc behaviour.
+ * @param [configuration.showConfirmation] - The boolean flag to enable/disable the confiramtion dialog.
+ * @param [configuration.showWarning] - The boolean flag to enable/disable the warning dialog.
  * @returns A Promise that resolves to an SendManyResponse object.
  */
 export async function sendMany(
   account: BtcAccount,
   origin: string,
   params: SendManyParams,
+  configuration: SendManyConfiguration = {
+    showConfirmation: true,
+    showWarning: true,
+  },
 ) {
   try {
     validateRequest(params, SendManyParamsStruct);
 
     const { dryrun, scope, subtractFeeFrom, replaceable, comment } = params;
+    const { showConfirmation, showWarning } = configuration;
     const chainApi = Factory.createOnChainServiceProvider(scope);
     const wallet = Factory.createWallet(scope);
 
@@ -127,13 +140,16 @@ export async function sendMany(
       // Wallet.createTransaction may throw an insufficient funds error
       // And end-user is expected to know about it.
       // Hence we display an alert dialog to indicate the issue.
-      if (createTxError instanceof InsufficientFundsError) {
+      if (showWarning && createTxError instanceof InsufficientFundsError) {
         await displayInsufficientFundsWarning(recipients, scope, origin);
       }
       throw createTxError;
     }
 
-    if (!(await getTxConsensus(txResp.txInfo, comment, scope, origin))) {
+    if (
+      showConfirmation &&
+      !(await getTxConsensus(txResp.txInfo, comment, scope, origin))
+    ) {
       throw new UserRejectedRequestError() as unknown as Error;
     }
 

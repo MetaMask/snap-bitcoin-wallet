@@ -29,7 +29,7 @@ const metamaskPermissions = new Set([
   KeyringRpcMethod.GetAccountBalances,
 ]);
 
-const allowedOrigins = [
+export const allowedOrigins = [
   'https://portfolio.metamask.io',
   'https://portfolio-builds.metafi-dev.codefi.network',
   'https://dev.portfolio.metamask.io',
@@ -37,7 +37,7 @@ const allowedOrigins = [
   'https://ramps-dev.portfolio.metamask.io',
 ];
 
-const metamask = 'metamask';
+export const metamask = 'metamask';
 
 export const originPermissions = new Map<string, Set<string>>([]);
 

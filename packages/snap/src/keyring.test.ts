@@ -8,8 +8,9 @@ import { Config } from './config';
 import { Caip2Asset, Caip2ChainId } from './constants';
 import { AccountNotFoundError, MethodNotImplementedError } from './exceptions';
 import { Factory } from './factory';
-import type { CreateAccountOptions } from './keyring';
+import type { CreateAccountOptions, KeyringOptions } from './keyring';
 import { BtcKeyring } from './keyring';
+import { metamask } from './permissions';
 import * as getBalanceRpc from './rpcs/get-balances';
 import * as sendManyRpc from './rpcs/sendmany';
 import { KeyringStateManager } from './stateManagement';
@@ -78,16 +79,19 @@ describe('BtcKeyring', () => {
     };
   };
 
-  const createMockKeyring = (stateMgr: KeyringStateManager) => {
+  const createMockKeyring = (
+    stateMgr: KeyringStateManager,
+    keyringOptions: KeyringOptions = {
+      defaultIndex: 0,
+      origin,
+      multiAccount: false,
+    },
+  ) => {
     const sendManySpy = jest.spyOn(sendManyRpc, 'sendMany');
     const getBalanceRpcSpy = jest.spyOn(getBalanceRpc, 'getBalances');
 
     return {
-      instance: new MockBtcKeyring(stateMgr, {
-        defaultIndex: 0,
-        origin,
-        multiAccount: false,
-      }),
+      instance: new MockBtcKeyring(stateMgr, keyringOptions),
       sendManySpy,
       getBalanceRpcSpy,
     };
@@ -321,48 +325,72 @@ describe('BtcKeyring', () => {
   });
 
   describe('submitRequest', () => {
-    it('calls SnapRpcHandler if the method support', async () => {
-      const caip2ChainId = Caip2ChainId.Testnet;
-      const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
-      const { instance: keyring, sendManySpy } = createMockKeyring(stateMgr);
-      const { sender, keyringAccount } = await createSender(caip2ChainId);
-      getWalletSpy.mockResolvedValue({
-        account: keyringAccount as unknown as KeyringAccount,
-        index: sender.index,
-        scope: keyringAccount.options.scope,
-        hdPath: sender.hdPath,
-      });
-      sendManySpy.mockResolvedValue({
-        txId: 'txid',
-      });
+    it.each([
+      {
+        requestOrigin: origin,
+        testTitle: 'is not metamask',
+      },
+      {
+        requestOrigin: metamask,
+        testTitle: 'is metamask',
+      },
+    ])(
+      'calls the `sendMany` method correctly when the request origin $testTitle',
+      async ({ requestOrigin }: { requestOrigin: string }) => {
+        const caip2ChainId = Caip2ChainId.Testnet;
+        const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
+        const { instance: keyring, sendManySpy } = createMockKeyring(stateMgr, {
+          defaultIndex: 0,
+          origin: requestOrigin,
+          multiAccount: false,
+        });
+        const { sender, keyringAccount } = await createSender(caip2ChainId);
 
-      const params = {
-        scope: caip2ChainId,
-        amounts: {
-          bc1qrp0yzgkf8rawkuvdlhnjfj2fnjwm0m8727kgah: '0.01',
-          bc1qf5n2h6mgelkls4497pkpemew55xpew90td2qae: '0.01',
-        },
-        comment: 'testing',
-        subtractFeeFrom: ['bc1qrp0yzgkf8rawkuvdlhnjfj2fnjwm0m8727kgah'],
-        replaceable: false,
-      };
+        getWalletSpy.mockResolvedValue({
+          account: keyringAccount as unknown as KeyringAccount,
+          index: sender.index,
+          scope: keyringAccount.options.scope,
+          hdPath: sender.hdPath,
+        });
+        sendManySpy.mockResolvedValue({
+          txId: 'txid',
+        });
 
-      await keyring.submitRequest({
-        id: keyringAccount.id,
-        scope: Caip2ChainId.Testnet,
-        account: keyringAccount.address,
-        request: {
-          method: 'btc_sendmany',
+        const showConfirmation = requestOrigin !== metamask;
+        const showWarning = requestOrigin !== metamask;
+
+        const params = {
+          scope: caip2ChainId,
+          amounts: {
+            bc1qrp0yzgkf8rawkuvdlhnjfj2fnjwm0m8727kgah: '0.01',
+            bc1qf5n2h6mgelkls4497pkpemew55xpew90td2qae: '0.01',
+          },
+          comment: 'testing',
+          subtractFeeFrom: ['bc1qrp0yzgkf8rawkuvdlhnjfj2fnjwm0m8727kgah'],
+          replaceable: false,
+        };
+
+        await keyring.submitRequest({
+          id: keyringAccount.id,
+          scope: Caip2ChainId.Testnet,
+          account: keyringAccount.address,
+          request: {
+            method: 'btc_sendmany',
+            params,
+          },
+        });
+
+        expect(sendManySpy).toHaveBeenCalledWith(
+          expect.any(BtcAccount),
+          requestOrigin,
           params,
-        },
-      });
-
-      expect(sendManySpy).toHaveBeenCalledWith(
-        expect.any(BtcAccount),
-        origin,
-        params,
-      );
-    });
+          {
+            showConfirmation,
+            showWarning,
+          },
+        );
+      },
+    );
 
     it('throws `AccountNotFoundError` if the account address is not match with the unlocked account', async () => {
       const caip2ChainId = Caip2ChainId.Testnet;
@@ -432,7 +460,7 @@ describe('BtcKeyring', () => {
       );
     });
 
-    it('throws `MethodNotFoundError` if the method not support', async () => {
+    it('throws `MethodNotFoundError` if the method is not supported', async () => {
       const caip2ChainId = Caip2ChainId.Testnet;
       const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
       const { instance: keyring } = createMockKeyring(stateMgr);

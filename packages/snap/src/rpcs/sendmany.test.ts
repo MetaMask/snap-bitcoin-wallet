@@ -20,6 +20,7 @@ import {
 } from '../bitcoin/wallet';
 import { Config } from '../config';
 import { Caip2ChainId } from '../constants';
+import { metamask } from '../permissions';
 import { getExplorerUrl, shortenAddress, satsToBtc } from '../utils';
 import * as snapUtils from '../utils/snap';
 import { type SendManyParams, sendMany } from './sendmany';
@@ -425,6 +426,27 @@ describe('SendManyHandler', () => {
       });
     });
 
+    it('does not displays a transaction confirmation dialog if the configuration `showConfirmation` is set to `false`', async () => {
+      const network = networks.testnet;
+      const caip2ChainId = Caip2ChainId.Testnet;
+      const { recipients, confirmDialogSpy, sender } = await prepareSendMany(
+        network,
+        caip2ChainId,
+      );
+
+      await sendMany(
+        sender,
+        metamask,
+        createSendManyParams(recipients, caip2ChainId, true),
+        {
+          showConfirmation: false,
+          showWarning: false,
+        },
+      );
+
+      expect(confirmDialogSpy).toHaveBeenCalledTimes(0);
+    });
+
     it('displays a warning dialog if the account has insufficient funds to pay the transaction', async () => {
       const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
@@ -482,6 +504,38 @@ describe('SendManyHandler', () => {
             'You do not have enough BTC in your account to pay for transaction amount or transaction fees on Bitcoin network.',
         },
       ]);
+    });
+
+    it('does not display a warning dialog if the configuration `showWarning` is set to `false`', async () => {
+      const network = networks.testnet;
+      const caip2ChainId = Caip2ChainId.Testnet;
+      const {
+        recipients: [recipient],
+        sender,
+        getDataForTransactionSpy,
+      } = await prepareSendMany(network, caip2ChainId);
+
+      const alertDialogSpy = jest.spyOn(snapUtils, 'alertDialog');
+
+      // force account to have insufficient funds
+      getDataForTransactionSpy.mockReset().mockResolvedValue({
+        data: {
+          utxos: [],
+        },
+      });
+
+      await expect(
+        sendMany(
+          sender,
+          metamask,
+          createSendManyParams([recipient], caip2ChainId, true),
+          {
+            showConfirmation: false,
+            showWarning: false,
+          },
+        ),
+      ).rejects.toThrow(InsufficientFundsError);
+      expect(alertDialogSpy).toHaveBeenCalledTimes(0);
     });
 
     it('throws InvalidParamsError when request parameter is not correct', async () => {

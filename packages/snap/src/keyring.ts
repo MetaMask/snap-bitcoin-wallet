@@ -22,6 +22,7 @@ import { Config } from './config';
 import { Caip2ChainId } from './constants';
 import { AccountNotFoundError, MethodNotImplementedError } from './exceptions';
 import { Factory } from './factory';
+import { metamask } from './permissions';
 import { getBalances, type SendManyParams, sendMany } from './rpcs';
 import type { KeyringStateManager, Wallet } from './stateManagement';
 import {
@@ -159,6 +160,7 @@ export class BtcKeyring implements Keyring {
   protected async handleSubmitRequest(request: KeyringRequest): Promise<Json> {
     const { scope, account: id } = request;
     const { method, params } = request.request;
+    const { origin } = this._options;
 
     const walletData = await this.getWalletData(id);
 
@@ -181,10 +183,21 @@ export class BtcKeyring implements Keyring {
 
     switch (method) {
       case 'btc_sendmany':
-        return (await sendMany(account, this._options.origin, {
-          ...params,
-          scope: walletData.scope,
-        } as unknown as SendManyParams)) as unknown as Json;
+        return (await sendMany(
+          account,
+          origin,
+          {
+            ...params,
+            scope: walletData.scope,
+          } as unknown as SendManyParams,
+          {
+            // Skip the warning dialog if the origin is metamask
+            showWarning: origin !== metamask,
+            // Skip the confirmation dialog if the origin is metamask
+            // Native ui confirmation will be used instead.
+            showConfirmation: origin !== metamask,
+          },
+        )) as unknown as Json;
       default:
         throw new MethodNotFoundError() as unknown as Error;
     }
