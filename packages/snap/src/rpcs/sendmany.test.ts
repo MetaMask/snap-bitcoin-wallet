@@ -10,12 +10,13 @@ import {
   generateBlockChairGetUtxosResp,
 } from '../../test/utils';
 import { BtcOnChainService } from '../bitcoin/chain';
-import type { BtcAccount } from '../bitcoin/wallet';
+import type { BtcAccount, Recipient } from '../bitcoin/wallet';
 import {
   BtcAccountDeriver,
   BtcWallet,
   type ITxInfo,
   TxValidationError,
+  InsufficientFundsError,
 } from '../bitcoin/wallet';
 import { Config } from '../config';
 import { Caip2ChainId } from '../constants';
@@ -95,10 +96,11 @@ describe('SendManyHandler', () => {
       caip2ChainId: string,
       dryrun: boolean,
       comment = '',
+      amount = 500,
     ): SendManyParams => {
       return {
         amounts: recipients.reduce((acc, recipient) => {
-          acc[recipient.address] = satsToBtc(500);
+          acc[recipient.address] = satsToBtc(amount);
           return acc;
         }, {}),
         comment,
@@ -137,7 +139,7 @@ describe('SendManyHandler', () => {
         getFeeRatesSpy,
         broadcastTransactionSpy,
       } = createMockChainApiFactory();
-      const snapHelperSpy = jest.spyOn(snapUtils, 'confirmDialog');
+      const confirmDialogSpy = jest.spyOn(snapUtils, 'confirmDialog');
 
       const { sender, keyringAccount, recipients } =
         await createSenderNRecipients(network, caip2ChainId, 2);
@@ -160,7 +162,7 @@ describe('SendManyHandler', () => {
       broadcastTransactionSpy.mockResolvedValue({
         transactionId: broadcastResp,
       });
-      snapHelperSpy.mockResolvedValue(true);
+      confirmDialogSpy.mockResolvedValue(true);
 
       return {
         sender,
@@ -170,7 +172,93 @@ describe('SendManyHandler', () => {
         getDataForTransactionSpy,
         getFeeRatesSpy,
         broadcastTransactionSpy,
-        snapHelperSpy,
+        confirmDialogSpy,
+      };
+    };
+
+    // this method is to create a expected response of a divider component
+    const createExpectedDividerComponent = (): unknown => {
+      return {
+        type: 'divider',
+      };
+    };
+
+    // this method is to create a expected response of a recipient list component
+    const createExpectedRecipientListComponent = (
+      recipients: Recipient[],
+      caip2ChainId: string,
+    ): unknown[] => {
+      const expectedComponents: unknown[] = [];
+      const recipientsLen = recipients.length;
+
+      for (let idx = 0; idx < recipientsLen; idx++) {
+        const recipient = recipients[idx];
+
+        expectedComponents.push({
+          type: 'panel',
+          children: [
+            {
+              type: 'row',
+              label: recipientsLen > 1 ? `Recipient ${idx + 1}` : `Recipient`,
+              value: {
+                type: 'text',
+                value: `[${shortenAddress(recipient.address)}](${getExplorerUrl(
+                  recipient.address,
+                  caip2ChainId,
+                )})`,
+              },
+            },
+            {
+              type: 'row',
+              label: 'Amount',
+              value: {
+                markdown: false,
+                type: 'text',
+                value: satsToBtc(recipient.value, true),
+              },
+            },
+          ],
+        });
+        expectedComponents.push(createExpectedDividerComponent());
+      }
+      return expectedComponents;
+    };
+
+    // this method is to create a expected response of a header panel component
+    const createExpectedHeadingPanelComponent = (
+      requestBy: string,
+      includeReviewText = true,
+    ): unknown => {
+      const headingComponent = {
+        type: 'heading',
+        value: 'Send Request',
+      };
+
+      const reviewTextComponent = {
+        type: 'text',
+        value:
+          "Review the request before proceeding. Once the transaction is made, it's irreversible.",
+      };
+
+      const requestByComponent = {
+        type: 'row',
+        label: 'Requested by',
+        value: {
+          type: 'text',
+          value: requestBy,
+          markdown: false,
+        },
+      };
+
+      const panelChilds: unknown[] = [headingComponent];
+      if (includeReviewText) {
+        panelChilds.push(reviewTextComponent);
+      }
+      panelChilds.push(requestByComponent);
+
+      return {
+        type: 'panel',
+        children: panelChilds,
       };
     };
 
@@ -213,22 +301,106 @@ describe('SendManyHandler', () => {
       expect(broadcastTransactionSpy).toHaveBeenCalledTimes(0);
     });
 
-    it('does create comment component in dialog if consumer has provide the comment', async () => {
+    it('displays a transaction confirmation dialog if the bitcoin transaction has been created successfully', async () => {
       const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
-      const { sender, recipients, snapHelperSpy } = await prepareSendMany(
+      const { recipients, confirmDialogSpy, sender } = await prepareSendMany(
         network,
         caip2ChainId,
       );
+      const sendAmtInSats = 500;
+      const txFee = 1;
+      const sendParams = createSendManyParams(
+        recipients,
+        caip2ChainId,
+        true,
+        '',
+        sendAmtInSats,
+      );
+      const mockTxInfo: ITxInfo = {
+        feeRate: BigInt(1),
+        txFee: BigInt(txFee),
+        sender: sender.address,
+        recipients: recipients.map((recipient) => ({
+          address: recipient.address,
+          value: BigInt(sendAmtInSats),
+        })),
+        total: BigInt(sendAmtInSats * recipients.length + txFee),
+      };
+
+      // mock createTransaction and signTransaction response
+      const walletCreateTxSpy = jest.spyOn(
+        BtcWallet.prototype,
+        'createTransaction',
+      );
+      const walletSignTxSpy = jest.spyOn(
+        BtcWallet.prototype,
+        'signTransaction',
+      );
+      walletCreateTxSpy.mockResolvedValue({
+        tx: 'transaction',
+        txInfo: mockTxInfo,
+      });
+      walletSignTxSpy.mockResolvedValue('txId');
+
+      await sendMany(sender, origin, sendParams);
+
+      expect(confirmDialogSpy).toHaveBeenCalledTimes(1);
+      expect(confirmDialogSpy).toHaveBeenCalledWith([
+        // heading panel
+        createExpectedHeadingPanelComponent(origin),
+        // divider
+        createExpectedDividerComponent(),
+        // recipient panel
+        ...createExpectedRecipientListComponent(
+          mockTxInfo.recipients,
+          caip2ChainId,
+        ),
+        // bottom panel
+        {
+          type: 'panel',
+          children: [
+            {
+              type: 'row',
+              label: 'Network fee',
+              value: {
+                markdown: false,
+                type: 'text',
+                value: satsToBtc(mockTxInfo.txFee, true),
+              },
+            },
+            {
+              type: 'row',
+              label: 'Total',
+              value: {
+                markdown: false,
+                type: 'text',
+                value: satsToBtc(mockTxInfo.total, true),
+              },
+            },
+          ],
+        },
+      ]);
+    });
+
+    it('creates a comment component in the transaction confirmation dialog if a comment has been provided', async () => {
+      const network = networks.testnet;
+      const caip2ChainId = Caip2ChainId.Testnet;
+      const { sender, recipients, confirmDialogSpy } = await prepareSendMany(
+        network,
+        caip2ChainId,
+      );
+      const comment = 'test comment';
 
       await sendMany(
         sender,
         origin,
-        createSendManyParams(recipients, caip2ChainId, true, 'test comment'),
+        createSendManyParams(recipients, caip2ChainId, true, comment),
       );
 
-      const calls = snapHelperSpy.mock.calls[0][0];
+      const calls = confirmDialogSpy.mock.calls[0][0];
 
+      expect(calls.length).toBeGreaterThan(0);
       const lastPanel = calls[calls.length - 1];
 
       expect(lastPanel).toStrictEqual({
@@ -237,7 +409,7 @@ describe('SendManyHandler', () => {
           {
             type: 'row',
             label: 'Comment',
-            value: { markdown: false, type: 'text', value: 'test comment' },
+            value: { markdown: false, type: 'text', value: comment },
           },
           {
             type: 'row',
@@ -253,143 +425,63 @@ describe('SendManyHandler', () => {
       });
     });
 
-    it('display `Recipient` as label in dialog if there is only 1 recipient', async () => {
+    it('displays a warning dialog if the account has insufficient funds to pay the transaction', async () => {
       const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
-      const { recipients, snapHelperSpy, sender } = await prepareSendMany(
-        network,
-        caip2ChainId,
-      );
-      const walletCreateTxSpy = jest.spyOn(
-        BtcWallet.prototype,
-        'createTransaction',
-      );
-      const walletSignTxSpy = jest.spyOn(
-        BtcWallet.prototype,
-        'signTransaction',
-      );
-
-      const info: ITxInfo = {
-        feeRate: BigInt('1'),
-        txFee: BigInt('1'),
-        sender: sender.address,
-        recipients: [
-          {
-            address: recipients[0].address,
-            value: BigInt('1000'),
-          },
-        ],
-        total: BigInt('1000'),
-      };
-
-      walletCreateTxSpy.mockResolvedValue({
-        tx: 'transaction',
-        txInfo: info,
-      });
-
-      walletSignTxSpy.mockResolvedValue('txId');
-
-      await sendMany(
+      const {
+        recipients: [recipient],
         sender,
-        origin,
-        createSendManyParams([recipients[0]], caip2ChainId, true),
-      );
+        getDataForTransactionSpy,
+      } = await prepareSendMany(network, caip2ChainId);
 
-      const calls = snapHelperSpy.mock.calls[0][0];
+      const alertDialogSpy = jest.spyOn(snapUtils, 'alertDialog');
+      alertDialogSpy.mockReturnThis();
 
-      const recipientsPanel = calls[2];
+      // force account to have insufficient funds
+      getDataForTransactionSpy.mockReset().mockResolvedValue({
+        data: {
+          utxos: [],
+        },
+      });
+      const sendAmtInSats = 500;
 
-      expect(recipientsPanel).toStrictEqual({
-        type: 'panel',
-        children: [
-          {
-            type: 'row',
-            label: 'Recipient',
-            value: {
-              type: 'text',
-              value: `[${shortenAddress(
-                recipients[0].address,
-              )}](${getExplorerUrl(recipients[0].address, caip2ChainId)})`,
+      await expect(
+        sendMany(
+          sender,
+          origin,
+          createSendManyParams(
+            [recipient],
+            caip2ChainId,
+            true,
+            '',
+            sendAmtInSats,
+          ),
+        ),
+      ).rejects.toThrow(InsufficientFundsError);
+      expect(alertDialogSpy).toHaveBeenCalledTimes(1);
+      expect(alertDialogSpy).toHaveBeenCalledWith([
+        // heading panel
+        createExpectedHeadingPanelComponent(origin, false),
+        // divider
+        createExpectedDividerComponent(),
+        // recipient panel
+        ...createExpectedRecipientListComponent(
+          [
+            {
+              address: recipient.address,
+              value: BigInt(sendAmtInSats),
             },
-          },
-          {
-            type: 'row',
-            label: 'Amount',
-            value: { markdown: false, type: 'text', value: '0.00001000 BTC' },
-          },
-        ],
-      });
-    });
-
-    it('display `Origin` in dialog', async () => {
-      const network = networks.testnet;
-      const caip2ChainId = Caip2ChainId.Testnet;
-      const { recipients, snapHelperSpy, sender } = await prepareSendMany(
-        network,
-        caip2ChainId,
-      );
-      const walletCreateTxSpy = jest.spyOn(
-        BtcWallet.prototype,
-        'createTransaction',
-      );
-      const walletSignTxSpy = jest.spyOn(
-        BtcWallet.prototype,
-        'signTransaction',
-      );
-
-      const info: ITxInfo = {
-        feeRate: BigInt('1'),
-        txFee: BigInt('1'),
-        sender: sender.address,
-        recipients: [
-          {
-            address: recipients[0].address,
-            value: BigInt('1000'),
-          },
-        ],
-        total: BigInt('1000'),
-      };
-
-      walletCreateTxSpy.mockResolvedValue({
-        tx: 'transaction',
-        txInfo: info,
-      });
-
-      walletSignTxSpy.mockResolvedValue('txId');
-
-      await sendMany(
-        sender,
-        origin,
-        createSendManyParams([recipients[0]], caip2ChainId, true),
-      );
-
-      const calls = snapHelperSpy.mock.calls[0][0];
-
-      const introPanel = calls[0];
-
-      expect(introPanel).toStrictEqual({
-        type: 'panel',
-        children: [
-          {
-            type: 'heading',
-            value: 'Send Request',
-          },
-          {
-            type: 'text',
-            value:
-              "Review the request before proceeding. Once the transaction is made, it's irreversible.",
-          },
-          {
-            type: 'row',
-            label: 'Requested by',
-            value: {
-              type: 'text',
-              value: origin,
-              markdown: false,
-            },
-          },
-        ],
-      });
+          ],
+          caip2ChainId,
+        ),
+        // warning message
+        {
+          markdown: false,
+          type: 'text',
+          value:
+            'You do not have enough BTC in your account to pay for transaction amount or transaction fees on Bitcoin network.',
+        },
+      ]);
     });
 
     it('throws InvalidParamsError when request parameter is not correct', async () => {
@@ -504,11 +596,11 @@ describe('SendManyHandler', () => {
     it('throws UserRejectedRequestError error if user denied the transaction', async () => {
       const network = networks.testnet;
       const caip2ChainId = Caip2ChainId.Testnet;
-      const { snapHelperSpy, sender, recipients } = await prepareSendMany(
+      const { confirmDialogSpy, sender, recipients } = await prepareSendMany(
         network,
         caip2ChainId,
       );
-      snapHelperSpy.mockResolvedValue(false);
+      confirmDialogSpy.mockResolvedValue(false);
 
       await expect(
         sendMany(sender, origin, {
