@@ -9,7 +9,7 @@ import { AccountNotFoundError } from '../exceptions';
  * @param account - The `BtcAccount` object to verify.
  * @param keyringAccount - The `KeyringAccount` object to verify.
  * @throws {AccountNotFoundError} If either the `BtcAccount` object or the `KeyringAccount` object is not provided.
- * @throws {AccountNotFoundError} If the BtcAccount's address and the KeyringAccount's address are not matching.
+ * @throws {AccountNotFoundError} If the `BtcAccount`'s address and the `KeyringAccount`'s address are not matching.
  */
 export function verifyIfAccountValid(
   account: BtcAccount,
