@@ -9,10 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.6.0]
 
-### Uncategorized
+### Added
 
-- chore: fix shorten address format ([#238](https://github.com/MetaMask/snap-bitcoin-wallet/pull/238))
-- chore: display a alert dialog if an insufficient funds error has thrown in RPC - `SendMany` ([#236](https://github.com/MetaMask/snap-bitcoin-wallet/pull/236))
+- Display an alert dialog when an error happens during `btc_sendmany` ([#236](https://github.com/MetaMask/snap-bitcoin-wallet/pull/236))
+
+### Changed
+
+- Use similar shorten-address format than the extension ([#238](https://github.com/MetaMask/snap-bitcoin-wallet/pull/238))
 
 ## [0.5.0]
 
