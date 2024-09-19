@@ -112,7 +112,7 @@ export type QNGetTransaction = {
 };
 /* eslint-enable */
 
-export class QuicknodeClient implements IDataClient {
+export class QuickNodeClient implements IDataClient {
   protected readonly _confrimationThreshold = 6;
 
   protected readonly _options: QuicknodeClientOptions;
@@ -169,7 +169,7 @@ export class QuicknodeClient implements IDataClient {
       assert(addresses, array(BtcP2wpkhAddressStruct));
 
       logger.info(
-        `[QuicknodeClient.getBalance] start: { addresses : ${JSON.stringify(
+        `[QuickNodeClient.getBalance] start: { addresses : ${JSON.stringify(
           addresses,
         )} }`,
       );
@@ -193,7 +193,7 @@ export class QuicknodeClient implements IDataClient {
         );
 
         logger.info(
-          `[QuicknodeClient.getBalance] response: ${JSON.stringify(response)}`,
+          `[QuickNodeClient.getBalance] response: ${JSON.stringify(response)}`,
         );
 
         // A safeguard to ensure the response is valid.
@@ -217,7 +217,7 @@ export class QuicknodeClient implements IDataClient {
       );
     } catch (error) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      logger.info(`[QuicknodeClient.getBalance] error: ${error.message}`);
+      logger.info(`[QuickNodeClient.getBalance] error: ${error.message}`);
       throw compactError(error, DataClientError);
     }
   }
@@ -240,7 +240,7 @@ export class QuicknodeClient implements IDataClient {
       });
 
       logger.info(
-        `[QuicknodeClient.getUtxos] response: ${JSON.stringify(response)}`,
+        `[QuickNodeClient.getUtxos] response: ${JSON.stringify(response)}`,
       );
 
       // A safeguard to ensure the response is valid.
@@ -258,14 +258,14 @@ export class QuicknodeClient implements IDataClient {
       }));
     } catch (error) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      logger.info(`[QuicknodeClient.getUtxos] error: ${error.message}`);
+      logger.info(`[QuickNodeClient.getUtxos] error: ${error.message}`);
       throw compactError(error, DataClientError);
     }
   }
 
   async getFeeRates(): Promise<DataClientGetFeeRatesResp> {
     try {
-      logger.info(`[QuicknodeClient.getFeeRates] start:`);
+      logger.info(`[QuickNodeClient.getFeeRates] start:`);
       // There is no UX to allow end user to select the fee rate,
       // hence we can just fetch the default fee rate.
       const processItems = {
@@ -283,7 +283,7 @@ export class QuicknodeClient implements IDataClient {
           });
 
           logger.info(
-            `[QuicknodeClient.getFeeRates] response: ${JSON.stringify(
+            `[QuickNodeClient.getFeeRates] response: ${JSON.stringify(
               response,
             )}`,
           );
@@ -304,7 +304,7 @@ export class QuicknodeClient implements IDataClient {
       return feeRates;
     } catch (error) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      logger.info(`[QuicknodeClient.getFeeRates] error: ${error.message}`);
+      logger.info(`[QuickNodeClient.getFeeRates] error: ${error.message}`);
       throw compactError(error, DataClientError);
     }
   }
@@ -319,7 +319,7 @@ export class QuicknodeClient implements IDataClient {
       });
 
       logger.info(
-        `[QuicknodeClient.sendTransaction] response: ${JSON.stringify(
+        `[QuickNodeClient.sendTransaction] response: ${JSON.stringify(
           response,
         )}`,
       );
@@ -332,7 +332,7 @@ export class QuicknodeClient implements IDataClient {
       return response.result.hex;
     } catch (error) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      logger.info(`[QuicknodeClient.sendTransaction] error: ${error.message}`);
+      logger.info(`[QuickNodeClient.sendTransaction] error: ${error.message}`);
       throw compactError(error, DataClientError);
     }
   }
@@ -347,7 +347,7 @@ export class QuicknodeClient implements IDataClient {
       );
 
       logger.info(
-        `[QuicknodeClient.getTransactionStatus] response: ${JSON.stringify(
+        `[QuickNodeClient.getTransactionStatus] response: ${JSON.stringify(
           response,
         )}`,
       );
@@ -368,7 +368,7 @@ export class QuicknodeClient implements IDataClient {
     } catch (error) {
       logger.info(
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        `[QuicknodeClient.getTransactionStatus] error: ${error.message}`,
+        `[QuickNodeClient.getTransactionStatus] error: ${error.message}`,
       );
       throw compactError(error, DataClientError);
     }

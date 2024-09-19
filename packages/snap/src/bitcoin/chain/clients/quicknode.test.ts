@@ -14,12 +14,12 @@ import type { BtcAccount } from '../../wallet';
 import { BtcAccountDeriver, BtcWallet } from '../../wallet';
 import { TransactionStatus } from '../constants';
 import { DataClientError } from '../exceptions';
-import { QuicknodeClient } from './quicknode';
+import { QuickNodeClient } from './quicknode';
 
 jest.mock('../../../utils/logger');
 jest.mock('../../../utils/snap');
 
-describe('QuicknodeClient', () => {
+describe('QuickNodeClient', () => {
   const testnetEndpoint = 'https://api.quicknode.com/testnet';
   const mainnetEndpoint = 'https://api.quicknode.com/mainnet';
 
@@ -59,7 +59,7 @@ describe('QuicknodeClient', () => {
   };
 
   const createQNClient = (network: Network) => {
-    return new QuicknodeClient({
+    return new QuickNodeClient({
       network,
       testnetEndpoint,
       mainnetEndpoint,
