@@ -140,6 +140,19 @@ export class QuickNodeClient implements IDataClient {
     }
   }
 
+  protected isApiRespError<Resp extends { result: unknown }>(
+    resp: Resp,
+  ): boolean {
+    // Possible error response from QuickNode:
+    // - { result : null, error : "some error message" }
+    // - { result : null, error : { code: -8, message: "some error message" } }
+    // - { result : { error : "some error message" } }
+    // - empty
+    return (
+      !resp.result || Object.prototype.hasOwnProperty.call(resp.result, 'error')
+    );
+  }
+
   async getBalances(addresses: string[]): Promise<DataClientGetBalancesResp> {
     assert(addresses, array(BtcP2wpkhAddressStruct));
 
