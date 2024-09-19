@@ -148,11 +148,12 @@ export class QuickNodeClient implements IDataClient {
       body: JSON.stringify(body),
     });
 
+    // QuickNode returns 200 status code for successful requests, others are errors status code
     if (response.status !== 200) {
       const res = await response.json();
       throw new Error(
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        `Failed to post data from quicknode: ${res.context.error}`,
+        `Failed to post data from quicknode: ${res.error}`,
       );
     }
 
@@ -162,6 +163,19 @@ export class QuickNodeClient implements IDataClient {
       );
     }
     return response.json() as unknown as Resp;
+  }
+
+  protected isApiRespError<Resp extends { result: unknown }>(
+    resp: Resp,
+  ): boolean {
+    // Possible error response from QuickNode:
+    // - { result : null, error : "some error message" }
+    // - { result : null, error : { code: -8, message: "some error message" } }
+    // - { result : { error : "some error message" } }
+    // - empty
+    return (
+      !resp.result || Object.prototype.hasOwnProperty.call(resp.result, 'error')
+    );
   }
 
   async getBalances(addresses: string[]): Promise<DataClientGetBalancesResp> {
@@ -197,7 +211,7 @@ export class QuickNodeClient implements IDataClient {
         );
 
         // A safeguard to ensure the response is valid.
-        if (!response.result) {
+        if (!response.result || this.isApiRespError(response)) {
           throw new Error(`Get balance response is invalid`);
         }
 
@@ -244,7 +258,7 @@ export class QuickNodeClient implements IDataClient {
       );
 
       // A safeguard to ensure the response is valid.
-      if (!response.result) {
+      if (!response.result || this.isApiRespError(response)) {
         throw new Error(`Get utxos response is invalid`);
       }
 
@@ -289,7 +303,7 @@ export class QuickNodeClient implements IDataClient {
           );
 
           // A safeguard to ensure the response is valid.
-          if (!response.result) {
+          if (!response.result || this.isApiRespError(response)) {
             throw new Error(`Get fee rate response is invalid`);
           }
 
@@ -325,7 +339,7 @@ export class QuickNodeClient implements IDataClient {
       );
 
       // A safeguard to ensure the response is valid.
-      if (!response.result) {
+      if (!response.result || this.isApiRespError(response)) {
         throw new Error(`send transaction response is invalid`);
       }
 
@@ -353,7 +367,7 @@ export class QuickNodeClient implements IDataClient {
       );
 
       // A safeguard to ensure the response is valid.
-      if (!response.result) {
+      if (!response.result || this.isApiRespError(response)) {
         throw new Error(`Get transaction response is invalid`);
       }
 

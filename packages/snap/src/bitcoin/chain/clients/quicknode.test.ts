@@ -1,3 +1,4 @@
+import type { Json } from '@metamask/utils';
 import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 
@@ -23,6 +24,12 @@ describe('QuickNodeClient', () => {
   const testnetEndpoint = 'https://api.quicknode.com/testnet';
   const mainnetEndpoint = 'https://api.quicknode.com/mainnet';
 
+  class MockQNClient extends QuickNodeClient {
+    async post<Resp>(body: Json): Promise<Resp> {
+      return super.post(body);
+    }
+  }
+
   const createMockFetch = () => {
     // eslint-disable-next-line no-restricted-globals
     Object.defineProperty(global, 'fetch', {
@@ -38,15 +45,8 @@ describe('QuickNodeClient', () => {
     };
   };
 
-  const createMockDeriver = (network) => {
-    return {
-      instance: new BtcAccountDeriver(network),
-    };
-  };
-
   const createAccounts = async (network, recipientCnt: number) => {
-    const { instance } = createMockDeriver(network);
-    const wallet = new BtcWallet(instance, network);
+    const wallet = new BtcWallet(new BtcAccountDeriver(network), network);
 
     const accounts: BtcAccount[] = [];
     for (let i = 0; i < recipientCnt; i++) {
@@ -59,12 +59,107 @@ describe('QuickNodeClient', () => {
   };
 
   const createQNClient = (network: Network) => {
-    return new QuickNodeClient({
+    return new MockQNClient({
       network,
       testnetEndpoint,
       mainnetEndpoint,
     });
   };
+
+  const mockApiError = ({
+    fetchSpy,
+    isOk = true,
+    status = 200,
+  }: {
+    fetchSpy: jest.SpyInstance;
+    isOk?: boolean;
+    status?: number;
+  }) => {
+    fetchSpy.mockResolvedValueOnce({
+      ok: isOk,
+      status,
+      json: jest.fn().mockResolvedValue({
+        result: null,
+        error: {
+          code: 1,
+          message: 'some error',
+        },
+        id: null,
+      }),
+    });
+  };
+
+  describe('post', () => {
+    it('executes a request', async () => {
+      const { fetchSpy } = createMockFetch();
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: jest.fn().mockResolvedValue(true),
+      });
+
+      const postBody = {
+        method: 'testmethod',
+        params: [1],
+      };
+
+      const instance = createQNClient(networks.testnet);
+      const result = await instance.post(postBody);
+
+      expect(fetchSpy).toHaveBeenCalledWith(instance.baseUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(postBody),
+      });
+      expect(result).toBe(true);
+    });
+
+    it('throws `Failed to post data from quicknode` error if the http status is not 200', async () => {
+      const { fetchSpy } = createMockFetch();
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: jest.fn().mockResolvedValue({ error: 'api error' }),
+      });
+
+      const postBody = {
+        method: 'testmethod',
+        params: [1],
+      };
+
+      const instance = createQNClient(networks.testnet);
+
+      await expect(instance.post(postBody)).rejects.toThrow(
+        'Failed to post data from quicknode: api error',
+      );
+    });
+
+    it('throws `Failed to post data from quicknode` error if the `response.ok` is false', async () => {
+      const { fetchSpy } = createMockFetch();
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        status: 200,
+        statusText: 'some error',
+        json: jest.fn().mockResolvedValue({}),
+      });
+
+      const postBody = {
+        method: 'testmethod',
+        params: [1],
+      };
+
+      const instance = createQNClient(networks.testnet);
+
+      await expect(instance.post(postBody)).rejects.toThrow(
+        'Failed to post data from quicknode: some error',
+      );
+    });
+  });
 
   describe('baseUrl', () => {
     it('returns testnet network url', () => {
@@ -119,10 +214,8 @@ describe('QuickNodeClient', () => {
       const { accounts } = await createAccounts(network, 5);
       const addresses = accounts.map((account) => account.address);
 
-      fetchSpy.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: jest.fn().mockResolvedValue(null),
+      mockApiError({
+        fetchSpy,
       });
 
       const instance = createQNClient(network);
@@ -158,10 +251,8 @@ describe('QuickNodeClient', () => {
     it('throws DataClientError if the api response is invalid', async () => {
       const { fetchSpy } = createMockFetch();
 
-      fetchSpy.mockResolvedValueOnce({
-        ok: false,
-        status: 200,
-        json: jest.fn().mockResolvedValue({}),
+      mockApiError({
+        fetchSpy,
       });
 
       const instance = createQNClient(networks.testnet);
@@ -206,10 +297,8 @@ describe('QuickNodeClient', () => {
         accounts: [{ address }],
       } = await createAccounts(network, 1);
 
-      fetchSpy.mockResolvedValueOnce({
-        ok: false,
-        status: 200,
-        json: jest.fn().mockResolvedValue({}),
+      mockApiError({
+        fetchSpy,
       });
 
       const instance = createQNClient(network);
@@ -269,10 +358,8 @@ describe('QuickNodeClient', () => {
     it('throws DataClientError if the api response is invalid', async () => {
       const { fetchSpy } = createMockFetch();
 
-      fetchSpy.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: jest.fn().mockResolvedValue({}),
+      mockApiError({
+        fetchSpy,
       });
 
       const instance = createQNClient(networks.testnet);
@@ -307,10 +394,8 @@ describe('QuickNodeClient', () => {
     it('throws DataClientError if the api response is invalid', async () => {
       const { fetchSpy } = createMockFetch();
 
-      fetchSpy.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: jest.fn().mockResolvedValue({}),
+      mockApiError({
+        fetchSpy,
       });
 
       const instance = createQNClient(networks.testnet);
