@@ -7,6 +7,7 @@ import { v4 as uuidV4 } from 'uuid';
 
 import { Caip2ChainId } from '../src/constants';
 import blockChairData from './fixtures/blockchair.json';
+import quickNodeData from './fixtures/quicknode.json';
 
 /* eslint-disable */
 
@@ -327,6 +328,148 @@ export function generateBlockChairTransactionDashboard(
   return resp;
 }
 
+/**
+ * Generate QuickNode bb_getaddress response by addrss.
+ *
+ * @param address - The account address.
+ * @returns A QuickNode bb_getaddress response.
+ */
+export function generateQNGetBalanceResp(address: string) {
+  const template = quickNodeData.bb_getaddressResp;
+  const resp: typeof template = {
+    ...template, result: {
+      ...template.result,
+      address: address,
+      balance: randomNum(1000000).toString(),
+    }
+  };
+
+  return resp;
+}
+
+/**
+ * Generate QuickNode bb_getutxos response.
+ *
+ * @param params - The params to generate mock utxos.
+ * @param params.utxosCount - The utxos count.
+ * @param params.minAmount - The min amount of each utxo value.
+ * @param params.maxAmount - The max amount of each utxo value.
+ * @param params.minConfirmations - The min confirmation of each utxo.
+ * @param params.maxConfirmations - The max confirmation of each utxo.
+ * @returns A QuickNode bb_getutxos response.
+ */
+export function generateQNGetUtxosResp(
+  {
+    utxosCount,
+    minAmount = 0,
+    maxAmount = 1000000,
+    minConfirmations = 1000,
+    maxConfirmations = 10000,
+  }: {
+    utxosCount: number,
+    minAmount?: number,
+    maxAmount?: number,
+    minConfirmations?: number,
+    maxConfirmations?: number,
+  }
+) {
+  const template = quickNodeData.bb_getutxosResp;
+  const data = { ...template };
+  let idx = -1;
+  data.result = Array.from({ length: utxosCount }, () => {
+    idx += 1;
+    return {
+      txid: randomNum(1000000)
+        .toString(16)
+        .padStart(
+          64,
+          '0',
+        ),
+      vout: idx,
+      value: Math.max(randomNum(maxAmount), minAmount).toString(),
+      height: 100000 + idx,
+      confirmations: Math.max(randomNum(maxConfirmations), minConfirmations),
+
+    };
+  });
+  return data;
+}
+
+/**
+ * Generate QuickNode get rawtransaction response.
+ *
+ * @param params - The params to generate mock get rawtransaction response.
+ * @param params.txid - The transaction id of the transaction.
+ * @param params.confirmations - The number of confirmations of the transaction.
+ * @returns A QuickNode get rawtransaction response.
+ */
+export function generateQNGetRawTransactionResp(
+  {
+    txid,
+    confirmations,
+  }: {
+    txid: string,
+    confirmations: number,
+  }
+) {
+  const template = quickNodeData.getrawtransactionResp;
+  const data = {
+    ...template,
+    result: {
+      ...template.result,
+      txid: txid,
+      confirmations: confirmations,
+    },
+  };
+  return data;
+}
+
+/**
+ * Generate QuickNode estimate smartfee response.
+ *
+ * @param params - The params to generate mock estimate smartfee response.
+ * @param params.feerate - The fee rate in btc unit.
+ * @returns A QuickNode estimate smartfee response.
+ */
+export function generateQNEstimatefeeResp(
+  {
+    feerate
+  }: {
+    feerate: number;
+  }
+) {
+  const template = quickNodeData.estimatesmartfeeResp;
+  const data = {
+    ...template,
+    result: {
+      ...template.result,
+      feerate: feerate,
+      block: Math.max(randomNum(100000), 1000),
+    },
+  };
+  return data;
+}
+
+/**
+ * Generate QuickNode send rawtransaction response.
+ *
+ * @returns A QuickNode send rawtransaction response.
+ */
+export function generateQNSendRawTransactionResp() {
+  const template = quickNodeData.estimatesmartfeeResp;
+  const data = {
+    ...template,
+    result: {
+      hex: randomNum(1000000)
+        .toString(16)
+        .padStart(
+          64,
+          '0',
+        ),
+    },
+  };
+  return data;
+}
 /**
  * Method to generate formatted utxos with blockchair resp.
  *

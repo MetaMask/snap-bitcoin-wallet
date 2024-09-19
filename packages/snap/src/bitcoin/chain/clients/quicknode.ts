@@ -41,9 +41,7 @@ export type QNGetBalancesResponse = {
 };
 
 export type QNGetUtxosResponse = {
-  result:
-    | null
-    | {
+  result: null | {
         txid: string;
         vout: number;
         value: string;
@@ -57,7 +55,13 @@ export type QNGetUtxosResponse = {
 };
 
 export type QNSubmitTransactionResponse = {
-  hex: string;
+  result: null | {
+    hex: string;
+  };
+  error: null | {
+    code: string;
+    message: string;
+  };
 };
 
 export type QNEstimateFeeResponse = {
@@ -109,6 +113,8 @@ export type QNGetTransaction = {
 /* eslint-enable */
 
 export class QuicknodeClient implements IDataClient {
+  protected readonly _confrimationThreshold = 6;
+
   protected readonly _options: QuicknodeClientOptions;
 
   protected readonly _priorityMap: Record<FeeRate, number>;
@@ -191,7 +197,7 @@ export class QuicknodeClient implements IDataClient {
         );
 
         // A safeguard to ensure the response is valid.
-        if (response.result === null) {
+        if (!response.result) {
           throw new Error(`Get balance response is invalid`);
         }
 
@@ -202,6 +208,8 @@ export class QuicknodeClient implements IDataClient {
 
       return addresses.reduce(
         (data: DataClientGetBalancesResp, address: string) => {
+          // The hashmap should include the balance for each enquired address
+          // But in case there are some behavior changes, we set the balance default to 0
           data[address] = addressBalanceMap.get(address) ?? 0;
           return data;
         },
@@ -236,7 +244,7 @@ export class QuicknodeClient implements IDataClient {
       );
 
       // A safeguard to ensure the response is valid.
-      if (response.result === null) {
+      if (!response.result) {
         throw new Error(`Get utxos response is invalid`);
       }
 
@@ -281,7 +289,7 @@ export class QuicknodeClient implements IDataClient {
           );
 
           // A safeguard to ensure the response is valid.
-          if (response.result === null) {
+          if (!response.result) {
             throw new Error(`Get fee rate response is invalid`);
           }
 
@@ -316,7 +324,12 @@ export class QuicknodeClient implements IDataClient {
         )}`,
       );
 
-      return response.hex;
+      // A safeguard to ensure the response is valid.
+      if (!response.result) {
+        throw new Error(`send transaction response is invalid`);
+      }
+
+      return response.result.hex;
     } catch (error) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       logger.info(`[QuicknodeClient.sendTransaction] error: ${error.message}`);
@@ -340,7 +353,7 @@ export class QuicknodeClient implements IDataClient {
       );
 
       // A safeguard to ensure the response is valid.
-      if (response?.result === null) {
+      if (!response.result) {
         throw new Error(`Get transaction response is invalid`);
       }
 
@@ -348,7 +361,7 @@ export class QuicknodeClient implements IDataClient {
       // reference: https://www.bitcoin.com/get-started/what-is-a-confirmation/#:~:text=Different%20cryptocurrencies%20require%20different%20numbers,secure%20after%20around%2030%20confirmations.
       return {
         status:
-          response.result.confirmations >= 6
+          response.result.confirmations >= this._confrimationThreshold
             ? TransactionStatus.Confirmed
             : TransactionStatus.Pending,
       };
