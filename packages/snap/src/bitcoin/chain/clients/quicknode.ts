@@ -16,7 +16,7 @@ import type {
 } from '../data-client';
 import { DataClientError } from '../exceptions';
 
-export type QuicknodeClientOptions = {
+export type QuickNodeClientOptions = {
   network: Network;
   // The endpoints will be setup via the environment variable
   testnetEndpoint: string;
@@ -54,7 +54,7 @@ export type QNGetUtxosResponse = {
   };
 };
 
-export type QNSubmitTransactionResponse = {
+export type QNSendTransactionResponse = {
   result: null | {
     hex: string;
   };
@@ -115,11 +115,11 @@ export type QNGetTransaction = {
 export class QuickNodeClient implements IDataClient {
   protected readonly _confrimationThreshold = 6;
 
-  protected readonly _options: QuicknodeClientOptions;
+  protected readonly _options: QuickNodeClientOptions;
 
   protected readonly _priorityMap: Record<FeeRate, number>;
 
-  constructor(options: QuicknodeClientOptions) {
+  constructor(options: QuickNodeClientOptions) {
     this._options = options;
     this._priorityMap = {
       [FeeRate.Fast]: 1,
@@ -193,7 +193,7 @@ export class QuickNodeClient implements IDataClient {
       await processBatch(addresses, async (address) => {
         const response = await this.post<QNGetBalancesResponse>(
           // index 0 of the params refer to the account address,
-          // index 1.details refer to the output flag:
+          // index 1 .details refer to the output flag:
           // 'basic' for basic address information, 'txids' for include tx ids into the response, 'txs' for include full transaction data
           {
             method: 'bb_getaddress',
@@ -327,7 +327,7 @@ export class QuickNodeClient implements IDataClient {
     signedTransaction: string,
   ): Promise<DataClientSendTxResp> {
     try {
-      const response = await this.post<QNSubmitTransactionResponse>({
+      const response = await this.post<QNSendTransactionResponse>({
         method: 'sendrawtransaction',
         params: [signedTransaction],
       });
