@@ -14,11 +14,11 @@ export function getProvider(): SnapsProvider {
 }
 
 /**
- * Retrieves a SLIP10NodeInterface object for the specified path and curve.
+ * Retrieves a `SLIP10NodeInterface` object for the specified path and curve.
  *
- * @param path - The BIP32 derivation path for which to retrieve a SLIP10NodeInterface.
+ * @param path - The BIP32 derivation path for which to retrieve a `SLIP10NodeInterface`.
  * @param curve - The elliptic curve to use for key derivation.
- * @returns A Promise that resolves to a SLIP10NodeInterface object.
+ * @returns A Promise that resolves to a `SLIP10NodeInterface` object.
  */
 export async function getBip32Deriver(
   path: string[],
