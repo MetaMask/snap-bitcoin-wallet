@@ -231,7 +231,7 @@ describe('QuickNodeClient', () => {
     });
 
     // This case should never happen, but to ensure the test is 100% covered, hence we mock the processBatch to not process any request
-    it('assign 0 balance to address if the address cannot be found in the hashmap', async () => {
+    it('assigns 0 balance to the address if it cannot be found in the hashmap', async () => {
       const network = networks.testnet;
       const { accounts } = await createAccounts(network, 5);
       const addresses = accounts.map((account) => account.address);
