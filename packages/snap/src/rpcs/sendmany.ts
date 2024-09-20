@@ -206,11 +206,14 @@ export async function getTxConsensus(
   ];
 
   components = components.concat(
-    buildRecipientsComponent(
-      info.change ? info.recipients.concat(info.change) : info.recipients,
-      scope,
-    ),
+    buildRecipientsComponent(info.recipients, scope),
   );
+
+  if (info.change) {
+    components = components.concat(
+      buildRecipientsComponent([info.change], scope, 'Change'),
+    );
+  }
 
   const bottomPanel: Component[] = [];
   const commentText = comment.trim();
@@ -264,15 +267,16 @@ export async function displayInsufficientFundsWarning(
  *
  * @param recipients - The recipient list of request.
  * @param scope - The Caip2 Chain Id of request.
+ * @param recipientsLabel - The label for the recipient.
+ * @param amountLabel - The label for the amount.
  * @returns An array of Snap component.
  */
 export function buildRecipientsComponent(
   recipients: Recipient[],
   scope: string,
+  recipientsLabel = `Recipient`,
+  amountLabel = `Amount`,
 ): Component[] {
-  const recipientsLabel = `Recipient`;
-  const amountLabel = `Amount`;
-
   const recipientsLen = recipients.length;
   const isMoreThanOneRecipient = recipientsLen > 1;
 
