@@ -75,4 +75,5 @@ jobs:
     secrets:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-      BLOCKCHAIR_API_KEY: ${{ secrets.BLOCKCHAIR_API_KEY }}
+      QN_TESTNET_ENDPOINT: ${{ secrets.QN_TESTNET_ENDPOINT }}
+      QN_MAINNET_ENDPOINT: ${{ secrets.QN_MAINNET_ENDPOINT }}

@@ -28,7 +28,9 @@ export const Config: SnapConfig = {
     dataClient: {
       options: {
         // eslint-disable-next-line no-restricted-globals
-        apiKey: process.env.BLOCKCHAIR_API_KEY,
+        testnetEndpoint: process.env.QN_TESTNET_ENDPOINT,
+        // eslint-disable-next-line no-restricted-globals
+        mainnetEndpoint: process.env.QN_MAINNET_ENDPOINT,
       },
     },
   },
