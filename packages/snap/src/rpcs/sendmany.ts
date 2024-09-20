@@ -209,12 +209,6 @@ export async function getTxConsensus(
     buildRecipientsComponent(info.recipients, scope),
   );
 
-  if (info.change) {
-    components = components.concat(
-      buildRecipientsComponent([info.change], scope, 'Change'),
-    );
-  }
-
   const bottomPanel: Component[] = [];
   const commentText = comment.trim();
   if (commentText.length > 0) {
@@ -225,8 +219,18 @@ export async function getTxConsensus(
     row(networkFeeLabel, text(`${satsToBtc(info.txFee, true)}`, false)),
   );
 
+  // Exclude the change amount from the total amount, as the change recipient is also hided to the user.
   bottomPanel.push(
-    row(totalLabel, text(`${satsToBtc(info.total, true)}`, false)),
+    row(
+      totalLabel,
+      text(
+        `${satsToBtc(
+          info.total - (info.change ? info.change?.value : BigInt(0)),
+          true,
+        )}`,
+        false,
+      ),
+    ),
   );
 
   components.push(panel(bottomPanel));
