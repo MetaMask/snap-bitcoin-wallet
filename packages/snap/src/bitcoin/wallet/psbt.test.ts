@@ -21,7 +21,7 @@ describe('PsbtService', () => {
     };
   };
 
-  const preparePsbt = async (rbfOptIn = false, inputsCnt = 2) => {
+  const preparePsbt = async (rbfOptIn = false, inputsCount = 2) => {
     const network = networks.testnet;
     const service = new PsbtService(network);
     const wallet = createMockWallet(network);
@@ -48,7 +48,7 @@ describe('PsbtService', () => {
     );
     const utxos = generateFormattedUtxos(
       sender.address,
-      inputsCnt,
+      inputsCount,
       outputVal * outputs.length + fee,
       outputVal * outputs.length + fee,
     );

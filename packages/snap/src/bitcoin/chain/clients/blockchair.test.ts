@@ -39,12 +39,12 @@ describe('BlockChairClient', () => {
     };
   };
 
-  const createAccounts = async (network, recipientCnt: number) => {
+  const createAccounts = async (network, recipientCount: number) => {
     const { instance } = createMockDeriver(network);
     const wallet = new BtcWallet(instance, network);
 
     const accounts: BtcAccount[] = [];
-    for (let i = 0; i < recipientCnt; i++) {
+    for (let i = 0; i < recipientCount; i++) {
       accounts.push(await wallet.unlock(i, Config.wallet.defaultAccountType));
     }
 
