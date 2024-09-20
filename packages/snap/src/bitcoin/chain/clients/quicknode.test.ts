@@ -11,6 +11,7 @@ import {
 } from '../../../../test/utils';
 import { Config } from '../../../config';
 import { btcToSats } from '../../../utils';
+import * as asyncUtils from '../../../utils/async';
 import type { BtcAccount } from '../../wallet';
 import { BtcAccountDeriver, BtcWallet } from '../../wallet';
 import { TransactionStatus } from '../constants';
@@ -225,6 +226,25 @@ describe('QuickNodeClient', () => {
       const result = await instance.getBalances(addresses);
 
       expect(result).toStrictEqual(expectedResult);
+    });
+
+    // This case should never happen, but to ensure the test is 100% covered, hence we mock the processBatch to not process any request
+    it('assign 0 balance to address if the address cant be found in the hashmap', async () => {
+      const network = networks.testnet;
+      const { accounts } = await createAccounts(network, 5);
+      const addresses = accounts.map((account) => account.address);
+
+      jest.spyOn(asyncUtils, 'processBatch').mockReturnThis();
+
+      const instance = createQNClient(network);
+      const result = await instance.getBalances(addresses);
+
+      expect(result).toStrictEqual(
+        addresses.reduce((acc, address) => {
+          acc[address] = 0;
+          return acc;
+        }, {}),
+      );
     });
 
     it('throws DataClientError if the api response is invalid', async () => {
