@@ -23,8 +23,6 @@ import {
   getMaxSpendableBalance,
 } from './rpcs';
 import { KeyringStateManager } from './stateManagement';
-import { generateSendFlowComponent } from './ui/components';
-import { sendManyInputHandler } from './ui/controllers/send-many.controller';
 import { isSnapRpcError, logger } from './utils';
 
 export const validateOrigin = (origin: string, method: string): void => {
@@ -42,7 +40,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   origin,
   request,
 }): Promise<Json> => {
-  logger.logLevel = parseInt(Config.logLevel, 10);
+  logger.logLevel = 6; //parseInt(Config.logLevel, 10);
+  console.log('onRpcRequest', request, origin);
 
   try {
     const { method } = request;
@@ -177,17 +176,17 @@ export const onUserInput: OnUserInputHandler = async ({ id, event }) => {
   //   }
   // }
 
-  const updatedRequest = await sendManyInputHandler({
-    sendRequest: existingRequest,
-    event,
-  });
+  // const updatedRequest = await sendManyInputHandler({
+  //   sendRequest: existingRequest,
+  //   event,
+  // });
 
-  await stateManager.upsertRequest(updatedRequest);
-  await snap.request({
-    method: 'snap_updateInterface',
-    params: {
-      id,
-      ui: generateSendFlowComponent(updatedRequest),
-    },
-  });
+  // await stateManager.upsertRequest(updatedRequest);
+  // await snap.request({
+  //   method: 'snap_updateInterface',
+  //   params: {
+  //     id,
+  //     ui: generateSendFlowComponent(updatedRequest),
+  //   },
+  // });
 };

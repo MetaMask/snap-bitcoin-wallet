@@ -19,12 +19,16 @@ import { v4 as uuidv4 } from 'uuid';
 
 import type { BtcAccount, BtcWallet } from './bitcoin/wallet';
 import { Config } from './config';
-import { Caip2ChainId } from './constants';
+import { Caip2Asset, Caip2ChainId } from './constants';
 import { AccountNotFoundError, MethodNotImplementedError } from './exceptions';
 import { Factory } from './factory';
 import { getBalances, type SendManyParams, sendMany } from './rpcs';
-import type { KeyringStateManager, Wallet } from './stateManagement';
-import { createBtcSendFlow } from './ui/ui';
+import type {
+  KeyringStateManager,
+  SendFlowRequest,
+  Wallet,
+} from './stateManagement';
+import { containsCompleteSendManyRequest, generateSendFlow } from './ui/utils';
 import {
   getProvider,
   ScopeStruct,
@@ -182,44 +186,81 @@ export class BtcKeyring implements Keyring {
 
     switch (method) {
       case 'btc_sendmany': {
-        const sendFlowRequest = await createBtcSendFlow(
-          walletData,
-          account,
-          (params as SendManyParams) ?? {},
-        );
+        let sendFlowRequest: SendFlowRequest;
+        if (containsCompleteSendManyRequest(params as SendManyParams)) {
+          sendFlowRequest = {
+            id: uuidv4(),
+            account: walletData.account.id,
+            scope,
+            transaction: params as SendManyParams,
+            status: 'draft',
+            interfaceId: '',
+          };
+        } else {
+          const asset =
+            scope === Caip2ChainId.Mainnet ? Caip2Asset.Btc : Caip2Asset.TBtc;
+
+          const balances = await getBalances(account, {
+            assets: [asset],
+            scope,
+          });
+
+          sendFlowRequest = await generateSendFlow({
+            account: walletData.account,
+            fees: { amount: '0', fiat: 0 },
+            scope: walletData.scope,
+            balance: {
+              amount: balances[asset].amount,
+              fiat: 0,
+            },
+          });
+
+          console.log('balances', balances);
+
+          // await updateSendFlow({});
+        }
+
+        // generate new request and store it in the state manager
+
+        // const sendFlowRequest = await createBtcSendFlow(
+        //   walletData,
+        //   account,
+        //   (params as SendManyParams) ?? {},
+        // );
+
         await this._stateMgr.upsertRequest(sendFlowRequest);
 
         const userResult = await snap.request({
           method: 'snap_dialog',
           params: {
             type: 'confirmation',
-            id: sendFlowRequest.id,
+            id: sendFlowRequest.interfaceId,
           },
         });
 
-        const updatedSendRequest = await this._stateMgr.getRequest(
-          sendFlowRequest.id,
-        );
+        // const updatedSendRequest = await this._stateMgr.getRequest(
+        //   sendFlowRequest.id,
+        // );
 
-        if (!updatedSendRequest) {
-          throw new Error('[SendMany]: Error Request not found');
-        }
+        // if (!updatedSendRequest) {
+        //   throw new Error('[SendMany]: Error Request not found');
+        // }
 
-        if (userResult) {
-          return (await sendMany(account, this._options.origin, {
-            // TODO: refactor to support multiple receivers?
-            amounts: {
-              [account.address]: updatedSendRequest.transaction.amount,
-            },
-            comment: updatedSendRequest.transaction.comment,
-            subtractFeeFrom: updatedSendRequest.transaction.subtractFeeFrom,
-            replaceable: updatedSendRequest.transaction.replaceable,
-            dryrun: false,
-            scope: walletData.scope,
-          } as unknown as SendManyParams)) as unknown as Json;
-        }
-        updatedSendRequest.status = 'rejected';
-        await this._stateMgr.upsertRequest(updatedSendRequest);
+        // if (userResult) {
+        //   return (await sendMany(account, this._options.origin, {
+        //     // TODO: refactor to support multiple receivers?
+        //     amounts: {
+        //       [account.address]: updatedSendRequest.transaction.amount,
+        //     },
+        //     comment: updatedSendRequest.transaction.comment,
+        //     subtractFeeFrom: updatedSendRequest.transaction.subtractFeeFrom,
+        //     replaceable: updatedSendRequest.transaction.replaceable,
+        //     dryrun: false,
+        //     scope: walletData.scope,
+        //   } as unknown as SendManyParams)) as unknown as Json;
+        // }
+        // updatedSendRequest.status = 'rejected';
+        // await this._stateMgr.upsertRequest(updatedSendRequest);
         throw new Error('User rejected the request');
       }
       default:

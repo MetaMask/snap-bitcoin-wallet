@@ -60,5 +60,8 @@
       "@lavamoat/preinstall-always-fail": false,
       "sharp": true
     }
+  },
+  "dependencies": {
+    "@metamask/jazzicon": "^2.0.0"
   }
 }

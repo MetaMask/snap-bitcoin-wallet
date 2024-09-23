@@ -30,19 +30,8 @@ export type SendFlowRequest = {
   id: string;
   account: string;
   scope: string;
-  balance: string;
-  transaction: Transaction;
-  estimates: SendEstimate;
-  validation: {
-    amount: boolean;
-    recipient: boolean;
-  };
-  errors: {
-    fees: string;
-    recipient: string;
-  };
-  step: 'send' | 'review';
-  status: 'creation' | 'pending' | 'success' | 'failure' | 'rejected';
+  transaction: SendManyParams;
+  status: 'draft' | 'confirmed' | 'pending' | 'failure' | 'rejected';
 };
 
 export type SnapState = {
