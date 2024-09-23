@@ -28,6 +28,9 @@
     "start": "yarn workspaces foreach --parallel --verbose --interlaced run start",
     "test": "yarn workspaces foreach --parallel --verbose run test"
   },
+  "resolutions": {
+    "@metamask/snaps-sdk": "^6.5.1"
+  },
   "devDependencies": {
     "@lavamoat/allow-scripts": "^3.1.0",
     "@lavamoat/preinstall-always-fail": "^2.1.0",
@@ -62,6 +65,7 @@
     }
   },
   "dependencies": {
-    "@metamask/jazzicon": "^2.0.0"
+    "@metamask/jazzicon": "^2.0.0",
+    "bitcoin-address-validation": "^2.2.3"
   }
 }

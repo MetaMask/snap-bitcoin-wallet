@@ -22,6 +22,7 @@ export type SendFormState = {
 export type SendFormErrors = {
   to?: string;
   amount?: string;
+  total?: string;
 };
 
 /**
@@ -63,7 +64,8 @@ export type Currency = {
  * @property fees - The fees for the transaction.
  */
 export type SendFlowContext = {
-  accounts: Record<string, Account>;
+  accounts: KeyringAccount[];
   selectedCurrency: 'BTC' | '$';
   fees: Currency;
+  scope: string;
 };

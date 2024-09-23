@@ -14,7 +14,8 @@ import type {
 } from './types';
 import { SendFlowRequest } from '../stateManagement';
 import { KeyringAccount } from '@metamask/keyring-api';
-import { Text } from '@metamask/snaps-sdk/jsx';
+import { Caip2ChainId } from '../constants';
+import validate, { Network } from 'bitcoin-address-validation';
 
 export type GenerateSendFlowParams = {
   account: KeyringAccount;
@@ -112,7 +113,12 @@ export function formValidation(
 ): SendFormErrors {
   const errors: Partial<SendFormErrors> = {};
 
-  if (formState.to === 'invalid address') {
+  if (
+    (context.scope === Caip2ChainId.Mainnet &&
+      validate(formState.to, Network.mainnet)) ||
+    (context.scope === Caip2ChainId.Testnet &&
+      validate(formState.to, Network.testnet))
+  ) {
     errors.to = 'Invalid address';
   }
 

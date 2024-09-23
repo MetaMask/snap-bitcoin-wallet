@@ -7,6 +7,7 @@ import {
   UnauthorizedError,
   SnapError,
   MethodNotFoundError,
+  UserInputEventType,
 } from '@metamask/snaps-sdk';
 
 import { Config } from './config';
@@ -24,6 +25,9 @@ import {
 } from './rpcs';
 import { KeyringStateManager } from './stateManagement';
 import { isSnapRpcError, logger } from './utils';
+import { SendFlowContext, SendFormState } from './ui/types';
+import { formValidation } from './ui/utils';
+import { SendFlow } from './ui/components';
 
 export const validateOrigin = (origin: string, method: string): void => {
   if (!origin) {
@@ -108,14 +112,102 @@ export const onKeyringRequest: OnKeyringRequestHandler = async ({
   }
 };
 
-export const onUserInput: OnUserInputHandler = async ({ id, event }) => {
-  // TODO: refactor to another function
-  // get existing values from request id
-  const stateManager = new KeyringStateManager();
-  const existingRequest = await stateManager.getRequest(id);
+export const onUserInput: OnUserInputHandler = async ({
+  id,
+  event,
+  context,
+}) => {
+  const {
+    selectedCurrency,
+    fees: previousFees,
+    accounts,
+    scope,
+  } = context as SendFlowContext;
 
-  if (!existingRequest) {
-    throw new Error(`missing request id: ${id}`);
+  const state = await snap.request({
+    method: 'snap_getInterfaceState',
+    params: { id },
+  });
+
+  logger.log('onUserInput', state);
+
+  const sendForm = state.sendForm as SendFormState;
+
+  const formErrors = formValidation(sendForm, context as SendFlowContext);
+
+  logger.log('formErrors', formErrors);
+
+  let fees = previousFees;
+
+  // skip call if there is an error with the amount.
+  if (!formErrors.amount) {
+    const estimates = await estimateFee({
+      account: accounts[0].id,
+      amount: sendForm.amount,
+    });
+    logger.log('estimates', estimates);
+    // TODO: fiat conversion
+    fees.amount = estimates.fee.amount;
+  }
+
+  const total = {
+    amount: Number(sendForm.amount ?? 0) + Number(fees.amount),
+    // TODO: fiat conversion
+    fiat: 0,
+  };
+
+  if (event.type === UserInputEventType.InputChangeEvent) {
+    switch (event.name) {
+      case 'amount':
+      case 'to':
+      case 'accountSelector': {
+        await snap.request({
+          method: 'snap_updateInterface',
+          params: {
+            id,
+            ui: (
+              <SendFlow
+                account={accounts[0]}
+                selectedCurrency={selectedCurrency}
+                total={{ amount: total.amount.toString(), fiat: total.fiat }}
+                fees={fees}
+                displayClearIcon={Boolean(sendForm.to) && sendForm.to !== ''}
+                errors={formErrors}
+              />
+            ),
+          },
+        });
+
+        break;
+      }
+      default:
+        break;
+    }
+  } else if (event.type === UserInputEventType.ButtonClickEvent) {
+    switch (event.name) {
+      case 'clear':
+        await snap.request({
+          method: 'snap_updateInterface',
+          params: {
+            id,
+            ui: (
+              <SendFlow
+                accounts={accountsArray}
+                selectedAccount={sendForm.accountSelector}
+                selectedCurrency={selectedCurrency}
+                total={total}
+                fees={fees}
+                flushToAddress={true}
+                displayClearIcon={false}
+                errors={formErrors}
+              />
+            ),
+          },
+        });
+        break;
+      default:
+        break;
+    }
   }
 
   // validate values
