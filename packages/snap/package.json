@@ -77,5 +77,8 @@
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
+  },
+  "dependencies": {
+    "@metamask/jazzicon": "^2.0.0"
   }
 }

@@ -33,12 +33,10 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
 }) => (
   <Section>
     <Row label="Estimated network fee">
-      {fees ? (
-        <Value
-          value={`${fees.amount.toString()} BTC`}
-          extra={`$${fees.fiat.toString()}`}
-        />
-      ) : null}
+      <Value
+        value={`${fees.amount.toString()} BTC`}
+        extra={`$${fees.fiat.toString()}`}
+      />
     </Row>
     <Row label="Transaction speed" tooltip="The estimated time of the TX">
       <Text>30m</Text>
