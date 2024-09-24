@@ -62,8 +62,7 @@ export async function generateSendFlow({
           displayClearIcon={false}
           isLoading={true}
           balance={{ amount: '', fiat: '' }}
-          amount="0"
-          rates="0"
+          amount=""
         />
       ),
       context: {
