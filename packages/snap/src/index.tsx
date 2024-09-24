@@ -162,14 +162,6 @@ export const onUserInput: OnUserInputHandler = async ({
         account: accounts[0].id,
         amount: sendForm.amount,
       });
-  if (!formErrors.amount) {
-    const estimates = await estimateFee({
-      account: accounts[0].id,
-      amount: sendForm.amount,
-    });
-    logger.log('estimates', estimates);
-    // TODO: fiat conversion
-    fees.amount = estimates.fee.amount;
       // TODO: fiat conversion
       fees.amount = estimates.fee.amount;
     } catch (feeError) {
