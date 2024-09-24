@@ -15,105 +15,17 @@ import type {
   DataClientGetFeeRatesResp,
 } from '../data-client';
 import { DataClientError } from '../exceptions';
-
-export type QuickNodeClientOptions = {
-  network: Network;
-  // The endpoints will be setup via the environment variable
-  testnetEndpoint: string;
-  mainnetEndpoint: string;
-};
-
-/* eslint-disable */
-export type QNGetBalancesResponse = {
-  result: null | {
-    address: string;
-    balance: string;
-    totalReceived: string;
-    totalSent: string;
-    unconfirmedBalance: string;
-    unconfirmedTxs: number;
-    txs: number;
-  };
-  error: null | {
-    code: string;
-    message: string;
-  };
-};
-
-export type QNGetUtxosResponse = {
-  result: null | {
-        txid: string;
-        vout: number;
-        value: string;
-        height: number;
-        confirmations: number;
-      }[];
-  error: null | {
-    code: string;
-    message: string;
-  };
-};
-
-export type QNSendTransactionResponse = {
-  result: null | {
-    hex: string;
-  };
-  error: null | {
-    code: string;
-    message: string;
-  };
-};
-
-export type QNEstimateFeeResponse = {
-  result: null | {
-    blocks: number;
-    feerate: number;
-  };
-  error: null | {
-    code: string;
-    message: string;
-  };
-};
-
-export type QNGetTransaction = {
-  result: null | {
-    txid: string;
-    hash: string;
-    version: number;
-    size: number;
-    vsize: number;
-    weight: number;
-    locktime: number;
-    vin: {
-      txid: string;
-      vout: number;
-      scriptSig: {
-        asm: string;
-        hex: string;
-      };
-      txinwitness: string[];
-      sequence: number;
-    }[];
-    vout: {
-      value: number;
-      n: number;
-      scriptPubKey: Record<string, string>;
-    }[];
-    hex: string;
-    blockhash: string;
-    confirmations: number;
-    time: number;
-    blocktime: number;
-  };
-  error: null | {
-    code: string;
-    message: string;
-  };
-};
-/* eslint-enable */
+import type {
+  QuickNodeClientOptions,
+  QuickNodeGetBalancesResponse,
+  QuickNodeGetUtxosResponse,
+  QuickNodeSendTransactionResponse,
+  QuickNodeEstimateFeeResponse,
+  QuickNodeGetTransaction,
+} from './quicknode.types';
 
 export class QuickNodeClient implements IDataClient {
-  protected readonly _confrimationThreshold = 6;
+  protected readonly _confirmationThreshold = 6;
 
   protected readonly _options: QuickNodeClientOptions;
 
@@ -139,7 +51,7 @@ export class QuickNodeClient implements IDataClient {
     }
   }
 
-  protected async post<Resp>(body: Json): Promise<Resp> {
+  protected async post<Response>(body: Json): Promise<Response> {
     const response = await fetch(this.baseUrl, {
       method: 'POST',
       headers: {
@@ -162,11 +74,11 @@ export class QuickNodeClient implements IDataClient {
         `Failed to post data from quicknode: ${response.statusText}`,
       );
     }
-    return response.json() as unknown as Resp;
+    return response.json() as unknown as Response;
   }
 
-  protected isApiRespError<Resp extends { result: unknown }>(
-    resp: Resp,
+  protected isApiRespError<Response extends { result: unknown }>(
+    resp: Response,
   ): boolean {
     // Possible error response from QuickNode:
     // - { result : null, error : "some error message" }
@@ -182,7 +94,7 @@ export class QuickNodeClient implements IDataClient {
     try {
       assert(addresses, array(BtcP2wpkhAddressStruct));
 
-      logger.info(
+      logger.debug(
         `[QuickNodeClient.getBalance] start: { addresses : ${JSON.stringify(
           addresses,
         )} }`,
@@ -191,10 +103,12 @@ export class QuickNodeClient implements IDataClient {
       const addressBalanceMap = new Map<string, number>();
 
       await processBatch(addresses, async (address) => {
-        const response = await this.post<QNGetBalancesResponse>(
+        const response = await this.post<QuickNodeGetBalancesResponse>(
           // index 0 of the params refer to the account address,
           // index 1 .details refer to the output flag:
-          // 'basic' for basic address information, 'txids' for include tx ids into the response, 'txs' for include full transaction data
+          // - 'basic' for basic address information
+          // - 'txids' to also include transaction IDs
+          // - 'txs' to include full transaction data
           {
             method: 'bb_getaddress',
             params: [
@@ -206,7 +120,7 @@ export class QuickNodeClient implements IDataClient {
           },
         );
 
-        logger.info(
+        logger.debug(
           `[QuickNodeClient.getBalance] response: ${JSON.stringify(response)}`,
         );
 
@@ -222,8 +136,8 @@ export class QuickNodeClient implements IDataClient {
 
       return addresses.reduce(
         (data: DataClientGetBalancesResp, address: string) => {
-          // The hashmap should include the balance for each enquired address
-          // But in case there are some behavior changes, we set the balance default to 0
+          // The hashmap should include the balance for each requested addresses
+          // but in case there are some behavior changes, we set the default balance to 0
           data[address] = addressBalanceMap.get(address) ?? 0;
           return data;
         },
@@ -243,7 +157,7 @@ export class QuickNodeClient implements IDataClient {
     try {
       assert(address, BtcP2wpkhAddressStruct);
 
-      const response = await this.post<QNGetUtxosResponse>({
+      const response = await this.post<QuickNodeGetUtxosResponse>({
         method: 'bb_getutxos',
         params: [
           address,
@@ -253,7 +167,7 @@ export class QuickNodeClient implements IDataClient {
         ],
       });
 
-      logger.info(
+      logger.debug(
         `[QuickNodeClient.getUtxos] response: ${JSON.stringify(response)}`,
       );
 
@@ -279,7 +193,7 @@ export class QuickNodeClient implements IDataClient {
 
   async getFeeRates(): Promise<DataClientGetFeeRatesResp> {
     try {
-      logger.info(`[QuickNodeClient.getFeeRates] start:`);
+      logger.debug(`[QuickNodeClient.getFeeRates] start:`);
       // There is no UX to allow end user to select the fee rate,
       // hence we can just fetch the default fee rate.
       const processItems = {
@@ -291,12 +205,12 @@ export class QuickNodeClient implements IDataClient {
       await processBatch(
         Object.entries(processItems),
         async ([feeRate, target]) => {
-          const response = await this.post<QNEstimateFeeResponse>({
+          const response = await this.post<QuickNodeEstimateFeeResponse>({
             method: 'estimatesmartfee',
             params: [target],
           });
 
-          logger.info(
+          logger.debug(
             `[QuickNodeClient.getFeeRates] response: ${JSON.stringify(
               response,
             )}`,
@@ -327,12 +241,12 @@ export class QuickNodeClient implements IDataClient {
     signedTransaction: string,
   ): Promise<DataClientSendTxResp> {
     try {
-      const response = await this.post<QNSendTransactionResponse>({
+      const response = await this.post<QuickNodeSendTransactionResponse>({
         method: 'sendrawtransaction',
         params: [signedTransaction],
       });
 
-      logger.info(
+      logger.debug(
         `[QuickNodeClient.sendTransaction] response: ${JSON.stringify(
           response,
         )}`,
@@ -353,14 +267,16 @@ export class QuickNodeClient implements IDataClient {
 
   async getTransactionStatus(txid: string): Promise<DataClientGetTxStatusResp> {
     try {
-      const response = await this.post<QNGetTransaction>(
+      const response = await this.post<QuickNodeGetTransaction>(
         // index 0 of the params refer to the tx id,
         // index 1 refer to the verbose flag,
-        // 0 for hex-encoded data, '1' for JSON object and '2' for JSON object with fee and prevout
+        // - 0: hex-encoded data
+        // - 1: JSON object
+        // - 2: JSON object with fee and prevout
         { method: 'getrawtransaction', params: [txid, 1] },
       );
 
-      logger.info(
+      logger.debug(
         `[QuickNodeClient.getTransactionStatus] response: ${JSON.stringify(
           response,
         )}`,
@@ -375,7 +291,7 @@ export class QuickNodeClient implements IDataClient {
       // reference: https://www.bitcoin.com/get-started/what-is-a-confirmation/#:~:text=Different%20cryptocurrencies%20require%20different%20numbers,secure%20after%20around%2030%20confirmations.
       return {
         status:
-          response.result.confirmations >= this._confrimationThreshold
+          response.result.confirmations >= this._confirmationThreshold
             ? TransactionStatus.Confirmed
             : TransactionStatus.Pending,
       };

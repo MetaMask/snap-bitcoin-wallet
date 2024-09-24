@@ -329,7 +329,7 @@ export function generateBlockChairTransactionDashboard(
 }
 
 /**
- * Generate QuickNode bb_getaddress response by addrss.
+ * Generate QuickNode bb_getaddress response by address.
  *
  * @param address - The account address.
  * @returns A QuickNode bb_getaddress response.
