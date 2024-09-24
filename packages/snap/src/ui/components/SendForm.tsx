@@ -12,14 +12,14 @@ import {
 
 import btcIcon from '../images/btc.svg';
 import jazzicon3 from '../images/jazzicon3.svg';
-import type { SendFormErrors } from '../types';
+import type { Currency, SendFormErrors } from '../types';
 import { AccountSelector } from './AccountSelector';
 import { AccountWithBalance } from '../utils';
 
 export enum SendFormNames {
   Amount = 'amount',
   To = 'to',
-  Swap = 'swap',
+  SwapCurrencyDisplay = 'swap',
   Clear = 'clear',
   Close = 'close',
 }
@@ -37,6 +37,8 @@ export enum SendFormNames {
 export type SendFormProps = {
   selectedAccount: string;
   accounts: AccountWithBalance[];
+  balance: Currency;
+  amount: string;
   errors?: SendFormErrors;
   selectedCurrency: 'BTC' | '$';
   displayClearIcon: boolean;
@@ -49,6 +51,8 @@ export type SendFormProps = {
  * @param props - The component props.
  * @param props.selectedAccount - The currently selected account.
  * @param props.accounts - The available accounts.
+ * @param props.balance - The balance of the account.
+ * @param props.amount - The amount of the transaction from the formState.
  * @param props.errors - The form errors.
  * @param props.selectedCurrency - The selected currency to display.
  * @param props.displayClearIcon - Whether to display the clear icon or not.
@@ -62,41 +66,50 @@ export const SendForm: SnapComponent<SendFormProps> = ({
   selectedCurrency,
   displayClearIcon,
   flushToAddress,
-}) => (
-  <Form name="sendForm">
-    <AccountSelector selectedAccount={selectedAccount} accounts={accounts} />
-    <Field label="Send amount" error={errors?.amount}>
-      <Box>
-        <Image src={btcIcon} />
-      </Box>
-      <Input
-        name={SendFormNames.Amount}
-        type="number"
-        placeholder="Enter amount to send"
+  balance,
+  amount,
+}) => {
+  return (
+    <Form name="sendForm">
+      <AccountSelector
+        selectedAccount={selectedAccount}
+        accounts={accounts}
+        balance={balance}
       />
-      <Box direction="horizontal" center>
-        <Text color="alternative">{selectedCurrency}</Text>
-        <Button name={SendFormNames.Swap}>
-          <Icon name="swap-vertical" color="primary" size="md" />
-        </Button>
-      </Box>
-    </Field>
-    <Field label="To account" error={errors?.to}>
-      <Box>
-        <Image src={jazzicon3} />
-      </Box>
-      <Input
-        name={SendFormNames.To}
-        placeholder="Enter receiving address"
-        value={flushToAddress ? '' : undefined}
-      />
-      {displayClearIcon && (
+      <Field label="Send amount" error={errors?.amount}>
         <Box>
-          <Button name={SendFormNames.Clear}>
-            <Icon name={SendFormNames.Close} color="primary" />
+          <Image src={btcIcon} />
+        </Box>
+        <Input
+          name={SendFormNames.Amount}
+          type="number"
+          placeholder="Enter amount to send"
+          value={amount}
+        />
+        <Box direction="horizontal" center>
+          <Text color="alternative">{selectedCurrency}</Text>
+          <Button name={SendFormNames.SwapCurrencyDisplay}>
+            <Icon name="swap-vertical" color="primary" size="md" />
           </Button>
         </Box>
-      )}
-    </Field>
-  </Form>
-);
+      </Field>
+      <Field label="To account" error={errors?.to}>
+        <Box>
+          <Image src={jazzicon3} />
+        </Box>
+        <Input
+          name={SendFormNames.To}
+          placeholder="Enter receiving address"
+          value={flushToAddress ? '' : undefined}
+        />
+        {displayClearIcon && (
+          <Box>
+            <Button name={SendFormNames.Clear}>
+              <Icon name={SendFormNames.Close} color="primary" />
+            </Button>
+          </Box>
+        )}
+      </Field>
+    </Form>
+  );
+};

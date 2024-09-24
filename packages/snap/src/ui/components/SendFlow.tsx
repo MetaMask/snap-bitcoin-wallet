@@ -1,12 +1,13 @@
 import type { SnapComponent } from '@metamask/snaps-sdk/jsx';
 import { Box, Container } from '@metamask/snaps-sdk/jsx';
+import { BigNumber } from 'bignumber.js';
 
 import type { Currency, SendFormErrors } from '../types';
 import { SendFlowFooter } from './SendFlowFooter';
 import { SendFlowHeader } from './SendFlowHeader';
 import { SendForm } from './SendForm';
 import { TransactionSummary } from './TransactionSummary';
-import { AccountWithBalance } from '../utils';
+import { KeyringAccount } from '@metamask/keyring-api';
 
 /**
  * The props for the {@link SendFlow} component.
@@ -14,17 +15,18 @@ import { AccountWithBalance } from '../utils';
  * @property accounts - The available accounts.
  * @property selectedAccount - The currently selected account.
  * @property selectedCurrency - The selected currency to display.
- * @property total - The total cost of the transaction.
+ * @property amount - The amount to send of the transaction.
  * @property fees - The fees for the transaction.
  * @property displayClearIcon - Whether to display the clear icon or not.
  * @property flushToAddress - Whether to flush the address field or not.
  * @property errors - The form errors.
  */
 export type SendFlowProps = {
-  account: AccountWithBalance;
-  selectedCurrency: 'BTC' | '$';
-  total: Currency;
+  account: KeyringAccount;
+  balance: Currency;
+  amount: string;
   fees: Currency;
+  selectedCurrency: 'BTC' | '$';
   displayClearIcon: boolean;
   flushToAddress?: boolean;
   errors?: SendFormErrors;
@@ -36,8 +38,9 @@ export type SendFlowProps = {
  *
  * @param props - The component props.
  * @param props.account - The selected account.
+ * @param props.balance - The balance of the account.
+ * @param props.amount - The amount of the transaction from formState.
  * @param props.selectedCurrency - The selected currency to display.
- * @param props.total - The total cost of the transaction.
  * @param props.errors - The form errors.
  * @param props.fees - The fees for the transaction.
  * @param props.displayClearIcon - Whether to display the clear icon or not.
@@ -48,14 +51,25 @@ export type SendFlowProps = {
 export const SendFlow: SnapComponent<SendFlowProps> = ({
   account,
   selectedCurrency,
-  total,
   fees,
   displayClearIcon,
   flushToAddress,
   errors,
   isLoading,
+  balance,
+  amount,
 }) => {
   const hasErrors = Object.values(errors ?? {}).some(Boolean);
+
+  console.log('sendflow errors', errors, hasErrors);
+
+  const total = {
+    amount: new BigNumber(balance.amount ?? '0')
+      .plus(new BigNumber(fees.amount ?? '0'))
+      .toString(),
+    fiat: '0',
+  };
+
   return (
     <Container>
       <Box>
@@ -67,6 +81,8 @@ export const SendFlow: SnapComponent<SendFlowProps> = ({
           flushToAddress={flushToAddress}
           displayClearIcon={displayClearIcon}
           errors={errors}
+          balance={balance}
+          amount={amount}
         />
         <TransactionSummary
           fees={fees}

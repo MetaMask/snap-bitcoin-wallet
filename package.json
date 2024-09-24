@@ -66,6 +66,8 @@
   },
   "dependencies": {
     "@metamask/jazzicon": "^2.0.0",
+    "bignumber": "^1.1.0",
+    "bignumber.js": "^9.1.2",
     "bitcoin-address-validation": "^2.2.3"
   }
 }

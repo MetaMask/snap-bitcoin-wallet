@@ -6792,6 +6792,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"bignumber.js@npm:^9.1.2":
+  version: 9.1.2
+  resolution: "bignumber.js@npm:9.1.2"
+  checksum: 582c03af77ec9cb0ebd682a373ee6c66475db94a4325f92299621d544aa4bd45cb45fd60001610e94aef8ae98a0905fa538241d9638d4422d57abbeeac6fadaf
+  languageName: node
+  linkType: hard
+
+"bignumber@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "bignumber@npm:1.1.0"
+  checksum: 300f2c04fb8aa538b9e73e9c1f2c84abc06c5c7f2e8b10c8864ff540b6ff890c6665f1563c5a29f9f9b48ce131bebef245f32043082266bbb07fd098b60e341b
+  languageName: node
+  linkType: hard
+
 "bin-links@npm:4.0.4":
   version: 4.0.4
   resolution: "bin-links@npm:4.0.4"
@@ -6854,6 +6868,8 @@ __metadata:
     "@metamask/jazzicon": ^2.0.0
     "@typescript-eslint/eslint-plugin": ^5.42.1
     "@typescript-eslint/parser": ^5.42.1
+    bignumber: ^1.1.0
+    bignumber.js: ^9.1.2
     bitcoin-address-validation: ^2.2.3
     depcheck: ^1.4.7
     eslint: ^8.45.0

@@ -1,4 +1,4 @@
-import { v4 as uuidV4 } from 'uuid';
+import { BigNumber } from 'bignumber.js';
 import { is } from '@metamask/superstruct';
 import {
   defaultSendManyParams,
@@ -21,7 +21,7 @@ import { logger } from '../utils';
 export type AccountWithBalance = KeyringAccount & { balance?: Currency };
 
 export type GenerateSendFlowParams = {
-  account: AccountWithBalance;
+  account: KeyringAccount;
   fees: Currency;
   scope: string;
 };
@@ -29,10 +29,12 @@ export type GenerateSendFlowParams = {
 export type UpdateSendFlowParams = {
   interfaceId: string;
   selectedCurrency: 'BTC' | '$';
-  account: AccountWithBalance;
-  fees: Currency;
+  account: KeyringAccount;
   scope: string;
-  total: Currency;
+  fees: Currency;
+  balance: Currency;
+  amount: string;
+  rates: string;
   isLoading: boolean;
 };
 
@@ -56,10 +58,12 @@ export async function generateSendFlow({
         <SendFlow
           account={account}
           selectedCurrency="BTC"
-          total={{ amount: '0', fiat: 0 }}
           fees={fees}
           displayClearIcon={false}
           isLoading={true}
+          balance={{ amount: '', fiat: '' }}
+          amount="0"
+          rates="0"
         />
       ),
       context: {
@@ -72,12 +76,18 @@ export async function generateSendFlow({
   });
 
   const sendFlowRequest: SendFlowRequest = {
-    id: uuidV4(),
+    id: interfaceId, // we use the same id for the interface and the request
     account: account.id,
     scope: scope,
     transaction: defaultSendManyParams(scope),
     status: 'draft',
     interfaceId,
+    selectedCurrency: 'BTC',
+    rates: '',
+    balance: {
+      amount: '',
+      fiat: '',
+    },
   };
 
   return sendFlowRequest;
@@ -88,8 +98,9 @@ export async function updateSendFlow({
   interfaceId,
   account,
   selectedCurrency,
-  total,
   fees,
+  balance,
+  amount,
 }: UpdateSendFlowParams) {
   await snap.request({
     method: 'snap_updateInterface',
@@ -99,10 +110,11 @@ export async function updateSendFlow({
         <SendFlow
           account={account}
           selectedCurrency={selectedCurrency}
-          total={isLoading ? { amount: '0', fiat: 0 } : total}
-          fees={isLoading ? { amount: '0', fiat: 0 } : fees}
           displayClearIcon={false}
           isLoading={isLoading}
+          balance={balance}
+          amount={amount}
+          fees={isLoading ? { amount: '', fiat: '' } : fees}
         />
       ),
     },
@@ -119,8 +131,15 @@ export async function updateSendFlow({
 export function formValidation(
   formState: SendFormState,
   context: SendFlowContext,
+  balance: Currency,
+  selectedCurrency: 'BTC' | '$',
+  rates: string,
 ): SendFormErrors {
   const errors: Partial<SendFormErrors> = {};
+  const cryptoAmount =
+    selectedCurrency === 'BTC'
+      ? formState.amount
+      : convertFiatToBtc(formState.amount, rates);
 
   logger.log('starting validation');
   if (
@@ -137,18 +156,17 @@ export function formValidation(
     errors.amount = 'Invalid amount';
   }
 
-  if (Number(formState.amount) <= 0) {
+  if (new BigNumber(formState.amount).lte(new BigNumber(0))) {
     errors.amount = 'Amount must be greater than 0';
   }
 
   // TODO: get rates
-  // if (
-  //   formState.amount &&
-  //   Number(formState.amount) >
-  //     Number(context.accounts[formState.accountSelector].balance.amount)
-  // ) {
-  //   errors.amount = 'Insufficient funds';
-  // }
+  if (
+    formState.amount &&
+    new BigNumber(cryptoAmount).gt(new BigNumber(balance.amount))
+  ) {
+    errors.amount = 'Insufficient funds';
+  }
 
   return errors;
 }
@@ -190,7 +208,19 @@ export async function sendStateToSendManyParams(
     comment: '',
     subtractFeeFrom: [],
     replaceable: true,
-    dryrun: true, // TODO: change to true
+    dryrun: true, // TODO: change to false
     scope,
   };
+}
+
+export function convertBtcToFiat(amount: string, rate: string): string {
+  const amountBN = new BigNumber(amount);
+  const rateBN = new BigNumber(rate);
+  return amountBN.multipliedBy(rateBN).toFixed(2);
+}
+
+export function convertFiatToBtc(amount: string, rate: string): string {
+  const amountBN = new BigNumber(amount);
+  const rateBN = new BigNumber(rate);
+  return amountBN.dividedBy(rateBN).toFixed(8);
 }

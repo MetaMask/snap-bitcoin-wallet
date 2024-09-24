@@ -30,6 +30,7 @@ import type {
 } from './stateManagement';
 import {
   containsCompleteSendManyRequest,
+  convertBtcToFiat,
   generateSendFlow,
   sendStateToSendManyParams,
   updateSendFlow,
@@ -198,8 +199,14 @@ export class BtcKeyring implements Keyring {
             account: walletData.account.id,
             scope,
             transaction: params as SendManyParams,
+            selectedCurrency: 'BTC',
             status: 'draft',
             interfaceId: '',
+            rates: '',
+            balance: {
+              amount: '',
+              fiat: '',
+            },
           };
         } else {
           const asset =
@@ -207,7 +214,7 @@ export class BtcKeyring implements Keyring {
 
           sendFlowRequest = await generateSendFlow({
             account: walletData.account,
-            fees: { amount: '0', fiat: 0 },
+            fees: { amount: '0', fiat: '0' },
             scope: walletData.scope,
           });
 
@@ -223,17 +230,29 @@ export class BtcKeyring implements Keyring {
             scope,
           });
 
+          // mock rates call
+          const rates = '64000';
+
+          sendFlowRequest.balance.amount = balances[asset].amount;
+          sendFlowRequest.balance.fiat = convertBtcToFiat(
+            balances[asset].amount,
+            rates,
+          );
+          sendFlowRequest.rates = rates;
+          await this._stateMgr.upsertRequest(sendFlowRequest);
+
           await updateSendFlow({
             interfaceId: sendFlowRequest.interfaceId,
             selectedCurrency: 'BTC',
-            total: { amount: '0', fiat: 0 },
             account: {
               ...walletData.account,
-              balance: { amount: balances[asset].amount, fiat: 0 },
             },
-            fees: { amount: '0', fiat: 0 },
+            fees: { amount: '', fiat: '' },
             scope: walletData.scope,
             isLoading: true,
+            balance: sendFlowRequest.balance,
+            amount: '0',
+            rates: sendFlowRequest.rates,
           });
 
           if (!(await userResult)) {
@@ -249,8 +268,6 @@ export class BtcKeyring implements Keyring {
           sendFlowRequest.transaction = sendManyParams;
         }
         await this._stateMgr.upsertRequest(sendFlowRequest);
-
-        // generate new request and store it in the state manager
 
         return await sendMany(
           account,

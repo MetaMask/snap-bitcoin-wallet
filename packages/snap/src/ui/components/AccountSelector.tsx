@@ -8,7 +8,9 @@ import {
 // import jazzicon from '@metamask/jazzicon';
 import jazzicon1 from '../images/jazzicon1.svg';
 
-import { AccountWithBalance, truncate } from '../utils';
+import { truncate } from '../utils';
+import { KeyringAccount } from '@metamask/keyring-api';
+import { Currency } from '../types';
 
 /**
  * The props for the {@link AccountSelector} component.
@@ -18,8 +20,11 @@ import { AccountWithBalance, truncate } from '../utils';
  */
 export type AccountSelectorProps = {
   selectedAccount: string;
-  accounts: AccountWithBalance[];
+  balance: Currency;
+  accounts: KeyringAccount[];
 };
+
+const loadingMessage = 'Loading';
 
 /**
  * A component that shows the account selector.
@@ -32,6 +37,7 @@ export type AccountSelectorProps = {
 export const AccountSelector: SnapComponent<AccountSelectorProps> = ({
   selectedAccount,
   accounts,
+  balance,
 }) => (
   <Field label={'From account'}>
     <Selector
@@ -44,13 +50,16 @@ export const AccountSelector: SnapComponent<AccountSelectorProps> = ({
           <SelectorOption value={address}>
             <Card
               image={jazzicon1}
-              // title={name}
               description={truncate(address, 13)}
-              // value={`${balance.amount.toString()} BTC`}
-              // extra={`$${balance.fiat.toString()}`}
+              value={
+                balance?.amount
+                  ? `${balance.amount.toString()} BTC`
+                  : loadingMessage
+              }
+              extra={
+                balance?.amount ? `$${balance.fiat.toString()}` : loadingMessage
+              }
               title={'Btc Account'}
-              value="1 BTC"
-              extra="$64000 usd"
             />
           </SelectorOption>
         );

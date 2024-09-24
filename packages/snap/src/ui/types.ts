@@ -56,7 +56,7 @@ export type Account = KeyringAccount & {
  */
 export type Currency = {
   amount: string;
-  fiat: number;
+  fiat: string;
 };
 
 /**

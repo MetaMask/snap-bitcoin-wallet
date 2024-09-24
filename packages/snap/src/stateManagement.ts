@@ -28,10 +28,17 @@ export type Transaction = SendManyParams & {
 
 export type SendFlowRequest = {
   id: string;
+  interfaceId: string;
   account: string;
   scope: string;
   transaction: SendManyParams;
   status: 'draft' | 'confirmed' | 'pending' | 'failure' | 'rejected';
+  selectedCurrency: 'BTC' | '$';
+  rates: string;
+  balance: {
+    amount: string;
+    fiat: string;
+  };
 };
 
 export type SnapState = {
