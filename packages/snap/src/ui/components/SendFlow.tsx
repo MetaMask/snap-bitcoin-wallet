@@ -1,13 +1,14 @@
+import type { KeyringAccount } from '@metamask/keyring-api';
 import type { SnapComponent } from '@metamask/snaps-sdk/jsx';
 import { Box, Container } from '@metamask/snaps-sdk/jsx';
 import { BigNumber } from 'bignumber.js';
 
 import type { Currency, SendFormErrors } from '../types';
+import type { AccountWithBalance } from '../utils';
 import { SendFlowFooter } from './SendFlowFooter';
 import { SendFlowHeader } from './SendFlowHeader';
 import { SendForm } from './SendForm';
 import { TransactionSummary } from './TransactionSummary';
-import { KeyringAccount } from '@metamask/keyring-api';
 
 /**
  * The props for the {@link SendFlow} component.
@@ -73,7 +74,7 @@ export const SendFlow: SnapComponent<SendFlowProps> = ({
   return (
     <Container>
       <Box>
-        <SendFlowHeader />
+        <SendFlowHeader heading="Send" />
         <SendForm
           selectedAccount={account.address}
           accounts={[account]}
