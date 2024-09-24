@@ -28,7 +28,12 @@ import type {
   SendFlowRequest,
   Wallet,
 } from './stateManagement';
-import { containsCompleteSendManyRequest, generateSendFlow } from './ui/utils';
+import {
+  containsCompleteSendManyRequest,
+  generateSendFlow,
+  sendStateToSendManyParams,
+  updateSendFlow,
+} from './ui/utils';
 import {
   getProvider,
   ScopeStruct,
@@ -200,68 +205,58 @@ export class BtcKeyring implements Keyring {
           const asset =
             scope === Caip2ChainId.Mainnet ? Caip2Asset.Btc : Caip2Asset.TBtc;
 
+          sendFlowRequest = await generateSendFlow({
+            account: walletData.account,
+            fees: { amount: '0', fiat: 0 },
+            scope: walletData.scope,
+          });
+
+          const userResult = snap.request({
+            method: 'snap_dialog',
+            params: {
+              id: sendFlowRequest.interfaceId,
+            },
+          });
+
           const balances = await getBalances(account, {
             assets: [asset],
             scope,
           });
 
-          sendFlowRequest = await generateSendFlow({
-            account: walletData.account,
+          await updateSendFlow({
+            interfaceId: sendFlowRequest.interfaceId,
+            selectedCurrency: 'BTC',
+            total: { amount: '0', fiat: 0 },
+            account: {
+              ...walletData.account,
+              balance: { amount: balances[asset].amount, fiat: 0 },
+            },
             fees: { amount: '0', fiat: 0 },
             scope: walletData.scope,
-            balance: {
-              amount: balances[asset].amount,
-              fiat: 0,
-            },
+            isLoading: true,
           });
 
-          console.log('balances', balances);
+          if (!(await userResult)) {
+            sendFlowRequest.status = 'rejected';
+            await this._stateMgr.upsertRequest(sendFlowRequest);
+            throw new Error('User rejected the request');
+          }
 
-          // await updateSendFlow({});
+          const sendManyParams = await sendStateToSendManyParams(
+            sendFlowRequest.interfaceId,
+            walletData.scope,
+          );
+          sendFlowRequest.transaction = sendManyParams;
         }
+        await this._stateMgr.upsertRequest(sendFlowRequest);
 
         // generate new request and store it in the state manager
 
-        // const sendFlowRequest = await createBtcSendFlow(
-        //   walletData,
-        //   account,
-        //   (params as SendManyParams) ?? {},
-        // );
-
-        await this._stateMgr.upsertRequest(sendFlowRequest);
-
-        const userResult = await snap.request({
-          method: 'snap_dialog',
-          params: {
-            type: 'confirmation',
-            id: sendFlowRequest.interfaceId,
-          },
-        });
-
-        // const updatedSendRequest = await this._stateMgr.getRequest(
-        //   sendFlowRequest.id,
-        // );
-
-        // if (!updatedSendRequest) {
-        //   throw new Error('[SendMany]: Error Request not found');
-        // }
-
-        // if (userResult) {
-        //   return (await sendMany(account, this._options.origin, {
-        //     // TODO: refactor to support multiple receivers?
-        //     amounts: {
-        //       [account.address]: updatedSendRequest.transaction.amount,
-        //     },
-        //     comment: updatedSendRequest.transaction.comment,
-        //     subtractFeeFrom: updatedSendRequest.transaction.subtractFeeFrom,
-        //     replaceable: updatedSendRequest.transaction.replaceable,
-        //     dryrun: false,
-        //     scope: walletData.scope,
-        //   } as unknown as SendManyParams)) as unknown as Json;
-        // }
-        // updatedSendRequest.status = 'rejected';
-        // await this._stateMgr.upsertRequest(updatedSendRequest);
-        throw new Error('User rejected the request');
+        return await sendMany(
+          account,
+          this._options.origin,
+          sendFlowRequest.transaction,
+        );
       }
       default:
         throw new MethodNotFoundError() as unknown as Error;

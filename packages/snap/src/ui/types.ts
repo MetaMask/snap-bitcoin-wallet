@@ -1,5 +1,7 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
 
+import type { AccountWithBalance } from './utils';
+
 /**
  * The state of the send form.
  *
@@ -23,6 +25,7 @@ export type SendFormErrors = {
   to?: string;
   amount?: string;
   total?: string;
+  fees?: string;
 };
 
 /**
@@ -64,7 +67,7 @@ export type Currency = {
  * @property fees - The fees for the transaction.
  */
 export type SendFlowContext = {
-  accounts: KeyringAccount[];
+  accounts: AccountWithBalance[];
   selectedCurrency: 'BTC' | '$';
   fees: Currency;
   scope: string;

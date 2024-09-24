@@ -1,12 +1,12 @@
 import type { SnapComponent } from '@metamask/snaps-sdk/jsx';
 import { Box, Container } from '@metamask/snaps-sdk/jsx';
 
-import type { Currency } from '../types';
+import type { Currency, SendFormErrors } from '../types';
 import { SendFlowFooter } from './SendFlowFooter';
 import { SendFlowHeader } from './SendFlowHeader';
 import { SendForm } from './SendForm';
 import { TransactionSummary } from './TransactionSummary';
-import { KeyringAccount } from '@metamask/keyring-api';
+import { AccountWithBalance } from '../utils';
 
 /**
  * The props for the {@link SendFlow} component.
@@ -21,16 +21,14 @@ import { KeyringAccount } from '@metamask/keyring-api';
  * @property errors - The form errors.
  */
 export type SendFlowProps = {
-  account: KeyringAccount;
+  account: AccountWithBalance;
   selectedCurrency: 'BTC' | '$';
   total: Currency;
   fees: Currency;
   displayClearIcon: boolean;
   flushToAddress?: boolean;
-  errors?: {
-    amount?: string;
-    to?: string;
-  };
+  errors?: SendFormErrors;
+  isLoading: boolean;
 };
 
 /**
@@ -44,6 +42,7 @@ export type SendFlowProps = {
  * @param props.fees - The fees for the transaction.
  * @param props.displayClearIcon - Whether to display the clear icon or not.
  * @param props.flushToAddress - Whether to flush the address field or not.
+ * @param props.isLoading - Whether the transaction is loading or not.
  * @returns The SendFlow component.
  */
 export const SendFlow: SnapComponent<SendFlowProps> = ({
@@ -54,7 +53,9 @@ export const SendFlow: SnapComponent<SendFlowProps> = ({
   displayClearIcon,
   flushToAddress,
   errors,
+  isLoading,
 }) => {
+  const hasErrors = Object.values(errors ?? {}).some(Boolean);
   return (
     <Container>
       <Box>
@@ -67,9 +68,14 @@ export const SendFlow: SnapComponent<SendFlowProps> = ({
           displayClearIcon={displayClearIcon}
           errors={errors}
         />
-        <TransactionSummary fees={fees} total={total} />
+        <TransactionSummary
+          fees={fees}
+          total={total}
+          isLoading={isLoading}
+          errors={errors}
+        />
       </Box>
-      <SendFlowFooter />
+      <SendFlowFooter disabled={hasErrors} />
     </Container>
   );
 };

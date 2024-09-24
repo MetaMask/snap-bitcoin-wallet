@@ -8,10 +8,7 @@ import {
 // import jazzicon from '@metamask/jazzicon';
 import jazzicon1 from '../images/jazzicon1.svg';
 
-import type { Account } from '../types';
-import { truncate } from '../utils';
-import { KeyringAccount } from '@metamask/keyring-api';
-import { stringToBytes } from '@metamask/utils';
+import { AccountWithBalance, truncate } from '../utils';
 
 /**
  * The props for the {@link AccountSelector} component.
@@ -21,7 +18,7 @@ import { stringToBytes } from '@metamask/utils';
  */
 export type AccountSelectorProps = {
   selectedAccount: string;
-  accounts: KeyringAccount[];
+  accounts: AccountWithBalance[];
 };
 
 /**
@@ -43,9 +40,6 @@ export const AccountSelector: SnapComponent<AccountSelectorProps> = ({
       value={selectedAccount}
     >
       {accounts.map(({ address }) => {
-        const addr = address.slice(2, 10);
-        const seed = parseInt(addr, 16);
-        // const image = jazzicon(46, seed);
         return (
           <SelectorOption value={address}>
             <Card

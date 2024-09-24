@@ -1,5 +1,5 @@
-import { is } from '@metamask/superstruct';
 import { v4 as uuidV4 } from 'uuid';
+import { is } from '@metamask/superstruct';
 import {
   defaultSendManyParams,
   SendManyParams,
@@ -16,20 +16,24 @@ import { SendFlowRequest } from '../stateManagement';
 import { KeyringAccount } from '@metamask/keyring-api';
 import { Caip2ChainId } from '../constants';
 import validate, { Network } from 'bitcoin-address-validation';
+import { logger } from '../utils';
+
+export type AccountWithBalance = KeyringAccount & { balance?: Currency };
 
 export type GenerateSendFlowParams = {
-  account: KeyringAccount;
+  account: AccountWithBalance;
   fees: Currency;
   scope: string;
-  balance: Currency;
 };
 
 export type UpdateSendFlowParams = {
   interfaceId: string;
-  account: KeyringAccount;
+  selectedCurrency: 'BTC' | '$';
+  account: AccountWithBalance;
   fees: Currency;
   scope: string;
-  balance: Currency;
+  total: Currency;
+  isLoading: boolean;
 };
 
 /**
@@ -55,6 +59,7 @@ export async function generateSendFlow({
           total={{ amount: '0', fiat: 0 }}
           fees={fees}
           displayClearIcon={false}
+          isLoading={true}
         />
       ),
       context: {
@@ -79,9 +84,12 @@ export async function generateSendFlow({
 }
 
 export async function updateSendFlow({
+  isLoading,
   interfaceId,
-  fees,
   account,
+  selectedCurrency,
+  total,
+  fees,
 }: UpdateSendFlowParams) {
   await snap.request({
     method: 'snap_updateInterface',
@@ -90,10 +98,11 @@ export async function updateSendFlow({
       ui: (
         <SendFlow
           account={account}
-          selectedCurrency="BTC"
-          total={{ amount: '0', fiat: 0 }}
-          fees={fees}
+          selectedCurrency={selectedCurrency}
+          total={isLoading ? { amount: '0', fiat: 0 } : total}
+          fees={isLoading ? { amount: '0', fiat: 0 } : fees}
           displayClearIcon={false}
+          isLoading={isLoading}
         />
       ),
     },
@@ -114,10 +123,11 @@ export function formValidation(
   const errors: Partial<SendFormErrors> = {};
 
   if (
-    (context.scope === Caip2ChainId.Mainnet &&
-      validate(formState.to, Network.mainnet)) ||
-    (context.scope === Caip2ChainId.Testnet &&
-      validate(formState.to, Network.testnet))
+    formState.to &&
+    ((context.scope === Caip2ChainId.Mainnet &&
+      !validate(formState.to, Network.mainnet)) ||
+      (context.scope === Caip2ChainId.Testnet &&
+        !validate(formState.to, Network.testnet)))
   ) {
     errors.to = 'Invalid address';
   }
@@ -129,6 +139,23 @@ export function formValidation(
   ) {
     errors.amount = 'Insufficient funds';
   }
+
+  if (formState.amount && isNaN(Number(formState.amount))) {
+    errors.amount = 'Invalid amount';
+  }
+
+  if (Number(formState.amount) <= 0) {
+    errors.amount = 'Amount must be greater than 0';
+  }
+
+  // TODO: get rates
+  // if (
+  //   formState.amount &&
+  //   Number(formState.amount) >
+  //     Number(context.accounts[formState.accountSelector].balance.amount)
+  // ) {
+  //   errors.amount = 'Insufficient funds';
+  // }
 
   return errors;
 }
@@ -150,4 +177,27 @@ export function containsCompleteSendManyRequest(
   request: SendManyParams,
 ): request is SendManyParams {
   return is(request, SendManyParamsStruct);
+}
+
+export async function sendStateToSendManyParams(
+  interfaceId: string,
+  scope: string,
+): Promise<SendManyParams> {
+  const acceptedSendFlowState = (
+    await snap.request({
+      method: 'snap_getInterfaceState',
+      params: { id: interfaceId },
+    })
+  ).sendForm as SendFormState;
+
+  return {
+    amounts: {
+      [acceptedSendFlowState.to]: acceptedSendFlowState.amount,
+    },
+    comment: '',
+    subtractFeeFrom: [],
+    replaceable: true,
+    dryrun: true, // TODO: change to true
+    scope,
+  };
 }

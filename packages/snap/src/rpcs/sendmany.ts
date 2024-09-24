@@ -135,7 +135,6 @@ export async function sendMany(
         txId: '',
         signedTransaction,
       };
-      console.log('dryrun', result);
       return result;
     }
 

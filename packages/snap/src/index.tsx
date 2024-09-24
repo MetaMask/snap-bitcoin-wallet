@@ -26,8 +26,9 @@ import {
 import { KeyringStateManager } from './stateManagement';
 import { isSnapRpcError, logger } from './utils';
 import { SendFlowContext, SendFormState } from './ui/types';
-import { formValidation } from './ui/utils';
+import { formValidation, updateSendFlow } from './ui/utils';
 import { SendFlow } from './ui/components';
+import { SendFormNames } from './ui/components/SendForm';
 
 export const validateOrigin = (origin: string, method: string): void => {
   if (!origin) {
@@ -140,6 +141,27 @@ export const onUserInput: OnUserInputHandler = async ({
   let fees = previousFees;
 
   // skip call if there is an error with the amount.
+  if (
+    event?.name === SendFormNames.Amount &&
+    !formErrors.amount &&
+    Number(sendForm.amount) > 0
+  ) {
+    // show loading state for fees
+    await updateSendFlow({
+      interfaceId: id,
+      fees,
+      account: accounts[0],
+      selectedCurrency,
+      isLoading: true,
+      total: { amount: '0', fiat: 0 }, // This is a placeholder value since it will display loading state.
+      scope,
+    });
+
+    try {
+      const estimates = await estimateFee({
+        account: accounts[0].id,
+        amount: sendForm.amount,
+      });
   if (!formErrors.amount) {
     const estimates = await estimateFee({
       account: accounts[0].id,
@@ -148,18 +170,23 @@ export const onUserInput: OnUserInputHandler = async ({
     logger.log('estimates', estimates);
     // TODO: fiat conversion
     fees.amount = estimates.fee.amount;
+      // TODO: fiat conversion
+      fees.amount = estimates.fee.amount;
+    } catch (feeError) {
+      formErrors.fees = 'Error fetching fees';
+    }
   }
 
   const total = {
-    amount: Number(sendForm.amount ?? 0) + Number(fees.amount),
+    amount: (Number(sendForm.amount ?? 0) + Number(fees.amount)).toString(),
     // TODO: fiat conversion
     fiat: 0,
   };
 
   if (event.type === UserInputEventType.InputChangeEvent) {
     switch (event.name) {
-      case 'amount':
-      case 'to':
+      case SendFormNames.Amount:
+      case SendFormNames.To:
       case 'accountSelector': {
         await snap.request({
           method: 'snap_updateInterface',
@@ -173,6 +200,7 @@ export const onUserInput: OnUserInputHandler = async ({
                 fees={fees}
                 displayClearIcon={Boolean(sendForm.to) && sendForm.to !== ''}
                 errors={formErrors}
+                isLoading={false}
               />
             ),
           },
@@ -185,25 +213,28 @@ export const onUserInput: OnUserInputHandler = async ({
     }
   } else if (event.type === UserInputEventType.ButtonClickEvent) {
     switch (event.name) {
-      case 'clear':
+      case SendFormNames.Clear:
         await snap.request({
           method: 'snap_updateInterface',
           params: {
             id,
             ui: (
               <SendFlow
-                accounts={accountsArray}
-                selectedAccount={sendForm.accountSelector}
+                account={accounts[0]}
                 selectedCurrency={selectedCurrency}
                 total={total}
                 fees={fees}
                 flushToAddress={true}
                 displayClearIcon={false}
                 errors={formErrors}
+                isLoading={false}
               />
             ),
           },
         });
+        break;
+      case SendFormNames.Close:
+        // TODO:
         break;
       default:
         break;

@@ -14,7 +14,15 @@ import btcIcon from '../images/btc.svg';
 import jazzicon3 from '../images/jazzicon3.svg';
 import type { SendFormErrors } from '../types';
 import { AccountSelector } from './AccountSelector';
-import { KeyringAccount } from '@metamask/keyring-api';
+import { AccountWithBalance } from '../utils';
+
+export enum SendFormNames {
+  Amount = 'amount',
+  To = 'to',
+  Swap = 'swap',
+  Clear = 'clear',
+  Close = 'close',
+}
 
 /**
  * The props for the {@link SendForm} component.
@@ -28,7 +36,7 @@ import { KeyringAccount } from '@metamask/keyring-api';
  */
 export type SendFormProps = {
   selectedAccount: string;
-  accounts: KeyringAccount[];
+  accounts: AccountWithBalance[];
   errors?: SendFormErrors;
   selectedCurrency: 'BTC' | '$';
   displayClearIcon: boolean;
@@ -61,10 +69,14 @@ export const SendForm: SnapComponent<SendFormProps> = ({
       <Box>
         <Image src={btcIcon} />
       </Box>
-      <Input name="amount" type="number" placeholder="Enter amount to send" />
+      <Input
+        name={SendFormNames.Amount}
+        type="number"
+        placeholder="Enter amount to send"
+      />
       <Box direction="horizontal" center>
         <Text color="alternative">{selectedCurrency}</Text>
-        <Button name="swap">
+        <Button name={SendFormNames.Swap}>
           <Icon name="swap-vertical" color="primary" size="md" />
         </Button>
       </Box>
@@ -74,14 +86,14 @@ export const SendForm: SnapComponent<SendFormProps> = ({
         <Image src={jazzicon3} />
       </Box>
       <Input
-        name="to"
+        name={SendFormNames.To}
         placeholder="Enter receiving address"
         value={flushToAddress ? '' : undefined}
       />
       {displayClearIcon && (
         <Box>
-          <Button name="clear">
-            <Icon name="close" color="primary" />
+          <Button name={SendFormNames.Clear}>
+            <Icon name={SendFormNames.Close} color="primary" />
           </Button>
         </Box>
       )}
