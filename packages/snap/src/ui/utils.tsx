@@ -122,6 +122,7 @@ export function formValidation(
 ): SendFormErrors {
   const errors: Partial<SendFormErrors> = {};
 
+  logger.log('starting validation');
   if (
     formState.to &&
     ((context.scope === Caip2ChainId.Mainnet &&
@@ -130,14 +131,6 @@ export function formValidation(
         !validate(formState.to, Network.testnet)))
   ) {
     errors.to = 'Invalid address';
-  }
-
-  if (
-    formState.amount &&
-    Number(formState.amount) >
-      Number(context.accounts[formState.accountSelector].balance.amount)
-  ) {
-    errors.amount = 'Insufficient funds';
   }
 
   if (formState.amount && isNaN(Number(formState.amount))) {
