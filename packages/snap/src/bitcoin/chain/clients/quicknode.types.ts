@@ -40,7 +40,7 @@ export type QuickNodeGetUtxosResponse = {
 
 export type QuickNodeSendTransactionResponse = {
   result: null | {
-    // eslint-disable-next-line @typescript-eslint/naming-convention
+    // eslint-disable-next-line id-denylist
     hex: string;
   };
   error: null | QuickNodeError;
@@ -68,7 +68,7 @@ export type QuickNodeGetTransaction = {
       vout: number;
       scriptSig: {
         asm: string;
-        // eslint-disable-next-line @typescript-eslint/naming-convention
+        // eslint-disable-next-line id-denylist
         hex: string;
       };
       txinwitness: string[];
@@ -79,7 +79,7 @@ export type QuickNodeGetTransaction = {
       n: number;
       scriptPubKey: Record<string, string>;
     }[];
-    // eslint-disable-next-line @typescript-eslint/naming-convention
+    // eslint-disable-next-line id-denylist
     hex: string;
     blockhash: string;
     confirmations: number;

@@ -1,6 +1,6 @@
 import { BtcP2wpkhAddressStruct } from '@metamask/keyring-api';
 import type { Json } from '@metamask/snaps-sdk';
-import { type Network, networks } from 'bitcoinjs-lib';
+import { networks } from 'bitcoinjs-lib';
 import { array, assert } from 'superstruct';
 
 import { Config } from '../../../config';
