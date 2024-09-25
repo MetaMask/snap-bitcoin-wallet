@@ -1,5 +1,4 @@
 import { handleKeyringRequest } from '@metamask/keyring-api';
-import { BigNumber } from 'bignumber.js';
 import {
   type OnRpcRequestHandler,
   type OnKeyringRequestHandler,
@@ -10,6 +9,7 @@ import {
   MethodNotFoundError,
   UserInputEventType,
 } from '@metamask/snaps-sdk';
+import { BigNumber } from 'bignumber.js';
 
 import { Config } from './config';
 import { BtcKeyring } from './keyring';
@@ -25,16 +25,16 @@ import {
   getMaxSpendableBalance,
 } from './rpcs';
 import { KeyringStateManager } from './stateManagement';
-import { isSnapRpcError, logger } from './utils';
-import { SendFlowContext, SendFormState } from './ui/types';
+import { ReviewTransaction, SendFlow } from './ui/components';
+import { SendForm, SendFormNames } from './ui/components/SendForm';
+import type { SendFlowContext, SendFormState } from './ui/types';
 import {
   convertBtcToFiat,
   convertFiatToBtc,
   formValidation,
   updateSendFlow,
 } from './ui/utils';
-import { SendFlow, ReviewTransaction } from './ui/components';
-import { SendForm, SendFormNames } from './ui/components/SendForm';
+import { isSnapRpcError, logger } from './utils';
 
 export const validateOrigin = (origin: string, method: string): void => {
   if (!origin) {
@@ -154,7 +154,7 @@ export const onUserInput: OnUserInputHandler = async ({
 
   logger.log('formErrors', formErrors);
 
-  let fees = request.fees;
+  const { fees } = request;
   console.log('fees', fees);
 
   if (event.type === UserInputEventType.InputChangeEvent) {
@@ -223,11 +223,11 @@ export const onUserInput: OnUserInputHandler = async ({
             ),
           },
         });
-        // TODO: fiat conversion
-        fees.amount = estimates.fee.amount;
-      } catch (feeError) {
-        formErrors.fees = 'Error fetching fees';
+
+        break;
       }
+      default:
+        break;
     }
   } else if (event.type === UserInputEventType.ButtonClickEvent) {
     switch (event.name) {
@@ -276,7 +276,7 @@ export const onUserInput: OnUserInputHandler = async ({
             amount: request.balance.amount,
             fiat: request.balance.fiat,
           },
-          amount: amount,
+          amount,
         });
         break;
       }
@@ -293,7 +293,7 @@ export const onUserInput: OnUserInputHandler = async ({
                 network={'Bitcoin mainnet'}
                 txSpeed={'30m'}
                 fees={fees}
-                total={{amount: '0.0006', fiat: '0'}}
+                total={{ amount: '0.0006', fiat: '0' }}
               />
             ),
           },
