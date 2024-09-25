@@ -6,8 +6,6 @@ import {
   Container,
   Footer,
   Heading,
-  Image,
-  Link,
   Row,
   Section,
   Text,
@@ -15,16 +13,14 @@ import {
 } from '@metamask/snaps-sdk/jsx';
 import type { CaipAccountId } from '@metamask/utils';
 
-import btcHaloIcon from '../images/btc-halo.svg';
-import btcIcon from '../images/btc.svg';
-import jazzIcon from '../images/jazzicon1.svg';
 import type { Currency } from '../types';
+import type { AccountWithBalance } from '../utils';
 import { SendFlowHeader } from './SendFlowHeader';
 
 export type ReviewTransactionProps = {
-  accountName: string;
+  account: AccountWithBalance;
   amount: Currency;
-  to: CaipAccountId;
+  to: string;
   network: string;
   txSpeed: string;
   fees: Currency;
@@ -32,7 +28,7 @@ export type ReviewTransactionProps = {
 };
 
 export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
-  accountName,
+  account,
   amount,
   total,
   to,
@@ -43,40 +39,44 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
   <Container>
     <Box>
       <SendFlowHeader heading="Review" />
-      <Box>
-        <Image src={btcHaloIcon} alt="Bitcoin icon" />
+      <Box alignment="center" center>
         <Heading>{`${total.amount} BTC`}</Heading>
-        <Text color="muted">{`$${total.fiat}`}</Text>
+        <Text color="muted">{`$${total.fiat.toString()}`}</Text>
       </Box>
       <Section>
         <Row label="From">
-          <Box direction="horizontal" alignment="center">
-            <Image src={jazzIcon} alt="Jazzicon" />
-            <Link href="https://example.com">{accountName}</Link>
-          </Box>
+          <Address
+            address={`${account.type}:${account.address}` as CaipAccountId}
+          />
         </Row>
         <Row label="Amount">
-          <Value value={`${amount.amount} BTC`} extra={`$${amount.fiat}`} />
+          <Value
+            value={`${amount.amount} BTC`}
+            extra={`$${amount.fiat.toString()}`}
+          />
         </Row>
         <Row label="Recipient">
-          <Address address={to} />
+          <Address address={`${account.type}:${to}`} />
         </Row>
       </Section>
       <Section>
         <Row label="Network">
-          <Box direction="horizontal" alignment="center">
-            <Image src={btcIcon} alt="Bitcoin icon" />
-            <Text>{network}</Text>
-          </Box>
+          <Text>{network}</Text>
         </Row>
         <Row label="Transaction speed" tooltip="TBD">
           <Text>{txSpeed}</Text>
         </Row>
         <Row label="Estimated network fee" tooltip="TBD">
-          <Value value={`${fees.amount} BTC`} extra={`$${fees.fiat}`} />
+          <Value
+            value={`${fees.amount} BTC`}
+            extra={`$${fees.fiat.toString()}`}
+          />
         </Row>
         <Row label="Total">
-          <Value value={`${total.amount} BTC`} extra={`$${total.fiat}`} />
+          <Value
+            value={`${total.amount} BTC`}
+            extra={`$${total.fiat.toString()}`}
+          />
         </Row>
       </Section>
     </Box>

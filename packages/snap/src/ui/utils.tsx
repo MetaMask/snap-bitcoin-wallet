@@ -1,10 +1,14 @@
-import { BigNumber } from 'bignumber.js';
+import type { KeyringAccount } from '@metamask/keyring-api';
 import { is } from '@metamask/superstruct';
-import {
-  defaultSendManyParams,
-  SendManyParams,
-  SendManyParamsStruct,
-} from '../rpcs';
+import { BigNumber } from 'bignumber.js';
+import validate, { Network } from 'bitcoin-address-validation';
+import { v4 as uuidV4 } from 'uuid';
+
+import { Caip2ChainId } from '../constants';
+import type { SendManyParams } from '../rpcs';
+import { defaultSendManyParams, SendManyParamsStruct } from '../rpcs';
+import type { SendFlowRequest } from '../stateManagement';
+import { logger } from '../utils';
 import { SendFlow } from './components';
 import type {
   Currency,
@@ -12,11 +16,6 @@ import type {
   SendFormErrors,
   SendFormState,
 } from './types';
-import { SendFlowRequest } from '../stateManagement';
-import { KeyringAccount } from '@metamask/keyring-api';
-import { Caip2ChainId } from '../constants';
-import validate, { Network } from 'bitcoin-address-validation';
-import { logger } from '../utils';
 
 export type AccountWithBalance = KeyringAccount & { balance?: Currency };
 
@@ -44,6 +43,7 @@ export type UpdateSendFlowParams = {
  * @param params - The parameters for the send form.
  * @param params.account - The selected account.
  * @param params.fees - The fees for the transaction.
+ * @param params.scope
  * @returns The interface ID.
  */
 export async function generateSendFlow({
@@ -77,7 +77,7 @@ export async function generateSendFlow({
   const sendFlowRequest: SendFlowRequest = {
     id: interfaceId, // we use the same id for the interface and the request
     account: account.id,
-    scope: scope,
+    scope,
     transaction: defaultSendManyParams(scope),
     status: 'draft',
     interfaceId,
@@ -96,6 +96,18 @@ export async function generateSendFlow({
   return sendFlowRequest;
 }
 
+/**
+ *
+ * @param options0
+ * @param options0.isLoading
+ * @param options0.interfaceId
+ * @param options0.account
+ * @param options0.selectedCurrency
+ * @param options0.total
+ * @param options0.fees
+ * @param options0.balance
+ * @param options0.amount
+ */
 export async function updateSendFlow({
   isLoading,
   interfaceId,
@@ -129,6 +141,9 @@ export async function updateSendFlow({
  *
  * @param formState - The state of the send form.
  * @param context - The context of the interface.
+ * @param balance
+ * @param selectedCurrency
+ * @param rates
  * @returns The form errors.
  */
 export function formValidation(
@@ -187,12 +202,21 @@ export function truncate(str: string, length: number): string {
     : str;
 }
 
+/**
+ *
+ * @param request
+ */
 export function containsCompleteSendManyRequest(
   request: SendManyParams,
 ): request is SendManyParams {
   return is(request, SendManyParamsStruct);
 }
 
+/**
+ *
+ * @param interfaceId
+ * @param scope
+ */
 export async function sendStateToSendManyParams(
   interfaceId: string,
   scope: string,
@@ -216,12 +240,22 @@ export async function sendStateToSendManyParams(
   };
 }
 
+/**
+ *
+ * @param amount
+ * @param rate
+ */
 export function convertBtcToFiat(amount: string, rate: string): string {
   const amountBN = new BigNumber(amount);
   const rateBN = new BigNumber(rate);
   return amountBN.multipliedBy(rateBN).toFixed(2);
 }
 
+/**
+ *
+ * @param amount
+ * @param rate
+ */
 export function convertFiatToBtc(amount: string, rate: string): string {
   const amountBN = new BigNumber(amount);
   const rateBN = new BigNumber(rate);

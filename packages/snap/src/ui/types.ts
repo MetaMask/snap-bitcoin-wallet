@@ -69,6 +69,5 @@ export type Currency = {
 export type SendFlowContext = {
   accounts: AccountWithBalance[];
   selectedCurrency: 'BTC' | '$';
-  fees: Currency;
   scope: string;
 };

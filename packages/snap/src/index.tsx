@@ -33,7 +33,7 @@ import {
   formValidation,
   updateSendFlow,
 } from './ui/utils';
-import { SendFlow } from './ui/components';
+import { SendFlow, ReviewTransaction } from './ui/components';
 import { SendForm, SendFormNames } from './ui/components/SendForm';
 
 export const validateOrigin = (origin: string, method: string): void => {
@@ -51,7 +51,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   origin,
   request,
 }): Promise<Json> => {
-  logger.logLevel = 6; //parseInt(Config.logLevel, 10);
+  logger.logLevel = 6; // parseInt(Config.logLevel, 10);
   console.log('onRpcRequest', request, origin);
 
   try {
@@ -223,11 +223,11 @@ export const onUserInput: OnUserInputHandler = async ({
             ),
           },
         });
-
-        break;
+        // TODO: fiat conversion
+        fees.amount = estimates.fee.amount;
+      } catch (feeError) {
+        formErrors.fees = 'Error fetching fees';
       }
-      default:
-        break;
     }
   } else if (event.type === UserInputEventType.ButtonClickEvent) {
     switch (event.name) {
@@ -280,6 +280,25 @@ export const onUserInput: OnUserInputHandler = async ({
         });
         break;
       }
+      case SendFormNames.Review:
+        await snap.request({
+          method: 'snap_updateInterface',
+          params: {
+            id,
+            ui: (
+              <ReviewTransaction
+                account={accounts[0]}
+                amount={{ amount: sendForm.amount, fiat: '0' }}
+                to={sendForm.to}
+                network={'Bitcoin mainnet'}
+                txSpeed={'30m'}
+                fees={fees}
+                total={{amount: '0.0006', fiat: '0'}}
+              />
+            ),
+          },
+        });
+        break;
       default:
         break;
     }
