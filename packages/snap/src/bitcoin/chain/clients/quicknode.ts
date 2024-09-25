@@ -1,7 +1,8 @@
 import { BtcP2wpkhAddressStruct } from '@metamask/keyring-api';
 import type { Json } from '@metamask/snaps-sdk';
 import { networks } from 'bitcoinjs-lib';
-import { array, assert } from 'superstruct';
+import type { Struct } from 'superstruct';
+import { array, assert, mask } from 'superstruct';
 
 import { Config } from '../../../config';
 import { btcToSats, compactError, logger, processBatch } from '../../../utils';
@@ -15,13 +16,19 @@ import type {
   DataClientGetFeeRatesResp,
 } from '../data-client';
 import { DataClientError } from '../exceptions';
-import type {
-  QuickNodeClientOptions,
-  QuickNodeGetBalancesResponse,
-  QuickNodeGetUtxosResponse,
-  QuickNodeSendTransactionResponse,
-  QuickNodeEstimateFeeResponse,
-  QuickNodeGetTransaction,
+import {
+  type QuickNodeClientOptions,
+  type QuickNodeGetBalancesResponse,
+  type QuickNodeGetUtxosResponse,
+  type QuickNodeSendTransactionResponse,
+  type QuickNodeEstimateFeeResponse,
+  type QuickNodeGetTransaction,
+  type QuickNodeResponse,
+  QuickNodeGetBalancesResponseStruct,
+  QuickNodeGetUtxosResponseStruct,
+  QuickNodeSendTransactionResponseStruct,
+  QuickNodeGetTransactionStruct,
+  QuickNodeEstimateFeeResponseStruct,
 } from './quicknode.types';
 
 export class QuickNodeClient implements IDataClient {
@@ -51,7 +58,9 @@ export class QuickNodeClient implements IDataClient {
     }
   }
 
-  protected async post<Response>(body: Json): Promise<Response> {
+  protected async post<Response extends QuickNodeResponse>(
+    body: Json,
+  ): Promise<Response> {
     const response = await fetch(this.baseUrl, {
       method: 'POST',
       headers: {
@@ -62,7 +71,7 @@ export class QuickNodeClient implements IDataClient {
 
     // QuickNode returns 200 status code for successful requests, others are errors status code
     if (response.status !== 200) {
-      const res = await response.json();
+      const res = (await response.json()) as unknown as Response;
       throw new Error(
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         `Failed to post data from quicknode: ${res.error}`,
@@ -77,8 +86,8 @@ export class QuickNodeClient implements IDataClient {
     return response.json() as unknown as Response;
   }
 
-  protected isApiRespError<Response extends { result: unknown }>(
-    resp: Response,
+  protected isErrorResponse<Response extends { result: unknown }>(
+    response: Response,
   ): boolean {
     // Possible error response from QuickNode:
     // - { result : null, error : "some error message" }
@@ -86,30 +95,67 @@ export class QuickNodeClient implements IDataClient {
     // - { result : { error : "some error message" } }
     // - empty
     return (
-      !resp.result || Object.prototype.hasOwnProperty.call(resp.result, 'error')
+      !response.result ||
+      Object.prototype.hasOwnProperty.call(response.result, 'error')
     );
   }
 
-  async getBalances(addresses: string[]): Promise<DataClientGetBalancesResp> {
+  protected async submitJsonRPCRequest<Response extends QuickNodeResponse>({
+    request,
+    responseStruct,
+  }: {
+    request: {
+      method: string;
+      params: Json;
+    };
+    responseStruct: Struct;
+  }) {
     try {
-      assert(addresses, array(BtcP2wpkhAddressStruct));
-
       logger.debug(
-        `[QuickNodeClient.getBalance] start: { addresses : ${JSON.stringify(
-          addresses,
-        )} }`,
+        `[QuickNodeClient.${request.method}] request:`,
+        JSON.stringify(request),
       );
 
-      const addressBalanceMap = new Map<string, number>();
+      const response = await this.post<Response>(request);
 
-      await processBatch(addresses, async (address) => {
-        const response = await this.post<QuickNodeGetBalancesResponse>(
+      logger.debug(
+        `[QuickNodeClient.${request.method}] response:`,
+        JSON.stringify(response),
+      );
+
+      // Safeguard to detect if the response is an error response, but they are not caught by the fetch error
+      if (this.isErrorResponse(response)) {
+        throw new Error(`Error response from quicknode`);
+      }
+
+      // Safeguard to identify if the response has some unexpected changes from quicknode
+      mask(response, responseStruct, 'Unexpected response from quicknode');
+
+      return response;
+    } catch (error) {
+      logger.info(
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+        `[QuickNodeClient.${request.method}] error: ${error.message}`,
+      );
+
+      throw compactError(error, DataClientError);
+    }
+  }
+
+  async getBalances(addresses: string[]): Promise<DataClientGetBalancesResp> {
+    assert(addresses, array(BtcP2wpkhAddressStruct));
+
+    const addressBalanceMap = new Map<string, number>();
+
+    await processBatch(addresses, async (address) => {
+      const response =
+        await this.submitJsonRPCRequest<QuickNodeGetBalancesResponse>({
           // index 0 of the params refer to the account address,
           // index 1 .details refer to the output flag:
           // - 'basic' for basic address information
           // - 'txids' to also include transaction IDs
           // - 'txs' to include full transaction data
-          {
+          request: {
             method: 'bb_getaddress',
             params: [
               address,
@@ -118,189 +164,118 @@ export class QuickNodeClient implements IDataClient {
               },
             ],
           },
-        );
+          responseStruct: QuickNodeGetBalancesResponseStruct,
+        });
 
-        logger.debug(
-          `[QuickNodeClient.getBalance] response: ${JSON.stringify(response)}`,
-        );
+      addressBalanceMap.set(address, parseInt(response.result.balance, 10));
+    });
 
-        // A safeguard to ensure the response is valid.
-        if (!response.result || this.isApiRespError(response)) {
-          throw new Error(`Get balance response is invalid`);
-        }
-
-        // the balance will be return as sats
-        // it is safe to use number in bitcoin rather than big int, due to max sats will not exceed 2100000000000000
-        addressBalanceMap.set(address, parseInt(response.result.balance, 10));
-      });
-
-      return addresses.reduce(
-        (data: DataClientGetBalancesResp, address: string) => {
-          // The hashmap should include the balance for each requested addresses
-          // but in case there are some behavior changes, we set the default balance to 0
-          data[address] = addressBalanceMap.get(address) ?? 0;
-          return data;
-        },
-        {},
-      );
-    } catch (error) {
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      logger.info(`[QuickNodeClient.getBalance] error: ${error.message}`);
-      throw compactError(error, DataClientError);
-    }
+    return addresses.reduce(
+      (data: DataClientGetBalancesResp, address: string) => {
+        // The hashmap should include the balance for each requested addresses
+        // but in case there are some behavior changes, we set the default balance to 0
+        data[address] = addressBalanceMap.get(address) ?? 0;
+        return data;
+      },
+      {},
+    );
   }
 
   async getUtxos(
     address: string,
     includeUnconfirmed?: boolean,
   ): Promise<DataClientGetUtxosResp> {
-    try {
-      assert(address, BtcP2wpkhAddressStruct);
+    assert(address, BtcP2wpkhAddressStruct);
 
-      const response = await this.post<QuickNodeGetUtxosResponse>({
-        method: 'bb_getutxos',
-        params: [
-          address,
-          {
-            confirmed: !includeUnconfirmed,
-          },
-        ],
-      });
+    const response = await this.submitJsonRPCRequest<QuickNodeGetUtxosResponse>(
+      {
+        request: {
+          method: 'bb_getutxos',
+          params: [
+            address,
+            {
+              confirmed: !includeUnconfirmed,
+            },
+          ],
+        },
+        responseStruct: QuickNodeGetUtxosResponseStruct,
+      },
+    );
 
-      logger.debug(
-        `[QuickNodeClient.getUtxos] response: ${JSON.stringify(response)}`,
-      );
-
-      // A safeguard to ensure the response is valid.
-      if (!response.result || this.isApiRespError(response)) {
-        throw new Error(`Get utxos response is invalid`);
-      }
-
-      return response.result.map((utxo) => ({
-        block: utxo.height,
-        txHash: utxo.txid,
-        index: utxo.vout,
-        // the utxo.value will be return as sats
-        // it is safe to use number in bitcoin rather than big int, due to max sats will not exceed 2100000000000000
-        value: parseInt(utxo.value, 10),
-      }));
-    } catch (error) {
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      logger.info(`[QuickNodeClient.getUtxos] error: ${error.message}`);
-      throw compactError(error, DataClientError);
-    }
+    return response.result.map((utxo) => ({
+      block: utxo.height,
+      txHash: utxo.txid,
+      index: utxo.vout,
+      // the utxo.value will be return as sats
+      // it is safe to use number in bitcoin rather than big int, due to max sats will not exceed 2100000000000000
+      value: parseInt(utxo.value, 10),
+    }));
   }
 
   async getFeeRates(): Promise<DataClientGetFeeRatesResp> {
-    try {
-      logger.debug(`[QuickNodeClient.getFeeRates] start:`);
-      // There is no UX to allow end user to select the fee rate,
-      // hence we can just fetch the default fee rate.
-      const processItems = {
-        [Config.defaultFeeRate]: this._priorityMap[Config.defaultFeeRate],
-      };
+    // There is no UX to allow end user to select the fee rate,
+    // hence we can just fetch the default fee rate.
+    const processItems = {
+      [Config.defaultFeeRate]: this._priorityMap[Config.defaultFeeRate],
+    };
 
-      const feeRates: Record<string, number> = {};
-      // keep this batch process in case we have to switch to support multiple fee rates.
-      await processBatch(
-        Object.entries(processItems),
-        async ([feeRate, target]) => {
-          const response = await this.post<QuickNodeEstimateFeeResponse>({
-            method: 'estimatesmartfee',
-            params: [target],
+    const feeRates: Record<string, number> = {};
+    // keep this batch process in case we have to switch to support multiple fee rates.
+    await processBatch(
+      Object.entries(processItems),
+      async ([feeRate, target]) => {
+        const response =
+          await this.submitJsonRPCRequest<QuickNodeEstimateFeeResponse>({
+            request: {
+              method: 'estimatesmartfee',
+              params: [target],
+            },
+            responseStruct: QuickNodeEstimateFeeResponseStruct,
           });
 
-          logger.debug(
-            `[QuickNodeClient.getFeeRates] response: ${JSON.stringify(
-              response,
-            )}`,
-          );
+        // The fee rate will be returned in btc unit
+        // e.g. 0.00005081
+        feeRates[feeRate] = Number(
+          btcToSats(response.result.feerate.toString()),
+        );
+      },
+    );
 
-          // A safeguard to ensure the response is valid.
-          if (!response.result || this.isApiRespError(response)) {
-            throw new Error(`Get fee rate response is invalid`);
-          }
-
-          // The fee rate will be returned in btc unit
-          // e.g. 0.00005081
-          feeRates[feeRate] = Number(
-            btcToSats(response.result.feerate.toString()),
-          );
-        },
-      );
-
-      return feeRates;
-    } catch (error) {
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      logger.info(`[QuickNodeClient.getFeeRates] error: ${error.message}`);
-      throw compactError(error, DataClientError);
-    }
+    return feeRates;
   }
 
   async sendTransaction(
     signedTransaction: string,
   ): Promise<DataClientSendTxResp> {
-    try {
-      const response = await this.post<QuickNodeSendTransactionResponse>({
-        method: 'sendrawtransaction',
-        params: [signedTransaction],
+    const response =
+      await this.submitJsonRPCRequest<QuickNodeSendTransactionResponse>({
+        request: {
+          method: 'sendrawtransaction',
+          params: [signedTransaction],
+        },
+        responseStruct: QuickNodeSendTransactionResponseStruct,
       });
-
-      logger.debug(
-        `[QuickNodeClient.sendTransaction] response: ${JSON.stringify(
-          response,
-        )}`,
-      );
-
-      // A safeguard to ensure the response is valid.
-      if (!response.result || this.isApiRespError(response)) {
-        throw new Error(`send transaction response is invalid`);
-      }
-
-      return response.result.hex;
-    } catch (error) {
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      logger.info(`[QuickNodeClient.sendTransaction] error: ${error.message}`);
-      throw compactError(error, DataClientError);
-    }
+    return response.result.hex;
   }
 
   async getTransactionStatus(txid: string): Promise<DataClientGetTxStatusResp> {
-    try {
-      const response = await this.post<QuickNodeGetTransaction>(
-        // index 0 of the params refer to the tx id,
-        // index 1 refer to the verbose flag,
-        // - 0: hex-encoded data
-        // - 1: JSON object
-        // - 2: JSON object with fee and prevout
-        { method: 'getrawtransaction', params: [txid, 1] },
-      );
+    const response = await this.submitJsonRPCRequest<QuickNodeGetTransaction>({
+      // index 0 of the params refer to the tx id,
+      // index 1 refer to the verbose flag,
+      // - 0: hex-encoded data
+      // - 1: JSON object
+      // - 2: JSON object with fee and prevout
+      request: { method: 'getrawtransaction', params: [txid, 1] },
+      responseStruct: QuickNodeGetTransactionStruct,
+    });
 
-      logger.debug(
-        `[QuickNodeClient.getTransactionStatus] response: ${JSON.stringify(
-          response,
-        )}`,
-      );
-
-      // A safeguard to ensure the response is valid.
-      if (!response.result || this.isApiRespError(response)) {
-        throw new Error(`Get transaction response is invalid`);
-      }
-
-      // Bitcoin transaction is often considered secure after six confirmations
-      // reference: https://www.bitcoin.com/get-started/what-is-a-confirmation/#:~:text=Different%20cryptocurrencies%20require%20different%20numbers,secure%20after%20around%2030%20confirmations.
-      return {
-        status:
-          response.result.confirmations >= this._confirmationThreshold
-            ? TransactionStatus.Confirmed
-            : TransactionStatus.Pending,
-      };
-    } catch (error) {
-      logger.info(
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        `[QuickNodeClient.getTransactionStatus] error: ${error.message}`,
-      );
-      throw compactError(error, DataClientError);
-    }
+    // Bitcoin transaction is often considered secure after six confirmations
+    // reference: https://www.bitcoin.com/get-started/what-is-a-confirmation/#:~:text=Different%20cryptocurrencies%20require%20different%20numbers,secure%20after%20around%2030%20confirmations.
+    return {
+      status:
+        response.result.confirmations >= this._confirmationThreshold
+          ? TransactionStatus.Confirmed
+          : TransactionStatus.Pending,
+    };
   }
 }

@@ -3,11 +3,11 @@ import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 
 import {
-  generateQNGetBalanceResp,
-  generateQNEstimatefeeResp,
-  generateQNGetUtxosResp,
-  generateQNGetRawTransactionResp,
-  generateQNSendRawTransactionResp,
+  generateQuickNodeGetBalanceResp,
+  generateQuickNodeEstimatefeeResp,
+  generateQuickNodeGetUtxosResp,
+  generateQuickNodeGetRawTransactionResp,
+  generateQuickNodeSendRawTransactionResp,
 } from '../../../../test/utils';
 import { Config } from '../../../config';
 import { btcToSats } from '../../../utils';
@@ -17,6 +17,7 @@ import { BtcAccountDeriver, BtcWallet } from '../../wallet';
 import { TransactionStatus } from '../constants';
 import { DataClientError } from '../exceptions';
 import { QuickNodeClient } from './quicknode';
+import type { QuickNodeResponse } from './quicknode.types';
 
 jest.mock('../../../utils/logger');
 jest.mock('../../../utils/snap');
@@ -25,21 +26,21 @@ describe('QuickNodeClient', () => {
   const testnetEndpoint = 'https://api.quicknode.com/testnet';
   const mainnetEndpoint = 'https://api.quicknode.com/mainnet';
 
-  class MockQNClient extends QuickNodeClient {
-    async post<Resp>(body: Json): Promise<Resp> {
+  class MockQuickNodeClient extends QuickNodeClient {
+    async post<Response extends QuickNodeResponse>(
+      body: Json,
+    ): Promise<Response> {
       return super.post(body);
     }
   }
 
   const createMockFetch = () => {
+    const fetchSpy = jest.fn();
+
     // eslint-disable-next-line no-restricted-globals
     Object.defineProperty(global, 'fetch', {
-      writable: true,
+      value: fetchSpy,
     });
-
-    const fetchSpy = jest.fn();
-    // eslint-disable-next-line no-restricted-globals
-    global.fetch = fetchSpy;
 
     return {
       fetchSpy,
@@ -59,15 +60,15 @@ describe('QuickNodeClient', () => {
     };
   };
 
-  const createQNClient = (network: Network) => {
-    return new MockQNClient({
+  const createQuickNodeClient = (network: Network) => {
+    return new MockQuickNodeClient({
       network,
       testnetEndpoint,
       mainnetEndpoint,
     });
   };
 
-  const mockApiError = ({
+  const mockErrorResponse = ({
     fetchSpy,
     isOk = true,
     status = 200,
@@ -113,9 +114,10 @@ describe('QuickNodeClient', () => {
     it('executes a request', async () => {
       const { fetchSpy } = createMockFetch();
 
+      const mockResponse = true;
       mockApiSuccessResponse({
         fetchSpy,
-        mockResponse: true,
+        mockResponse,
       });
 
       const postBody = {
@@ -123,23 +125,23 @@ describe('QuickNodeClient', () => {
         params: [1],
       };
 
-      const instance = createQNClient(networks.testnet);
-      const result = await instance.post(postBody);
+      const client = createQuickNodeClient(networks.testnet);
+      const result = await client.post(postBody);
 
-      expect(fetchSpy).toHaveBeenCalledWith(instance.baseUrl, {
+      expect(fetchSpy).toHaveBeenCalledWith(client.baseUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(postBody),
       });
-      expect(result).toBe(true);
+      expect(result).toBe(mockResponse);
     });
 
     it('throws `Failed to post data from quicknode` error if the http status is not 200', async () => {
       const { fetchSpy } = createMockFetch();
 
-      mockApiError({
+      mockErrorResponse({
         fetchSpy,
         status: 500,
         isOk: true,
@@ -153,9 +155,9 @@ describe('QuickNodeClient', () => {
         params: [1],
       };
 
-      const instance = createQNClient(networks.testnet);
+      const client = createQuickNodeClient(networks.testnet);
 
-      await expect(instance.post(postBody)).rejects.toThrow(
+      await expect(client.post(postBody)).rejects.toThrow(
         'Failed to post data from quicknode: api error',
       );
     });
@@ -163,7 +165,7 @@ describe('QuickNodeClient', () => {
     it('throws `Failed to post data from quicknode` error if the `response.ok` is false', async () => {
       const { fetchSpy } = createMockFetch();
 
-      mockApiError({
+      mockErrorResponse({
         fetchSpy,
         status: 200,
         statusText: 'api error',
@@ -175,9 +177,9 @@ describe('QuickNodeClient', () => {
         params: [1],
       };
 
-      const instance = createQNClient(networks.testnet);
+      const client = createQuickNodeClient(networks.testnet);
 
-      await expect(instance.post(postBody)).rejects.toThrow(
+      await expect(client.post(postBody)).rejects.toThrow(
         'Failed to post data from quicknode: api error',
       );
     });
@@ -185,21 +187,21 @@ describe('QuickNodeClient', () => {
 
   describe('baseUrl', () => {
     it('returns the testnet api endpoint', () => {
-      const instance = createQNClient(networks.testnet);
+      const client = createQuickNodeClient(networks.testnet);
 
-      expect(instance.baseUrl).toStrictEqual(testnetEndpoint);
+      expect(client.baseUrl).toStrictEqual(testnetEndpoint);
     });
 
     it('returns the mainnet api endpoint', () => {
-      const instance = createQNClient(networks.bitcoin);
+      const client = createQuickNodeClient(networks.bitcoin);
 
-      expect(instance.baseUrl).toStrictEqual(mainnetEndpoint);
+      expect(client.baseUrl).toStrictEqual(mainnetEndpoint);
     });
 
-    it('throws `Invalid network` error if the given network is not support', () => {
-      const instance = createQNClient(networks.regtest);
+    it('throws `Invalid network` error if the given network is not supported', () => {
+      const client = createQuickNodeClient(networks.regtest);
 
-      expect(() => instance.baseUrl).toThrow('Invalid network');
+      expect(() => client.baseUrl).toThrow('Invalid network');
     });
   });
 
@@ -212,7 +214,7 @@ describe('QuickNodeClient', () => {
 
       const expectedResult = {};
       for (const address of addresses) {
-        const mockResponse = generateQNGetBalanceResp(address);
+        const mockResponse = generateQuickNodeGetBalanceResp(address);
 
         expectedResult[address] = parseInt(mockResponse.result.balance, 10);
 
@@ -222,29 +224,29 @@ describe('QuickNodeClient', () => {
         });
       }
 
-      const instance = createQNClient(network);
-      const result = await instance.getBalances(addresses);
+      const client = createQuickNodeClient(network);
+      const result = await client.getBalances(addresses);
 
       expect(result).toStrictEqual(expectedResult);
     });
 
     // This case should never happen, but to ensure the test is 100% covered, hence we mock the processBatch to not process any request
-    it('assign 0 balance to address if the address cant be found in the hashmap', async () => {
+    it('assign 0 balance to address if the address cannot be found in the hashmap', async () => {
       const network = networks.testnet;
       const { accounts } = await createAccounts(network, 5);
       const addresses = accounts.map((account) => account.address);
 
       jest.spyOn(asyncUtils, 'processBatch').mockReturnThis();
 
-      const instance = createQNClient(network);
-      const result = await instance.getBalances(addresses);
+      const client = createQuickNodeClient(network);
+      const result = await client.getBalances(addresses);
 
-      expect(result).toStrictEqual(
-        addresses.reduce((acc, address) => {
-          acc[address] = 0;
-          return acc;
-        }, {}),
-      );
+      const expectedEmptyBalances = addresses.reduce((acc, address) => {
+        acc[address] = 0;
+        return acc;
+      }, {});
+
+      expect(result).toStrictEqual(expectedEmptyBalances);
     });
 
     it('throws DataClientError if the api response is invalid', async () => {
@@ -253,13 +255,13 @@ describe('QuickNodeClient', () => {
       const { accounts } = await createAccounts(network, 5);
       const addresses = accounts.map((account) => account.address);
 
-      mockApiError({
+      mockErrorResponse({
         fetchSpy,
       });
 
-      const instance = createQNClient(network);
+      const client = createQuickNodeClient(network);
 
-      await expect(instance.getBalances(addresses)).rejects.toThrow(
+      await expect(client.getBalances(addresses)).rejects.toThrow(
         DataClientError,
       );
     });
@@ -269,7 +271,7 @@ describe('QuickNodeClient', () => {
     it('returns fee rates', async () => {
       const { fetchSpy } = createMockFetch();
       const expectedFeeRate = 0.0001;
-      const mockResponse = generateQNEstimatefeeResp({
+      const mockResponse = generateQuickNodeEstimatefeeResp({
         feerate: expectedFeeRate,
       });
 
@@ -278,8 +280,8 @@ describe('QuickNodeClient', () => {
         mockResponse,
       });
 
-      const instance = createQNClient(networks.testnet);
-      const result = await instance.getFeeRates();
+      const client = createQuickNodeClient(networks.testnet);
+      const result = await client.getFeeRates();
 
       expect(result).toStrictEqual({
         [Config.defaultFeeRate]: Number(btcToSats(expectedFeeRate.toString())),
@@ -289,13 +291,13 @@ describe('QuickNodeClient', () => {
     it('throws DataClientError if the api response is invalid', async () => {
       const { fetchSpy } = createMockFetch();
 
-      mockApiError({
+      mockErrorResponse({
         fetchSpy,
       });
 
-      const instance = createQNClient(networks.testnet);
+      const client = createQuickNodeClient(networks.testnet);
 
-      await expect(instance.getFeeRates()).rejects.toThrow(DataClientError);
+      await expect(client.getFeeRates()).rejects.toThrow(DataClientError);
     });
   });
 
@@ -306,7 +308,7 @@ describe('QuickNodeClient', () => {
       const {
         accounts: [{ address }],
       } = await createAccounts(network, 1);
-      const mockResponse = generateQNGetUtxosResp({
+      const mockResponse = generateQuickNodeGetUtxosResp({
         utxosCount: 10,
       });
       const expectedResult = mockResponse.result.map((utxo) => ({
@@ -321,8 +323,8 @@ describe('QuickNodeClient', () => {
         mockResponse,
       });
 
-      const instance = createQNClient(network);
-      const result = await instance.getUtxos(address);
+      const client = createQuickNodeClient(network);
+      const result = await client.getUtxos(address);
 
       expect(result).toStrictEqual(expectedResult);
     });
@@ -334,13 +336,13 @@ describe('QuickNodeClient', () => {
         accounts: [{ address }],
       } = await createAccounts(network, 1);
 
-      mockApiError({
+      mockErrorResponse({
         fetchSpy,
       });
 
-      const instance = createQNClient(network);
+      const client = createQuickNodeClient(network);
 
-      await expect(instance.getUtxos(address)).rejects.toThrow(DataClientError);
+      await expect(client.getUtxos(address)).rejects.toThrow(DataClientError);
     });
   });
 
@@ -348,31 +350,34 @@ describe('QuickNodeClient', () => {
     const txid =
       '1cd985fc26a9b27d0b574739b908d5fe78e2297b24323a7f8c04526648dc9c08';
 
-    it("returns `confirmed` if the transaction's confirmation number is >= 6", async () => {
-      const { fetchSpy } = createMockFetch();
+    it.each([6, 7])(
+      "returns `confirmed` if the transaction's confirmation number is $s",
+      async (confirmations: number) => {
+        const { fetchSpy } = createMockFetch();
 
-      const mockResponse = generateQNGetRawTransactionResp({
-        txid,
-        confirmations: 6,
-      });
+        const mockResponse = generateQuickNodeGetRawTransactionResp({
+          txid,
+          confirmations,
+        });
 
-      mockApiSuccessResponse({
-        fetchSpy,
-        mockResponse,
-      });
+        mockApiSuccessResponse({
+          fetchSpy,
+          mockResponse,
+        });
 
-      const instance = createQNClient(networks.testnet);
-      const result = await instance.getTransactionStatus(txid);
+        const client = createQuickNodeClient(networks.testnet);
+        const result = await client.getTransactionStatus(txid);
 
-      expect(result).toStrictEqual({
-        status: TransactionStatus.Confirmed,
-      });
-    });
+        expect(result).toStrictEqual({
+          status: TransactionStatus.Confirmed,
+        });
+      },
+    );
 
     it("returns `pending` if the transaction's confirmation number is < 6", async () => {
       const { fetchSpy } = createMockFetch();
 
-      const mockResponse = generateQNGetRawTransactionResp({
+      const mockResponse = generateQuickNodeGetRawTransactionResp({
         txid,
         confirmations: 1,
       });
@@ -382,8 +387,8 @@ describe('QuickNodeClient', () => {
         mockResponse,
       });
 
-      const instance = createQNClient(networks.testnet);
-      const result = await instance.getTransactionStatus(txid);
+      const client = createQuickNodeClient(networks.testnet);
+      const result = await client.getTransactionStatus(txid);
 
       expect(result).toStrictEqual({
         status: TransactionStatus.Pending,
@@ -393,13 +398,13 @@ describe('QuickNodeClient', () => {
     it('throws DataClientError if the api response is invalid', async () => {
       const { fetchSpy } = createMockFetch();
 
-      mockApiError({
+      mockErrorResponse({
         fetchSpy,
       });
 
-      const instance = createQNClient(networks.testnet);
+      const client = createQuickNodeClient(networks.testnet);
 
-      await expect(instance.getTransactionStatus(txid)).rejects.toThrow(
+      await expect(client.getTransactionStatus(txid)).rejects.toThrow(
         DataClientError,
       );
     });
@@ -411,7 +416,7 @@ describe('QuickNodeClient', () => {
 
     it('broadcasts a transaction', async () => {
       const { fetchSpy } = createMockFetch();
-      const mockResponse = generateQNSendRawTransactionResp();
+      const mockResponse = generateQuickNodeSendRawTransactionResp();
       const expectedResult = mockResponse.result.hex;
 
       mockApiSuccessResponse({
@@ -419,8 +424,8 @@ describe('QuickNodeClient', () => {
         mockResponse,
       });
 
-      const instance = createQNClient(networks.testnet);
-      const result = await instance.sendTransaction(signedTransaction);
+      const client = createQuickNodeClient(networks.testnet);
+      const result = await client.sendTransaction(signedTransaction);
 
       expect(result).toStrictEqual(expectedResult);
     });
@@ -428,13 +433,13 @@ describe('QuickNodeClient', () => {
     it('throws DataClientError if the api response is invalid', async () => {
       const { fetchSpy } = createMockFetch();
 
-      mockApiError({
+      mockErrorResponse({
         fetchSpy,
       });
 
-      const instance = createQNClient(networks.testnet);
+      const client = createQuickNodeClient(networks.testnet);
 
-      await expect(instance.sendTransaction(signedTransaction)).rejects.toThrow(
+      await expect(client.sendTransaction(signedTransaction)).rejects.toThrow(
         DataClientError,
       );
     });
