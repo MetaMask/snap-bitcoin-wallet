@@ -2,6 +2,7 @@ import type { KeyringAccount } from '@metamask/keyring-api';
 
 import type { EstimateFeeResponse, SendManyParams } from './rpcs';
 import type { Currency } from './ui/types';
+import type { AssetType } from './ui/utils';
 import { compactError, SnapStateManager } from './utils';
 
 export type Wallet = {
@@ -34,7 +35,7 @@ export type SendFlowRequest = {
   scope: string;
   transaction: SendManyParams;
   status: 'draft' | 'confirmed' | 'pending' | 'failure' | 'rejected';
-  selectedCurrency: 'BTC' | '$';
+  selectedCurrency: AssetType;
   rates: string;
   balance: {
     amount: string;

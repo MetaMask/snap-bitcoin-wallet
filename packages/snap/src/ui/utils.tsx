@@ -2,14 +2,12 @@ import type { KeyringAccount } from '@metamask/keyring-api';
 import { is } from '@metamask/superstruct';
 import { BigNumber } from 'bignumber.js';
 import validate, { Network } from 'bitcoin-address-validation';
-import { v4 as uuidV4 } from 'uuid';
 
 import { Caip2ChainId } from '../constants';
 import type { SendManyParams } from '../rpcs';
 import { defaultSendManyParams, SendManyParamsStruct } from '../rpcs';
 import type { SendFlowRequest } from '../stateManagement';
-import { logger } from '../utils';
-import { SendFlow } from './components';
+import { SendFlow, SendFlowProps } from './components';
 import type {
   Currency,
   SendFlowContext,
@@ -19,22 +17,20 @@ import type {
 
 export type AccountWithBalance = KeyringAccount & { balance?: Currency };
 
+export enum AssetType {
+  BTC = 'BTC',
+  FIAT = '$',
+}
+
 export type GenerateSendFlowParams = {
   account: KeyringAccount;
   fees: Currency;
   scope: string;
 };
 
-export type UpdateSendFlowParams = {
+export type UpdateSendFlowParams = SendFlowProps & {
   interfaceId: string;
-  selectedCurrency: 'BTC' | '$';
-  account: KeyringAccount;
   scope: string;
-  fees: Currency;
-  balance: Currency;
-  amount: string;
-  rates: string;
-  isLoading: boolean;
 };
 
 /**
@@ -57,17 +53,19 @@ export async function generateSendFlow({
       ui: (
         <SendFlow
           account={account}
-          selectedCurrency="BTC"
+          selectedCurrency={AssetType.BTC}
           fees={fees}
           displayClearIcon={false}
           isLoading={true}
           balance={{ amount: '', fiat: '' }}
           amount=""
+          rates="0"
+          canSubmit={false}
         />
       ),
       context: {
         accounts: [account],
-        selectedCurrency: 'BTC',
+        selectedCurrency: AssetType.BTC,
         fees,
         scope,
       },
@@ -81,7 +79,7 @@ export async function generateSendFlow({
     transaction: defaultSendManyParams(scope),
     status: 'draft',
     interfaceId,
-    selectedCurrency: 'BTC',
+    selectedCurrency: AssetType.BTC,
     rates: '',
     balance: {
       amount: '',
@@ -113,9 +111,12 @@ export async function updateSendFlow({
   interfaceId,
   account,
   selectedCurrency,
+  flushToAddress,
   fees,
   balance,
   amount,
+  rates,
+  canSubmit,
 }: UpdateSendFlowParams) {
   await snap.request({
     method: 'snap_updateInterface',
@@ -125,11 +126,14 @@ export async function updateSendFlow({
         <SendFlow
           account={account}
           selectedCurrency={selectedCurrency}
+          flushToAddress={flushToAddress}
           displayClearIcon={false}
           isLoading={isLoading}
           balance={balance}
           amount={amount}
           fees={isLoading ? { amount: '', fiat: '' } : fees}
+          rates={rates}
+          canSubmit={canSubmit}
         />
       ),
     },
@@ -150,7 +154,7 @@ export function formValidation(
   formState: SendFormState,
   context: SendFlowContext,
   balance: Currency,
-  selectedCurrency: 'BTC' | '$',
+  selectedCurrency: AssetType,
   rates: string,
 ): SendFormErrors {
   const errors: Partial<SendFormErrors> = {};
@@ -159,7 +163,6 @@ export function formValidation(
       ? formState.amount
       : convertFiatToBtc(formState.amount, rates);
 
-  logger.log('starting validation');
   if (
     formState.to &&
     ((context.scope === Caip2ChainId.Mainnet &&
@@ -259,5 +262,5 @@ export function convertBtcToFiat(amount: string, rate: string): string {
 export function convertFiatToBtc(amount: string, rate: string): string {
   const amountBN = new BigNumber(amount);
   const rateBN = new BigNumber(rate);
-  return amountBN.dividedBy(rateBN).toFixed(8);
+  return amountBN.dividedBy(rateBN).toFixed(8); // 8 is the number of decimals for btc
 }

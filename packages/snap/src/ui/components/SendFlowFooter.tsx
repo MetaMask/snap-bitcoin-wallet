@@ -1,4 +1,5 @@
 import { Button, Footer, type SnapComponent } from '@metamask/snaps-sdk/jsx';
+import { SendFormNames } from './SendForm';
 
 /**
  * The props for the {@link SendFlowFooter} component.
@@ -18,7 +19,8 @@ export const SendFlowFooter: SnapComponent<SendFlowFooterProps> = ({
   disabled,
 }: SendFlowFooterProps) => (
   <Footer>
-    <Button name="review" disabled={disabled}>
+    <Button name={SendFormNames.Cancel}>Cancel</Button>
+    <Button name={SendFormNames.Review} disabled={disabled}>
       Review
     </Button>
   </Footer>

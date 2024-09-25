@@ -29,6 +29,7 @@ import type {
   Wallet,
 } from './stateManagement';
 import {
+  AssetType,
   containsCompleteSendManyRequest,
   convertBtcToFiat,
   generateSendFlow,
@@ -199,7 +200,7 @@ export class BtcKeyring implements Keyring {
             account: walletData.account.id,
             scope,
             transaction: params as SendManyParams,
-            selectedCurrency: 'BTC',
+            selectedCurrency: AssetType.BTC,
             status: 'draft',
             interfaceId: '',
             rates: '',
@@ -247,7 +248,7 @@ export class BtcKeyring implements Keyring {
 
           await updateSendFlow({
             interfaceId: sendFlowRequest.interfaceId,
-            selectedCurrency: 'BTC',
+            selectedCurrency: AssetType.BTC,
             account: {
               ...walletData.account,
             },

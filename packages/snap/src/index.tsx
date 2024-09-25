@@ -29,6 +29,7 @@ import { ReviewTransaction, SendFlow } from './ui/components';
 import { SendForm, SendFormNames } from './ui/components/SendForm';
 import type { SendFlowContext, SendFormState } from './ui/types';
 import {
+  AssetType,
   convertBtcToFiat,
   convertFiatToBtc,
   formValidation,
@@ -51,8 +52,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   origin,
   request,
 }): Promise<Json> => {
-  logger.logLevel = 6; // parseInt(Config.logLevel, 10);
-  console.log('onRpcRequest', request, origin);
+  logger.logLevel = 6; //parseInt(Config.logLevel, 10);
 
   try {
     const { method } = request;
@@ -157,11 +157,13 @@ export const onUserInput: OnUserInputHandler = async ({
   const { fees } = request;
   console.log('fees', fees);
 
+  const canSubmit = Object.values(formErrors).every((error) => !error);
+
   if (event.type === UserInputEventType.InputChangeEvent) {
     switch (event.name) {
       case SendFormNames.Amount:
       case SendFormNames.To:
-      case 'accountSelector': {
+      case SendFormNames.AccountSelector: {
         // skip call if there is an error with the amount.
         if (
           event?.name === SendFormNames.Amount &&
@@ -182,13 +184,15 @@ export const onUserInput: OnUserInputHandler = async ({
             },
             amount: sendForm.amount, // no need to convert because denomination is the same
             rates: request.rates,
+            displayClearIcon: Boolean(sendForm.to) && sendForm.to !== '',
+            canSubmit,
           });
 
           try {
             const estimates = await estimateFee({
               account: accounts[0].id,
               amount:
-                request.selectedCurrency === 'BTC'
+                request.selectedCurrency === AssetType.BTC
                   ? sendForm.amount
                   : convertFiatToBtc(sendForm.amount, request.rates),
             });
@@ -204,26 +208,20 @@ export const onUserInput: OnUserInputHandler = async ({
           }
         }
 
-        await snap.request({
-          method: 'snap_updateInterface',
-          params: {
-            id,
-            ui: (
-              <SendFlow
-                account={accounts[0]}
-                selectedCurrency={selectedCurrency}
-                fees={fees}
-                displayClearIcon={Boolean(sendForm.to) && sendForm.to !== ''}
-                errors={formErrors}
-                isLoading={false}
-                balance={request.balance}
-                amount={sendForm.amount}
-                rates={request.rates}
-              />
-            ),
-          },
+        await updateSendFlow({
+          interfaceId: id,
+          scope: request.scope,
+          account: accounts[0],
+          selectedCurrency,
+          fees,
+          displayClearIcon: Boolean(sendForm.to) && sendForm.to !== '',
+          errors: formErrors,
+          isLoading: false,
+          balance: request.balance,
+          amount: sendForm.amount,
+          rates: request.rates,
+          canSubmit,
         });
-
         break;
       }
       default:
@@ -232,36 +230,39 @@ export const onUserInput: OnUserInputHandler = async ({
   } else if (event.type === UserInputEventType.ButtonClickEvent) {
     switch (event.name) {
       case SendFormNames.Clear:
-        await snap.request({
-          method: 'snap_updateInterface',
-          params: {
-            id,
-            ui: (
-              <SendFlow
-                account={accounts[0]}
-                selectedCurrency={selectedCurrency}
-                fees={fees}
-                flushToAddress={true}
-                displayClearIcon={false}
-                errors={formErrors}
-                isLoading={false}
-                balance={request.balance}
-                amount={request.amount}
-              />
-            ),
-          },
+        await updateSendFlow({
+          interfaceId: id,
+          scope: request.scope,
+          account: accounts[0],
+          selectedCurrency,
+          fees,
+          displayClearIcon: Boolean(sendForm.to) && sendForm.to !== '',
+          flushToAddress: true,
+          errors: formErrors,
+          isLoading: false,
+          balance: request.balance,
+          amount: sendForm.amount,
+          rates: request.rates,
+          canSubmit,
         });
         break;
-      case SendFormNames.Close:
-        // TODO:
+      case SendFormNames.Close: {
+        await stateManager.upsertRequest({
+          ...request,
+          status: 'rejected',
+        });
         break;
+      }
       case SendFormNames.SwapCurrencyDisplay: {
         const updatedRequest = {
           ...request,
-          selectedCurrency: request.selectedCurrency === 'BTC' ? '$' : 'BTC',
+          selectedCurrency:
+            request.selectedCurrency === AssetType.BTC
+              ? AssetType.FIAT
+              : AssetType.BTC,
         };
         const amount =
-          request.selectedCurrency === 'BTC'
+          request.selectedCurrency === AssetType.BTC
             ? convertBtcToFiat(sendForm.amount, request.rates)
             : convertFiatToBtc(sendForm.amount, request.rates);
         await stateManager.upsertRequest(updatedRequest);
@@ -277,6 +278,9 @@ export const onUserInput: OnUserInputHandler = async ({
             fiat: request.balance.fiat,
           },
           amount,
+          rates: request.rates,
+          displayClearIcon: Boolean(sendForm.to) && sendForm.to !== '',
+          canSubmit,
         });
         break;
       }
@@ -302,5 +306,6 @@ export const onUserInput: OnUserInputHandler = async ({
       default:
         break;
     }
+  } else if (event.type === UserInputEventType.FormSubmitEvent) {
   }
 };

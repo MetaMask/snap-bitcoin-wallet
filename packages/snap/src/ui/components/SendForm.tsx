@@ -20,9 +20,11 @@ export enum SendFormNames {
   Amount = 'amount',
   To = 'to',
   SwapCurrencyDisplay = 'swap',
+  AccountSelector = 'accountSelector',
   Clear = 'clear',
   Close = 'close',
   Review = 'review',
+  Cancel = 'cancel',
 }
 
 /**
