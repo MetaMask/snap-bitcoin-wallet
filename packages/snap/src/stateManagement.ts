@@ -1,6 +1,7 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
 
 import type { EstimateFeeResponse, SendManyParams } from './rpcs';
+import type { Currency } from './ui/types';
 import { compactError, SnapStateManager } from './utils';
 
 export type Wallet = {
@@ -39,6 +40,7 @@ export type SendFlowRequest = {
     amount: string;
     fiat: string;
   };
+  fees: Currency;
 };
 
 export type SnapState = {

@@ -207,6 +207,10 @@ export class BtcKeyring implements Keyring {
               amount: '',
               fiat: '',
             },
+            fees: {
+              amount: '',
+              fiat: '',
+            },
           };
         } else {
           const asset =

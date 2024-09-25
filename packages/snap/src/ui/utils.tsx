@@ -87,6 +87,10 @@ export async function generateSendFlow({
       amount: '',
       fiat: '',
     },
+    fees: {
+      amount: '0',
+      fiat: '0',
+    },
   };
 
   return sendFlowRequest;

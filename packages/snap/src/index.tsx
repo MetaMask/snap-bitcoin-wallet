@@ -124,12 +124,7 @@ export const onUserInput: OnUserInputHandler = async ({
   event,
   context,
 }) => {
-  const {
-    selectedCurrency,
-    fees: previousFees,
-    accounts,
-    scope,
-  } = context as SendFlowContext;
+  const { selectedCurrency, accounts, scope } = context as SendFlowContext;
 
   const state = await snap.request({
     method: 'snap_getInterfaceState',
@@ -159,7 +154,8 @@ export const onUserInput: OnUserInputHandler = async ({
 
   logger.log('formErrors', formErrors);
 
-  let fees = previousFees;
+  let fees = request.fees;
+  console.log('fees', fees);
 
   if (event.type === UserInputEventType.InputChangeEvent) {
     switch (event.name) {
@@ -199,6 +195,10 @@ export const onUserInput: OnUserInputHandler = async ({
             // TODO: fiat conversion
             fees.amount = estimates.fee.amount;
             fees.fiat = convertBtcToFiat(estimates.fee.amount, request.rates);
+            await stateManager.upsertRequest({
+              ...request,
+              fees,
+            });
           } catch (feeError) {
             formErrors.fees = 'Error fetching fees';
           }
@@ -270,7 +270,7 @@ export const onUserInput: OnUserInputHandler = async ({
           fees,
           account: accounts[0],
           selectedCurrency: updatedRequest.selectedCurrency,
-          isLoading: true,
+          isLoading: false,
           scope,
           balance: {
             amount: request.balance.amount,
