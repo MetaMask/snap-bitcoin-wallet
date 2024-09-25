@@ -1,6 +1,6 @@
 import type { Network } from 'bitcoinjs-lib';
 import type { Infer } from 'superstruct';
-import { array, number, object, record, string } from 'superstruct';
+import { array, number, object, string } from 'superstruct';
 
 export type QuickNodeClientOptions = {
   network: Network;
