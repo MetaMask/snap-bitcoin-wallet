@@ -32,8 +32,6 @@ import {
 } from './quicknode.types';
 
 export class QuickNodeClient implements IDataClient {
-  protected readonly _confirmationThreshold = 6;
-
   protected readonly _options: QuickNodeClientOptions;
 
   protected readonly _priorityMap: Record<FeeRate, number>;
@@ -273,7 +271,7 @@ export class QuickNodeClient implements IDataClient {
     // reference: https://www.bitcoin.com/get-started/what-is-a-confirmation/#:~:text=Different%20cryptocurrencies%20require%20different%20numbers,secure%20after%20around%2030%20confirmations.
     return {
       status:
-        response.result.confirmations >= this._confirmationThreshold
+        response.result.confirmations >= Config.defaultConfirmationThreshold
           ? TransactionStatus.Confirmed
           : TransactionStatus.Pending,
     };

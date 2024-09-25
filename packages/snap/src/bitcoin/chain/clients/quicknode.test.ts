@@ -350,7 +350,10 @@ describe('QuickNodeClient', () => {
     const txid =
       '1cd985fc26a9b27d0b574739b908d5fe78e2297b24323a7f8c04526648dc9c08';
 
-    it.each([6, 7])(
+    it.each([
+      Config.defaultConfirmationThreshold,
+      Config.defaultConfirmationThreshold + 1,
+    ])(
       "returns `confirmed` if the transaction's confirmation number is $s",
       async (confirmations: number) => {
         const { fetchSpy } = createMockFetch();
@@ -374,12 +377,12 @@ describe('QuickNodeClient', () => {
       },
     );
 
-    it("returns `pending` if the transaction's confirmation number is < 6", async () => {
+    it(`returns 'pending' if the transaction's confirmation number is < ${Config.defaultConfirmationThreshold}`, async () => {
       const { fetchSpy } = createMockFetch();
 
       const mockResponse = generateQuickNodeGetRawTransactionResp({
         txid,
-        confirmations: 1,
+        confirmations: Config.defaultConfirmationThreshold - 1,
       });
 
       mockApiSuccessResponse({
