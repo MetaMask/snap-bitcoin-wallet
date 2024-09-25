@@ -13,8 +13,8 @@ import {
 import btcIcon from '../images/btc.svg';
 import jazzicon3 from '../images/jazzicon3.svg';
 import type { Currency, SendFormErrors } from '../types';
+import type { AccountWithBalance } from '../utils';
 import { AccountSelector } from './AccountSelector';
-import { AccountWithBalance } from '../utils';
 
 export enum SendFormNames {
   Amount = 'amount',
@@ -22,6 +22,7 @@ export enum SendFormNames {
   SwapCurrencyDisplay = 'swap',
   Clear = 'clear',
   Close = 'close',
+  Review = 'review',
 }
 
 /**
