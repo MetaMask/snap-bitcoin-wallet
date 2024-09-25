@@ -1,0 +1,71 @@
+{
+  "getrawtransactionResp": {
+    "result": {
+      "txid": "xxxxx",
+      "hash": "xxxxx",
+      "version": 1,
+      "size": 246,
+      "vsize": 165,
+      "weight": 657,
+      "locktime": 0,
+      "vin": [
+        {
+          "txid": "xxxxx",
+          "vout": 1,
+          "txinwitness": [
+            "304402207b3f3e6d5bf8fe781d226af2043566ba5b5dc375940c1eee56c175621a739f8b02200e6e57f1b4a401f4abea080f07e460ca613c9cc980c81699bbb15c69388dda3001",
+            "03927dd425ca1e744ac605aa60a62afd22b6e7e3b1c4f962d7acd6cb00e422627d"
+          ],
+          "sequence": 4294967295
+        }
+      ],
+      "vout": [
+        {
+          "value": 0.00105089,
+          "n": 0
+        }
+      ],
+      "hex": "xxxxx",
+      "blockhash": "xxxxx",
+      "confirmations": 185569,
+      "time": 1616673563,
+      "blocktime": 1616673563
+    },
+    "error": null,
+    "id": null
+  },
+  "estimatesmartfeeResp": {
+    "result": {
+      "feerate": 0.00004213,
+      "blocks": 2
+    },
+    "error": null,
+    "id": null
+  },
+  "bb_getaddressResp": {
+    "id": null,
+    "result": {
+      "address": "xxxxxx",
+      "balance": "1",
+      "totalReceived": "100000",
+      "totalSent": "100000",
+      "unconfirmedBalance": "0",
+      "unconfirmedTxs": 0,
+      "txs": 100
+    },
+    "jsonrpc": "2.0"
+  },
+  "bb_getutxosResp": {
+    "id": null,
+    "result": [
+      {
+        "txid": "xxxxxx",
+        "vout": 1,
+        "value": "1",
+        "height": 100000,
+        "confirmations": 1000
+      }
+    ],
+    "jsonrpc": "2.0"
+  }
+}

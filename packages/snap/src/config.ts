@@ -21,6 +21,7 @@ export type SnapConfig = {
     [network in string]: string;
   };
   logLevel: string;
+  defaultConfirmationThreshold: number;
 };
 
 export const Config: SnapConfig = {
@@ -49,4 +50,6 @@ export const Config: SnapConfig = {
   },
   // eslint-disable-next-line no-restricted-globals
   logLevel: process.env.LOG_LEVEL ?? '0',
+  // the number of confirmations required for a transaction to be considered confirmed
+  defaultConfirmationThreshold: 6,
 };
