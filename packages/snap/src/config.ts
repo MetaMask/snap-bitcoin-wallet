@@ -1,12 +1,13 @@
-import type { Json } from '@metamask/snaps-sdk';
-
 import { FeeRate } from './bitcoin/chain/constants';
 import { Caip2ChainId, Caip2Asset } from './constants';
 
-export type SnapConfig = {
+export type SnapChainConfig = {
   onChainService: {
     dataClient: {
-      options?: Record<string, Json | undefined>;
+      options: {
+        mainnetEndpoint: string | undefined;
+        testnetEndpoint: string | undefined;
+      };
     };
   };
   wallet: {
@@ -24,7 +25,7 @@ export type SnapConfig = {
   defaultConfirmationThreshold: number;
 };
 
-export const Config: SnapConfig = {
+export const Config: SnapChainConfig = {
   onChainService: {
     dataClient: {
       options: {
