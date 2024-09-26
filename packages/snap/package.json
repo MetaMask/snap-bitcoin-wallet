@@ -30,6 +30,9 @@
     "start": "mm-snap watch",
     "test": "jest --passWithNoTests"
   },
+  "dependencies": {
+    "@metamask/jazzicon": "^2.0.0"
+  },
   "devDependencies": {
     "@babel/preset-typescript": "^7.23.3",
     "@bitcoinerlab/secp256k1": "1.1.1",
@@ -43,7 +46,7 @@
     "@metamask/keyring-api": "^8.1.1",
     "@metamask/snaps-cli": "^6.3.3",
     "@metamask/snaps-jest": "^8.4.0",
-    "@metamask/snaps-sdk": "^6.5.1",
+    "@metamask/snaps-sdk": "6.6.0",
     "@metamask/utils": "^9.1.0",
     "@typescript-eslint/eslint-plugin": "^5.42.1",
     "@typescript-eslint/parser": "^5.42.1",
@@ -77,8 +80,5 @@
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
-  },
-  "dependencies": {
-    "@metamask/jazzicon": "^2.0.0"
   }
 }
