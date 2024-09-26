@@ -1,5 +1,5 @@
 import type { SnapComponent } from '@metamask/snaps-sdk/jsx';
-import { Box, Button, Heading, Icon } from '@metamask/snaps-sdk/jsx';
+import { Box, Button, Heading, Icon, Text } from '@metamask/snaps-sdk/jsx';
 import { SendFormNames } from './SendForm';
 
 export type SendFlowHeaderProps = {
@@ -21,5 +21,6 @@ export const SendFlowHeader: SnapComponent<SendFlowHeaderProps> = ({
       <Icon name="arrow-left" color="primary" size="md" />
     </Button>
     <Heading>{heading}</Heading>
+    <Text> </Text>
   </Box>
 );
