@@ -3,12 +3,12 @@ import type { SnapComponent } from '@metamask/snaps-sdk/jsx';
 import { Box, Container } from '@metamask/snaps-sdk/jsx';
 import { BigNumber } from 'bignumber.js';
 
+import type { SendFlowParams } from '../../stateManagement';
 import type { Currency, SendFormErrors } from '../types';
 import { SendFlowFooter } from './SendFlowFooter';
 import { SendFlowHeader } from './SendFlowHeader';
 import { SendForm } from './SendForm';
 import { TransactionSummary } from './TransactionSummary';
-import { SendFlowParams } from '../../stateManagement';
 
 /**
  * The props for the {@link SendFlow} component.
@@ -26,6 +26,7 @@ export type SendFlowProps = {
   account: KeyringAccount;
   displayClearIcon: boolean;
   flushToAddress?: boolean;
+  switchValue?: boolean;
   sendFlowParams: SendFlowParams;
 };
 
@@ -37,13 +38,13 @@ export type SendFlowProps = {
 /**
  * SendFlow component for handling the send transaction flow in the application.
  *
- * @param {Object} props - The properties object.
- * @param {Account} props.account - The account information for the transaction.
- * @param {boolean} props.displayClearIcon - Flag to display the clear icon.
- * @param {boolean} props.flushToAddress - Flag to flush to address.
- * @param {SendFlowParams} props.sendFlowParams - Additional parameters for the send flow.
- *
- * @returns {JSX.Element} The rendered SendFlow component.
+ * @param props - The properties object.
+ * @param props.account - The account information for the transaction.
+ * @param props.displayClearIcon - Flag to display the clear icon.
+ * @param props.flushToAddress - Flag to flush to address.
+ * @param props.switchValue - Flag to switch the amount value.
+ * @param props.sendFlowParams - Additional parameters for the send flow.
+ * @returns The rendered SendFlow component.
  */
 export const SendFlow: SnapComponent<SendFlowProps> = ({
   account,

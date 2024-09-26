@@ -6,9 +6,9 @@ import { estimateFee } from '../../rpcs';
 import type { KeyringStateManager } from '../../stateManagement';
 import { type SendFlowRequest } from '../../stateManagement';
 import { logger } from '../../utils';
+import { ReviewTransaction } from '../components';
 import { SendFormNames } from '../components/SendForm';
 import type { SendFlowContext, SendFormErrors, SendFormState } from '../types';
-import { ReviewTransaction } from '../components';
 import {
   AssetType,
   convertBtcToFiat,
@@ -244,6 +244,7 @@ export class SendManyController {
           request: this.request,
           flushToAddress: false,
           displayClearIcon: true,
+          switchValue: true,
         });
       }
       case SendFormNames.Review: {

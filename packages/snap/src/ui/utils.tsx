@@ -36,6 +36,7 @@ export type UpdateSendFlowParams = {
   request: SendFlowRequest;
   flushToAddress: boolean;
   displayClearIcon: boolean;
+  switchValue?: boolean;
 };
 
 /**
@@ -93,11 +94,16 @@ export async function generateSendFlow({
  * @param options0.fees
  * @param options0.balance
  * @param options0.amount
+ * @param options0.request
+ * @param options0.flushToAddress
+ * @param options0.displayClearIcon
+ * @param options0.switchValue
  */
 export async function updateSendFlow({
   request,
   flushToAddress,
   displayClearIcon,
+  switchValue,
 }: UpdateSendFlowParams) {
   await snap.request({
     method: 'snap_updateInterface',
@@ -109,6 +115,7 @@ export async function updateSendFlow({
           sendFlowParams={request}
           flushToAddress={flushToAddress}
           displayClearIcon={displayClearIcon}
+          switchValue={switchValue}
         />
       ),
     },
@@ -198,6 +205,7 @@ export function containsCompleteSendManyRequest(
 /**
  *
  * @param interfaceId
+ * @param request
  * @param scope
  */
 export async function sendStateToSendManyParams(

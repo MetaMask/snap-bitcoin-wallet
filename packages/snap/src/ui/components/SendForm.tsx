@@ -10,12 +10,13 @@ import {
   type SnapComponent,
 } from '@metamask/snaps-sdk/jsx';
 
+import type { SendFlowParams } from '../../stateManagement';
 import btcIcon from '../images/btc.svg';
 import jazzicon3 from '../images/jazzicon3.svg';
 import type { Currency, SendFormErrors } from '../types';
-import { AccountWithBalance, AssetType } from '../utils';
+import type { AccountWithBalance } from '../utils';
+import { AssetType } from '../utils';
 import { AccountSelector } from './AccountSelector';
-import { SendFlowParams } from '../../stateManagement';
 
 export enum SendFormNames {
   Amount = 'amount',
@@ -46,6 +47,7 @@ export type SendFormProps = {
   balance: SendFlowParams['balance'];
   amount: SendFlowParams['amount'];
   selectedCurrency: SendFlowParams['selectedCurrency'];
+  switchValue?: boolean;
   recipient: SendFlowParams['recipient'];
   displayClearIcon: boolean;
   flushToAddress?: boolean;
@@ -63,6 +65,8 @@ export type SendFormProps = {
  * @param props.selectedCurrency - The selected currency to display.
  * @param props.displayClearIcon - Whether to display the clear icon or not.
  * @param props.flushToAddress - Whether to flush the address field or not.
+ * @param props.recipient
+ * @param props.switchValue
  * @returns The SendForm component.
  */
 export const SendForm: SnapComponent<SendFormProps> = ({
@@ -74,8 +78,12 @@ export const SendForm: SnapComponent<SendFormProps> = ({
   balance,
   amount,
   recipient,
+  switchValue,
 }) => {
   const showRecipientError = recipient.address.length > 0 && !recipient.error;
+
+  const valueToDisplay =
+    selectedCurrency === AssetType.BTC ? amount.amount : amount.fiat;
 
   console.log('amount', amount);
   return (
@@ -93,9 +101,7 @@ export const SendForm: SnapComponent<SendFormProps> = ({
           name={SendFormNames.Amount}
           type="number"
           placeholder="Enter amount to send"
-          value={
-            selectedCurrency === AssetType.BTC ? amount.amount : amount.fiat
-          }
+          value={switchValue ? valueToDisplay : undefined}
         />
         <Box direction="horizontal" center>
           <Text color="alternative">{selectedCurrency}</Text>
