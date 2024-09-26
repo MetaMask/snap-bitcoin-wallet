@@ -12,7 +12,6 @@ import {
 
 import btcIcon from '../images/btc.svg';
 import jazzicon3 from '../images/jazzicon3.svg';
-import type { Currency, SendFormErrors } from '../types';
 import { AccountWithBalance, AssetType } from '../utils';
 import { AccountSelector } from './AccountSelector';
 import { SendFlowParams } from '../../stateManagement';
@@ -49,6 +48,8 @@ export type SendFormProps = {
   recipient: SendFlowParams['recipient'];
   displayClearIcon: boolean;
   flushToAddress?: boolean;
+  currencySwitched: boolean;
+  backEventTriggered: boolean;
 };
 
 /**
@@ -74,10 +75,24 @@ export const SendForm: SnapComponent<SendFormProps> = ({
   balance,
   amount,
   recipient,
+  currencySwitched,
+  backEventTriggered,
 }) => {
   const showRecipientError = recipient.address.length > 0 && !recipient.error;
+  const valueToDisplay =
+    currencySwitched || backEventTriggered
+      ? selectedCurrency === AssetType.BTC
+        ? amount.amount
+        : amount.fiat
+      : undefined;
 
-  console.log('amount', amount);
+  let addressToDisplay: string | undefined = undefined;
+  if (backEventTriggered) {
+    addressToDisplay = recipient.address;
+  } else if (flushToAddress) {
+    addressToDisplay = '';
+  }
+
   return (
     <Form name="sendForm">
       <AccountSelector
@@ -93,9 +108,7 @@ export const SendForm: SnapComponent<SendFormProps> = ({
           name={SendFormNames.Amount}
           type="number"
           placeholder="Enter amount to send"
-          value={
-            selectedCurrency === AssetType.BTC ? amount.amount : amount.fiat
-          }
+          value={valueToDisplay}
         />
         <Box direction="horizontal" center>
           <Text color="alternative">{selectedCurrency}</Text>
@@ -111,7 +124,7 @@ export const SendForm: SnapComponent<SendFormProps> = ({
         <Input
           name={SendFormNames.To}
           placeholder="Enter receiving address"
-          value={flushToAddress ? '' : undefined}
+          value={addressToDisplay}
         />
         {displayClearIcon && (
           <Box>

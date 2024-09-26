@@ -36,6 +36,8 @@ export type UpdateSendFlowParams = {
   request: SendFlowRequest;
   flushToAddress: boolean;
   displayClearIcon: boolean;
+  currencySwitched?: boolean;
+  backEventTriggered?: boolean;
 };
 
 /**
@@ -98,6 +100,8 @@ export async function updateSendFlow({
   request,
   flushToAddress,
   displayClearIcon,
+  currencySwitched = false,
+  backEventTriggered = false,
 }: UpdateSendFlowParams) {
   await snap.request({
     method: 'snap_updateInterface',
@@ -109,6 +113,8 @@ export async function updateSendFlow({
           sendFlowParams={request}
           flushToAddress={flushToAddress}
           displayClearIcon={displayClearIcon}
+          currencySwitched={currencySwitched}
+          backEventTriggered={backEventTriggered}
         />
       ),
     },
@@ -161,7 +167,6 @@ export function formValidation(
     errors.amount = 'Amount must be greater than 0';
   }
 
-  // TODO: get rates
   if (
     formState.amount &&
     new BigNumber(cryptoAmount).gt(new BigNumber(balance.amount))

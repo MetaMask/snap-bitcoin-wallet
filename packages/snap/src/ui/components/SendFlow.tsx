@@ -27,6 +27,8 @@ export type SendFlowProps = {
   displayClearIcon: boolean;
   flushToAddress?: boolean;
   sendFlowParams: SendFlowParams;
+  currencySwitched?: boolean;
+  backEventTriggered?: boolean;
 };
 
 /**
@@ -50,6 +52,8 @@ export const SendFlow: SnapComponent<SendFlowProps> = ({
   displayClearIcon,
   flushToAddress,
   sendFlowParams,
+  currencySwitched = false,
+  backEventTriggered = false,
 }) => {
   const disabledReview =
     !sendFlowParams.amount.valid ||
@@ -65,6 +69,8 @@ export const SendFlow: SnapComponent<SendFlowProps> = ({
           flushToAddress={flushToAddress}
           displayClearIcon={displayClearIcon}
           {...sendFlowParams}
+          currencySwitched={currencySwitched}
+          backEventTriggered={backEventTriggered}
         />
         {new BigNumber(sendFlowParams.amount.amount).gt(new BigNumber(0)) ? (
           <TransactionSummary

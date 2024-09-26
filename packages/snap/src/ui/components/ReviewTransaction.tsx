@@ -10,9 +10,11 @@ import {
   Section,
   Text,
   Value,
+  Image,
 } from '@metamask/snaps-sdk/jsx';
 import type { CaipAccountId } from '@metamask/utils';
 
+import btcIcon from '../images/btc.svg';
 import { SendFlowHeader } from './SendFlowHeader';
 import { SendFormNames } from './SendForm';
 import { SendFlowRequest } from '../../stateManagement';
@@ -37,8 +39,11 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
       <Box>
         <SendFlowHeader heading="Review" />
         <Box alignment="center" center>
-          <Heading>{`${total.amount} BTC`}</Heading>
-          <Text color="muted">{`$${total.fiat.toString()}`}</Text>
+          <Box>
+            <Image src={btcIcon} />
+          </Box>
+          <Heading>{`Sending ${total.amount} BTC`}</Heading>
+          <Text color="muted">Review the transaction before proceeding</Text>
         </Box>
         <Section>
           <Row label="From">

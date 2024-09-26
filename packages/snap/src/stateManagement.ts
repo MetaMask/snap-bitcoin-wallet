@@ -55,7 +55,23 @@ export type SendFlowParams = {
 
 export type TransactionState = {
   transaction: Omit<SendManyParams, 'scope'>;
-  status: 'draft' | 'signed' | 'confirmed' | 'pending' | 'failure' | 'rejected';
+  /* The status of the transaction 
+    - draft: The transaction is being created and edited
+    - review: The transaction is in a review state that is ready to be confirmed by the user to sign
+    - signed: The transaction is signed and ready to be sent
+    - rejected: The transaction is rejected by the user
+    - confirmed: The transaction is confirmed by the network
+    - pending: The transaction is pending confirmation
+    - failure: The transaction failed
+  */
+  status:
+    | 'draft'
+    | 'review'
+    | 'signed'
+    | 'rejected'
+    | 'confirmed'
+    | 'pending'
+    | 'failure';
   txId?: string;
 };
 

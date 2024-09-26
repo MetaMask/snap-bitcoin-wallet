@@ -204,6 +204,7 @@ export class BtcKeyring implements Keyring {
             interfaceId: '',
             status: 'draft',
           };
+          // TODO: validate the request and show errors if any.
         } else {
           const asset =
             scope === Caip2ChainId.Mainnet ? Caip2Asset.Btc : Caip2Asset.TBtc;

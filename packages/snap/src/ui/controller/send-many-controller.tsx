@@ -119,7 +119,7 @@ export class SendManyController {
       case SendFormNames.Amount: {
         if (
           !formErrors.amount &&
-          new BigNumber(formState.amount).gte(new BigNumber(0))
+          new BigNumber(formState.amount).gt(new BigNumber(0))
         ) {
           this.request.amount = {
             amount:
@@ -190,6 +190,12 @@ export class SendManyController {
           };
           await this.persistRequest(this.request);
         }
+        return await updateSendFlow({
+          request: this.request,
+          flushToAddress: false,
+          displayClearIcon: true,
+          currencySwitched: true,
+        });
         break;
       }
       default:
@@ -211,6 +217,29 @@ export class SendManyController {
     formState: SendFormState,
   ) {
     switch (eventName) {
+      case SendFormNames.HeaderBack: {
+        if (this.request.status === 'review') {
+          this.request.status = 'draft';
+          await this.persistRequest(this.request);
+          return await updateSendFlow({
+            request: this.request,
+            flushToAddress: false,
+            displayClearIcon: true,
+            backEventTriggered: true,
+          });
+        } else if (this.request.status === 'draft') {
+          this.request.status = 'rejected';
+          await this.persistRequest(this.request);
+          return await snap.request({
+            method: 'snap_resolveInterface',
+            params: {
+              id: this.interfaceId,
+              value: false,
+            },
+          });
+        }
+        throw new Error('Invalid state');
+      }
       case SendFormNames.Clear:
         this.request.recipient = {
           address: '',
@@ -223,6 +252,7 @@ export class SendManyController {
           flushToAddress: false,
           displayClearIcon: true,
         });
+      case SendFormNames.Cancel:
       case SendFormNames.Close: {
         this.request.status = 'rejected';
         await this.persistRequest(this.request);
@@ -247,6 +277,8 @@ export class SendManyController {
         });
       }
       case SendFormNames.Review: {
+        this.request.status = 'review';
+        await this.persistRequest(this.request);
         return await snap.request({
           method: 'snap_updateInterface',
           params: {
@@ -256,6 +288,8 @@ export class SendManyController {
         });
       }
       case SendFormNames.Send: {
+        this.request.status = 'signed';
+        await this.persistRequest(this.request);
         return await snap.request({
           method: 'snap_resolveInterface',
           params: {
