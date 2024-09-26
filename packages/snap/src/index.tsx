@@ -7,9 +7,7 @@ import {
   UnauthorizedError,
   SnapError,
   MethodNotFoundError,
-  UserInputEventType,
 } from '@metamask/snaps-sdk';
-import { BigNumber } from 'bignumber.js';
 
 import { Config } from './config';
 import { BtcKeyring } from './keyring';
@@ -26,15 +24,7 @@ import {
 } from './rpcs';
 import { KeyringStateManager } from './stateManagement';
 import type { SendFlowContext, SendFormState } from './ui/types';
-import {
-  AssetType,
-  convertBtcToFiat,
-  convertFiatToBtc,
-  formValidation,
-  updateSendFlow,
-} from './ui/utils';
 import { isSnapRpcError, logger } from './utils';
-import { CaipToNetworkName } from './constants';
 import {
   isSendFormEvent,
   SendManyController,
@@ -158,5 +148,4 @@ export const onUserInput: OnUserInputHandler = async ({
       state.sendForm as SendFormState,
     );
   }
-  // } else if (event.type === UserInputEventType.ButtonClickEvent) {
 };

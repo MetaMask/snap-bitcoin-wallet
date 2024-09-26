@@ -6,13 +6,13 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Caip2ChainId } from '../constants';
 import type { SendManyParams } from '../rpcs';
-import { defaultSendManyParams, SendManyParamsStruct } from '../rpcs';
+import { SendManyParamsStruct } from '../rpcs';
 import {
   generateDefaultSendFlowParams,
   generateDefaultSendFlowRequest,
   type SendFlowRequest,
 } from '../stateManagement';
-import { SendFlow, SendFlowProps } from './components';
+import { SendFlow } from './components';
 import type {
   Currency,
   SendFlowContext,
