@@ -12,26 +12,17 @@ import {
   assert,
 } from 'superstruct';
 
-import type { Transaction } from '../bitcoin/wallet';
-import {
-  type BtcAccount,
-  TxValidationError,
-  InsufficientFundsError,
-} from '../bitcoin/wallet';
+import { type BtcAccount, TxValidationError } from '../bitcoin/wallet';
 import { Factory } from '../factory';
 import {
   ScopeStruct,
   isSnapRpcError,
-  shortenAddress,
-  getExplorerUrl,
   btcToSats,
-  satsToBtc,
   validateRequest,
   validateResponse,
   logger,
   AmountStruct,
   getFeeRate,
-  alertDialog,
 } from '../utils';
 
 export const TransactionAmountStruct = refine(
@@ -120,10 +111,6 @@ export async function sendMany(
       subtractFeeFrom,
       replaceable,
     });
-
-    /*
-    Insert confirmation screen here
-    */
 
     const signedTransaction = await wallet.signTransaction(
       account.signer,

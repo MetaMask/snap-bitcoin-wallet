@@ -2,11 +2,16 @@ import type { KeyringAccount } from '@metamask/keyring-api';
 import { is } from '@metamask/superstruct';
 import { BigNumber } from 'bignumber.js';
 import validate, { Network } from 'bitcoin-address-validation';
+import { v4 as uuidv4 } from 'uuid';
 
 import { Caip2ChainId } from '../constants';
 import type { SendManyParams } from '../rpcs';
 import { defaultSendManyParams, SendManyParamsStruct } from '../rpcs';
-import type { SendFlowRequest } from '../stateManagement';
+import {
+  generateDefaultSendFlowParams,
+  generateDefaultSendFlowRequest,
+  type SendFlowRequest,
+} from '../stateManagement';
 import { SendFlow, SendFlowProps } from './components';
 import type {
   Currency,
@@ -24,13 +29,13 @@ export enum AssetType {
 
 export type GenerateSendFlowParams = {
   account: KeyringAccount;
-  fees: Currency;
   scope: string;
 };
 
-export type UpdateSendFlowParams = SendFlowProps & {
-  interfaceId: string;
-  scope: string;
+export type UpdateSendFlowParams = {
+  request: SendFlowRequest;
+  flushToAddress: boolean;
+  displayClearIcon: boolean;
 };
 
 /**
@@ -38,58 +43,41 @@ export type UpdateSendFlowParams = SendFlowProps & {
  *
  * @param params - The parameters for the send form.
  * @param params.account - The selected account.
- * @param params.fees - The fees for the transaction.
  * @param params.scope
  * @returns The interface ID.
  */
 export async function generateSendFlow({
   account,
-  fees,
   scope,
 }: GenerateSendFlowParams): Promise<SendFlowRequest> {
+  const requestId = uuidv4();
+  const sendFlowProps = generateDefaultSendFlowParams();
   const interfaceId = await snap.request({
     method: 'snap_createInterface',
     params: {
       ui: (
         <SendFlow
           account={account}
-          selectedCurrency={AssetType.BTC}
-          fees={fees}
+          sendFlowParams={{
+            ...sendFlowProps,
+          }}
           displayClearIcon={false}
-          isLoading={true}
-          balance={{ amount: '', fiat: '' }}
-          amount=""
-          rates="0"
-          canSubmit={false}
         />
       ),
       context: {
+        requestId,
         accounts: [account],
-        selectedCurrency: AssetType.BTC,
-        fees,
         scope,
       },
     },
   });
 
-  const sendFlowRequest: SendFlowRequest = {
-    id: interfaceId, // we use the same id for the interface and the request
-    account: account.id,
+  const sendFlowRequest = generateDefaultSendFlowRequest(
+    account,
     scope,
-    transaction: defaultSendManyParams(scope),
-    status: 'draft',
+    requestId,
     interfaceId,
-    selectedCurrency: AssetType.BTC,
-    rates: '',
-    balance: {
-      amount: '',
-      fiat: '',
-    },
-    fees: {
-      amount: '0',
-      fiat: '0',
-    },
-  };
+  );
 
   return sendFlowRequest;
 }
@@ -107,33 +95,20 @@ export async function generateSendFlow({
  * @param options0.amount
  */
 export async function updateSendFlow({
-  isLoading,
-  interfaceId,
-  account,
-  selectedCurrency,
+  request,
   flushToAddress,
-  fees,
-  balance,
-  amount,
-  rates,
-  canSubmit,
+  displayClearIcon,
 }: UpdateSendFlowParams) {
   await snap.request({
     method: 'snap_updateInterface',
     params: {
-      id: interfaceId,
+      id: request.interfaceId,
       ui: (
         <SendFlow
-          account={account}
-          selectedCurrency={selectedCurrency}
+          account={request.account}
+          sendFlowParams={request}
           flushToAddress={flushToAddress}
-          displayClearIcon={false}
-          isLoading={isLoading}
-          balance={balance}
-          amount={amount}
-          fees={isLoading ? { amount: '', fiat: '' } : fees}
-          rates={rates}
-          canSubmit={canSubmit}
+          displayClearIcon={displayClearIcon}
         />
       ),
     },
@@ -157,9 +132,14 @@ export function formValidation(
   selectedCurrency: AssetType,
   rates: string,
 ): SendFormErrors {
-  const errors: Partial<SendFormErrors> = {};
+  const errors: SendFormErrors = {
+    to: '',
+    amount: '',
+    total: '',
+    fees: '',
+  };
   const cryptoAmount =
-    selectedCurrency === 'BTC'
+    selectedCurrency === AssetType.BTC
       ? formState.amount
       : convertFiatToBtc(formState.amount, rates);
 
@@ -221,19 +201,12 @@ export function containsCompleteSendManyRequest(
  * @param scope
  */
 export async function sendStateToSendManyParams(
-  interfaceId: string,
+  request: SendFlowRequest,
   scope: string,
 ): Promise<SendManyParams> {
-  const acceptedSendFlowState = (
-    await snap.request({
-      method: 'snap_getInterfaceState',
-      params: { id: interfaceId },
-    })
-  ).sendForm as SendFormState;
-
   return {
     amounts: {
-      [acceptedSendFlowState.to]: acceptedSendFlowState.amount,
+      [request.recipient.address]: request.amount.amount,
     },
     comment: '',
     subtractFeeFrom: [],

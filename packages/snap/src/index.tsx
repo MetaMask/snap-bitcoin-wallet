@@ -25,8 +25,6 @@ import {
   getMaxSpendableBalance,
 } from './rpcs';
 import { KeyringStateManager } from './stateManagement';
-import { ReviewTransaction, SendFlow } from './ui/components';
-import { SendForm, SendFormNames } from './ui/components/SendForm';
 import type { SendFlowContext, SendFormState } from './ui/types';
 import {
   AssetType,
@@ -36,6 +34,11 @@ import {
   updateSendFlow,
 } from './ui/utils';
 import { isSnapRpcError, logger } from './utils';
+import { CaipToNetworkName } from './constants';
+import {
+  isSendFormEvent,
+  SendManyController,
+} from './ui/controller/send-many-controller';
 
 export const validateOrigin = (origin: string, method: string): void => {
   if (!origin) {
@@ -124,188 +127,36 @@ export const onUserInput: OnUserInputHandler = async ({
   event,
   context,
 }) => {
-  const { selectedCurrency, accounts, scope } = context as SendFlowContext;
-
+  const { requestId } = context as SendFlowContext;
   const state = await snap.request({
     method: 'snap_getInterfaceState',
     params: { id },
   });
 
   const stateManager = new KeyringStateManager();
-  const request = await stateManager.getRequest(id);
-  logger.log('onUserInput request', JSON.stringify(request, null, 4));
+  const request = await stateManager.getRequest(requestId);
 
   if (!request) {
     throw new Error('Request not found');
   }
 
+  logger.log('onUserInput request', JSON.stringify(request, null, 4));
   logger.log('onUserInput state', JSON.stringify(state, null, 4));
   logger.log('onUserInput event', JSON.stringify(event, null, 4));
 
-  const sendForm = state.sendForm as SendFormState;
-
-  const formErrors = formValidation(
-    sendForm,
-    context as SendFlowContext,
-    request.balance,
-    request.selectedCurrency,
-    request.rates,
-  );
-
-  logger.log('formErrors', formErrors);
-
-  const { fees } = request;
-  console.log('fees', fees);
-
-  const canSubmit = Object.values(formErrors).every((error) => !error);
-
-  if (event.type === UserInputEventType.InputChangeEvent) {
-    switch (event.name) {
-      case SendFormNames.Amount:
-      case SendFormNames.To:
-      case SendFormNames.AccountSelector: {
-        // skip call if there is an error with the amount.
-        if (
-          event?.name === SendFormNames.Amount &&
-          !formErrors.amount &&
-          new BigNumber(sendForm.amount).gte(new BigNumber(0))
-        ) {
-          // show loading state for fees
-          await updateSendFlow({
-            interfaceId: id,
-            fees,
-            account: accounts[0],
-            selectedCurrency: request.selectedCurrency,
-            isLoading: true,
-            scope,
-            balance: {
-              amount: request.balance.amount,
-              fiat: request.balance.fiat,
-            },
-            amount: sendForm.amount, // no need to convert because denomination is the same
-            rates: request.rates,
-            displayClearIcon: Boolean(sendForm.to) && sendForm.to !== '',
-            canSubmit,
-          });
-
-          try {
-            const estimates = await estimateFee({
-              account: accounts[0].id,
-              amount:
-                request.selectedCurrency === AssetType.BTC
-                  ? sendForm.amount
-                  : convertFiatToBtc(sendForm.amount, request.rates),
-            });
-            // TODO: fiat conversion
-            fees.amount = estimates.fee.amount;
-            fees.fiat = convertBtcToFiat(estimates.fee.amount, request.rates);
-            await stateManager.upsertRequest({
-              ...request,
-              fees,
-            });
-          } catch (feeError) {
-            formErrors.fees = 'Error fetching fees';
-          }
-        }
-
-        await updateSendFlow({
-          interfaceId: id,
-          scope: request.scope,
-          account: accounts[0],
-          selectedCurrency,
-          fees,
-          displayClearIcon: Boolean(sendForm.to) && sendForm.to !== '',
-          errors: formErrors,
-          isLoading: false,
-          balance: request.balance,
-          amount: sendForm.amount,
-          rates: request.rates,
-          canSubmit,
-        });
-        break;
-      }
-      default:
-        break;
-    }
-  } else if (event.type === UserInputEventType.ButtonClickEvent) {
-    switch (event.name) {
-      case SendFormNames.Clear:
-        await updateSendFlow({
-          interfaceId: id,
-          scope: request.scope,
-          account: accounts[0],
-          selectedCurrency,
-          fees,
-          displayClearIcon: Boolean(sendForm.to) && sendForm.to !== '',
-          flushToAddress: true,
-          errors: formErrors,
-          isLoading: false,
-          balance: request.balance,
-          amount: sendForm.amount,
-          rates: request.rates,
-          canSubmit,
-        });
-        break;
-      case SendFormNames.Close: {
-        await stateManager.upsertRequest({
-          ...request,
-          status: 'rejected',
-        });
-        break;
-      }
-      case SendFormNames.SwapCurrencyDisplay: {
-        const updatedRequest = {
-          ...request,
-          selectedCurrency:
-            request.selectedCurrency === AssetType.BTC
-              ? AssetType.FIAT
-              : AssetType.BTC,
-        };
-        const amount =
-          request.selectedCurrency === AssetType.BTC
-            ? convertBtcToFiat(sendForm.amount, request.rates)
-            : convertFiatToBtc(sendForm.amount, request.rates);
-        await stateManager.upsertRequest(updatedRequest);
-        await updateSendFlow({
-          interfaceId: id,
-          fees,
-          account: accounts[0],
-          selectedCurrency: updatedRequest.selectedCurrency,
-          isLoading: false,
-          scope,
-          balance: {
-            amount: request.balance.amount,
-            fiat: request.balance.fiat,
-          },
-          amount,
-          rates: request.rates,
-          displayClearIcon: Boolean(sendForm.to) && sendForm.to !== '',
-          canSubmit,
-        });
-        break;
-      }
-      case SendFormNames.Review:
-        await snap.request({
-          method: 'snap_updateInterface',
-          params: {
-            id,
-            ui: (
-              <ReviewTransaction
-                account={accounts[0]}
-                amount={{ amount: sendForm.amount, fiat: '0' }}
-                to={sendForm.to}
-                network={'Bitcoin mainnet'}
-                txSpeed={'30m'}
-                fees={fees}
-                total={{ amount: '0.0006', fiat: '0' }}
-              />
-            ),
-          },
-        });
-        break;
-      default:
-        break;
-    }
-  } else if (event.type === UserInputEventType.FormSubmitEvent) {
+  if (isSendFormEvent(event)) {
+    const sendManyController = new SendManyController({
+      stateManager,
+      request,
+      context: context as SendFlowContext,
+      event,
+      interfaceId: id,
+    });
+    await sendManyController.handleEvent(
+      event,
+      context as SendFlowContext,
+      state.sendForm as SendFormState,
+    );
   }
+  // } else if (event.type === UserInputEventType.ButtonClickEvent) {
 };

@@ -28,8 +28,8 @@ import type {
   SendFlowRequest,
   Wallet,
 } from './stateManagement';
+import { generateDefaultSendFlowParams } from './stateManagement';
 import {
-  AssetType,
   containsCompleteSendManyRequest,
   convertBtcToFiat,
   generateSendFlow,
@@ -197,21 +197,12 @@ export class BtcKeyring implements Keyring {
         if (containsCompleteSendManyRequest(params as SendManyParams)) {
           sendFlowRequest = {
             id: uuidv4(),
-            account: walletData.account.id,
+            account: walletData.account,
             scope,
             transaction: params as SendManyParams,
-            selectedCurrency: AssetType.BTC,
-            status: 'draft',
+            ...generateDefaultSendFlowParams(),
             interfaceId: '',
-            rates: '',
-            balance: {
-              amount: '',
-              fiat: '',
-            },
-            fees: {
-              amount: '',
-              fiat: '',
-            },
+            status: 'draft',
           };
         } else {
           const asset =
@@ -219,11 +210,10 @@ export class BtcKeyring implements Keyring {
 
           sendFlowRequest = await generateSendFlow({
             account: walletData.account,
-            fees: { amount: '0', fiat: '0' },
             scope: walletData.scope,
           });
 
-          const userResult = snap.request({
+          const sendFlowPromise = snap.request({
             method: 'snap_dialog',
             params: {
               id: sendFlowRequest.interfaceId,
@@ -247,38 +237,46 @@ export class BtcKeyring implements Keyring {
           await this._stateMgr.upsertRequest(sendFlowRequest);
 
           await updateSendFlow({
-            interfaceId: sendFlowRequest.interfaceId,
-            selectedCurrency: AssetType.BTC,
-            account: {
-              ...walletData.account,
+            request: {
+              ...sendFlowRequest,
             },
-            fees: { amount: '', fiat: '' },
-            scope: walletData.scope,
-            isLoading: true,
-            balance: sendFlowRequest.balance,
-            amount: '0',
-            rates: sendFlowRequest.rates,
+            flushToAddress: false,
+            displayClearIcon: false,
           });
 
-          if (!(await userResult)) {
+          const sendFlowResult = await sendFlowPromise;
+
+          if (!sendFlowResult) {
             sendFlowRequest.status = 'rejected';
             await this._stateMgr.upsertRequest(sendFlowRequest);
             throw new Error('User rejected the request');
           }
 
+          const updatedSendFlowRequest = await this._stateMgr.getRequest(
+            sendFlowRequest.id,
+          );
+
+          if (!updatedSendFlowRequest) {
+            throw new Error('Send flow request not found');
+          }
+
           const sendManyParams = await sendStateToSendManyParams(
-            sendFlowRequest.interfaceId,
+            updatedSendFlowRequest,
             walletData.scope,
           );
           sendFlowRequest.transaction = sendManyParams;
+          sendFlowRequest.status = 'confirmed';
         }
         await this._stateMgr.upsertRequest(sendFlowRequest);
 
-        return await sendMany(
-          account,
-          this._options.origin,
-          sendFlowRequest.transaction,
-        );
+        const tx = await sendMany(account, this._options.origin, {
+          ...sendFlowRequest.transaction,
+          scope,
+        });
+
+        sendFlowRequest.txId = tx.txId;
+        console.log('txId:', tx);
+        return tx;
       }
       default:
         throw new MethodNotFoundError() as unknown as Error;

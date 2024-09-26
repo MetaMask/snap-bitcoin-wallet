@@ -13,8 +13,9 @@ import {
 import btcIcon from '../images/btc.svg';
 import jazzicon3 from '../images/jazzicon3.svg';
 import type { Currency, SendFormErrors } from '../types';
-import type { AccountWithBalance } from '../utils';
+import { AccountWithBalance, AssetType } from '../utils';
 import { AccountSelector } from './AccountSelector';
+import { SendFlowParams } from '../../stateManagement';
 
 export enum SendFormNames {
   Amount = 'amount',
@@ -25,6 +26,8 @@ export enum SendFormNames {
   Close = 'close',
   Review = 'review',
   Cancel = 'cancel',
+  Send = 'send',
+  HeaderBack = 'headerBack',
 }
 
 /**
@@ -40,10 +43,10 @@ export enum SendFormNames {
 export type SendFormProps = {
   selectedAccount: string;
   accounts: AccountWithBalance[];
-  balance: Currency;
-  amount: string;
-  errors?: SendFormErrors;
-  selectedCurrency: 'BTC' | '$';
+  balance: SendFlowParams['balance'];
+  amount: SendFlowParams['amount'];
+  selectedCurrency: SendFlowParams['selectedCurrency'];
+  recipient: SendFlowParams['recipient'];
   displayClearIcon: boolean;
   flushToAddress?: boolean;
 };
@@ -65,13 +68,16 @@ export type SendFormProps = {
 export const SendForm: SnapComponent<SendFormProps> = ({
   selectedAccount,
   accounts,
-  errors,
   selectedCurrency,
   displayClearIcon,
   flushToAddress,
   balance,
   amount,
+  recipient,
 }) => {
+  const showRecipientError = recipient.address.length > 0 && !recipient.error;
+
+  console.log('amount', amount);
   return (
     <Form name="sendForm">
       <AccountSelector
@@ -79,7 +85,7 @@ export const SendForm: SnapComponent<SendFormProps> = ({
         accounts={accounts}
         balance={balance}
       />
-      <Field label="Send amount" error={errors?.amount}>
+      <Field label="Send amount" error={amount.error}>
         <Box>
           <Image src={btcIcon} />
         </Box>
@@ -87,7 +93,9 @@ export const SendForm: SnapComponent<SendFormProps> = ({
           name={SendFormNames.Amount}
           type="number"
           placeholder="Enter amount to send"
-          value={amount}
+          value={
+            selectedCurrency === AssetType.BTC ? amount.amount : amount.fiat
+          }
         />
         <Box direction="horizontal" center>
           <Text color="alternative">{selectedCurrency}</Text>
@@ -96,7 +104,7 @@ export const SendForm: SnapComponent<SendFormProps> = ({
           </Button>
         </Box>
       </Field>
-      <Field label="To account" error={errors?.to}>
+      <Field label="To account" error={recipient.error}>
         <Box>
           <Image src={jazzicon3} />
         </Box>
@@ -113,6 +121,7 @@ export const SendForm: SnapComponent<SendFormProps> = ({
           </Box>
         )}
       </Field>
+      {showRecipientError && <Text color="success">Valid bitcoin address</Text>}
     </Form>
   );
 };

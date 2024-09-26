@@ -17,10 +17,8 @@ import type { Currency, SendFormErrors } from '../types';
  * @property total - The total cost of the transaction.
  */
 export type TransactionSummaryProps = {
-  isLoading: boolean;
-  fees: Currency;
+  fees: Currency & { loading: boolean; error: string };
   total: Currency;
-  errors?: SendFormErrors;
 };
 
 /**
@@ -29,17 +27,13 @@ export type TransactionSummaryProps = {
  * @param props - The component props.
  * @param props.fees - The fees for the transaction.
  * @param props.total - The total cost of the transaction.
- * @param props.isLoading - Whether the transaction is loading or not.
- * @param props.errors - The form errors.
  * @returns The TransactionSummary component.
  */
 export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
-  isLoading,
   fees,
   total,
-  errors,
 }) => {
-  if (isLoading) {
+  if (fees.loading) {
     return (
       <Section>
         <Box direction="vertical" alignment="center" center>
@@ -50,11 +44,11 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
     );
   }
 
-  if (errors?.fees) {
+  if (fees.error) {
     return (
       <Section>
         <Row label="Error">
-          <Text>{errors.fees}</Text>
+          <Text>{fees.error}</Text>
         </Row>
       </Section>
     );
@@ -62,7 +56,7 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
 
   return (
     <Section>
-      <Row label="Estimated network fee">
+      <Row label="Network fee" tooltip="The estimated network fee">
         <Value
           value={`${fees.amount.toString()} BTC`}
           extra={`$${fees.fiat.toString()}`}

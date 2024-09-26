@@ -1,8 +1,12 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
 
-import type { EstimateFeeResponse, SendManyParams } from './rpcs';
+import {
+  defaultSendManyParams,
+  type EstimateFeeResponse,
+  type SendManyParams,
+} from './rpcs';
 import type { Currency } from './ui/types';
-import type { AssetType } from './ui/utils';
+import { AssetType } from './ui/utils';
 import { compactError, SnapStateManager } from './utils';
 
 export type Wallet = {
@@ -28,27 +32,92 @@ export type Transaction = SendManyParams & {
   total: string;
 };
 
-export type SendFlowRequest = {
+export type BaseRequestState = {
   id: string;
   interfaceId: string;
-  account: string;
+  account: KeyringAccount;
   scope: string;
-  transaction: SendManyParams;
-  status: 'draft' | 'confirmed' | 'pending' | 'failure' | 'rejected';
-  selectedCurrency: AssetType;
-  rates: string;
-  balance: {
-    amount: string;
-    fiat: string;
-  };
-  fees: Currency;
 };
+
+export type SendFlowParams = {
+  selectedCurrency: AssetType;
+  recipient: {
+    address: string;
+    error: string;
+    valid: boolean;
+  };
+  fees: Currency & { loading: boolean; error: string };
+  amount: Currency & { error: string; valid: boolean };
+  rates: string;
+  balance: Currency; // to be removed once metadata is available
+  total: Currency;
+};
+
+export type TransactionState = {
+  transaction: Omit<SendManyParams, 'scope'>;
+  status: 'draft' | 'signed' | 'confirmed' | 'pending' | 'failure' | 'rejected';
+  txId?: string;
+};
+
+export type SendFlowRequest = BaseRequestState &
+  SendFlowParams &
+  TransactionState;
 
 export type SnapState = {
   walletIds: string[];
   wallets: Wallets;
   requests: {
     [id: string]: SendFlowRequest;
+  };
+};
+
+export const generateDefaultSendFlowParams = (): SendFlowParams => {
+  return {
+    selectedCurrency: AssetType.BTC,
+    recipient: {
+      address: '',
+      error: '',
+      valid: false,
+    },
+    fees: {
+      amount: '',
+      fiat: '',
+      loading: false,
+      error: '',
+    },
+    amount: {
+      amount: '',
+      fiat: '',
+      error: '',
+      valid: false,
+    },
+    rates: '',
+    balance: {
+      amount: '',
+      fiat: '',
+    },
+    total: {
+      amount: '',
+      fiat: '',
+    },
+  };
+};
+
+export const generateDefaultSendFlowRequest = (
+  account: KeyringAccount,
+  scope: string,
+  requestId: string,
+  interfaceId: string,
+): SendFlowRequest => {
+  return {
+    id: requestId,
+    interfaceId,
+    account,
+    scope,
+    transaction: defaultSendManyParams(scope),
+    status: 'draft',
+    // Send flow params
+    ...generateDefaultSendFlowParams(),
   };
 };
 

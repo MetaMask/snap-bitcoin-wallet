@@ -8,7 +8,7 @@ import { SendFlowFooter } from './SendFlowFooter';
 import { SendFlowHeader } from './SendFlowHeader';
 import { SendForm } from './SendForm';
 import { TransactionSummary } from './TransactionSummary';
-import { convertBtcToFiat } from '../utils';
+import { SendFlowParams } from '../../stateManagement';
 
 /**
  * The props for the {@link SendFlow} component.
@@ -24,53 +24,37 @@ import { convertBtcToFiat } from '../utils';
  */
 export type SendFlowProps = {
   account: KeyringAccount;
-  balance: Currency;
-  amount: string;
-  fees: Currency;
-  rates: string;
-  selectedCurrency: 'BTC' | '$';
   displayClearIcon: boolean;
   flushToAddress?: boolean;
-  errors?: SendFormErrors;
-  isLoading: boolean;
-  canSubmit: boolean;
+  sendFlowParams: SendFlowParams;
 };
 
 /**
  * A send flow component, which shows the user a form to send funds to another.
  *
- * @param props - The component props.
- * @param props.account - The selected account.
- * @param props.balance - The balance of the account.
- * @param props.amount - The amount of the transaction from formState.
- * @param props.selectedCurrency - The selected currency to display.
- * @param props.rates - The rates for the selected currency.
- * @param props.errors - The form errors.
- * @param props.fees - The fees for the transaction.
- * @param props.displayClearIcon - Whether to display the clear icon or not.
- * @param props.flushToAddress - Whether to flush the address field or not.
- * @param props.isLoading - Whether the transaction is loading or not.
- * @param props.canSubmit - Whether the form can be submitted or not.
  * @returns The SendFlow component.
+ */
+/**
+ * SendFlow component for handling the send transaction flow in the application.
+ *
+ * @param {Object} props - The properties object.
+ * @param {Account} props.account - The account information for the transaction.
+ * @param {boolean} props.displayClearIcon - Flag to display the clear icon.
+ * @param {boolean} props.flushToAddress - Flag to flush to address.
+ * @param {SendFlowParams} props.sendFlowParams - Additional parameters for the send flow.
+ *
+ * @returns {JSX.Element} The rendered SendFlow component.
  */
 export const SendFlow: SnapComponent<SendFlowProps> = ({
   account,
-  selectedCurrency,
-  rates,
-  fees,
   displayClearIcon,
   flushToAddress,
-  errors,
-  isLoading,
-  balance,
-  amount,
-  canSubmit,
+  sendFlowParams,
 }) => {
-  const totalAmount = new BigNumber(amount ?? '0')
-    .plus(new BigNumber(fees.amount ?? '0'))
-    .toString();
-  const totalFiat = convertBtcToFiat(totalAmount, rates);
-
+  const disabledReview =
+    !sendFlowParams.amount.valid ||
+    !sendFlowParams.recipient.valid ||
+    sendFlowParams.fees.loading;
   return (
     <Container>
       <Box>
@@ -78,24 +62,18 @@ export const SendFlow: SnapComponent<SendFlowProps> = ({
         <SendForm
           selectedAccount={account.address}
           accounts={[account]}
-          selectedCurrency={selectedCurrency}
           flushToAddress={flushToAddress}
           displayClearIcon={displayClearIcon}
-          errors={errors}
-          balance={balance}
-          amount={amount}
+          {...sendFlowParams}
         />
-        <TransactionSummary
-          fees={fees}
-          total={{
-            amount: totalAmount,
-            fiat: totalFiat,
-          }}
-          isLoading={isLoading}
-          errors={errors}
-        />
+        {new BigNumber(sendFlowParams.amount.amount).gt(new BigNumber(0)) ? (
+          <TransactionSummary
+            fees={sendFlowParams.fees}
+            total={sendFlowParams.total}
+          />
+        ) : null}
       </Box>
-      <SendFlowFooter disabled={canSubmit} />
+      <SendFlowFooter disabled={disabledReview} />
     </Container>
   );
 };
