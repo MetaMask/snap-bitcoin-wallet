@@ -9,11 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.6.1]
 
-### Uncategorized
+### Added
 
-- chore: bump keyring-api to ^8.1.3 ([#253](https://github.com/MetaMask/snap-bitcoin-wallet/pull/253))
-- feat: add `QuickNode` api client ([#247](https://github.com/MetaMask/snap-bitcoin-wallet/pull/247))
-- refactor: add rpc test helper ([#222](https://github.com/MetaMask/snap-bitcoin-wallet/pull/222))
+- Add `QuickNode` API client ([#247](https://github.com/MetaMask/snap-bitcoin-wallet/pull/247))
+  - This client is not yet used, we still use Blockchair provider for the moment.
+
+### Changed
+
+- Bump `@metamask/keyring-api` from `^8.0.2` to `^8.1.3` ([#253](https://github.com/MetaMask/snap-bitcoin-wallet/pull/253))
+  - This version is now built slightly differently and is part of the [accounts monorepo](https://github.com/MetaMask/accounts).
 
 ## [0.6.0]
 
