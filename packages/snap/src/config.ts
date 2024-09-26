@@ -29,9 +29,9 @@ export const Config: SnapConfig = {
     dataClient: {
       options: {
         // eslint-disable-next-line no-restricted-globals
-        testnetEndpoint: process.env.QN_TESTNET_ENDPOINT,
+        testnetEndpoint: process.env.QUICKNODE_TESTNET_ENDPOINT,
         // eslint-disable-next-line no-restricted-globals
-        mainnetEndpoint: process.env.QN_MAINNET_ENDPOINT,
+        mainnetEndpoint: process.env.QUICKNODE_MAINNET_ENDPOINT,
       },
     },
   },
