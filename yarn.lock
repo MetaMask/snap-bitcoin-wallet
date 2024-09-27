@@ -3017,7 +3017,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/post-message-stream@npm:^8.1.0":
+"@metamask/post-message-stream@npm:^8.1.0, @metamask/post-message-stream@npm:^8.1.1":
   version: 8.1.1
   resolution: "@metamask/post-message-stream@npm:8.1.1"
   dependencies:
@@ -3186,21 +3186,21 @@ __metadata:
   linkType: hard
 
 "@metamask/snaps-execution-environments@npm:^6.6.2":
-  version: 6.6.2
-  resolution: "@metamask/snaps-execution-environments@npm:6.6.2"
+  version: 6.8.0
+  resolution: "@metamask/snaps-execution-environments@npm:6.8.0"
   dependencies:
     "@metamask/json-rpc-engine": ^9.0.2
     "@metamask/object-multiplex": ^2.0.0
-    "@metamask/post-message-stream": ^8.1.0
+    "@metamask/post-message-stream": ^8.1.1
     "@metamask/providers": ^17.1.2
     "@metamask/rpc-errors": ^6.3.1
-    "@metamask/snaps-sdk": ^6.1.0
-    "@metamask/snaps-utils": ^7.8.1
+    "@metamask/snaps-sdk": ^6.6.0
+    "@metamask/snaps-utils": ^8.2.0
     "@metamask/superstruct": ^3.1.0
-    "@metamask/utils": ^9.1.0
+    "@metamask/utils": ^9.2.1
     nanoid: ^3.1.31
     readable-stream: ^3.6.2
-  checksum: 76663335a14ddcf74b2b5bd56b041a77c163a87e52e9a45a08ae2d9a32c9add3ce8381cbf08a98ba1a9c40abc098e8c4d3f32b36e313bf04be4230bf9883ea29
+  checksum: eb818041cf9d005f1b03d41e149920ac5ae42cabb4924fe21e7ca37bfc5fc5dff9e49abe5a8d14a3888cc64697da89f05a13d289241bee065d3c31076ad129d5
   languageName: node
   linkType: hard
 
@@ -3264,7 +3264,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/snaps-sdk@npm:^6.1.0, @metamask/snaps-sdk@npm:^6.2.0, @metamask/snaps-sdk@npm:^6.5.0, @metamask/snaps-sdk@npm:^6.5.1":
+"@metamask/snaps-sdk@npm:^6.2.0, @metamask/snaps-sdk@npm:^6.5.0, @metamask/snaps-sdk@npm:^6.5.1, @metamask/snaps-sdk@npm:^6.6.0":
   version: 6.6.0
   resolution: "@metamask/snaps-sdk@npm:6.6.0"
   dependencies:
@@ -3274,37 +3274,6 @@ __metadata:
     "@metamask/superstruct": ^3.1.0
     "@metamask/utils": ^9.2.1
   checksum: 5ed1681b0456cdfbb0fdaf32dd7b5f1e12ed62acaec17d462ed1d4579ac4c2de9543e4c92fed04774c5cf7864a522100d0c3560fb643e13c34f51296087abe65
-  languageName: node
-  linkType: hard
-
-"@metamask/snaps-utils@npm:^7.8.1":
-  version: 7.8.1
-  resolution: "@metamask/snaps-utils@npm:7.8.1"
-  dependencies:
-    "@babel/core": ^7.23.2
-    "@babel/types": ^7.23.0
-    "@metamask/base-controller": ^6.0.2
-    "@metamask/key-tree": ^9.1.2
-    "@metamask/permission-controller": ^11.0.0
-    "@metamask/rpc-errors": ^6.3.1
-    "@metamask/slip44": ^3.1.0
-    "@metamask/snaps-registry": ^3.2.1
-    "@metamask/snaps-sdk": ^6.1.0
-    "@metamask/superstruct": ^3.1.0
-    "@metamask/utils": ^9.1.0
-    "@noble/hashes": ^1.3.1
-    "@scure/base": ^1.1.1
-    chalk: ^4.1.2
-    cron-parser: ^4.5.0
-    fast-deep-equal: ^3.1.3
-    fast-json-stable-stringify: ^2.1.0
-    fast-xml-parser: ^4.3.4
-    marked: ^12.0.1
-    rfdc: ^1.3.0
-    semver: ^7.5.4
-    ses: ^1.1.0
-    validate-npm-package-name: ^5.0.0
-  checksum: 707c0012af870bd5793ac7cec88fd7f3d90cda4249a756cf725d7026bed3874959fb43682cfee06995a92751ca1dadc5f3eaf7ab497c94413fb790cbbc02d394
   languageName: node
   linkType: hard
 
@@ -3367,6 +3336,37 @@ __metadata:
     ses: ^1.1.0
     validate-npm-package-name: ^5.0.0
   checksum: f1562cd2f17edd0058c5ec24376478692a71b8597c7baf0af4710e2f12d7dce42aeff06813062033cbf61f721476ed79b6bdaa82adfde039cddb902115a0c96d
+  languageName: node
+  linkType: hard
+
+"@metamask/snaps-utils@npm:^8.2.0":
+  version: 8.2.0
+  resolution: "@metamask/snaps-utils@npm:8.2.0"
+  dependencies:
+    "@babel/core": ^7.23.2
+    "@babel/types": ^7.23.0
+    "@metamask/base-controller": ^6.0.2
+    "@metamask/key-tree": ^9.1.2
+    "@metamask/permission-controller": ^11.0.0
+    "@metamask/rpc-errors": ^6.3.1
+    "@metamask/slip44": ^4.0.0
+    "@metamask/snaps-registry": ^3.2.1
+    "@metamask/snaps-sdk": ^6.6.0
+    "@metamask/superstruct": ^3.1.0
+    "@metamask/utils": ^9.2.1
+    "@noble/hashes": ^1.3.1
+    "@scure/base": ^1.1.1
+    chalk: ^4.1.2
+    cron-parser: ^4.5.0
+    fast-deep-equal: ^3.1.3
+    fast-json-stable-stringify: ^2.1.0
+    fast-xml-parser: ^4.4.1
+    marked: ^12.0.1
+    rfdc: ^1.3.0
+    semver: ^7.5.4
+    ses: ^1.1.0
+    validate-npm-package-name: ^5.0.0
+  checksum: 909fd18c620e3558649fef173dd6fc7d4dfda6061f7920136ee2be8e6cac90ef23f1d1d797cf6780ae16c084b8e2ea8d6516f4704a30ece9110005dd561f283a
   languageName: node
   linkType: hard
 
@@ -10444,17 +10444,6 @@ __metadata:
   dependencies:
     punycode: ^1.3.2
   checksum: 5043d0c4a8d775ff58504d56c096563c11b113e4cb8a2668c6f824a1cd4fb3812e2fdf76537eb24a7ce4ae7def6bd9747da630c617cf2a4b6ce0c42514e4f21c
-  languageName: node
-  linkType: hard
-
-"fast-xml-parser@npm:^4.3.4":
-  version: 4.3.4
-  resolution: "fast-xml-parser@npm:4.3.4"
-  dependencies:
-    strnum: ^1.0.5
-  bin:
-    fxparser: src/cli/cli.js
-  checksum: ab88177343f6d3d971d53462db3011003a83eb8a8db704840127ddaaf27105ea90cdf7903a0f9b2e1279ccc4adfca8dfc0277b33bae6262406f10c16bd60ccf9
   languageName: node
   linkType: hard
 
