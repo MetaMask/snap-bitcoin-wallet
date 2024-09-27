@@ -123,7 +123,7 @@ export const onUserInput: OnUserInputHandler = async ({
     params: { id },
   });
 
-  const stateManager = new KeyringStateManager();
+  const stateManager = new KeyringStateManager(true);
   const request = await stateManager.getRequest(requestId);
 
   if (!request) {

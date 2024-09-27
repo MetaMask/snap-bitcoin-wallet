@@ -104,6 +104,7 @@ export class SendManyController {
     );
 
     logger.log('formErrors', formErrors);
+    console.log('');
 
     switch (eventName) {
       case SendFormNames.To: {
@@ -113,6 +114,10 @@ export class SendManyController {
           valid: !formErrors.to,
         };
         await this.persistRequest(this.request);
+        await updateSendFlow({
+          request: this.request,
+          displayClearIcon: Boolean(formState.to) && formState.to !== '',
+        });
         break;
       }
       case SendFormNames.AccountSelector: // this does nothing at the moment.
@@ -138,7 +143,6 @@ export class SendManyController {
           // show loading state for fees
           await updateSendFlow({
             request: this.request,
-            flushToAddress: false,
             displayClearIcon: Boolean(formState.to) && formState.to !== '',
           });
 
@@ -167,9 +171,9 @@ export class SendManyController {
               fiat: convertBtcToFiat(updatedTotal, this.request.rates),
             };
 
-            await this.persistRequest({
-              ...this.request,
-            });
+            // await this.persistRequest({
+            //   ...this.request,
+            // });
           } catch (feeError) {
             this.request.fees = {
               fiat: '',
@@ -177,10 +181,17 @@ export class SendManyController {
               loading: false,
               error: feeError.message,
             };
-            await this.persistRequest({
-              ...this.request,
-            });
+            // await this.persistRequest({
+            //   ...this.request,
+            // });
           }
+        } else if (
+          !formErrors.amount &&
+          new BigNumber(formState.amount).eq(
+            new BigNumber(this.request.amount.amount),
+          )
+        ) {
+          return;
         } else {
           this.request.amount = {
             amount: formState.amount,
@@ -190,25 +201,15 @@ export class SendManyController {
           };
           await this.persistRequest(this.request);
         }
-        return await updateSendFlow({
+        await updateSendFlow({
           request: this.request,
-          flushToAddress: false,
-          displayClearIcon: true,
-          currencySwitched: true,
+          displayClearIcon: Boolean(formState.to) && formState.to !== '',
         });
         break;
       }
       default:
         break;
     }
-
-    logger.log('sendmanycontroller updating send flow');
-
-    await updateSendFlow({
-      request: this.request,
-      flushToAddress: false,
-      displayClearIcon: true,
-    });
   }
 
   async handleButtonEvent(
@@ -274,6 +275,7 @@ export class SendManyController {
           request: this.request,
           flushToAddress: false,
           displayClearIcon: true,
+          currencySwitched: true,
         });
       }
       case SendFormNames.Review: {

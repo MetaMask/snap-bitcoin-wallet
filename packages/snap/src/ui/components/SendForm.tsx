@@ -10,7 +10,7 @@ import {
   type SnapComponent,
 } from '@metamask/snaps-sdk/jsx';
 
-import btcIcon from '../images/btc.svg';
+import btcIcon from '../images/btc-halo.svg';
 import jazzicon3 from '../images/jazzicon3.svg';
 import { AccountWithBalance, AssetType } from '../utils';
 import { AccountSelector } from './AccountSelector';

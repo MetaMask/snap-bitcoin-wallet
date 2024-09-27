@@ -34,8 +34,8 @@ export type GenerateSendFlowParams = {
 
 export type UpdateSendFlowParams = {
   request: SendFlowRequest;
-  flushToAddress: boolean;
   displayClearIcon: boolean;
+  flushToAddress?: boolean;
   currencySwitched?: boolean;
   backEventTriggered?: boolean;
 };
@@ -98,8 +98,8 @@ export async function generateSendFlow({
  */
 export async function updateSendFlow({
   request,
-  flushToAddress,
   displayClearIcon,
+  flushToAddress = false,
   currencySwitched = false,
   backEventTriggered = false,
 }: UpdateSendFlowParams) {
@@ -216,7 +216,7 @@ export async function sendStateToSendManyParams(
     comment: '',
     subtractFeeFrom: [],
     replaceable: true,
-    dryrun: true, // TODO: change to false
+    dryrun: false,
     scope,
   };
 }
