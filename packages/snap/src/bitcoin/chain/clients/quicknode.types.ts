@@ -78,7 +78,7 @@ export const QuickNodeGetTransactionStruct = object({
     locktime: number(),
     // eslint-disable-next-line id-denylist
     hex: string(),
-    // below params will be absent if the transaction is in memory pool
+    // The following fields will not be set if the transaction is in the memory pool
     blockhash: optional(string()),
     confirmations: optional(number()),
     time: optional(number()),
