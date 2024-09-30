@@ -13,8 +13,8 @@ const config: SnapConfig = {
   environment: {
     /* eslint-disable */
     LOG_LEVEL: process.env.LOG_LEVEL,
-    QN_MAINNET_ENDPOINT: process.env.QN_MAINNET_ENDPOINT,
-    QN_TESTNET_ENDPOINT: process.env.QN_TESTNET_ENDPOINT,
+    QUICKNODE_MAINNET_ENDPOINT: process.env.QUICKNODE_MAINNET_ENDPOINT,
+    QUICKNODE_TESTNET_ENDPOINT: process.env.QUICKNODE_TESTNET_ENDPOINT,
     /* eslint-disable */
   },
   polyfills: true,

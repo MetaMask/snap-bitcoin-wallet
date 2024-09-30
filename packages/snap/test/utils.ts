@@ -329,14 +329,14 @@ export function generateBlockChairTransactionDashboard(
 }
 
 /**
- * Generate QuickNode bb_getaddress response by addrss.
+ * Generate QuickNode bb_getaddress response by address.
  *
  * @param address - The account address.
  * @returns A QuickNode bb_getaddress response.
  */
-export function generateQNGetBalanceResp(address: string) {
+export function generateQuickNodeGetBalanceResp(address: string) {
   const template = quickNodeData.bb_getaddressResp;
-  const resp: typeof template = {
+  const data: typeof template = {
     ...template, result: {
       ...template.result,
       address: address,
@@ -344,7 +344,7 @@ export function generateQNGetBalanceResp(address: string) {
     }
   };
 
-  return resp;
+  return data;
 }
 
 /**
@@ -358,7 +358,7 @@ export function generateQNGetBalanceResp(address: string) {
  * @param params.maxConfirmations - The max confirmation of each utxo.
  * @returns A QuickNode bb_getutxos response.
  */
-export function generateQNGetUtxosResp(
+export function generateQuickNodeGetUtxosResp(
   {
     utxosCount,
     minAmount = 0,
@@ -375,20 +375,13 @@ export function generateQNGetUtxosResp(
 ) {
   const template = quickNodeData.bb_getutxosResp;
   const data = { ...template };
-  let idx = -1;
-  data.result = Array.from({ length: utxosCount }, () => {
-    idx += 1;
+  data.result = Array.from({ length: utxosCount }, (_, idx) => {
     return {
-      txid: randomNum(1000000)
-        .toString(16)
-        .padStart(
-          64,
-          '0',
-        ),
+      txid: generateRandomTransactionId(),
       vout: idx,
-      value: Math.max(randomNum(maxAmount), minAmount).toString(),
+      value: Math.max(minAmount, randomNum(maxAmount)).toString(),
       height: 100000 + idx,
-      confirmations: Math.max(randomNum(maxConfirmations), minConfirmations),
+      confirmations: Math.max(minConfirmations, randomNum(maxConfirmations)),
 
     };
   });
@@ -403,7 +396,7 @@ export function generateQNGetUtxosResp(
  * @param params.confirmations - The number of confirmations of the transaction.
  * @returns A QuickNode get rawtransaction response.
  */
-export function generateQNGetRawTransactionResp(
+export function generateQuickNodeGetRawTransactionResp(
   {
     txid,
     confirmations,
@@ -417,7 +410,7 @@ export function generateQNGetRawTransactionResp(
     ...template,
     result: {
       ...template.result,
-      txid: txid,
+      txid,
       confirmations: confirmations,
     },
   };
@@ -431,7 +424,7 @@ export function generateQNGetRawTransactionResp(
  * @param params.feerate - The fee rate in btc unit.
  * @returns A QuickNode estimate smartfee response.
  */
-export function generateQNEstimatefeeResp(
+export function generateQuickNodeEstimatefeeResp(
   {
     feerate
   }: {
@@ -443,8 +436,8 @@ export function generateQNEstimatefeeResp(
     ...template,
     result: {
       ...template.result,
-      feerate: feerate,
-      block: Math.max(randomNum(100000), 1000),
+      feerate,
+      block: Math.max(1000, randomNum(100000)),
     },
   };
   return data;
@@ -455,21 +448,31 @@ export function generateQNEstimatefeeResp(
  *
  * @returns A QuickNode send rawtransaction response.
  */
-export function generateQNSendRawTransactionResp() {
+export function generateQuickNodeSendRawTransactionResp() {
   const template = quickNodeData.estimatesmartfeeResp;
   const data = {
     ...template,
     result: {
-      hex: randomNum(1000000)
-        .toString(16)
-        .padStart(
-          64,
-          '0',
-        ),
+      hex: generateRandomTransactionId()
     },
   };
   return data;
 }
+
+/**
+ * Generate a random 64 long hex transaction id.
+ *
+ * @returns A 64 long hex transaction id.
+ */
+export function generateRandomTransactionId() {
+  return randomNum(100000000)
+  .toString(16)
+  .padStart(
+    64,
+    '0',
+  )
+}
+
 /**
  * Method to generate formatted utxos with blockchair resp.
  *

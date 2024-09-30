@@ -7,11 +7,12 @@ export class Factory {
   static createOnChainServiceProvider(scope: string): BtcOnChainService {
     const btcNetwork = getBtcNetwork(scope);
 
-    const { mainnetEndpoint, testnetEndpoint } = Config.onChainService
-      .dataClient.options as unknown as {
-      mainnetEndpoint: string;
-      testnetEndpoint: string;
-    };
+    const { mainnetEndpoint, testnetEndpoint } =
+      Config.onChainService.dataClient.options;
+
+    if (!mainnetEndpoint || !testnetEndpoint) {
+      throw new Error('Invalid QuickNode endpoint');
+    }
 
     const client = new QuickNodeClient({
       network: btcNetwork,
