@@ -37,14 +37,14 @@ describe('Factory', () => {
       expect(instance).toBeInstanceOf(QuickNodeClient);
     });
 
-    it('throws `QuickNode endpoints have not configured` error if the endpoints does not provided', () => {
+    it('throws `QuickNode endpoints have not been configured` error if the endpoints have not been provided', () => {
       Config.onChainService.dataClient.options = {
         mainnetEndpoint: undefined,
         testnetEndpoint: undefined,
       };
 
       expect(() => Factory.createQuickNodeClient(Caip2ChainId.Testnet)).toThrow(
-        'QuickNode endpoints have not configured',
+        'QuickNode endpoints have not been configured',
       );
     });
   });

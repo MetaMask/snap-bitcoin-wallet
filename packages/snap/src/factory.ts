@@ -19,7 +19,7 @@ export class Factory {
       Config.onChainService.dataClient.options;
 
     if (!mainnetEndpoint || !testnetEndpoint) {
-      throw new Error('QuickNode endpoints have not configured');
+      throw new Error('QuickNode endpoints have not been configured');
     }
 
     return new QuickNodeClient({
