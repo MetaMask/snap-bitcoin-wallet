@@ -402,7 +402,7 @@ export function generateQuickNodeGetRawTransactionResp(
     confirmations,
   }: {
     txid: string,
-    confirmations: number,
+    confirmations: number | undefined,
   }
 ) {
   const template = quickNodeData.getrawtransactionResp;
@@ -452,9 +452,7 @@ export function generateQuickNodeSendRawTransactionResp() {
   const template = quickNodeData.estimatesmartfeeResp;
   const data = {
     ...template,
-    result: {
-      hex: generateRandomTransactionId()
-    },
+    result: generateRandomTransactionId(),
   };
   return data;
 }
