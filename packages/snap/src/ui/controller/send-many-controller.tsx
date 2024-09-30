@@ -215,7 +215,7 @@ export class SendManyController {
         return await updateSendFlow({
           request: this.request,
           flushToAddress: true,
-          displayClearIcon: true,
+          displayClearIcon: false,
         });
       case SendFormNames.Cancel:
       case SendFormNames.Close: {
