@@ -442,7 +442,7 @@ describe('QuickNodeClient', () => {
     it('broadcasts a transaction', async () => {
       const { fetchSpy } = createMockFetch();
       const mockResponse = generateQuickNodeSendRawTransactionResp();
-      const expectedResult = mockResponse.result.hex;
+      const expectedResult = mockResponse.result;
 
       mockApiSuccessResponse({
         fetchSpy,

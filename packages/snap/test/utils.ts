@@ -452,9 +452,7 @@ export function generateQuickNodeSendRawTransactionResp() {
   const template = quickNodeData.estimatesmartfeeResp;
   const data = {
     ...template,
-    result: {
-      hex: generateRandomTransactionId()
-    },
+    result: generateRandomTransactionId()
   };
   return data;
 }
