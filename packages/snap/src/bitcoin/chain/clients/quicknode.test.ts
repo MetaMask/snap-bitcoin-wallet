@@ -399,6 +399,27 @@ describe('QuickNodeClient', () => {
       });
     });
 
+    it(`returns 'pending' if the transaction's confirmation number is undefined`, async () => {
+      const { fetchSpy } = createMockFetch();
+
+      const mockResponse = generateQuickNodeGetRawTransactionResp({
+        txid,
+        confirmations: undefined,
+      });
+
+      mockApiSuccessResponse({
+        fetchSpy,
+        mockResponse,
+      });
+
+      const client = createQuickNodeClient(networks.testnet);
+      const result = await client.getTransactionStatus(txid);
+
+      expect(result).toStrictEqual({
+        status: TransactionStatus.Pending,
+      });
+    });
+
     it('throws DataClientError if the api response is invalid', async () => {
       const { fetchSpy } = createMockFetch();
 

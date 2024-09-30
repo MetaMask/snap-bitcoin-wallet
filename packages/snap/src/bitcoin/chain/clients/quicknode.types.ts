@@ -1,6 +1,6 @@
 import type { Network } from 'bitcoinjs-lib';
 import type { Infer } from 'superstruct';
-import { array, number, object, string } from 'superstruct';
+import { array, number, object, optional, string } from 'superstruct';
 
 export type QuickNodeClientOptions = {
   network: Network;
@@ -51,10 +51,7 @@ export type QuickNodeGetUtxosResponse = QuickNodeResponse &
   Infer<typeof QuickNodeGetUtxosResponseStruct>;
 
 export const QuickNodeSendTransactionResponseStruct = object({
-  result: object({
-    // eslint-disable-next-line id-denylist
-    hex: string(),
-  }),
+  result: string(),
 });
 
 export type QuickNodeSendTransactionResponse = QuickNodeResponse &
@@ -81,10 +78,11 @@ export const QuickNodeGetTransactionStruct = object({
     locktime: number(),
     // eslint-disable-next-line id-denylist
     hex: string(),
-    blockhash: string(),
-    confirmations: number(),
-    time: number(),
-    blocktime: number(),
+    // below params will be absent if the transaction is in memory pool
+    blockhash: optional(string()),
+    confirmations: optional(number()),
+    time: optional(number()),
+    blocktime: optional(number()),
   }),
 });
 

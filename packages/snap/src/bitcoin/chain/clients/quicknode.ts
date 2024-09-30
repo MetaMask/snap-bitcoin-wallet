@@ -266,7 +266,7 @@ export class QuickNodeClient implements IDataClient {
         },
         responseStruct: QuickNodeSendTransactionResponseStruct,
       });
-    return response.result.hex;
+    return response.result;
   }
 
   async getTransactionStatus(txid: string): Promise<DataClientGetTxStatusResp> {
@@ -284,6 +284,7 @@ export class QuickNodeClient implements IDataClient {
     // reference: https://www.bitcoin.com/get-started/what-is-a-confirmation/#:~:text=Different%20cryptocurrencies%20require%20different%20numbers,secure%20after%20around%2030%20confirmations.
     return {
       status:
+        response.result.confirmations &&
         response.result.confirmations >= Config.defaultConfirmationThreshold
           ? TransactionStatus.Confirmed
           : TransactionStatus.Pending,

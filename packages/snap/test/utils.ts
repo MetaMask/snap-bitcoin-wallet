@@ -402,7 +402,7 @@ export function generateQuickNodeGetRawTransactionResp(
     confirmations,
   }: {
     txid: string,
-    confirmations: number,
+    confirmations: number | undefined,
   }
 ) {
   const template = quickNodeData.getrawtransactionResp;
