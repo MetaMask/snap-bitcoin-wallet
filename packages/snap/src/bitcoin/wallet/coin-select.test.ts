@@ -69,5 +69,27 @@ describe('CoinSelectService', () => {
       expect(result.inputs.length).toBeGreaterThan(0);
       expect(result.outputs.length).toBeGreaterThan(0);
     });
+
+    it('returns empty inputs and outputs when the provided UTXOs are insufficient', async () => {
+      const network = networks.testnet;
+      // Setup a test case where required utxos are greater than the available utxos
+      const { inputs, outputs, sender } = await prepareCoinSlect(
+        network,
+        10000,
+        500,
+        500,
+      );
+
+      const coinSelectService = new CoinSelectService(1);
+
+      const result = coinSelectService.selectCoins(
+        inputs,
+        outputs,
+        new TxOutput(0, sender.address, sender.script),
+      );
+
+      expect(result.inputs).toHaveLength(0);
+      expect(result.outputs).toHaveLength(0);
+    });
   });
 });
