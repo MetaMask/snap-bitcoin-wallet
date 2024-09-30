@@ -7,21 +7,25 @@ export class Factory {
   static createOnChainServiceProvider(scope: string): BtcOnChainService {
     const btcNetwork = getBtcNetwork(scope);
 
+    return new BtcOnChainService(Factory.createQuickNodeClient(scope), {
+      network: btcNetwork,
+    });
+  }
+
+  static createQuickNodeClient(scope: string): QuickNodeClient {
+    const btcNetwork = getBtcNetwork(scope);
+
     const { mainnetEndpoint, testnetEndpoint } =
       Config.onChainService.dataClient.options;
 
     if (!mainnetEndpoint || !testnetEndpoint) {
-      throw new Error('Invalid QuickNode endpoint');
+      throw new Error('QuickNode endpoints have not configured');
     }
 
-    const client = new QuickNodeClient({
+    return new QuickNodeClient({
       network: btcNetwork,
       mainnetEndpoint,
       testnetEndpoint,
-    });
-
-    return new BtcOnChainService(client, {
-      network: btcNetwork,
     });
   }
 

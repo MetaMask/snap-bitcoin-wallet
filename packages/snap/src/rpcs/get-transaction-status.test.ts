@@ -1,7 +1,8 @@
 import { InvalidParamsError } from '@metamask/snaps-sdk';
 
-import { BtcOnChainService, TransactionStatus } from '../bitcoin/chain';
+import { TransactionStatus } from '../bitcoin/chain';
 import { Caip2ChainId } from '../constants';
+import { createMockChainApiFactory } from './__tests__/helper';
 import { getTransactionStatus } from './get-transaction-status';
 
 jest.mock('../utils/logger');
@@ -10,18 +11,8 @@ describe('getTransactionStatus', () => {
   const txHash =
     '1cd985fc26a9b27d0b574739b908d5fe78e2297b24323a7f8c04526648dc9c08';
 
-  const createMockChainService = () => {
-    const getTransactionStatusSpy = jest.spyOn(
-      BtcOnChainService.prototype,
-      'getTransactionStatus',
-    );
-    return {
-      getTransactionStatusSpy,
-    };
-  };
-
   it('gets status', async () => {
-    const { getTransactionStatusSpy } = createMockChainService();
+    const { getTransactionStatusSpy } = createMockChainApiFactory();
 
     const mockResp = {
       status: TransactionStatus.Confirmed,
@@ -41,7 +32,7 @@ describe('getTransactionStatus', () => {
   });
 
   it('throws `Fail to get the transaction status` when transaction status fetch failed', async () => {
-    const { getTransactionStatusSpy } = createMockChainService();
+    const { getTransactionStatusSpy } = createMockChainApiFactory();
 
     getTransactionStatusSpy.mockRejectedValue(new Error('error'));
 
