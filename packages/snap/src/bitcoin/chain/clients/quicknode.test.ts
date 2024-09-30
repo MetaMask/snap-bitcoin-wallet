@@ -38,7 +38,7 @@ describe('QuickNodeClient', () => {
     const fetchSpy = jest.fn();
     // eslint-disable-next-line no-restricted-globals
     Object.defineProperty(global, 'fetch', {
-      // make the fetch can be redefined in the global scope
+      // Allow `fetch` to be redefined in the global scope
       writable: true,
       value: fetchSpy,
     });
