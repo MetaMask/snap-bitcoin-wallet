@@ -134,20 +134,21 @@ export async function updateSendFlow({
 export function formValidation(
   formState: SendFormState,
   context: SendFlowContext,
-  balance: Currency,
-  selectedCurrency: AssetType,
-  rates: string,
-): SendFormErrors {
+  request: SendFlowRequest,
+): SendFlowRequest {
   const errors: SendFormErrors = {
     to: '',
     amount: '',
     total: '',
     fees: '',
   };
+
+  console.log('formState', JSON.stringify(formState, null, 4));
+
   const cryptoAmount =
-    selectedCurrency === AssetType.BTC
-      ? formState.amount
-      : convertFiatToBtc(formState.amount, rates);
+    request.selectedCurrency === AssetType.BTC
+      ? formState.amount ?? '0'
+      : convertFiatToBtc(formState.amount ?? '0', request.rates);
 
   if (
     formState.to &&
@@ -157,24 +158,50 @@ export function formValidation(
         !validate(formState.to, Network.testnet)))
   ) {
     errors.to = 'Invalid address';
+    request.recipient = {
+      address: formState.to,
+      error: errors.to,
+      valid: Boolean(!errors.to),
+    };
   }
 
   if (formState.amount && isNaN(Number(formState.amount))) {
     errors.amount = 'Invalid amount';
-  }
-
-  if (new BigNumber(formState.amount).lte(new BigNumber(0))) {
-    errors.amount = 'Amount must be greater than 0';
+    request.amount = {
+      amount: '',
+      fiat: '',
+      error: errors.amount,
+      valid: Boolean(!errors.amount),
+    };
   }
 
   if (
     formState.amount &&
-    new BigNumber(cryptoAmount).gt(new BigNumber(balance.amount))
+    new BigNumber(formState.amount).lte(new BigNumber(0))
   ) {
-    errors.amount = 'Insufficient funds';
+    errors.amount = 'Amount must be greater than 0';
+    request.amount = {
+      amount: '0',
+      fiat: '0',
+      error: errors.amount,
+      valid: Boolean(!errors.amount),
+    };
   }
 
-  return errors;
+  if (
+    formState.amount &&
+    new BigNumber(cryptoAmount).gt(new BigNumber(this.request.balance.amount))
+  ) {
+    errors.amount = 'Insufficient funds';
+    request.amount = {
+      amount: formState.amount,
+      fiat: convertBtcToFiat(formState.amount, this.request.rates),
+      error: errors.amount,
+      valid: Boolean(!errors.amount),
+    };
+  }
+
+  return request;
 }
 
 /**

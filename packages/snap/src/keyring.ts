@@ -213,6 +213,7 @@ export class BtcKeyring implements Keyring {
             account: walletData.account,
             scope: walletData.scope,
           });
+          await this._stateMgr.upsertRequest(sendFlowRequest);
 
           const sendFlowPromise = snap.request({
             method: 'snap_dialog',

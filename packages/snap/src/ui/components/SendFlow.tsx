@@ -50,8 +50,8 @@ export type SendFlowProps = {
 export const SendFlow: SnapComponent<SendFlowProps> = ({
   account,
   displayClearIcon,
-  flushToAddress,
   sendFlowParams,
+  flushToAddress = false,
   currencySwitched = false,
   backEventTriggered = false,
 }) => {
@@ -66,11 +66,11 @@ export const SendFlow: SnapComponent<SendFlowProps> = ({
         <SendForm
           selectedAccount={account.address}
           accounts={[account]}
-          flushToAddress={flushToAddress}
           displayClearIcon={displayClearIcon}
-          {...sendFlowParams}
+          flushToAddress={flushToAddress}
           currencySwitched={currencySwitched}
           backEventTriggered={backEventTriggered}
+          {...sendFlowParams}
         />
         {new BigNumber(sendFlowParams.amount.amount).gt(new BigNumber(0)) ? (
           <TransactionSummary

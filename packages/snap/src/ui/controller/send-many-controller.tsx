@@ -95,128 +95,92 @@ export class SendManyController {
     context: SendFlowContext,
     formState: SendFormState,
   ) {
-    const formErrors: SendFormErrors = formValidation(
-      formState,
-      context,
-      this.request.balance,
-      this.request.selectedCurrency,
-      this.request.rates,
-    );
+    try {
+      formValidation(formState, context, this.request);
+    } catch (e) {
+      console.log(e);
+    }
 
-    logger.log('formErrors', formErrors);
-    console.log('');
+    logger.log('formErrors', JSON.stringify(this.request, null, 4));
+
+    let displayClearIcon = Boolean(formState.to) && formState.to !== '';
 
     switch (eventName) {
       case SendFormNames.To: {
-        this.request.recipient = {
-          address: formState.to,
-          error: formErrors.to,
-          valid: !formErrors.to,
-        };
         await this.persistRequest(this.request);
         await updateSendFlow({
           request: this.request,
-          displayClearIcon: Boolean(formState.to) && formState.to !== '',
+          displayClearIcon,
         });
         break;
       }
-      case SendFormNames.AccountSelector: // this does nothing at the moment.
       case SendFormNames.Amount: {
         if (
-          !formErrors.amount &&
-          new BigNumber(formState.amount).gt(new BigNumber(0))
-        ) {
-          this.request.amount = {
-            amount:
-              this.request.selectedCurrency === AssetType.BTC
-                ? formState.amount
-                : convertFiatToBtc(formState.amount, this.request.rates),
-            fiat:
-              this.request.selectedCurrency === AssetType.BTC
-                ? convertBtcToFiat(formState.amount, this.request.rates)
-                : formState.amount,
-            error: formErrors.amount,
-            valid: !formErrors.amount,
-          };
-          this.request.fees.loading = true;
-
-          // show loading state for fees
-          await updateSendFlow({
-            request: this.request,
-            displayClearIcon: Boolean(formState.to) && formState.to !== '',
-          });
-
-          const amountInBtc =
-            this.request.selectedCurrency === AssetType.BTC
-              ? formState.amount
-              : convertFiatToBtc(formState.amount, this.request.rates);
-
-          try {
-            const estimates = await estimateFee({
-              account: this.context.accounts[0].id,
-              amount: amountInBtc,
-            });
-            // TODO: fiat conversion
-            this.request.fees = {
-              fiat: convertBtcToFiat(estimates.fee.amount, this.request.rates),
-              amount: estimates.fee.amount,
-              loading: false,
-              error: '',
-            };
-            const updatedTotal = new BigNumber(amountInBtc)
-              .plus(new BigNumber(this.request.fees.amount))
-              .toString();
-            this.request.total = {
-              amount: updatedTotal,
-              fiat: convertBtcToFiat(updatedTotal, this.request.rates),
-            };
-
-            // await this.persistRequest({
-            //   ...this.request,
-            // });
-          } catch (feeError) {
-            this.request.fees = {
-              fiat: '',
-              amount: '',
-              loading: false,
-              error: feeError.message,
-            };
-            // await this.persistRequest({
-            //   ...this.request,
-            // });
-          }
-        } else if (
-          !formErrors.amount &&
+          this.request.amount.error ||
           new BigNumber(formState.amount).eq(
             new BigNumber(this.request.amount.amount),
           )
         ) {
-          return;
-        } else {
-          this.request.amount = {
-            amount: formState.amount,
-            fiat: formState.amount,
-            error: formErrors.amount,
-            valid: !formErrors.amount,
+          return await updateSendFlow({
+            request: this.request,
+            displayClearIcon,
+          });
+        }
+        this.request.fees.loading = true;
+
+        // show loading state for fees
+        await updateSendFlow({
+          request: this.request,
+          displayClearIcon,
+        });
+
+        const amountInBtc =
+          this.request.selectedCurrency === AssetType.BTC
+            ? formState.amount
+            : convertFiatToBtc(formState.amount, this.request.rates);
+
+        try {
+          const estimates = await estimateFee({
+            account: this.context.accounts[0].id,
+            amount: amountInBtc,
+          });
+          // TODO: fiat conversion
+          this.request.fees = {
+            fiat: convertBtcToFiat(estimates.fee.amount, this.request.rates),
+            amount: estimates.fee.amount,
+            loading: false,
+            error: '',
+          };
+          const updatedTotal = new BigNumber(amountInBtc)
+            .plus(new BigNumber(this.request.fees.amount))
+            .toString();
+          this.request.total = {
+            amount: updatedTotal,
+            fiat: convertBtcToFiat(updatedTotal, this.request.rates),
+          };
+
+          await this.persistRequest(this.request);
+        } catch (feeError) {
+          this.request.fees = {
+            fiat: '',
+            amount: '',
+            loading: false,
+            error: feeError.message,
           };
           await this.persistRequest(this.request);
         }
         await updateSendFlow({
           request: this.request,
-          displayClearIcon: Boolean(formState.to) && formState.to !== '',
+          displayClearIcon,
         });
         break;
       }
       default:
-        break;
+        return;
     }
   }
 
-  async handleButtonEvent(
-    eventName: SendFormNames,
-    context: SendFlowContext,
-    formState: SendFormState,
-  ) {
+  async handleButtonEvent(eventName: SendFormNames) {
     switch (eventName) {
       case SendFormNames.HeaderBack: {
         if (this.request.status === 'review') {
@@ -250,7 +214,7 @@ export class SendManyController {
         await this.persistRequest(this.request);
         return await updateSendFlow({
           request: this.request,
-          flushToAddress: false,
+          flushToAddress: true,
           displayClearIcon: true,
         });
       case SendFormNames.Cancel:
