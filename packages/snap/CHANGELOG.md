@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.2]
+
+### Uncategorized
+
+- chore: change `dataclient` from `BlockChairClient` to `QuickNodeClient` ([#250](https://github.com/MetaMask/snap-bitcoin-wallet/pull/250))
+- fix: update `QuickNode` api response handle ([#263](https://github.com/MetaMask/snap-bitcoin-wallet/pull/263))
+- fix: invalid response in estimate fee rpc ([#261](https://github.com/MetaMask/snap-bitcoin-wallet/pull/261))
+
 ## [0.6.1]
 
 ### Added
@@ -186,7 +194,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add CI for lint and test ([#2](https://github.com/MetaMask/bitcoin/pull/2))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.6.1...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.6.2...HEAD
+[0.6.2]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.4.0...v0.5.0
