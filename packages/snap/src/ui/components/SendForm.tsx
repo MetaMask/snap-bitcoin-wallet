@@ -118,9 +118,11 @@ export const SendForm: SnapComponent<SendFormProps> = ({
         </Box>
       </Field>
       <Field label="To account" error={recipient.error}>
-        <Box>
-          <Image src={jazzicon3} />
-        </Box>
+        {recipient.valid && (
+          <Box>
+            <Image src={jazzicon3} />
+          </Box>
+        )}
         <Input
           name={SendFormNames.To}
           placeholder="Enter receiving address"
