@@ -8,7 +8,7 @@ import {
   type SnapComponent,
 } from '@metamask/snaps-sdk/jsx';
 
-import type { Currency, SendFormErrors } from '../types';
+import { SendFlowRequest } from '../../stateManagement';
 
 /**
  * The props for the {@link TransactionSummary} component.
@@ -17,8 +17,8 @@ import type { Currency, SendFormErrors } from '../types';
  * @property total - The total cost of the transaction.
  */
 export type TransactionSummaryProps = {
-  fees: Currency & { loading: boolean; error: string };
-  total: Currency;
+  fees: SendFlowRequest['fees'];
+  total: SendFlowRequest['total'];
 };
 
 /**

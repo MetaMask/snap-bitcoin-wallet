@@ -136,14 +136,17 @@ export function formValidation(
   context: SendFlowContext,
   request: SendFlowRequest,
 ): SendFlowRequest {
+  // reset errors
+  request.amount.error = '';
+  request.recipient.error = '';
+  request.fees.error = '';
+
   const errors: SendFormErrors = {
     to: '',
     amount: '',
     total: '',
     fees: '',
   };
-
-  console.log('formState', JSON.stringify(formState, null, 4));
 
   const cryptoAmount =
     request.selectedCurrency === AssetType.BTC
@@ -161,7 +164,7 @@ export function formValidation(
     request.recipient = {
       address: formState.to,
       error: errors.to,
-      valid: Boolean(!errors.to),
+      valid: false,
     };
   }
 
@@ -171,7 +174,7 @@ export function formValidation(
       amount: '',
       fiat: '',
       error: errors.amount,
-      valid: Boolean(!errors.amount),
+      valid: false,
     };
   }
 
@@ -184,20 +187,30 @@ export function formValidation(
       amount: '0',
       fiat: '0',
       error: errors.amount,
-      valid: Boolean(!errors.amount),
+      valid: false,
     };
   }
 
   if (
     formState.amount &&
-    new BigNumber(cryptoAmount).gt(new BigNumber(this.request.balance.amount))
+    new BigNumber(cryptoAmount).gt(new BigNumber(request.balance.amount))
   ) {
     errors.amount = 'Insufficient funds';
     request.amount = {
       amount: formState.amount,
-      fiat: convertBtcToFiat(formState.amount, this.request.rates),
+      fiat: convertBtcToFiat(formState.amount, request.rates),
       error: errors.amount,
-      valid: Boolean(!errors.amount),
+      valid: false,
+    };
+  }
+
+  // Reset the fees if the amount is invalid
+  if (request.amount.error) {
+    request.fees = {
+      amount: '',
+      fiat: '',
+      loading: false,
+      error: '',
     };
   }
 

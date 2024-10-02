@@ -78,11 +78,7 @@ export class SendManyController {
         break;
       }
       case UserInputEventType.ButtonClickEvent: {
-        await this.handleButtonEvent(
-          event.name as SendFormNames,
-          context,
-          formState,
-        );
+        await this.handleButtonEvent(event.name as SendFormNames);
         break;
       }
       default:
@@ -107,6 +103,8 @@ export class SendManyController {
 
     switch (eventName) {
       case SendFormNames.To: {
+        this.request.recipient.address = formState.to;
+        this.request.recipient.valid = Boolean(!this.request.recipient.error);
         await this.persistRequest(this.request);
         await updateSendFlow({
           request: this.request,
@@ -115,17 +113,13 @@ export class SendManyController {
         break;
       }
       case SendFormNames.Amount: {
-        if (
-          this.request.amount.error ||
-          new BigNumber(formState.amount).eq(
-            new BigNumber(this.request.amount.amount),
-          )
-        ) {
+        if (this.request.amount.error) {
           return await updateSendFlow({
             request: this.request,
             displayClearIcon,
           });
         }
+        this.request.amount.valid = Boolean(!this.request.amount.error);
         this.request.fees.loading = true;
 
         // show loading state for fees
@@ -138,6 +132,11 @@ export class SendManyController {
           this.request.selectedCurrency === AssetType.BTC
             ? formState.amount
             : convertFiatToBtc(formState.amount, this.request.rates);
+        this.request.amount.amount = amountInBtc;
+        this.request.amount.fiat = convertBtcToFiat(
+          amountInBtc,
+          this.request.rates,
+        );
 
         try {
           const estimates = await estimateFee({
