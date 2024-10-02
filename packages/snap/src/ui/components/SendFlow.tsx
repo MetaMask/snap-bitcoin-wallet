@@ -55,9 +55,15 @@ export const SendFlow: SnapComponent<SendFlowProps> = ({
   currencySwitched = false,
   backEventTriggered = false,
 }) => {
-  const disabledReview =
+  const disabledReview = Boolean(
     !sendFlowParams.amount.valid ||
-    !sendFlowParams.recipient.valid ||
+      !sendFlowParams.recipient.valid ||
+      sendFlowParams.fees.loading ||
+      sendFlowParams.fees.error,
+  );
+
+  const showTransactionSummary =
+    Boolean(!sendFlowParams.amount.error && sendFlowParams.amount.amount) ||
     sendFlowParams.fees.loading;
   return (
     <Container>
@@ -72,12 +78,12 @@ export const SendFlow: SnapComponent<SendFlowProps> = ({
           backEventTriggered={backEventTriggered}
           {...sendFlowParams}
         />
-        {new BigNumber(sendFlowParams.amount.amount).gt(new BigNumber(0)) ? (
+        {showTransactionSummary && (
           <TransactionSummary
             fees={sendFlowParams.fees}
             total={sendFlowParams.total}
           />
-        ) : null}
+        )}
       </Box>
       <SendFlowFooter disabled={disabledReview} />
     </Container>
