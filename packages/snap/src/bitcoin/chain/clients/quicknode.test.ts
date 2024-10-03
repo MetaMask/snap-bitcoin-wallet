@@ -285,7 +285,9 @@ describe('QuickNodeClient', () => {
       const result = await client.getFeeRates();
 
       expect(result).toStrictEqual({
-        [Config.defaultFeeRate]: Number(satsKVBToVB(btcToSats(expectedFeeRateKVB.toString()))),
+        [Config.defaultFeeRate]: Number(
+          satsKVBToVB(btcToSats(expectedFeeRateKVB.toString())),
+        ),
       });
     });
 
