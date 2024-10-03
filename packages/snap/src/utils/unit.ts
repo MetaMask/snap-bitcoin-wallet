@@ -1,4 +1,4 @@
-import Big from 'big.js';
+import BigNumber from 'bignumber.js';
 
 import { Config } from '../config';
 
@@ -7,6 +7,9 @@ export const maxSatoshi = 21 * 1e14;
 
 // Minimum amount of satoshis
 export const minSatoshi = 1;
+
+// Rate to convert from BTC to sats
+export const btcSatsFactor = 100000000;
 
 /**
  * Converts a satoshis to a string representing the equivalent amount of BTC.
@@ -20,14 +23,14 @@ export function satsToBtc(sats: number | bigint, withUnit = false): string {
   if (typeof sats === 'number' && !Number.isInteger(sats)) {
     throw new Error('satsToBtc must be called on an integer number');
   }
-  const bigIntSat = new Big(sats);
-  const val = bigIntSat.div(100000000).toFixed(8);
+  const bigSat = new BigNumber(sats.toString());
+  const btc = bigSat.div(btcSatsFactor).toFixed(8);
 
   if (withUnit) {
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    return `${val} ${Config.unit}`;
+    return `${btc} ${Config.unit}`;
   }
-  return val;
+  return btc;
 }
 
 /**
@@ -38,12 +41,14 @@ export function satsToBtc(sats: number | bigint, withUnit = false): string {
  * @throws A Error if the BTC > max amount of satoshis (21 * 1e14) or the BTC < 0 or the BTC has more than 8 decimals.
  */
 export function btcToSats(btc: string): bigint {
-  const stringVals = btc.split('.');
-  if (stringVals.length > 1 && stringVals[1].length > 8) {
+  const bigBtc = new BigNumber(btc);
+  const sats = bigBtc.times(btcSatsFactor);
+
+  // If it's not a "true" integer, it means we still have some decimals, so the original
+  // amount had more than 8 digits after the decimal point.
+  if (!sats.isInteger()) {
     throw new Error('BTC amount is out of range');
   }
-  const bigIntBtc = new Big(btc);
-  const sats = bigIntBtc.times(100000000);
   if (sats.lt(0) || sats.gt(maxSatoshi)) {
     throw new Error('BTC amount is out of range');
   }
