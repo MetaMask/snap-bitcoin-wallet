@@ -2,6 +2,11 @@ import BigNumber from 'bignumber.js';
 
 import { Config } from '../config';
 
+// QuickNode is using bitcoin core under the hood, and their "estimatesmartfee" is using BTC/kvB. So we will have
+// to convert it back to standard vB.
+// See: https://github.com/bitcoin/bitcoin/blob/v28.0/src/policy/feerate.cpp#L17
+export const bitcoinCoreKB = 1000;
+
 // Maximum amount of satoshis
 export const maxSatoshi = 21 * 1e14;
 
@@ -10,6 +15,16 @@ export const minSatoshi = 1;
 
 // Rate to convert from BTC to sats
 export const btcSatsFactor = 100000000;
+
+/**
+ * Converts sats/kvB to sats/vB.
+ *
+ * @param kvb - The amount in sats/kvB.
+ * @returns The converted amount to sats/vB.
+ */
+export function satsKVBToVB(kvb: number | bigint): bigint {
+  return BigInt(kvb) / BigInt(bitcoinCoreKB);
+}
 
 /**
  * Converts a satoshis to a string representing the equivalent amount of BTC.
