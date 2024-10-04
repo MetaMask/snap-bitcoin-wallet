@@ -8,7 +8,7 @@ import {
   type SnapComponent,
 } from '@metamask/snaps-sdk/jsx';
 
-import { SendFlowRequest } from '../../stateManagement';
+import type { SendFlowRequest } from '../../stateManagement';
 
 /**
  * The props for the {@link TransactionSummary} component.

@@ -14,11 +14,11 @@ import {
 } from '@metamask/snaps-sdk/jsx';
 import type { CaipAccountId } from '@metamask/utils';
 
+import { CaipToNetworkName } from '../../constants';
+import type { SendFlowRequest } from '../../stateManagement';
 import btcIcon from '../images/btc.svg';
 import { SendFlowHeader } from './SendFlowHeader';
 import { SendFormNames } from './SendForm';
-import { SendFlowRequest } from '../../stateManagement';
-import { CaipToNetworkName } from '../../constants';
 
 export type ReviewTransactionProps = SendFlowRequest & {
   txSpeed: string;
@@ -34,6 +34,8 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
   fees,
 }) => {
   const network = CaipToNetworkName[scope];
+  const disabledSend = Boolean(!amount.valid || !recipient.valid || fees.error);
+
   return (
     <Container>
       <Box>
@@ -81,9 +83,14 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
             />
           </Row>
         </Section>
+        {Boolean(recipient.error) && (
+          <Text color="error">{recipient.error}</Text>
+        )}
+        {Boolean(amount.error) && <Text color="error">{amount.error}</Text>}
+        {Boolean(fees.error) && <Text color="error">{fees.error}</Text>}
       </Box>
       <Footer>
-        <Button name={SendFormNames.Send} type="submit">
+        <Button name={SendFormNames.Send} type="submit" disabled={disabledSend}>
           Send
         </Button>
       </Footer>

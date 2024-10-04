@@ -1,14 +1,12 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
 import type { SnapComponent } from '@metamask/snaps-sdk/jsx';
 import { Box, Container } from '@metamask/snaps-sdk/jsx';
-import { BigNumber } from 'bignumber.js';
 
-import type { Currency, SendFormErrors } from '../types';
+import type { SendFlowParams } from '../../stateManagement';
 import { SendFlowFooter } from './SendFlowFooter';
 import { SendFlowHeader } from './SendFlowHeader';
 import { SendForm } from './SendForm';
 import { TransactionSummary } from './TransactionSummary';
-import { SendFlowParams } from '../../stateManagement';
 
 /**
  * The props for the {@link SendFlow} component.
@@ -39,13 +37,14 @@ export type SendFlowProps = {
 /**
  * SendFlow component for handling the send transaction flow in the application.
  *
- * @param {Object} props - The properties object.
- * @param {Account} props.account - The account information for the transaction.
- * @param {boolean} props.displayClearIcon - Flag to display the clear icon.
- * @param {boolean} props.flushToAddress - Flag to flush to address.
- * @param {SendFlowParams} props.sendFlowParams - Additional parameters for the send flow.
- *
- * @returns {JSX.Element} The rendered SendFlow component.
+ * @param props - The properties object.
+ * @param props.account - The account information for the transaction.
+ * @param props.displayClearIcon - Flag to display the clear icon.
+ * @param props.flushToAddress - Flag to flush to address.
+ * @param props.sendFlowParams - Additional parameters for the send flow.
+ * @param props.currencySwitched - Flag indicating if the currency was switched.
+ * @param props.backEventTriggered - Flag indicating if the back event was triggered.
+ * @returns The rendered SendFlow component.
  */
 export const SendFlow: SnapComponent<SendFlowProps> = ({
   account,
@@ -55,6 +54,8 @@ export const SendFlow: SnapComponent<SendFlowProps> = ({
   currencySwitched = false,
   backEventTriggered = false,
 }) => {
+  console.log('SendFlow', sendFlowParams);
+
   const disabledReview = Boolean(
     !sendFlowParams.amount.valid ||
       !sendFlowParams.recipient.valid ||
@@ -65,6 +66,10 @@ export const SendFlow: SnapComponent<SendFlowProps> = ({
   const showTransactionSummary =
     Boolean(!sendFlowParams.amount.error && sendFlowParams.amount.amount) ||
     sendFlowParams.fees.loading;
+  console.log('amount valid', sendFlowParams.amount.valid);
+  console.log('recipient valid', sendFlowParams.recipient.valid);
+  console.log('fees loading', sendFlowParams.fees.loading);
+  console.log('fees error', sendFlowParams.fees.error);
   return (
     <Container>
       <Box>

@@ -41,12 +41,16 @@ export const TransactionAmountStruct = refine(
   },
 );
 
-export const SendManyParamsStruct = object({
+export const SendManyStruct = object({
   amounts: TransactionAmountStruct,
   comment: string(),
   subtractFeeFrom: array(BtcP2wpkhAddressStruct),
   replaceable: boolean(),
   dryrun: optional(boolean()),
+});
+
+export const SendManyParamsStruct = object({
+  ...SendManyStruct.schema,
   scope: ScopeStruct,
 });
 
@@ -74,13 +78,13 @@ export const defaultSendManyParams = (
  * Send BTC to multiple account.
  *
  * @param account - The account to send the transaction.
- * @param origin - The origin of the request.
+ * @param _origin - The origin of the request.
  * @param params - The parameters for send the transaction.
  * @returns A Promise that resolves to an SendManyResponse object.
  */
 export async function sendMany(
   account: BtcAccount,
-  origin: string,
+  _origin: string,
   params: SendManyParams,
 ) {
   try {

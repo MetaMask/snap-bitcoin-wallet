@@ -5,8 +5,8 @@ import {
   type EstimateFeeResponse,
   type SendManyParams,
 } from './rpcs';
+import { AssetType } from './ui/types';
 import type { Currency } from './ui/types';
-import { AssetType } from './ui/utils';
 import { compactError, SnapStateManager } from './utils';
 
 export type Wallet = {

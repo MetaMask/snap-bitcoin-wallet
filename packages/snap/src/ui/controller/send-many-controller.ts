@@ -5,17 +5,10 @@ import { BigNumber } from 'bignumber.js';
 import { estimateFee } from '../../rpcs';
 import type { KeyringStateManager } from '../../stateManagement';
 import { type SendFlowRequest } from '../../stateManagement';
-import { logger } from '../../utils';
 import { SendFormNames } from '../components/SendForm';
-import type { SendFlowContext, SendFormErrors, SendFormState } from '../types';
-import { ReviewTransaction } from '../components';
-import {
-  AssetType,
-  convertBtcToFiat,
-  convertFiatToBtc,
-  formValidation,
-  updateSendFlow,
-} from '../utils';
+import { updateSendFlow } from '../render-interfaces';
+import { AssetType, type SendFlowContext, type SendFormState } from '../types';
+import { convertBtcToFiat, convertFiatToBtc, formValidation } from '../utils';
 
 export const isSendFormEvent = (event: UserInputEvent): boolean => {
   return Object.values(SendFormNames).includes(event?.name as SendFormNames);
@@ -28,27 +21,22 @@ export class SendManyController {
 
   context: SendFlowContext;
 
-  event: UserInputEvent;
-
   interfaceId: string;
 
   constructor({
     stateManager,
     request,
     context,
-    event,
     interfaceId,
   }: {
     stateManager: KeyringStateManager;
     request: SendFlowRequest;
     context: SendFlowContext;
-    event: UserInputEvent;
     interfaceId: string;
   }) {
     this.stateManager = stateManager;
     this.request = request;
     this.context = context;
-    this.event = event;
     this.interfaceId = interfaceId;
   }
 
@@ -90,16 +78,10 @@ export class SendManyController {
     eventName: SendFormNames,
     context: SendFlowContext,
     formState: SendFormState,
-  ) {
-    try {
-      formValidation(formState, context, this.request);
-    } catch (e) {
-      console.log(e);
-    }
+  ): Promise<void> {
+    formValidation(formState, context, this.request);
 
-    logger.log('formErrors', JSON.stringify(this.request, null, 4));
-
-    let displayClearIcon = Boolean(formState.to) && formState.to !== '';
+    const displayClearIcon = Boolean(formState.to) && formState.to !== '';
 
     switch (eventName) {
       case SendFormNames.To: {
@@ -114,10 +96,11 @@ export class SendManyController {
       }
       case SendFormNames.Amount: {
         if (this.request.amount.error) {
-          return await updateSendFlow({
+          await updateSendFlow({
             request: this.request,
             displayClearIcon,
           });
+          return;
         }
         this.request.amount.valid = Boolean(!this.request.amount.error);
         this.request.fees.loading = true;
@@ -143,6 +126,7 @@ export class SendManyController {
             account: this.context.accounts[0].id,
             amount: amountInBtc,
           });
+          console.log('estimates', estimates);
           // TODO: fiat conversion
           this.request.fees = {
             fiat: convertBtcToFiat(estimates.fee.amount, this.request.rates),
@@ -160,6 +144,7 @@ export class SendManyController {
 
           await this.persistRequest(this.request);
         } catch (feeError) {
+          console.log('fee error', feeError);
           this.request.fees = {
             fiat: '',
             amount: '',
@@ -175,11 +160,11 @@ export class SendManyController {
         break;
       }
       default:
-        return;
+        break;
     }
   }
 
-  async handleButtonEvent(eventName: SendFormNames) {
+  async handleButtonEvent(eventName: SendFormNames): Promise<void | null> {
     switch (eventName) {
       case SendFormNames.HeaderBack: {
         if (this.request.status === 'review') {
@@ -220,13 +205,14 @@ export class SendManyController {
       case SendFormNames.Close: {
         this.request.status = 'rejected';
         await this.persistRequest(this.request);
-        return await snap.request({
+        await snap.request({
           method: 'snap_resolveInterface',
           params: {
             id: this.interfaceId,
             value: false,
           },
         });
+        return null;
       }
       case SendFormNames.SwapCurrencyDisplay: {
         this.request.selectedCurrency =
@@ -244,27 +230,26 @@ export class SendManyController {
       case SendFormNames.Review: {
         this.request.status = 'review';
         await this.persistRequest(this.request);
-        return await snap.request({
-          method: 'snap_updateInterface',
-          params: {
-            id: this.request.interfaceId,
-            ui: <ReviewTransaction {...this.request} txSpeed={'30m'} />,
-          },
+        return await updateSendFlow({
+          request: this.request,
+          displayClearIcon: false,
+          showReviewTransaction: true,
         });
       }
       case SendFormNames.Send: {
         this.request.status = 'signed';
         await this.persistRequest(this.request);
-        return await snap.request({
+        await snap.request({
           method: 'snap_resolveInterface',
           params: {
             id: this.interfaceId,
             value: true,
           },
         });
+        return null;
       }
       default:
-        break;
+        return null;
     }
   }
 }

@@ -1,3 +1,4 @@
+import type { KeyringAccount } from '@metamask/keyring-api';
 import {
   Card,
   Field,
@@ -5,12 +6,11 @@ import {
   SelectorOption,
   type SnapComponent,
 } from '@metamask/snaps-sdk/jsx';
+
 // import jazzicon from '@metamask/jazzicon';
 import jazzicon1 from '../images/jazzicon1.svg';
-
+import type { Currency } from '../types';
 import { truncate } from '../utils';
-import { KeyringAccount } from '@metamask/keyring-api';
-import { Currency } from '../types';
 
 /**
  * The props for the {@link AccountSelector} component.
@@ -32,6 +32,7 @@ const loadingMessage = 'Loading';
  * @param props - The component props.
  * @param props.selectedAccount - The currently selected account.
  * @param props.accounts - The available accounts.
+ * @param props.balance - The balance of the selected account.
  * @returns The AccountSelector component.
  */
 export const AccountSelector: SnapComponent<AccountSelectorProps> = ({

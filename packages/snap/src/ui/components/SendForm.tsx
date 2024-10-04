@@ -10,11 +10,12 @@ import {
   type SnapComponent,
 } from '@metamask/snaps-sdk/jsx';
 
+import type { SendFlowParams } from '../../stateManagement';
 import btcIcon from '../images/btc-halo.svg';
 import jazzicon3 from '../images/jazzicon3.svg';
-import { AccountWithBalance, AssetType } from '../utils';
-import { AccountSelector } from './AccountSelector';
-import { SendFlowParams } from '../../stateManagement';
+import type { AccountWithBalance } from '../types';
+import { AssetType } from '../types';
+import { AccountSelector as AccountSelectorComponent } from './AccountSelector';
 
 export enum SendFormNames {
   Amount = 'amount',
@@ -60,10 +61,12 @@ export type SendFormProps = {
  * @param props.accounts - The available accounts.
  * @param props.balance - The balance of the account.
  * @param props.amount - The amount of the transaction from the formState.
- * @param props.errors - The form errors.
  * @param props.selectedCurrency - The selected currency to display.
  * @param props.displayClearIcon - Whether to display the clear icon or not.
  * @param props.flushToAddress - Whether to flush the address field or not.
+ * @param props.recipient - The recipient details including address and validation status.
+ * @param props.currencySwitched - Whether the currency display has been switched.
+ * @param props.backEventTriggered - Whether the back event has been triggered.
  * @returns The SendForm component.
  */
 export const SendForm: SnapComponent<SendFormProps> = ({
@@ -80,13 +83,14 @@ export const SendForm: SnapComponent<SendFormProps> = ({
 }) => {
   const showRecipientError = recipient.address.length > 0 && !recipient.error;
   const valueToDisplay =
+    // eslint-disable-next-line no-nested-ternary
     currencySwitched || backEventTriggered
       ? selectedCurrency === AssetType.BTC
         ? amount.amount
         : amount.fiat
       : undefined;
 
-  let addressToDisplay: string | undefined = undefined;
+  let addressToDisplay: string | undefined;
   if (backEventTriggered) {
     addressToDisplay = recipient.address;
   } else if (flushToAddress) {
@@ -95,7 +99,7 @@ export const SendForm: SnapComponent<SendFormProps> = ({
 
   return (
     <Form name="sendForm">
-      <AccountSelector
+      <AccountSelectorComponent
         selectedAccount={selectedAccount}
         accounts={accounts}
         balance={balance}

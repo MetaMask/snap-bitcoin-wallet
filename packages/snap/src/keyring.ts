@@ -28,13 +28,16 @@ import type {
   SendFlowRequest,
   Wallet,
 } from './stateManagement';
-import { generateDefaultSendFlowParams } from './stateManagement';
+import {
+  generateConfirmationReviewInterface,
+  generateSendFlow,
+  updateSendFlow,
+} from './ui/render-interfaces';
 import {
   containsCompleteSendManyRequest,
   convertBtcToFiat,
-  generateSendFlow,
+  sendManyParamsToSendFlowParams,
   sendStateToSendManyParams,
-  updateSendFlow,
 } from './ui/utils';
 import {
   getProvider,
@@ -193,22 +196,62 @@ export class BtcKeyring implements Keyring {
 
     switch (method) {
       case 'btc_sendmany': {
+        const asset =
+          scope === Caip2ChainId.Mainnet ? Caip2Asset.Btc : Caip2Asset.TBtc;
+
         let sendFlowRequest: SendFlowRequest;
         if (containsCompleteSendManyRequest(params as SendManyParams)) {
+          const balances = await getBalances(account, {
+            assets: [asset],
+            scope,
+          });
+
+          // TODO: replace with actual call
+          const rates = '64000';
+
           sendFlowRequest = {
             id: uuidv4(),
             account: walletData.account,
             scope,
             transaction: params as SendManyParams,
-            ...generateDefaultSendFlowParams(),
             interfaceId: '',
-            status: 'draft',
+            status: 'review',
+            ...(await sendManyParamsToSendFlowParams(
+              params as SendManyParams,
+              walletData.account.id,
+              scope,
+              rates,
+              balances[asset].amount,
+            )),
           };
-          // TODO: validate the request and show errors if any.
-        } else {
-          const asset =
-            scope === Caip2ChainId.Mainnet ? Caip2Asset.Btc : Caip2Asset.TBtc;
 
+          console.log(
+            'sendFlowRequest:',
+            JSON.stringify(sendFlowRequest, null, 4),
+          );
+
+          const interfaceId = await generateConfirmationReviewInterface({
+            request: sendFlowRequest,
+          });
+
+          sendFlowRequest.interfaceId = interfaceId;
+
+          await this._stateMgr.upsertRequest(sendFlowRequest);
+          const result = await snap.request({
+            method: 'snap_dialog',
+            params: {
+              id: interfaceId,
+            },
+          });
+
+          console.log('result:', result);
+
+          if (!result) {
+            sendFlowRequest.status = 'rejected';
+            await this._stateMgr.upsertRequest(sendFlowRequest);
+            throw new Error('User rejected the request');
+          }
+        } else {
           sendFlowRequest = await generateSendFlow({
             account: walletData.account,
             scope: walletData.scope,
