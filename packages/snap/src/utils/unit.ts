@@ -23,7 +23,19 @@ export const satsIn1Btc = 100000000;
  * @returns The converted amount to sats/vB.
  */
 export function satsKVBToVB(kvb: number | bigint): bigint {
-  return BigInt(kvb) / BigInt(bitcoinCoreKB);
+  // It cannot be lower than 1 sat per vB.
+  if (kvb < bitcoinCoreKB) {
+    throw new Error(`Unable to convert kvB to vB: "${kvb}" is too small`);
+  }
+  // NOTE: From here, we now we can safely divides by `bitcoinCoreKB` and we know it's not
+  // going to give a results of 0.
+
+  // We still use `BigNumber` here and not `bigint` to be able to round up the result
+  const bigKVB = BigNumber(kvb.toString());
+  const bigKB = BigNumber(bitcoinCoreKB);
+  const bigVB = bigKVB.div(bigKB).toFixed(0, BigNumber.ROUND_HALF_UP);
+
+  return BigInt(bigVB.toString());
 }
 
 /**
