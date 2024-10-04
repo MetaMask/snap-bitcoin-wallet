@@ -10,7 +10,7 @@ import {
   generateQuickNodeSendRawTransactionResp,
 } from '../../../../test/utils';
 import { Config } from '../../../config';
-import { btcToSats } from '../../../utils';
+import { btcToSats, satsKVBToVB } from '../../../utils';
 import * as asyncUtils from '../../../utils/async';
 import type { BtcAccount } from '../../wallet';
 import { BtcAccountDeriver, BtcWallet } from '../../wallet';
@@ -271,9 +271,9 @@ describe('QuickNodeClient', () => {
   describe('getFeeRates', () => {
     it('returns fee rates', async () => {
       const { fetchSpy } = createMockFetch();
-      const expectedFeeRate = 0.0001;
+      const expectedFeeRateKVB = 0.0001;
       const mockResponse = generateQuickNodeEstimatefeeResp({
-        feerate: expectedFeeRate,
+        feerate: expectedFeeRateKVB,
       });
 
       mockApiSuccessResponse({
@@ -285,7 +285,9 @@ describe('QuickNodeClient', () => {
       const result = await client.getFeeRates();
 
       expect(result).toStrictEqual({
-        [Config.defaultFeeRate]: Number(btcToSats(expectedFeeRate.toString())),
+        [Config.defaultFeeRate]: Number(
+          satsKVBToVB(btcToSats(expectedFeeRateKVB.toString())),
+        ),
       });
     });
 

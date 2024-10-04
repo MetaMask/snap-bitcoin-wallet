@@ -5,7 +5,13 @@ import type { Struct } from 'superstruct';
 import { array, assert, mask } from 'superstruct';
 
 import { Config } from '../../../config';
-import { btcToSats, compactError, logger, processBatch } from '../../../utils';
+import {
+  btcToSats,
+  compactError,
+  logger,
+  processBatch,
+  satsKVBToVB,
+} from '../../../utils';
 import { FeeRate, TransactionStatus } from '../constants';
 import type {
   IDataClient,
@@ -246,10 +252,12 @@ export class QuickNodeClient implements IDataClient {
             responseStruct: QuickNodeEstimateFeeResponseStruct,
           });
 
-        // The fee rate will be returned in btc unit
+        // The fee rate will be returned in BTC/kvB unit (note the kilobyte here)
         // e.g. 0.00005081
+        // See: https://www.quicknode.com/docs/bitcoin/estimatesmartfee
+        // > Estimates the smart fee per **kilobyte** ...
         feeRates[feeRate] = Number(
-          btcToSats(response.result.feerate.toString()),
+          satsKVBToVB(btcToSats(response.result.feerate.toString())),
         );
       },
     );
