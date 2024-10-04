@@ -2,8 +2,8 @@ import BigNumber from 'bignumber.js';
 
 import { Config } from '../config';
 
-// QuickNode is using bitcoin core under the hood, and their "estimatesmartfee" is using BTC/kvB. So we will have
-// to convert it back to standard vB.
+// Bitcoin Core's RPC 'estimatesmartfee' returns values in BTC/kvB.
+// Hence, we will have to convert it back to standard BTC/vB.
 // See: https://github.com/bitcoin/bitcoin/blob/v28.0/src/policy/feerate.cpp#L17
 export const bitcoinCoreKB = 1000;
 
