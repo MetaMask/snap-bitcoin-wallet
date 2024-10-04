@@ -39,13 +39,13 @@ export function satsToBtc(sats: number | bigint, withUnit = false): string {
     throw new Error('satsToBtc must be called on an integer number');
   }
   const bigSat = new BigNumber(sats.toString());
-  const btc = bigSat.div(btcSatsFactor).toFixed(8);
+  const bigBtc = bigSat.div(btcSatsFactor).toFixed(8);
 
   if (withUnit) {
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    return `${btc} ${Config.unit}`;
+    return `${bigBtc} ${Config.unit}`;
   }
-  return btc;
+  return bigBtc;
 }
 
 /**
@@ -57,15 +57,15 @@ export function satsToBtc(sats: number | bigint, withUnit = false): string {
  */
 export function btcToSats(btc: string): bigint {
   const bigBtc = new BigNumber(btc);
-  const sats = bigBtc.times(btcSatsFactor);
+  const bigSats = bigBtc.times(btcSatsFactor);
 
   // If it's not a "true" integer, it means we still have some decimals, so the original
   // amount had more than 8 digits after the decimal point.
-  if (!sats.isInteger()) {
+  if (!bigSats.isInteger()) {
     throw new Error('BTC amount is out of range');
   }
-  if (sats.lt(0) || sats.gt(maxSatoshi)) {
+  if (bigSats.lt(0) || bigSats.gt(maxSatoshi)) {
     throw new Error('BTC amount is out of range');
   }
-  return BigInt(sats.toFixed(0));
+  return BigInt(bigSats.toFixed(0));
 }
