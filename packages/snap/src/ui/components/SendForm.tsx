@@ -110,7 +110,6 @@ export const SendForm: SnapComponent<SendFormProps> = ({
         </Box>
         <Input
           name={SendFormNames.Amount}
-          type="number"
           placeholder="Enter amount to send"
           value={valueToDisplay}
         />
