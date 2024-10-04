@@ -2680,12 +2680,14 @@ __metadata:
     "@metamask/snaps-cli": ^6.3.3
     "@metamask/snaps-jest": ^8.4.0
     "@metamask/snaps-sdk": 6.6.0
+    "@metamask/superstruct": ^3.1.0
     "@metamask/utils": ^9.1.0
     "@typescript-eslint/eslint-plugin": ^5.42.1
     "@typescript-eslint/parser": ^5.42.1
     async-mutex: ^0.3.2
     bignumber.js: 9.1.2
     bip32: 4.0.0
+    bitcoin-address-validation: ^2.2.3
     bitcoinjs-lib: 6.1.5
     coinselect: 3.1.13
     dotenv: ^16.4.5
@@ -2699,6 +2701,7 @@ __metadata:
     eslint-plugin-prettier: ^4.2.1
     eslint-plugin-promise: ^6.1.1
     jest: ^29.5.0
+    jest-transform-stub: 2.0.0
     prettier: ^2.7.1
     rimraf: ^3.0.2
     superstruct: ^1.0.3
@@ -13448,6 +13451,13 @@ __metadata:
     pretty-format: ^29.5.0
     semver: ^7.3.5
   checksum: fe5df54122ed10eed625de6416a45bc4958d5062b018f05b152bf9785ab7f355dcd55e40cf5da63895bf8278f8d7b2bb4059b2cfbfdee18f509d455d37d8aa2b
+  languageName: node
+  linkType: hard
+
+"jest-transform-stub@npm:2.0.0":
+  version: 2.0.0
+  resolution: "jest-transform-stub@npm:2.0.0"
+  checksum: c46134257e5fb047f5952e4a4a1339925dd009da15aa8d3310ba1d3e4d22266ed6c675cd18e58c9d5ca2246718d6cc8ff00ea6a4b6f3b2a6b285b6426f6ae8fe
   languageName: node
   linkType: hard
 
