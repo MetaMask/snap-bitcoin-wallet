@@ -31,18 +31,33 @@ import {
   QuickNodeEstimateFeeResponseStruct,
 } from './quicknode.types';
 
+const MAINNET_CONFIRMATION_TARGET = {
+  [FeeRate.Fast]: 1,
+  [FeeRate.Medium]: 2,
+  [FeeRate.Slow]: 3,
+};
+
+// FIXME: There's an issue right now with QuickNode for testnet. Looks like there is not enough
+// data on testnet to be able to target the very first blocks. So workaround this, we just shift
+// everything by 20 to be able to use their API
+const TESTNET_CONFIRMATION_TARGET = {
+  [FeeRate.Fast]: 21,
+  [FeeRate.Medium]: 22,
+  [FeeRate.Slow]: 23,
+};
+
 export class QuickNodeClient implements IDataClient {
   protected readonly _options: QuickNodeClientOptions;
 
   protected readonly _priorityMap: Record<FeeRate, number>;
 
   constructor(options: QuickNodeClientOptions) {
+    const isMainnet = options.network === networks.bitcoin;
+
     this._options = options;
-    this._priorityMap = {
-      [FeeRate.Fast]: 1,
-      [FeeRate.Medium]: 2,
-      [FeeRate.Slow]: 3,
-    };
+    this._priorityMap = isMainnet
+      ? MAINNET_CONFIRMATION_TARGET
+      : TESTNET_CONFIRMATION_TARGET;
   }
 
   get baseUrl(): string {
