@@ -195,7 +195,7 @@ export function validateRecipient(
     (scope === Caip2ChainId.Testnet && !validate(address, Network.testnet))
   ) {
     return {
-      address,
+      address: address ?? '',
       error: 'Invalid address',
       valid: false,
     };
