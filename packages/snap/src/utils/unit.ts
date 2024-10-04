@@ -14,7 +14,7 @@ export const maxSatoshi = 21 * 1e14;
 export const minSatoshi = 1;
 
 // Rate to convert from BTC to sats
-export const btcSatsFactor = 100000000;
+export const satsIn1Btc = 100000000;
 
 /**
  * Converts sats/kvB to sats/vB.
@@ -39,7 +39,7 @@ export function satsToBtc(sats: number | bigint, withUnit = false): string {
     throw new Error('satsToBtc must be called on an integer number');
   }
   const bigSat = new BigNumber(sats.toString());
-  const bigBtc = bigSat.div(btcSatsFactor).toFixed(8);
+  const bigBtc = bigSat.div(satsIn1Btc).toFixed(8);
 
   if (withUnit) {
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
@@ -57,7 +57,7 @@ export function satsToBtc(sats: number | bigint, withUnit = false): string {
  */
 export function btcToSats(btc: string): bigint {
   const bigBtc = new BigNumber(btc);
-  const bigSats = bigBtc.times(btcSatsFactor);
+  const bigSats = bigBtc.times(satsIn1Btc);
 
   // If it's not a "true" integer, it means we still have some decimals, so the original
   // amount had more than 8 digits after the decimal point.
