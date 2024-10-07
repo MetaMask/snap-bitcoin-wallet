@@ -30,6 +30,6 @@ export const DustLimit = {
 // Maximum weight in bytes for a standard transaction
 export const MaxStandardTxWeight = 400000;
 
-// Minium fee rate in BTC/KvB
+// Default minimum fee rate in BTC/KvB
 // To align with the response from RPC provider, we use BTC unit in KvB
 export const DefaultTxMinFeeRateInBtcPerKvb = 0.0001
