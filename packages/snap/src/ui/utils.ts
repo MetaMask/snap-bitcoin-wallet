@@ -244,7 +244,8 @@ export async function sendManyParamsToSendFlowParams(
     defaultParams.fees.amount = estimatedFees.fee.amount;
     defaultParams.fees.fiat = convertBtcToFiat(estimatedFees.fee.amount, rates);
   } catch (error) {
-    defaultParams.fees.error = 'Error estimating fees';
+    console.log('error estimating fees', error);
+    defaultParams.fees.error = `Error estimating fees: ${error as string}`;
   }
 
   defaultParams.amount = validateAmount(amount, balance, rates);

@@ -28,6 +28,7 @@ export enum SendFormNames {
   Cancel = 'cancel',
   Send = 'send',
   HeaderBack = 'headerBack',
+  SetMax = 'max',
 }
 
 /**
@@ -105,8 +106,11 @@ export const SendForm: SnapComponent<SendFormProps> = ({
         balance={balance}
       />
       <Field label="Send amount" error={amount.error}>
-        <Box>
+        <Box direction="horizontal" center>
           <Image src={btcIcon} />
+          {selectedCurrency === AssetType.FIAT && (
+            <Text color="alternative">{selectedCurrency}</Text>
+          )}
         </Box>
         <Input
           name={SendFormNames.Amount}
@@ -114,12 +118,25 @@ export const SendForm: SnapComponent<SendFormProps> = ({
           value={valueToDisplay}
         />
         <Box direction="horizontal" center>
-          <Text color="alternative">{selectedCurrency}</Text>
+          {selectedCurrency === AssetType.BTC && (
+            <Text color="alternative">{selectedCurrency}</Text>
+          )}
           <Button name={SendFormNames.SwapCurrencyDisplay}>
             <Icon name="swap-vertical" color="primary" size="md" />
           </Button>
         </Box>
       </Field>
+      <Box
+        direction="horizontal"
+        alignment={balance.fiat ? 'space-between' : 'end'}
+      >
+        {Boolean(balance.fiat) && (
+          <Text color="muted">{`Balance: $${balance.fiat.toLocaleLowerCase()}`}</Text>
+        )}
+        <Button name={SendFormNames.SetMax} disabled={Boolean(!balance.amount)}>
+          Max
+        </Button>
+      </Box>
       <Field label="To account" error={recipient.error}>
         {recipient.valid && (
           <Box>
