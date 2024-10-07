@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix fee estimation with `QuickNode` ([#266](https://github.com/MetaMask/snap-bitcoin-wallet/pull/266)), ([#261](https://github.com/MetaMask/snap-bitcoin-wallet/pull/261))
   - Properly uses `kvB` instead of `vB`.
-  - Properly triggers an error if the account has not enough UTXOs when estimating the fees.
+  - Will **NOT** throw an error if the account has not enough UTXOs when estimating the fees.
 
 ## [0.6.1]
 
