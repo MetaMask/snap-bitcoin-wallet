@@ -277,7 +277,7 @@ describe('QuickNodeClient', () => {
   });
 
   describe('getFeeRates', () => {
-    const prepareEstimateFeeRateMock = ({
+    const mockEstimateFeeRate = ({
       fetchSpy,
       mempoolminfee = 0.0001,
       minrelaytxfee = 0.0001,
@@ -325,7 +325,7 @@ describe('QuickNodeClient', () => {
     it('returns fee rates', async () => {
       const { fetchSpy } = createMockFetch();
       const expectedFeeRateKVB = 0.0002;
-      prepareEstimateFeeRateMock({
+      mockEstimateFeeRate({
         fetchSpy,
         smartFee: expectedFeeRateKVB,
       });
@@ -345,7 +345,7 @@ describe('QuickNodeClient', () => {
       const mempoolminfee = 0.0001;
       const minrelaytxfee = 0.0001;
 
-      prepareEstimateFeeRateMock({
+      mockEstimateFeeRate({
         fetchSpy,
         smartFee: undefined,
         minrelaytxfee,
@@ -369,7 +369,7 @@ describe('QuickNodeClient', () => {
 
     it('throws error if the feerate is unavailable and the api response is unexpected', async () => {
       const { fetchSpy } = createMockFetch();
-      prepareEstimateFeeRateMock({
+      mockEstimateFeeRate({
         fetchSpy,
         smartFee: undefined,
         estimateFeeErrors: ['Unexpected error'],
