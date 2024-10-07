@@ -358,7 +358,7 @@ describe('QuickNodeClient', () => {
       const result = await client.getFeeRates();
 
       expect(logger.warn).toHaveBeenCalledWith(
-        `Feerate on target block ${target} is unavailable from provider`,
+        `The feerate is unavailable on target block ${target}, use mempool data 'mempoolminfee' instead`,
       );
       expect(result).toStrictEqual({
         [Config.defaultFeeRate]: Number(
