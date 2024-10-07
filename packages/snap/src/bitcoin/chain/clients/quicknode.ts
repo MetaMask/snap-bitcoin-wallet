@@ -258,7 +258,7 @@ export class QuickNodeClient implements IDataClient {
             responseStruct: QuickNodeEstimateFeeResponseStruct,
           });
 
-        // When the feerate data is unavaiable,
+        // When the feerate data is unavailable,
         // the api response will look like:
         // {
         //   "result": {
