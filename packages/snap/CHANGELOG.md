@@ -9,13 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.7.0]
 
-### Uncategorized
+### Changed
 
-- fix(quicknode): fix fee estimate ([#266](https://github.com/MetaMask/snap-bitcoin-wallet/pull/266))
-- fix(quicknode): workaround testnet conf_target for fee estimation ([#267](https://github.com/MetaMask/snap-bitcoin-wallet/pull/267))
-- chore: change `dataclient` from `BlockChairClient` to `QuickNodeClient` ([#250](https://github.com/MetaMask/snap-bitcoin-wallet/pull/250))
-- fix: update `QuickNode` api response handle ([#263](https://github.com/MetaMask/snap-bitcoin-wallet/pull/263))
-- fix: invalid response in estimate fee rpc ([#261](https://github.com/MetaMask/snap-bitcoin-wallet/pull/261))
+- Use `QuickNode` as the main provider ([#250](https://github.com/MetaMask/snap-bitcoin-wallet/pull/250))
+- Workaround `QuickNode` fee estimation for testnet ([#267](https://github.com/MetaMask/snap-bitcoin-wallet/pull/267))
+  - We temporarily changed the confirmation target block to a higher block number to make sure the API is not failing with an error.
+
+### Fixed
+
+- Fix fee estimation with `QuickNode` ([#266](https://github.com/MetaMask/snap-bitcoin-wallet/pull/266)), ([#261](https://github.com/MetaMask/snap-bitcoin-wallet/pull/261))
+  - Properly uses `kvB` instead of `vB`.
+  - Properly triggers an error if the account has not enough UTXOs when estimating the fees.
 
 ## [0.6.1]
 
