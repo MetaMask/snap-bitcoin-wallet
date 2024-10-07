@@ -32,7 +32,7 @@ export function getFeeRate(
 
 /**
  * Estimate the minimum fee rate considering required fee.
- * Reference: https://github.com/bitcoin/bitcoin/blob/master/src/wallet/fees.cpp#L58.
+ * Reference: https://github.com/bitcoin/bitcoin/blob/v28.0/src/wallet/fees.cpp#L58-L81.
  *
  * @param smartFee - The fee rate estimated by the estimatesmartfee rpc in BTC/kvB.
  * @param mempoolminfee - Minimum fee rate in BTC/kvB for tx to be accepted.

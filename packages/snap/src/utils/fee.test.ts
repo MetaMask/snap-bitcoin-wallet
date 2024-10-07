@@ -6,11 +6,11 @@ describe('getMinimumFeeRateInKvb', () => {
     [
       // when all inputs are same
       [1, 1, 1, 1],
-      // when minrelaytxfee is the largest
+      // when minrelaytxfee is the highest
       [1, 2, 3, 3],
-      // when mempoolminfee is the largest
+      // when mempoolminfee is the highest
       [1, 3, 2, 3],
-      // when smartFee is the largest
+      // when smartFee is the highest
       [4, 2, 1, 4],
       // when all inputs less than DefaultTxMinFeeRateInBtcPerKvb
       [

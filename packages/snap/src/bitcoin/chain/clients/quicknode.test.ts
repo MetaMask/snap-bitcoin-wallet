@@ -17,7 +17,7 @@ import type { BtcAccount } from '../../wallet';
 import { BtcAccountDeriver, BtcWallet } from '../../wallet';
 import { TransactionStatus } from '../constants';
 import { DataClientError } from '../exceptions';
-import { QuickNodeClient } from './quicknode';
+import { NoFeeRateError, QuickNodeClient } from './quicknode';
 import type {
   QuickNodeEstimateFeeResponse,
   QuickNodeResponse,
@@ -294,7 +294,7 @@ describe('QuickNodeClient', () => {
         mempoolminfee,
         minrelaytxfee,
       });
-      const mockEstmateFeeResponse = generateQuickNodeEstimatefeeResp({
+      const mockEstimateFeeResponse = generateQuickNodeEstimatefeeResp({
         feerate: smartFee,
       });
       // Mock Mempool Info Response
@@ -304,12 +304,12 @@ describe('QuickNodeClient', () => {
       });
 
       let estimateFeeResponse: QuickNodeEstimateFeeResponse =
-        mockEstmateFeeResponse;
+        mockEstimateFeeResponse;
       if (estimateFeeErrors && estimateFeeErrors.length > 0) {
         estimateFeeResponse = {
-          ...mockEstmateFeeResponse,
+          ...mockEstimateFeeResponse,
           result: {
-            ...mockEstmateFeeResponse.result,
+            ...mockEstimateFeeResponse.result,
             errors: estimateFeeErrors,
           },
         };
@@ -340,7 +340,7 @@ describe('QuickNodeClient', () => {
       });
     });
 
-    it('does not throws error if the fee rate is unavailable', async () => {
+    it('does not throw any error if the fee rate is unavailable', async () => {
       const { fetchSpy } = createMockFetch();
       const mempoolminfee = 0.0001;
       const minrelaytxfee = 0.0001;
@@ -350,7 +350,7 @@ describe('QuickNodeClient', () => {
         smartFee: undefined,
         minrelaytxfee,
         mempoolminfee,
-        estimateFeeErrors: ['Insufficient data or no feerate found'],
+        estimateFeeErrors: [NoFeeRateError],
       });
 
       const client = createQuickNodeClient(networks.testnet);
@@ -367,7 +367,7 @@ describe('QuickNodeClient', () => {
       });
     });
 
-    it('throws error if the fee rate is unavailable and the api response is unexpected', async () => {
+    it('throws an error if the fee rate is unavailable and the api response is an unexpected error', async () => {
       const { fetchSpy } = createMockFetch();
       mockEstimateFeeRate({
         fetchSpy,

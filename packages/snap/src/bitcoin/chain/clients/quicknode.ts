@@ -55,6 +55,8 @@ const TESTNET_CONFIRMATION_TARGET = {
   [FeeRate.Slow]: 23,
 };
 
+export const NoFeeRateError = 'Insufficient data or no feerate found';
+
 export class QuickNodeClient implements IDataClient {
   protected readonly _options: QuickNodeClientOptions;
 
@@ -243,20 +245,23 @@ export class QuickNodeClient implements IDataClient {
 
     const feeRates: Record<string, number> = {};
 
-    const mempool = await this.getMempoolInfo();
+    const {
+      result: { mempoolminfee, minrelaytxfee },
+    } = await this.getMempoolInfo();
 
     // keep this batch process in case we have to switch to support multiple fee rates.
     await processBatch(
       Object.entries(processItems),
       async ([feeRate, target]) => {
-        const response =
-          await this.submitJsonRPCRequest<QuickNodeEstimateFeeResponse>({
-            request: {
-              method: 'estimatesmartfee',
-              params: [target],
-            },
-            responseStruct: QuickNodeEstimateFeeResponseStruct,
-          });
+        const {
+          result: { feerate, errors },
+        } = await this.submitJsonRPCRequest<QuickNodeEstimateFeeResponse>({
+          request: {
+            method: 'estimatesmartfee',
+            params: [target],
+          },
+          responseStruct: QuickNodeEstimateFeeResponseStruct,
+        });
 
         // When the feerate data is unavailable,
         // the api response will look like:
@@ -269,26 +274,21 @@ export class QuickNodeClient implements IDataClient {
         //   "id": null
         // }
         // In that case, we will use the mempool min fee instead.
-        if (
-          response.result.errors &&
-          response.result.errors[0] === 'Insufficient data or no feerate found'
-        ) {
+        if (errors && errors[0] === NoFeeRateError) {
           logger.warn(
             `The feerate is unavailable on target block ${target}, use mempool data 'mempoolminfee' instead`,
           );
-        } else if (response.result.errors) {
+        } else if (errors) {
           throw new DataClientError(
-            `Failed to get fee rate from quicknode: ${JSON.stringify(
-              response.result.errors,
-            )}`,
+            `Failed to get fee rate from quicknode: ${JSON.stringify(errors)}`,
           );
         }
 
         // A safeguard to ensure the feerate is not reject by the chain with the min requirement by mempool
         const feeRateInBtcPerKvb = getMinimumFeeRateInKvb(
-          response.result.feerate ?? 0,
-          mempool.result.mempoolminfee,
-          mempool.result.minrelaytxfee,
+          feerate ?? 0,
+          mempoolminfee,
+          minrelaytxfee,
         );
 
         // The fee rate will be returned in BTC/kvB unit (note the kilobyte here)
