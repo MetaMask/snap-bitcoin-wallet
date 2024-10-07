@@ -11,7 +11,7 @@ import {
   getMinimumFeeRateInKvb,
   logger,
   processBatch,
-  satsKVBToVB,
+  satsKvbToVb,
 } from '../../../utils';
 import { FeeRate, TransactionStatus } from '../constants';
 import type {
@@ -296,7 +296,7 @@ export class QuickNodeClient implements IDataClient {
         // See: https://www.quicknode.com/docs/bitcoin/estimatesmartfee
         // > Estimates the smart fee per **kilobyte** ...
         feeRates[feeRate] = Number(
-          satsKVBToVB(btcToSats(feeRateInBtcPerKvb.toString())),
+          satsKvbToVb(btcToSats(feeRateInBtcPerKvb.toString())),
         );
       },
     );

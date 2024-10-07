@@ -11,7 +11,7 @@ import {
   generateQuickNodeMempoolResp,
 } from '../../../../test/utils';
 import { Config } from '../../../config';
-import { btcToSats, logger, satsKVBToVB } from '../../../utils';
+import { btcToSats, logger, satsKvbToVb } from '../../../utils';
 import * as asyncUtils from '../../../utils/async';
 import type { BtcAccount } from '../../wallet';
 import { BtcAccountDeriver, BtcWallet } from '../../wallet';
@@ -324,10 +324,10 @@ describe('QuickNodeClient', () => {
 
     it('returns fee rates', async () => {
       const { fetchSpy } = createMockFetch();
-      const expectedFeeRateKVB = 0.0002;
+      const expectedFeeRateKvb = 0.0002;
       mockEstimateFeeRate({
         fetchSpy,
-        smartFee: expectedFeeRateKVB,
+        smartFee: expectedFeeRateKvb,
       });
 
       const client = createQuickNodeClient(networks.testnet);
@@ -335,7 +335,7 @@ describe('QuickNodeClient', () => {
 
       expect(result).toStrictEqual({
         [Config.defaultFeeRate]: Number(
-          satsKVBToVB(btcToSats(expectedFeeRateKVB.toString())),
+          satsKvbToVb(btcToSats(expectedFeeRateKvb.toString())),
         ),
       });
     });
@@ -362,7 +362,7 @@ describe('QuickNodeClient', () => {
       );
       expect(result).toStrictEqual({
         [Config.defaultFeeRate]: Number(
-          satsKVBToVB(btcToSats(minrelaytxfee.toString())),
+          satsKvbToVb(btcToSats(minrelaytxfee.toString())),
         ),
       });
     });
