@@ -3,10 +3,10 @@ import {
   btcToSats,
   maxSatoshi,
   minSatoshi,
-  satsKVBToVB,
+  satsKvbToVb,
 } from './unit';
 
-describe('satsKVBToVB', () => {
+describe('satsKvbToVB', () => {
   it.each([
     { kvb: 1000n, vb: 1n },
     { kvb: 1001n, vb: 1n },
@@ -16,11 +16,11 @@ describe('satsKVBToVB', () => {
     { kvb: 1999n, vb: 2n },
     { kvb: 123456789123456789n, vb: 123456789123457n },
   ])('converts from "$kvb" (sats/kvB) to "$vb" (sats/vB)', ({ kvb, vb }) => {
-    expect(satsKVBToVB(kvb)).toBe(vb);
+    expect(satsKvbToVb(kvb)).toBe(vb);
   });
 
   it.each([0, 1, 500, 999])('throws an error if not convertible: %s', (kvb) => {
-    expect(() => satsKVBToVB(kvb)).toThrow(Error);
+    expect(() => satsKvbToVb(kvb)).toThrow(Error);
   });
 });
 
