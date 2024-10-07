@@ -8,6 +8,7 @@ import { Config } from '../../../config';
 import {
   btcToSats,
   compactError,
+  getMinimumFeeRateInKvb,
   logger,
   processBatch,
   satsKVBToVB,
@@ -22,6 +23,7 @@ import type {
   DataClientGetFeeRatesResp,
 } from '../data-client';
 import { DataClientError } from '../exceptions';
+import type { QuickNodeGetMempoolResponse } from './quicknode.types';
 import {
   type QuickNodeClientOptions,
   type QuickNodeGetBalancesResponse,
@@ -35,6 +37,7 @@ import {
   QuickNodeSendTransactionResponseStruct,
   QuickNodeGetTransactionStruct,
   QuickNodeEstimateFeeResponseStruct,
+  QuickNodeGetMempoolStruct,
 } from './quicknode.types';
 
 const MAINNET_CONFIRMATION_TARGET = {
@@ -239,6 +242,9 @@ export class QuickNodeClient implements IDataClient {
     };
 
     const feeRates: Record<string, number> = {};
+
+    const mempool = await this.getMempoolInfo();
+
     // keep this batch process in case we have to switch to support multiple fee rates.
     await processBatch(
       Object.entries(processItems),
@@ -252,17 +258,60 @@ export class QuickNodeClient implements IDataClient {
             responseStruct: QuickNodeEstimateFeeResponseStruct,
           });
 
+        // When the feerate data is unavaiable,
+        // the api response will look like:
+        // {
+        //   "result": {
+        //     "errors": ['Insufficient data or no feerate found'],
+        //     "blocks": 2
+        //   },
+        //   "error": null,
+        //   "id": null
+        // }
+        // In that case, we will use the mempool min fee instead.
+        if (
+          response.result.errors &&
+          response.result.errors[0] === 'Insufficient data or no feerate found'
+        ) {
+          logger.warn(
+            `The feerate is unavailable on target block ${target}, use mempool data 'mempoolminfee' instead`,
+          );
+        } else if (response.result.errors) {
+          throw new DataClientError(
+            `Failed to get fee rate from quicknode: ${JSON.stringify(
+              response.result.errors,
+            )}`,
+          );
+        }
+
+        // A safeguard to ensure the feerate is not reject by the chain with the min requirement by mempool
+        const feeRateInBtcPerKvb = getMinimumFeeRateInKvb(
+          response.result.feerate ?? 0,
+          mempool.result.mempoolminfee,
+          mempool.result.minrelaytxfee,
+        );
+
         // The fee rate will be returned in BTC/kvB unit (note the kilobyte here)
         // e.g. 0.00005081
         // See: https://www.quicknode.com/docs/bitcoin/estimatesmartfee
         // > Estimates the smart fee per **kilobyte** ...
         feeRates[feeRate] = Number(
-          satsKVBToVB(btcToSats(response.result.feerate.toString())),
+          satsKVBToVB(btcToSats(feeRateInBtcPerKvb.toString())),
         );
       },
     );
 
     return feeRates;
+  }
+
+  protected async getMempoolInfo(): Promise<QuickNodeGetMempoolResponse> {
+    return await this.submitJsonRPCRequest<QuickNodeGetMempoolResponse>({
+      request: {
+        method: 'getmempoolinfo',
+        params: [],
+      },
+      responseStruct: QuickNodeGetMempoolStruct,
+    });
   }
 
   async sendTransaction(

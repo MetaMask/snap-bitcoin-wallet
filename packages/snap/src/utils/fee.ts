@@ -2,6 +2,7 @@ import { assert, enums } from 'superstruct';
 
 import type { Fee } from '../bitcoin/chain';
 import { FeeRate } from '../bitcoin/chain/constants';
+import { DefaultTxMinFeeRateInBtcPerKvb } from '../bitcoin/wallet';
 import { Config } from '../config';
 import { FeeRateUnavailableError } from '../exceptions';
 
@@ -27,4 +28,30 @@ export function getFeeRate(
   }
   // Fee rate cannot be lower than 1
   return Math.max(Number(selectedFees.rate), 1);
+}
+
+/**
+ * Estimate the minimum fee rate considering required fee.
+ * Reference: https://github.com/bitcoin/bitcoin/blob/master/src/wallet/fees.cpp#L58.
+ *
+ * @param smartFee - The fee rate estimated by the estimatesmartfee rpc in BTC/kvB.
+ * @param mempoolminfee - Minimum fee rate in BTC/kvB for tx to be accepted.
+ * @param minrelaytxfee - Current minimum relay fee in BTC/kB for transactions.
+ * @returns The minimum fee rate in BTC/kvB.
+ */
+export function getMinimumFeeRateInKvb(
+  smartFee: number,
+  mempoolminfee: number,
+  minrelaytxfee: number,
+) {
+  // Obey mempool min fee when using smart fee estimation
+  const minFee = Math.max(smartFee, mempoolminfee);
+  // Prevent user from paying a fee below the required fee rate - `minrelaytxfee`
+  const minRequireFee = Math.max(
+    minFee,
+    minrelaytxfee,
+    DefaultTxMinFeeRateInBtcPerKvb,
+  );
+
+  return minRequireFee;
 }
