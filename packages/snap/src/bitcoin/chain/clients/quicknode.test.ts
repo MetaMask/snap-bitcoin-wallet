@@ -340,7 +340,7 @@ describe('QuickNodeClient', () => {
       });
     });
 
-    it('does not throws error if the feerate is unavailable', async () => {
+    it('does not throws error if the fee rate is unavailable', async () => {
       const { fetchSpy } = createMockFetch();
       const mempoolminfee = 0.0001;
       const minrelaytxfee = 0.0001;
@@ -367,7 +367,7 @@ describe('QuickNodeClient', () => {
       });
     });
 
-    it('throws error if the feerate is unavailable and the api response is unexpected', async () => {
+    it('throws error if the fee rate is unavailable and the api response is unexpected', async () => {
       const { fetchSpy } = createMockFetch();
       mockEstimateFeeRate({
         fetchSpy,
