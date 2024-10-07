@@ -6,22 +6,28 @@ import {
   satsKvbToVb,
 } from './unit';
 
-describe('satsKvbToVB', () => {
+describe('satsKvbToVb', () => {
   it.each([
-    { kvb: 1000n, vb: 1n },
-    { kvb: 1001n, vb: 1n },
-    { kvb: 1499n, vb: 1n },
-    { kvb: 1500n, vb: 2n },
-    { kvb: 1501n, vb: 2n },
-    { kvb: 1999n, vb: 2n },
-    { kvb: 123456789123456789n, vb: 123456789123457n },
-  ])('converts from "$kvb" (sats/kvB) to "$vb" (sats/vB)', ({ kvb, vb }) => {
-    expect(satsKvbToVb(kvb)).toBe(vb);
-  });
+    { fromKvb: 1000n, toVb: 1n },
+    { fromKvb: 1001n, toVb: 1n },
+    { fromKvb: 1499n, toVb: 1n },
+    { fromKvb: 1500n, toVb: 2n },
+    { fromKvb: 1501n, toVb: 2n },
+    { fromKvb: 1999n, toVb: 2n },
+    { fromKvb: 123456789123456789n, toVb: 123456789123457n },
+  ])(
+    'converts from "$fromKvb" (sats/kvB) to "$toVb" (sats/vB)',
+    ({ fromKvb, toVb }) => {
+      expect(satsKvbToVb(fromKvb)).toBe(toVb);
+    },
+  );
 
-  it.each([0, 1, 500, 999])('throws an error if not convertible: %s', (kvb) => {
-    expect(() => satsKvbToVb(kvb)).toThrow(Error);
-  });
+  it.each([0, 1, 500, 999])(
+    'throws an error if not convertible: %s',
+    (fromKvb) => {
+      expect(() => satsKvbToVb(fromKvb)).toThrow(Error);
+    },
+  );
 });
 
 describe('satsToBtc', () => {
