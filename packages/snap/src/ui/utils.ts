@@ -243,23 +243,22 @@ export async function sendManyParamsToSendFlowParams(
     });
     defaultParams.fees.amount = estimatedFees.fee.amount;
     defaultParams.fees.fiat = convertBtcToFiat(estimatedFees.fee.amount, rates);
+    defaultParams.amount = validateAmount(amount, balance, rates);
+    defaultParams.total = {
+      amount: new BigNumber(amount)
+        .plus(new BigNumber(defaultParams.fees.amount ?? '0'))
+        .toString(),
+      fiat: convertBtcToFiat(
+        new BigNumber(amount)
+          .plus(new BigNumber(defaultParams.fees.amount ?? '0'))
+          .toString(),
+        rates,
+      ),
+    };
   } catch (error) {
     console.log('error estimating fees', error);
     defaultParams.fees.error = `Error estimating fees: ${error as string}`;
   }
-
-  defaultParams.amount = validateAmount(amount, balance, rates);
-  defaultParams.total = {
-    amount: new BigNumber(defaultParams.balance.amount)
-      .plus(new BigNumber(defaultParams.fees.amount ?? '0'))
-      .toString(),
-    fiat: convertBtcToFiat(
-      new BigNumber(amount)
-        .plus(new BigNumber(defaultParams.fees.amount ?? '0'))
-        .toString(),
-      rates,
-    ),
-  };
 
   return defaultParams;
 }

@@ -22,13 +22,15 @@ import {
   estimateFee,
   getMaxSpendableBalance,
 } from './rpcs';
+import type { StartSendTransactionFlowParams } from './rpcs/start-send-transaction-flow';
+import { startSendTransactionFlow } from './rpcs/start-send-transaction-flow';
 import { KeyringStateManager } from './stateManagement';
-import type { SendFlowContext, SendFormState } from './ui/types';
-import { isSnapRpcError, logger } from './utils';
 import {
   isSendFormEvent,
   SendManyController,
 } from './ui/controller/send-many-controller';
+import type { SendFlowContext, SendFormState } from './ui/types';
+import { isSnapRpcError, logger } from './utils';
 
 export const validateOrigin = (origin: string, method: string): void => {
   if (!origin) {
@@ -45,7 +47,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   origin,
   request,
 }): Promise<Json> => {
-  logger.logLevel = 6; //parseInt(Config.logLevel, 10);
+  logger.logLevel = 6;
 
   try {
     const { method } = request;
@@ -63,6 +65,11 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         return await getMaxSpendableBalance(
           request.params as GetMaxSpendableBalanceParams,
         );
+      case InternalRpcMethod.StartSendTransactionFlow: {
+        return await startSendTransactionFlow(
+          request.params as StartSendTransactionFlowParams,
+        );
+      }
 
       default:
         throw new MethodNotFoundError() as unknown as Error;
@@ -139,7 +146,6 @@ export const onUserInput: OnUserInputHandler = async ({
       stateManager,
       request,
       context: context as SendFlowContext,
-      event,
       interfaceId: id,
     });
     await sendManyController.handleEvent(

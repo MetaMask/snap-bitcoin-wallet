@@ -38,7 +38,6 @@ export enum SendFormNames {
  * @property accounts - The available accounts.
  * @property errors - The form errors.
  * @property selectedCurrency - The selected currency to display.
- * @property displayClearIcon - Whether to display the clear icon or not.
  * @property flushToAddress - Whether to flush the address field or not.
  */
 export type SendFormProps = {
@@ -48,7 +47,6 @@ export type SendFormProps = {
   amount: SendFlowParams['amount'];
   selectedCurrency: SendFlowParams['selectedCurrency'];
   recipient: SendFlowParams['recipient'];
-  displayClearIcon: boolean;
   flushToAddress?: boolean;
   currencySwitched: boolean;
   backEventTriggered: boolean;
@@ -63,7 +61,6 @@ export type SendFormProps = {
  * @param props.balance - The balance of the account.
  * @param props.amount - The amount of the transaction from the formState.
  * @param props.selectedCurrency - The selected currency to display.
- * @param props.displayClearIcon - Whether to display the clear icon or not.
  * @param props.flushToAddress - Whether to flush the address field or not.
  * @param props.recipient - The recipient details including address and validation status.
  * @param props.currencySwitched - Whether the currency display has been switched.
@@ -74,7 +71,6 @@ export const SendForm: SnapComponent<SendFormProps> = ({
   selectedAccount,
   accounts,
   selectedCurrency,
-  displayClearIcon,
   flushToAddress,
   balance,
   amount,
@@ -108,9 +104,6 @@ export const SendForm: SnapComponent<SendFormProps> = ({
       <Field label="Send amount" error={amount.error}>
         <Box direction="horizontal" center>
           <Image src={btcIcon} />
-          {selectedCurrency === AssetType.FIAT && (
-            <Text color="alternative">{selectedCurrency}</Text>
-          )}
         </Box>
         <Input
           name={SendFormNames.Amount}
@@ -118,9 +111,9 @@ export const SendForm: SnapComponent<SendFormProps> = ({
           value={valueToDisplay}
         />
         <Box direction="horizontal" center>
-          {selectedCurrency === AssetType.BTC && (
-            <Text color="alternative">{selectedCurrency}</Text>
-          )}
+          <Text color="alternative">
+            {selectedCurrency === AssetType.FIAT ? 'USD' : selectedCurrency}
+          </Text>
           <Button name={SendFormNames.SwapCurrencyDisplay}>
             <Icon name="swap-vertical" color="primary" size="md" />
           </Button>
@@ -148,7 +141,7 @@ export const SendForm: SnapComponent<SendFormProps> = ({
           placeholder="Enter receiving address"
           value={addressToDisplay}
         />
-        {displayClearIcon && (
+        {Boolean(recipient.address) && (
           <Box>
             <Button name={SendFormNames.Clear}>
               <Icon name={SendFormNames.Close} color="primary" />

@@ -4,6 +4,7 @@ export enum InternalRpcMethod {
   GetTransactionStatus = 'chain_getTransactionStatus',
   EstimateFee = 'estimateFee',
   GetMaxSpendableBalance = 'getMaxSpendableBalance',
+  StartSendTransactionFlow = 'startSendTransactionFlow',
 }
 
 const dappPermissions = new Set([
@@ -31,6 +32,7 @@ const metamaskPermissions = new Set([
   InternalRpcMethod.GetTransactionStatus,
   InternalRpcMethod.EstimateFee,
   InternalRpcMethod.GetMaxSpendableBalance,
+  InternalRpcMethod.StartSendTransactionFlow,
 ]);
 
 const allowedOrigins = [
