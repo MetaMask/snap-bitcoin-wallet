@@ -76,7 +76,6 @@ export async function startSendTransactionFlow({
       request: {
         ...sendFlowRequest,
       },
-      flushToAddress: false,
     });
 
     const sendFlowResult = await sendFlowPromise;
@@ -87,6 +86,8 @@ export async function startSendTransactionFlow({
       throw new Error('User rejected the request');
     }
 
+    // Get the latest send flow request from the state manager
+    // this has been updated via onInputHandler
     const updatedSendFlowRequest = await stateManager.getRequest(
       sendFlowRequest.id,
     );
@@ -114,6 +115,6 @@ export async function startSendTransactionFlow({
   } catch (error) {
     logger.error('Failed to start send transaction flow', error);
 
-    throw new Error('Failed to start send transaction flow');
+    throw new Error(error);
   }
 }

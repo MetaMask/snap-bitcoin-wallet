@@ -16,13 +16,11 @@ import { TransactionSummary } from './TransactionSummary';
  * @property selectedCurrency - The selected currency to display.
  * @property amount - The amount to send of the transaction.
  * @property fees - The fees for the transaction.
- * @property displayClearIcon - Whether to display the clear icon or not.
  * @property flushToAddress - Whether to flush the address field or not.
  * @property errors - The form errors.
  */
 export type SendFlowProps = {
   account: KeyringAccount;
-  displayClearIcon: boolean;
   flushToAddress?: boolean;
   sendFlowParams: SendFlowParams;
   currencySwitched?: boolean;
@@ -39,7 +37,6 @@ export type SendFlowProps = {
  *
  * @param props - The properties object.
  * @param props.account - The account information for the transaction.
- * @param props.displayClearIcon - Flag to display the clear icon.
  * @param props.flushToAddress - Flag to flush to address.
  * @param props.sendFlowParams - Additional parameters for the send flow.
  * @param props.currencySwitched - Flag indicating if the currency was switched.
@@ -48,7 +45,6 @@ export type SendFlowProps = {
  */
 export const SendFlow: SnapComponent<SendFlowProps> = ({
   account,
-  displayClearIcon,
   sendFlowParams,
   flushToAddress = false,
   currencySwitched = false,
@@ -77,7 +73,6 @@ export const SendFlow: SnapComponent<SendFlowProps> = ({
         <SendForm
           selectedAccount={account.address}
           accounts={[account]}
-          displayClearIcon={displayClearIcon}
           flushToAddress={flushToAddress}
           currencySwitched={currencySwitched}
           backEventTriggered={backEventTriggered}

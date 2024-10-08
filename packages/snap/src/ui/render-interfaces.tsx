@@ -31,7 +31,6 @@ export async function generateSendFlow({
           sendFlowParams={{
             ...sendFlowProps,
           }}
-          displayClearIcon={false}
         />
       ),
       context: {
@@ -57,7 +56,6 @@ export async function generateSendFlow({
  *
  * @param options - The options for updating the send flow.
  * @param options.request - The send flow request object.
- * @param options.displayClearIcon - Whether to display the clear icon.
  * @param options.flushToAddress - Whether to flush to address.
  * @param options.currencySwitched - Whether the currency was switched.
  * @param options.backEventTriggered - Whether the back event was triggered.
@@ -65,7 +63,6 @@ export async function generateSendFlow({
  */
 export async function updateSendFlow({
   request,
-  displayClearIcon,
   flushToAddress = false,
   currencySwitched = false,
   backEventTriggered = false,
@@ -82,7 +79,6 @@ export async function updateSendFlow({
           account={request.account}
           sendFlowParams={request}
           flushToAddress={flushToAddress}
-          displayClearIcon={displayClearIcon}
           currencySwitched={currencySwitched}
           backEventTriggered={backEventTriggered}
         />

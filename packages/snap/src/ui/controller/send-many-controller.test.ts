@@ -209,7 +209,6 @@ describe('SendManyController', () => {
       expect(upsertRequestSpy).toHaveBeenCalledWith(expectedRequest);
       expect(updateSendFlow).toHaveBeenCalledWith({
         request: expectedRequest,
-        displayClearIcon: true,
       });
     });
 
@@ -325,7 +324,6 @@ describe('SendManyController', () => {
         });
         expect(updateSendFlow).toHaveBeenCalledWith({
           request: controller.request,
-          displayClearIcon: true,
         });
       });
 
@@ -367,7 +365,6 @@ describe('SendManyController', () => {
         });
         expect(updateSendFlow).toHaveBeenCalledWith({
           request: controller.request,
-          displayClearIcon: true,
         });
       });
     });
@@ -413,7 +410,6 @@ describe('SendManyController', () => {
         expect(controller.request.total.amount).toBeDefined();
         expect(updateSendFlow).toHaveBeenCalledWith({
           request: controller.request,
-          displayClearIcon: false,
         });
       });
 
@@ -458,7 +454,6 @@ describe('SendManyController', () => {
         expect(controller.request.total.amount).toBeDefined();
         expect(updateSendFlow).toHaveBeenCalledWith({
           request: controller.request,
-          displayClearIcon: false,
         });
       });
 
@@ -494,7 +489,6 @@ describe('SendManyController', () => {
         expect(controller.request.amount.valid).toBe(false);
         expect(updateSendFlow).toHaveBeenCalledWith({
           request: controller.request,
-          displayClearIcon: false,
         });
       });
 
@@ -535,7 +529,6 @@ describe('SendManyController', () => {
         expect(controller.request.fees.error).toBe('Fee estimation error');
         expect(updateSendFlow).toHaveBeenCalledWith({
           request: controller.request,
-          displayClearIcon: false,
         });
       });
     });
@@ -669,7 +662,6 @@ describe('SendManyController', () => {
         request: expectedResult,
         flushToAddress: false,
         currencySwitched: true,
-        displayClearIcon: true,
       });
     });
 
@@ -697,7 +689,6 @@ describe('SendManyController', () => {
       expect(stateManager.upsertRequest).toHaveBeenCalledWith(expectedResult);
       expect(updateSendFlow).toHaveBeenCalledWith({
         request: expectedResult,
-        displayClearIcon: false,
         showReviewTransaction: true,
       });
     });

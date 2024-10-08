@@ -85,7 +85,6 @@ export type GenerateSendFlowParams = {
 
 export type UpdateSendFlowParams = {
   request: SendFlowRequest;
-  displayClearIcon: boolean;
   flushToAddress?: boolean;
   currencySwitched?: boolean;
   backEventTriggered?: boolean;

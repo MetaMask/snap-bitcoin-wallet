@@ -81,8 +81,6 @@ export class SendManyController {
   ): Promise<void> {
     formValidation(formState, context, this.request);
 
-    const displayClearIcon = Boolean(formState.to) && formState.to !== '';
-
     switch (eventName) {
       case SendFormNames.To: {
         this.request.recipient.address = formState.to;
@@ -90,7 +88,6 @@ export class SendManyController {
         await this.persistRequest(this.request);
         await updateSendFlow({
           request: this.request,
-          displayClearIcon,
         });
         break;
       }
@@ -98,7 +95,6 @@ export class SendManyController {
         if (this.request.amount.error) {
           await updateSendFlow({
             request: this.request,
-            displayClearIcon,
           });
           return;
         }
@@ -108,7 +104,6 @@ export class SendManyController {
         // show loading state for fees
         await updateSendFlow({
           request: this.request,
-          displayClearIcon,
         });
 
         const amountInBtc =
@@ -153,7 +148,6 @@ export class SendManyController {
         }
         await updateSendFlow({
           request: this.request,
-          displayClearIcon,
         });
         break;
       }
@@ -171,7 +165,6 @@ export class SendManyController {
           return await updateSendFlow({
             request: this.request,
             flushToAddress: false,
-            displayClearIcon: true,
             backEventTriggered: true,
           });
         } else if (this.request.status === 'draft') {
@@ -197,7 +190,6 @@ export class SendManyController {
         return await updateSendFlow({
           request: this.request,
           flushToAddress: true,
-          displayClearIcon: false,
         });
       case SendFormNames.Cancel:
       case SendFormNames.Close: {
@@ -221,7 +213,6 @@ export class SendManyController {
         return await updateSendFlow({
           request: this.request,
           flushToAddress: false,
-          displayClearIcon: true,
           currencySwitched: true,
         });
       }
@@ -230,7 +221,6 @@ export class SendManyController {
         await this.persistRequest(this.request);
         return await updateSendFlow({
           request: this.request,
-          displayClearIcon: false,
           showReviewTransaction: true,
         });
       }
@@ -250,7 +240,6 @@ export class SendManyController {
         this.request.fees.loading = true;
         await updateSendFlow({
           request: this.request,
-          displayClearIcon: false,
         });
 
         try {
@@ -294,7 +283,6 @@ export class SendManyController {
 
         return await updateSendFlow({
           request: this.request,
-          displayClearIcon: false,
           currencySwitched: true,
         });
       }
