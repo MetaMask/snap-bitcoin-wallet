@@ -3,6 +3,11 @@ import { Box, Button, Heading, Icon, Text } from '@metamask/snaps-sdk/jsx';
 
 import { SendFormNames } from './SendForm';
 
+/**
+ * The props for the {@link SendFlowHeader} component.
+ *
+ * @property heading - The heading to display.
+ */
 export type SendFlowHeaderProps = {
   heading: string;
 };
