@@ -10,6 +10,7 @@ import { estimateFee, getMaxSpendableBalance } from '../../rpcs';
 import {
   generateDefaultSendFlowRequest,
   KeyringStateManager,
+  TransactionStatus,
 } from '../../stateManagement';
 import { SendFormNames } from '../components/SendForm';
 import { updateSendFlow } from '../render-interfaces';
@@ -301,7 +302,7 @@ describe('SendManyController', () => {
           mockRequestId,
           mockInterfaceId,
         );
-        mockRequest.status = 'review';
+        mockRequest.status = TransactionStatus.Review;
 
         const { instance: stateManager } = createMockStateManager();
 
@@ -342,7 +343,7 @@ describe('SendManyController', () => {
           mockRequestId,
           mockInterfaceId,
         );
-        mockRequest.status = 'review';
+        mockRequest.status = TransactionStatus.Review;
 
         const { instance: stateManager } = createMockStateManager();
 
@@ -548,7 +549,7 @@ describe('SendManyController', () => {
         mockRequestId,
         mockInterfaceId,
       );
-      mockRequest.status = 'review';
+      mockRequest.status = TransactionStatus.Review;
 
       const { instance: stateManager } = createMockStateManager();
 
@@ -559,10 +560,10 @@ describe('SendManyController', () => {
         interfaceId: mockInterfaceId,
       });
       await controller.handleButtonEvent(SendFormNames.HeaderBack);
-      expect(controller.request.status).toBe('draft');
+      expect(controller.request.status).toBe(TransactionStatus.Draft);
       expect(controller.request).toStrictEqual({
         ...mockRequest,
-        status: 'draft',
+        status: TransactionStatus.Draft,
       });
       expect(updateSendFlow).toHaveBeenCalled();
     });
@@ -574,7 +575,7 @@ describe('SendManyController', () => {
         mockRequestId,
         mockInterfaceId,
       );
-      mockRequest.status = 'draft';
+      mockRequest.status = TransactionStatus.Draft;
 
       const { instance: stateManager } = createMockStateManager();
 
@@ -585,10 +586,10 @@ describe('SendManyController', () => {
         interfaceId: mockInterfaceId,
       });
       await controller.handleButtonEvent(SendFormNames.HeaderBack);
-      expect(controller.request.status).toBe('rejected');
+      expect(controller.request.status).toBe(TransactionStatus.Rejected);
       expect(controller.request).toStrictEqual({
         ...mockRequest,
-        status: 'rejected',
+        status: TransactionStatus.Rejected,
       });
       expect(snap.request).toHaveBeenCalledWith({
         method: 'snap_resolveInterface',
@@ -635,7 +636,7 @@ describe('SendManyController', () => {
         interfaceId: mockInterfaceId,
       });
       await controller.handleButtonEvent(SendFormNames.Cancel);
-      expect(controller.request.status).toBe('rejected');
+      expect(controller.request.status).toBe(TransactionStatus.Rejected);
     });
 
     it('should handle "SwapCurrencyDisplay" button event', async () => {
@@ -685,9 +686,9 @@ describe('SendManyController', () => {
       await controller.handleButtonEvent(SendFormNames.Review);
       const expectedResult = {
         ...mockRequest,
-        status: 'review',
+        status: TransactionStatus.Review,
       };
-      expect(controller.request.status).toBe('review');
+      expect(controller.request.status).toBe(TransactionStatus.Review);
       expect(stateManager.upsertRequest).toHaveBeenCalledWith(expectedResult);
       expect(updateSendFlow).toHaveBeenCalledWith({
         request: expectedResult,
@@ -702,7 +703,7 @@ describe('SendManyController', () => {
         mockRequestId,
         mockInterfaceId,
       );
-      mockRequest.status = 'review';
+      mockRequest.status = TransactionStatus.Review;
       const { instance: stateManager } = createMockStateManager();
 
       const controller = new SendManyController({
@@ -714,9 +715,9 @@ describe('SendManyController', () => {
       await controller.handleButtonEvent(SendFormNames.Send);
       const expectedResult = {
         ...mockRequest,
-        status: 'signed',
+        status: TransactionStatus.Signed,
       };
-      expect(controller.request.status).toBe('signed');
+      expect(controller.request.status).toBe(TransactionStatus.Signed);
       expect(stateManager.upsertRequest).toHaveBeenCalledWith(expectedResult);
       expect(snap.request).toHaveBeenCalledWith({
         method: 'snap_resolveInterface',

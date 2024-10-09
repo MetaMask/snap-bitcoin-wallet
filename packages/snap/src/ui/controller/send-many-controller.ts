@@ -4,7 +4,7 @@ import { BigNumber } from 'bignumber.js';
 
 import { estimateFee, getMaxSpendableBalance } from '../../rpcs';
 import type { KeyringStateManager } from '../../stateManagement';
-import { type SendFlowRequest } from '../../stateManagement';
+import { TransactionStatus, type SendFlowRequest } from '../../stateManagement';
 import { SendFormNames } from '../components/SendForm';
 import { updateSendFlow } from '../render-interfaces';
 import { AssetType, type SendFlowContext, type SendFormState } from '../types';
@@ -167,16 +167,16 @@ export class SendManyController {
   async handleButtonEvent(eventName: SendFormNames): Promise<void | null> {
     switch (eventName) {
       case SendFormNames.HeaderBack: {
-        if (this.request.status === 'review') {
-          this.request.status = 'draft';
+        if (this.request.status === TransactionStatus.Review) {
+          this.request.status = TransactionStatus.Draft;
           await this.persistRequest(this.request);
           return await updateSendFlow({
             request: this.request,
             flushToAddress: false,
             backEventTriggered: true,
           });
-        } else if (this.request.status === 'draft') {
-          this.request.status = 'rejected';
+        } else if (this.request.status === TransactionStatus.Draft) {
+          this.request.status = TransactionStatus.Rejected;
           await this.persistRequest(this.request);
           return await this.resolveInterface(false);
         }
@@ -195,7 +195,7 @@ export class SendManyController {
         });
       case SendFormNames.Cancel:
       case SendFormNames.Close: {
-        this.request.status = 'rejected';
+        this.request.status = TransactionStatus.Rejected;
         await this.persistRequest(this.request);
         await snap.request({
           method: 'snap_resolveInterface',
@@ -219,7 +219,7 @@ export class SendManyController {
         });
       }
       case SendFormNames.Review: {
-        this.request.status = 'review';
+        this.request.status = TransactionStatus.Review;
         await this.persistRequest(this.request);
         return await updateSendFlow({
           request: this.request,
@@ -227,7 +227,7 @@ export class SendManyController {
         });
       }
       case SendFormNames.Send: {
-        this.request.status = 'signed';
+        this.request.status = TransactionStatus.Signed;
         await this.persistRequest(this.request);
         await this.resolveInterface(true);
         return null;

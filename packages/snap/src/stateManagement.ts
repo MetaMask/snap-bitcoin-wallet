@@ -53,6 +53,16 @@ export type SendFlowParams = {
   total: Currency & { error: string; valid: boolean };
 };
 
+export enum TransactionStatus {
+  Draft = 'draft',
+  Review = 'review',
+  Signed = 'signed',
+  Rejected = 'rejected',
+  Confirmed = 'confirmed',
+  Pending = 'pending',
+  Failure = 'failure',
+}
+
 export type TransactionState = {
   transaction: Omit<SendManyParams, 'scope'>;
   /* The status of the transaction 
@@ -64,14 +74,7 @@ export type TransactionState = {
     - pending: The transaction is pending confirmation
     - failure: The transaction failed
   */
-  status:
-    | 'draft'
-    | 'review'
-    | 'signed'
-    | 'rejected'
-    | 'confirmed'
-    | 'pending'
-    | 'failure';
+  status: TransactionStatus;
   txId?: string;
 };
 
@@ -133,7 +136,7 @@ export const generateDefaultSendFlowRequest = (
     account,
     scope,
     transaction: defaultSendManyParams(scope),
-    status: 'draft',
+    status: TransactionStatus.Draft,
     // Send flow params
     ...generateDefaultSendFlowParams(),
   };

@@ -1,4 +1,5 @@
 import { Caip2ChainId } from '../constants';
+import { TransactionStatus } from '../stateManagement';
 import { AssetType } from '../ui/types';
 import { StartSendTransactionFlowTest } from './__tests__/helper';
 import { defaultSendManyParams } from './sendmany';
@@ -45,7 +46,7 @@ describe('startSendTransactionFlow', () => {
       account: keyringAccount,
       scope: mockScope,
       transaction: defaultSendManyParams(mockScope),
-      status: 'draft' as const,
+      status: TransactionStatus.Draft,
       selectedCurrency: AssetType.BTC,
       recipient: {
         address: keyringAccount.address,
@@ -99,7 +100,7 @@ describe('startSendTransactionFlow', () => {
       account: keyringAccount,
       scope: mockScope,
       transaction: defaultSendManyParams(mockScope),
-      status: 'draft' as const,
+      status: TransactionStatus.Draft,
       selectedCurrency: AssetType.BTC,
       recipient: {
         address: keyringAccount.address,

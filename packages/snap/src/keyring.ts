@@ -23,10 +23,11 @@ import { Caip2Asset, Caip2ChainId } from './constants';
 import { AccountNotFoundError, MethodNotImplementedError } from './exceptions';
 import { Factory } from './factory';
 import { getBalances, type SendManyParams, sendMany } from './rpcs';
-import type {
-  KeyringStateManager,
-  SendFlowRequest,
-  Wallet,
+import {
+  TransactionStatus,
+  type KeyringStateManager,
+  type SendFlowRequest,
+  type Wallet,
 } from './stateManagement';
 import { generateConfirmationReviewInterface } from './ui/render-interfaces';
 import { sendManyParamsToSendFlowParams } from './ui/utils';
@@ -203,7 +204,7 @@ export class BtcKeyring implements Keyring {
           scope,
           transaction: params as SendManyParams,
           interfaceId: '',
-          status: 'review',
+          status: TransactionStatus.Review,
           ...(await sendManyParamsToSendFlowParams(
             params as SendManyParams,
             walletData.account.id,
@@ -228,7 +229,7 @@ export class BtcKeyring implements Keyring {
         });
 
         if (!result) {
-          sendFlowRequest.status = 'rejected';
+          sendFlowRequest.status = TransactionStatus.Rejected;
           await this._stateMgr.upsertRequest(sendFlowRequest);
           throw new Error('User rejected the request');
         }

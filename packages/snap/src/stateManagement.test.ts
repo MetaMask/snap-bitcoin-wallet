@@ -2,7 +2,7 @@ import { generateAccounts } from '../test/utils';
 import { Caip2ChainId } from './constants';
 import { defaultSendManyParams } from './rpcs';
 import type { SendFlowRequest } from './stateManagement';
-import { KeyringStateManager } from './stateManagement';
+import { KeyringStateManager, TransactionStatus } from './stateManagement';
 import { AssetType } from './ui/types';
 import * as snapUtil from './utils/snap';
 
@@ -379,7 +379,7 @@ describe('KeyringStateManager', () => {
               amount: '1',
               total: '1',
             },
-            status: 'draft' as const,
+            status: TransactionStatus.Draft,
             selectedCurrency: AssetType.BTC,
             recipient: {
               address: 'recipient-address',
@@ -466,7 +466,7 @@ describe('KeyringStateManager', () => {
             transaction: {
               ...defaultSendManyParams('scope-1'),
             },
-            status: 'draft',
+            status: TransactionStatus.Draft,
             selectedCurrency: AssetType.BTC,
             recipient: {
               address: 'recipient-address',
@@ -517,7 +517,7 @@ describe('KeyringStateManager', () => {
             transaction: {
               ...defaultSendManyParams('scope-1'),
             },
-            status: 'draft',
+            status: TransactionStatus.Draft,
             selectedCurrency: AssetType.BTC,
             recipient: {
               address: 'recipient-address',
@@ -553,7 +553,7 @@ describe('KeyringStateManager', () => {
 
           const updatedRequest: SendFlowRequest = {
             ...existingRequest,
-            status: 'review',
+            status: TransactionStatus.Review,
           };
 
           await instance.upsertRequest(updatedRequest);
@@ -575,7 +575,7 @@ describe('KeyringStateManager', () => {
             transaction: {
               ...defaultSendManyParams('scope-1'),
             },
-            status: 'draft',
+            status: TransactionStatus.Draft,
             selectedCurrency: AssetType.BTC,
             recipient: {
               address: 'recipient-address',
@@ -625,7 +625,7 @@ describe('KeyringStateManager', () => {
             transaction: {
               ...defaultSendManyParams('scope-1'),
             },
-            status: 'draft',
+            status: TransactionStatus.Draft,
             selectedCurrency: AssetType.BTC,
             recipient: {
               address: 'recipient-address',
