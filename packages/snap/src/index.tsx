@@ -47,7 +47,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   origin,
   request,
 }): Promise<Json> => {
-  logger.logLevel = 6;
+  logger.logLevel = parseInt(Config.logLevel, 10);
 
   try {
     const { method } = request;
@@ -91,8 +91,7 @@ export const onKeyringRequest: OnKeyringRequestHandler = async ({
   origin,
   request,
 }): Promise<Json> => {
-  logger.logLevel = 6;
-  logger.log('onKeyringRequest', request, origin);
+  logger.logLevel = parseInt(Config.logLevel, 10);
 
   try {
     validateOrigin(origin, request.method);
@@ -136,10 +135,6 @@ export const onUserInput: OnUserInputHandler = async ({
   if (!request) {
     throw new Error('Request not found');
   }
-
-  logger.log('onUserInput request', JSON.stringify(request, null, 4));
-  logger.log('onUserInput state', JSON.stringify(state, null, 4));
-  logger.log('onUserInput event', JSON.stringify(event, null, 4));
 
   if (isSendFormEvent(event)) {
     const sendManyController = new SendManyController({
