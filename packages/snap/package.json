@@ -1,6 +1,6 @@
 {
   "name": "@metamask/bitcoin-wallet-snap",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "A Bitcoin wallet Snap.",
   "repository": {
     "type": "git",
@@ -51,7 +51,7 @@
     "@typescript-eslint/eslint-plugin": "^5.42.1",
     "@typescript-eslint/parser": "^5.42.1",
     "async-mutex": "^0.3.2",
-    "big.js": "6.2.1",
+    "bignumber.js": "9.1.2",
     "bip32": "4.0.0",
     "bitcoinjs-lib": "6.1.5",
     "coinselect": "3.1.13",

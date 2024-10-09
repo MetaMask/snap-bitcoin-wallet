@@ -34,7 +34,9 @@ export class CoinSelectService {
 
     const selectedResult: SelectionResult = {
       fee: result.fee,
-      inputs: result.inputs,
+      // CoinSelect returns undefined inputs when the provided UTXOs are insufficient,
+      // Hence, assign an empty array to standardize the return value
+      inputs: result.inputs ?? [],
       outputs: [],
     };
 

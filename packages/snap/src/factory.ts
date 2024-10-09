@@ -1,5 +1,5 @@
 import { BtcOnChainService } from './bitcoin/chain';
-import { BlockChairClient } from './bitcoin/chain/clients/blockchair';
+import { QuickNodeClient } from './bitcoin/chain/clients/quicknode';
 import { BtcAccountDeriver, BtcWallet, getBtcNetwork } from './bitcoin/wallet';
 import { Config } from './config';
 
@@ -7,13 +7,25 @@ export class Factory {
   static createOnChainServiceProvider(scope: string): BtcOnChainService {
     const btcNetwork = getBtcNetwork(scope);
 
-    const client = new BlockChairClient({
+    return new BtcOnChainService(Factory.createQuickNodeClient(scope), {
       network: btcNetwork,
-      apiKey: Config.onChainService.dataClient.options?.apiKey?.toString(),
     });
+  }
 
-    return new BtcOnChainService(client, {
+  static createQuickNodeClient(scope: string): QuickNodeClient {
+    const btcNetwork = getBtcNetwork(scope);
+
+    const { mainnetEndpoint, testnetEndpoint } =
+      Config.onChainService.dataClient.options;
+
+    if (!mainnetEndpoint || !testnetEndpoint) {
+      throw new Error('QuickNode endpoints have not been configured');
+    }
+
+    return new QuickNodeClient({
       network: btcNetwork,
+      mainnetEndpoint,
+      testnetEndpoint,
     });
   }
 

@@ -130,7 +130,10 @@ export class BtcWallet {
       feeRate,
     );
 
-    if (!selectionResult.inputs || !selectionResult.outputs) {
+    if (
+      selectionResult.inputs.length === 0 ||
+      selectionResult.outputs.length === 0
+    ) {
       throw new InsufficientFundsError();
     }
 
