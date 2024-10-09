@@ -28,16 +28,8 @@ import type {
   SendFlowRequest,
   Wallet,
 } from './stateManagement';
-import {
-  generateConfirmationReviewInterface,
-  generateSendFlow,
-  updateSendFlow,
-} from './ui/render-interfaces';
-import {
-  convertBtcToFiat,
-  sendManyParamsToSendFlowParams,
-  sendStateToSendManyParams,
-} from './ui/utils';
+import { generateConfirmationReviewInterface } from './ui/render-interfaces';
+import { sendManyParamsToSendFlowParams } from './ui/utils';
 import {
   getProvider,
   ScopeStruct,
