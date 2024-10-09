@@ -111,18 +111,24 @@ export class SendManyController {
           request: this.request,
         });
 
-        if (this.request.selectedCurrency === AssetType.BTC) { 
+        if (this.request.selectedCurrency === AssetType.BTC) {
           this.request.amount.amount = formState.amount;
-          this.request.amount.fiat = convertBtcToFiat(fomState.amount, this.request.rates);
+          this.request.amount.fiat = convertBtcToFiat(
+            formState.amount,
+            this.request.rates,
+          );
         } else {
           this.request.amount.fiat = formState.amount;
-          this.request.amount.amount = convertFiatToBtc(fomState.amount, this.request.rates);
+          this.request.amount.amount = convertFiatToBtc(
+            formState.amount,
+            this.request.rates,
+          );
         }
 
         try {
           const estimates = await estimateFee({
             account: this.context.accounts[0].id,
-            amount: amountInBtc,
+            amount: this.request.amount.amount,
           });
           // TODO: fiat conversion
           this.request.fees = {
@@ -132,7 +138,7 @@ export class SendManyController {
             error: '',
           };
           this.request.total = validateTotal(
-            amountInBtc,
+            this.request.amount.amount,
             estimates.fee.amount,
             this.request.balance.amount,
             this.request.rates,
