@@ -3252,6 +3252,32 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@metamask/snaps-sdk@npm:6.6.0":
+  version: 6.6.0
+  resolution: "@metamask/snaps-sdk@npm:6.6.0"
+  dependencies:
+    "@metamask/key-tree": ^9.1.2
+    "@metamask/providers": ^17.1.2
+    "@metamask/rpc-errors": ^6.3.1
+    "@metamask/superstruct": ^3.1.0
+    "@metamask/utils": ^9.2.1
+  checksum: 5ed1681b0456cdfbb0fdaf32dd7b5f1e12ed62acaec17d462ed1d4579ac4c2de9543e4c92fed04774c5cf7864a522100d0c3560fb643e13c34f51296087abe65
+  languageName: node
+  linkType: hard
+
+"@metamask/snaps-sdk@npm:^6.5.0":
+  version: 6.8.0
+  resolution: "@metamask/snaps-sdk@npm:6.8.0"
+  dependencies:
+    "@metamask/key-tree": ^9.1.2
+    "@metamask/providers": ^17.1.2
+    "@metamask/rpc-errors": ^6.3.1
+    "@metamask/superstruct": ^3.1.0
+    "@metamask/utils": ^9.2.1
+  checksum: a7cfbadb4f816776a2e34353cdd99cae665de47971ada4400aea15dfa308a17f468fec98e4798e54d454284baf43c7a9eb44fc480543770ed7e17ae34a199b32
+  languageName: node
+  linkType: hard
+
 "@metamask/snaps-sdk@npm:^6.5.1":
   version: 6.5.1
   resolution: "@metamask/snaps-sdk@npm:6.5.1"
@@ -6761,13 +6787,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bignumber@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "bignumber@npm:1.1.0"
-  checksum: 300f2c04fb8aa538b9e73e9c1f2c84abc06c5c7f2e8b10c8864ff540b6ff890c6665f1563c5a29f9f9b48ce131bebef245f32043082266bbb07fd098b60e341b
-  languageName: node
-  linkType: hard
-
 "bin-links@npm:4.0.4":
   version: 4.0.4
   resolution: "bin-links@npm:4.0.4"
@@ -6830,7 +6849,6 @@ __metadata:
     "@metamask/jazzicon": ^2.0.0
     "@typescript-eslint/eslint-plugin": ^5.42.1
     "@typescript-eslint/parser": ^5.42.1
-    bignumber: ^1.1.0
     bignumber.js: ^9.1.2
     bitcoin-address-validation: ^2.2.3
     depcheck: ^1.4.7
