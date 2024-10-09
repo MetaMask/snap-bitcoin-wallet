@@ -53,6 +53,13 @@ export type SendFormProps = {
   backEventTriggered: boolean;
 };
 
+const getAmountFrom = (
+  selectedCurrency: AssetType,
+  amount: SendFlowParams['amount'],
+) => {
+  return selectedCurrency === AssetType.BTC ? amount.amount : amount.fiat;
+};
+
 /**
  * A component that shows the send form.
  *
@@ -82,12 +89,9 @@ export const SendForm: SnapComponent<SendFormProps> = ({
   backEventTriggered,
 }) => {
   const showRecipientError = recipient.address.length > 0 && !recipient.error;
-  const valueToDisplay =
-    // eslint-disable-next-line no-nested-ternary
+  const amountToDisplay =
     currencySwitched || backEventTriggered
-      ? selectedCurrency === AssetType.BTC
-        ? amount.amount
-        : amount.fiat
+      ? getAmountFrom(selectedCurrency, amount)
       : undefined;
 
   let addressToDisplay: string | undefined;
@@ -111,7 +115,7 @@ export const SendForm: SnapComponent<SendFormProps> = ({
         <Input
           name={SendFormNames.Amount}
           placeholder="Enter amount to send"
-          value={valueToDisplay}
+          value={amountToDisplay}
         />
         <Box direction="horizontal" center>
           <Text color="alternative">
