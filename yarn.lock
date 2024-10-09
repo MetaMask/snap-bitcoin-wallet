@@ -3090,8 +3090,8 @@ __metadata:
   linkType: hard
 
 "@metamask/snaps-cli@npm:^6.3.0":
-  version: 6.3.3
-  resolution: "@metamask/snaps-cli@npm:6.3.3"
+  version: 6.4.0
+  resolution: "@metamask/snaps-cli@npm:6.4.0"
   dependencies:
     "@babel/core": ^7.23.2
     "@babel/plugin-transform-class-properties": ^7.22.5
@@ -3101,8 +3101,8 @@ __metadata:
     "@babel/plugin-transform-runtime": ^7.13.2
     "@babel/preset-env": ^7.23.2
     "@babel/preset-typescript": ^7.23.2
-    "@metamask/snaps-sdk": ^6.5.0
-    "@metamask/snaps-utils": ^8.1.1
+    "@metamask/snaps-sdk": ^6.8.0
+    "@metamask/snaps-utils": ^8.4.0
     "@metamask/snaps-webpack-plugin": ^4.1.2
     "@metamask/superstruct": ^3.1.0
     "@metamask/utils": ^9.2.1
@@ -3144,7 +3144,7 @@ __metadata:
     yargs: ^17.7.1
   bin:
     mm-snap: ./dist/main.cjs
-  checksum: dff0646fae69f6ae9d8629fcf7593d1e10686d5966199b0ba5190614f118b0ca45571a09fda835f0ca114d5212aacdb7267c404c84974de7c50af8d7714e4415
+  checksum: 735aa51914c564a40382c25e6d6bf3c659b334c87effb3a03f9d8a8f8b48f3575e68a0289adef4bc7e21c73290bc3f7522c57acd0a1a357dde098688fbe100d0
   languageName: node
   linkType: hard
 
@@ -3277,6 +3277,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@metamask/snaps-sdk@npm:^6.8.0":
+  version: 6.8.0
+  resolution: "@metamask/snaps-sdk@npm:6.8.0"
+  dependencies:
+    "@metamask/key-tree": ^9.1.2
+    "@metamask/providers": ^17.1.2
+    "@metamask/rpc-errors": ^6.3.1
+    "@metamask/superstruct": ^3.1.0
+    "@metamask/utils": ^9.2.1
+  checksum: a7cfbadb4f816776a2e34353cdd99cae665de47971ada4400aea15dfa308a17f468fec98e4798e54d454284baf43c7a9eb44fc480543770ed7e17ae34a199b32
+  languageName: node
+  linkType: hard
+
 "@metamask/snaps-utils@npm:^7.8.1":
   version: 7.8.1
   resolution: "@metamask/snaps-utils@npm:7.8.1"
@@ -3367,6 +3380,37 @@ __metadata:
     ses: ^1.1.0
     validate-npm-package-name: ^5.0.0
   checksum: f1562cd2f17edd0058c5ec24376478692a71b8597c7baf0af4710e2f12d7dce42aeff06813062033cbf61f721476ed79b6bdaa82adfde039cddb902115a0c96d
+  languageName: node
+  linkType: hard
+
+"@metamask/snaps-utils@npm:^8.4.0":
+  version: 8.4.0
+  resolution: "@metamask/snaps-utils@npm:8.4.0"
+  dependencies:
+    "@babel/core": ^7.23.2
+    "@babel/types": ^7.23.0
+    "@metamask/base-controller": ^6.0.2
+    "@metamask/key-tree": ^9.1.2
+    "@metamask/permission-controller": ^11.0.0
+    "@metamask/rpc-errors": ^6.3.1
+    "@metamask/slip44": ^4.0.0
+    "@metamask/snaps-registry": ^3.2.1
+    "@metamask/snaps-sdk": ^6.8.0
+    "@metamask/superstruct": ^3.1.0
+    "@metamask/utils": ^9.2.1
+    "@noble/hashes": ^1.3.1
+    "@scure/base": ^1.1.1
+    chalk: ^4.1.2
+    cron-parser: ^4.5.0
+    fast-deep-equal: ^3.1.3
+    fast-json-stable-stringify: ^2.1.0
+    fast-xml-parser: ^4.4.1
+    marked: ^12.0.1
+    rfdc: ^1.3.0
+    semver: ^7.5.4
+    ses: ^1.1.0
+    validate-npm-package-name: ^5.0.0
+  checksum: aa12570b3e845bc70a30978c0f298738d2efd135cd73f58f638aa817eac05e7a5c5ebe33cc637bd3982eb66f9b5134c86bcc9790d7a5e051d0c819c6ad37cd1c
   languageName: node
   linkType: hard
 
