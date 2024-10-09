@@ -305,8 +305,6 @@ export class BtcKeyring implements Keyring {
           },
         });
 
-        console.log('result:', result);
-
         if (!result) {
           sendFlowRequest.status = 'rejected';
           await this._stateMgr.upsertRequest(sendFlowRequest);

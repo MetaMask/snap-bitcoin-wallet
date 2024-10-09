@@ -1,17 +1,8 @@
-import {
-  InvalidParamsError,
-  UserRejectedRequestError,
-} from '@metamask/snaps-sdk';
+import { InvalidParamsError } from '@metamask/snaps-sdk';
 
-import type { BtcAccount, Recipient } from '../bitcoin/wallet';
-import {
-  BtcWallet,
-  type ITxInfo,
-  TxValidationError,
-  InsufficientFundsError,
-} from '../bitcoin/wallet';
+import type { BtcAccount } from '../bitcoin/wallet';
 import { Caip2ChainId } from '../constants';
-import { getExplorerUrl, shortenAddress, satsToBtc } from '../utils';
+import { satsToBtc } from '../utils';
 import { SendManyTest } from './__tests__/helper';
 import { type SendManyParams, sendMany } from './sendmany';
 
@@ -61,92 +52,6 @@ describe('SendManyHandler', () => {
       await testHelper.setup();
 
       return testHelper;
-    };
-
-    // this method is to create a expected response of a divider component
-    const createExpectedDividerComponent = (): unknown => {
-      return {
-        type: 'divider',
-      };
-    };
-
-    // this method is to create a expected response of a recipient list component
-    const createExpectedRecipientListComponent = (
-      recipients: Recipient[],
-      caip2ChainId: string,
-    ): unknown[] => {
-      const expectedComponents: unknown[] = [];
-      const recipientsLen = recipients.length;
-
-      for (let idx = 0; idx < recipientsLen; idx++) {
-        const recipient = recipients[idx];
-
-        expectedComponents.push({
-          type: 'panel',
-          children: [
-            {
-              type: 'row',
-              label: recipientsLen > 1 ? `Recipient ${idx + 1}` : `Recipient`,
-              value: {
-                type: 'text',
-                value: `[${shortenAddress(recipient.address)}](${getExplorerUrl(
-                  recipient.address,
-                  caip2ChainId,
-                )})`,
-              },
-            },
-            {
-              type: 'row',
-              label: 'Amount',
-              value: {
-                markdown: false,
-                type: 'text',
-                value: satsToBtc(recipient.value, true),
-              },
-            },
-          ],
-        });
-        expectedComponents.push(createExpectedDividerComponent());
-      }
-      return expectedComponents;
-    };
-
-    // this method is to create a expected response of a header panel component
-    const createExpectedHeadingPanelComponent = (
-      requestBy: string,
-      includeReviewText = true,
-    ): unknown => {
-      const headingComponent = {
-        type: 'heading',
-        value: 'Send Request',
-      };
-
-      const reviewTextComponent = {
-        type: 'text',
-        value:
-          "Review the request before proceeding. Once the transaction is made, it's irreversible.",
-      };
-
-      const requestByComponent = {
-        type: 'row',
-        label: 'Requested by',
-        value: {
-          type: 'text',
-          value: requestBy,
-          markdown: false,
-        },
-      };
-
-      const panelChilds: unknown[] = [headingComponent];
-      if (includeReviewText) {
-        panelChilds.push(reviewTextComponent);
-      }
-      panelChilds.push(requestByComponent);
-
-      return {
-        type: 'panel',
-        children: panelChilds,
-      };
     };
 
     it('returns correct result', async () => {

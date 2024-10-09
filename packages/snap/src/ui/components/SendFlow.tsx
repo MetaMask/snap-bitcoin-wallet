@@ -50,8 +50,6 @@ export const SendFlow: SnapComponent<SendFlowProps> = ({
   currencySwitched = false,
   backEventTriggered = false,
 }) => {
-  console.log('SendFlow', sendFlowParams);
-
   const disabledReview = Boolean(
     !sendFlowParams.amount.valid ||
       !sendFlowParams.recipient.valid ||
@@ -62,10 +60,7 @@ export const SendFlow: SnapComponent<SendFlowProps> = ({
   const showTransactionSummary =
     Boolean(!sendFlowParams.amount.error && sendFlowParams.amount.amount) ||
     sendFlowParams.fees.loading;
-  console.log('amount valid', sendFlowParams.amount.valid);
-  console.log('recipient valid', sendFlowParams.recipient.valid);
-  console.log('fees loading', sendFlowParams.fees.loading);
-  console.log('fees error', sendFlowParams.fees.error);
+
   return (
     <Container>
       <Box>

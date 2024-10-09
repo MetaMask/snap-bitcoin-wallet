@@ -2,13 +2,10 @@ import { Caip2ChainId } from '../constants';
 import { AssetType } from '../ui/types';
 import { StartSendTransactionFlowTest } from './__tests__/helper';
 import { defaultSendManyParams } from './sendmany';
-import * as sendMany from './sendmany';
 import { startSendTransactionFlow } from './start-send-transaction-flow';
 
 jest.mock('../utils/logger');
 jest.mock('../utils/snap');
-
-const sendManySpy = jest.spyOn(sendMany, 'sendMany');
 
 const prepareStartSendTransactionFlow = async (
   caip2ChainId,
