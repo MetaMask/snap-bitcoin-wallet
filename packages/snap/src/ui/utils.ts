@@ -144,9 +144,10 @@ export function validateTotal(
     };
   }
 
+  const newTotal = new BigNumber(amount).plus(new BigNumber(fees)).toString();
   return {
-    amount,
-    fiat: convertBtcToFiat(amount, rates),
+    amount: newTotal,
+    fiat: convertBtcToFiat(newTotal, rates),
     error: '',
     valid: true,
   };
@@ -281,7 +282,7 @@ export async function sendManyParamsToSendFlowParams(
     defaultParams.amount = validateAmount(amount, balance, rates);
     defaultParams.total = validateTotal(
       amount,
-      defaultParams.fees.amount,
+      estimatedFees.fee.amount,
       balance,
       rates,
     );
