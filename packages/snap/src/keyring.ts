@@ -248,7 +248,6 @@ export class BtcKeyring implements Keyring {
         });
 
         sendFlowRequest.txId = tx.txId;
-        console.log('txId:', tx);
         return tx;
       }
       default:

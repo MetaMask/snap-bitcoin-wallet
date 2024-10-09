@@ -110,7 +110,6 @@ export async function startSendTransactionFlow({
     });
 
     sendFlowRequest.txId = tx.txId;
-    console.log('txId:', tx);
     return tx;
   } catch (error) {
     logger.error('Failed to start send transaction flow', error);
