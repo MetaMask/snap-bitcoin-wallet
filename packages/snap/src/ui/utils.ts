@@ -2,7 +2,7 @@ import { BigNumber } from 'bignumber.js';
 // eslint-disable-next-line import/no-named-as-default
 import validate, { Network } from 'bitcoin-address-validation';
 
-import { Caip2ChainId } from '../constants';
+import { Caip2Asset, Caip2ChainId } from '../constants';
 import type { SendManyParams } from '../rpcs';
 import { estimateFee } from '../rpcs';
 import type { SendFlowParams } from '../stateManagement';
@@ -293,4 +293,14 @@ export async function sendManyParamsToSendFlowParams(
   }
 
   return defaultParams;
+}
+
+/**
+ * Gets the asset type based on the given scope.
+ *
+ * @param scope - The scope of the network (mainnet or testnet).
+ * @returns The asset type corresponding to the scope.
+ */
+export function getAssetTypeFromScope(scope: string): Caip2Asset {
+  return scope === Caip2ChainId.Mainnet ? Caip2Asset.Btc : Caip2Asset.TBtc;
 }

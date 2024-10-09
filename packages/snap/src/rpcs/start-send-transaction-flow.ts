@@ -1,9 +1,13 @@
-import { Caip2Asset, Caip2ChainId } from '../constants';
+import type { Caip2ChainId } from '../constants';
 import { AccountNotFoundError } from '../exceptions';
 import { Factory } from '../factory';
-import { KeyringStateManager } from '../stateManagement';
+import { KeyringStateManager, TransactionStatus } from '../stateManagement';
 import { generateSendFlow, updateSendFlow } from '../ui/render-interfaces';
-import { convertBtcToFiat, sendStateToSendManyParams } from '../ui/utils';
+import {
+  convertBtcToFiat,
+  getAssetTypeFromScope,
+  sendStateToSendManyParams,
+} from '../ui/utils';
 import { logger } from '../utils';
 import { getBalances } from './get-balances';
 import { sendMany } from './sendmany';
@@ -39,8 +43,7 @@ export async function startSendTransactionFlow({
       walletData.index,
       walletData.account.type,
     );
-    const asset =
-      scope === Caip2ChainId.Mainnet ? Caip2Asset.Btc : Caip2Asset.TBtc;
+    const asset = getAssetTypeFromScope(scope);
 
     const sendFlowRequest = await generateSendFlow({
       account: walletData.account,
@@ -81,7 +84,7 @@ export async function startSendTransactionFlow({
     const sendFlowResult = await sendFlowPromise;
 
     if (!sendFlowResult) {
-      sendFlowRequest.status = 'rejected';
+      sendFlowRequest.status = TransactionStatus.Rejected;
       await stateManager.upsertRequest(sendFlowRequest);
       throw new Error('User rejected the request');
     }
@@ -101,7 +104,7 @@ export async function startSendTransactionFlow({
       walletData.scope,
     );
     sendFlowRequest.transaction = sendManyParams;
-    sendFlowRequest.status = 'confirmed';
+    sendFlowRequest.status = TransactionStatus.Confirmed;
     await stateManager.upsertRequest(sendFlowRequest);
 
     const tx = await sendMany(account, scope, {
