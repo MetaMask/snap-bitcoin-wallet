@@ -172,13 +172,7 @@ export class SendManyController {
         } else if (this.request.status === 'draft') {
           this.request.status = 'rejected';
           await this.persistRequest(this.request);
-          return await snap.request({
-            method: 'snap_resolveInterface',
-            params: {
-              id: this.interfaceId,
-              value: false,
-            },
-          });
+          return await this.resolveInterface(false);
         }
         throw new Error('Invalid state');
       }
@@ -229,13 +223,7 @@ export class SendManyController {
       case SendFormNames.Send: {
         this.request.status = 'signed';
         await this.persistRequest(this.request);
-        await snap.request({
-          method: 'snap_resolveInterface',
-          params: {
-            id: this.interfaceId,
-            value: true,
-          },
-        });
+        await this.resolveInterface(true);
         return null;
       }
       case SendFormNames.SetMax: {
@@ -291,5 +279,15 @@ export class SendManyController {
       default:
         return null;
     }
+  }
+
+  async resolveInterface(value: boolean): Promise<void> {
+    await snap.request({
+      method: 'snap_resolveInterface',
+      params: {
+        id: this.interfaceId,
+        value,
+      },
+    });
   }
 }
