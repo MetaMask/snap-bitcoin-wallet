@@ -10,7 +10,7 @@ export enum Caip2Asset {
   TBtc = 'bip122:000000000933ea01ad0ee984209779ba/slip44:0',
 }
 
-export const CaipToNetworkName: Record<CaipChainId, string> = {
+export const Caip2ChainIdToNetworkName: Record<CaipChainId, string> = {
   [Caip2ChainId.Mainnet]: 'Bitcoin Mainnet',
   [Caip2ChainId.Testnet]: 'Bitcoin Testnet',
 };
