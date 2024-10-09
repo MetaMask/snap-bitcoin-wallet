@@ -8,7 +8,12 @@ import { type SendFlowRequest } from '../../stateManagement';
 import { SendFormNames } from '../components/SendForm';
 import { updateSendFlow } from '../render-interfaces';
 import { AssetType, type SendFlowContext, type SendFormState } from '../types';
-import { convertBtcToFiat, convertFiatToBtc, formValidation } from '../utils';
+import {
+  convertBtcToFiat,
+  convertFiatToBtc,
+  formValidation,
+  validateTotal,
+} from '../utils';
 
 export const isSendFormEvent = (event: UserInputEvent): boolean => {
   return Object.values(SendFormNames).includes(event?.name as SendFormNames);
@@ -128,13 +133,12 @@ export class SendManyController {
             loading: false,
             error: '',
           };
-          const updatedTotal = new BigNumber(amountInBtc)
-            .plus(new BigNumber(this.request.fees.amount))
-            .toString();
-          this.request.total = {
-            amount: updatedTotal,
-            fiat: convertBtcToFiat(updatedTotal, this.request.rates),
-          };
+          this.request.total = validateTotal(
+            amountInBtc,
+            estimates.fee.amount,
+            this.request.balance.amount,
+            this.request.rates,
+          );
 
           await this.persistRequest(this.request);
         } catch (feeError) {
@@ -246,33 +250,33 @@ export class SendManyController {
           const maxAmount = await getMaxSpendableBalance({
             account: this.context.accounts[0].id,
           });
-          console.log('maxAmount', maxAmount);
-          this.request.amount = {
-            amount: maxAmount.balance.amount,
-            fiat: convertBtcToFiat(
+          if (new BigNumber(maxAmount.balance.amount).lte(new BigNumber(0))) {
+            this.request.amount.error = 'Fees exceed max sendable amount';
+            this.request.fees.loading = false;
+          } else {
+            this.request.amount = {
+              amount: maxAmount.balance.amount,
+              fiat: convertBtcToFiat(
+                maxAmount.balance.amount,
+                this.request.rates,
+              ),
+              error: '',
+              valid: true,
+            };
+            this.request.fees = {
+              amount: maxAmount.fee.amount,
+              fiat: convertBtcToFiat(maxAmount.fee.amount, this.request.rates),
+              loading: false,
+              error: '',
+            };
+            this.request.total = validateTotal(
               maxAmount.balance.amount,
+              maxAmount.fee.amount,
+              this.request.balance.amount,
               this.request.rates,
-            ),
-            error: '',
-            valid: true,
-          };
-          this.request.fees = {
-            amount: maxAmount.fee.amount,
-            fiat: convertBtcToFiat(maxAmount.fee.amount, this.request.rates),
-            loading: false,
-            error: '',
-          };
-          this.request.total = {
-            amount: new BigNumber(maxAmount.balance.amount)
-              .plus(new BigNumber(maxAmount.fee.amount))
-              .toString(),
-            fiat: convertBtcToFiat(
-              new BigNumber(maxAmount.balance.amount)
-                .plus(new BigNumber(maxAmount.fee.amount))
-                .toString(),
-              this.request.rates,
-            ),
-          };
+            );
+          }
+
           await this.persistRequest(this.request);
         } catch (error) {
           this.request.amount.error = `Error fetching max amount: ${

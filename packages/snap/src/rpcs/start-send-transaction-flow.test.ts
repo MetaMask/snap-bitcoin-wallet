@@ -72,6 +72,8 @@ describe('startSendTransactionFlow', () => {
       total: {
         amount: '0.51',
         fiat: '31620.00',
+        valid: true,
+        error: '',
       },
     };
     await helper.setupGetRequest(mockRequestWithCorrectValues);
@@ -124,6 +126,8 @@ describe('startSendTransactionFlow', () => {
       total: {
         amount: '0.51',
         fiat: '31620.00',
+        valid: true,
+        error: '',
       },
     };
     await helper.setupGetRequest(mockRequestWithCorrectValues);

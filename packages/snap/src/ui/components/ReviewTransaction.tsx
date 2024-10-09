@@ -34,7 +34,9 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
   fees,
 }) => {
   const network = CaipToNetworkName[scope];
-  const disabledSend = Boolean(!amount.valid || !recipient.valid || fees.error);
+  const disabledSend = Boolean(
+    !amount.valid || !recipient.valid || !total.valid || fees.error,
+  );
 
   return (
     <Container>
@@ -88,6 +90,7 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
         )}
         {Boolean(amount.error) && <Text color="error">{amount.error}</Text>}
         {Boolean(fees.error) && <Text color="error">{fees.error}</Text>}
+        {Boolean(total.error) && <Text color="error">{total.error}</Text>}
       </Box>
       <Footer>
         <Button name={SendFormNames.Send} type="submit" disabled={disabledSend}>

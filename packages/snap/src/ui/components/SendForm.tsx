@@ -47,6 +47,7 @@ export type SendFormProps = {
   amount: SendFlowParams['amount'];
   selectedCurrency: SendFlowParams['selectedCurrency'];
   recipient: SendFlowParams['recipient'];
+  total: SendFlowParams['total'];
   flushToAddress?: boolean;
   currencySwitched: boolean;
   backEventTriggered: boolean;
@@ -63,6 +64,7 @@ export type SendFormProps = {
  * @param props.selectedCurrency - The selected currency to display.
  * @param props.flushToAddress - Whether to flush the address field or not.
  * @param props.recipient - The recipient details including address and validation status.
+ * @param props.total - The total amount including fees.
  * @param props.currencySwitched - Whether the currency display has been switched.
  * @param props.backEventTriggered - Whether the back event has been triggered.
  * @returns The SendForm component.
@@ -75,6 +77,7 @@ export const SendForm: SnapComponent<SendFormProps> = ({
   balance,
   amount,
   recipient,
+  total,
   currencySwitched,
   backEventTriggered,
 }) => {
@@ -101,7 +104,7 @@ export const SendForm: SnapComponent<SendFormProps> = ({
         accounts={accounts}
         balance={balance}
       />
-      <Field label="Send amount" error={amount.error}>
+      <Field label="Send amount" error={amount.error || total.error}>
         <Box direction="horizontal" center>
           <Image src={btcIcon} />
         </Box>

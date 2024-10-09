@@ -406,6 +406,8 @@ describe('KeyringStateManager', () => {
             total: {
               amount: '1.0001',
               fiat: '100.01',
+              error: '',
+              valid: true,
             },
           };
           state.requests[requestId] = request;
@@ -491,6 +493,8 @@ describe('KeyringStateManager', () => {
             total: {
               amount: '1.0001',
               fiat: '100.01',
+              error: '',
+              valid: true,
             },
           };
 
@@ -540,6 +544,8 @@ describe('KeyringStateManager', () => {
             total: {
               amount: '1.0001',
               fiat: '100.01',
+              error: '',
+              valid: true,
             },
           };
           state.requests[requestId] = existingRequest;
@@ -596,6 +602,8 @@ describe('KeyringStateManager', () => {
             total: {
               amount: '1.0001',
               fiat: '100.01',
+              error: '',
+              valid: true,
             },
           };
 
@@ -644,6 +652,8 @@ describe('KeyringStateManager', () => {
             total: {
               amount: '1.0001',
               fiat: '100.01',
+              error: '',
+              valid: true,
             },
           };
           state.requests[requestId] = request;

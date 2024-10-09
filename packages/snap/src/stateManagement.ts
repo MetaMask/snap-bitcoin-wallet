@@ -50,7 +50,7 @@ export type SendFlowParams = {
   amount: Currency & { error: string; valid: boolean };
   rates: string;
   balance: Currency; // to be removed once metadata is available
-  total: Currency;
+  total: Currency & { error: string; valid: boolean };
 };
 
 export type TransactionState = {
@@ -115,6 +115,8 @@ export const generateDefaultSendFlowParams = (): SendFlowParams => {
     total: {
       amount: '',
       fiat: '',
+      error: '',
+      valid: false,
     },
   };
 };

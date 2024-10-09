@@ -319,6 +319,8 @@ describe('utils', () => {
         total: {
           amount: expectedTotal,
           fiat: convertBtcToFiat(expectedTotal, rates),
+          valid: true,
+          error: '',
         },
         selectedCurrency: AssetType.BTC,
       });

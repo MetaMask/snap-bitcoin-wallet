@@ -105,6 +105,54 @@ export function validateAmount(
 }
 
 /**
+ * Validates the amount to be sent.
+ *
+ * @param amount - The amount to be validated.
+ * @param fees - The fees to be validated.
+ * @param balance - The current balance of the account.
+ * @param rates - The conversion rates from Bitcoin to fiat.
+ * @returns An object containing the validated amount, fiat equivalent, error message, and validity status.
+ */
+export function validateTotal(
+  amount: string,
+  fees: string,
+  balance: string,
+  rates: string,
+): SendFlowRequest['total'] {
+  if (
+    isNaN(Number(amount)) ||
+    isNaN(Number(fees)) ||
+    isNaN(Number(balance)) ||
+    isNaN(Number(rates))
+  ) {
+    return {
+      amount: '',
+      fiat: '',
+      error: '',
+      valid: false,
+    };
+  }
+
+  if (
+    new BigNumber(amount).plus(new BigNumber(fees)).gt(new BigNumber(balance))
+  ) {
+    return {
+      amount,
+      fiat: convertBtcToFiat(amount, rates),
+      error: 'Amount and fees exceeds balance',
+      valid: false,
+    };
+  }
+
+  return {
+    amount,
+    fiat: convertBtcToFiat(amount, rates),
+    error: '',
+    valid: true,
+  };
+}
+
+/**
  * Truncate a string to a given length.
  *
  * @param str - The string to truncate.
@@ -231,17 +279,12 @@ export async function sendManyParamsToSendFlowParams(
     defaultParams.fees.amount = estimatedFees.fee.amount;
     defaultParams.fees.fiat = convertBtcToFiat(estimatedFees.fee.amount, rates);
     defaultParams.amount = validateAmount(amount, balance, rates);
-    defaultParams.total = {
-      amount: new BigNumber(amount)
-        .plus(new BigNumber(defaultParams.fees.amount ?? '0'))
-        .toString(),
-      fiat: convertBtcToFiat(
-        new BigNumber(amount)
-          .plus(new BigNumber(defaultParams.fees.amount ?? '0'))
-          .toString(),
-        rates,
-      ),
-    };
+    defaultParams.total = validateTotal(
+      amount,
+      defaultParams.fees.amount,
+      balance,
+      rates,
+    );
   } catch (error) {
     defaultParams.fees.error = `Error estimating fees: ${
       error.message as string
