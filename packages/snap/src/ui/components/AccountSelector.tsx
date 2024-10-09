@@ -7,7 +7,6 @@ import {
   type SnapComponent,
 } from '@metamask/snaps-sdk/jsx';
 
-// import jazzicon from '@metamask/jazzicon';
 import jazzicon1 from '../images/jazzicon1.svg';
 import type { Currency } from '../types';
 import { truncate } from '../utils';
