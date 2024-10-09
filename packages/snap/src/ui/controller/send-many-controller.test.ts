@@ -2,10 +2,11 @@ import type { KeyringAccount } from '@metamask/keyring-api';
 import { BtcAccountType } from '@metamask/keyring-api';
 import type { UserInputEvent } from '@metamask/snaps-sdk';
 import { UserInputEventType } from '@metamask/snaps-sdk';
+import BigNumber from 'bignumber.js';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Caip2ChainId } from '../../constants';
-import { estimateFee } from '../../rpcs';
+import { estimateFee, getMaxSpendableBalance } from '../../rpcs';
 import {
   generateDefaultSendFlowRequest,
   KeyringStateManager,
@@ -19,6 +20,7 @@ import { SendManyController, isSendFormEvent } from './send-many-controller';
 jest.mock('../../rpcs', () => ({
   ...jest.requireActual('../../rpcs'),
   estimateFee: jest.fn(),
+  getMaxSpendableBalance: jest.fn(),
 }));
 
 jest.mock('../render-interfaces', () => ({
@@ -722,6 +724,84 @@ describe('SendManyController', () => {
           id: expectedResult.interfaceId,
           value: true,
         },
+      });
+    });
+
+    it('should handle "SetMax" button event', async () => {
+      const mockRequest = generateDefaultSendFlowRequest(
+        mockAccount,
+        mockScope,
+        mockRequestId,
+        mockInterfaceId,
+      );
+      const { instance: stateManager } = createMockStateManager();
+
+      const controller = new SendManyController({
+        stateManager,
+        request: mockRequest,
+        context: mockContext,
+        interfaceId: mockInterfaceId,
+      });
+
+      const mockMaxSpendableBalance = {
+        balance: { amount: '0.05' },
+        fee: { amount: '0.0001' },
+      };
+
+      jest.spyOn(controller, 'persistRequest').mockResolvedValue(undefined);
+      (getMaxSpendableBalance as jest.Mock).mockResolvedValue(
+        mockMaxSpendableBalance,
+      );
+
+      await controller.handleButtonEvent(SendFormNames.SetMax);
+
+      expect(controller.request.amount.amount).toBe(
+        mockMaxSpendableBalance.balance.amount,
+      );
+      expect(controller.request.fees.amount).toBe(
+        mockMaxSpendableBalance.fee.amount,
+      );
+      expect(controller.request.total.amount).toBe(
+        new BigNumber(mockMaxSpendableBalance.balance.amount)
+          .plus(new BigNumber(mockMaxSpendableBalance.fee.amount))
+          .toString(),
+      );
+      expect(updateSendFlow).toHaveBeenCalledWith({
+        request: controller.request,
+        currencySwitched: true,
+      });
+    });
+
+    it('should handle "SetMax" button event with error', async () => {
+      const mockRequest = generateDefaultSendFlowRequest(
+        mockAccount,
+        mockScope,
+        mockRequestId,
+        mockInterfaceId,
+      );
+      const { instance: stateManager } = createMockStateManager();
+
+      const controller = new SendManyController({
+        stateManager,
+        request: mockRequest,
+        context: mockContext,
+        interfaceId: mockInterfaceId,
+      });
+
+      jest.spyOn(controller, 'persistRequest').mockResolvedValue(undefined);
+      (getMaxSpendableBalance as jest.Mock).mockRejectedValue(
+        new Error('Error fetching max amount'),
+      );
+
+      await controller.handleButtonEvent(SendFormNames.SetMax);
+
+      expect(controller.request.amount.error).toBe(
+        'Error fetching max amount: Error: Error fetching max amount',
+      );
+      expect(controller.request.fees.loading).toBe(false);
+      expect(updateSendFlow).toHaveBeenCalledWith({
+        request: controller.request,
+        currencySwitched: true,
       });
     });
   });

@@ -34,7 +34,6 @@ import {
   updateSendFlow,
 } from './ui/render-interfaces';
 import {
-  containsCompleteSendManyRequest,
   convertBtcToFiat,
   sendManyParamsToSendFlowParams,
   sendStateToSendManyParams,
@@ -268,10 +267,6 @@ export class BtcKeyring implements Keyring {
         return tx;
       }
       case 'btc_sendmany': {
-        if (!containsCompleteSendManyRequest(params as SendManyParams)) {
-          throw new Error('Invalid sendMany params');
-        }
-
         const balances = await getBalances(account, {
           assets: [asset],
           scope,

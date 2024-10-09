@@ -1,11 +1,10 @@
-import { is } from '@metamask/superstruct';
 import { BigNumber } from 'bignumber.js';
 // eslint-disable-next-line import/no-named-as-default
 import validate, { Network } from 'bitcoin-address-validation';
 
 import { Caip2ChainId } from '../constants';
 import type { SendManyParams } from '../rpcs';
-import { estimateFee, SendManyStruct } from '../rpcs';
+import { estimateFee } from '../rpcs';
 import type { SendFlowParams } from '../stateManagement';
 import {
   generateDefaultSendFlowParams,
@@ -116,18 +115,6 @@ export function truncate(str: string, length: number): string {
   return str.length > length
     ? `${str.slice(0, 5)}...${str.slice(str.length - 5, str.length)}`
     : str;
-}
-
-/**
- * Checks if the request contains a complete SendManyParams object.
- *
- * @param request - The request object to check.
- * @returns True if the request contains a complete SendManyParams object, false otherwise.
- */
-export function containsCompleteSendManyRequest(
-  request: Omit<SendManyParams, 'scope'>,
-): request is Omit<SendManyParams, 'scope'> {
-  return is(request, SendManyStruct);
 }
 
 /**
@@ -256,8 +243,9 @@ export async function sendManyParamsToSendFlowParams(
       ),
     };
   } catch (error) {
-    console.log('error estimating fees', error);
-    defaultParams.fees.error = `Error estimating fees: ${error as string}`;
+    defaultParams.fees.error = `Error estimating fees: ${
+      error.message as string
+    }`;
   }
 
   return defaultParams;

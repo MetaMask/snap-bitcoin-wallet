@@ -83,12 +83,9 @@ export class PsbtService {
         // reference : https://en.bitcoin.it/wiki/BIP_0125
         // A transaction is considered to have opted in to allowing replacement of itself if any of its inputs have an nSequence number less than (0xffffffff - 1).
         // we use max sequence number - 2 to void conflicting with other possible uses of nSequence
-        // sequence: replaceable
-        //   ? Transaction.DEFAULT_SEQUENCE - 2
-        //   : Transaction.DEFAULT_SEQUENCE,
-
-        // HARDCODED TO ALWAYS REPLACABLE
-        sequence: Transaction.DEFAULT_SEQUENCE - 2,
+        sequence: replaceable
+          ? Transaction.DEFAULT_SEQUENCE - 2
+          : Transaction.DEFAULT_SEQUENCE,
       });
     } catch (error) {
       logger.error('Failed to add input', error);
