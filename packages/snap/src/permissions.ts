@@ -32,6 +32,7 @@ const metamaskPermissions = new Set([
   InternalRpcMethod.GetTransactionStatus,
   InternalRpcMethod.EstimateFee,
   InternalRpcMethod.GetMaxSpendableBalance,
+  // Internal methods with a UI
   InternalRpcMethod.StartSendTransactionFlow,
 ]);
 

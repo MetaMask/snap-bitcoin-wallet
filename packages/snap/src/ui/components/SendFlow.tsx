@@ -50,11 +50,13 @@ export const SendFlow: SnapComponent<SendFlowProps> = ({
   currencySwitched = false,
   backEventTriggered = false,
 }) => {
+  const { amount, recipient, fees } = sendFlowParams;
+
   const disabledReview = Boolean(
-    !sendFlowParams.amount.valid ||
-      !sendFlowParams.recipient.valid ||
-      sendFlowParams.fees.loading ||
-      sendFlowParams.fees.error,
+    !amount.valid ||
+      !recipient.valid ||
+      fees.loading ||
+      fees.error,
   );
 
   const showTransactionSummary =

@@ -135,7 +135,7 @@ export async function sendMany(
       txId: result.transactionId,
     };
 
-    console.log('submitted txid', resp.txId);
+    logger.debug(`Submitted transaction ID: ${resp.txId}`);
 
     validateResponse(resp, SendManyResponseStruct);
 

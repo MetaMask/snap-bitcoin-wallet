@@ -215,7 +215,7 @@ export class BtcKeyring implements Keyring {
           scope,
         });
 
-        // mock rates call
+        // TODO: Use rates coming from the extension, for now we just mock it
         const rates = '64000';
 
         sendFlowRequest.balance.amount = balances[asset].amount;

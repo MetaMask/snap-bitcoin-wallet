@@ -14,8 +14,8 @@ export type SendFlowFooterProps = {
 /**
  * A component that shows the send flow footer.
  *
- * @param options0 - The options object.
- * @param options0.disabled - Whether the button is disabled or not.
+ * @param props - The options object.
+ * @param props.disabled - Whether the button is disabled or not.
  * @returns The SendFlowFooter component.
  */
 export const SendFlowFooter: SnapComponent<SendFlowFooterProps> = ({
