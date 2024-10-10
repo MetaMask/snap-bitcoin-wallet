@@ -308,8 +308,7 @@ export class BtcKeyring implements Keyring {
     method: string,
     keyringAccount: KeyringAccount,
   ): void {
-    const validMethods = [...keyringAccount.methods, 'btc_initiateSendMany'];
-    if (!validMethods.includes(method)) {
+    if (!keyringAccount.methods.includes(method)) {
       throw new UnauthorizedError(`Permission denied`) as unknown as Error;
     }
   }
