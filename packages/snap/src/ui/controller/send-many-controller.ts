@@ -237,50 +237,7 @@ export class SendManyController {
         await updateSendFlow({
           request: this.request,
         });
-
-        try {
-          const maxAmount = await getMaxSpendableBalance({
-            account: this.context.accounts[0].id,
-          });
-          if (new BigNumber(maxAmount.balance.amount).lte(new BigNumber(0))) {
-            this.request.amount.error = 'Fees exceed max sendable amount';
-            this.request.fees.loading = false;
-          } else {
-            this.request.amount = {
-              amount: maxAmount.balance.amount,
-              fiat: convertBtcToFiat(
-                maxAmount.balance.amount,
-                this.request.rates,
-              ),
-              error: '',
-              valid: true,
-            };
-            this.request.fees = {
-              amount: maxAmount.fee.amount,
-              fiat: convertBtcToFiat(maxAmount.fee.amount, this.request.rates),
-              loading: false,
-              error: '',
-            };
-            this.request.total = validateTotal(
-              maxAmount.balance.amount,
-              maxAmount.fee.amount,
-              this.request.balance.amount,
-              this.request.rates,
-            );
-          }
-
-          await this.persistRequest(this.request);
-        } catch (error) {
-          this.request.amount.error = `Error fetching max amount: ${
-            error as string
-          }`;
-          this.request.fees.loading = false;
-        }
-
-        return await updateSendFlow({
-          request: this.request,
-          currencySwitched: true,
-        });
+        return await this.handleSetMax();
       }
       default:
         return null;
@@ -294,6 +251,49 @@ export class SendManyController {
         id: this.interfaceId,
         value,
       },
+    });
+  }
+
+  async handleSetMax() {
+    try {
+      const maxAmount = await getMaxSpendableBalance({
+        account: this.context.accounts[0].id,
+      });
+      if (new BigNumber(maxAmount.balance.amount).lte(new BigNumber(0))) {
+        this.request.amount.error = 'Fees exceed max sendable amount';
+        this.request.fees.loading = false;
+      } else {
+        this.request.amount = {
+          amount: maxAmount.balance.amount,
+          fiat: convertBtcToFiat(maxAmount.balance.amount, this.request.rates),
+          error: '',
+          valid: true,
+        };
+        this.request.fees = {
+          amount: maxAmount.fee.amount,
+          fiat: convertBtcToFiat(maxAmount.fee.amount, this.request.rates),
+          loading: false,
+          error: '',
+        };
+        this.request.total = validateTotal(
+          maxAmount.balance.amount,
+          maxAmount.fee.amount,
+          this.request.balance.amount,
+          this.request.rates,
+        );
+      }
+
+      await this.persistRequest(this.request);
+    } catch (error) {
+      this.request.amount.error = `Error fetching max amount: ${
+        error as string
+      }`;
+      this.request.fees.loading = false;
+    }
+
+    return await updateSendFlow({
+      request: this.request,
+      currencySwitched: true,
     });
   }
 }
