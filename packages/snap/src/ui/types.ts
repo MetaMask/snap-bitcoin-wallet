@@ -29,19 +29,6 @@ export type SendFormErrors = {
 };
 
 /**
- * An Account of the send flow interface.
- *
- * @property name - The name of the account.
- * @property address - The address of the account.
- * @property balance - The balance of the account.
- * @property icon - The icon of the account.
- */
-export type Account = KeyringAccount & {
-  balance: Currency;
-  icon: string;
-};
-
-/**
  * A currency value.
  *
  * @property amount - The amount in the selected currency.
