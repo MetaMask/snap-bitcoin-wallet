@@ -149,19 +149,6 @@ export function validateTotal(
 }
 
 /**
- * Truncate a string to a given length.
- *
- * @param str - The string to truncate.
- * @param length - The number of characters to truncate the string to.
- * @returns The truncated string.
- */
-export function truncate(str: string, length: number): string {
-  return str.length > length
-    ? `${str.slice(0, 5)}...${str.slice(str.length - 5, str.length)}`
-    : str;
-}
-
-/**
  * Converts the send state to SendManyParams.
  *
  * @param request - The request object containing form data and errors.

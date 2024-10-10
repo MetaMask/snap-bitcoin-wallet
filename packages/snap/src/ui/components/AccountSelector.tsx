@@ -9,7 +9,7 @@ import {
 
 import jazzicon1 from '../images/jazzicon1.svg';
 import type { Currency } from '../types';
-import { truncate } from '../utils';
+import { shortenAddress } from '../../utils';
 
 /**
  * The props for the {@link AccountSelector} component.
@@ -50,7 +50,7 @@ export const AccountSelector: SnapComponent<AccountSelectorProps> = ({
           <SelectorOption value={address}>
             <Card
               image={jazzicon1}
-              description={truncate(address, 13)}
+              description={shortenAddress(address)}
               value={
                 balance?.amount
                   ? `${balance.amount.toString()} BTC`

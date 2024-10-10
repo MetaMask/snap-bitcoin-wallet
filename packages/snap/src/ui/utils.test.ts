@@ -8,7 +8,6 @@ import type { SendManyParams } from '../rpcs';
 import { generateDefaultSendFlowRequest } from '../stateManagement';
 import { AssetType } from './types';
 import {
-  truncate,
   validateAmount,
   validateRecipient,
   convertBtcToFiat,
@@ -38,41 +37,6 @@ const mockAccount = {
 };
 
 describe('utils', () => {
-  describe('truncate', () => {
-    it('should truncate a string longer than the specified length', () => {
-      expect(truncate('1234567890', 5)).toBe('12345...67890');
-    });
-
-    it('should return the original string if its length is less than or equal to the specified length', () => {
-      expect(truncate('12345', 5)).toBe('12345');
-      expect(truncate('1234', 5)).toBe('1234');
-    });
-
-    it('should handle empty strings', () => {
-      expect(truncate('', 5)).toBe('');
-    });
-
-    it('should handle strings with length exactly equal to the specified length', () => {
-      expect(truncate('12345', 5)).toBe('12345');
-    });
-
-    it('should handle strings with length just one more than the specified length', () => {
-      expect(truncate('123456', 5)).toBe('12345...23456');
-    });
-
-    it('should handle strings with length just one less than the specified length', () => {
-      expect(truncate('1234', 5)).toBe('1234');
-    });
-
-    it('should handle negative length values gracefully', () => {
-      expect(truncate('1234567890', -1)).toBe('12345...67890');
-    });
-
-    it('should handle zero length value gracefully', () => {
-      expect(truncate('1234567890', 0)).toBe('12345...67890');
-    });
-  });
-
   describe('validateAmount', () => {
     it('should return error if amount is not a number', () => {
       const result = validateAmount('abc', '100', '62000');
