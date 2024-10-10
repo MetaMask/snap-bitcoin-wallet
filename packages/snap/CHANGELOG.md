@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0]
+
+### Changed
+
+- Use `QuickNode` as the main provider ([#250](https://github.com/MetaMask/snap-bitcoin-wallet/pull/250))
+- Workaround `QuickNode` fee estimation for testnet ([#267](https://github.com/MetaMask/snap-bitcoin-wallet/pull/267))
+  - We temporarily changed the confirmation target block to a higher block number to make sure the API is not failing with an error.
+
+### Fixed
+
+- Fix fee estimation with `QuickNode` ([#266](https://github.com/MetaMask/snap-bitcoin-wallet/pull/266)), ([#261](https://github.com/MetaMask/snap-bitcoin-wallet/pull/261))
+  - Properly uses `kvB` instead of `vB`.
+  - Will **NOT** throw an error if the account has not enough UTXOs when estimating the fees.
+
 ## [0.6.1]
 
 ### Added
@@ -186,7 +200,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add CI for lint and test ([#2](https://github.com/MetaMask/bitcoin/pull/2))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.6.1...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.4.0...v0.5.0
