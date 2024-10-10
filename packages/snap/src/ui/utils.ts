@@ -120,9 +120,7 @@ export function validateTotal(
   balance: string,
   rates: string,
 ): SendFlowRequest['total'] {
-  if (
-    [amount, fees, balance, rates].some((x) => isNaN(Number(x)))
-  ) {
+  if ([amount, fees, balance, rates].some((value) => isNaN(Number(value)))) {
     return {
       amount: '',
       fiat: '',
@@ -259,6 +257,7 @@ export async function sendManyParamsToSendFlowParams(
   balance: string,
 ): Promise<SendFlowParams> {
   const defaultParams = generateDefaultSendFlowParams();
+  // This is safe because we validate the recipient in `validateRecipient` if it is not defined.
   const recipient = Object.keys(params.amounts)[0];
   const amount = params.amounts[recipient];
 
