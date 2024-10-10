@@ -7,9 +7,9 @@ import {
   type SnapComponent,
 } from '@metamask/snaps-sdk/jsx';
 
+import { shortenAddress } from '../../utils';
 import jazzicon1 from '../images/jazzicon1.svg';
 import type { Currency } from '../types';
-import { shortenAddress } from '../../utils';
 
 /**
  * The props for the {@link AccountSelector} component.

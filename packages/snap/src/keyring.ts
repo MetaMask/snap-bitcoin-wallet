@@ -185,63 +185,15 @@ export class BtcKeyring implements Keyring {
     verifyIfAccountValid(account, walletData.account);
 
     this.verifyIfMethodValid(method, walletData.account);
-    const asset =
-      scope === Caip2ChainId.Mainnet ? Caip2Asset.Btc : Caip2Asset.TBtc;
 
     switch (method) {
       case 'btc_sendmany': {
-        const balances = await getBalances(account, {
-          assets: [asset],
-          scope,
+        return await this.handleSendMany({
+          scope: scope as Caip2ChainId,
+          walletData,
+          account,
+          params: params as SendManyParams,
         });
-
-        // TODO: replace with actual call
-        const rates = '64000';
-
-        const sendFlowRequest: SendFlowRequest = {
-          id: uuidv4(),
-          account: walletData.account,
-          scope,
-          transaction: params as SendManyParams,
-          interfaceId: '',
-          status: TransactionStatus.Review,
-          ...(await sendManyParamsToSendFlowParams(
-            params as SendManyParams,
-            walletData.account.id,
-            scope,
-            rates,
-            balances[asset].amount,
-          )),
-        };
-
-        const interfaceId = await generateConfirmationReviewInterface({
-          request: sendFlowRequest,
-        });
-
-        sendFlowRequest.interfaceId = interfaceId;
-
-        await this._stateMgr.upsertRequest(sendFlowRequest);
-        const result = await snap.request({
-          method: 'snap_dialog',
-          params: {
-            id: interfaceId,
-          },
-        });
-
-        if (!result) {
-          sendFlowRequest.status = TransactionStatus.Rejected;
-          await this._stateMgr.upsertRequest(sendFlowRequest);
-          throw new Error('User rejected the request');
-        }
-        await this._stateMgr.upsertRequest(sendFlowRequest);
-
-        const tx = await sendMany(account, this._options.origin, {
-          ...sendFlowRequest.transaction,
-          scope,
-        });
-
-        sendFlowRequest.txId = tx.txId;
-        return tx;
       }
       default:
         throw new MethodNotFoundError() as unknown as Error;
@@ -341,5 +293,73 @@ export class BtcKeyring implements Keyring {
         // Leave it blank to fallback to auto-suggested name on the extension side
         return '';
     }
+  }
+
+  protected async handleSendMany({
+    scope,
+    walletData,
+    account,
+    params,
+  }: {
+    scope: Caip2ChainId;
+    walletData: Wallet;
+    account: BtcAccount;
+    params: SendManyParams;
+  }): Promise<Json> {
+    const asset =
+      scope === Caip2ChainId.Mainnet ? Caip2Asset.Btc : Caip2Asset.TBtc;
+
+    const balances = await getBalances(account, {
+      assets: [asset],
+      scope,
+    });
+
+    // TODO: replace with actual call
+    const rates = '64000';
+
+    const sendFlowRequest: SendFlowRequest = {
+      id: uuidv4(),
+      account: walletData.account,
+      scope,
+      transaction: params,
+      interfaceId: '',
+      status: TransactionStatus.Review,
+      ...(await sendManyParamsToSendFlowParams(
+        params,
+        walletData.account.id,
+        scope,
+        rates,
+        balances[asset].amount,
+      )),
+    };
+
+    const interfaceId = await generateConfirmationReviewInterface({
+      request: sendFlowRequest,
+    });
+
+    sendFlowRequest.interfaceId = interfaceId;
+
+    await this._stateMgr.upsertRequest(sendFlowRequest);
+    const result = await snap.request({
+      method: 'snap_dialog',
+      params: {
+        id: interfaceId,
+      },
+    });
+
+    if (!result) {
+      sendFlowRequest.status = TransactionStatus.Rejected;
+      await this._stateMgr.upsertRequest(sendFlowRequest);
+      throw new Error('User rejected the request');
+    }
+    await this._stateMgr.upsertRequest(sendFlowRequest);
+
+    const tx = await sendMany(account, this._options.origin, {
+      ...sendFlowRequest.transaction,
+      scope,
+    });
+
+    sendFlowRequest.txId = tx.txId;
+    return tx;
   }
 }
