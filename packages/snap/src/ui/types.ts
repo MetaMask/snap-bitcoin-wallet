@@ -36,13 +36,6 @@ export type SendFormErrors = {
  * @property balance - The balance of the account.
  * @property icon - The icon of the account.
  */
-// export type Account = {
-//   name: string;
-//   address: string;
-//   balance: Currency;
-//   icon: string;
-// };
-
 export type Account = KeyringAccount & {
   balance: Currency;
   icon: string;

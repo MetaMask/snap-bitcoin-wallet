@@ -31,10 +31,11 @@ export function formValidation(
   request.recipient.error = '';
   request.fees.error = '';
 
+  const formAmount = formState.amount ?? '0';
   const cryptoAmount =
     request.selectedCurrency === AssetType.BTC
-      ? formState.amount ?? '0'
-      : convertFiatToBtc(formState.amount ?? '0', request.rates);
+      ? formAmount
+      : convertFiatToBtc(formAmount, request.rates);
 
   request.recipient = validateRecipient(formState.to, context.scope);
   request.amount = validateAmount(
@@ -120,10 +121,7 @@ export function validateTotal(
   rates: string,
 ): SendFlowRequest['total'] {
   if (
-    isNaN(Number(amount)) ||
-    isNaN(Number(fees)) ||
-    isNaN(Number(balance)) ||
-    isNaN(Number(rates))
+    [amount, fees, balance, rates].some((x) => isNaN(Number(x)))
   ) {
     return {
       amount: '',
@@ -133,9 +131,8 @@ export function validateTotal(
     };
   }
 
-  if (
-    new BigNumber(amount).plus(new BigNumber(fees)).gt(new BigNumber(balance))
-  ) {
+  const total = new BigNumber(amount).plus(new BigNumber(fees));
+  if (total.gt(new BigNumber(balance))) {
     return {
       amount,
       fiat: convertBtcToFiat(amount, rates),
@@ -144,7 +141,7 @@ export function validateTotal(
     };
   }
 
-  const newTotal = new BigNumber(amount).plus(new BigNumber(fees)).toString();
+  const newTotal = total.toString();
   return {
     amount: newTotal,
     fiat: convertBtcToFiat(newTotal, rates),
