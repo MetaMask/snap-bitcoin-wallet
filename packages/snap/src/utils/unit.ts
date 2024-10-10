@@ -5,7 +5,7 @@ import { Config } from '../config';
 // Bitcoin Core's RPC 'estimatesmartfee' returns values in BTC/kvB.
 // Hence, we will have to convert it back to standard BTC/vB.
 // See: https://github.com/bitcoin/bitcoin/blob/v28.0/src/policy/feerate.cpp#L17
-export const bitcoinCoreKB = 1000;
+export const bitcoinCoreKb = 1000;
 
 // Maximum amount of satoshis
 export const maxSatoshi = 21 * 1e14;
@@ -22,20 +22,20 @@ export const satsIn1Btc = 100000000;
  * @param kvb - The amount in sats/kvB.
  * @returns The converted amount to sats/vB.
  */
-export function satsKVBToVB(kvb: number | bigint): bigint {
+export function satsKvbToVb(kvb: number | bigint): bigint {
   // It cannot be lower than 1 sat per vB.
-  if (kvb < bitcoinCoreKB) {
+  if (kvb < bitcoinCoreKb) {
     throw new Error(`Unable to convert kvB to vB: "${kvb}" is too small`);
   }
-  // NOTE: From here, we now we can safely divides by `bitcoinCoreKB` and we know it's not
+  // NOTE: From here, we now we can safely divides by `bitcoinCoreKb` and we know it's not
   // going to give a results of 0.
 
   // We still use `BigNumber` here and not `bigint` to be able to round up the result
-  const bigKVB = BigNumber(kvb.toString());
-  const bigKB = BigNumber(bitcoinCoreKB);
-  const bigVB = bigKVB.div(bigKB).toFixed(0, BigNumber.ROUND_HALF_UP);
+  const bigKvb = BigNumber(kvb.toString());
+  const bigKb = BigNumber(bitcoinCoreKb);
+  const bigVb = bigKvb.div(bigKb).toFixed(0, BigNumber.ROUND_HALF_UP);
 
-  return BigInt(bigVB.toString());
+  return BigInt(bigVb.toString());
 }
 
 /**
