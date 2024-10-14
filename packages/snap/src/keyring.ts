@@ -349,9 +349,12 @@ export class BtcKeyring implements Keyring {
 
     if (!result) {
       sendFlowRequest.status = TransactionStatus.Rejected;
-      await this._stateMgr.upsertRequest(sendFlowRequest);
+      await this._stateMgr.removeRequest(sendFlowRequest.id);
       throw new Error('User rejected the request');
     }
+
+    // Get the latest send flow request from the state manager
+    // this has been updated via onInputHandler
     await this._stateMgr.upsertRequest(sendFlowRequest);
 
     const tx = await sendMany(account, this._options.origin, {

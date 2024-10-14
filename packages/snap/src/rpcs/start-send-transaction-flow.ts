@@ -1,3 +1,5 @@
+import { UserRejectedRequestError } from '@metamask/snaps-sdk';
+
 import type { Caip2ChainId } from '../constants';
 import { AccountNotFoundError } from '../exceptions';
 import { Factory } from '../factory';
@@ -8,12 +10,12 @@ import {
   getAssetTypeFromScope,
   sendStateToSendManyParams,
 } from '../ui/utils';
-import { logger } from '../utils';
+import { logger, verifyIfAccountValid } from '../utils';
 import { getBalances } from './get-balances';
 import { sendMany } from './sendmany';
 
 export type StartSendTransactionFlowParams = {
-  accountId: string;
+  account: string;
   scope: Caip2ChainId;
 };
 
@@ -21,28 +23,29 @@ export type StartSendTransactionFlowParams = {
  * Starts the send transaction flow for a given account and scope.
  *
  * @param options0 - The options for starting the send transaction flow.
- * @param options0.accountId - The ID of the account to use.
+ * @param options0.account - The ID of the account to use.
  * @param options0.scope - The scope of the transaction.
  * @returns The transaction result.
  */
 export async function startSendTransactionFlow({
-  accountId,
+  account,
   scope,
 }: StartSendTransactionFlowParams) {
   try {
     const stateManager = new KeyringStateManager();
-    const walletData = await stateManager.getWallet(accountId);
+    const walletData = await stateManager.getWallet(account);
 
     if (!walletData) {
       throw new AccountNotFoundError();
     }
 
     const wallet = Factory.createWallet(walletData.scope);
-
-    const account = await wallet.unlock(
+    const btcAccount = await wallet.unlock(
       walletData.index,
       walletData.account.type,
     );
+    verifyIfAccountValid(btcAccount, walletData.account);
+
     const asset = getAssetTypeFromScope(scope);
 
     const sendFlowRequest = await generateSendFlow({
@@ -59,7 +62,7 @@ export async function startSendTransactionFlow({
       },
     });
 
-    const balances = await getBalances(account, {
+    const balances = await getBalances(btcAccount, {
       assets: [asset],
       scope,
     });
@@ -85,8 +88,8 @@ export async function startSendTransactionFlow({
 
     if (!sendFlowResult) {
       sendFlowRequest.status = TransactionStatus.Rejected;
-      await stateManager.upsertRequest(sendFlowRequest);
-      throw new Error('User rejected the request');
+      await stateManager.removeRequest(sendFlowRequest.id);
+      throw new UserRejectedRequestError() as unknown as Error;
     }
 
     // Get the latest send flow request from the state manager
@@ -107,12 +110,13 @@ export async function startSendTransactionFlow({
     sendFlowRequest.status = TransactionStatus.Confirmed;
     await stateManager.upsertRequest(sendFlowRequest);
 
-    const tx = await sendMany(account, scope, {
+    const tx = await sendMany(btcAccount, scope, {
       ...sendFlowRequest.transaction,
       scope,
     });
 
     sendFlowRequest.txId = tx.txId;
+    await stateManager.upsertRequest(sendFlowRequest);
     return tx;
   } catch (error) {
     logger.error('Failed to start send transaction flow', error);
