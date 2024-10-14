@@ -14,9 +14,9 @@ import {
 } from '@metamask/snaps-sdk/jsx';
 import type { CaipAccountId } from '@metamask/utils';
 
-import { Caip2ChainIdToNetworkName } from '../../constants';
 import type { SendFlowRequest } from '../../stateManagement';
 import btcIcon from '../images/btc.svg';
+import { getNetworkNameFromScope } from '../utils';
 import { SendFlowHeader } from './SendFlowHeader';
 import { SendFormNames } from './SendForm';
 
@@ -33,7 +33,7 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
   txSpeed,
   fees,
 }) => {
-  const network = Caip2ChainIdToNetworkName[scope];
+  const network = getNetworkNameFromScope(scope);
   const disabledSend = Boolean(
     amount.error || recipient.error || total.error || fees.error,
   );

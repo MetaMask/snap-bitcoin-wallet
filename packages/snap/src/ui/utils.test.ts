@@ -3,7 +3,7 @@ import { BtcAccountType } from '@metamask/keyring-api';
 import { BigNumber } from 'bignumber.js';
 import { v4 as uuidv4 } from 'uuid';
 
-import { Caip2ChainId } from '../constants';
+import { Caip2ChainId, Caip2ChainIdToNetworkName } from '../constants';
 import type { SendManyParams } from '../rpcs';
 import { generateDefaultSendFlowRequest } from '../stateManagement';
 import { AssetType } from './types';
@@ -15,6 +15,7 @@ import {
   sendStateToSendManyParams,
   sendManyParamsToSendFlowParams,
   formValidation,
+  getNetworkNameFromScope,
 } from './utils';
 
 const mockEstimateFee = jest.fn();
@@ -514,6 +515,42 @@ describe('utils', () => {
         loading: false,
         error: '',
       });
+    });
+  });
+
+  describe('getNetworkNameFromScope', () => {
+    const expectedError = 'Unknown Network';
+
+    it('should return "Mainnet" for Caip2ChainId.Mainnet', () => {
+      const result = getNetworkNameFromScope(Caip2ChainId.Mainnet);
+      expect(result).toBe(Caip2ChainIdToNetworkName[Caip2ChainId.Mainnet]);
+    });
+
+    it('should return "Testnet" for Caip2ChainId.Testnet', () => {
+      const result = getNetworkNameFromScope(Caip2ChainId.Testnet);
+      expect(result).toBe(Caip2ChainIdToNetworkName[Caip2ChainId.Testnet]);
+    });
+
+    it('should return "Unknown" for an unknown scope', () => {
+      const result = getNetworkNameFromScope('unknownScope' as Caip2ChainId);
+      expect(result).toBe(expectedError);
+    });
+
+    it('should return "Unknown" for an empty string', () => {
+      const result = getNetworkNameFromScope('' as Caip2ChainId);
+      expect(result).toBe(expectedError);
+    });
+
+    it('should return "Unknown" for null', () => {
+      const result = getNetworkNameFromScope(null as unknown as Caip2ChainId);
+      expect(result).toBe(expectedError);
+    });
+
+    it('should return "Unknown" for undefined', () => {
+      const result = getNetworkNameFromScope(
+        undefined as unknown as Caip2ChainId,
+      );
+      expect(result).toBe(expectedError);
     });
   });
 });

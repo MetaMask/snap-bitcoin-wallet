@@ -2,7 +2,11 @@ import { BigNumber } from 'bignumber.js';
 // eslint-disable-next-line import/no-named-as-default
 import validate, { Network } from 'bitcoin-address-validation';
 
-import { Caip2Asset, Caip2ChainId } from '../constants';
+import {
+  Caip2Asset,
+  Caip2ChainId,
+  Caip2ChainIdToNetworkName,
+} from '../constants';
 import type { SendManyParams } from '../rpcs';
 import { estimateFee } from '../rpcs';
 import type { SendFlowParams } from '../stateManagement';
@@ -286,4 +290,14 @@ export async function sendManyParamsToSendFlowParams(
  */
 export function getAssetTypeFromScope(scope: string): Caip2Asset {
   return scope === Caip2ChainId.Mainnet ? Caip2Asset.Btc : Caip2Asset.TBtc;
+}
+
+/**
+ * Gets the network name based on the given scope.
+ *
+ * @param scope - The scope of the network (mainnet or testnet).
+ * @returns The network name corresponding to the scope.
+ */
+export function getNetworkNameFromScope(scope: string): string {
+  return Caip2ChainIdToNetworkName[scope] ?? 'Unknown Network';
 }
