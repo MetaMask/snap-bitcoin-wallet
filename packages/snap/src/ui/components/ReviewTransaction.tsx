@@ -58,7 +58,7 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
           <Row label="Amount">
             <Value
               value={`${amount.amount} BTC`}
-              extra={`$${amount.fiat.toString()}`}
+              extra={`$${amount.fiat}`}
             />
           </Row>
           <Row label="Recipient">
@@ -69,19 +69,19 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
           <Row label="Network">
             <Text>{network}</Text>
           </Row>
-          <Row label="Transaction speed" tooltip="The estimated time of the TX">
+          <Row label="Transaction speed" tooltip="The estimated time of the transaction">
             <Text>{txSpeed}</Text>
           </Row>
           <Row label="Network fee" tooltip="The estimated network fee">
             <Value
               value={`${fees.amount} BTC`}
-              extra={`$${fees.fiat.toString()}`}
+              extra={`$${fees.fiat}`}
             />
           </Row>
           <Row label="Total">
             <Value
               value={`${total.amount} BTC`}
-              extra={`$${total.fiat.toString()}`}
+              extra={`$${total.fiat}`}
             />
           </Row>
         </Section>

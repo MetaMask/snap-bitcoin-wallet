@@ -130,7 +130,6 @@ export class SendManyController {
             account: this.context.accounts[0].id,
             amount: this.request.amount.amount,
           });
-          // TODO: fiat conversion
           this.request.fees = {
             fiat: convertBtcToFiat(estimates.fee.amount, this.request.rates),
             amount: estimates.fee.amount,

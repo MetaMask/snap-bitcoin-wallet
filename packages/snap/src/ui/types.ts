@@ -20,6 +20,8 @@ export type SendFormState = {
  *
  * @property to - The error for the receiving address.
  * @property amount - The error for the amount.
+ * @property total - The error for the total amount.
+ * @property fees - The error for the estimated fees.
  */
 export type SendFormErrors = {
   to: string;
@@ -44,6 +46,7 @@ export type Currency = {
  *
  * @property accounts - The available accounts.
  * @property fees - The fees for the transaction.
+ * @property requestId - The ID of the send flow request. 
  */
 export type SendFlowContext = {
   accounts: AccountWithBalance[];

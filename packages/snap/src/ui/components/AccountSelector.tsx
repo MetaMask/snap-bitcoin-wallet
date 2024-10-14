@@ -59,7 +59,7 @@ export const AccountSelector: SnapComponent<AccountSelectorProps> = ({
               extra={
                 balance?.amount ? `$${balance.fiat.toString()}` : loadingMessage
               }
-              title={'Btc Account'}
+              title={'Bitcoin Account'}
             />
           </SelectorOption>
         );

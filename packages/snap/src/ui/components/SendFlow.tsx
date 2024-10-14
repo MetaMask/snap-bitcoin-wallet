@@ -11,13 +11,11 @@ import { TransactionSummary } from './TransactionSummary';
 /**
  * The props for the {@link SendFlow} component.
  *
- * @property accounts - The available accounts.
- * @property selectedAccount - The currently selected account.
- * @property selectedCurrency - The selected currency to display.
- * @property amount - The amount to send of the transaction.
- * @property fees - The fees for the transaction.
- * @property flushToAddress - Whether to flush the address field or not.
- * @property errors - The form errors.
+ * @property account - The account information for the transaction.
+ * @property flushToAddress - Flag to flush to address.
+ * @property sendFlowParams - Additional parameters for the send flow.
+ * @property currencySwitched - Flag indicating if the currency was switched.
+ * @property backEventTriggered - Flag indicating if the back event was triggered.
  */
 export type SendFlowProps = {
   account: KeyringAccount;
@@ -31,9 +29,6 @@ export type SendFlowProps = {
  * A send flow component, which shows the user a form to send funds to another.
  *
  * @returns The SendFlow component.
- */
-/**
- * SendFlow component for handling the send transaction flow in the application.
  *
  * @param props - The properties object.
  * @param props.account - The account information for the transaction.
@@ -57,8 +52,8 @@ export const SendFlow: SnapComponent<SendFlowProps> = ({
   );
 
   const showTransactionSummary =
-    Boolean(!sendFlowParams.amount.error && sendFlowParams.amount.amount) ||
-    sendFlowParams.fees.loading;
+    Boolean(!amount.error && amount.amount) ||
+    fees.loading;
 
   return (
     <Container>

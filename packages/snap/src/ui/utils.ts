@@ -23,7 +23,7 @@ import type { SendFlowContext, SendFormState } from './types';
  * @param formState - The state of the send form.
  * @param context - The context of the interface.
  * @param request - The request object containing form data and errors.
- * @returns The form errors.
+ * @returns The `SendFlowRequest` object with the assigned errors.
  */
 export function formValidation(
   formState: SendFormState,
@@ -159,7 +159,7 @@ export function validateTotal(
  * @param scope - The scope of the network (mainnet or testnet).
  * @returns A promise that resolves to the SendManyParams object.
  */
-export async function sendStateToSendManyParams(
+export function sendStateToSendManyParams(
   request: SendFlowRequest,
   scope: string,
 ): Promise<SendManyParams> {
