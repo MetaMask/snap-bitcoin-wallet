@@ -156,7 +156,7 @@ describe('QuickNodeClient', () => {
       expect(result).toBe(mockResponse);
     });
 
-    it('throws `Api response error` error if the http status is not 200', async () => {
+    it('throws `API response error` error if the http status is not 200', async () => {
       const { fetchSpy } = createMockFetch();
 
       mockErrorResponse({
@@ -182,11 +182,11 @@ describe('QuickNodeClient', () => {
         }),
       ).rejects.toThrow(
         // the error message will be JSON.stringify, hence it will formatted as a string.
-        'Api response error: "api error"',
+        'API response error: "api error"',
       );
     });
 
-    it('throws `Http response error` error if the `response.ok` is false', async () => {
+    it('throws `HTTP response error` error if the `response.ok` is false', async () => {
       const { fetchSpy } = createMockFetch();
 
       mockErrorResponse({
@@ -208,7 +208,7 @@ describe('QuickNodeClient', () => {
           request: postBody,
           responseStruct: any(),
         }),
-      ).rejects.toThrow('Http response error: Not OK');
+      ).rejects.toThrow('HTTP response error: Not OK');
     });
   });
 
