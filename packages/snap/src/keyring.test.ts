@@ -22,6 +22,20 @@ jest.mock('@metamask/keyring-api', () => ({
   emitSnapKeyringEvent: jest.fn(),
 }));
 
+jest.mock('./rpcs/get-rates-and-balances', () => ({
+  getRatesAndBalances: () =>
+    jest.fn().mockResolvedValue({
+      rates: {
+        value: 'mockRates',
+        error: '',
+      },
+      balances: {
+        value: 'mockBalance',
+        error: '',
+      },
+    })(),
+}));
+
 class MockBtcKeyring extends BtcKeyring {
   // Mock protected method getKeyringAccountNameSuggestion to public for test purpose
   public getKeyringAccountNameSuggestion(options?: CreateAccountOptions) {

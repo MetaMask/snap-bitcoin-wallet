@@ -16,6 +16,7 @@ import { KeyringStateManager } from '../../stateManagement';
 import * as renderInterfaces from '../../ui/render-interfaces';
 import * as snapUtils from '../../utils/snap';
 import { generateDefaultSendFlowRequest } from '../../utils/transaction';
+import * as ratesAndBalances from '../get-rates-and-balances';
 
 jest.mock('../../utils/snap');
 
@@ -56,6 +57,20 @@ export function createMockChainApiFactory() {
     getBalancesSpy,
     getFeeRatesSpy,
   };
+}
+
+/**
+ * Create a mock for getting balance and rates.
+ *
+ * @returns The spy instance for `getRatesAndBalances`.
+ */
+export function createBalanceAndRatesMock() {
+  const getBalanceAndRatesSpy = jest.spyOn(
+    ratesAndBalances,
+    'getRatesAndBalances',
+  );
+
+  return getBalanceAndRatesSpy;
 }
 
 /**
@@ -414,6 +429,8 @@ export class StartSendTransactionFlowTest extends SendManyTest {
 
   createSendUIDialogMock: jest.SpyInstance;
 
+  getBalanceAndRatesSpy: jest.SpyInstance;
+
   scope: string;
 
   requestId = 'mock-requestId';
@@ -441,6 +458,7 @@ export class StartSendTransactionFlowTest extends SendManyTest {
     );
     this.upsertRequestSpy = upsertRequestSpy;
     this.getRequestSpy = getRequestSpy;
+    this.getBalanceAndRatesSpy = createBalanceAndRatesMock();
   }
 
   async setup() {
@@ -473,6 +491,16 @@ export class StartSendTransactionFlowTest extends SendManyTest {
       },
     });
     this.createSendUIDialogMock.mockResolvedValue(true);
+    this.getBalanceAndRatesSpy.mockResolvedValue({
+      rates: {
+        value: '62000',
+        error: '',
+      },
+      balances: {
+        value: '1',
+        error: '',
+      },
+    });
   }
 
   async setupMockRequest(sendFlowRequest: SendFlowRequest): Promise<void> {

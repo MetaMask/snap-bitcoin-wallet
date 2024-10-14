@@ -23,6 +23,7 @@ import { Caip2ChainId } from './constants';
 import { AccountNotFoundError, MethodNotImplementedError } from './exceptions';
 import { Factory } from './factory';
 import { getBalances, type SendManyParams, sendMany } from './rpcs';
+import { getRatesAndBalances } from './rpcs/get-rates-and-balances';
 import {
   TransactionStatus,
   type KeyringStateManager,
@@ -41,7 +42,6 @@ import {
   verifyIfAccountValid,
   createSendUIDialog,
 } from './utils';
-import { getRates } from './utils/rates';
 
 export type KeyringOptions = Record<string, Json> & {
   defaultIndex: number;
@@ -313,13 +313,17 @@ export class BtcKeyring implements Keyring {
   }): Promise<Json> {
     const asset = getAssetTypeFromScope(scope);
 
-    const balances = await getBalances(account, {
-      assets: [asset],
+    const { rates, balances } = await getRatesAndBalances({
+      asset,
       scope,
+      btcAccount: account,
     });
 
-    // TODO: replace with actual call
-    const rates = await getRates(asset);
+    if (rates.error || balances.error) {
+      throw new Error(
+        `Error fetching rates and balances: ${rates.error ?? balances.error}`,
+      );
+    }
 
     const sendFlowRequest: SendFlowRequest = {
       id: uuidv4(),
@@ -332,8 +336,8 @@ export class BtcKeyring implements Keyring {
         params,
         walletData.account.id,
         scope,
-        rates,
-        balances[asset].amount,
+        rates.value,
+        balances.value,
       )),
     };
 

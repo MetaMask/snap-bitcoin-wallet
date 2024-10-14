@@ -11,8 +11,7 @@ import {
   generateSendManyParams,
 } from '../ui/utils';
 import { logger, verifyIfAccountValid } from '../utils';
-import { getRates } from '../utils/rates';
-import { getBalances } from './get-balances';
+import { getRatesAndBalances } from './get-rates-and-balances';
 import { sendMany } from './sendmany';
 
 export type StartSendTransactionFlowParams = {
@@ -65,17 +64,21 @@ export async function startSendTransactionFlow({
       },
     });
 
-    const balances = await getBalances(btcAccount, {
-      assets: [asset],
+    const { rates, balances } = await getRatesAndBalances({
+      asset,
       scope,
+      btcAccount,
     });
 
-    // mock rates call
-    const rates = await getRates(asset);
+    if (rates.error || balances.error) {
+      throw new Error(
+        `Error fetching rates and balances: ${rates.error ?? balances.error}`,
+      );
+    }
 
-    sendFlowRequest.balance.amount = balances[asset].amount;
-    sendFlowRequest.balance.fiat = btcToFiat(balances[asset].amount, rates);
-    sendFlowRequest.rates = rates;
+    sendFlowRequest.balance.amount = balances.value;
+    sendFlowRequest.balance.fiat = btcToFiat(balances.value, rates.value);
+    sendFlowRequest.rates = rates.value;
     await stateManager.upsertRequest(sendFlowRequest);
 
     await updateSendFlow({

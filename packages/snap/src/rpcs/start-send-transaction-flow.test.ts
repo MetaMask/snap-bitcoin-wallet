@@ -1,4 +1,4 @@
-import { Caip2ChainId } from '../constants';
+import { Caip2Asset, Caip2ChainId } from '../constants';
 import { TransactionStatus } from '../stateManagement';
 import { AssetType } from '../ui/types';
 import { generateSendManyParams } from '../ui/utils';
@@ -93,7 +93,12 @@ describe('startSendTransactionFlow', () => {
 
   it('throws an error when the user rejects the transaction', async () => {
     const helper = await prepareStartSendTransactionFlow(mockScope);
-    const { keyringAccount } = helper;
+    const { keyringAccount, getBalancesSpy } = helper;
+    getBalancesSpy.mockResolvedValueOnce({
+      [Caip2Asset.TBtc]: {
+        amount: '1',
+      },
+    });
     const mockRequestWithCorrectValues = {
       id: 'mock-requestId',
       interfaceId: 'mock-interfaceId',
@@ -153,7 +158,12 @@ describe('startSendTransactionFlow', () => {
 
   it('throws an error when send flow request is not found', async () => {
     const helper = await prepareStartSendTransactionFlow(mockScope);
-    const { keyringAccount } = helper;
+    const { keyringAccount, getBalancesSpy } = helper;
+    getBalancesSpy.mockResolvedValueOnce({
+      [Caip2Asset.TBtc]: {
+        amount: '1',
+      },
+    });
     // @ts-expect-error - We are testing the error case
     await helper.setupGetRequest(null);
 
