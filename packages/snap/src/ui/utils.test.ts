@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Caip2ChainId, Caip2ChainIdToNetworkName } from '../constants';
 import type { SendManyParams } from '../rpcs';
 import { generateDefaultSendFlowRequest } from '../stateManagement';
-import { AssetType } from './types';
+import { AssetType, SendFormError } from './types';
 import {
   validateAmount,
   validateRecipient,
@@ -44,7 +44,7 @@ describe('utils', () => {
       expect(result).toStrictEqual({
         amount: '',
         fiat: '',
-        error: 'Invalid amount',
+        error: SendFormError.InvalidAmount,
         valid: false,
       });
     });
@@ -109,7 +109,7 @@ describe('utils', () => {
       const result = validateRecipient('invalidAddress', Caip2ChainId.Mainnet);
       expect(result).toStrictEqual({
         address: 'invalidAddress',
-        error: 'Invalid address',
+        error: SendFormError.InvalidAddress,
         valid: false,
       });
     });
@@ -118,7 +118,7 @@ describe('utils', () => {
       const result = validateRecipient('invalidAddress', Caip2ChainId.Testnet);
       expect(result).toStrictEqual({
         address: 'invalidAddress',
-        error: 'Invalid address',
+        error: SendFormError.InvalidAddress,
         valid: false,
       });
     });
@@ -130,7 +130,7 @@ describe('utils', () => {
       );
       expect(result).toStrictEqual({
         address: 'bc1q26a367uz34eg5mufwhlscwdcplu6frtgf00r7a',
-        error: 'Invalid address',
+        error: SendFormError.InvalidAddress,
         valid: false,
       });
     });
@@ -142,7 +142,7 @@ describe('utils', () => {
       );
       expect(result).toStrictEqual({
         address: 'mipcBbFg9gMiCh81Kj8tqqdgoZub1ZJRfn',
-        error: 'Invalid address',
+        error: SendFormError.InvalidAddress,
         valid: false,
       });
     });
@@ -151,7 +151,7 @@ describe('utils', () => {
       const result = validateRecipient('', Caip2ChainId.Mainnet);
       expect(result).toStrictEqual({
         address: '',
-        error: 'Invalid address',
+        error: SendFormError.InvalidAddress,
         valid: false,
       });
     });
@@ -163,7 +163,7 @@ describe('utils', () => {
       );
       expect(result).toStrictEqual({
         address: '',
-        error: 'Invalid address',
+        error: SendFormError.InvalidAddress,
         valid: false,
       });
     });
@@ -175,7 +175,7 @@ describe('utils', () => {
       );
       expect(result).toStrictEqual({
         address: '',
-        error: 'Invalid address',
+        error: SendFormError.InvalidAddress,
         valid: false,
       });
     });
@@ -203,7 +203,7 @@ describe('utils', () => {
       };
       const scope = Caip2ChainId.Mainnet;
 
-      const result = await sendStateToSendManyParams(request, scope);
+      const result = generateSendManyParams(scope, request);
 
       expect(result).toStrictEqual({
         amounts: { bc1q26a367uz34eg5mufwhlscwdcplu6frtgf00r7a: '0.1' },
@@ -267,23 +267,23 @@ describe('utils', () => {
         },
         balance: {
           amount: balance,
-          fiat: convertBtcToFiat(balance, rates),
+          fiat: btcToFiat(balance, rates),
         },
         fees: {
           amount: mockFee.fee.amount,
-          fiat: convertBtcToFiat(mockFee.fee.amount, rates),
+          fiat: btcToFiat(mockFee.fee.amount, rates),
           loading: false,
           error: '',
         },
         amount: {
           amount: expectedAmount,
-          fiat: convertBtcToFiat(expectedAmount, rates),
+          fiat: btcToFiat(expectedAmount, rates),
           error: '',
           valid: true,
         },
         total: {
           amount: expectedTotal,
-          fiat: convertBtcToFiat(expectedTotal, rates),
+          fiat: btcToFiat(expectedTotal, rates),
           valid: true,
           error: '',
         },
@@ -358,7 +358,7 @@ describe('utils', () => {
         rates,
         balance,
       );
-      expect((await result).amount.error).toBe('Insufficient funds');
+      expect((await result).amount.error).toBe(SendFormError.InsufficientFunds);
     });
   });
 
@@ -374,7 +374,7 @@ describe('utils', () => {
     ])(
       'should convert $amount btc to $rate fiat',
       ({ amount, rate, expected }) => {
-        expect(convertBtcToFiat(amount, rate)).toStrictEqual(expected);
+        expect(btcToFiat(amount, rate)).toStrictEqual(expected);
       },
     );
   });
@@ -390,7 +390,7 @@ describe('utils', () => {
     ])(
       'should convert $amount fiat to $rate btc',
       ({ amount, rate, expected }) => {
-        expect(convertFiatToBtc(amount, rate)).toStrictEqual(expected);
+        expect(fiatToBtc(amount, rate)).toStrictEqual(expected);
       },
     );
   });
@@ -446,7 +446,7 @@ describe('utils', () => {
           amount: 'abc',
           to: 'bc1q26a367uz34eg5mufwhlscwdcplu6frtgf00r7a',
         },
-        expectedAmountError: 'Invalid amount',
+        expectedAmountError: SendFormError.InvalidAmount,
         expectedRecipientError: '',
       },
       {
@@ -454,7 +454,7 @@ describe('utils', () => {
           amount: '0',
           to: 'bc1q26a367uz34eg5mufwhlscwdcplu6frtgf00r7a',
         },
-        expectedAmountError: 'Amount must be greater than 0',
+        expectedAmountError: SendFormError.ZeroAmount,
         expectedRecipientError: '',
       },
       {
@@ -462,13 +462,13 @@ describe('utils', () => {
           amount: '2',
           to: 'bc1q26a367uz34eg5mufwhlscwdcplu6frtgf00r7a',
         },
-        expectedAmountError: 'Insufficient funds',
+        expectedAmountError: SendFormError.InsufficientFunds,
         expectedRecipientError: '',
       },
       {
         formState: { amount: '0.1', to: 'invalidAddress' },
         expectedAmountError: '',
-        expectedRecipientError: 'Invalid address',
+        expectedRecipientError: SendFormError.InvalidAddress,
       },
     ])(
       'should handle error cases for form validation',

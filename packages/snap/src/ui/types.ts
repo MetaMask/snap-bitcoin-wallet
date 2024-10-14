@@ -15,6 +15,16 @@ export type SendFormState = {
   accountSelector: string;
 };
 
+export enum SendFormError {
+  InvalidAddress = 'Invalid address',
+  InvalidAmount = 'Invalid amount',
+  ZeroAmount = 'Amount must be greater than 0',
+  InsufficientFunds = 'Insufficient funds',
+  TotalExceedsBalance = 'Amount and fees exceeds balance',
+  InvalidTotal = 'Invalid total',
+  InvalidFees = 'Invalid fees',
+}
+
 /**
  * The form errors.
  *
@@ -23,11 +33,11 @@ export type SendFormState = {
  * @property total - The error for the total amount.
  * @property fees - The error for the estimated fees.
  */
-export type SendFormErrors = {
-  to: string;
-  amount: string;
-  total: string;
-  fees: string;
+export type SendFormErrorsObject = {
+  to: SendFormError;
+  amount: SendFormError;
+  total: SendFormError;
+  fees: SendFormError;
 };
 
 /**
@@ -46,7 +56,7 @@ export type Currency = {
  *
  * @property accounts - The available accounts.
  * @property fees - The fees for the transaction.
- * @property requestId - The ID of the send flow request. 
+ * @property requestId - The ID of the send flow request.
  */
 export type SendFlowContext = {
   accounts: AccountWithBalance[];
@@ -71,5 +81,4 @@ export type UpdateSendFlowParams = {
   flushToAddress?: boolean;
   currencySwitched?: boolean;
   backEventTriggered?: boolean;
-  showReviewTransaction?: boolean;
 };
