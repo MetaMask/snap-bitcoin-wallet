@@ -5,14 +5,14 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Caip2ChainId, Caip2ChainIdToNetworkName } from '../constants';
 import type { SendManyParams } from '../rpcs';
-import { generateDefaultSendFlowRequest } from '../stateManagement';
+import { generateDefaultSendFlowRequest } from '../utils/transaction';
 import { AssetType, SendFormError } from './types';
 import {
   validateAmount,
   validateRecipient,
-  convertBtcToFiat,
-  convertFiatToBtc,
-  sendStateToSendManyParams,
+  btcToFiat,
+  fiatToBtc,
+  generateSendManyParams,
   sendManyParamsToSendFlowParams,
   formValidation,
   getNetworkNameFromScope,

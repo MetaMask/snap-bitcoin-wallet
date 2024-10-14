@@ -39,6 +39,7 @@ import {
   ScopeStruct,
   logger,
   verifyIfAccountValid,
+  createSendUIDialog,
 } from './utils';
 import { getRates } from './utils/rates';
 
@@ -343,12 +344,7 @@ export class BtcKeyring implements Keyring {
     sendFlowRequest.interfaceId = interfaceId;
 
     await this._stateMgr.upsertRequest(sendFlowRequest);
-    const result = await snap.request({
-      method: 'snap_dialog',
-      params: {
-        id: interfaceId,
-      },
-    });
+    const result = await createSendUIDialog(sendFlowRequest.id);
 
     if (!result) {
       sendFlowRequest.status = TransactionStatus.Rejected;
@@ -366,6 +362,7 @@ export class BtcKeyring implements Keyring {
     });
 
     sendFlowRequest.txId = tx.txId;
+    await this._stateMgr.upsertRequest(sendFlowRequest);
     return tx;
   }
 }

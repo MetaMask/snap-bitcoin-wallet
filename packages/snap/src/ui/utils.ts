@@ -10,11 +10,9 @@ import {
 import type { SendManyParams } from '../rpcs';
 import { estimateFee } from '../rpcs';
 import type { SendFlowParams } from '../stateManagement';
-import {
-  generateDefaultSendFlowParams,
-  type SendFlowRequest,
-} from '../stateManagement';
-import { AssetType } from './types';
+import { type SendFlowRequest } from '../stateManagement';
+import { generateDefaultSendFlowParams } from '../utils/transaction';
+import { AssetType, SendFormError } from './types';
 import type { SendFlowContext, SendFormState } from './types';
 
 /**
@@ -39,7 +37,7 @@ export function formValidation(
   const cryptoAmount =
     request.selectedCurrency === AssetType.BTC
       ? formAmount
-      : convertFiatToBtc(formAmount, request.rates);
+      : fiatToBtc(formAmount, request.rates);
 
   request.recipient = validateRecipient(formState.to, context.scope);
   request.amount = validateAmount(
@@ -78,7 +76,7 @@ export function validateAmount(
     return {
       amount: '',
       fiat: '',
-      error: 'Invalid amount',
+      error: SendFormError.InvalidAmount,
       valid: false,
     };
   }
@@ -87,7 +85,7 @@ export function validateAmount(
     return {
       amount: '0',
       fiat: '0',
-      error: 'Amount must be greater than 0',
+      error: SendFormError.ZeroAmount,
       valid: false,
     };
   }
@@ -95,15 +93,15 @@ export function validateAmount(
   if (amount && new BigNumber(amount).gt(new BigNumber(balance))) {
     return {
       amount,
-      fiat: convertBtcToFiat(amount, rates),
-      error: 'Insufficient funds',
+      fiat: btcToFiat(amount, rates),
+      error: SendFormError.InsufficientFunds,
       valid: false,
     };
   }
 
   return {
     amount,
-    fiat: convertBtcToFiat(amount, rates),
+    fiat: btcToFiat(amount, rates),
     error: '',
     valid: true,
   };
@@ -137,8 +135,8 @@ export function validateTotal(
   if (total.gt(new BigNumber(balance))) {
     return {
       amount,
-      fiat: convertBtcToFiat(amount, rates),
-      error: 'Amount and fees exceeds balance',
+      fiat: btcToFiat(amount, rates),
+      error: SendFormError.TotalExceedsBalance,
       valid: false,
     };
   }
@@ -146,7 +144,7 @@ export function validateTotal(
   const newTotal = total.toString();
   return {
     amount: newTotal,
-    fiat: convertBtcToFiat(newTotal, rates),
+    fiat: btcToFiat(newTotal, rates),
     error: '',
     valid: true,
   };
@@ -155,14 +153,25 @@ export function validateTotal(
 /**
  * Converts the send state to SendManyParams.
  *
- * @param request - The request object containing form data and errors.
  * @param scope - The scope of the network (mainnet or testnet).
+ * @param request - The request object containing form data and errors.
  * @returns A promise that resolves to the SendManyParams object.
  */
-export function sendStateToSendManyParams(
-  request: SendFlowRequest,
+export function generateSendManyParams(
   scope: string,
-): Promise<SendManyParams> {
+  request?: SendFlowRequest,
+): SendManyParams {
+  if (!request) {
+    return {
+      amounts: {},
+      comment: '',
+      subtractFeeFrom: [],
+      replaceable: true,
+      dryrun: false,
+      scope,
+    };
+  }
+
   return {
     amounts: {
       [request.recipient.address]: request.amount.amount,
@@ -182,7 +191,7 @@ export function sendStateToSendManyParams(
  * @param rate - The conversion rate from Bitcoin to fiat.
  * @returns The equivalent fiat value as a string.
  */
-export function convertBtcToFiat(amount: string, rate: string): string {
+export function btcToFiat(amount: string, rate: string): string {
   const amountBN = new BigNumber(amount);
   const rateBN = new BigNumber(rate);
   return amountBN.multipliedBy(rateBN).toFixed(2);
@@ -195,7 +204,7 @@ export function convertBtcToFiat(amount: string, rate: string): string {
  * @param rate - The conversion rate from fiat to Bitcoin.
  * @returns The equivalent Bitcoin value as a string.
  */
-export function convertFiatToBtc(amount: string, rate: string): string {
+export function fiatToBtc(amount: string, rate: string): string {
   const amountBN = new BigNumber(amount);
   const rateBN = new BigNumber(rate);
   return amountBN.dividedBy(rateBN).toFixed(8); // 8 is the number of decimals for btc
@@ -218,7 +227,7 @@ export function validateRecipient(
   ) {
     return {
       address: address ?? '',
-      error: 'Invalid address',
+      error: SendFormError.InvalidAddress,
       valid: false,
     };
   }
@@ -256,7 +265,7 @@ export async function sendManyParamsToSendFlowParams(
   defaultParams.recipient = validateRecipient(recipient, scope);
   defaultParams.balance = {
     amount: balance,
-    fiat: convertBtcToFiat(balance, rates),
+    fiat: btcToFiat(balance, rates),
   };
 
   try {
@@ -265,7 +274,7 @@ export async function sendManyParamsToSendFlowParams(
       amount,
     });
     defaultParams.fees.amount = estimatedFees.fee.amount;
-    defaultParams.fees.fiat = convertBtcToFiat(estimatedFees.fee.amount, rates);
+    defaultParams.fees.fiat = btcToFiat(estimatedFees.fee.amount, rates);
     defaultParams.amount = validateAmount(amount, balance, rates);
     defaultParams.total = validateTotal(
       amount,

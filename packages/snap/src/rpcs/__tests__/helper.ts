@@ -12,12 +12,10 @@ import { Config } from '../../config';
 import { Caip2Asset } from '../../constants';
 import { Factory } from '../../factory';
 import type { SendFlowRequest } from '../../stateManagement';
-import {
-  generateDefaultSendFlowRequest,
-  KeyringStateManager,
-} from '../../stateManagement';
+import { KeyringStateManager } from '../../stateManagement';
 import * as renderInterfaces from '../../ui/render-interfaces';
 import * as snapUtils from '../../utils/snap';
+import { generateDefaultSendFlowRequest } from '../../utils/transaction';
 
 jest.mock('../../utils/snap');
 
@@ -177,6 +175,16 @@ export function createRequestMocks(defaultRequest: SendFlowRequest) {
     getRequestSpy,
     upsertRequestSpy,
   };
+}
+
+/**
+ * Create a mock `sendUIDialog`.
+ *
+ * @returns The `sendUIDialogSpy`.
+ */
+export function createSendUIDialogMock() {
+  const sendUIDialogSpy = jest.spyOn(snapUtils, 'createSendUIDialog');
+  return sendUIDialogSpy;
 }
 
 /**
@@ -404,6 +412,8 @@ export class StartSendTransactionFlowTest extends SendManyTest {
 
   upsertRequestSpy: jest.SpyInstance;
 
+  createSendUIDialogMock: jest.SpyInstance;
+
   scope: string;
 
   requestId = 'mock-requestId';
@@ -420,6 +430,7 @@ export class StartSendTransactionFlowTest extends SendManyTest {
     this.updateSendFlowSpy = mocks.updateSendFlowSpy;
     this.generateConfirmationReviewInterfaceSpy =
       mocks.generateConfirmationReviewInterfaceSpy;
+    this.createSendUIDialogMock = createSendUIDialogMock();
     const { getRequestSpy, upsertRequestSpy } = createRequestMocks(
       generateDefaultSendFlowRequest(
         this.keyringAccount,
@@ -461,6 +472,7 @@ export class StartSendTransactionFlowTest extends SendManyTest {
         },
       },
     });
+    this.createSendUIDialogMock.mockResolvedValue(true);
   }
 
   async setupMockRequest(sendFlowRequest: SendFlowRequest): Promise<void> {

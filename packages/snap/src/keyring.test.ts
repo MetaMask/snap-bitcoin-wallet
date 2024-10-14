@@ -323,7 +323,6 @@ describe('BtcKeyring', () => {
   describe('submitRequest', () => {
     it('calls SnapRpcHandler if the method support', async () => {
       // Mocking user interaction
-      jest.spyOn(snap, 'request').mockResolvedValue(true);
       const caip2ChainId = Caip2ChainId.Testnet;
       const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
       const {
@@ -374,7 +373,6 @@ describe('BtcKeyring', () => {
         origin,
         params,
       );
-      jest.restoreAllMocks();
     });
 
     it('throws `AccountNotFoundError` if the account address is not match with the unlocked account', async () => {

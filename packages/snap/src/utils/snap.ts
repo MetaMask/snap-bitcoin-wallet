@@ -98,3 +98,18 @@ export async function setStateData<State>(data: State) {
     },
   });
 }
+
+/**
+ * Creates and sends a UI dialog with the specified interface ID.
+ *
+ * @param interfaceId - The ID of the interface to create the dialog for.
+ * @returns A Promise that resolves to the result of the dialog request.
+ */
+export async function createSendUIDialog(interfaceId: string) {
+  return await snap.request({
+    method: 'snap_dialog',
+    params: {
+      id: interfaceId,
+    },
+  });
+}

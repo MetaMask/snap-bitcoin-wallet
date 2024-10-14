@@ -6,14 +6,12 @@ import { estimateFee, getMaxSpendableBalance } from '../../rpcs';
 import type { KeyringStateManager } from '../../stateManagement';
 import { TransactionStatus, type SendFlowRequest } from '../../stateManagement';
 import { SendFormNames } from '../components/SendForm';
-import { updateSendFlow } from '../render-interfaces';
-import { AssetType, type SendFlowContext, type SendFormState } from '../types';
 import {
-  convertBtcToFiat,
-  convertFiatToBtc,
-  formValidation,
-  validateTotal,
-} from '../utils';
+  generateConfirmationReviewInterface,
+  updateSendFlow,
+} from '../render-interfaces';
+import { AssetType, type SendFlowContext, type SendFormState } from '../types';
+import { btcToFiat, fiatToBtc, formValidation, validateTotal } from '../utils';
 
 export const isSendFormEvent = (event: UserInputEvent): boolean => {
   return Object.values(SendFormNames).includes(event?.name as SendFormNames);
@@ -113,13 +111,13 @@ export class SendManyController {
 
         if (this.request.selectedCurrency === AssetType.BTC) {
           this.request.amount.amount = formState.amount;
-          this.request.amount.fiat = convertBtcToFiat(
+          this.request.amount.fiat = btcToFiat(
             formState.amount,
             this.request.rates,
           );
         } else {
           this.request.amount.fiat = formState.amount;
-          this.request.amount.amount = convertFiatToBtc(
+          this.request.amount.amount = fiatToBtc(
             formState.amount,
             this.request.rates,
           );
@@ -131,7 +129,7 @@ export class SendManyController {
             amount: this.request.amount.amount,
           });
           this.request.fees = {
-            fiat: convertBtcToFiat(estimates.fee.amount, this.request.rates),
+            fiat: btcToFiat(estimates.fee.amount, this.request.rates),
             amount: estimates.fee.amount,
             loading: false,
             error: '',
@@ -220,10 +218,8 @@ export class SendManyController {
       case SendFormNames.Review: {
         this.request.status = TransactionStatus.Review;
         await this.persistRequest(this.request);
-        return await updateSendFlow({
-          request: this.request,
-          showReviewTransaction: true,
-        });
+        await generateConfirmationReviewInterface({ request: this.request });
+        return null;
       }
       case SendFormNames.Send: {
         this.request.status = TransactionStatus.Signed;
@@ -264,13 +260,13 @@ export class SendManyController {
       } else {
         this.request.amount = {
           amount: maxAmount.balance.amount,
-          fiat: convertBtcToFiat(maxAmount.balance.amount, this.request.rates),
+          fiat: btcToFiat(maxAmount.balance.amount, this.request.rates),
           error: '',
           valid: true,
         };
         this.request.fees = {
           amount: maxAmount.fee.amount,
-          fiat: convertBtcToFiat(maxAmount.fee.amount, this.request.rates),
+          fiat: btcToFiat(maxAmount.fee.amount, this.request.rates),
           loading: false,
           error: '',
         };
@@ -285,7 +281,7 @@ export class SendManyController {
       await this.persistRequest(this.request);
     } catch (error) {
       this.request.amount.error = `Error fetching max amount: ${
-        error as string
+        error.message as string
       }`;
       this.request.fees.loading = false;
     }

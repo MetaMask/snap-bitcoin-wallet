@@ -6,7 +6,7 @@ import { Factory } from '../factory';
 import { KeyringStateManager, TransactionStatus } from '../stateManagement';
 import { generateSendFlow, updateSendFlow } from '../ui/render-interfaces';
 import {
-  convertBtcToFiat,
+  btcToFiat,
   getAssetTypeFromScope,
   generateSendManyParams,
 } from '../ui/utils';
@@ -74,10 +74,7 @@ export async function startSendTransactionFlow({
     const rates = await getRates(asset);
 
     sendFlowRequest.balance.amount = balances[asset].amount;
-    sendFlowRequest.balance.fiat = convertBtcToFiat(
-      balances[asset].amount,
-      rates,
-    );
+    sendFlowRequest.balance.fiat = btcToFiat(balances[asset].amount, rates);
     sendFlowRequest.rates = rates;
     await stateManager.upsertRequest(sendFlowRequest);
 

@@ -7,11 +7,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Caip2ChainId } from '../../constants';
 import { estimateFee, getMaxSpendableBalance } from '../../rpcs';
-import {
-  generateDefaultSendFlowRequest,
-  KeyringStateManager,
-  TransactionStatus,
-} from '../../stateManagement';
+import { KeyringStateManager, TransactionStatus } from '../../stateManagement';
+import { generateDefaultSendFlowRequest } from '../../utils/transaction';
 import { SendFormNames } from '../components/SendForm';
 import { updateSendFlow } from '../render-interfaces';
 import type { SendFlowContext, SendFormState } from '../types';
@@ -24,15 +21,18 @@ jest.mock('../../rpcs', () => ({
   getMaxSpendableBalance: jest.fn(),
 }));
 
-jest.mock('../render-interfaces', () => ({
-  updateSendFlow: jest.fn(),
-}));
-
 // @ts-expect-error Mocking Snap global object
 // eslint-disable-next-line no-restricted-globals
 global.snap = {
   request: jest.fn(),
 };
+
+const mockGenerateConfirmationReviewInterface = jest.fn();
+jest.mock('../render-interfaces', () => ({
+  updateSendFlow: jest.fn(),
+  generateConfirmationReviewInterface: (args) =>
+    mockGenerateConfirmationReviewInterface(args),
+}));
 
 const mockInterfaceId = 'interfaceId';
 const mockScope = Caip2ChainId.Mainnet;
@@ -690,9 +690,8 @@ describe('SendManyController', () => {
       };
       expect(controller.request.status).toBe(TransactionStatus.Review);
       expect(stateManager.upsertRequest).toHaveBeenCalledWith(expectedResult);
-      expect(updateSendFlow).toHaveBeenCalledWith({
+      expect(mockGenerateConfirmationReviewInterface).toHaveBeenCalledWith({
         request: expectedResult,
-        showReviewTransaction: true,
       });
     });
 
@@ -797,7 +796,7 @@ describe('SendManyController', () => {
       await controller.handleButtonEvent(SendFormNames.SetMax);
 
       expect(controller.request.amount.error).toBe(
-        'Error fetching max amount: Error: Error fetching max amount',
+        'Error fetching max amount: Error fetching max amount',
       );
       expect(controller.request.fees.loading).toBe(false);
       expect(updateSendFlow).toHaveBeenCalledWith({

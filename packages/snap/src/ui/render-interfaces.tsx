@@ -4,7 +4,7 @@ import type { SendFlowRequest } from '../stateManagement';
 import {
   generateDefaultSendFlowParams,
   generateDefaultSendFlowRequest,
-} from '../stateManagement';
+} from '../utils/transaction';
 import { SendFlow, ReviewTransaction } from './components';
 import type { GenerateSendFlowParams, UpdateSendFlowParams } from './types';
 
@@ -59,22 +59,18 @@ export async function generateSendFlow({
  * @param options.flushToAddress - Whether to flush to address.
  * @param options.currencySwitched - Whether the currency was switched.
  * @param options.backEventTriggered - Whether the back event was triggered.
- * @param options.showReviewTransaction - Whether to show the review transaction.
  */
 export async function updateSendFlow({
   request,
   flushToAddress = false,
   currencySwitched = false,
   backEventTriggered = false,
-  showReviewTransaction = false,
 }: UpdateSendFlowParams) {
   await snap.request({
     method: 'snap_updateInterface',
     params: {
       id: request.interfaceId,
-      ui: showReviewTransaction ? (
-        <ReviewTransaction {...request} txSpeed="30m" />
-      ) : (
+      ui: (
         <SendFlow
           account={request.account}
           sendFlowParams={request}
