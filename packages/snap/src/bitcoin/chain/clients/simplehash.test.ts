@@ -80,7 +80,7 @@ describe('SimpleHashClient', () => {
       expect(fetchSpy).toHaveBeenCalledTimes(addresses.length);
     });
 
-    it('throws `Api response error` if the http status is not 200', async () => {
+    it('throws `API response error` if the http status is not 200', async () => {
       const { fetchSpy } = createMockFetch();
       const addresses = await reateAccountAddresses(1);
 
@@ -92,11 +92,11 @@ describe('SimpleHashClient', () => {
       const client = createSimpleHashClient();
 
       await expect(client.filterUtxos(addresses, [])).rejects.toThrow(
-        `Api response error`,
+        `API response error`,
       );
     });
 
-    it('throws `Unexpected response from Api client` if the api response is unexpected', async () => {
+    it('throws `Unexpected response from API client` if the api response is unexpected', async () => {
       const { fetchSpy } = createMockFetch();
       const addresses = await reateAccountAddresses(1);
 
@@ -110,7 +110,7 @@ describe('SimpleHashClient', () => {
       const client = createSimpleHashClient();
 
       await expect(client.filterUtxos(addresses, [])).rejects.toThrow(
-        `Unexpected response from Api client`,
+        `Unexpected response from API client`,
       );
     });
   });
