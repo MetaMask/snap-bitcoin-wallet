@@ -274,7 +274,11 @@ export class QuickNodeClient implements IDataClient {
         //   "id": null
         // }
         // In that case, we will use the mempool min fee instead.
-        if (errors && errors[0] === NoFeeRateError) {
+        if (
+          Array.isArray(errors) &&
+          errors.length === 1 &&
+          errors[0] === NoFeeRateError
+        ) {
           logger.warn(
             `The feerate is unavailable on target block ${target}, use mempool data 'mempoolminfee' instead`,
           );
