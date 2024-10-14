@@ -28,8 +28,6 @@ export type SendFlowProps = {
 /**
  * A send flow component, which shows the user a form to send funds to another.
  *
- * @returns The SendFlow component.
- *
  * @param props - The properties object.
  * @param props.account - The account information for the transaction.
  * @param props.flushToAddress - Flag to flush to address.
@@ -52,8 +50,7 @@ export const SendFlow: SnapComponent<SendFlowProps> = ({
   );
 
   const showTransactionSummary =
-    Boolean(!amount.error && amount.amount) ||
-    fees.loading;
+    Boolean(!amount.error && amount.amount) || fees.loading;
 
   return (
     <Container>

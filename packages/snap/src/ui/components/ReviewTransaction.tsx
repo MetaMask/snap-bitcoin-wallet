@@ -56,10 +56,7 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
             />
           </Row>
           <Row label="Amount">
-            <Value
-              value={`${amount.amount} BTC`}
-              extra={`$${amount.fiat}`}
-            />
+            <Value value={`${amount.amount} BTC`} extra={`$${amount.fiat}`} />
           </Row>
           <Row label="Recipient">
             <Address address={`${account.type}:${recipient.address}`} />
@@ -69,20 +66,17 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
           <Row label="Network">
             <Text>{network}</Text>
           </Row>
-          <Row label="Transaction speed" tooltip="The estimated time of the transaction">
+          <Row
+            label="Transaction speed"
+            tooltip="The estimated time of the transaction"
+          >
             <Text>{txSpeed}</Text>
           </Row>
           <Row label="Network fee" tooltip="The estimated network fee">
-            <Value
-              value={`${fees.amount} BTC`}
-              extra={`$${fees.fiat}`}
-            />
+            <Value value={`${fees.amount} BTC`} extra={`$${fees.fiat}`} />
           </Row>
           <Row label="Total">
-            <Value
-              value={`${total.amount} BTC`}
-              extra={`$${total.fiat}`}
-            />
+            <Value value={`${total.amount} BTC`} extra={`$${total.fiat}`} />
           </Row>
         </Section>
         {Boolean(recipient.error) && (

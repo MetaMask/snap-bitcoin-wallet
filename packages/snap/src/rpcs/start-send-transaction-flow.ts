@@ -11,9 +11,9 @@ import {
   generateSendManyParams,
 } from '../ui/utils';
 import { logger, verifyIfAccountValid } from '../utils';
+import { getRates } from '../utils/rates';
 import { getBalances } from './get-balances';
 import { sendMany } from './sendmany';
-import { getRates } from '../utils/rates';
 
 export type StartSendTransactionFlowParams = {
   account: string;
