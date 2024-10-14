@@ -8,7 +8,7 @@ import { generateSendFlow, updateSendFlow } from '../ui/render-interfaces';
 import {
   convertBtcToFiat,
   getAssetTypeFromScope,
-  sendStateToSendManyParams,
+  generateSendManyParams,
 } from '../ui/utils';
 import { logger, verifyIfAccountValid } from '../utils';
 import { getBalances } from './get-balances';
@@ -105,9 +105,9 @@ export async function startSendTransactionFlow({
       throw new Error('Send flow request not found');
     }
 
-    const sendManyParams = await sendStateToSendManyParams(
-      updatedSendFlowRequest,
+    const sendManyParams = generateSendManyParams(
       walletData.scope,
+      updatedSendFlowRequest,
     );
     sendFlowRequest.transaction = sendManyParams;
     sendFlowRequest.status = TransactionStatus.Confirmed;

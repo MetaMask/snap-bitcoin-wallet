@@ -1,9 +1,9 @@
 import { generateAccounts } from '../test/utils';
 import { Caip2ChainId } from './constants';
-import { defaultSendManyParams } from './rpcs';
 import type { SendFlowRequest } from './stateManagement';
 import { KeyringStateManager, TransactionStatus } from './stateManagement';
 import { AssetType } from './ui/types';
+import { generateSendManyParams } from './ui/utils';
 import * as snapUtil from './utils/snap';
 
 describe('KeyringStateManager', () => {
@@ -373,7 +373,7 @@ describe('KeyringStateManager', () => {
             account: state.wallets[state.walletIds[0]].account,
             scope: 'scope-1',
             transaction: {
-              ...defaultSendManyParams('scope-1'),
+              ...generateSendManyParams('scope-1'),
               sender: 'sender-1',
               recipient: 'recipient-1',
               amount: '1',
@@ -464,7 +464,7 @@ describe('KeyringStateManager', () => {
             account: state.wallets[state.walletIds[0]].account,
             scope: 'scope-1',
             transaction: {
-              ...defaultSendManyParams('scope-1'),
+              ...generateSendManyParams('scope-1'),
             },
             status: TransactionStatus.Draft,
             selectedCurrency: AssetType.BTC,
@@ -515,7 +515,7 @@ describe('KeyringStateManager', () => {
             account: state.wallets[state.walletIds[0]].account,
             scope: 'scope-1',
             transaction: {
-              ...defaultSendManyParams('scope-1'),
+              ...generateSendManyParams('scope-1'),
             },
             status: TransactionStatus.Draft,
             selectedCurrency: AssetType.BTC,
@@ -573,7 +573,7 @@ describe('KeyringStateManager', () => {
             account: generateAccounts(1)[0],
             scope: 'scope-1',
             transaction: {
-              ...defaultSendManyParams('scope-1'),
+              ...generateSendManyParams('scope-1'),
             },
             status: TransactionStatus.Draft,
             selectedCurrency: AssetType.BTC,
@@ -623,7 +623,7 @@ describe('KeyringStateManager', () => {
             account: state.wallets[state.walletIds[0]].account,
             scope: 'scope-1',
             transaction: {
-              ...defaultSendManyParams('scope-1'),
+              ...generateSendManyParams('scope-1'),
             },
             status: TransactionStatus.Draft,
             selectedCurrency: AssetType.BTC,

@@ -63,17 +63,6 @@ export type SendManyParams = Infer<typeof SendManyParamsStruct>;
 
 export type SendManyResponse = Infer<typeof SendManyResponseStruct>;
 
-export const defaultSendManyParams = (
-  scope: Infer<typeof ScopeStruct>,
-): SendManyParams => ({
-  amounts: {},
-  comment: '',
-  subtractFeeFrom: [],
-  replaceable: true,
-  dryrun: false,
-  scope,
-});
-
 /**
  * Send BTC to multiple account.
  *

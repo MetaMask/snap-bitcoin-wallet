@@ -1,8 +1,8 @@
 import { Caip2ChainId } from '../constants';
 import { TransactionStatus } from '../stateManagement';
 import { AssetType } from '../ui/types';
+import { generateSendManyParams } from '../ui/utils';
 import { StartSendTransactionFlowTest } from './__tests__/helper';
-import { defaultSendManyParams } from './sendmany';
 import { startSendTransactionFlow } from './start-send-transaction-flow';
 
 jest.mock('../utils/logger');
@@ -34,7 +34,7 @@ describe('startSendTransactionFlow', () => {
   const mockScope = Caip2ChainId.Testnet;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
   });
 
   it('creates a new request', async () => {
@@ -45,7 +45,7 @@ describe('startSendTransactionFlow', () => {
       interfaceId: 'mock-interfaceId',
       account: keyringAccount,
       scope: mockScope,
-      transaction: defaultSendManyParams(mockScope),
+      transaction: generateSendManyParams(mockScope),
       status: TransactionStatus.Draft,
       selectedCurrency: AssetType.BTC,
       recipient: {
@@ -80,12 +80,12 @@ describe('startSendTransactionFlow', () => {
     await helper.setupGetRequest(mockRequestWithCorrectValues);
 
     const transactionTx = await startSendTransactionFlow({
-      accountId: keyringAccount.id,
+      account: keyringAccount.id,
       scope: mockScope,
     });
 
     expect(helper.generateSendFlowSpy).toHaveBeenCalledTimes(1);
-    expect(helper.upsertRequestSpy).toHaveBeenCalledTimes(3);
+    expect(helper.upsertRequestSpy).toHaveBeenCalledTimes(4);
     expect(transactionTx).toStrictEqual({
       txId: '0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098',
     });
@@ -99,7 +99,7 @@ describe('startSendTransactionFlow', () => {
       interfaceId: 'mock-interfaceId',
       account: keyringAccount,
       scope: mockScope,
-      transaction: defaultSendManyParams(mockScope),
+      transaction: generateSendManyParams(mockScope),
       status: TransactionStatus.Draft,
       selectedCurrency: AssetType.BTC,
       recipient: {
@@ -136,7 +136,7 @@ describe('startSendTransactionFlow', () => {
 
     await expect(
       startSendTransactionFlow({
-        accountId: keyringAccount.id,
+        account: keyringAccount.id,
         scope: mockScope,
       }),
     ).rejects.toThrow('User rejected the request');
@@ -145,7 +145,7 @@ describe('startSendTransactionFlow', () => {
   it('throws an error when the account is not found', async () => {
     await expect(
       startSendTransactionFlow({
-        accountId: 'non-existing-account-id',
+        account: 'non-existing-account-id',
         scope: mockScope,
       }),
     ).rejects.toThrow('Account not found');
@@ -159,7 +159,7 @@ describe('startSendTransactionFlow', () => {
 
     await expect(
       startSendTransactionFlow({
-        accountId: keyringAccount.id,
+        account: keyringAccount.id,
         scope: mockScope,
       }),
     ).rejects.toThrow('Send flow request not found');
