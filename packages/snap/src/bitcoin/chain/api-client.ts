@@ -16,30 +16,29 @@ export type HttpResponse = globalThis.Response;
 
 export abstract class ApiClient {
   /**
-   * The name of the Api Client.
+   * The name of the API Client.
    */
   abstract apiClientName: string;
 
   /**
-   * An abstract method that will be called in internal method `submitRequest`.
-   * It is to verify and convert the http response to the Api response.
+   * An abstract method called internally by `submitRequest()` to verify and convert the HTTP response to the expected API response.
    *
-   * @param response - The http response to verify
-   * @returns A promise that resolves to the Api response.
+   * @param response - The HTTP response to verify and convert.
+   * @returns A promise that resolves to the API response.
    */
   protected abstract getResponse<ApiResponse>(
     response: HttpResponse,
   ): Promise<ApiResponse>;
 
   /**
-   * An internal method to build the `RequestInfo` Object.
+   * An internal method used to build the `HttpRequest` object.
    *
    * @param params - The request parameters.
-   * @param params.method - The http method, either GET or POST.
-   * @param params.headers - The http headers.
-   * @param params.url - The request url.
-   * @param [params.body] - The request body.
-   * @returns A `RequestInfo` Object.
+   * @param params.method - The HTTP method (GET or POST).
+   * @param params.headers - The HTTP headers.
+   * @param params.url - The request URL.
+   * @param [params.body] - The request body (optional).
+   * @returns A `HttpRequest` object.
    */
   protected buildRequest({
     method,
@@ -66,13 +65,13 @@ export abstract class ApiClient {
   }
 
   /**
-   * An internal method to submit the Api request.
+   * An internal method used to submit the API request.
    *
    * @param params - The request parameters.
-   * @param [params.requestId] - The string id of the request.
-   * @param params.request - The `RequestInfo` Object.
-   * @param params.responseStruct - The superstruct to verify the Api response.
-   * @returns A promise that resolves to a Json object.
+   * @param [params.requestId] - The string ID of the request (optional).
+   * @param params.request - The `RequestInfo` object.
+   * @param params.responseStruct - The superstruct used to verify the API response.
+   * @returns A promise that resolves to a JSON object.
    */
   protected async submitRequest<ApiResponse>({
     requestId = '',
