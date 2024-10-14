@@ -47,11 +47,11 @@ export function getMinimumFeeRateInKvb(
   // Obey mempool min fee when using smart fee estimation
   const minFee = Math.max(smartFee, mempoolminfee);
   // Prevent user from paying a fee below the required fee rate - `minrelaytxfee`
-  const minRequireFee = Math.max(
+  const minRequiredFee = Math.max(
     minFee,
     minrelaytxfee,
     DefaultTxMinFeeRateInBtcPerKvb,
   );
 
-  return minRequireFee;
+  return minRequiredFee;
 }

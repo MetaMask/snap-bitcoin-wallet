@@ -26,7 +26,7 @@ describe('getMinimumFeeRateInKvb', () => {
       expected: data[3],
     })),
   )(
-    'returns the minimum require fee correctly when smartFee=$smartFee, mempoolminfee=$mempoolminfee, minrelaytxfee=$minrelaytxfee',
+    'returns the minimum required fee for: smartFee=$smartFee, mempoolminfee=$mempoolminfee, minrelaytxfee=$minrelaytxfee',
     ({
       smartFee,
       mempoolminfee,
