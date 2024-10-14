@@ -1,6 +1,6 @@
 import type { Network } from 'bitcoinjs-lib';
 import type { Infer } from 'superstruct';
-import { array, number, object, optional, string } from 'superstruct';
+import { array, boolean, number, object, optional, string } from 'superstruct';
 
 export type QuickNodeClientOptions = {
   network: Network;
@@ -60,7 +60,11 @@ export type QuickNodeSendTransactionResponse = QuickNodeResponse &
 export const QuickNodeEstimateFeeResponseStruct = object({
   result: object({
     blocks: number(),
-    feerate: number(),
+    // if the fee rate is not available, the field `feerate` will be omitted
+    feerate: optional(number()),
+    // if the fee rate is not available, the field `errors` will be present
+    // e.g errors: ["Insufficient data or no feerate found"]
+    errors: optional(array(string())),
   }),
 });
 
@@ -88,3 +92,22 @@ export const QuickNodeGetTransactionStruct = object({
 
 export type QuickNodeGetTransaction = QuickNodeResponse &
   Infer<typeof QuickNodeGetTransactionStruct>;
+
+// Reference: https://www.quicknode.com/docs/bitcoin/getmempoolinfo
+export const QuickNodeGetMempoolStruct = object({
+  result: object({
+    loaded: boolean(),
+    size: number(),
+    bytes: number(),
+    usage: number(),
+    maxmempool: number(),
+    mempoolminfee: number(),
+    minrelaytxfee: number(),
+    unbroadcastcount: number(),
+    incrementalrelayfee: number(),
+    fullrbf: boolean(),
+  }),
+});
+
+export type QuickNodeGetMempoolResponse = QuickNodeResponse &
+  Infer<typeof QuickNodeGetMempoolStruct>;
