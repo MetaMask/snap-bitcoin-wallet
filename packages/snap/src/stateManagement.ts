@@ -1,12 +1,7 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
 
-import {
-  defaultSendManyParams,
-  type EstimateFeeResponse,
-  type SendManyParams,
-} from './rpcs';
-import { AssetType } from './ui/types';
-import type { Currency } from './ui/types';
+import { type EstimateFeeResponse, type SendManyParams } from './rpcs';
+import type { AssetType, Currency } from './ui/types';
 import { compactError, SnapStateManager } from './utils';
 
 export type Wallet = {
@@ -87,58 +82,6 @@ export type SnapState = {
   wallets: Wallets;
   requests: {
     [id: string]: SendFlowRequest;
-  };
-};
-
-export const generateDefaultSendFlowParams = (): SendFlowParams => {
-  return {
-    selectedCurrency: AssetType.BTC,
-    recipient: {
-      address: '',
-      error: '',
-      valid: false,
-    },
-    fees: {
-      amount: '',
-      fiat: '',
-      loading: false,
-      error: '',
-    },
-    amount: {
-      amount: '',
-      fiat: '',
-      error: '',
-      valid: false,
-    },
-    rates: '',
-    balance: {
-      amount: '',
-      fiat: '',
-    },
-    total: {
-      amount: '',
-      fiat: '',
-      error: '',
-      valid: false,
-    },
-  };
-};
-
-export const generateDefaultSendFlowRequest = (
-  account: KeyringAccount,
-  scope: string,
-  requestId: string,
-  interfaceId: string,
-): SendFlowRequest => {
-  return {
-    id: requestId,
-    interfaceId,
-    account,
-    scope,
-    transaction: defaultSendManyParams(scope),
-    status: TransactionStatus.Draft,
-    // Send flow params
-    ...generateDefaultSendFlowParams(),
   };
 };
 
@@ -286,7 +229,9 @@ export class KeyringStateManager extends SnapStateManager<SnapState> {
   async removeRequest(id: string): Promise<void> {
     try {
       await this.update(async (state: SnapState) => {
-        delete state.requests[id];
+        if (state.requests[id]) {
+          delete state.requests[id];
+        }
       });
     } catch (error) {
       throw compactError(error, Error);
