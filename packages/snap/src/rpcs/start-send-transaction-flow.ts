@@ -56,6 +56,8 @@ export async function startSendTransactionFlow({
 
     await stateManager.upsertRequest(sendFlowRequest);
 
+    // This awaited later on the flow inorder to display the ui as soon as possible.
+    // If we don't, then the UI will be displayed after the balances and rates call are finished.
     const sendFlowPromise = snap.request({
       method: 'snap_dialog',
       params: {
