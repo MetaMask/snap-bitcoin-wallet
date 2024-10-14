@@ -13,6 +13,7 @@ import {
 import { logger, verifyIfAccountValid } from '../utils';
 import { getBalances } from './get-balances';
 import { sendMany } from './sendmany';
+import { getRates } from '../utils/rates';
 
 export type StartSendTransactionFlowParams = {
   account: string;
@@ -68,7 +69,7 @@ export async function startSendTransactionFlow({
     });
 
     // mock rates call
-    const rates = '64000';
+    const rates = await getRates(asset);
 
     sendFlowRequest.balance.amount = balances[asset].amount;
     sendFlowRequest.balance.fiat = convertBtcToFiat(

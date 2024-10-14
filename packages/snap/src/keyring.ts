@@ -19,7 +19,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import type { BtcAccount, BtcWallet } from './bitcoin/wallet';
 import { Config } from './config';
-import { Caip2Asset, Caip2ChainId } from './constants';
+import { Caip2ChainId } from './constants';
 import { AccountNotFoundError, MethodNotImplementedError } from './exceptions';
 import { Factory } from './factory';
 import { getBalances, type SendManyParams, sendMany } from './rpcs';
@@ -30,13 +30,17 @@ import {
   type Wallet,
 } from './stateManagement';
 import { generateConfirmationReviewInterface } from './ui/render-interfaces';
-import { sendManyParamsToSendFlowParams } from './ui/utils';
+import {
+  getAssetTypeFromScope,
+  sendManyParamsToSendFlowParams,
+} from './ui/utils';
 import {
   getProvider,
   ScopeStruct,
   logger,
   verifyIfAccountValid,
 } from './utils';
+import { getRates } from './utils/rates';
 
 export type KeyringOptions = Record<string, Json> & {
   defaultIndex: number;
@@ -306,8 +310,7 @@ export class BtcKeyring implements Keyring {
     account: BtcAccount;
     params: SendManyParams;
   }): Promise<Json> {
-    const asset =
-      scope === Caip2ChainId.Mainnet ? Caip2Asset.Btc : Caip2Asset.TBtc;
+    const asset = getAssetTypeFromScope(scope);
 
     const balances = await getBalances(account, {
       assets: [asset],
@@ -315,7 +318,7 @@ export class BtcKeyring implements Keyring {
     });
 
     // TODO: replace with actual call
-    const rates = '64000';
+    const rates = await getRates(asset);
 
     const sendFlowRequest: SendFlowRequest = {
       id: uuidv4(),
