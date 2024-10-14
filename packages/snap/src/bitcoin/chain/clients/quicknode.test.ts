@@ -10,15 +10,17 @@ import {
   generateQuickNodeGetUtxosResp,
   generateQuickNodeGetRawTransactionResp,
   generateQuickNodeSendRawTransactionResp,
+  generateQuickNodeMempoolResp,
 } from '../../../../test/utils';
 import { Config } from '../../../config';
-import { btcToSats, satsKvbToVb } from '../../../utils';
+import { btcToSats, logger, satsKvbToVb } from '../../../utils';
 import * as asyncUtils from '../../../utils/async';
 import type { BtcAccount } from '../../wallet';
 import { BtcAccountDeriver, BtcWallet } from '../../wallet';
 import { TransactionStatus } from '../constants';
 import { DataClientError } from '../exceptions';
-import { QuickNodeClient } from './quicknode';
+import { NoFeeRateError, QuickNodeClient } from './quicknode';
+import type { QuickNodeEstimateFeeResponse } from './quicknode.types';
 
 jest.mock('../../../utils/logger');
 jest.mock('../../../utils/snap');
@@ -42,6 +44,10 @@ describe('QuickNodeClient', () => {
         request,
         responseStruct,
       });
+    }
+
+    getPriorityMap() {
+      return this._priorityMap;
     }
   }
 
@@ -156,7 +162,7 @@ describe('QuickNodeClient', () => {
       expect(result).toBe(mockResponse);
     });
 
-    it('throws `Api response error` error if the http status is not 200', async () => {
+    it('throws `API response error` error if the http status is not 200', async () => {
       const { fetchSpy } = createMockFetch();
 
       mockErrorResponse({
@@ -182,11 +188,11 @@ describe('QuickNodeClient', () => {
         }),
       ).rejects.toThrow(
         // the error message will be JSON.stringify, hence it will formatted as a string.
-        'Api response error: "api error"',
+        'API response error: "api error"',
       );
     });
 
-    it('throws `Http response error` error if the `response.ok` is false', async () => {
+    it('throws `HTTP response error` error if the `response.ok` is false', async () => {
       const { fetchSpy } = createMockFetch();
 
       mockErrorResponse({
@@ -208,7 +214,7 @@ describe('QuickNodeClient', () => {
           request: postBody,
           responseStruct: any(),
         }),
-      ).rejects.toThrow('Http response error: Not OK');
+      ).rejects.toThrow('HTTP response error: Not OK');
     });
   });
 
@@ -295,16 +301,57 @@ describe('QuickNodeClient', () => {
   });
 
   describe('getFeeRates', () => {
-    it('returns fee rates', async () => {
-      const { fetchSpy } = createMockFetch();
-      const expectedFeeRateKvb = 0.0001;
-      const mockResponse = generateQuickNodeEstimatefeeResp({
-        feerate: expectedFeeRateKvb,
+    const mockEstimateFeeRate = ({
+      fetchSpy,
+      mempoolminfee = 0.0001,
+      minrelaytxfee = 0.0001,
+      smartFee,
+      estimateFeeErrors = [],
+    }: {
+      fetchSpy: jest.SpyInstance;
+      mempoolminfee?: number;
+      minrelaytxfee?: number;
+      smartFee?: number;
+      estimateFeeErrors?: string[];
+    }) => {
+      const mockMempoolInfoResponse = generateQuickNodeMempoolResp({
+        mempoolminfee,
+        minrelaytxfee,
       });
-
+      const mockEstimateFeeResponse = generateQuickNodeEstimatefeeResp({
+        feerate: smartFee,
+      });
+      // Mock Mempool Info Response
       mockApiSuccessResponse({
         fetchSpy,
-        mockResponse,
+        mockResponse: mockMempoolInfoResponse,
+      });
+
+      let estimateFeeResponse: QuickNodeEstimateFeeResponse =
+        mockEstimateFeeResponse;
+      if (estimateFeeErrors && estimateFeeErrors.length > 0) {
+        estimateFeeResponse = {
+          ...mockEstimateFeeResponse,
+          result: {
+            ...mockEstimateFeeResponse.result,
+            errors: estimateFeeErrors,
+          },
+        };
+      }
+
+      // Mock Estimate Fee Response
+      mockApiSuccessResponse({
+        fetchSpy,
+        mockResponse: estimateFeeResponse,
+      });
+    };
+
+    it('returns fee rates', async () => {
+      const { fetchSpy } = createMockFetch();
+      const expectedFeeRateKvb = 0.0002;
+      mockEstimateFeeRate({
+        fetchSpy,
+        smartFee: expectedFeeRateKvb,
       });
 
       const client = createQuickNodeClient(networks.testnet);
@@ -315,6 +362,46 @@ describe('QuickNodeClient', () => {
           satsKvbToVb(btcToSats(expectedFeeRateKvb.toString())),
         ),
       });
+    });
+
+    it('does not throw any error if the fee rate is unavailable', async () => {
+      const { fetchSpy } = createMockFetch();
+      const mempoolminfee = 0.0001;
+      const minrelaytxfee = 0.0001;
+
+      mockEstimateFeeRate({
+        fetchSpy,
+        smartFee: undefined,
+        minrelaytxfee,
+        mempoolminfee,
+        estimateFeeErrors: [NoFeeRateError],
+      });
+
+      const client = createQuickNodeClient(networks.testnet);
+      const target = client.getPriorityMap()[Config.defaultFeeRate];
+      const result = await client.getFeeRates();
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        `The feerate is unavailable on target block ${target}, use mempool data 'mempoolminfee' instead`,
+      );
+      expect(result).toStrictEqual({
+        [Config.defaultFeeRate]: Number(
+          satsKvbToVb(btcToSats(minrelaytxfee.toString())),
+        ),
+      });
+    });
+
+    it('throws an error if the fee rate is unavailable and the api response is an unexpected error', async () => {
+      const { fetchSpy } = createMockFetch();
+      mockEstimateFeeRate({
+        fetchSpy,
+        smartFee: undefined,
+        estimateFeeErrors: ['Unexpected error'],
+      });
+
+      const client = createQuickNodeClient(networks.testnet);
+
+      await expect(client.getFeeRates()).rejects.toThrow(DataClientError);
     });
 
     it('throws DataClientError if the api response is invalid', async () => {

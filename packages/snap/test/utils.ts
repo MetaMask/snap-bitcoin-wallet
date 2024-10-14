@@ -429,7 +429,7 @@ export function generateQuickNodeEstimatefeeResp(
   {
     feerate
   }: {
-    feerate: number;
+    feerate: number | undefined;
   }
 ) {
   const template = quickNodeData.estimatesmartfeeResp;
@@ -439,6 +439,33 @@ export function generateQuickNodeEstimatefeeResp(
       ...template.result,
       feerate,
       block: Math.max(1000, randomNum(100000)),
+    },
+  };
+  return data;
+}
+
+/**
+ * Generate QuickNode get mempool info response.
+ *
+ * @param params - The params to generate mock get mempool info response.
+ * @param params.mempoolminfee - Minimum fee rate in BTC/kvB for tx to be accepted.
+ * @param params.minrelaytxfee - Minimum relay fee in BTC/kB for transactions.
+ * @returns A QuickNode get mempool info response.
+ */
+export function generateQuickNodeMempoolResp( {
+  mempoolminfee = Math.max(1000, randomNum(10000)),
+  minrelaytxfee,
+} : {
+  mempoolminfee?: number
+  minrelaytxfee?: number
+}) {
+  const template = quickNodeData.getmempoolinfo;
+  const data = {
+    ...template,
+    result: {
+      ...template.result,
+      mempoolminfee: mempoolminfee,
+      minrelaytxfee: minrelaytxfee ?? Math.max(mempoolminfee, randomNum(10000)),
     },
   };
   return data;
