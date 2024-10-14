@@ -99,8 +99,8 @@ export abstract class ApiClient {
 
       logger.debug(`${logPrefix} response:`, JSON.stringify(jsonResponse));
 
-      // Safeguard to identify if the response has some unexpected changes from the Api client
-      mask(jsonResponse, responseStruct, `Unexpected response from Api client`);
+      // Safeguard to identify if the response has some unexpected changes from the API client
+      mask(jsonResponse, responseStruct, `Unexpected response from API client`);
 
       return jsonResponse;
     } catch (error) {
