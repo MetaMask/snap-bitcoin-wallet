@@ -60,3 +60,17 @@ export type IDataClient = {
    */
   sendTransaction(tx: string): Promise<DataClientSendTxResp>;
 };
+
+/**
+ * This interface defines the methods available on a data client for sats protection.
+ */
+export type ISatsProtectionDataClient = {
+  /**
+   * Filter Utxos that contains Inscription, Runes or Rare Sats.
+   *
+   * @param {string[]} address - An array of Bitcoin addresses to query.
+   * @param {Utxo[]} utxos - An array of UTXOs to filter.
+   * @returns {Promise<Utxo[]>} A promise that resolves to the filtered UTXOs.
+   */
+  filterUtxos(address: string[], utxos: Utxo[]): Promise<Utxo[]>;
+};

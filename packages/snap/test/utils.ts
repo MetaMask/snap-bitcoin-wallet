@@ -8,6 +8,7 @@ import { v4 as uuidV4 } from 'uuid';
 import { Caip2ChainId } from '../src/constants';
 import blockChairData from './fixtures/blockchair.json';
 import quickNodeData from './fixtures/quicknode.json';
+import simpleHashData from './fixtures/simplehash.json';
 
 /* eslint-disable */
 
@@ -458,17 +459,52 @@ export function generateQuickNodeSendRawTransactionResp() {
 }
 
 /**
- * Generate a random 64 long hex transaction id.
+ * Generate SimpleHash wallet_assets_by_utxo response.
+ *
+ * @param count - The number of utxo to generate.
+ * @returns A SimpleHash wallet_assets_by_utxo response.
+ */
+export function generateSimpleHashWalletAssetsByAddressResp(address:string, count: number) {
+  const template = simpleHashData.walletAssetsByAddress;
+  const data: typeof template = {
+    ...template, 
+    utxos: []
+  };
+  
+  data.utxos = Array.from({ length: count }, (idx:number) => {
+    return {
+      output: `${generateTransactionId(Number(address) + idx)}: ${randomNum(100)}`,
+      value: randomNum(1000000),
+      block_number: randomNum(1000000),
+    };
+  });
+  data.count = data.utxos.length;
+
+  return data;
+}
+
+
+/**
+ * Generate a 64 long hex transaction id.
  *
  * @returns A 64 long hex transaction id.
  */
-export function generateRandomTransactionId() {
-  return randomNum(100000000)
+export function generateTransactionId(id: number) {
+  return id
   .toString(16)
   .padStart(
     64,
     '0',
   )
+}
+
+/**
+ * Generate a random 64 long hex transaction id.
+ *
+ * @returns A 64 long hex transaction id.
+ */
+export function generateRandomTransactionId() {
+  return generateTransactionId(randomNum(100000000));
 }
 
 /**
