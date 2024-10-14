@@ -1,6 +1,8 @@
 import type { Json } from '@metamask/utils';
 import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
+import type { Struct } from 'superstruct';
+import { any } from 'superstruct';
 
 import {
   generateQuickNodeGetBalanceResp,
@@ -17,7 +19,6 @@ import { BtcAccountDeriver, BtcWallet } from '../../wallet';
 import { TransactionStatus } from '../constants';
 import { DataClientError } from '../exceptions';
 import { QuickNodeClient } from './quicknode';
-import type { QuickNodeResponse } from './quicknode.types';
 
 jest.mock('../../../utils/logger');
 jest.mock('../../../utils/snap');
@@ -27,10 +28,20 @@ describe('QuickNodeClient', () => {
   const mainnetEndpoint = 'https://api.quicknode.com/mainnet';
 
   class MockQuickNodeClient extends QuickNodeClient {
-    async post<Response extends QuickNodeResponse>(
-      body: Json,
-    ): Promise<Response> {
-      return super.post(body);
+    async submitJsonRPCRequest<ApiResponse>({
+      request,
+      responseStruct,
+    }: {
+      request: {
+        method: string;
+        params: Json;
+      };
+      responseStruct: Struct;
+    }) {
+      return super.submitJsonRPCRequest<ApiResponse>({
+        request,
+        responseStruct,
+      });
     }
   }
 
@@ -111,11 +122,13 @@ describe('QuickNodeClient', () => {
     });
   };
 
-  describe('post', () => {
+  describe('submitJsonRPCRequest', () => {
     it('executes a request', async () => {
       const { fetchSpy } = createMockFetch();
+      const mockResponse = {
+        result: true,
+      };
 
-      const mockResponse = true;
       mockApiSuccessResponse({
         fetchSpy,
         mockResponse,
@@ -127,7 +140,10 @@ describe('QuickNodeClient', () => {
       };
 
       const client = createQuickNodeClient(networks.testnet);
-      const result = await client.post(postBody);
+      const result = await client.submitJsonRPCRequest({
+        request: postBody,
+        responseStruct: any(),
+      });
 
       expect(fetchSpy).toHaveBeenCalledWith(client.baseUrl, {
         method: 'POST',
@@ -136,10 +152,11 @@ describe('QuickNodeClient', () => {
         },
         body: JSON.stringify(postBody),
       });
+
       expect(result).toBe(mockResponse);
     });
 
-    it('throws `Failed to post data from quicknode` error if the http status is not 200', async () => {
+    it('throws `Api response error` error if the http status is not 200', async () => {
       const { fetchSpy } = createMockFetch();
 
       mockErrorResponse({
@@ -158,18 +175,24 @@ describe('QuickNodeClient', () => {
 
       const client = createQuickNodeClient(networks.testnet);
 
-      await expect(client.post(postBody)).rejects.toThrow(
-        'Failed to post data from quicknode: api error',
+      await expect(
+        client.submitJsonRPCRequest({
+          request: postBody,
+          responseStruct: any(),
+        }),
+      ).rejects.toThrow(
+        // the error message will be JSON.stringify, hence it will formatted as a string.
+        'Api response error: "api error"',
       );
     });
 
-    it('throws `Failed to post data from quicknode` error if the `response.ok` is false', async () => {
+    it('throws `Http response error` error if the `response.ok` is false', async () => {
       const { fetchSpy } = createMockFetch();
 
       mockErrorResponse({
         fetchSpy,
         status: 200,
-        statusText: 'api error',
+        statusText: 'Not OK',
         isOk: false,
       });
 
@@ -180,9 +203,12 @@ describe('QuickNodeClient', () => {
 
       const client = createQuickNodeClient(networks.testnet);
 
-      await expect(client.post(postBody)).rejects.toThrow(
-        'Failed to post data from quicknode: api error',
-      );
+      await expect(
+        client.submitJsonRPCRequest({
+          request: postBody,
+          responseStruct: any(),
+        }),
+      ).rejects.toThrow('Http response error: Not OK');
     });
   });
 
