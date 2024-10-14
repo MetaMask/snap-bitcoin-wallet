@@ -290,7 +290,7 @@ describe('QuickNodeClient', () => {
       smartFee?: number;
       estimateFeeErrors?: string[];
     }) => {
-      const mockMempoolInfo = generateQuickNodeMempoolResp({
+      const mockMempoolInfoResponse = generateQuickNodeMempoolResp({
         mempoolminfee,
         minrelaytxfee,
       });
@@ -300,7 +300,7 @@ describe('QuickNodeClient', () => {
       // Mock Mempool Info Response
       mockApiSuccessResponse({
         fetchSpy,
-        mockResponse: mockMempoolInfo,
+        mockResponse: mockMempoolInfoResponse,
       });
 
       let estimateFeeResponse: QuickNodeEstimateFeeResponse =
