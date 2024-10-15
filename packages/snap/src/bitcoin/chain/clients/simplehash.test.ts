@@ -58,7 +58,6 @@ describe('SimpleHashClient', () => {
         );
         for (const utxo of mockResponse.utxos) {
           const [txHash, vout] = utxo.output.split(':');
-          // using a set to avoid duplicate utxos
           utxoSet.add({
             txHash,
             index: parseInt(vout, 10),

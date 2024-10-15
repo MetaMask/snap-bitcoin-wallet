@@ -1,8 +1,9 @@
-import type { Struct } from 'superstruct';
+import { BtcP2wpkhAddressStruct } from '@metamask/keyring-api';
+import { array, assert, type Struct } from 'superstruct';
 
 import { processBatch } from '../../../utils';
-import type { HttpResponse } from '../api-client';
-import { ApiClient } from '../api-client';
+import type { HttpHeader, HttpResponse } from '../api-client';
+import { ApiClient, HttpMethod } from '../api-client';
 import type { ISatsProtectionDataClient } from '../data-client';
 import type { Utxo } from '../service';
 import type {
@@ -17,6 +18,8 @@ export class SimpleHashClient
 {
   readonly apiClientName = 'SimpleHashClient';
 
+  // Simplehash API does not support testnet, only mainnet is supported.
+  // reference: https://docs.simplehash.com/reference/supported-chains-testnets
   readonly baseUrl = `https://api.simplehash.com/api/v0`;
 
   protected _options: SimpleHashClientOptions;
@@ -31,7 +34,7 @@ export class SimpleHashClient
     return url.toString();
   }
 
-  protected getAuthHeader(): Record<string, string> {
+  protected getHttpHeader(): HttpHeader {
     return {
       'X-API-KEY': this._options.apiKey,
     };
@@ -62,9 +65,9 @@ export class SimpleHashClient
   }) {
     return await super.submitRequest<ApiResponse>({
       request: this.buildRequest({
-        method: 'GET',
+        method: HttpMethod.Get,
         url: this.getApiUrl(endpoint),
-        headers: this.getAuthHeader(),
+        headers: this.getHttpHeader(),
       }),
       responseStruct,
       requestId,
@@ -78,12 +81,18 @@ export class SimpleHashClient
     return [txHash, parseInt(vout, 10)];
   }
 
-  // The API will returns the utxos without inscriptions, raresats and runes,
-  // hence we can skip the utxos filtering, thus the argument _utxos will not be used.
+  // The API will returns the utxos that does not contains inscriptions, raresats and runes,
+  // thus we can skip the utxos filtering, and directly return the utxos from this API.
+  // Hence, the argument _utxos will be ignored.
   async filterUtxos(addresses: string[], _utxos: Utxo[]): Promise<Utxo[]> {
-    const utxoSet: Set<Utxo> = new Set();
+    // A safeguard to deduplicate the addresses to prevent duplicated utxos returned by the API.
+    const uniqueAddresses = Array.from(new Set(addresses));
 
-    await processBatch(addresses, async (address: string) => {
+    assert(uniqueAddresses, array(BtcP2wpkhAddressStruct));
+
+    const utxos: Utxo[] = [];
+
+    await processBatch(uniqueAddresses, async (address: string) => {
       const result =
         await this.submitGetApiRequest<SimpleHashWalletAssetsByUtxoResponse>({
           endpoint: `/custom/wallet_assets_by_utxo/${address}?without_inscriptions_runes_raresats=1`,
@@ -93,8 +102,10 @@ export class SimpleHashClient
 
       for (const utxo of result.utxos) {
         const [txHash, vout] = this.outputToTxHashNVout(utxo.output);
-        // using a set to avoid duplicate utxos
-        utxoSet.add({
+        // The utxo will not be duplicated,
+        // as when create a transaction, it gives the utxo with an unique ID (Output/Outpoint).
+        // Therefore we are safe to store the utxos with array.
+        utxos.push({
           txHash,
           index: vout,
           value: utxo.value,
@@ -103,6 +114,6 @@ export class SimpleHashClient
       }
     });
 
-    return Array.from(utxoSet);
+    return utxos;
   }
 }
