@@ -43,15 +43,13 @@ export class SimpleHashClient
   protected async getResponse<ApiResponse>(
     response: HttpResponse,
   ): Promise<ApiResponse> {
-    // Simplehash only returns 200 status code for successful requests,
-    // otherwise can consider as error.
+    // For successful requests, Simplehash will return a 200 status code.
+    // Any other status code should be considered an error.
     if (response.status !== 200) {
-      throw new Error(
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        `API response error`,
-      );
+      throw new Error(`API response error`);
     }
-    return (await response.json()) as unknown as ApiResponse;
+
+    return await super.getResponse<ApiResponse>(response);
   }
 
   protected async submitGetApiRequest<ApiResponse>({
@@ -74,18 +72,19 @@ export class SimpleHashClient
     });
   }
 
-  // An output is the combination of tx hash and index as an unique identifier of an utxo
+  // An output is the combination of the transaction hash and the vout, serving as a unique identifier for an UTXO
   // e.g 123456789558bd40a14d1cc2f42f5e0476a34ab8589bdc84f65b4eb305b9b925:0
+  // Transaction hash is the first part before the colon, and the index/vout is the second part after the colon.
   protected outputToTxHashNVout(output: string): [string, number] {
     const [txHash, vout] = output.split(':');
     return [txHash, parseInt(vout, 10)];
   }
 
-  // The API will returns the utxos that does not contains inscriptions, raresats and runes,
-  // thus we can skip the utxos filtering, and directly return the utxos from this API.
-  // Hence, the argument _utxos will be ignored.
+  // The API returns UTXOs that does not contain inscriptions, raresats, and runes,
+  // which eliminates the need for UTXO filtering.
+  // As a result, the argument _utxos will be disregarded, and the UTXOs can be directly returned from this API.
   async filterUtxos(addresses: string[], _utxos: Utxo[]): Promise<Utxo[]> {
-    // A safeguard to deduplicate the addresses to prevent duplicated utxos returned by the API.
+    // A safeguard to deduplicate the addresses and prevent duplicated utxos returned by the API.
     const uniqueAddresses = Array.from(new Set(addresses));
 
     assert(uniqueAddresses, array(BtcP2wpkhAddressStruct));
@@ -102,9 +101,8 @@ export class SimpleHashClient
 
       for (const utxo of result.utxos) {
         const [txHash, vout] = this.outputToTxHashNVout(utxo.output);
-        // The utxo will not be duplicated,
-        // as when create a transaction, it gives the utxo with an unique ID (Output/Outpoint).
-        // Therefore we are safe to store the utxos with array.
+        // The UTXO will not be duplicated,
+        // therefore we are safe to store the UTXO into an array.
         utxos.push({
           txHash,
           index: vout,
