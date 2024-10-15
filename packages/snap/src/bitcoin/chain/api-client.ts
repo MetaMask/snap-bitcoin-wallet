@@ -5,10 +5,17 @@ import { mask } from 'superstruct';
 import { compactError, logger } from '../../utils';
 import { DataClientError } from './exceptions';
 
+export enum HttpMethod {
+  Get = 'GET',
+  Post = 'POST',
+}
+
+export type HttpHeader = Record<string, string>;
+
 export type HttpRequest = {
   url: string;
-  method: 'GET' | 'POST';
-  headers: Record<string, string>;
+  method: HttpMethod;
+  headers: HttpHeader;
   body?: string;
 };
 
@@ -21,14 +28,22 @@ export abstract class ApiClient {
   abstract apiClientName: string;
 
   /**
-   * An abstract method called internally by `submitRequest()` to verify and convert the HTTP response to the expected API response.
+   * An internal method called internally by `submitRequest()` to verify and convert the HTTP response to the expected API response.
    *
    * @param response - The HTTP response to verify and convert.
    * @returns A promise that resolves to the API response.
    */
-  protected abstract getResponse<ApiResponse>(
+  protected async getResponse<ApiResponse>(
     response: HttpResponse,
-  ): Promise<ApiResponse>;
+  ): Promise<ApiResponse> {
+    try {
+      return (await response.json()) as unknown as ApiResponse;
+    } catch (error) {
+      throw new Error(
+        'API response error: response body can not be serialised.',
+      );
+    }
+  }
 
   /**
    * An internal method used to build the `HttpRequest` object.
@@ -46,8 +61,8 @@ export abstract class ApiClient {
     url,
     body,
   }: {
-    method: 'GET' | 'POST';
-    headers?: Record<string, string>;
+    method: HttpMethod;
+    headers?: HttpHeader;
     url: string;
     body?: Json;
   }): HttpRequest {
@@ -81,7 +96,7 @@ export abstract class ApiClient {
     requestId?: string;
     request: HttpRequest;
     responseStruct: Struct;
-  }) {
+  }): Promise<ApiResponse> {
     const logPrefix = `[${this.apiClientName}.${requestId}]`;
 
     try {

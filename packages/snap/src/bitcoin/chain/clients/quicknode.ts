@@ -13,7 +13,7 @@ import {
   satsKvbToVb,
 } from '../../../utils';
 import type { HttpResponse } from '../api-client';
-import { ApiClient } from '../api-client';
+import { ApiClient, HttpMethod } from '../api-client';
 import { FeeRate, TransactionStatus } from '../constants';
 import type {
   IDataClient,
@@ -103,23 +103,19 @@ export class QuickNodeClient extends ApiClient implements IDataClient {
   protected async getResponse<ApiResponse>(
     response: HttpResponse,
   ): Promise<ApiResponse> {
+    const apiResponse = (await super.getResponse<ApiResponse>(
+      response,
+    )) as unknown as ApiResponse & QuickNodeResponse;
+
     // QuickNode returns 200 status code for successful requests, others are errors status code
     if (response.status !== 200) {
-      const res = (await response.json()) as unknown as ApiResponse &
-        QuickNodeResponse;
       throw new Error(
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        `API response error: ${JSON.stringify(res.error)}`,
+        `API response error: ${JSON.stringify(apiResponse.error)}`,
       );
     }
 
-    if (!response.ok) {
-      throw new Error(`HTTP response error: ${response.statusText}`);
-    }
-
     // Safeguard to detect if the response is an error response, but they are not caught by the fetch error
-    const apiResponse = (await response.json()) as unknown as ApiResponse &
-      QuickNodeResponse;
     if (this.isErrorResponse(apiResponse)) {
       throw new Error(`Error response from quicknode`);
     }
@@ -139,7 +135,7 @@ export class QuickNodeClient extends ApiClient implements IDataClient {
   }) {
     return await this.submitRequest<ApiResponse>({
       request: this.buildRequest({
-        method: 'POST',
+        method: HttpMethod.Post,
         url: this.baseUrl,
         body: request,
       }),

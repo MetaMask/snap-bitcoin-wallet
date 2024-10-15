@@ -168,7 +168,6 @@ describe('QuickNodeClient', () => {
       mockErrorResponse({
         fetchSpy,
         status: 500,
-        isOk: true,
         errorResp: {
           error: 'api error',
         },
@@ -192,14 +191,13 @@ describe('QuickNodeClient', () => {
       );
     });
 
-    it('throws `HTTP response error` error if the `response.ok` is false', async () => {
+    it('throws `API response error: response body can not be serialised.` error if the response body can not be serialised', async () => {
       const { fetchSpy } = createMockFetch();
 
-      mockErrorResponse({
-        fetchSpy,
-        status: 200,
-        statusText: 'Not OK',
-        isOk: false,
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: jest.fn().mockRejectedValue(false),
       });
 
       const postBody = {
@@ -214,7 +212,9 @@ describe('QuickNodeClient', () => {
           request: postBody,
           responseStruct: any(),
         }),
-      ).rejects.toThrow('HTTP response error: Not OK');
+      ).rejects.toThrow(
+        'API response error: response body can not be serialised.',
+      );
     });
   });
 
