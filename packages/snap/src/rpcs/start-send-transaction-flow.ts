@@ -1,7 +1,8 @@
 import { UserRejectedRequestError } from '@metamask/snaps-sdk';
+import { enums, nonempty, object, string } from 'superstruct';
 
 import { TxValidationError } from '../bitcoin/wallet';
-import type { Caip2ChainId } from '../constants';
+import { Caip2ChainId } from '../constants';
 import {
   AccountNotFoundError,
   isSnapException,
@@ -19,6 +20,7 @@ import {
   createSendUIDialog,
   isSnapRpcError,
   logger,
+  validateRequest,
   verifyIfAccountValid,
 } from '../utils';
 import { createRatesAndBalances } from './get-rates-and-balances';
@@ -29,18 +31,25 @@ export type StartSendTransactionFlowParams = {
   scope: Caip2ChainId;
 };
 
+export const StartSendTransactionFlowParamsStruct = object({
+  account: nonempty(string()),
+  scope: enums([...Object.values(Caip2ChainId)]),
+});
+
 /**
  * Starts the send transaction flow for a given account and scope.
  *
- * @param options0 - The options for starting the send transaction flow.
- * @param options0.account - The ID of the account to use.
- * @param options0.scope - The scope of the transaction.
+ * @param params - The parameters for starting the transaction flow.
  * @returns The transaction result.
  */
-export async function startSendTransactionFlow({
-  account,
-  scope,
-}: StartSendTransactionFlowParams) {
+export async function startSendTransactionFlow(
+  params: StartSendTransactionFlowParams,
+) {
+  validateRequest<StartSendTransactionFlowParams>(
+    params,
+    StartSendTransactionFlowParamsStruct,
+  );
+  const { account, scope } = params;
   try {
     const stateManager = new KeyringStateManager();
     const walletData = await stateManager.getWallet(account);
@@ -125,12 +134,19 @@ export async function startSendTransactionFlow({
     sendFlowRequest.status = TransactionStatus.Confirmed;
     await stateManager.upsertRequest(sendFlowRequest);
 
-    const tx = await sendMany(btcAccount, scope, {
-      ...sendFlowRequest.transaction,
-      scope,
-    });
+    let tx;
+    try {
+      tx = await sendMany(btcAccount, scope, {
+        ...sendFlowRequest.transaction,
+        scope,
+      });
 
-    sendFlowRequest.txId = tx.txId;
+      sendFlowRequest.txId = tx.txId;
+    } catch (error) {
+      await stateManager.removeRequest(sendFlowRequest.id);
+      throw error;
+    }
+
     await stateManager.upsertRequest(sendFlowRequest);
     return tx;
   } catch (error) {
