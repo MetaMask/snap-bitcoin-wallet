@@ -54,7 +54,7 @@ describe('utils', () => {
       expect(result).toStrictEqual({
         amount: '0',
         fiat: '0',
-        error: 'Amount must be greater than 0',
+        error: SendFormError.ZeroAmount,
         valid: false,
       });
     });
@@ -64,7 +64,7 @@ describe('utils', () => {
       expect(result).toStrictEqual({
         amount: '200',
         fiat: '12400000.00',
-        error: 'Insufficient funds',
+        error: SendFormError.InsufficientFunds,
         valid: false,
       });
     });
@@ -362,7 +362,7 @@ describe('utils', () => {
     });
   });
 
-  describe('convertBtcToFiat', () => {
+  describe('btcToFiat', () => {
     it.each([
       { amount: '1', rate: '62000', expected: '62000.00' },
       { amount: '0.1', rate: '62000', expected: '6200.00' },
@@ -379,7 +379,7 @@ describe('utils', () => {
     );
   });
 
-  describe('convertFiatToBtc', () => {
+  describe('fiatToBtc', () => {
     it.each([
       { amount: '1', rate: '62000', expected: '0.00001613' },
       { amount: '0.1', rate: '62000', expected: '0.00000161' },
