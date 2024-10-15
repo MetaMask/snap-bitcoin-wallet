@@ -11,7 +11,7 @@ import {
   generateSendManyParams,
 } from '../ui/utils';
 import { logger, verifyIfAccountValid } from '../utils';
-import { getRatesAndBalances } from './get-rates-and-balances';
+import { createRatesAndBalancesMock } from './get-rates-and-balances';
 import { sendMany } from './sendmany';
 
 export type StartSendTransactionFlowParams = {
@@ -59,7 +59,7 @@ export async function startSendTransactionFlow({
     // If we don't, then the UI will be displayed after the balances and rates call are finished.
     const sendFlowPromise = createSendUIDialog(sendFlowRequest.interfaceId);
 
-    const { rates, balances } = await getRatesAndBalances({
+    const { rates, balances } = await createRatesAndBalancesMock({
       asset,
       scope,
       btcAccount,
