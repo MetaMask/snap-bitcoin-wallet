@@ -60,7 +60,7 @@ export class SimpleHashClient
     endpoint: string;
     responseStruct: Struct;
     requestId: string;
-  }) {
+  }): Promise<ApiResponse> {
     return await super.submitRequest<ApiResponse>({
       request: this.buildRequest({
         method: HttpMethod.Get,
