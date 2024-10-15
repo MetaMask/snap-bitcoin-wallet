@@ -42,7 +42,7 @@ export async function getRatesAndBalances({
   }
 
   if (balancesResult.status === 'fulfilled') {
-    balances = balancesResult[asset].amount;
+    balances = balancesResult.value[asset].amount;
   } else {
     errors.balances = `Balances error: ${
       balancesResult.reason.message as string
