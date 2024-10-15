@@ -27,14 +27,9 @@ import { getRatesAndBalances } from './rpcs/get-rates-and-balances';
 import {
   TransactionStatus,
   type KeyringStateManager,
-  type SendFlowRequest,
   type Wallet,
 } from './stateManagement';
-import { generateConfirmationReviewInterface } from './ui/render-interfaces';
-import {
-  getAssetTypeFromScope,
-  sendManyParamsToSendFlowParams,
-} from './ui/utils';
+import { generateSendFlowRequest, getAssetTypeFromScope } from './ui/utils';
 import {
   getProvider,
   ScopeStruct,
@@ -325,27 +320,13 @@ export class BtcKeyring implements Keyring {
       );
     }
 
-    const sendFlowRequest: SendFlowRequest = {
-      id: uuidv4(),
-      account: walletData.account,
-      scope,
-      transaction: params,
-      interfaceId: '',
-      status: TransactionStatus.Review,
-      ...(await sendManyParamsToSendFlowParams(
-        params,
-        walletData.account.id,
-        scope,
-        rates.value,
-        balances.value,
-      )),
-    };
-
-    const interfaceId = await generateConfirmationReviewInterface({
-      request: sendFlowRequest,
-    });
-
-    sendFlowRequest.interfaceId = interfaceId;
+    const sendFlowRequest = await generateSendFlowRequest(
+      walletData,
+      TransactionStatus.Review,
+      rates.value,
+      balances.value,
+      params,
+    );
 
     await this._stateMgr.upsertRequest(sendFlowRequest);
     const result = await createSendUIDialog(sendFlowRequest.id);

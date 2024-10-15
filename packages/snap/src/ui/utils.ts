@@ -1,6 +1,7 @@
 import { BigNumber } from 'bignumber.js';
 // eslint-disable-next-line import/no-named-as-default
 import validate, { Network } from 'bitcoin-address-validation';
+import { v4 as uuidv4 } from 'uuid';
 
 import {
   Caip2Asset,
@@ -9,9 +10,10 @@ import {
 } from '../constants';
 import type { SendManyParams } from '../rpcs';
 import { estimateFee } from '../rpcs';
-import type { SendFlowParams } from '../stateManagement';
-import { type SendFlowRequest } from '../stateManagement';
+import type { SendFlowParams, Wallet } from '../stateManagement';
+import { TransactionStatus, type SendFlowRequest } from '../stateManagement';
 import { generateDefaultSendFlowParams } from '../utils/transaction';
+import { generateConfirmationReviewInterface } from './render-interfaces';
 import { AssetType, SendFormError } from './types';
 import type { SendFlowContext, SendFormState } from './types';
 
@@ -237,6 +239,49 @@ export function validateRecipient(
     error: '',
     valid: true,
   };
+}
+
+/**
+ * Generates a send flow request object.
+ *
+ * @param wallet - The wallet object containing account and scope information.
+ * @param status - The current transaction status.
+ * @param rates - The conversion rates from Bitcoin to fiat.
+ * @param balance - The current balance of the account.
+ * @param transaction - Optional transaction details.
+ * @returns A promise that resolves to the SendFlowRequest object.
+ */
+export async function generateSendFlowRequest(
+  wallet: Wallet,
+  status: TransactionStatus,
+  rates: string,
+  balance: string,
+  transaction?: SendFlowRequest['transaction'],
+): Promise<SendFlowRequest> {
+  const sendManyParams = transaction ?? generateSendManyParams(wallet.scope);
+  const sendFlowRequest = {
+    id: uuidv4(),
+    account: wallet.account,
+    scope: wallet.scope,
+    transaction: sendManyParams,
+    interfaceId: '',
+    status: status ?? TransactionStatus.Draft,
+    ...(await sendManyParamsToSendFlowParams(
+      sendManyParams,
+      wallet.account.id,
+      wallet.scope,
+      rates,
+      balance,
+    )),
+  };
+
+  const interfaceId = await generateConfirmationReviewInterface({
+    request: sendFlowRequest,
+  });
+
+  sendFlowRequest.interfaceId = interfaceId;
+
+  return sendFlowRequest;
 }
 
 /**

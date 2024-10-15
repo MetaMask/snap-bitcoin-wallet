@@ -36,7 +36,7 @@ export async function getRatesAndBalances({
   ]);
 
   if (ratesResult.status === 'fulfilled') {
-    rates = ratesResult;
+    rates = ratesResult.value;
   } else {
     errors.rates = `Rates error: ${ratesResult.reason.message as string}`;
   }
