@@ -67,7 +67,7 @@ export function createMockChainApiFactory() {
 export function createBalanceAndRatesMock() {
   const getBalanceAndRatesSpy = jest.spyOn(
     ratesAndBalances,
-    'getRatesAndBalances',
+    'createRatesAndBalances',
   );
 
   return getBalanceAndRatesSpy;
@@ -497,8 +497,15 @@ export class StartSendTransactionFlowTest extends SendManyTest {
         error: '',
       },
       balances: {
-        value: '1',
-        error: '',
+        value: {
+          [Caip2Asset.TBtc]: {
+            amount: '1',
+          },
+          [Caip2Asset.Btc]: {
+            amount: '1',
+          },
+          error: '',
+        },
       },
     });
   }

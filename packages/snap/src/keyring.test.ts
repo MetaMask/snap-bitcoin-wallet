@@ -23,7 +23,7 @@ jest.mock('@metamask/keyring-api', () => ({
 }));
 
 jest.mock('./rpcs/get-rates-and-balances', () => ({
-  getRatesAndBalances: () =>
+  createRatesAndBalances: () =>
     jest.fn().mockResolvedValue({
       rates: {
         value: 'mockRates',

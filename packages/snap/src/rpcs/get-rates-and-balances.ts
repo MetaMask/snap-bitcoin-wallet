@@ -18,7 +18,7 @@ export type GetRatesAndBalancesParams = {
  * @param options.btcAccount - The Bitcoin account to fetch balances for.
  * @returns An object containing rates and balances.
  */
-export async function createRatesAndBalancesMock({
+export async function createRatesAndBalances({
   asset,
   scope,
   btcAccount,

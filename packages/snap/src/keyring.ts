@@ -23,7 +23,7 @@ import { Caip2ChainId } from './constants';
 import { AccountNotFoundError, MethodNotImplementedError } from './exceptions';
 import { Factory } from './factory';
 import { getBalances, type SendManyParams, sendMany } from './rpcs';
-import { createRatesAndBalancesMock } from './rpcs/get-rates-and-balances';
+import { createRatesAndBalances } from './rpcs/get-rates-and-balances';
 import {
   TransactionStatus,
   type KeyringStateManager,
@@ -308,7 +308,7 @@ export class BtcKeyring implements Keyring {
   }): Promise<Json> {
     const asset = getAssetTypeFromScope(scope);
 
-    const { rates, balances } = await createRatesAndBalancesMock({
+    const { rates, balances } = await createRatesAndBalances({
       asset,
       scope,
       btcAccount: account,

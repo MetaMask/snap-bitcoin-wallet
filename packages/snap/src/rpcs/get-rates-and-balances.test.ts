@@ -1,7 +1,7 @@
 import { getRates } from '../utils/rates';
 import { getBalances } from './get-balances';
 import type { GetRatesAndBalancesParams } from './get-rates-and-balances';
-import { createRatesAndBalancesMock } from './get-rates-and-balances';
+import { createRatesAndBalances } from './get-rates-and-balances';
 
 jest.mock('../utils/rates');
 jest.mock('./get-balances');
@@ -31,7 +31,7 @@ describe('getRatesAndBalances', () => {
       [mockAsset]: { amount: 'mockBalance' },
     });
 
-    const result = await createRatesAndBalancesMock(params);
+    const result = await createRatesAndBalances(params);
 
     expect(result).toStrictEqual({
       rates: {
@@ -51,7 +51,7 @@ describe('getRatesAndBalances', () => {
       [mockAsset]: { amount: 'mockBalance' },
     });
 
-    const result = await createRatesAndBalancesMock(params);
+    const result = await createRatesAndBalances(params);
 
     expect(result).toStrictEqual({
       rates: {
@@ -69,7 +69,7 @@ describe('getRatesAndBalances', () => {
     (getRates as jest.Mock).mockResolvedValue('mockRates');
     (getBalances as jest.Mock).mockRejectedValue(new Error('Balances error'));
 
-    const result = await createRatesAndBalancesMock(params);
+    const result = await createRatesAndBalances(params);
 
     expect(result).toStrictEqual({
       rates: {
@@ -87,7 +87,7 @@ describe('getRatesAndBalances', () => {
     (getRates as jest.Mock).mockRejectedValue(new Error('Rates error'));
     (getBalances as jest.Mock).mockRejectedValue(new Error('Balances error'));
 
-    const result = await createRatesAndBalancesMock(params);
+    const result = await createRatesAndBalances(params);
 
     expect(result).toStrictEqual({
       rates: {

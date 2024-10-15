@@ -1,7 +1,12 @@
 import { UserRejectedRequestError } from '@metamask/snaps-sdk';
 
+import { TxValidationError } from '../bitcoin/wallet';
 import type { Caip2ChainId } from '../constants';
-import { AccountNotFoundError } from '../exceptions';
+import {
+  AccountNotFoundError,
+  isSnapException,
+  SendFlowRequestNotFoundError,
+} from '../exceptions';
 import { Factory } from '../factory';
 import { KeyringStateManager, TransactionStatus } from '../stateManagement';
 import { generateSendFlow, updateSendFlow } from '../ui/render-interfaces';
@@ -10,8 +15,13 @@ import {
   getAssetTypeFromScope,
   generateSendManyParams,
 } from '../ui/utils';
-import { logger, verifyIfAccountValid } from '../utils';
-import { createRatesAndBalancesMock } from './get-rates-and-balances';
+import {
+  createSendUIDialog,
+  isSnapRpcError,
+  logger,
+  verifyIfAccountValid,
+} from '../utils';
+import { createRatesAndBalances } from './get-rates-and-balances';
 import { sendMany } from './sendmany';
 
 export type StartSendTransactionFlowParams = {
@@ -59,26 +69,24 @@ export async function startSendTransactionFlow({
     // If we don't, then the UI will be displayed after the balances and rates call are finished.
     const sendFlowPromise = createSendUIDialog(sendFlowRequest.interfaceId);
 
-    const { rates, balances } = await createRatesAndBalancesMock({
+    const { rates, balances } = await createRatesAndBalances({
       asset,
       scope,
       btcAccount,
     });
 
-   let errors:string[] = []
-   
-   if (rates.error) {
-       errors.push(rates.error)
-   }
-   
-   if (balances.error) {
-       errors.push(balances.error)
-   }
+    const errors: string[] = [];
 
-   if (errors) {
-      throw new Error(
-        `Error fetching rates and balances: ${errors.join(',')}`,
-      );
+    if (rates.error) {
+      errors.push(rates.error);
+    }
+
+    if (balances.error) {
+      errors.push(balances.error);
+    }
+
+    if (errors.length > 0) {
+      throw new Error(`Error fetching rates and balances: ${errors.join(',')}`);
     }
 
     sendFlowRequest.balance.amount = balances.value;
@@ -106,7 +114,7 @@ export async function startSendTransactionFlow({
     );
 
     if (!updatedSendFlowRequest) {
-      throw new Error('Send flow request not found');
+      throw new SendFlowRequestNotFoundError();
     }
 
     const sendManyParams = generateSendManyParams(
@@ -132,7 +140,7 @@ export async function startSendTransactionFlow({
       throw error as unknown as Error;
     }
 
-    if (error instanceof TxValidationError) {
+    if (isSnapException(error) || error instanceof TxValidationError) {
       throw error;
     }
 
