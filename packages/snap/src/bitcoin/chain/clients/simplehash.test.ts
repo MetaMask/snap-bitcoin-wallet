@@ -1,5 +1,6 @@
 import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
+import { StructError } from 'superstruct';
 
 import { generateSimpleHashWalletAssetsByAddressResp } from '../../../../test/utils';
 import { Config } from '../../../config';
@@ -49,7 +50,7 @@ describe('SimpleHashClient', () => {
       const { fetchSpy } = createMockFetch();
       const addresses = await reateAccountAddresses(5);
 
-      const utxoSet: Set<Utxo> = new Set();
+      const expectedUtxos: Utxo[] = [];
 
       for (const address of addresses) {
         const mockResponse = generateSimpleHashWalletAssetsByAddressResp(
@@ -58,7 +59,7 @@ describe('SimpleHashClient', () => {
         );
         for (const utxo of mockResponse.utxos) {
           const [txHash, vout] = utxo.output.split(':');
-          utxoSet.add({
+          expectedUtxos.push({
             txHash,
             index: parseInt(vout, 10),
             value: utxo.value,
@@ -75,8 +76,17 @@ describe('SimpleHashClient', () => {
       const client = createSimpleHashClient();
       const result = await client.filterUtxos(addresses, []);
 
-      expect(result).toStrictEqual(Array.from(utxoSet));
+      expect(result).toStrictEqual(expectedUtxos);
       expect(fetchSpy).toHaveBeenCalledTimes(addresses.length);
+    });
+
+    it('throws superstruct error if any of the given addresses is not a valid bitcoin address', async () => {
+      const addresses = await reateAccountAddresses(1);
+      const client = createSimpleHashClient();
+
+      await expect(
+        client.filterUtxos([...addresses, 'invalid address'], []),
+      ).rejects.toThrow(StructError);
     });
 
     it('throws `API response error` if the http status is not 200', async () => {

@@ -510,7 +510,6 @@ export function generateSimpleHashWalletAssetsByAddressResp(address:string, coun
   return data;
 }
 
-
 /**
  * Generate a 64 long hex transaction id.
  *
