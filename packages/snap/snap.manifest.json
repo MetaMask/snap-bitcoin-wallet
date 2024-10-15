@@ -1,7 +1,7 @@
 {
   "version": "0.7.0",
   "description": "Manage Bitcoin using MetaMask",
-  "proposedName": "Bitcoin Manager",
+  "proposedName": "Bitcoin",
   "repository": {
     "type": "git",
     "url": "https://github.com/MetaMask/snap-bitcoin-wallet.git"
