@@ -140,8 +140,6 @@ export class SendManyController {
             this.request.balance.amount,
             this.request.rates,
           );
-
-          await this.persistRequest(this.request);
         } catch (feeError) {
           this.request.fees = {
             fiat: '',
@@ -149,8 +147,8 @@ export class SendManyController {
             loading: false,
             error: feeError.message,
           };
-          await this.persistRequest(this.request);
         }
+        await this.persistRequest(this.request);
         await updateSendFlow({
           request: this.request,
         });
@@ -194,13 +192,7 @@ export class SendManyController {
       case SendFormNames.Close: {
         this.request.status = TransactionStatus.Rejected;
         await this.persistRequest(this.request);
-        await snap.request({
-          method: 'snap_resolveInterface',
-          params: {
-            id: this.interfaceId,
-            value: false,
-          },
-        });
+        await this.resolveInterface(false);
         return null;
       }
       case SendFormNames.SwapCurrencyDisplay: {
@@ -277,8 +269,6 @@ export class SendManyController {
           this.request.rates,
         );
       }
-
-      await this.persistRequest(this.request);
     } catch (error) {
       this.request.amount.error = `Error fetching max amount: ${
         error.message as string
@@ -286,6 +276,7 @@ export class SendManyController {
       this.request.fees.loading = false;
     }
 
+    await this.persistRequest(this.request);
     return await updateSendFlow({
       request: this.request,
       currencySwitched: true,

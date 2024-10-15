@@ -42,7 +42,11 @@ export async function createRatesAndBalances({
   }
 
   if (balancesResult.status === 'fulfilled') {
-    balances = balancesResult.value[asset].amount;
+    balances = balancesResult.value[asset]?.amount;
+    // Double-check that `getBalances` returned a valid amount for that asset.
+    if (balances === undefined) {
+      errors.balances = `Balances error: no balance found for "${asset}"`;
+    }
   } else {
     errors.balances = `Balances error: ${
       balancesResult.reason.message as string

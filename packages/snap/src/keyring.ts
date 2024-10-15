@@ -11,6 +11,7 @@ import {
 import {
   MethodNotFoundError,
   UnauthorizedError,
+  UserRejectedRequestError,
   type Json,
 } from '@metamask/snaps-sdk';
 import type { Infer } from 'superstruct';
@@ -334,7 +335,7 @@ export class BtcKeyring implements Keyring {
     if (!result) {
       sendFlowRequest.status = TransactionStatus.Rejected;
       await this._stateMgr.removeRequest(sendFlowRequest.id);
-      throw new Error('User rejected the request');
+      throw new UserRejectedRequestError() as unknown as Error;
     }
 
     // Get the latest send flow request from the state manager

@@ -15,6 +15,7 @@ import type { Currency } from '../types';
  * The props for the {@link AccountSelector} component.
  *
  * @property selectedAccount - The currently selected account.
+ * @property balance - The balance of the selected account.
  * @property accounts - The available accounts.
  */
 export type AccountSelectorProps = {

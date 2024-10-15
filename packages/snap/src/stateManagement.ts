@@ -14,9 +14,9 @@ export type Wallet = {
 export type Wallets = Record<string, Wallet>;
 
 export type SendEstimate = {
-  /* The estimated fee in BTC*/
+  // The estimated fee in BTC.
   fees: EstimateFeeResponse & { loading: boolean };
-  /* The estimated time to confirmation*/
+  // The estimated time to confirmation time.
   confirmationTime: string;
 };
 
@@ -44,7 +44,7 @@ export type SendFlowParams = {
   fees: Currency & { loading: boolean; error: string };
   amount: Currency & { error: string; valid: boolean };
   rates: string;
-  balance: Currency; // to be removed once metadata is available
+  balance: Currency; // TODO: To be removed once metadata is available
   total: Currency & { error: string; valid: boolean };
 };
 

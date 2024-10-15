@@ -60,7 +60,7 @@ export function createMockChainApiFactory() {
 }
 
 /**
- * Create a mock for getting balance and rates.
+ * Create a mock for getting balances and rates.
  *
  * @returns The spy instance for `getRatesAndBalances`.
  */
