@@ -83,21 +83,21 @@ export abstract class ApiClient {
    * An internal method used to submit the API request.
    *
    * @param params - The request parameters.
-   * @param [params.requestId] - The string ID of the request (optional).
-   * @param params.request - The `RequestInfo` object.
+   * @param [params.requestName] - The name of the request (optional).
+   * @param params.request - The `HttpRequest` object.
    * @param params.responseStruct - The superstruct used to verify the API response.
    * @returns A promise that resolves to a JSON object.
    */
   protected async submitRequest<ApiResponse>({
-    requestId = '',
+    requestName = '',
     request,
     responseStruct,
   }: {
-    requestId?: string;
+    requestName?: string;
     request: HttpRequest;
     responseStruct: Struct;
   }): Promise<ApiResponse> {
-    const logPrefix = `[${this.apiClientName}.${requestId}]`;
+    const logPrefix = `[${this.apiClientName}.${requestName}]`;
 
     try {
       logger.debug(`${logPrefix} request:`, `method - ${request.method}`);

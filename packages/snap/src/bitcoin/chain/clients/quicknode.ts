@@ -140,8 +140,8 @@ export class QuickNodeClient extends ApiClient implements IDataClient {
         body: request,
       }),
       responseStruct,
-      // This field is for logging purpose, therefore we use the JSON-RPC method name as the identifier
-      requestId: request.method,
+      // Use the JSON-RPC method name as the requestName for underlying logging purposes
+      requestName: request.method,
     });
   }
 
