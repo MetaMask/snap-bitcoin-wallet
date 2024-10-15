@@ -64,13 +64,13 @@ export function createMockChainApiFactory() {
  *
  * @returns The spy instance for `getRatesAndBalances`.
  */
-export function createBalanceAndRatesMock() {
-  const getBalanceAndRatesSpy = jest.spyOn(
+export function createRatesAndBalancesMock() {
+  const getRatesAndBalancesSpy = jest.spyOn(
     ratesAndBalances,
     'createRatesAndBalances',
   );
 
-  return getBalanceAndRatesSpy;
+  return getRatesAndBalancesSpy;
 }
 
 /**
@@ -458,7 +458,7 @@ export class StartSendTransactionFlowTest extends SendManyTest {
     );
     this.upsertRequestSpy = upsertRequestSpy;
     this.getRequestSpy = getRequestSpy;
-    this.getBalanceAndRatesSpy = createBalanceAndRatesMock();
+    this.getBalanceAndRatesSpy = createRatesAndBalancesMock();
   }
 
   async setup() {
