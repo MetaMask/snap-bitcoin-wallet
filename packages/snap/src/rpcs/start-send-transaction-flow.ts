@@ -57,12 +57,7 @@ export async function startSendTransactionFlow({
 
     // This awaited later on the flow inorder to display the ui as soon as possible.
     // If we don't, then the UI will be displayed after the balances and rates call are finished.
-    const sendFlowPromise = snap.request({
-      method: 'snap_dialog',
-      params: {
-        id: sendFlowRequest.interfaceId,
-      },
-    });
+    const sendFlowPromise = createSendUIDialog(sendFlowRequest.interfaceId);
 
     const { rates, balances } = await getRatesAndBalances({
       asset,
@@ -70,9 +65,19 @@ export async function startSendTransactionFlow({
       btcAccount,
     });
 
-    if (rates.error || balances.error) {
+   let errors:string[] = []
+   
+   if (rates.error) {
+       errors.push(rates.error)
+   }
+   
+   if (balances.error) {
+       errors.push(balances.error)
+   }
+
+   if (errors) {
       throw new Error(
-        `Error fetching rates and balances: ${rates.error ?? balances.error}`,
+        `Error fetching rates and balances: ${errors.join(',')}`,
       );
     }
 
@@ -90,7 +95,6 @@ export async function startSendTransactionFlow({
     const sendFlowResult = await sendFlowPromise;
 
     if (!sendFlowResult) {
-      sendFlowRequest.status = TransactionStatus.Rejected;
       await stateManager.removeRequest(sendFlowRequest.id);
       throw new UserRejectedRequestError() as unknown as Error;
     }
@@ -124,6 +128,14 @@ export async function startSendTransactionFlow({
   } catch (error) {
     logger.error('Failed to start send transaction flow', error);
 
-    throw new Error(error);
+    if (isSnapRpcError(error)) {
+      throw error as unknown as Error;
+    }
+
+    if (error instanceof TxValidationError) {
+      throw error;
+    }
+
+    throw new Error('Failed to send the transaction');
   }
 }
