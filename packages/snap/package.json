@@ -30,9 +30,6 @@
     "start": "mm-snap watch",
     "test": "jest --passWithNoTests"
   },
-  "dependencies": {
-    "bitcoin-address-validation": "^2.2.3"
-  },
   "devDependencies": {
     "@babel/preset-typescript": "^7.23.3",
     "@bitcoinerlab/secp256k1": "1.1.1",
@@ -53,6 +50,7 @@
     "async-mutex": "^0.3.2",
     "bignumber.js": "9.1.2",
     "bip32": "4.0.0",
+    "bitcoin-address-validation": "^2.2.3",
     "bitcoinjs-lib": "6.1.5",
     "coinselect": "3.1.13",
     "dotenv": "^16.4.5",
