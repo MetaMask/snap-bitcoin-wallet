@@ -35,8 +35,6 @@ export async function createRatesAndBalances({
     getBalances(btcAccount, { scope, assets: [asset] }),
   ]);
 
-  console.log('ratesResult: ', ratesResult);
-
   if (ratesResult.status === 'fulfilled') {
     rates = ratesResult.value;
   } else {
