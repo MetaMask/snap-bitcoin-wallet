@@ -100,6 +100,12 @@ export class QuickNodeClient extends ApiClient implements IDataClient {
     );
   }
 
+  protected formatError<ApiResponse extends QuickNodeResponse>(
+    apiResponse: ApiResponse,
+  ): string {
+    return JSON.stringify(apiResponse.error);
+  }
+
   protected async getResponse<ApiResponse>(
     response: HttpResponse,
   ): Promise<ApiResponse> {
@@ -111,7 +117,7 @@ export class QuickNodeClient extends ApiClient implements IDataClient {
     if (response.status !== 200) {
       throw new Error(
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        `API response error: ${JSON.stringify(apiResponse.error)}`,
+        `API response error: ${this.formatError(apiResponse)}`,
       );
     }
 

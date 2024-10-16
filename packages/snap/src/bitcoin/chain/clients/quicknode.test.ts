@@ -189,7 +189,7 @@ describe('QuickNodeClient', () => {
           responseStruct: any(),
         }),
       ).rejects.toThrow(
-        // the error message will be JSON.stringify, hence it will formatted as a string.
+        // The error message will be JSON stringified, hence the quotes here.
         'API response error: "api error"',
       );
     });
