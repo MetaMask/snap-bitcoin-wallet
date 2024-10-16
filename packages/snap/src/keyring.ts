@@ -18,11 +18,7 @@ import type { Infer } from 'superstruct';
 import { assert, object, StructError } from 'superstruct';
 import { v4 as uuidv4 } from 'uuid';
 
-import {
-  TxValidationError,
-  type BtcAccount,
-  type BtcWallet,
-} from './bitcoin/wallet';
+import { type BtcAccount, type BtcWallet } from './bitcoin/wallet';
 import { Config } from './config';
 import { Caip2ChainId } from './constants';
 import { AccountNotFoundError, MethodNotImplementedError } from './exceptions';
