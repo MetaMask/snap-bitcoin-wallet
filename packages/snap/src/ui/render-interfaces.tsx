@@ -102,3 +102,24 @@ export async function generateConfirmationReviewInterface({
     },
   });
 }
+
+/**
+ * Display the confirmation review interface.
+ *
+ * @param options0 - The options for displaying the confirmation review interface.
+ * @param options0.request - The send flow request object.
+ * @returns A promise that resolves when the confirmation review interface is displayed.
+ */
+export async function displayConfirmationReview({
+  request,
+}: {
+  request: SendFlowRequest;
+}) {
+  return await snap.request({
+    method: 'snap_updateInterface',
+    params: {
+      id: request.id,
+      ui: <ReviewTransaction {...request} txSpeed="30m" />,
+    },
+  });
+}
