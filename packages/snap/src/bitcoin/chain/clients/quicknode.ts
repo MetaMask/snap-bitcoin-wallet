@@ -103,9 +103,9 @@ export class QuickNodeClient extends ApiClient implements IDataClient {
   protected async getResponse<ApiResponse>(
     response: HttpResponse,
   ): Promise<ApiResponse> {
-    const apiResponse = (await super.getResponse<ApiResponse>(
-      response,
-    )) as unknown as ApiResponse & QuickNodeResponse;
+    const apiResponse = await super.getResponse<
+      ApiResponse & QuickNodeResponse
+    >(response);
 
     // QuickNode returns 200 status code for successful requests, others are errors status code
     if (response.status !== 200) {
