@@ -27,11 +27,10 @@ global.snap = {
   request: jest.fn(),
 };
 
-const mockGenerateConfirmationReviewInterface = jest.fn();
+const mockdisplayConfirmationReview = jest.fn();
 jest.mock('../render-interfaces', () => ({
   updateSendFlow: jest.fn(),
-  generateConfirmationReviewInterface: (args) =>
-    mockGenerateConfirmationReviewInterface(args),
+  displayConfirmationReview: (args) => mockdisplayConfirmationReview(args),
 }));
 
 const mockInterfaceId = 'interfaceId';
@@ -690,7 +689,7 @@ describe('SendManyController', () => {
       };
       expect(controller.request.status).toBe(TransactionStatus.Review);
       expect(stateManager.upsertRequest).toHaveBeenCalledWith(expectedResult);
-      expect(mockGenerateConfirmationReviewInterface).toHaveBeenCalledWith({
+      expect(mockdisplayConfirmationReview).toHaveBeenCalledWith({
         request: expectedResult,
       });
     });
