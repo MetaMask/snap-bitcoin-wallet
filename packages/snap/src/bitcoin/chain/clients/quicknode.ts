@@ -100,18 +100,24 @@ export class QuickNodeClient extends ApiClient implements IDataClient {
     );
   }
 
+  protected formatError<ApiResponse extends QuickNodeResponse>(
+    apiResponse: ApiResponse,
+  ): string {
+    return JSON.stringify(apiResponse.error);
+  }
+
   protected async getResponse<ApiResponse>(
     response: HttpResponse,
   ): Promise<ApiResponse> {
-    const apiResponse = (await super.getResponse<ApiResponse>(
-      response,
-    )) as unknown as ApiResponse & QuickNodeResponse;
+    const apiResponse = await super.getResponse<
+      ApiResponse & QuickNodeResponse
+    >(response);
 
     // QuickNode returns 200 status code for successful requests, others are errors status code
     if (response.status !== 200) {
       throw new Error(
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        `API response error: ${JSON.stringify(apiResponse.error)}`,
+        `API response error: ${this.formatError(apiResponse)}`,
       );
     }
 
@@ -123,7 +129,7 @@ export class QuickNodeClient extends ApiClient implements IDataClient {
     return apiResponse;
   }
 
-  protected async submitJsonRPCRequest<ApiResponse>({
+  protected async submitJsonRPCRequest<ApiResponse extends QuickNodeResponse>({
     request,
     responseStruct,
   }: {
@@ -132,16 +138,16 @@ export class QuickNodeClient extends ApiClient implements IDataClient {
       params: Json;
     };
     responseStruct: Struct;
-  }) {
-    return await this.submitRequest<ApiResponse>({
-      request: this.buildRequest({
+  }): Promise<ApiResponse> {
+    return await this.submitHttpRequest<ApiResponse>({
+      request: this.buildHttpRequest({
         method: HttpMethod.Post,
         url: this.baseUrl,
         body: request,
       }),
       responseStruct,
-      // This field is for logging purpose, therefore we use the JSON-RPC method name as the identifier
-      requestId: request.method,
+      // Use the JSON-RPC method name as the requestName for underlying logging purposes
+      requestName: request.method,
     });
   }
 

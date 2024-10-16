@@ -32,3 +32,5 @@ export const alertDialog = jest.fn();
 export const getStateData = jest.fn();
 
 export const setStateData = jest.fn();
+
+export const createSendUIDialog = () => jest.fn().mockResolvedValue(true)();

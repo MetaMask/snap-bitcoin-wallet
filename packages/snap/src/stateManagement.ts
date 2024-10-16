@@ -1,5 +1,7 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
 
+import { type EstimateFeeResponse, type SendManyParams } from './rpcs';
+import type { AssetType, Currency } from './ui/types';
 import { compactError, SnapStateManager } from './utils';
 
 export type Wallet = {
@@ -11,9 +13,76 @@ export type Wallet = {
 
 export type Wallets = Record<string, Wallet>;
 
+export type SendEstimate = {
+  // The estimated fee in BTC.
+  fees: EstimateFeeResponse & { loading: boolean };
+  // The estimated time to confirmation time.
+  confirmationTime: string;
+};
+
+export type Transaction = SendManyParams & {
+  sender: string;
+  recipient: string;
+  amount: string;
+  total: string;
+};
+
+export type BaseRequestState = {
+  id: string;
+  interfaceId: string;
+  account: KeyringAccount;
+  scope: string;
+};
+
+export type SendFlowParams = {
+  selectedCurrency: AssetType;
+  recipient: {
+    address: string;
+    error: string;
+    valid: boolean;
+  };
+  fees: Currency & { loading: boolean; error: string };
+  amount: Currency & { error: string; valid: boolean };
+  rates: string;
+  balance: Currency; // TODO: To be removed once metadata is available
+  total: Currency & { error: string; valid: boolean };
+};
+
+export enum TransactionStatus {
+  Draft = 'draft',
+  Review = 'review',
+  Signed = 'signed',
+  Rejected = 'rejected',
+  Confirmed = 'confirmed',
+  Pending = 'pending',
+  Failure = 'failure',
+}
+
+export type TransactionState = {
+  transaction: Omit<SendManyParams, 'scope'>;
+  /* The status of the transaction 
+    - draft: The transaction is being created and edited
+    - review: The transaction is in a review state that is ready to be confirmed by the user to sign
+    - signed: The transaction is signed and ready to be sent
+    - rejected: The transaction is rejected by the user
+    - confirmed: The transaction is confirmed by the network
+    - pending: The transaction is pending confirmation
+    - failure: The transaction failed
+  */
+  status: TransactionStatus;
+  txId?: string;
+};
+
+export type SendFlowRequest = BaseRequestState &
+  SendFlowParams &
+  TransactionState;
+
 export type SnapState = {
   walletIds: string[];
   wallets: Wallets;
+  requests: {
+    [id: string]: SendFlowRequest;
+  };
 };
 
 export class KeyringStateManager extends SnapStateManager<SnapState> {
@@ -24,6 +93,7 @@ export class KeyringStateManager extends SnapStateManager<SnapState> {
         state = {
           walletIds: [],
           wallets: {},
+          requests: {},
         };
       }
 
@@ -33,6 +103,10 @@ export class KeyringStateManager extends SnapStateManager<SnapState> {
 
       if (!state.wallets) {
         state.wallets = {};
+      }
+
+      if (!state.requests) {
+        state.requests = {};
       }
 
       return state;
@@ -130,6 +204,40 @@ export class KeyringStateManager extends SnapStateManager<SnapState> {
     }
   }
 
+  async getRequest(id: string): Promise<SendFlowRequest | null> {
+    try {
+      const state = await this.get();
+      return state.requests[id] ?? null;
+    } catch (error) {
+      throw compactError(error, Error);
+    }
+  }
+
+  async upsertRequest(sendFlowRequest: SendFlowRequest): Promise<void> {
+    try {
+      await this.update(async (state: SnapState) => {
+        state.requests[sendFlowRequest.id] = {
+          ...state.requests[sendFlowRequest.id],
+          ...sendFlowRequest,
+        };
+      });
+    } catch (error) {
+      throw compactError(error, Error);
+    }
+  }
+
+  async removeRequest(id: string): Promise<void> {
+    try {
+      await this.update(async (state: SnapState) => {
+        if (state.requests[id]) {
+          delete state.requests[id];
+        }
+      });
+    } catch (error) {
+      throw compactError(error, Error);
+    }
+  }
+
   protected getAccountByAddress(
     state: SnapState,
     address: string,
@@ -143,5 +251,9 @@ export class KeyringStateManager extends SnapStateManager<SnapState> {
 
   protected isAccountExist(state: SnapState, id: string): boolean {
     return Object.prototype.hasOwnProperty.call(state.wallets, id);
+  }
+
+  protected isRequestExist(state: SnapState, id: string): boolean {
+    return Object.prototype.hasOwnProperty.call(state.requests, id);
   }
 }

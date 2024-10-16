@@ -20,7 +20,10 @@ import { BtcAccountDeriver, BtcWallet } from '../../wallet';
 import { TransactionStatus } from '../constants';
 import { DataClientError } from '../exceptions';
 import { NoFeeRateError, QuickNodeClient } from './quicknode';
-import type { QuickNodeEstimateFeeResponse } from './quicknode.types';
+import type {
+  QuickNodeEstimateFeeResponse,
+  QuickNodeResponse,
+} from './quicknode.types';
 
 jest.mock('../../../utils/logger');
 jest.mock('../../../utils/snap');
@@ -30,7 +33,7 @@ describe('QuickNodeClient', () => {
   const mainnetEndpoint = 'https://api.quicknode.com/mainnet';
 
   class MockQuickNodeClient extends QuickNodeClient {
-    async submitJsonRPCRequest<ApiResponse>({
+    async submitJsonRPCRequest<ApiResponse extends QuickNodeResponse>({
       request,
       responseStruct,
     }: {
@@ -186,12 +189,12 @@ describe('QuickNodeClient', () => {
           responseStruct: any(),
         }),
       ).rejects.toThrow(
-        // the error message will be JSON.stringify, hence it will formatted as a string.
+        // The error message will be JSON stringified, hence the quotes here.
         'API response error: "api error"',
       );
     });
 
-    it('throws `API response error: response body can not be serialised.` error if the response body can not be serialised', async () => {
+    it('throws `API response error: response body can not be deserialised.` error if the response body can not be deserialised', async () => {
       const { fetchSpy } = createMockFetch();
 
       fetchSpy.mockResolvedValueOnce({
@@ -213,7 +216,7 @@ describe('QuickNodeClient', () => {
           responseStruct: any(),
         }),
       ).rejects.toThrow(
-        'API response error: response body can not be serialised.',
+        'API response error: response body can not be deserialised.',
       );
     });
   });

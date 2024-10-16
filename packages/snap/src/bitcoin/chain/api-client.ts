@@ -10,12 +10,12 @@ export enum HttpMethod {
   Post = 'POST',
 }
 
-export type HttpHeader = Record<string, string>;
+export type HttpHeaders = Record<string, string>;
 
 export type HttpRequest = {
   url: string;
   method: HttpMethod;
-  headers: HttpHeader;
+  headers: HttpHeaders;
   body?: string;
 };
 
@@ -40,7 +40,7 @@ export abstract class ApiClient {
       return (await response.json()) as unknown as ApiResponse;
     } catch (error) {
       throw new Error(
-        'API response error: response body can not be serialised.',
+        'API response error: response body can not be deserialised.',
       );
     }
   }
@@ -55,14 +55,14 @@ export abstract class ApiClient {
    * @param [params.body] - The request body (optional).
    * @returns A `HttpRequest` object.
    */
-  protected buildRequest({
+  protected buildHttpRequest({
     method,
     headers = {},
     url,
     body,
   }: {
     method: HttpMethod;
-    headers?: HttpHeader;
+    headers?: HttpHeaders;
     url: string;
     body?: Json;
   }): HttpRequest {
@@ -73,7 +73,8 @@ export abstract class ApiClient {
         'Content-Type': 'application/json',
         ...headers,
       },
-      body: method === 'POST' && body ? JSON.stringify(body) : undefined,
+      body:
+        method === HttpMethod.Post && body ? JSON.stringify(body) : undefined,
     };
 
     return request;
@@ -83,24 +84,24 @@ export abstract class ApiClient {
    * An internal method used to submit the API request.
    *
    * @param params - The request parameters.
-   * @param [params.requestId] - The string ID of the request (optional).
-   * @param params.request - The `RequestInfo` object.
+   * @param [params.requestName] - The name of the request (optional).
+   * @param params.request - The `HttpRequest` object.
    * @param params.responseStruct - The superstruct used to verify the API response.
    * @returns A promise that resolves to a JSON object.
    */
-  protected async submitRequest<ApiResponse>({
-    requestId = '',
+  protected async submitHttpRequest<ApiResponse>({
+    requestName = '',
     request,
     responseStruct,
   }: {
-    requestId?: string;
+    requestName?: string;
     request: HttpRequest;
     responseStruct: Struct;
   }): Promise<ApiResponse> {
-    const logPrefix = `[${this.apiClientName}.${requestId}]`;
+    const logPrefix = `[${this.apiClientName}.${requestName}]`;
 
     try {
-      logger.debug(`${logPrefix} request:`, `method - ${request.method}`);
+      logger.debug(`${logPrefix} request: ${request.method}`); // Log HTTP method being used.
 
       const fetchRequest = {
         method: request.method,

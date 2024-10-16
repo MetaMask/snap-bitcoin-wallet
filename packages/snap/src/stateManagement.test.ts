@@ -1,6 +1,9 @@
 import { generateAccounts } from '../test/utils';
 import { Caip2ChainId } from './constants';
-import { KeyringStateManager } from './stateManagement';
+import type { SendFlowRequest } from './stateManagement';
+import { KeyringStateManager, TransactionStatus } from './stateManagement';
+import { AssetType } from './ui/types';
+import { generateSendManyParams } from './ui/utils';
 import * as snapUtil from './utils/snap';
 
 describe('KeyringStateManager', () => {
@@ -31,6 +34,7 @@ describe('KeyringStateManager', () => {
         };
         return acc;
       }, {}),
+      requests: {} as Record<string, SendFlowRequest>,
     };
   };
 
@@ -353,6 +357,331 @@ describe('KeyringStateManager', () => {
       const { id } = state.wallets[state.walletIds[0]].account;
 
       await expect(instance.getWallet(id)).rejects.toThrow(Error);
+    });
+  });
+
+  describe('Requests', () => {
+    describe('getRequest', () => {
+      it('returns the request if it exists', async () => {
+        const { instance, getDataSpy } = createMockStateManager();
+        const state = createInitState(20);
+        const requestId = 'request-1';
+        const request = {
+          id: requestId,
+          interfaceId: 'interface-1',
+          account: state.wallets[state.walletIds[0]].account,
+          scope: 'scope-1',
+          transaction: {
+            ...generateSendManyParams('scope-1'),
+            sender: 'sender-1',
+            recipient: 'recipient-1',
+            amount: '1',
+            total: '1',
+          },
+          status: TransactionStatus.Draft,
+          selectedCurrency: AssetType.BTC,
+          recipient: {
+            address: 'recipient-address',
+            error: '',
+            valid: true,
+          },
+          fees: {
+            amount: '0.0001',
+            fiat: '0.01',
+            loading: false,
+            error: '',
+          },
+          amount: {
+            amount: '1',
+            fiat: '100',
+            error: '',
+            valid: true,
+          },
+          rates: '100',
+          balance: {
+            amount: '10',
+            fiat: '1000',
+          },
+          total: {
+            amount: '1.0001',
+            fiat: '100.01',
+            error: '',
+            valid: true,
+          },
+        };
+        state.requests[requestId] = request;
+        getDataSpy.mockResolvedValue(state);
+
+        const result = await instance.getRequest(requestId);
+
+        expect(getDataSpy).toHaveBeenCalledTimes(1);
+        expect(result).toStrictEqual(request);
+      });
+
+      it('returns null if the request does not exist', async () => {
+        const { instance, getDataSpy } = createMockStateManager();
+        const state = createInitState(20);
+        getDataSpy.mockResolvedValue(state);
+        const requestId = 'non-existent-request';
+
+        const result = await instance.getRequest(requestId);
+
+        expect(getDataSpy).toHaveBeenCalledTimes(1);
+        expect(result).toBeNull();
+      });
+
+      it('returns null if the state is null', async () => {
+        const { instance, getDataSpy } = createMockStateManager();
+        getDataSpy.mockResolvedValue(null);
+        const requestId = 'request-1';
+
+        const result = await instance.getRequest(requestId);
+
+        expect(getDataSpy).toHaveBeenCalledTimes(1);
+        expect(result).toBeNull();
+      });
+
+      it('throws an Error if another Error was thrown', async () => {
+        const { instance, getDataSpy } = createMockStateManager();
+        getDataSpy.mockRejectedValue(new Error('error'));
+        const requestId = 'request-1';
+
+        await expect(instance.getRequest(requestId)).rejects.toThrow(Error);
+      });
+    });
+
+    describe('upsertRequest', () => {
+      it('adds a new request if it does not exist', async () => {
+        const { instance, getDataSpy, setDataSpy } = createMockStateManager();
+        const state = createInitState(20);
+        getDataSpy.mockResolvedValue(state);
+        const requestId = 'new-request';
+        const newRequest: SendFlowRequest = {
+          id: requestId,
+          interfaceId: 'interface-1',
+          account: state.wallets[state.walletIds[0]].account,
+          scope: 'scope-1',
+          transaction: {
+            ...generateSendManyParams('scope-1'),
+          },
+          status: TransactionStatus.Draft,
+          selectedCurrency: AssetType.BTC,
+          recipient: {
+            address: 'recipient-address',
+            error: '',
+            valid: true,
+          },
+          fees: {
+            amount: '0.0001',
+            fiat: '0.01',
+            loading: false,
+            error: '',
+          },
+          amount: {
+            amount: '1',
+            fiat: '100',
+            error: '',
+            valid: true,
+          },
+          rates: '100',
+          balance: {
+            amount: '10',
+            fiat: '1000',
+          },
+          total: {
+            amount: '1.0001',
+            fiat: '100.01',
+            error: '',
+            valid: true,
+          },
+        };
+
+        await instance.upsertRequest(newRequest);
+
+        expect(getDataSpy).toHaveBeenCalledTimes(1);
+        expect(setDataSpy).toHaveBeenCalledTimes(1);
+        expect(state.requests[requestId]).toStrictEqual(newRequest);
+      });
+
+      it('updates an existing request if it exists', async () => {
+        const { instance, getDataSpy, setDataSpy } = createMockStateManager();
+        const state = createInitState(20);
+        const requestId = 'existing-request';
+        const existingRequest: SendFlowRequest = {
+          id: requestId,
+          interfaceId: 'interface-1',
+          account: state.wallets[state.walletIds[0]].account,
+          scope: 'scope-1',
+          transaction: {
+            ...generateSendManyParams('scope-1'),
+          },
+          status: TransactionStatus.Draft,
+          selectedCurrency: AssetType.BTC,
+          recipient: {
+            address: 'recipient-address',
+            error: '',
+            valid: true,
+          },
+          fees: {
+            amount: '0.0001',
+            fiat: '0.01',
+            loading: false,
+            error: '',
+          },
+          amount: {
+            amount: '1',
+            fiat: '100',
+            error: '',
+            valid: true,
+          },
+          rates: '100',
+          balance: {
+            amount: '10',
+            fiat: '1000',
+          },
+          total: {
+            amount: '1.0001',
+            fiat: '100.01',
+            error: '',
+            valid: true,
+          },
+        };
+        state.requests[requestId] = existingRequest;
+        getDataSpy.mockResolvedValue(state);
+
+        const updatedRequest: SendFlowRequest = {
+          ...existingRequest,
+          status: TransactionStatus.Review,
+        };
+
+        await instance.upsertRequest(updatedRequest);
+
+        expect(getDataSpy).toHaveBeenCalledTimes(1);
+        expect(setDataSpy).toHaveBeenCalledTimes(1);
+        expect(state.requests[requestId]).toStrictEqual(updatedRequest);
+      });
+
+      it('throws an Error if another Error was thrown', async () => {
+        const { instance, getDataSpy } = createMockStateManager();
+        getDataSpy.mockRejectedValue(new Error('error'));
+        const requestId = 'request-1';
+        const request: SendFlowRequest = {
+          id: requestId,
+          interfaceId: 'interface-1',
+          account: generateAccounts(1)[0],
+          scope: 'scope-1',
+          transaction: {
+            ...generateSendManyParams('scope-1'),
+          },
+          status: TransactionStatus.Draft,
+          selectedCurrency: AssetType.BTC,
+          recipient: {
+            address: 'recipient-address',
+            error: '',
+            valid: true,
+          },
+          fees: {
+            amount: '0.0001',
+            fiat: '0.01',
+            loading: false,
+            error: '',
+          },
+          amount: {
+            amount: '1',
+            fiat: '100',
+            error: '',
+            valid: true,
+          },
+          rates: '100',
+          balance: {
+            amount: '10',
+            fiat: '1000',
+          },
+          total: {
+            amount: '1.0001',
+            fiat: '100.01',
+            error: '',
+            valid: true,
+          },
+        };
+
+        await expect(instance.upsertRequest(request)).rejects.toThrow(Error);
+      });
+    });
+    describe('removeRequest', () => {
+      it('removes the request if it exists', async () => {
+        const { instance, getDataSpy, setDataSpy } = createMockStateManager();
+        const state = createInitState(20);
+        const requestId = 'request-to-remove';
+        const request: SendFlowRequest = {
+          id: requestId,
+          interfaceId: 'interface-1',
+          account: state.wallets[state.walletIds[0]].account,
+          scope: 'scope-1',
+          transaction: {
+            ...generateSendManyParams('scope-1'),
+          },
+          status: TransactionStatus.Draft,
+          selectedCurrency: AssetType.BTC,
+          recipient: {
+            address: 'recipient-address',
+            error: '',
+            valid: true,
+          },
+          fees: {
+            amount: '0.0001',
+            fiat: '0.01',
+            loading: false,
+            error: '',
+          },
+          amount: {
+            amount: '1',
+            fiat: '100',
+            error: '',
+            valid: true,
+          },
+          rates: '100',
+          balance: {
+            amount: '10',
+            fiat: '1000',
+          },
+          total: {
+            amount: '1.0001',
+            fiat: '100.01',
+            error: '',
+            valid: true,
+          },
+        };
+        state.requests[requestId] = request;
+        getDataSpy.mockResolvedValue(state);
+
+        await instance.removeRequest(requestId);
+
+        expect(getDataSpy).toHaveBeenCalledTimes(1);
+        expect(setDataSpy).toHaveBeenCalledTimes(1);
+        expect(state.requests[requestId]).toBeUndefined();
+      });
+
+      it('does nothing if the request does not exist', async () => {
+        const { instance, getDataSpy, setDataSpy } = createMockStateManager();
+        const state = createInitState(20);
+        getDataSpy.mockResolvedValue(state);
+        const requestId = 'non-existent-request';
+
+        await instance.removeRequest(requestId);
+
+        expect(getDataSpy).toHaveBeenCalledTimes(1);
+        expect(setDataSpy).toHaveBeenCalledTimes(1);
+        expect(state.requests[requestId]).toBeUndefined();
+      });
+
+      it('throws an Error if another Error was thrown', async () => {
+        const { instance, getDataSpy } = createMockStateManager();
+        getDataSpy.mockRejectedValue(new Error('error'));
+        const requestId = 'request-1';
+
+        await expect(instance.removeRequest(requestId)).rejects.toThrow(Error);
+      });
     });
   });
 });
