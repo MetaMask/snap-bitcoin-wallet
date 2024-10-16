@@ -92,6 +92,7 @@ export class SimpleHashClient
     const utxos: Utxo[] = [];
 
     await processBatch(uniqueAddresses, async (address: string) => {
+      // API reference: https://docs.simplehash.com/reference/bitcoin_assets_grouped_by_utxo
       const result =
         await this.submitGetApiRequest<SimpleHashWalletAssetsByUtxoResponse>({
           endpoint: `/custom/wallet_assets_by_utxo/${address}?without_inscriptions_runes_raresats=1`,
