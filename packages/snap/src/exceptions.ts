@@ -34,7 +34,6 @@ export function isSnapException(error: Error): boolean {
   const errors = [
     AccountNotFoundError,
     MethodNotImplementedError,
-    FeeRateUnavailableError,
     SendFlowRequestNotFoundError,
   ];
   return errors.some((errType) => error instanceof errType);
