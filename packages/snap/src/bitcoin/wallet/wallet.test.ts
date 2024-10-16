@@ -248,7 +248,7 @@ describe('BtcWallet', () => {
       }
     });
 
-    it('uses `replaceable = false` if not provided', async () => {
+    it('uses `replaceable = true` if not provided', async () => {
       const network = networks.testnet;
       const { instance } = createMockDeriver(network);
       const wallet = new BtcWallet(instance, network);
@@ -269,7 +269,7 @@ describe('BtcWallet', () => {
 
       expect(psbtSpy).toHaveBeenCalledWith(
         expect.any(Array<TxInput>),
-        false,
+        true,
         expect.any(String),
         expect.any(Buffer),
         expect.any(Buffer),
