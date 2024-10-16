@@ -10,12 +10,12 @@ export enum HttpMethod {
   Post = 'POST',
 }
 
-export type HttpHeader = Record<string, string>;
+export type HttpHeaders = Record<string, string>;
 
 export type HttpRequest = {
   url: string;
   method: HttpMethod;
-  headers: HttpHeader;
+  headers: HttpHeaders;
   body?: string;
 };
 
@@ -62,7 +62,7 @@ export abstract class ApiClient {
     body,
   }: {
     method: HttpMethod;
-    headers?: HttpHeader;
+    headers?: HttpHeaders;
     url: string;
     body?: Json;
   }): HttpRequest {

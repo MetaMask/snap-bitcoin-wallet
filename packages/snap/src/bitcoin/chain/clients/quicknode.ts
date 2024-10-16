@@ -123,7 +123,7 @@ export class QuickNodeClient extends ApiClient implements IDataClient {
     return apiResponse;
   }
 
-  protected async submitJsonRPCRequest<ApiResponse>({
+  protected async submitJsonRPCRequest<ApiResponse extends QuickNodeResponse>({
     request,
     responseStruct,
   }: {
