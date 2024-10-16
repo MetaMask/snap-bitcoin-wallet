@@ -10,6 +10,9 @@ updates:
       time: '06:00'
     allow:
       - dependency-name: '@metamask/*'
+    ignore:
+      - dependency-name: '@metamask/*'
+        update-types: ["version-update:semver-major"]
     target-branch: 'main'
     versioning-strategy: 'increase-if-necessary'
     open-pull-requests-limit: 10
