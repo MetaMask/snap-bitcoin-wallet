@@ -1,16 +1,13 @@
-import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 import { StructError } from 'superstruct';
 
 import { generateSimpleHashWalletAssetsByAddressResp } from '../../../../test/utils';
-import { Config } from '../../../config';
-import type { BtcAccount } from '../../wallet';
-import { BtcAccountDeriver, BtcWallet } from '../../wallet';
 import type { Utxo } from '../service';
 import {
   createMockFetch,
   mockApiSuccessResponse,
   mockErrorResponse,
+  createAccounts,
 } from './__tests__/helper';
 import { SimpleHashClient } from './simplehash';
 
@@ -18,36 +15,21 @@ jest.mock('../../../utils/logger');
 jest.mock('../../../utils/snap');
 
 describe('SimpleHashClient', () => {
-  class MockSimpleHashClient extends SimpleHashClient {}
-
-  const createAccounts = async (network: Network, recipientCnt: number) => {
-    const wallet = new BtcWallet(new BtcAccountDeriver(network), network);
-
-    const accounts: BtcAccount[] = [];
-    for (let i = 0; i < recipientCnt; i++) {
-      accounts.push(await wallet.unlock(i, Config.wallet.defaultAccountType));
-    }
-
-    return {
-      accounts,
-    };
-  };
-
   const createSimpleHashClient = () => {
-    return new MockSimpleHashClient({
+    return new SimpleHashClient({
       apiKey: 'API-KEY',
     });
   };
 
   const createAccountAddresses = async (count: number) => {
     const network = networks.bitcoin;
-    const { accounts } = await createAccounts(network, count);
+    const accounts = await createAccounts(network, count);
     return accounts.map((account) => account.address);
   };
 
   describe('filterUtxos', () => {
     it('returns filtered utxos', async () => {
-      const { fetchSpy } = createMockFetch();
+      const fetchSpy = createMockFetch();
       const addresses = await createAccountAddresses(5);
 
       const expectedUtxos: Utxo[] = [];
@@ -90,7 +72,7 @@ describe('SimpleHashClient', () => {
     });
 
     it('throws `API response error` if the http status is not 200', async () => {
-      const { fetchSpy } = createMockFetch();
+      const fetchSpy = createMockFetch();
       const addresses = await createAccountAddresses(1);
 
       mockErrorResponse({
@@ -106,7 +88,7 @@ describe('SimpleHashClient', () => {
     });
 
     it('throws `Unexpected response from API client` if the api response is unexpected', async () => {
-      const { fetchSpy } = createMockFetch();
+      const fetchSpy = createMockFetch();
       const addresses = await createAccountAddresses(1);
 
       mockApiSuccessResponse({
