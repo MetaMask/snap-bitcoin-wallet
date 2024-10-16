@@ -128,16 +128,14 @@ export async function createSendUIDialog(interfaceId: string) {
  * @returns A Promise that resolves to the currency rates.
  */
 export async function getRatesFromMetamask(
-  _asset: Caip2Asset,
+  currency: string,
 ): Promise<GetCurrencyRateResult> {
-  // _asset is not used because the only supported asset is 'btc' for now.
-
   return (await snap.request({
     // @ts-expect-error TODO: snaps will fix this type error
     method: 'snap_getCurrencyRate',
     params: {
       // @ts-expect-error TODO: snaps will fix this type error
-      currency: 'btc',
+      currency,
     },
   })) as GetCurrencyRateResult;
 }
