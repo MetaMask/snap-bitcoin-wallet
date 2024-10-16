@@ -318,40 +318,39 @@ export class BtcKeyring implements Keyring {
   }): Promise<Json> {
     const asset = getAssetTypeFromScope(scope);
 
-    try {
-      const { rates, balances } = await createRatesAndBalances({
-        asset,
-        scope,
-        btcAccount: account,
-      });
+    const { rates, balances } = await createRatesAndBalances({
+      asset,
+      scope,
+      btcAccount: account,
+    });
 
-      if (rates.error || balances.error) {
-        throw new Error(
-          `Error fetching rates and balances: ${rates.error ?? balances.error}`,
-        );
-      }
-
-      const sendFlowRequest = await generateSendFlowRequest(
-        walletData,
-        TransactionStatus.Review,
-        rates.value,
-        balances.value,
-        params,
+    if (rates.error || balances.error) {
+      throw new Error(
+        `Error fetching rates and balances: ${rates.error ?? balances.error}`,
       );
+    }
 
-      await this._stateMgr.upsertRequest(sendFlowRequest);
-      const result = await createSendUIDialog(sendFlowRequest.id);
+    const sendFlowRequest = await generateSendFlowRequest(
+      walletData,
+      TransactionStatus.Review,
+      rates.value,
+      balances.value,
+      params,
+    );
 
-      if (!result) {
-        sendFlowRequest.status = TransactionStatus.Rejected;
-        await this._stateMgr.removeRequest(sendFlowRequest.id);
-        throw new UserRejectedRequestError() as unknown as Error;
-      }
+    await this._stateMgr.upsertRequest(sendFlowRequest);
+    const result = await createSendUIDialog(sendFlowRequest.id);
 
-      // Get the latest send flow request from the state manager
-      // this has been updated via onInputHandler
-      await this._stateMgr.upsertRequest(sendFlowRequest);
+    if (!result) {
+      sendFlowRequest.status = TransactionStatus.Rejected;
+      await this._stateMgr.removeRequest(sendFlowRequest.id);
+      throw new UserRejectedRequestError() as unknown as Error;
+    }
 
+    // Get the latest send flow request from the state manager
+    // this has been updated via onInputHandler
+    await this._stateMgr.upsertRequest(sendFlowRequest);
+    try {
       const tx = await sendMany(account, this._options.origin, {
         ...sendFlowRequest.transaction,
         scope,
@@ -361,17 +360,9 @@ export class BtcKeyring implements Keyring {
       await this._stateMgr.upsertRequest(sendFlowRequest);
       return tx;
     } catch (error) {
-      logger.error('Failed to start send transaction flow', error);
+      await this._stateMgr.removeRequest(sendFlowRequest.id);
 
-      if (isSnapRpcError(error)) {
-        throw error as unknown as Error;
-      }
-
-      if (isSnapException(error) || error instanceof TxValidationError) {
-        throw error;
-      }
-
-      throw new Error('Failed to send the transaction');
+      throw error;
     }
   }
 }
