@@ -39,7 +39,7 @@ describe('SimpleHashClient', () => {
     });
   };
 
-  const reateAccountAddresses = async (count: number) => {
+  const createAccountAddresses = async (count: number) => {
     const network = networks.bitcoin;
     const { accounts } = await createAccounts(network, count);
     return accounts.map((account) => account.address);
@@ -48,7 +48,7 @@ describe('SimpleHashClient', () => {
   describe('filterUtxos', () => {
     it('returns filtered utxos', async () => {
       const { fetchSpy } = createMockFetch();
-      const addresses = await reateAccountAddresses(5);
+      const addresses = await createAccountAddresses(5);
 
       const expectedUtxos: Utxo[] = [];
 
@@ -81,7 +81,7 @@ describe('SimpleHashClient', () => {
     });
 
     it('throws superstruct error if any of the given addresses is not a valid bitcoin address', async () => {
-      const addresses = await reateAccountAddresses(1);
+      const addresses = await createAccountAddresses(1);
       const client = createSimpleHashClient();
 
       await expect(
@@ -91,7 +91,7 @@ describe('SimpleHashClient', () => {
 
     it('throws `API response error` if the http status is not 200', async () => {
       const { fetchSpy } = createMockFetch();
-      const addresses = await reateAccountAddresses(1);
+      const addresses = await createAccountAddresses(1);
 
       mockErrorResponse({
         fetchSpy,
@@ -107,7 +107,7 @@ describe('SimpleHashClient', () => {
 
     it('throws `Unexpected response from API client` if the api response is unexpected', async () => {
       const { fetchSpy } = createMockFetch();
-      const addresses = await reateAccountAddresses(1);
+      const addresses = await createAccountAddresses(1);
 
       mockApiSuccessResponse({
         fetchSpy,
