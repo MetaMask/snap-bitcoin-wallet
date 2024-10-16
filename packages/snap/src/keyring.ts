@@ -205,7 +205,6 @@ export class BtcKeyring implements Keyring {
     event: KeyringEvent,
     data: Record<string, Json>,
   ): Promise<void> {
-    // @ts-expect-error TODO: fix type
     await emitSnapKeyringEvent(getProvider(), event, data);
   }
 

@@ -24,6 +24,12 @@ export class SendFlowRequestNotFoundError extends CustomError {
   }
 }
 
+export class CurrencyRatesNotAvailableError extends CustomError {
+  constructor(errMsg?: string) {
+    super(errMsg ?? `Currency rates not available`);
+  }
+}
+
 /**
  * Determines if the given error is a Snap exception.
  *
@@ -35,6 +41,7 @@ export function isSnapException(error: Error): boolean {
     AccountNotFoundError,
     MethodNotImplementedError,
     SendFlowRequestNotFoundError,
+    CurrencyRatesNotAvailableError,
   ];
   return errors.some((errType) => error instanceof errType);
 }
