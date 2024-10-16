@@ -13,3 +13,10 @@ updates:
     target-branch: 'main'
     versioning-strategy: 'increase-if-necessary'
     open-pull-requests-limit: 10
+    groups:
+      snaps:
+        patterns:
+          - '@metamask/snaps-*'
+      json-rpc:
+        patterns:
+          - '@metamask/json-rpc-*'
