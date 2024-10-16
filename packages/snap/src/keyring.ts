@@ -11,24 +11,32 @@ import {
 import {
   MethodNotFoundError,
   UnauthorizedError,
+  UserRejectedRequestError,
   type Json,
 } from '@metamask/snaps-sdk';
 import type { Infer } from 'superstruct';
 import { assert, object, StructError } from 'superstruct';
 import { v4 as uuidv4 } from 'uuid';
 
-import type { BtcAccount, BtcWallet } from './bitcoin/wallet';
+import { type BtcAccount, type BtcWallet } from './bitcoin/wallet';
 import { Config } from './config';
 import { Caip2ChainId } from './constants';
 import { AccountNotFoundError, MethodNotImplementedError } from './exceptions';
 import { Factory } from './factory';
 import { getBalances, type SendManyParams, sendMany } from './rpcs';
-import type { KeyringStateManager, Wallet } from './stateManagement';
+import { createRatesAndBalances } from './rpcs/get-rates-and-balances';
+import {
+  TransactionStatus,
+  type KeyringStateManager,
+  type Wallet,
+} from './stateManagement';
+import { generateSendFlowRequest, getAssetTypeFromScope } from './ui/utils';
 import {
   getProvider,
   ScopeStruct,
   logger,
   verifyIfAccountValid,
+  createSendUIDialog,
 } from './utils';
 
 export type KeyringOptions = Record<string, Json> & {
@@ -180,11 +188,14 @@ export class BtcKeyring implements Keyring {
     this.verifyIfMethodValid(method, walletData.account);
 
     switch (method) {
-      case 'btc_sendmany':
-        return (await sendMany(account, this._options.origin, {
-          ...params,
-          scope: walletData.scope,
-        } as unknown as SendManyParams)) as unknown as Json;
+      case 'btc_sendmany': {
+        return await this.handleSendMany({
+          scope: scope as Caip2ChainId,
+          walletData,
+          account,
+          params: params as SendManyParams,
+        });
+      }
       default:
         throw new MethodNotFoundError() as unknown as Error;
     }
@@ -194,6 +205,7 @@ export class BtcKeyring implements Keyring {
     event: KeyringEvent,
     data: Record<string, Json>,
   ): Promise<void> {
+    // @ts-expect-error TODO: fix type
     await emitSnapKeyringEvent(getProvider(), event, data);
   }
 
@@ -281,6 +293,66 @@ export class BtcKeyring implements Keyring {
       default:
         // Leave it blank to fallback to auto-suggested name on the extension side
         return '';
+    }
+  }
+
+  protected async handleSendMany({
+    scope,
+    walletData,
+    account,
+    params,
+  }: {
+    scope: Caip2ChainId;
+    walletData: Wallet;
+    account: BtcAccount;
+    params: SendManyParams;
+  }): Promise<Json> {
+    const asset = getAssetTypeFromScope(scope);
+
+    const { rates, balances } = await createRatesAndBalances({
+      asset,
+      scope,
+      btcAccount: account,
+    });
+
+    if (rates.error || balances.error) {
+      throw new Error(
+        `Error fetching rates and balances: ${rates.error ?? balances.error}`,
+      );
+    }
+
+    const sendFlowRequest = await generateSendFlowRequest(
+      walletData,
+      TransactionStatus.Review,
+      rates.value,
+      balances.value,
+      params,
+    );
+
+    await this._stateMgr.upsertRequest(sendFlowRequest);
+    const result = await createSendUIDialog(sendFlowRequest.id);
+
+    if (!result) {
+      await this._stateMgr.removeRequest(sendFlowRequest.id);
+      throw new UserRejectedRequestError() as unknown as Error;
+    }
+
+    // Get the latest send flow request from the state manager
+    // this has been updated via onInputHandler
+    await this._stateMgr.upsertRequest(sendFlowRequest);
+    try {
+      const tx = await sendMany(account, this._options.origin, {
+        ...sendFlowRequest.transaction,
+        scope,
+      });
+
+      sendFlowRequest.txId = tx.txId;
+      await this._stateMgr.upsertRequest(sendFlowRequest);
+      return tx;
+    } catch (error) {
+      await this._stateMgr.removeRequest(sendFlowRequest.id);
+
+      throw error;
     }
   }
 }

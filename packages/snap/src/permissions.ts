@@ -4,6 +4,7 @@ export enum InternalRpcMethod {
   GetTransactionStatus = 'chain_getTransactionStatus',
   EstimateFee = 'estimateFee',
   GetMaxSpendableBalance = 'getMaxSpendableBalance',
+  StartSendTransactionFlow = 'startSendTransactionFlow',
 }
 
 const dappPermissions = new Set([
@@ -12,9 +13,8 @@ const dappPermissions = new Set([
   KeyringRpcMethod.GetAccount,
   KeyringRpcMethod.GetAccountBalances,
   KeyringRpcMethod.SubmitRequest,
-  // Chain API methods
-  InternalRpcMethod.GetTransactionStatus,
   // Internal methods
+  InternalRpcMethod.GetTransactionStatus,
   InternalRpcMethod.EstimateFee,
   InternalRpcMethod.GetMaxSpendableBalance,
 ]);
@@ -27,6 +27,13 @@ const metamaskPermissions = new Set([
   KeyringRpcMethod.FilterAccountChains,
   KeyringRpcMethod.DeleteAccount,
   KeyringRpcMethod.GetAccountBalances,
+  KeyringRpcMethod.SubmitRequest,
+  // Internal methods
+  InternalRpcMethod.GetTransactionStatus,
+  InternalRpcMethod.EstimateFee,
+  InternalRpcMethod.GetMaxSpendableBalance,
+  // Internal methods with a UI
+  InternalRpcMethod.StartSendTransactionFlow,
 ]);
 
 const allowedOrigins = [

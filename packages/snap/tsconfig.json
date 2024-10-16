@@ -6,7 +6,9 @@
     "forceConsistentCasingInFileNames": true /* Ensure that casing is correct in imports. */,
     "skipLibCheck": true /* Skip type checking all .d.ts files. */,
     "resolveJsonModule": true /*  lets us import JSON modules from within TypeScript modules. */,
-    "strictNullChecks": true /* Enable strict null checks. */
+    "strictNullChecks": true /* Enable strict null checks. */,
+    "jsx": "react-jsx",
+    "jsxImportSource": "@metamask/snaps-sdk"
   },
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts", "**/*.tsx", "src/**/*.tsx", "src/index.tsx"]
 }

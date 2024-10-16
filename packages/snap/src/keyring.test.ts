@@ -22,6 +22,20 @@ jest.mock('@metamask/keyring-api', () => ({
   emitSnapKeyringEvent: jest.fn(),
 }));
 
+jest.mock('./rpcs/get-rates-and-balances', () => ({
+  createRatesAndBalances: () =>
+    jest.fn().mockResolvedValue({
+      rates: {
+        value: 'mockRates',
+        error: '',
+      },
+      balances: {
+        value: 'mockBalance',
+        error: '',
+      },
+    })(),
+}));
+
 class MockBtcKeyring extends BtcKeyring {
   // Mock protected method getKeyringAccountNameSuggestion to public for test purpose
   public getKeyringAccountNameSuggestion(options?: CreateAccountOptions) {
@@ -322,9 +336,14 @@ describe('BtcKeyring', () => {
 
   describe('submitRequest', () => {
     it('calls SnapRpcHandler if the method support', async () => {
+      // Mocking user interaction
       const caip2ChainId = Caip2ChainId.Testnet;
       const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
-      const { instance: keyring, sendManySpy } = createMockKeyring(stateMgr);
+      const {
+        instance: keyring,
+        sendManySpy,
+        getBalanceRpcSpy,
+      } = createMockKeyring(stateMgr);
       const { sender, keyringAccount } = await createSender(caip2ChainId);
       getWalletSpy.mockResolvedValue({
         account: keyringAccount as unknown as KeyringAccount,
@@ -334,6 +353,12 @@ describe('BtcKeyring', () => {
       });
       sendManySpy.mockResolvedValue({
         txId: 'txid',
+      });
+      getBalanceRpcSpy.mockResolvedValue({
+        [Caip2Asset.TBtc]: {
+          amount: '1',
+          unit: Config.unit,
+        },
       });
 
       const params = {

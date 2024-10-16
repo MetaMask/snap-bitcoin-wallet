@@ -2,6 +2,7 @@ import { handleKeyringRequest } from '@metamask/keyring-api';
 import {
   type OnRpcRequestHandler,
   type OnKeyringRequestHandler,
+  type OnUserInputHandler,
   type Json,
   UnauthorizedError,
   SnapError,
@@ -21,7 +22,14 @@ import {
   estimateFee,
   getMaxSpendableBalance,
 } from './rpcs';
+import type { StartSendTransactionFlowParams } from './rpcs/start-send-transaction-flow';
+import { startSendTransactionFlow } from './rpcs/start-send-transaction-flow';
 import { KeyringStateManager } from './stateManagement';
+import {
+  isSendFormEvent,
+  SendManyController,
+} from './ui/controller/send-many-controller';
+import type { SendFlowContext, SendFormState } from './ui/types';
 import { isSnapRpcError, logger } from './utils';
 
 export const validateOrigin = (origin: string, method: string): void => {
@@ -57,6 +65,12 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         return await getMaxSpendableBalance(
           request.params as GetMaxSpendableBalanceParams,
         );
+      case InternalRpcMethod.StartSendTransactionFlow: {
+        return await startSendTransactionFlow(
+          request.params as StartSendTransactionFlowParams,
+        );
+      }
+
       default:
         throw new MethodNotFoundError() as unknown as Error;
     }
@@ -101,5 +115,38 @@ export const onKeyringRequest: OnKeyringRequestHandler = async ({
       `onKeyringRequest error: ${JSON.stringify(snapError.toJSON(), null, 2)}`,
     );
     throw snapError;
+  }
+};
+
+export const onUserInput: OnUserInputHandler = async ({
+  id,
+  event,
+  context,
+}) => {
+  const { requestId } = context as SendFlowContext;
+  const state = await snap.request({
+    method: 'snap_getInterfaceState',
+    params: { id },
+  });
+
+  const stateManager = new KeyringStateManager(true);
+  const request = await stateManager.getRequest(requestId);
+
+  if (!request) {
+    throw new Error('Request not found');
+  }
+
+  if (isSendFormEvent(event)) {
+    const sendManyController = new SendManyController({
+      stateManager,
+      request,
+      context: context as SendFlowContext,
+      interfaceId: id,
+    });
+    await sendManyController.handleEvent(
+      event,
+      context as SendFlowContext,
+      state.sendForm as SendFormState,
+    );
   }
 };

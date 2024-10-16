@@ -1,17 +1,8 @@
-import {
-  InvalidParamsError,
-  UserRejectedRequestError,
-} from '@metamask/snaps-sdk';
+import { InvalidParamsError } from '@metamask/snaps-sdk';
 
-import type { BtcAccount, Recipient } from '../bitcoin/wallet';
-import {
-  BtcWallet,
-  type ITxInfo,
-  TxValidationError,
-  InsufficientFundsError,
-} from '../bitcoin/wallet';
+import type { BtcAccount } from '../bitcoin/wallet';
 import { Caip2ChainId } from '../constants';
-import { getExplorerUrl, shortenAddress, satsToBtc } from '../utils';
+import { satsToBtc } from '../utils';
 import { SendManyTest } from './__tests__/helper';
 import { type SendManyParams, sendMany } from './sendmany';
 
@@ -63,92 +54,6 @@ describe('SendManyHandler', () => {
       return testHelper;
     };
 
-    // this method is to create a expected response of a divider component
-    const createExpectedDividerComponent = (): unknown => {
-      return {
-        type: 'divider',
-      };
-    };
-
-    // this method is to create a expected response of a recipient list component
-    const createExpectedRecipientListComponent = (
-      recipients: Recipient[],
-      caip2ChainId: string,
-    ): unknown[] => {
-      const expectedComponents: unknown[] = [];
-      const recipientsLen = recipients.length;
-
-      for (let idx = 0; idx < recipientsLen; idx++) {
-        const recipient = recipients[idx];
-
-        expectedComponents.push({
-          type: 'panel',
-          children: [
-            {
-              type: 'row',
-              label: recipientsLen > 1 ? `Recipient ${idx + 1}` : `Recipient`,
-              value: {
-                type: 'text',
-                value: `[${shortenAddress(recipient.address)}](${getExplorerUrl(
-                  recipient.address,
-                  caip2ChainId,
-                )})`,
-              },
-            },
-            {
-              type: 'row',
-              label: 'Amount',
-              value: {
-                markdown: false,
-                type: 'text',
-                value: satsToBtc(recipient.value, true),
-              },
-            },
-          ],
-        });
-        expectedComponents.push(createExpectedDividerComponent());
-      }
-      return expectedComponents;
-    };
-
-    // this method is to create a expected response of a header panel component
-    const createExpectedHeadingPanelComponent = (
-      requestBy: string,
-      includeReviewText = true,
-    ): unknown => {
-      const headingComponent = {
-        type: 'heading',
-        value: 'Send Request',
-      };
-
-      const reviewTextComponent = {
-        type: 'text',
-        value:
-          "Review the request before proceeding. Once the transaction is made, it's irreversible.",
-      };
-
-      const requestByComponent = {
-        type: 'row',
-        label: 'Requested by',
-        value: {
-          type: 'text',
-          value: requestBy,
-          markdown: false,
-        },
-      };
-
-      const panelChilds: unknown[] = [headingComponent];
-      if (includeReviewText) {
-        panelChilds.push(reviewTextComponent);
-      }
-      panelChilds.push(requestByComponent);
-
-      return {
-        type: 'panel',
-        children: panelChilds,
-      };
-    };
-
     it('returns correct result', async () => {
       const caip2ChainId = Caip2ChainId.Testnet;
       const {
@@ -184,178 +89,6 @@ describe('SendManyHandler', () => {
       );
 
       expect(broadcastTransactionSpy).toHaveBeenCalledTimes(0);
-    });
-
-    it('displays a transaction confirmation dialog if the bitcoin transaction has been created successfully', async () => {
-      const caip2ChainId = Caip2ChainId.Testnet;
-      const { recipients, confirmDialogSpy, sender } = await prepareSendMany(
-        caip2ChainId,
-      );
-      const sendAmtInSats = 500;
-      const txFee = 1;
-      const sendParams = createSendManyParams(
-        recipients,
-        caip2ChainId,
-        true,
-        '',
-        sendAmtInSats,
-      );
-      const mockTxInfo: ITxInfo = {
-        feeRate: BigInt(1),
-        txFee: BigInt(txFee),
-        sender: sender.address,
-        recipients: recipients.map((recipient) => ({
-          address: recipient.address,
-          value: BigInt(sendAmtInSats),
-        })),
-        total: BigInt(sendAmtInSats * recipients.length + txFee),
-      };
-
-      // mock createTransaction and signTransaction response
-      const walletCreateTxSpy = jest.spyOn(
-        BtcWallet.prototype,
-        'createTransaction',
-      );
-      const walletSignTxSpy = jest.spyOn(
-        BtcWallet.prototype,
-        'signTransaction',
-      );
-      walletCreateTxSpy.mockResolvedValue({
-        tx: 'transaction',
-        txInfo: mockTxInfo,
-      });
-      walletSignTxSpy.mockResolvedValue('txId');
-
-      await sendMany(sender, origin, sendParams);
-
-      expect(confirmDialogSpy).toHaveBeenCalledTimes(1);
-      expect(confirmDialogSpy).toHaveBeenCalledWith([
-        // heading panel
-        createExpectedHeadingPanelComponent(origin),
-        // divider
-        createExpectedDividerComponent(),
-        // recipient panel
-        ...createExpectedRecipientListComponent(
-          mockTxInfo.recipients,
-          caip2ChainId,
-        ),
-        // bottom panel
-        {
-          type: 'panel',
-          children: [
-            {
-              type: 'row',
-              label: 'Network fee',
-              value: {
-                markdown: false,
-                type: 'text',
-                value: satsToBtc(mockTxInfo.txFee, true),
-              },
-            },
-            {
-              type: 'row',
-              label: 'Total',
-              value: {
-                markdown: false,
-                type: 'text',
-                value: satsToBtc(mockTxInfo.total, true),
-              },
-            },
-          ],
-        },
-      ]);
-    });
-
-    it('creates a comment component in the transaction confirmation dialog if a comment has been provided', async () => {
-      const caip2ChainId = Caip2ChainId.Testnet;
-      const { sender, recipients, confirmDialogSpy } = await prepareSendMany(
-        caip2ChainId,
-      );
-      const comment = 'test comment';
-
-      await sendMany(
-        sender,
-        origin,
-        createSendManyParams(recipients, caip2ChainId, true, comment),
-      );
-
-      const calls = confirmDialogSpy.mock.calls[0][0];
-
-      expect(calls.length).toBeGreaterThan(0);
-      const lastPanel = calls[calls.length - 1];
-
-      expect(lastPanel).toStrictEqual({
-        type: 'panel',
-        children: [
-          {
-            type: 'row',
-            label: 'Comment',
-            value: { markdown: false, type: 'text', value: comment },
-          },
-          {
-            type: 'row',
-            label: 'Network fee',
-            value: { markdown: false, type: 'text', value: expect.any(String) },
-          },
-          {
-            type: 'row',
-            label: 'Total',
-            value: { markdown: false, type: 'text', value: expect.any(String) },
-          },
-        ],
-      });
-    });
-
-    it('displays a warning dialog if the account has insufficient funds to pay the transaction', async () => {
-      const caip2ChainId = Caip2ChainId.Testnet;
-      const helper = await prepareSendMany(caip2ChainId);
-      const {
-        recipients: [recipient],
-        sender,
-        alertDialogSpy,
-      } = helper;
-
-      await helper.setupInsufficientFundsTest();
-
-      const sendAmtInSats = 500;
-
-      await expect(
-        sendMany(
-          sender,
-          origin,
-          createSendManyParams(
-            [recipient],
-            caip2ChainId,
-            true,
-            '',
-            sendAmtInSats,
-          ),
-        ),
-      ).rejects.toThrow(InsufficientFundsError);
-      expect(alertDialogSpy).toHaveBeenCalledTimes(1);
-      expect(alertDialogSpy).toHaveBeenCalledWith([
-        // heading panel
-        createExpectedHeadingPanelComponent(origin, false),
-        // divider
-        createExpectedDividerComponent(),
-        // recipient panel
-        ...createExpectedRecipientListComponent(
-          [
-            {
-              address: recipient.address,
-              value: BigInt(sendAmtInSats),
-            },
-          ],
-          caip2ChainId,
-        ),
-        // warning message
-        {
-          markdown: false,
-          type: 'text',
-          value:
-            'You do not have enough BTC in your account to pay for transaction amount or transaction fees on Bitcoin network.',
-        },
-      ]);
     });
 
     it('throws InvalidParamsError when request parameter is not correct', async () => {
@@ -449,19 +182,6 @@ describe('SendManyHandler', () => {
       ).rejects.toThrow('Invalid Response');
     });
 
-    it('throws UserRejectedRequestError error if user denied the transaction', async () => {
-      const caip2ChainId = Caip2ChainId.Testnet;
-      const helper = await prepareSendMany(caip2ChainId);
-      const { sender, recipients } = helper;
-      await helper.setupUserDeniedTest();
-
-      await expect(
-        sendMany(sender, origin, {
-          ...createSendManyParams(recipients, caip2ChainId, false),
-        }),
-      ).rejects.toThrow(UserRejectedRequestError);
-    });
-
     it('throws `Failed to send the transaction` error if no fee rate is returned from the chain service', async () => {
       const caip2ChainId = Caip2ChainId.Testnet;
       const { sender, recipients, getFeeRatesSpy } = await prepareSendMany(
@@ -491,21 +211,6 @@ describe('SendManyHandler', () => {
           ...createSendManyParams(recipients, caip2ChainId, false),
         }),
       ).rejects.toThrow('Failed to send the transaction');
-    });
-
-    it('throws DisplayableError error message if the DisplayableError is thrown', async () => {
-      const caip2ChainId = Caip2ChainId.Testnet;
-      const { broadcastTransactionSpy, sender, recipients } =
-        await prepareSendMany(caip2ChainId);
-      broadcastTransactionSpy.mockRejectedValue(
-        new TxValidationError('some tx error'),
-      );
-
-      await expect(
-        sendMany(sender, origin, {
-          ...createSendManyParams(recipients, caip2ChainId, false),
-        }),
-      ).rejects.toThrow('some tx error');
     });
   });
 });
