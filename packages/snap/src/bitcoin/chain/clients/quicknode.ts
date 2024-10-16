@@ -2,17 +2,18 @@ import { BtcP2wpkhAddressStruct } from '@metamask/keyring-api';
 import type { Json } from '@metamask/snaps-sdk';
 import { networks } from 'bitcoinjs-lib';
 import type { Struct } from 'superstruct';
-import { array, assert, mask } from 'superstruct';
+import { array, assert } from 'superstruct';
 
 import { Config } from '../../../config';
 import {
   btcToSats,
-  compactError,
   getMinimumFeeRateInKvb,
   logger,
   processBatch,
   satsKvbToVb,
 } from '../../../utils';
+import type { HttpResponse } from '../api-client';
+import { ApiClient, HttpMethod } from '../api-client';
 import { FeeRate, TransactionStatus } from '../constants';
 import type {
   IDataClient,
@@ -57,12 +58,15 @@ const TESTNET_CONFIRMATION_TARGET = {
 
 export const NoFeeRateError = 'Insufficient data or no feerate found';
 
-export class QuickNodeClient implements IDataClient {
+export class QuickNodeClient extends ApiClient implements IDataClient {
+  apiClientName = 'QuickNodeClient';
+
   protected readonly _options: QuickNodeClientOptions;
 
   protected readonly _priorityMap: Record<FeeRate, number>;
 
   constructor(options: QuickNodeClientOptions) {
+    super();
     const isMainnet = options.network === networks.bitcoin;
 
     this._options = options;
@@ -82,36 +86,8 @@ export class QuickNodeClient implements IDataClient {
     }
   }
 
-  protected async post<Response extends QuickNodeResponse>(
-    body: Json,
-  ): Promise<Response> {
-    const response = await fetch(this.baseUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    });
-
-    // QuickNode returns 200 status code for successful requests, others are errors status code
-    if (response.status !== 200) {
-      const res = (await response.json()) as unknown as Response;
-      throw new Error(
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        `Failed to post data from quicknode: ${res.error}`,
-      );
-    }
-
-    if (!response.ok) {
-      throw new Error(
-        `Failed to post data from quicknode: ${response.statusText}`,
-      );
-    }
-    return response.json() as unknown as Response;
-  }
-
-  protected isErrorResponse<Response extends { result: unknown }>(
-    response: Response,
+  protected isErrorResponse<ApiResponse extends QuickNodeResponse>(
+    response: ApiResponse,
   ): boolean {
     // Possible error response from QuickNode:
     // - { result : null, error : "some error message" }
@@ -124,7 +100,36 @@ export class QuickNodeClient implements IDataClient {
     );
   }
 
-  protected async submitJsonRPCRequest<Response extends QuickNodeResponse>({
+  protected formatError<ApiResponse extends QuickNodeResponse>(
+    apiResponse: ApiResponse,
+  ): string {
+    return JSON.stringify(apiResponse.error);
+  }
+
+  protected async getResponse<ApiResponse>(
+    response: HttpResponse,
+  ): Promise<ApiResponse> {
+    const apiResponse = await super.getResponse<
+      ApiResponse & QuickNodeResponse
+    >(response);
+
+    // QuickNode returns 200 status code for successful requests, others are errors status code
+    if (response.status !== 200) {
+      throw new Error(
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+        `API response error: ${this.formatError(apiResponse)}`,
+      );
+    }
+
+    // Safeguard to detect if the response is an error response, but they are not caught by the fetch error
+    if (this.isErrorResponse(apiResponse)) {
+      throw new Error(`Error response from quicknode`);
+    }
+
+    return apiResponse;
+  }
+
+  protected async submitJsonRPCRequest<ApiResponse extends QuickNodeResponse>({
     request,
     responseStruct,
   }: {
@@ -133,37 +138,17 @@ export class QuickNodeClient implements IDataClient {
       params: Json;
     };
     responseStruct: Struct;
-  }) {
-    try {
-      logger.debug(
-        `[QuickNodeClient.${request.method}] request:`,
-        JSON.stringify(request),
-      );
-
-      const response = await this.post<Response>(request);
-
-      logger.debug(
-        `[QuickNodeClient.${request.method}] response:`,
-        JSON.stringify(response),
-      );
-
-      // Safeguard to detect if the response is an error response, but they are not caught by the fetch error
-      if (this.isErrorResponse(response)) {
-        throw new Error(`Error response from quicknode`);
-      }
-
-      // Safeguard to identify if the response has some unexpected changes from quicknode
-      mask(response, responseStruct, 'Unexpected response from quicknode');
-
-      return response;
-    } catch (error) {
-      logger.info(
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        `[QuickNodeClient.${request.method}] error: ${error.message}`,
-      );
-
-      throw compactError(error, DataClientError);
-    }
+  }): Promise<ApiResponse> {
+    return await this.submitHttpRequest<ApiResponse>({
+      request: this.buildHttpRequest({
+        method: HttpMethod.Post,
+        url: this.baseUrl,
+        body: request,
+      }),
+      responseStruct,
+      // Use the JSON-RPC method name as the requestName for underlying logging purposes
+      requestName: request.method,
+    });
   }
 
   async getBalances(addresses: string[]): Promise<DataClientGetBalancesResp> {
