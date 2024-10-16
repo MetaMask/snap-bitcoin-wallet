@@ -40,7 +40,7 @@ export abstract class ApiClient {
       return (await response.json()) as unknown as ApiResponse;
     } catch (error) {
       throw new Error(
-        'API response error: response body can not be serialised.',
+        'API response error: response body can not be deserialised.',
       );
     }
   }

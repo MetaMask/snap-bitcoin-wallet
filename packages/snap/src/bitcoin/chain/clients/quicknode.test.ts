@@ -194,7 +194,7 @@ describe('QuickNodeClient', () => {
       );
     });
 
-    it('throws `API response error: response body can not be serialised.` error if the response body can not be deserialised', async () => {
+    it('throws `API response error: response body can not be deserialised.` error if the response body can not be deserialised', async () => {
       const { fetchSpy } = createMockFetch();
 
       fetchSpy.mockResolvedValueOnce({
@@ -216,7 +216,7 @@ describe('QuickNodeClient', () => {
           responseStruct: any(),
         }),
       ).rejects.toThrow(
-        'API response error: response body can not be serialised.',
+        'API response error: response body can not be deserialised.',
       );
     });
   });
