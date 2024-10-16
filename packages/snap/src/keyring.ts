@@ -18,10 +18,18 @@ import type { Infer } from 'superstruct';
 import { assert, object, StructError } from 'superstruct';
 import { v4 as uuidv4 } from 'uuid';
 
-import type { BtcAccount, BtcWallet } from './bitcoin/wallet';
+import {
+  TxValidationError,
+  type BtcAccount,
+  type BtcWallet,
+} from './bitcoin/wallet';
 import { Config } from './config';
 import { Caip2ChainId } from './constants';
-import { AccountNotFoundError, MethodNotImplementedError } from './exceptions';
+import {
+  AccountNotFoundError,
+  isSnapException,
+  MethodNotImplementedError,
+} from './exceptions';
 import { Factory } from './factory';
 import { getBalances, type SendManyParams, sendMany } from './rpcs';
 import { createRatesAndBalances } from './rpcs/get-rates-and-balances';
@@ -37,6 +45,7 @@ import {
   logger,
   verifyIfAccountValid,
   createSendUIDialog,
+  isSnapRpcError,
 } from './utils';
 
 export type KeyringOptions = Record<string, Json> & {
@@ -309,46 +318,60 @@ export class BtcKeyring implements Keyring {
   }): Promise<Json> {
     const asset = getAssetTypeFromScope(scope);
 
-    const { rates, balances } = await createRatesAndBalances({
-      asset,
-      scope,
-      btcAccount: account,
-    });
+    try {
+      const { rates, balances } = await createRatesAndBalances({
+        asset,
+        scope,
+        btcAccount: account,
+      });
 
-    if (rates.error || balances.error) {
-      throw new Error(
-        `Error fetching rates and balances: ${rates.error ?? balances.error}`,
+      if (rates.error || balances.error) {
+        throw new Error(
+          `Error fetching rates and balances: ${rates.error ?? balances.error}`,
+        );
+      }
+
+      const sendFlowRequest = await generateSendFlowRequest(
+        walletData,
+        TransactionStatus.Review,
+        rates.value,
+        balances.value,
+        params,
       );
+
+      await this._stateMgr.upsertRequest(sendFlowRequest);
+      const result = await createSendUIDialog(sendFlowRequest.id);
+
+      if (!result) {
+        sendFlowRequest.status = TransactionStatus.Rejected;
+        await this._stateMgr.removeRequest(sendFlowRequest.id);
+        throw new UserRejectedRequestError() as unknown as Error;
+      }
+
+      // Get the latest send flow request from the state manager
+      // this has been updated via onInputHandler
+      await this._stateMgr.upsertRequest(sendFlowRequest);
+
+      const tx = await sendMany(account, this._options.origin, {
+        ...sendFlowRequest.transaction,
+        scope,
+      });
+
+      sendFlowRequest.txId = tx.txId;
+      await this._stateMgr.upsertRequest(sendFlowRequest);
+      return tx;
+    } catch (error) {
+      logger.error('Failed to start send transaction flow', error);
+
+      if (isSnapRpcError(error)) {
+        throw error as unknown as Error;
+      }
+
+      if (isSnapException(error) || error instanceof TxValidationError) {
+        throw error;
+      }
+
+      throw new Error('Failed to send the transaction');
     }
-
-    const sendFlowRequest = await generateSendFlowRequest(
-      walletData,
-      TransactionStatus.Review,
-      rates.value,
-      balances.value,
-      params,
-    );
-
-    await this._stateMgr.upsertRequest(sendFlowRequest);
-    const result = await createSendUIDialog(sendFlowRequest.id);
-
-    if (!result) {
-      sendFlowRequest.status = TransactionStatus.Rejected;
-      await this._stateMgr.removeRequest(sendFlowRequest.id);
-      throw new UserRejectedRequestError() as unknown as Error;
-    }
-
-    // Get the latest send flow request from the state manager
-    // this has been updated via onInputHandler
-    await this._stateMgr.upsertRequest(sendFlowRequest);
-
-    const tx = await sendMany(account, this._options.origin, {
-      ...sendFlowRequest.transaction,
-      scope,
-    });
-
-    sendFlowRequest.txId = tx.txId;
-    await this._stateMgr.upsertRequest(sendFlowRequest);
-    return tx;
   }
 }
