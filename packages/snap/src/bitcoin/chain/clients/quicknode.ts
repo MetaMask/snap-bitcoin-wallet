@@ -133,8 +133,8 @@ export class QuickNodeClient extends ApiClient implements IDataClient {
     };
     responseStruct: Struct;
   }): Promise<ApiResponse> {
-    return await this.submitRequest<ApiResponse>({
-      request: this.buildRequest({
+    return await this.submitHttpRequest<ApiResponse>({
+      request: this.buildHttpRequest({
         method: HttpMethod.Post,
         url: this.baseUrl,
         body: request,

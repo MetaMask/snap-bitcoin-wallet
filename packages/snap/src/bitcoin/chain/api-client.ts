@@ -55,7 +55,7 @@ export abstract class ApiClient {
    * @param [params.body] - The request body (optional).
    * @returns A `HttpRequest` object.
    */
-  protected buildRequest({
+  protected buildHttpRequest({
     method,
     headers = {},
     url,
@@ -89,7 +89,7 @@ export abstract class ApiClient {
    * @param params.responseStruct - The superstruct used to verify the API response.
    * @returns A promise that resolves to a JSON object.
    */
-  protected async submitRequest<ApiResponse>({
+  protected async submitHttpRequest<ApiResponse>({
     requestName = '',
     request,
     responseStruct,
