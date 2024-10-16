@@ -101,7 +101,7 @@ export abstract class ApiClient {
     const logPrefix = `[${this.apiClientName}.${requestName}]`;
 
     try {
-      logger.debug(`${logPrefix} request:`, `method - ${request.method}`);
+      logger.debug(`${logPrefix} request: ${request.method}`); // Log HTTP method being used.
 
       const fetchRequest = {
         method: request.method,
