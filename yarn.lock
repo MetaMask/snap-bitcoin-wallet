@@ -2755,7 +2755,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@metamask/controller-utils@npm:^11.0.2, @metamask/controller-utils@npm:^11.3.0":
+"@metamask/controller-utils@npm:^11.3.0":
   version: 11.3.0
   resolution: "@metamask/controller-utils@npm:11.3.0"
   dependencies:
@@ -2997,12 +2997,12 @@ __metadata:
   linkType: hard
 
 "@metamask/permission-controller@npm:^11.0.0":
-  version: 11.0.0
-  resolution: "@metamask/permission-controller@npm:11.0.0"
+  version: 11.0.2
+  resolution: "@metamask/permission-controller@npm:11.0.2"
   dependencies:
-    "@metamask/base-controller": ^6.0.2
-    "@metamask/controller-utils": ^11.0.2
-    "@metamask/json-rpc-engine": ^9.0.2
+    "@metamask/base-controller": ^7.0.1
+    "@metamask/controller-utils": ^11.3.0
+    "@metamask/json-rpc-engine": ^9.0.3
     "@metamask/rpc-errors": ^6.3.1
     "@metamask/utils": ^9.1.0
     "@types/deep-freeze-strict": ^1.1.0
@@ -3011,7 +3011,7 @@ __metadata:
     nanoid: ^3.1.31
   peerDependencies:
     "@metamask/approval-controller": ^7.0.0
-  checksum: 3038d6ddfff65fc4d5b32c49413f09c3c1522a34b990fb9990915534ef959c5112b517d683825d78a5c11d1669c160b7efe432b2f2e40289e079d617c2a4acf1
+  checksum: 671307a9d14563082a69381de37828636333ab0126ba1ede89c1163c7604ee8855d8f17299dc3ed83d573aa913d52c5aa9359a184d3fcbf6c4e7675b7df19c68
   languageName: node
   linkType: hard
 
