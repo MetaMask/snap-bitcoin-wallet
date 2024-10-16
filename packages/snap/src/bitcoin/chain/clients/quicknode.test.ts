@@ -191,7 +191,7 @@ describe('QuickNodeClient', () => {
       );
     });
 
-    it('throws `API response error: response body can not be serialised.` error if the response body can not be serialised', async () => {
+    it('throws `API response error: response body can not be serialised.` error if the response body can not be deserialised', async () => {
       const { fetchSpy } = createMockFetch();
 
       fetchSpy.mockResolvedValueOnce({

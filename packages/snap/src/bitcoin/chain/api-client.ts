@@ -73,7 +73,7 @@ export abstract class ApiClient {
         'Content-Type': 'application/json',
         ...headers,
       },
-      body: method === 'POST' && body ? JSON.stringify(body) : undefined,
+      body: method === HttpMethod.Post && body ? JSON.stringify(body) : undefined,
     };
 
     return request;
