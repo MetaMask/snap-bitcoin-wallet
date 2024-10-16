@@ -7,8 +7,6 @@ import type {
 } from '@metamask/snaps-sdk';
 import { DialogType, panel, type SnapsProvider } from '@metamask/snaps-sdk';
 
-import type { Caip2Asset } from '../constants';
-
 declare const snap: SnapsProvider;
 
 /**
@@ -124,7 +122,7 @@ export async function createSendUIDialog(interfaceId: string) {
 /**
  * Retrieves the currency rates from MetaMask for the specified asset.
  *
- * @param _asset - The asset for which to retrieve the currency rates.
+ * @param currency - The currency for which to retrieve the currency rates.
  * @returns A Promise that resolves to the currency rates.
  */
 export async function getRatesFromMetamask(
