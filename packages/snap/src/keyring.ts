@@ -25,11 +25,7 @@ import {
 } from './bitcoin/wallet';
 import { Config } from './config';
 import { Caip2ChainId } from './constants';
-import {
-  AccountNotFoundError,
-  isSnapException,
-  MethodNotImplementedError,
-} from './exceptions';
+import { AccountNotFoundError, MethodNotImplementedError } from './exceptions';
 import { Factory } from './factory';
 import { getBalances, type SendManyParams, sendMany } from './rpcs';
 import { createRatesAndBalances } from './rpcs/get-rates-and-balances';
@@ -45,7 +41,6 @@ import {
   logger,
   verifyIfAccountValid,
   createSendUIDialog,
-  isSnapRpcError,
 } from './utils';
 
 export type KeyringOptions = Record<string, Json> & {
@@ -342,7 +337,6 @@ export class BtcKeyring implements Keyring {
     const result = await createSendUIDialog(sendFlowRequest.id);
 
     if (!result) {
-      sendFlowRequest.status = TransactionStatus.Rejected;
       await this._stateMgr.removeRequest(sendFlowRequest.id);
       throw new UserRejectedRequestError() as unknown as Error;
     }
