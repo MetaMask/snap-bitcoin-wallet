@@ -2,7 +2,7 @@ import { BtcP2wpkhAddressStruct } from '@metamask/keyring-api';
 import { array, assert, type Struct } from 'superstruct';
 
 import { processBatch } from '../../../utils';
-import type { HttpHeader, HttpResponse } from '../api-client';
+import type { HttpHeaders, HttpResponse } from '../api-client';
 import { ApiClient, HttpMethod } from '../api-client';
 import type { ISatsProtectionDataClient } from '../data-client';
 import type { Utxo } from '../service';
@@ -22,7 +22,7 @@ export class SimpleHashClient
   // reference: https://docs.simplehash.com/reference/supported-chains-testnets
   readonly baseUrl = `https://api.simplehash.com/api/v0`;
 
-  protected _options: SimpleHashClientOptions;
+  protected readonly _options: SimpleHashClientOptions;
 
   constructor(options: SimpleHashClientOptions) {
     super();
@@ -34,7 +34,7 @@ export class SimpleHashClient
     return url.toString();
   }
 
-  protected getHttpHeader(): HttpHeader {
+  protected getHttpHeaders(): HttpHeaders {
     return {
       'X-API-KEY': this._options.apiKey,
     };
@@ -55,20 +55,20 @@ export class SimpleHashClient
   protected async submitGetApiRequest<ApiResponse>({
     endpoint,
     responseStruct,
-    requestId,
+    requestName,
   }: {
     endpoint: string;
     responseStruct: Struct;
-    requestId: string;
+    requestName: string;
   }): Promise<ApiResponse> {
-    return await super.submitRequest<ApiResponse>({
-      request: this.buildRequest({
+    return await super.submitHttpRequest<ApiResponse>({
+      request: this.buildHttpRequest({
         method: HttpMethod.Get,
         url: this.getApiUrl(endpoint),
-        headers: this.getHttpHeader(),
+        headers: this.getHttpHeaders(),
       }),
       responseStruct,
-      requestId,
+      requestName,
     });
   }
 
@@ -96,7 +96,7 @@ export class SimpleHashClient
         await this.submitGetApiRequest<SimpleHashWalletAssetsByUtxoResponse>({
           endpoint: `/custom/wallet_assets_by_utxo/${address}?without_inscriptions_runes_raresats=1`,
           responseStruct: SimpleHashWalletAssetsByUtxoResponseStruct,
-          requestId: 'wallet_assets_by_utxo',
+          requestName: 'wallet_assets_by_utxo',
         });
 
       for (const utxo of result.utxos) {
