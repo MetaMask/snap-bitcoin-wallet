@@ -25,7 +25,7 @@ describe('getRatesAndBalances', () => {
     jest.clearAllMocks();
   });
 
-  it('should return rates and balances when both promises are fulfilled', async () => {
+  it('returns rates and balances when both promises are fulfilled', async () => {
     (getRates as jest.Mock).mockResolvedValue('mockRates');
     (getBalances as jest.Mock).mockResolvedValue({
       [mockAsset]: { amount: 'mockBalance' },
@@ -45,7 +45,7 @@ describe('getRatesAndBalances', () => {
     });
   });
 
-  it('should return an error for rates when getRates promise is rejected', async () => {
+  it('returns an error for rates when getRates promise is rejected', async () => {
     (getRates as jest.Mock).mockRejectedValue(new Error('Rates error'));
     (getBalances as jest.Mock).mockResolvedValue({
       [mockAsset]: { amount: 'mockBalance' },
@@ -65,7 +65,7 @@ describe('getRatesAndBalances', () => {
     });
   });
 
-  it('should return an error for balances when getBalances promise is rejected', async () => {
+  it('returns an error for balances when getBalances promise is rejected', async () => {
     (getRates as jest.Mock).mockResolvedValue('mockRates');
     (getBalances as jest.Mock).mockRejectedValue(new Error('Balances error'));
 
@@ -83,7 +83,7 @@ describe('getRatesAndBalances', () => {
     });
   });
 
-  it('should return errors for both rates and balances when both promises are rejected', async () => {
+  it('returns errors for both rates and balances when both promises are rejected', async () => {
     (getRates as jest.Mock).mockRejectedValue(new Error('Rates error'));
     (getBalances as jest.Mock).mockRejectedValue(new Error('Balances error'));
 
