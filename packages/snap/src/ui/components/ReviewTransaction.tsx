@@ -73,7 +73,7 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
           </Row>
           <Row label="Recipient">
             <Link href={getExplorerLink(scope, recipient.address)}>
-              <Address address={`${account.type}:${recipient.address}`} />
+              <Address address={`${account.type}:${recipient.address}` as CaipAccountId} />
             </Link>
           </Row>
         </Section>
