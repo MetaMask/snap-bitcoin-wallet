@@ -140,7 +140,7 @@ export class BtcWallet {
     const psbtService = new PsbtService(this._network);
     psbtService.addInputs(
       selectionResult.inputs,
-      options.replaceable ?? false,
+      options.replaceable ?? true,
       hdPath,
       hexToBuffer(pubkey, false),
       hexToBuffer(mfp, false),
