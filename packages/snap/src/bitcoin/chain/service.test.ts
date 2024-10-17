@@ -133,9 +133,9 @@ describe('BtcOnChainService', () => {
 
       getUtxosSpy.mockResolvedValue(utxos);
 
-      const result = await txService.getDataForTransaction(sender);
+      const result = await txService.getDataForTransaction([sender]);
 
-      expect(getUtxosSpy).toHaveBeenCalledWith(sender);
+      expect(getUtxosSpy).toHaveBeenCalledWith([sender]);
       expect(result).toStrictEqual({
         data: {
           utxos,
@@ -151,7 +151,7 @@ describe('BtcOnChainService', () => {
 
       getUtxosSpy.mockRejectedValue(new Error('error'));
 
-      await expect(txService.getDataForTransaction(sender)).rejects.toThrow(
+      await expect(txService.getDataForTransaction([sender])).rejects.toThrow(
         BtcOnChainServiceError,
       );
     });

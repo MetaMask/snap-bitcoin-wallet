@@ -33,7 +33,7 @@ export type IDataClient = {
    * @returns {Promise<DataClientGetUtxosResp>} A promise that resolves to an array of UTXOs.
    */
   getUtxos(
-    address: string,
+    addresses: string[],
     includeUnconfirmed?: boolean,
   ): Promise<DataClientGetUtxosResp>;
 
