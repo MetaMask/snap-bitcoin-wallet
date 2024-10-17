@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **BREAKING:** Rename `btc_sendmany` method to `sendBitcoin` ([#303](https://github.com/MetaMask/snap-bitcoin-wallet/pull/303))
-    - The `comment` and `subtractFeeFrom` options have been removed too.
+  - The `comment` and `subtractFeeFrom` options have been removed too.
 - **BREAKING:** Make transactions replaceable by default ([#297](https://github.com/MetaMask/snap-bitcoin-wallet/pull/297))
 - Rename proposed name to "Bitcoin" (was "Bitcoin Manager") ([#283](https://github.com/MetaMask/snap-bitcoin-wallet/pull/283))
 - Adds fee estimation fallback for `QuickNode` ([#269](https://github.com/MetaMask/snap-bitcoin-wallet/pull/269))
