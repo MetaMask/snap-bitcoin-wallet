@@ -9,20 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.8.0]
 
-### Uncategorized
+### Changed
 
-- fix: footer validation ([#309](https://github.com/MetaMask/snap-bitcoin-wallet/pull/309))
-- fix: allow any btc address in sendmany ([#308](https://github.com/MetaMask/snap-bitcoin-wallet/pull/308))
-- refactor!: sendmany -> sendBitcoin ([#303](https://github.com/MetaMask/snap-bitcoin-wallet/pull/303))
-- fix: show btc logo and add links to address ([#305](https://github.com/MetaMask/snap-bitcoin-wallet/pull/305))
-- feat!: make transactions replaceable by default ([#297](https://github.com/MetaMask/snap-bitcoin-wallet/pull/297))
-- fix: use input props ([#304](https://github.com/MetaMask/snap-bitcoin-wallet/pull/304))
-- feat: use snap_getCurrencyRates ([#289](https://github.com/MetaMask/snap-bitcoin-wallet/pull/289))
-- refactor(QuickNode): refactor data client into a base class ([#282](https://github.com/MetaMask/snap-bitcoin-wallet/pull/282))
-- feat: send ui ([#281](https://github.com/MetaMask/snap-bitcoin-wallet/pull/281))
-- feat: rename proposed name to "Bitcoin" ([#283](https://github.com/MetaMask/snap-bitcoin-wallet/pull/283))
-- feat(QuickNode): add fallback solution if `QuickNode` RPC `estimatesmartfee` returns data unavailable ([#269](https://github.com/MetaMask/snap-bitcoin-wallet/pull/269))
-- refactor: better naming for KVB/KB/VB ([#270](https://github.com/MetaMask/snap-bitcoin-wallet/pull/270))
+- **BREAKING:** Rename `btc_sendmany` method to `sendBitcoin` ([#303](https://github.com/MetaMask/snap-bitcoin-wallet/pull/303))
+- **BREAKING:** Make transactions replaceable by default ([#297](https://github.com/MetaMask/snap-bitcoin-wallet/pull/297))
+- Rename proposed name to "Bitcoin" (was "Bitcoin Manager") ([#283](https://github.com/MetaMask/snap-bitcoin-wallet/pull/283))
+- Adds fee estimation fallback for `QuickNode` ([#269](https://github.com/MetaMask/snap-bitcoin-wallet/pull/269))
+  - In some cases `QuickNode` might fail to process fee estimation. In this case we fallback with using fee information coming from the mempool directly.
+  - We also added a default minimum fee as the last resort in case everything else failed.
+
+### Added
+
+- Add send flow UI ([#281](https://github.com/MetaMask/snap-bitcoin-wallet/pull/281)), ([#309](https://github.com/MetaMask/snap-bitcoin-wallet/pull/309)), ([#308](https://github.com/MetaMask/snap-bitcoin-wallet/pull/308)), ([#305](https://github.com/MetaMask/snap-bitcoin-wallet/pull/305)), ([#304](https://github.com/MetaMask/snap-bitcoin-wallet/pull/304)), ([#289](https://github.com/MetaMask/snap-bitcoin-wallet/pull/289))
 
 ## [0.7.0]
 
