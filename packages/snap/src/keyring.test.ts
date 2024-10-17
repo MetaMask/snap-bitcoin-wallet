@@ -12,7 +12,7 @@ import { Factory } from './factory';
 import type { CreateAccountOptions } from './keyring';
 import { BtcKeyring } from './keyring';
 import * as getBalanceRpc from './rpcs/get-balances';
-import * as sendManyRpc from './rpcs/send-bitcoin';
+import * as sendBitcoinRpc from './rpcs/send-bitcoin';
 import { KeyringStateManager } from './stateManagement';
 
 jest.mock('./utils/logger');
@@ -94,7 +94,7 @@ describe('BtcKeyring', () => {
   };
 
   const createMockKeyring = (stateMgr: KeyringStateManager) => {
-    const sendManySpy = jest.spyOn(sendManyRpc, 'sendMany');
+    const sendBitcoinSpy = jest.spyOn(sendBitcoinRpc, 'sendBitcoin');
     const getBalanceRpcSpy = jest.spyOn(getBalanceRpc, 'getBalances');
 
     return {
@@ -103,7 +103,7 @@ describe('BtcKeyring', () => {
         origin,
         multiAccount: false,
       }),
-      sendManySpy,
+      sendBitcoinSpy,
       getBalanceRpcSpy,
     };
   };
@@ -342,7 +342,7 @@ describe('BtcKeyring', () => {
       const { instance: stateMgr, getWalletSpy } = createMockStateMgr();
       const {
         instance: keyring,
-        sendManySpy,
+        sendBitcoinSpy,
         getBalanceRpcSpy,
       } = createMockKeyring(stateMgr);
       const { sender, keyringAccount } = await createSender(caip2ChainId);
@@ -352,7 +352,7 @@ describe('BtcKeyring', () => {
         scope: keyringAccount.options.scope,
         hdPath: sender.hdPath,
       });
-      sendManySpy.mockResolvedValue({
+      sendBitcoinSpy.mockResolvedValue({
         txId: 'txid',
       });
       getBalanceRpcSpy.mockResolvedValue({
@@ -381,7 +381,7 @@ describe('BtcKeyring', () => {
         },
       });
 
-      expect(sendManySpy).toHaveBeenCalledWith(
+      expect(sendBitcoinSpy).toHaveBeenCalledWith(
         expect.any(BtcAccount),
         origin,
         params,

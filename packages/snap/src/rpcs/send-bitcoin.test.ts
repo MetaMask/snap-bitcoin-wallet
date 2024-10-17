@@ -4,13 +4,13 @@ import type { BtcAccount } from '../bitcoin/wallet';
 import { Caip2ChainId } from '../constants';
 import { satsToBtc } from '../utils';
 import { SendBitcoinTest } from './__tests__/helper';
-import { type SendBitcoinParams, sendMany } from './send-bitcoin';
+import { type SendBitcoinParams, sendBitcoin } from './send-bitcoin';
 
 jest.mock('../utils/logger');
 jest.mock('../utils/snap');
 
 describe('SendBitcoinHandler', () => {
-  describe('sendMany', () => {
+  describe('sendBitcoin', () => {
     const origin = 'http://localhost:3000';
 
     const createSendBitcoinParams = (
@@ -62,7 +62,7 @@ describe('SendBitcoinHandler', () => {
         broadcastTransactionSpy,
       } = await prepareSendBitcoin(caip2ChainId);
 
-      const result = await sendMany(
+      const result = await sendBitcoin(
         sender,
         origin,
         createSendBitcoinParams(recipients, caip2ChainId, false),
@@ -79,7 +79,7 @@ describe('SendBitcoinHandler', () => {
       const { recipients, sender, broadcastTransactionSpy } =
         await prepareSendBitcoin(caip2ChainId);
 
-      await sendMany(
+      await sendBitcoin(
         sender,
         origin,
         createSendBitcoinParams(recipients, caip2ChainId, true),
@@ -93,7 +93,7 @@ describe('SendBitcoinHandler', () => {
       const { sender } = await prepareSendBitcoin(caip2ChainId);
 
       await expect(
-        sendMany(sender, origin, {
+        sendBitcoin(sender, origin, {
           recipients: {
             'some-address': '1',
           },
@@ -106,7 +106,7 @@ describe('SendBitcoinHandler', () => {
       const { sender, recipients } = await prepareSendBitcoin(caip2ChainId, 0);
 
       await expect(
-        sendMany(
+        sendBitcoin(
           sender,
           origin,
           createSendBitcoinParams(recipients, caip2ChainId, false),
@@ -119,7 +119,7 @@ describe('SendBitcoinHandler', () => {
       const { sender, recipients } = await prepareSendBitcoin(caip2ChainId, 2);
 
       await expect(
-        sendMany(sender, origin, {
+        sendBitcoin(sender, origin, {
           ...createSendBitcoinParams(recipients, caip2ChainId, false),
           recipients: {
             [recipients[0].address]: 'invalid',
@@ -129,7 +129,7 @@ describe('SendBitcoinHandler', () => {
       ).rejects.toThrow('Invalid amount, must be a positive finite number');
 
       await expect(
-        sendMany(sender, origin, {
+        sendBitcoin(sender, origin, {
           ...createSendBitcoinParams(recipients, caip2ChainId, false),
           recipients: {
             [recipients[0].address]: '0',
@@ -139,7 +139,7 @@ describe('SendBitcoinHandler', () => {
       ).rejects.toThrow('Invalid amount, must be a positive finite number');
 
       await expect(
-        sendMany(sender, origin, {
+        sendBitcoin(sender, origin, {
           ...createSendBitcoinParams(recipients, caip2ChainId, false),
           recipients: {
             [recipients[0].address]: 'invalid',
@@ -154,7 +154,7 @@ describe('SendBitcoinHandler', () => {
       const { sender, recipients } = await prepareSendBitcoin(caip2ChainId, 2);
 
       await expect(
-        sendMany(sender, origin, {
+        sendBitcoin(sender, origin, {
           ...createSendBitcoinParams(recipients, caip2ChainId, false),
           recipients: {
             [recipients[0].address]: '1',
@@ -173,7 +173,7 @@ describe('SendBitcoinHandler', () => {
         transactionId: '',
       });
       await expect(
-        sendMany(sender, origin, {
+        sendBitcoin(sender, origin, {
           ...createSendBitcoinParams(recipients, caip2ChainId, false),
         }),
       ).rejects.toThrow('Invalid Response');
@@ -189,7 +189,7 @@ describe('SendBitcoinHandler', () => {
       });
 
       await expect(
-        sendMany(
+        sendBitcoin(
           sender,
           origin,
           createSendBitcoinParams(recipients, caip2ChainId, false),
@@ -204,7 +204,7 @@ describe('SendBitcoinHandler', () => {
       broadcastTransactionSpy.mockRejectedValue(new Error('error'));
 
       await expect(
-        sendMany(sender, origin, {
+        sendBitcoin(sender, origin, {
           ...createSendBitcoinParams(recipients, caip2ChainId, false),
         }),
       ).rejects.toThrow('Failed to send the transaction');

@@ -24,7 +24,7 @@ import {
   verifyIfAccountValid,
 } from '../utils';
 import { createRatesAndBalances } from './get-rates-and-balances';
-import { sendMany } from './send-bitcoin';
+import { sendBitcoin } from './send-bitcoin';
 
 export type StartSendTransactionFlowParams = {
   account: string;
@@ -126,17 +126,17 @@ export async function startSendTransactionFlow(
       throw new SendFlowRequestNotFoundError();
     }
 
-    const sendManyParams = generateSendBitcoinParams(
+    const sendBitcoinParams = generateSendBitcoinParams(
       walletData.scope,
       updatedSendFlowRequest,
     );
-    sendFlowRequest.transaction = sendManyParams;
+    sendFlowRequest.transaction = sendBitcoinParams;
     sendFlowRequest.status = TransactionStatus.Confirmed;
     await stateManager.upsertRequest(sendFlowRequest);
 
     let tx;
     try {
-      tx = await sendMany(btcAccount, scope, {
+      tx = await sendBitcoin(btcAccount, scope, {
         ...sendFlowRequest.transaction,
         scope,
       });

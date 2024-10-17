@@ -24,7 +24,7 @@ import { Config } from './config';
 import { Caip2ChainId } from './constants';
 import { AccountNotFoundError, MethodNotImplementedError } from './exceptions';
 import { Factory } from './factory';
-import { getBalances, type SendBitcoinParams, sendMany } from './rpcs';
+import { getBalances, type SendBitcoinParams, sendBitcoin } from './rpcs';
 import { createRatesAndBalances } from './rpcs/get-rates-and-balances';
 import {
   TransactionStatus,
@@ -341,7 +341,7 @@ export class BtcKeyring implements Keyring {
     // this has been updated via onInputHandler
     await this._stateMgr.upsertRequest(sendFlowRequest);
     try {
-      const tx = await sendMany(account, this._options.origin, {
+      const tx = await sendBitcoin(account, this._options.origin, {
         ...sendFlowRequest.transaction,
         scope,
       });

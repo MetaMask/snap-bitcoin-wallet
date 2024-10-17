@@ -13,7 +13,7 @@ import {
   btcToFiat,
   fiatToBtc,
   generateSendBitcoinParams,
-  sendManyParamsToSendFlowParams,
+  sendBitcoinParamsToSendFlowParams,
   formValidation,
   getNetworkNameFromScope,
 } from './utils';
@@ -214,7 +214,7 @@ describe('utils', () => {
     });
   });
 
-  describe('sendManyParamsToSendFlowParams', () => {
+  describe('sendBitcoinParamsToSendFlowParams', () => {
     const mockFee = {
       fee: {
         amount: '0.0001',
@@ -241,7 +241,7 @@ describe('utils', () => {
       const rates = '62000';
       const balance = '1';
 
-      const result = await sendManyParamsToSendFlowParams(
+      const result = await sendBitcoinParamsToSendFlowParams(
         params,
         account,
         scope,
@@ -298,7 +298,7 @@ describe('utils', () => {
       const rates = '62000';
       const balance = '1';
 
-      const result = await sendManyParamsToSendFlowParams(
+      const result = await sendBitcoinParamsToSendFlowParams(
         params,
         account,
         scope,
@@ -319,7 +319,7 @@ describe('utils', () => {
       const rates = '62000';
       const balance = '1';
 
-      const result = await sendManyParamsToSendFlowParams(
+      const result = await sendBitcoinParamsToSendFlowParams(
         params,
         account,
         scope,
@@ -341,7 +341,7 @@ describe('utils', () => {
       const rates = '62000';
       const balance = '1';
 
-      const result = sendManyParamsToSendFlowParams(
+      const result = sendBitcoinParamsToSendFlowParams(
         params,
         account,
         scope,

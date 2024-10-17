@@ -254,16 +254,17 @@ export async function generateSendFlowRequest(
   balance: string,
   transaction?: SendFlowRequest['transaction'],
 ): Promise<SendFlowRequest> {
-  const sendManyParams = transaction ?? generateSendBitcoinParams(wallet.scope);
+  const sendBitcoinParams =
+    transaction ?? generateSendBitcoinParams(wallet.scope);
   const sendFlowRequest = {
     id: uuidv4(),
     account: wallet.account,
     scope: wallet.scope,
-    transaction: sendManyParams,
+    transaction: sendBitcoinParams,
     interfaceId: '',
     status: status ?? TransactionStatus.Draft,
-    ...(await sendManyParamsToSendFlowParams(
-      sendManyParams,
+    ...(await sendBitcoinParamsToSendFlowParams(
+      sendBitcoinParams,
       wallet.account.id,
       wallet.scope,
       rates,
@@ -290,7 +291,7 @@ export async function generateSendFlowRequest(
  * @param balance - The balance of the account.
  * @returns A promise that resolves to the send flow parameters.
  */
-export async function sendManyParamsToSendFlowParams(
+export async function sendBitcoinParamsToSendFlowParams(
   params: Omit<SendBitcoinParams, 'scope'>,
   account: string,
   scope: string,

@@ -137,13 +137,13 @@ export const onUserInput: OnUserInputHandler = async ({
   }
 
   if (isSendFormEvent(event)) {
-    const sendManyController = new SendBitcoinController({
+    const sendBitcoinController = new SendBitcoinController({
       stateManager,
       request,
       context: context as SendFlowContext,
       interfaceId: id,
     });
-    await sendManyController.handleEvent(
+    await sendBitcoinController.handleEvent(
       event,
       context as SendFlowContext,
       state.sendForm as SendFormState,

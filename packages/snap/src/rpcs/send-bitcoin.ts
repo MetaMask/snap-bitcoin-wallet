@@ -68,7 +68,7 @@ export type SendBitcoinResponse = Infer<typeof SendBitcoinResponseStruct>;
  * @param params - The parameters for send the transaction.
  * @returns A Promise that resolves to an SendBitcoinResponse object.
  */
-export async function sendMany(
+export async function sendBitcoin(
   account: BtcAccount,
   _origin: string,
   params: SendBitcoinParams,
