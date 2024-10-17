@@ -4,7 +4,6 @@ import { networks } from 'bitcoinjs-lib';
 import {
   generateAccounts,
   generateFormattedUtxos,
-  generateQuickNodeGetUtxosResp,
   generateQuickNodeSendRawTransactionResp,
 } from '../../../test/utils';
 import { Caip2Asset } from '../../constants';
