@@ -1,4 +1,3 @@
-import { BtcP2wpkhAddressStruct } from '@metamask/keyring-api';
 import {
   object,
   string,
@@ -22,10 +21,11 @@ import {
   logger,
   AmountStruct,
   getFeeRate,
+  BitcoinAddressStruct,
 } from '../utils';
 
 export const RecipientsStruct = refine(
-  record(BtcP2wpkhAddressStruct, string()),
+  record(BitcoinAddressStruct, string()),
   'RecipientsStruct',
   (value: Record<string, string>) => {
     if (Object.entries(value).length === 0) {
