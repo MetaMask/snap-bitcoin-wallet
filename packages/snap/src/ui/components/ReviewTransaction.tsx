@@ -57,7 +57,7 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
           <Box direction="horizontal" center>
             <Image src={btcIcon} />
           </Box>
-          <Heading>{`Sending ${total.amount} BTC`}</Heading>
+          <Heading size="lg">{`Sending ${total.amount} BTC`}</Heading>
           <Text color="muted">Review the transaction before proceeding</Text>
         </Box>
         <Section>
