@@ -1,4 +1,5 @@
 import {
+  BtcMethod,
   KeyringEvent,
   emitSnapKeyringEvent,
   type Keyring,
@@ -23,7 +24,7 @@ import { Config } from './config';
 import { Caip2ChainId } from './constants';
 import { AccountNotFoundError, MethodNotImplementedError } from './exceptions';
 import { Factory } from './factory';
-import { getBalances, type SendManyParams, sendMany } from './rpcs';
+import { getBalances, type SendBitcoinParams, sendMany } from './rpcs';
 import { createRatesAndBalances } from './rpcs/get-rates-and-balances';
 import {
   TransactionStatus,
@@ -57,7 +58,7 @@ export class BtcKeyring implements Keyring {
 
   protected readonly _options: KeyringOptions;
 
-  protected readonly _methods = ['btc_sendmany'];
+  protected readonly _methods = [BtcMethod.SendBitcoin];
 
   constructor(stateMgr: KeyringStateManager, options: KeyringOptions) {
     this._stateMgr = stateMgr;
@@ -188,12 +189,12 @@ export class BtcKeyring implements Keyring {
     this.verifyIfMethodValid(method, walletData.account);
 
     switch (method) {
-      case 'btc_sendmany': {
-        return await this.handleSendMany({
+      case BtcMethod.SendBitcoin: {
+        return await this.handleSendBitcoin({
           scope: scope as Caip2ChainId,
           walletData,
           account,
-          params: params as SendManyParams,
+          params: params as SendBitcoinParams,
         });
       }
       default:
@@ -295,7 +296,7 @@ export class BtcKeyring implements Keyring {
     }
   }
 
-  protected async handleSendMany({
+  protected async handleSendBitcoin({
     scope,
     walletData,
     account,
@@ -304,7 +305,7 @@ export class BtcKeyring implements Keyring {
     scope: Caip2ChainId;
     walletData: Wallet;
     account: BtcAccount;
-    params: SendManyParams;
+    params: SendBitcoinParams;
   }): Promise<Json> {
     const asset = getAssetTypeFromScope(scope);
 

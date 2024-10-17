@@ -1,4 +1,5 @@
 import ecc from '@bitcoinerlab/secp256k1';
+import { BtcMethod } from '@metamask/keyring-api';
 import { BIP32Factory, type BIP32Interface } from 'bip32';
 import type { Network } from 'bitcoinjs-lib';
 import { Buffer } from 'buffer';
@@ -36,7 +37,7 @@ export function generateAccounts(cnt = 1, addressPrefix = '') {
         scope: Caip2ChainId.Testnet,
         index: i,
       },
-      methods: ['btc_sendmany'],
+      methods: [BtcMethod.SendBitcoin],
     });
   }
 

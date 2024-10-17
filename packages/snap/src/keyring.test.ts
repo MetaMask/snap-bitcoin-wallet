@@ -1,4 +1,5 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
+import { BtcMethod } from '@metamask/keyring-api';
 import { MethodNotFoundError, UnauthorizedError } from '@metamask/snaps-sdk';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -11,7 +12,7 @@ import { Factory } from './factory';
 import type { CreateAccountOptions } from './keyring';
 import { BtcKeyring } from './keyring';
 import * as getBalanceRpc from './rpcs/get-balances';
-import * as sendManyRpc from './rpcs/sendmany';
+import * as sendManyRpc from './rpcs/send-bitcoin';
 import { KeyringStateManager } from './stateManagement';
 
 jest.mock('./utils/logger');
@@ -119,7 +120,7 @@ describe('BtcKeyring', () => {
         scope: caip2ChainId,
         index: sender.index,
       },
-      methods: ['btc_sendmany'],
+      methods: [BtcMethod.SendBitcoin],
     };
     return {
       sender,
@@ -363,12 +364,10 @@ describe('BtcKeyring', () => {
 
       const params = {
         scope: caip2ChainId,
-        amounts: {
+        recipients: {
           bc1qrp0yzgkf8rawkuvdlhnjfj2fnjwm0m8727kgah: '0.01',
           bc1qf5n2h6mgelkls4497pkpemew55xpew90td2qae: '0.01',
         },
-        comment: 'testing',
-        subtractFeeFrom: ['bc1qrp0yzgkf8rawkuvdlhnjfj2fnjwm0m8727kgah'],
         replaceable: false,
       };
 
@@ -377,7 +376,7 @@ describe('BtcKeyring', () => {
         scope: Caip2ChainId.Testnet,
         account: keyringAccount.address,
         request: {
-          method: 'btc_sendmany',
+          method: BtcMethod.SendBitcoin,
           params,
         },
       });
@@ -408,7 +407,7 @@ describe('BtcKeyring', () => {
           scope: caip2ChainId,
           account: accFromState.id,
           request: {
-            method: 'btc_sendmany',
+            method: BtcMethod.SendBitcoin,
           },
         }),
       ).rejects.toThrow(AccountNotFoundError);
@@ -425,7 +424,7 @@ describe('BtcKeyring', () => {
           scope: Caip2ChainId.Testnet,
           account: account.id,
           request: {
-            method: 'btc_sendmany',
+            method: BtcMethod.SendBitcoin,
           },
         }),
       ).rejects.toThrow(AccountNotFoundError);
@@ -449,7 +448,7 @@ describe('BtcKeyring', () => {
           scope: Caip2ChainId.Mainnet,
           account: keyringAccount.id,
           request: {
-            method: 'btc_sendmany',
+            method: BtcMethod.SendBitcoin,
           },
         }),
       ).rejects.toThrow(
@@ -463,7 +462,7 @@ describe('BtcKeyring', () => {
       const { instance: keyring } = createMockKeyring(stateMgr);
       const { sender, keyringAccount } = await createSender(caip2ChainId);
       // This method will not be dispatched in `handleSubmitRequest` and will throw a `MethodNotFoundError` if used
-      keyringAccount.methods = ['btc_notImplemented'];
+      keyringAccount.methods = ['btc_notImplemented' as BtcMethod];
 
       getWalletSpy.mockResolvedValue({
         account: keyringAccount as unknown as KeyringAccount,

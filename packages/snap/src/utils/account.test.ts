@@ -1,4 +1,4 @@
-import type { KeyringAccount } from '@metamask/keyring-api';
+import { BtcMethod, type KeyringAccount } from '@metamask/keyring-api';
 import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 import { v4 as uuidV4 } from 'uuid';
@@ -38,7 +38,7 @@ describe('verifyIfAccountValid', function () {
         scope: caip2ChainId,
         index,
       },
-      methods: ['btc_sendmany'],
+      methods: [BtcMethod.SendBitcoin],
     } as unknown as KeyringAccount;
   };
 

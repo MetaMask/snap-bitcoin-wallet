@@ -1,10 +1,10 @@
 import { expect } from '@jest/globals';
-import { BtcAccountType } from '@metamask/keyring-api';
+import { BtcAccountType, BtcMethod } from '@metamask/keyring-api';
 import { BigNumber } from 'bignumber.js';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Caip2ChainId, Caip2ChainIdToNetworkName } from '../constants';
-import type { SendManyParams } from '../rpcs';
+import type { SendBitcoinParams } from '../rpcs';
 import { generateDefaultSendFlowRequest } from '../utils/transaction';
 import { AssetType, SendFormError } from './types';
 import {
@@ -12,7 +12,7 @@ import {
   validateRecipient,
   btcToFiat,
   fiatToBtc,
-  generateSendManyParams,
+  generateSendBitcoinParams,
   sendManyParamsToSendFlowParams,
   formValidation,
   getNetworkNameFromScope,
@@ -34,7 +34,7 @@ const mockAccount = {
     scope: Caip2ChainId.Mainnet,
     index: '1',
   },
-  methods: ['btc_sendmany'],
+  methods: [BtcMethod.SendBitcoin],
 };
 
 describe('utils', () => {
@@ -181,8 +181,8 @@ describe('utils', () => {
     });
   });
 
-  describe('sendStateToSendManyParams', () => {
-    it('should convert send state to SendManyParams correctly', async () => {
+  describe('sendStateToSendBitcoinParams', () => {
+    it('should convert send state to SendBitcoinParams correctly', async () => {
       const request = {
         ...generateDefaultSendFlowRequest(
           mockAccount,
@@ -203,12 +203,10 @@ describe('utils', () => {
       };
       const scope = Caip2ChainId.Mainnet;
 
-      const result = generateSendManyParams(scope, request);
+      const result = generateSendBitcoinParams(scope, request);
 
       expect(result).toStrictEqual({
-        amounts: { bc1q26a367uz34eg5mufwhlscwdcplu6frtgf00r7a: '0.1' },
-        comment: '',
-        subtractFeeFrom: [],
+        recipients: { bc1q26a367uz34eg5mufwhlscwdcplu6frtgf00r7a: '0.1' },
         replaceable: true,
         dryrun: false,
         scope,
@@ -232,11 +230,9 @@ describe('utils', () => {
       jest.resetAllMocks();
     });
 
-    it('should convert SendManyParams to SendFlowParams correctly', async () => {
-      const params: Omit<SendManyParams, 'scope'> = {
-        amounts: { bc1q26a367uz34eg5mufwhlscwdcplu6frtgf00r7a: '0.1' },
-        comment: '',
-        subtractFeeFrom: [],
+    it('should convert SendBitcoinParams to SendFlowParams correctly', async () => {
+      const params: Omit<SendBitcoinParams, 'scope'> = {
+        recipients: { bc1q26a367uz34eg5mufwhlscwdcplu6frtgf00r7a: '0.1' },
         replaceable: true,
         dryrun: false,
       };
@@ -253,7 +249,7 @@ describe('utils', () => {
         balance,
       );
 
-      const expectedAmount = Object.values(params.amounts)[0];
+      const expectedAmount = Object.values(params.recipients)[0];
       const expectedTotal = new BigNumber(expectedAmount)
         .plus(new BigNumber(mockFee.fee.amount))
         .toString();
@@ -293,9 +289,7 @@ describe('utils', () => {
 
     it('should handle invalid recipient address', async () => {
       const params = {
-        amounts: { invalidAddress: '0.1' },
-        comment: '',
-        subtractFeeFrom: [],
+        recipients: { invalidAddress: '0.1' },
         replaceable: true,
         dryrun: false,
       };
@@ -316,9 +310,7 @@ describe('utils', () => {
 
     it('should handle invalid amount', async () => {
       const params = {
-        amounts: { bc1q26a367uz34eg5mufwhlscwdcplu6frtgf00r7a: '0' },
-        comment: '',
-        subtractFeeFrom: [],
+        recipients: { bc1q26a367uz34eg5mufwhlscwdcplu6frtgf00r7a: '0' },
         replaceable: true,
         dryrun: false,
       };
@@ -340,9 +332,7 @@ describe('utils', () => {
 
     it('should handle insufficient balance', async () => {
       const params = {
-        amounts: { bc1q26a367uz34eg5mufwhlscwdcplu6frtgf00r7a: '2' },
-        comment: '',
-        subtractFeeFrom: [],
+        recipients: { bc1q26a367uz34eg5mufwhlscwdcplu6frtgf00r7a: '2' },
         replaceable: true,
         dryrun: false,
       };

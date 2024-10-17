@@ -5,7 +5,7 @@ import {
 } from '../exceptions';
 import { TransactionStatus } from '../stateManagement';
 import { AssetType } from '../ui/types';
-import { generateSendManyParams } from '../ui/utils';
+import { generateSendBitcoinParams } from '../ui/utils';
 import { StartSendTransactionFlowTest } from './__tests__/helper';
 import { startSendTransactionFlow } from './start-send-transaction-flow';
 
@@ -62,7 +62,7 @@ describe('startSendTransactionFlow', () => {
       interfaceId: 'mock-interfaceId',
       account: keyringAccount,
       scope: mockScope,
-      transaction: generateSendManyParams(mockScope),
+      transaction: generateSendBitcoinParams(mockScope),
       status: TransactionStatus.Draft,
       selectedCurrency: AssetType.BTC,
       recipient: {
@@ -131,7 +131,7 @@ describe('startSendTransactionFlow', () => {
       interfaceId: 'mock-interfaceId',
       account: keyringAccount,
       scope: mockScope,
-      transaction: generateSendManyParams(mockScope),
+      transaction: generateSendBitcoinParams(mockScope),
       status: TransactionStatus.Draft,
       selectedCurrency: AssetType.BTC,
       recipient: {

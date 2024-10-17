@@ -164,7 +164,6 @@ describe('BtcWallet', () => {
         {
           utxos,
           fee: 56,
-          subtractFeeFrom: [],
           replaceable: false,
         },
       );
@@ -194,7 +193,6 @@ describe('BtcWallet', () => {
         {
           utxos,
           fee: 50,
-          subtractFeeFrom: [],
           replaceable: false,
         },
       );
@@ -228,7 +226,6 @@ describe('BtcWallet', () => {
         {
           utxos,
           fee: 1,
-          subtractFeeFrom: [],
           replaceable: false,
         },
       );
@@ -263,7 +260,6 @@ describe('BtcWallet', () => {
         {
           utxos,
           fee: 1,
-          subtractFeeFrom: [],
         },
       );
 
@@ -307,7 +303,6 @@ describe('BtcWallet', () => {
         {
           utxos,
           fee: 1,
-          subtractFeeFrom: [],
           replaceable: false,
         },
       );
@@ -332,7 +327,6 @@ describe('BtcWallet', () => {
           {
             utxos,
             fee: 20,
-            subtractFeeFrom: [],
             replaceable: false,
           },
         ),
@@ -354,7 +348,6 @@ describe('BtcWallet', () => {
           {
             utxos,
             fee: 20,
-            subtractFeeFrom: [],
             replaceable: false,
           },
         ),
@@ -376,7 +369,6 @@ describe('BtcWallet', () => {
         {
           utxos,
           fee: 1,
-          subtractFeeFrom: [],
           replaceable: false,
         },
       );

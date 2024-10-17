@@ -48,7 +48,6 @@ export type ITxInfo = {
 export type CreateTransactionOptions = {
   utxos: Utxo[];
   fee: number;
-  subtractFeeFrom?: string[];
   //
   // BIP125 opt-in RBF flag,
   //
@@ -148,7 +147,6 @@ export class BtcWallet {
 
     const txInfo = new TxInfo(address, feeRate);
 
-    // TODO: add support of subtractFeeFrom, and throw error if output is too small after subtraction
     for (const output of selectionResult.outputs) {
       psbtService.addOutput(output);
       txInfo.addRecipient(output);

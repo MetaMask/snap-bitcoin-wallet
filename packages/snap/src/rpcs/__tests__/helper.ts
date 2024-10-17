@@ -1,4 +1,4 @@
-import type { KeyringAccount } from '@metamask/keyring-api';
+import { BtcMethod, type KeyringAccount } from '@metamask/keyring-api';
 import { v4 as uuidV4 } from 'uuid';
 
 import {
@@ -134,7 +134,7 @@ export async function createMockKeyringAccount(
       scope: caip2ChainId,
       index: account.index,
     },
-    methods: ['btc_sendmany'],
+    methods: [BtcMethod.SendBitcoin],
   } as unknown as KeyringAccount;
 
   getWalletSpy.mockResolvedValue({
@@ -233,7 +233,7 @@ export type EstimateFeeTestCreateOption = AccountTestCreateOption & {
   utxoMaxVal: number;
 };
 
-export type SendManyCreateOption = EstimateFeeTestCreateOption & {
+export type SendBitcoinCreateOption = EstimateFeeTestCreateOption & {
   recipientCount: number;
 };
 
@@ -353,10 +353,10 @@ export class EstimateFeeTest extends AccountTest {
 
 export class GetMaxSpendableBalanceTest extends EstimateFeeTest {}
 
-export class SendManyTest extends EstimateFeeTest {
+export class SendBitcoinTest extends EstimateFeeTest {
   recipients: BtcAccount[];
 
-  testCase: SendManyCreateOption;
+  testCase: SendBitcoinCreateOption;
 
   broadcastTransactionSpy: jest.SpyInstance;
 
@@ -364,7 +364,7 @@ export class SendManyTest extends EstimateFeeTest {
 
   alertDialogSpy: jest.SpyInstance;
 
-  constructor(testCase: SendManyCreateOption) {
+  constructor(testCase: SendBitcoinCreateOption) {
     super(testCase);
     const { broadcastTransactionSpy } = createMockChainApiFactory();
     this.broadcastTransactionSpy = broadcastTransactionSpy;
@@ -412,7 +412,7 @@ export class SendManyTest extends EstimateFeeTest {
   }
 }
 
-export class StartSendTransactionFlowTest extends SendManyTest {
+export class StartSendTransactionFlowTest extends SendBitcoinTest {
   generateSendFlowSpy: jest.SpyInstance;
 
   updateSendFlowSpy: jest.SpyInstance;
@@ -437,7 +437,7 @@ export class StartSendTransactionFlowTest extends SendManyTest {
 
   interfaceId = 'mock-interfaceId';
 
-  constructor(testCase: SendManyCreateOption) {
+  constructor(testCase: SendBitcoinCreateOption) {
     super(testCase);
     this.scope = testCase.caip2ChainId;
     const mocks = createMockSendFlow();
