@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0]
+
+### Uncategorized
+
+- fix: footer validation ([#309](https://github.com/MetaMask/snap-bitcoin-wallet/pull/309))
+- fix: allow any btc address in sendmany ([#308](https://github.com/MetaMask/snap-bitcoin-wallet/pull/308))
+- refactor!: sendmany -> sendBitcoin ([#303](https://github.com/MetaMask/snap-bitcoin-wallet/pull/303))
+- fix: show btc logo and add links to address ([#305](https://github.com/MetaMask/snap-bitcoin-wallet/pull/305))
+- feat!: make transactions replaceable by default ([#297](https://github.com/MetaMask/snap-bitcoin-wallet/pull/297))
+- fix: use input props ([#304](https://github.com/MetaMask/snap-bitcoin-wallet/pull/304))
+- feat: use snap_getCurrencyRates ([#289](https://github.com/MetaMask/snap-bitcoin-wallet/pull/289))
+- refactor(QuickNode): refactor data client into a base class ([#282](https://github.com/MetaMask/snap-bitcoin-wallet/pull/282))
+- feat: send ui ([#281](https://github.com/MetaMask/snap-bitcoin-wallet/pull/281))
+- feat: rename proposed name to "Bitcoin" ([#283](https://github.com/MetaMask/snap-bitcoin-wallet/pull/283))
+- feat(QuickNode): add fallback solution if `QuickNode` RPC `estimatesmartfee` returns data unavailable ([#269](https://github.com/MetaMask/snap-bitcoin-wallet/pull/269))
+- refactor: better naming for KVB/KB/VB ([#270](https://github.com/MetaMask/snap-bitcoin-wallet/pull/270))
+
 ## [0.7.0]
 
 ### Changed
@@ -200,7 +217,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add CI for lint and test ([#2](https://github.com/MetaMask/bitcoin/pull/2))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.5.0...v0.6.0
