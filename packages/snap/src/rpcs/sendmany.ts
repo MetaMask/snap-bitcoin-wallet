@@ -96,7 +96,7 @@ export async function sendMany(
 
     const {
       data: { utxos },
-    } = await chainApi.getDataForTransaction(account.address);
+    } = await chainApi.getDataForTransaction([account.address]);
 
     const txResp = await wallet.createTransaction(account, recipients, {
       utxos,
