@@ -2675,7 +2675,7 @@ __metadata:
     "@metamask/eslint-config-nodejs": ^12.1.0
     "@metamask/eslint-config-typescript": ^12.1.0
     "@metamask/key-tree": ^9.1.2
-    "@metamask/keyring-api": ^8.1.3
+    "@metamask/keyring-api": ^9.0.0
     "@metamask/snaps-cli": ^6.5.0
     "@metamask/snaps-jest": ^8.6.0
     "@metamask/snaps-sdk": ^6.9.0
@@ -2719,7 +2719,7 @@ __metadata:
     "@metamask/eslint-config-jest": ^12.1.0
     "@metamask/eslint-config-nodejs": ^12.1.0
     "@metamask/eslint-config-typescript": ^12.1.0
-    "@metamask/keyring-api": ^8.1.3
+    "@metamask/keyring-api": ^9.0.0
     "@metamask/providers": ^17.1.1
     "@svgr/webpack": ^6.4.0
     "@testing-library/dom": ^8.17.1
@@ -2960,19 +2960,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/keyring-api@npm:^8.1.3":
-  version: 8.1.3
-  resolution: "@metamask/keyring-api@npm:8.1.3"
+"@metamask/keyring-api@npm:^9.0.0":
+  version: 9.0.0
+  resolution: "@metamask/keyring-api@npm:9.0.0"
   dependencies:
-    "@metamask/snaps-sdk": ^6.5.1
+    "@metamask/snaps-sdk": ^6.7.0
     "@metamask/superstruct": ^3.1.0
     "@metamask/utils": ^9.2.1
     "@types/uuid": ^9.0.8
     bech32: ^2.0.0
     uuid: ^9.0.1
+    webextension-polyfill: ^0.12.0
   peerDependencies:
     "@metamask/providers": ^17.2.0
-  checksum: 5943878fa9e47aae1c5ef49a2bcdf7f69fd68532cc9ca8ab1b8d2682cd91c1ac9a6db8219df6365d71b3dcf29731f854699c74f2b3bf68a9d03ebecc5fb71e30
+  checksum: 205cbe876ac034b8f1dd94c9795360cd33b6f0df4ec5a1ce32127c2aa6a19cb878429c1977c9dbb46b5b8388011e4a13d9cb8a62724b38b1bf2202a745b152a3
   languageName: node
   linkType: hard
 
@@ -3272,20 +3273,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/snaps-sdk@npm:^6.5.1":
-  version: 6.5.1
-  resolution: "@metamask/snaps-sdk@npm:6.5.1"
-  dependencies:
-    "@metamask/key-tree": ^9.1.2
-    "@metamask/providers": ^17.1.2
-    "@metamask/rpc-errors": ^6.3.1
-    "@metamask/superstruct": ^3.1.0
-    "@metamask/utils": ^9.2.1
-  checksum: 4a6b3d8fab615155aaabbe567b7b94485bfe328e38d214fcd1e359deb927fb2c1ade2c849b7e0270ebc60e7db9caf1ea4d634f26c80e0e8f4d4447f4469d8da1
-  languageName: node
-  linkType: hard
-
-"@metamask/snaps-sdk@npm:^6.9.0":
+"@metamask/snaps-sdk@npm:^6.7.0, @metamask/snaps-sdk@npm:^6.9.0":
   version: 6.9.0
   resolution: "@metamask/snaps-sdk@npm:6.9.0"
   dependencies:
@@ -19526,6 +19514,13 @@ __metadata:
   version: 1.2.2
   resolution: "weak-lru-cache@npm:1.2.2"
   checksum: 0fbe16839d193ed82ddb4fe331ca8cfaee2ecbd42596aa02366c708956cf41f7258f2d5411c3bc9aa099c26058dc47afbd2593d449718a18e4ef4d870c5ace18
+  languageName: node
+  linkType: hard
+
+"webextension-polyfill@npm:^0.12.0":
+  version: 0.12.0
+  resolution: "webextension-polyfill@npm:0.12.0"
+  checksum: fc2166c8c9d3f32d7742727394092ff1a1eb19cbc4e5a73066d57f9bff1684e38342b90fabd23981e7295e904c536e8509552a64e989d217dae5de6ddca73532
   languageName: node
   linkType: hard
 
