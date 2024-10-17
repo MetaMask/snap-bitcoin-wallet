@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add send flow UI ([#281](https://github.com/MetaMask/snap-bitcoin-wallet/pull/281)), ([#309](https://github.com/MetaMask/snap-bitcoin-wallet/pull/309)), ([#308](https://github.com/MetaMask/snap-bitcoin-wallet/pull/308)), ([#305](https://github.com/MetaMask/snap-bitcoin-wallet/pull/305)), ([#304](https://github.com/MetaMask/snap-bitcoin-wallet/pull/304)), ([#289](https://github.com/MetaMask/snap-bitcoin-wallet/pull/289))
+  - The send flow can be started using the `startSendTransactionFlow` internal method.
+  - The UI allows to send any arbitary amount (according ot its balance).
+  - There is a confirmation screen that summarize everything regarding the transaction (amount, recipient, fee estimation), once confirmed the transaction will be broadcasted to the blockchain.
+  - Calling the `sendBitcoin` account's method will trigger the confirmation screen too.
 
 ### Changed
 
