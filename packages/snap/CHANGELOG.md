@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0]
+
+### Added
+
+- Add send flow UI ([#281](https://github.com/MetaMask/snap-bitcoin-wallet/pull/281)), ([#309](https://github.com/MetaMask/snap-bitcoin-wallet/pull/309)), ([#308](https://github.com/MetaMask/snap-bitcoin-wallet/pull/308)), ([#305](https://github.com/MetaMask/snap-bitcoin-wallet/pull/305)), ([#304](https://github.com/MetaMask/snap-bitcoin-wallet/pull/304)), ([#289](https://github.com/MetaMask/snap-bitcoin-wallet/pull/289))
+  - The send flow can be started using the `startSendTransactionFlow` internal method.
+  - The UI allows to send an amount to one recipient (according to its balance).
+  - There is a confirmation screen that summarize everything regarding the transaction (amount, recipient, fee estimation), once confirmed the transaction will be broadcasted to the blockchain.
+  - Calling the `sendBitcoin` account's method will trigger the confirmation screen too.
+
+### Changed
+
+- **BREAKING:** Rename `btc_sendmany` method to `sendBitcoin` ([#303](https://github.com/MetaMask/snap-bitcoin-wallet/pull/303))
+  - The `comment` and `subtractFeeFrom` options have been removed too.
+- **BREAKING:** Make transactions replaceable by default ([#297](https://github.com/MetaMask/snap-bitcoin-wallet/pull/297))
+- Rename proposed name to "Bitcoin" (was "Bitcoin Manager") ([#283](https://github.com/MetaMask/snap-bitcoin-wallet/pull/283))
+- Adds fee estimation fallback for `QuickNode` ([#269](https://github.com/MetaMask/snap-bitcoin-wallet/pull/269))
+  - In some cases, `QuickNode` may fail to process fee estimation. In such instances, we fall back on using fee information directly from the mempool.
+  - We also added a default minimum fee as the last resort in case everything else failed.
+
 ## [0.7.0]
 
 ### Changed
@@ -200,7 +220,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add CI for lint and test ([#2](https://github.com/MetaMask/bitcoin/pull/2))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.5.0...v0.6.0
