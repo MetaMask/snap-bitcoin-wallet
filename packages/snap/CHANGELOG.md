@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.8.1]
 
-### Uncategorized
+### Fixed
 
-- feat: add hideSnapBranding when building ([#312](https://github.com/MetaMask/snap-bitcoin-wallet/pull/312))
+- Use `hideSnapBranding` flag when building ([#312](https://github.com/MetaMask/snap-bitcoin-wallet/pull/312))
 
 ## [0.8.0]
 
