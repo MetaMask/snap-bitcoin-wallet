@@ -95,7 +95,7 @@ provider.request({
             recipients: {
               ['tb1qlhkuysju47s642834n7f3tyk67mvnt2cfd9r7y']: '0.00000500',
             }, // the recipient struct to indicate how many BTC to be received for each recipient
-            replaceable: false, // an flag to opt-in RBF
+            replaceable: true, // an flag to opt-in RBF
             dryrun: true, // an flag to enable similation of the transaction, without broadcast to network
           },
         },

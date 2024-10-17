@@ -32,7 +32,7 @@ export const SendBitcoinCard = ({
             recipients: {
               [address]: '0.00000500',
             },
-            replaceable: false,
+            replaceable: true,
             dryrun: true,
           },
         },

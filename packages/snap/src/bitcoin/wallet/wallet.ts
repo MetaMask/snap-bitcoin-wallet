@@ -139,6 +139,7 @@ export class BtcWallet {
     const psbtService = new PsbtService(this._network);
     psbtService.addInputs(
       selectionResult.inputs,
+      // Is now enabled by default (requirement for the Keyring API v9.0.0)
       options.replaceable ?? true,
       hdPath,
       hexToBuffer(pubkey, false),

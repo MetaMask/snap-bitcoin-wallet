@@ -368,7 +368,7 @@ describe('BtcKeyring', () => {
           bc1qrp0yzgkf8rawkuvdlhnjfj2fnjwm0m8727kgah: '0.01',
           bc1qf5n2h6mgelkls4497pkpemew55xpew90td2qae: '0.01',
         },
-        replaceable: false,
+        replaceable: true,
       };
 
       await keyring.submitRequest({
