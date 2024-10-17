@@ -118,7 +118,7 @@ export async function displayConfirmationReview({
   return await snap.request({
     method: 'snap_updateInterface',
     params: {
-      id: request.id,
+      id: request.interfaceId,
       ui: <ReviewTransaction {...request} txSpeed="30m" />,
     },
   });

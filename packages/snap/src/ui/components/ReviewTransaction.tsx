@@ -15,7 +15,7 @@ import {
 import type { CaipAccountId } from '@metamask/utils';
 
 import type { SendFlowRequest } from '../../stateManagement';
-import btcIcon from '../images/btc.svg';
+import btcIcon from '../images/btc-halo.svg';
 import { getNetworkNameFromScope } from '../utils';
 import { SendFlowHeader } from './SendFlowHeader';
 import { SendFormNames } from './SendForm';
@@ -43,7 +43,7 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
       <Box>
         <SendFlowHeader heading="Review" />
         <Box alignment="center" center>
-          <Box>
+          <Box direction="horizontal" center>
             <Image src={btcIcon} />
           </Box>
           <Heading>{`Sending ${total.amount} BTC`}</Heading>
