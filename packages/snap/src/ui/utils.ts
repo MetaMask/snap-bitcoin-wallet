@@ -8,7 +8,7 @@ import {
   Caip2ChainId,
   Caip2ChainIdToNetworkName,
 } from '../constants';
-import type { SendManyParams } from '../rpcs';
+import type { SendBitcoinParams } from '../rpcs';
 import { estimateFee } from '../rpcs';
 import type { SendFlowParams, Wallet } from '../stateManagement';
 import { TransactionStatus, type SendFlowRequest } from '../stateManagement';
@@ -153,21 +153,19 @@ export function validateTotal(
 }
 
 /**
- * Converts the send state to SendManyParams.
+ * Converts the send state to SendBitcoinParams.
  *
  * @param scope - The scope of the network (mainnet or testnet).
  * @param request - The request object containing form data and errors.
- * @returns A promise that resolves to the SendManyParams object.
+ * @returns A promise that resolves to the SendBitcoinParams object.
  */
-export function generateSendManyParams(
+export function generateSendBitcoinParams(
   scope: string,
   request?: SendFlowRequest,
-): SendManyParams {
+): SendBitcoinParams {
   if (!request) {
     return {
-      amounts: {},
-      comment: '',
-      subtractFeeFrom: [],
+      recipients: {},
       replaceable: true,
       dryrun: false,
       scope,
@@ -175,11 +173,9 @@ export function generateSendManyParams(
   }
 
   return {
-    amounts: {
+    recipients: {
       [request.recipient.address]: request.amount.amount,
     },
-    comment: '',
-    subtractFeeFrom: [],
     replaceable: true,
     dryrun: false,
     scope,
@@ -258,16 +254,17 @@ export async function generateSendFlowRequest(
   balance: string,
   transaction?: SendFlowRequest['transaction'],
 ): Promise<SendFlowRequest> {
-  const sendManyParams = transaction ?? generateSendManyParams(wallet.scope);
+  const sendBitcoinParams =
+    transaction ?? generateSendBitcoinParams(wallet.scope);
   const sendFlowRequest = {
     id: uuidv4(),
     account: wallet.account,
     scope: wallet.scope,
-    transaction: sendManyParams,
+    transaction: sendBitcoinParams,
     interfaceId: '',
     status: status ?? TransactionStatus.Draft,
-    ...(await sendManyParamsToSendFlowParams(
-      sendManyParams,
+    ...(await sendBitcoinParamsToSendFlowParams(
+      sendBitcoinParams,
       wallet.account.id,
       wallet.scope,
       rates,
@@ -285,7 +282,7 @@ export async function generateSendFlowRequest(
 }
 
 /**
- * Converts SendManyParams to SendFlowParams.
+ * Converts SendBitcoinParams to SendFlowParams.
  *
  * @param params - The parameters for sending many transactions.
  * @param account - The account from which the transactions will be sent.
@@ -294,8 +291,8 @@ export async function generateSendFlowRequest(
  * @param balance - The balance of the account.
  * @returns A promise that resolves to the send flow parameters.
  */
-export async function sendManyParamsToSendFlowParams(
-  params: Omit<SendManyParams, 'scope'>,
+export async function sendBitcoinParamsToSendFlowParams(
+  params: Omit<SendBitcoinParams, 'scope'>,
   account: string,
   scope: string,
   rates: string,
@@ -303,8 +300,8 @@ export async function sendManyParamsToSendFlowParams(
 ): Promise<SendFlowParams> {
   const defaultParams = generateDefaultSendFlowParams();
   // This is safe because we validate the recipient in `validateRecipient` if it is not defined.
-  const recipient = Object.keys(params.amounts)[0];
-  const amount = params.amounts[recipient];
+  const recipient = Object.keys(params.recipients)[0];
+  const amount = params.recipients[recipient];
 
   defaultParams.rates = rates;
   defaultParams.recipient = validateRecipient(recipient, scope);

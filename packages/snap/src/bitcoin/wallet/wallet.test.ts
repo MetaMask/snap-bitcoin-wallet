@@ -164,8 +164,7 @@ describe('BtcWallet', () => {
         {
           utxos,
           fee: 56,
-          subtractFeeFrom: [],
-          replaceable: false,
+          replaceable: true,
         },
       );
 
@@ -194,8 +193,7 @@ describe('BtcWallet', () => {
         {
           utxos,
           fee: 50,
-          subtractFeeFrom: [],
-          replaceable: false,
+          replaceable: true,
         },
       );
 
@@ -228,8 +226,7 @@ describe('BtcWallet', () => {
         {
           utxos,
           fee: 1,
-          subtractFeeFrom: [],
-          replaceable: false,
+          replaceable: true,
         },
       );
 
@@ -263,7 +260,6 @@ describe('BtcWallet', () => {
         {
           utxos,
           fee: 1,
-          subtractFeeFrom: [],
         },
       );
 
@@ -307,8 +303,7 @@ describe('BtcWallet', () => {
         {
           utxos,
           fee: 1,
-          subtractFeeFrom: [],
-          replaceable: false,
+          replaceable: true,
         },
       );
 
@@ -332,8 +327,7 @@ describe('BtcWallet', () => {
           {
             utxos,
             fee: 20,
-            subtractFeeFrom: [],
-            replaceable: false,
+            replaceable: true,
           },
         ),
       ).rejects.toThrow('Transaction amount too small');
@@ -354,8 +348,7 @@ describe('BtcWallet', () => {
           {
             utxos,
             fee: 20,
-            subtractFeeFrom: [],
-            replaceable: false,
+            replaceable: true,
           },
         ),
       ).rejects.toThrow('Insufficient funds');
@@ -376,8 +369,7 @@ describe('BtcWallet', () => {
         {
           utxos,
           fee: 1,
-          subtractFeeFrom: [],
-          replaceable: false,
+          replaceable: true,
         },
       );
 

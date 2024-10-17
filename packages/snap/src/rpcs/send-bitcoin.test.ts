@@ -3,37 +3,34 @@ import { InvalidParamsError } from '@metamask/snaps-sdk';
 import type { BtcAccount } from '../bitcoin/wallet';
 import { Caip2ChainId } from '../constants';
 import { satsToBtc } from '../utils';
-import { SendManyTest } from './__tests__/helper';
-import { type SendManyParams, sendMany } from './sendmany';
+import { SendBitcoinTest } from './__tests__/helper';
+import { type SendBitcoinParams, sendBitcoin } from './send-bitcoin';
 
 jest.mock('../utils/logger');
 jest.mock('../utils/snap');
 
-describe('SendManyHandler', () => {
-  describe('sendMany', () => {
+describe('SendBitcoinHandler', () => {
+  describe('sendBitcoin', () => {
     const origin = 'http://localhost:3000';
 
-    const createSendManyParams = (
+    const createSendBitcoinParams = (
       recipients: BtcAccount[],
       caip2ChainId: string,
       dryrun: boolean,
-      comment = '',
       amount = 500,
-    ): SendManyParams => {
+    ): SendBitcoinParams => {
       return {
-        amounts: recipients.reduce((acc, recipient) => {
+        recipients: recipients.reduce((acc, recipient) => {
           acc[recipient.address] = satsToBtc(amount);
           return acc;
         }, {}),
-        comment,
-        subtractFeeFrom: [],
-        replaceable: false,
+        replaceable: true,
         dryrun,
         scope: caip2ChainId,
-      } as unknown as SendManyParams;
+      } as unknown as SendBitcoinParams;
     };
 
-    const prepareSendMany = async (
+    const prepareSendBitcoin = async (
       caip2ChainId: string,
       recipientCount = 10,
       feeRate = 1,
@@ -41,7 +38,7 @@ describe('SendManyHandler', () => {
       utxoMinVal = 100000,
       utxoMaxVal = 100000,
     ) => {
-      const testHelper = new SendManyTest({
+      const testHelper = new SendBitcoinTest({
         caip2ChainId,
         utxoCount,
         utxoMinVal,
@@ -63,12 +60,12 @@ describe('SendManyHandler', () => {
         getDataForTransactionSpy,
         getFeeRatesSpy,
         broadcastTransactionSpy,
-      } = await prepareSendMany(caip2ChainId);
+      } = await prepareSendBitcoin(caip2ChainId);
 
-      const result = await sendMany(
+      const result = await sendBitcoin(
         sender,
         origin,
-        createSendManyParams(recipients, caip2ChainId, false),
+        createSendBitcoinParams(recipients, caip2ChainId, false),
       );
 
       expect(result).toStrictEqual({ txId: broadCastTxResp });
@@ -80,12 +77,12 @@ describe('SendManyHandler', () => {
     it('does not broadcast transaction if in dryrun mode', async () => {
       const caip2ChainId = Caip2ChainId.Testnet;
       const { recipients, sender, broadcastTransactionSpy } =
-        await prepareSendMany(caip2ChainId);
+        await prepareSendBitcoin(caip2ChainId);
 
-      await sendMany(
+      await sendBitcoin(
         sender,
         origin,
-        createSendManyParams(recipients, caip2ChainId, true),
+        createSendBitcoinParams(recipients, caip2ChainId, true),
       );
 
       expect(broadcastTransactionSpy).toHaveBeenCalledTimes(0);
@@ -93,38 +90,38 @@ describe('SendManyHandler', () => {
 
     it('throws InvalidParamsError when request parameter is not correct', async () => {
       const caip2ChainId = Caip2ChainId.Testnet;
-      const { sender } = await prepareSendMany(caip2ChainId);
+      const { sender } = await prepareSendBitcoin(caip2ChainId);
 
       await expect(
-        sendMany(sender, origin, {
-          amounts: {
+        sendBitcoin(sender, origin, {
+          recipients: {
             'some-address': '1',
           },
-        } as unknown as SendManyParams),
+        } as unknown as SendBitcoinParams),
       ).rejects.toThrow(InvalidParamsError);
     });
 
-    it('throws `Transaction must have at least one recipient` error if no recipient provided', async () => {
+    it('throws `Recipients object must have at least one recipient` error if no recipient provided', async () => {
       const caip2ChainId = Caip2ChainId.Testnet;
-      const { sender, recipients } = await prepareSendMany(caip2ChainId, 0);
+      const { sender, recipients } = await prepareSendBitcoin(caip2ChainId, 0);
 
       await expect(
-        sendMany(
+        sendBitcoin(
           sender,
           origin,
-          createSendManyParams(recipients, caip2ChainId, false),
+          createSendBitcoinParams(recipients, caip2ChainId, false),
         ),
-      ).rejects.toThrow('Transaction must have at least one recipient');
+      ).rejects.toThrow('Recipients object must have at least one recipient');
     });
 
     it('throws `Invalid amount, must be a positive finite number` error if receive amount is not valid', async () => {
       const caip2ChainId = Caip2ChainId.Testnet;
-      const { sender, recipients } = await prepareSendMany(caip2ChainId, 2);
+      const { sender, recipients } = await prepareSendBitcoin(caip2ChainId, 2);
 
       await expect(
-        sendMany(sender, origin, {
-          ...createSendManyParams(recipients, caip2ChainId, false),
-          amounts: {
+        sendBitcoin(sender, origin, {
+          ...createSendBitcoinParams(recipients, caip2ChainId, false),
+          recipients: {
             [recipients[0].address]: 'invalid',
             [recipients[1].address]: '0.1',
           },
@@ -132,9 +129,9 @@ describe('SendManyHandler', () => {
       ).rejects.toThrow('Invalid amount, must be a positive finite number');
 
       await expect(
-        sendMany(sender, origin, {
-          ...createSendManyParams(recipients, caip2ChainId, false),
-          amounts: {
+        sendBitcoin(sender, origin, {
+          ...createSendBitcoinParams(recipients, caip2ChainId, false),
+          recipients: {
             [recipients[0].address]: '0',
             [recipients[1].address]: '0.1',
           },
@@ -142,9 +139,9 @@ describe('SendManyHandler', () => {
       ).rejects.toThrow('Invalid amount, must be a positive finite number');
 
       await expect(
-        sendMany(sender, origin, {
-          ...createSendManyParams(recipients, caip2ChainId, false),
-          amounts: {
+        sendBitcoin(sender, origin, {
+          ...createSendBitcoinParams(recipients, caip2ChainId, false),
+          recipients: {
             [recipients[0].address]: 'invalid',
             [recipients[1].address]: '0.000000019',
           },
@@ -154,12 +151,12 @@ describe('SendManyHandler', () => {
 
     it('throws `Invalid amount, out of bounds` error if receive amount is out of bounds', async () => {
       const caip2ChainId = Caip2ChainId.Testnet;
-      const { sender, recipients } = await prepareSendMany(caip2ChainId, 2);
+      const { sender, recipients } = await prepareSendBitcoin(caip2ChainId, 2);
 
       await expect(
-        sendMany(sender, origin, {
-          ...createSendManyParams(recipients, caip2ChainId, false),
-          amounts: {
+        sendBitcoin(sender, origin, {
+          ...createSendBitcoinParams(recipients, caip2ChainId, false),
+          recipients: {
             [recipients[0].address]: '1',
             [recipients[1].address]: '999999999.99999999',
           },
@@ -170,21 +167,21 @@ describe('SendManyHandler', () => {
     it('throws `Invalid response` error if the response is unexpected', async () => {
       const caip2ChainId = Caip2ChainId.Testnet;
       const { sender, recipients, broadcastTransactionSpy } =
-        await prepareSendMany(caip2ChainId);
+        await prepareSendBitcoin(caip2ChainId);
 
       broadcastTransactionSpy.mockResolvedValue({
         transactionId: '',
       });
       await expect(
-        sendMany(sender, origin, {
-          ...createSendManyParams(recipients, caip2ChainId, false),
+        sendBitcoin(sender, origin, {
+          ...createSendBitcoinParams(recipients, caip2ChainId, false),
         }),
       ).rejects.toThrow('Invalid Response');
     });
 
     it('throws `Failed to send the transaction` error if no fee rate is returned from the chain service', async () => {
       const caip2ChainId = Caip2ChainId.Testnet;
-      const { sender, recipients, getFeeRatesSpy } = await prepareSendMany(
+      const { sender, recipients, getFeeRatesSpy } = await prepareSendBitcoin(
         caip2ChainId,
       );
       getFeeRatesSpy.mockResolvedValue({
@@ -192,10 +189,10 @@ describe('SendManyHandler', () => {
       });
 
       await expect(
-        sendMany(
+        sendBitcoin(
           sender,
           origin,
-          createSendManyParams(recipients, caip2ChainId, false),
+          createSendBitcoinParams(recipients, caip2ChainId, false),
         ),
       ).rejects.toThrow('Failed to send the transaction');
     });
@@ -203,12 +200,12 @@ describe('SendManyHandler', () => {
     it('throws `Failed to send the transaction` error if the transaction is fail to commit', async () => {
       const caip2ChainId = Caip2ChainId.Testnet;
       const { broadcastTransactionSpy, sender, recipients } =
-        await prepareSendMany(caip2ChainId);
+        await prepareSendBitcoin(caip2ChainId);
       broadcastTransactionSpy.mockRejectedValue(new Error('error'));
 
       await expect(
-        sendMany(sender, origin, {
-          ...createSendManyParams(recipients, caip2ChainId, false),
+        sendBitcoin(sender, origin, {
+          ...createSendBitcoinParams(recipients, caip2ChainId, false),
         }),
       ).rejects.toThrow('Failed to send the transaction');
     });
