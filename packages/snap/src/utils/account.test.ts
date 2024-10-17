@@ -38,7 +38,7 @@ describe('verifyIfAccountValid', function () {
         scope: caip2ChainId,
         index,
       },
-      methods: [BtcMethod.SendBitcoin],
+      methods: [`${BtcMethod.SendBitcoin}`],
     } as unknown as KeyringAccount;
   };
 

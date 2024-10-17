@@ -58,7 +58,7 @@ export class BtcKeyring implements Keyring {
 
   protected readonly _options: KeyringOptions;
 
-  protected readonly _methods = [BtcMethod.SendBitcoin];
+  protected readonly _methods = [`${BtcMethod.SendBitcoin}`];
 
   constructor(stateMgr: KeyringStateManager, options: KeyringOptions) {
     this._stateMgr = stateMgr;
@@ -189,7 +189,7 @@ export class BtcKeyring implements Keyring {
     this.verifyIfMethodValid(method, walletData.account);
 
     switch (method) {
-      case BtcMethod.SendBitcoin: {
+      case `${BtcMethod.SendBitcoin}`: {
         return await this.handleSendBitcoin({
           scope: scope as Caip2ChainId,
           walletData,

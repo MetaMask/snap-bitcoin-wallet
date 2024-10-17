@@ -134,7 +134,7 @@ export async function createMockKeyringAccount(
       scope: caip2ChainId,
       index: account.index,
     },
-    methods: [BtcMethod.SendBitcoin],
+    methods: [`${BtcMethod.SendBitcoin}`],
   } as unknown as KeyringAccount;
 
   getWalletSpy.mockResolvedValue({

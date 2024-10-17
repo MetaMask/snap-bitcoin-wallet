@@ -47,7 +47,7 @@ const mockAccount = {
     scope: Caip2ChainId.Mainnet,
     index: '1',
   },
-  methods: [BtcMethod.SendBitcoin],
+  methods: [`${BtcMethod.SendBitcoin}`],
 };
 
 const mockContext: SendFlowContext = {

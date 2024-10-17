@@ -37,7 +37,7 @@ export function generateAccounts(cnt = 1, addressPrefix = '') {
         scope: Caip2ChainId.Testnet,
         index: i,
       },
-      methods: [BtcMethod.SendBitcoin],
+      methods: [`${BtcMethod.SendBitcoin}`],
     });
   }
 

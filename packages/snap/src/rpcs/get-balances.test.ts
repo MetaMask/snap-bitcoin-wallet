@@ -39,7 +39,7 @@ describe('getBalances', () => {
         scope: caip2ChainId,
         index: sender.index,
       },
-      methods: [BtcMethod.SendBitcoin],
+      methods: [`${BtcMethod.SendBitcoin}`],
     };
 
     const walletData = {

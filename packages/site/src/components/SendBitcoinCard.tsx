@@ -27,7 +27,7 @@ export const SendBitcoinCard = ({
         id: uuidV4(),
         scope,
         request: {
-          method: BtcMethod.SendBitcoin,
+          method: `${BtcMethod.SendBitcoin}`,
           params: {
             recipients: {
               [address]: '0.00000500',
