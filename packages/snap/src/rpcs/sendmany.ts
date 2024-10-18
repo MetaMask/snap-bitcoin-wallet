@@ -13,6 +13,7 @@ import {
 } from 'superstruct';
 
 import { type BtcAccount, TxValidationError } from '../bitcoin/wallet';
+import { Config } from '../config';
 import { Factory } from '../factory';
 import {
   ScopeStruct,
@@ -76,6 +77,9 @@ export async function sendMany(
   _origin: string,
   params: SendManyParams,
 ) {
+  // FIXME: This is a temporary solution to enable sats protection for sendMany RPC.
+  const enableSatsProtection: boolean = Config.defaultSatsProtectionEnablement;
+
   try {
     validateRequest(params, SendManyParamsStruct);
 
@@ -94,9 +98,9 @@ export async function sendMany(
       }),
     );
 
-    const {
-      data: { utxos },
-    } = await chainApi.getDataForTransaction([account.address]);
+    const utxos = await wallet.getSpendableUtxos(account, {
+      satsProtection: enableSatsProtection,
+    });
 
     const txResp = await wallet.createTransaction(account, recipients, {
       utxos,

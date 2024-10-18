@@ -43,6 +43,9 @@ export type EstimateFeeResponse = Infer<typeof EstimateFeeResponseStruct>;
  * @returns A Promise that resolves to an EstimateFeeResponse object.
  */
 export async function estimateFee(params: EstimateFeeParams) {
+  // FIXME: This is a temporary solution to enable sats protection.
+  const enableSatsProtection: boolean = Config.defaultSatsProtectionEnablement;
+
   try {
     validateRequest(params, EstimateFeeParamsStruct);
 
@@ -70,9 +73,9 @@ export async function estimateFee(params: EstimateFeeParams) {
 
     const fee = getFeeRate(feesResp.fees);
 
-    const {
-      data: { utxos },
-    } = await chainApi.getDataForTransaction([account.address]);
+    const utxos = await wallet.getSpendableUtxos(account, {
+      satsProtection: enableSatsProtection,
+    });
 
     // TODO: change this to use the first address from account when we support multi-addresses per accounts
     // We do not need the real recipient address when estimating the fees, so we just use our account's address here

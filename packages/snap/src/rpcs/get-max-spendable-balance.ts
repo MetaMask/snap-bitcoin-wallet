@@ -50,6 +50,9 @@ export type GetMaxSpendableBalanceResponse = Infer<
 export async function getMaxSpendableBalance(
   params: GetMaxSpendableBalanceParams,
 ) {
+  // FIXME: This is a temporary solution to enable sats protection.
+  const enableSatsProtection: boolean = Config.defaultSatsProtectionEnablement;
+
   try {
     validateRequest(params, GetMaxSpendableBalanceParamsStruct);
 
@@ -77,9 +80,9 @@ export async function getMaxSpendableBalance(
 
     const fee = getFeeRate(feesResp.fees);
 
-    const {
-      data: { utxos },
-    } = await chainApi.getDataForTransaction([account.address]);
+    const utxos = await wallet.getSpendableUtxos(account, {
+      satsProtection: enableSatsProtection,
+    });
 
     let spendable = BigInt(0);
     let estimatedFee = BigInt(0);

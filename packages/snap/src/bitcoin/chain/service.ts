@@ -4,7 +4,7 @@ import { networks } from 'bitcoinjs-lib';
 import { Caip2Asset } from '../../constants';
 import { compactError } from '../../utils';
 import type { FeeRate, TransactionStatus } from './constants';
-import type { IDataClient } from './data-client';
+import type { IDataClient, ISatsProtectionDataClient } from './data-client';
 import { BtcOnChainServiceError } from './exceptions';
 
 export type TransactionStatusData = {
@@ -53,13 +53,24 @@ export type BtcOnChainServiceOptions = {
   network: Network;
 };
 
+export type BtcOnChainServiceClients = {
+  dataClient: IDataClient;
+  satsProtectionDataClient: ISatsProtectionDataClient;
+};
+
 export class BtcOnChainService {
   protected readonly _dataClient: IDataClient;
 
+  protected readonly _satsProtectionDataClient: ISatsProtectionDataClient;
+
   protected readonly _options: BtcOnChainServiceOptions;
 
-  constructor(dataClient: IDataClient, options: BtcOnChainServiceOptions) {
+  constructor(
+    { dataClient, satsProtectionDataClient }: BtcOnChainServiceClients,
+    options: BtcOnChainServiceOptions,
+  ) {
     this._dataClient = dataClient;
+    this._satsProtectionDataClient = satsProtectionDataClient;
     this._options = options;
   }
 
@@ -155,15 +166,25 @@ export class BtcOnChainService {
    */
   async getDataForTransaction(addresses: string[]): Promise<TransactionData> {
     try {
-      const data = await this._dataClient.getUtxos(addresses);
+      const utxos = await this._dataClient.getUtxos(addresses);
+
       return {
         data: {
-          utxos: data,
+          utxos,
         },
       };
     } catch (error) {
       throw compactError(error, BtcOnChainServiceError);
     }
+  }
+
+  async getSpendableUtxos(addresses: string[], utxos: Utxo[]): Promise<Utxo[]> {
+    // Sats Protection is only supported for mainnet network
+    // Therefore we don't need to filter the utxos for testnet
+    if (this.network !== networks.bitcoin) {
+      return utxos;
+    }
+    return await this._satsProtectionDataClient.filterUtxos(addresses, utxos);
   }
 
   /**

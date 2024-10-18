@@ -1,22 +1,32 @@
 import { BtcOnChainService } from './bitcoin/chain';
 import { QuickNodeClient } from './bitcoin/chain/clients/quicknode';
+import { SimpleHashClient } from './bitcoin/chain/clients/simplehash';
 import { BtcAccountDeriver, BtcWallet, getBtcNetwork } from './bitcoin/wallet';
-import { Config } from './config';
+import { ApiClient, Config } from './config';
 
 export class Factory {
   static createOnChainServiceProvider(scope: string): BtcOnChainService {
     const btcNetwork = getBtcNetwork(scope);
 
-    return new BtcOnChainService(Factory.createQuickNodeClient(scope), {
-      network: btcNetwork,
-    });
+    const quickNodeClient = Factory.createQuickNodeClient(scope);
+    const simpleHashClient = Factory.createSimpleHashClient();
+
+    return new BtcOnChainService(
+      {
+        dataClient: quickNodeClient,
+        satsProtectionDataClient: simpleHashClient,
+      },
+      {
+        network: btcNetwork,
+      },
+    );
   }
 
   static createQuickNodeClient(scope: string): QuickNodeClient {
     const btcNetwork = getBtcNetwork(scope);
 
     const { mainnetEndpoint, testnetEndpoint } =
-      Config.onChainService.dataClient.options;
+      Config.onChainService.apiClient[ApiClient.QuickNode].options;
 
     if (!mainnetEndpoint || !testnetEndpoint) {
       throw new Error('QuickNode endpoints have not been configured');
@@ -26,6 +36,19 @@ export class Factory {
       network: btcNetwork,
       mainnetEndpoint,
       testnetEndpoint,
+    });
+  }
+
+  static createSimpleHashClient(): SimpleHashClient {
+    const { apiKey } =
+      Config.onChainService.apiClient[ApiClient.SimpleHash].options;
+
+    if (!apiKey) {
+      throw new Error('Simplehash api key have not been configured');
+    }
+
+    return new SimpleHashClient({
+      apiKey,
     });
   }
 

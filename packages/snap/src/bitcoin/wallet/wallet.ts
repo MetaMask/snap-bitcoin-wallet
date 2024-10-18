@@ -2,8 +2,9 @@ import type { BIP32Interface } from 'bip32';
 import { networks, type Network } from 'bitcoinjs-lib';
 import { type Buffer } from 'buffer';
 
+import { Factory } from '../../factory';
 import { bufferToString, compactError, hexToBuffer, logger } from '../../utils';
-import type { Utxo } from '../chain';
+import type { BtcOnChainService, Utxo } from '../chain';
 import type { BtcAccount } from './account';
 import {
   P2WPKHAccount,
@@ -24,7 +25,7 @@ import { AccountSigner } from './signer';
 import { TxInfo } from './transaction-info';
 import { TxInput } from './transaction-input';
 import { TxOutput } from './transaction-output';
-import { isDust, getScriptForDestination } from './utils';
+import { isDust, getScriptForDestination, getCaip2ChainId } from './utils';
 
 export type Recipient = {
   address: string;
@@ -60,9 +61,14 @@ export class BtcWallet {
 
   protected readonly _network: Network;
 
+  protected readonly _chainApi: BtcOnChainService;
+
   constructor(deriver: BtcAccountDeriver, network: Network) {
     this._deriver = deriver;
     this._network = network;
+    this._chainApi = Factory.createOnChainServiceProvider(
+      getCaip2ChainId(network),
+    );
   }
 
   /**
@@ -201,6 +207,41 @@ export class BtcWallet {
       new TxOutput(0, account.address, scriptOutput),
       feeRate,
     );
+  }
+
+  /**
+   * Get the filtered UTXOS to spend with the given account.
+   *
+   * @param account - The `IAccount` object to create the transaction.
+   * @param filters - The options to filter the UTXOs.
+   * @param filters.satsProtection - The options to filter the UTXOs that contain inscriptions, raresats, and runes.
+   * @returns A promise that resolves to the filtered the UTXOs.
+   */
+  async getSpendableUtxos(
+    account: BtcAccount,
+    filters: {
+      satsProtection: boolean;
+    },
+  ): Promise<Utxo[]> {
+    try {
+      const { satsProtection } = filters;
+
+      // TODO: add filter to filter UTXOs that has marked used
+
+      // FIXME: the account address should be an replaced by Dynamic addresses
+      const {
+        data: { utxos },
+      } = await this._chainApi.getDataForTransaction([account.address]);
+
+      if (satsProtection) {
+        // FIXME: the account address should be an replaced by Dynamic addresses
+        return await this._chainApi.getSpendableUtxos([account.address], utxos);
+      }
+
+      return utxos;
+    } catch (error) {
+      throw compactError(error, WalletError);
+    }
   }
 
   /**
