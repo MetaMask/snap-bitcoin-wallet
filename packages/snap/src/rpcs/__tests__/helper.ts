@@ -351,7 +351,7 @@ export class SendBitcoinTest extends EstimateFeeTest {
 
   #broadCastTxResp: string | null;
 
-  constructor(testCase: SendManyCreateOption) {
+  constructor(testCase: SendBitcoinCreateOption) {
     super(testCase);
     const { broadcastTransactionSpy } = createMockChainApiFactory();
     this.broadcastTransactionSpy = broadcastTransactionSpy;
