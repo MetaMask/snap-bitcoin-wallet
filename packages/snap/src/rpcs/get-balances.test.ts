@@ -1,4 +1,4 @@
-import type { KeyringAccount } from '@metamask/keyring-api';
+import { BtcMethod, type KeyringAccount } from '@metamask/keyring-api';
 import { InvalidParamsError } from '@metamask/snaps-sdk';
 import { networks } from 'bitcoinjs-lib';
 import { v4 as uuidv4 } from 'uuid';
@@ -39,7 +39,7 @@ describe('getBalances', () => {
         scope: caip2ChainId,
         index: sender.index,
       },
-      methods: ['btc_sendmany'],
+      methods: [`${BtcMethod.SendBitcoin}`],
     };
 
     const walletData = {
