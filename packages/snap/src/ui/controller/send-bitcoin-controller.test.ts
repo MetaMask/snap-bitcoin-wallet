@@ -1,5 +1,5 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
-import { BtcAccountType } from '@metamask/keyring-api';
+import { BtcAccountType, BtcMethod } from '@metamask/keyring-api';
 import type { UserInputEvent } from '@metamask/snaps-sdk';
 import { UserInputEventType } from '@metamask/snaps-sdk';
 import BigNumber from 'bignumber.js';
@@ -13,7 +13,10 @@ import { SendFormNames } from '../components/SendForm';
 import { updateSendFlow } from '../render-interfaces';
 import type { SendFlowContext, SendFormState } from '../types';
 import { AssetType } from '../types';
-import { SendManyController, isSendFormEvent } from './send-many-controller';
+import {
+  SendBitcoinController,
+  isSendFormEvent,
+} from './send-bitcoin-controller';
 
 jest.mock('../../rpcs', () => ({
   ...jest.requireActual('../../rpcs'),
@@ -27,11 +30,10 @@ global.snap = {
   request: jest.fn(),
 };
 
-const mockGenerateConfirmationReviewInterface = jest.fn();
+const mockDisplayConfirmationReview = jest.fn();
 jest.mock('../render-interfaces', () => ({
   updateSendFlow: jest.fn(),
-  generateConfirmationReviewInterface: (args) =>
-    mockGenerateConfirmationReviewInterface(args),
+  displayConfirmationReview: (args) => mockDisplayConfirmationReview(args),
 }));
 
 const mockInterfaceId = 'interfaceId';
@@ -45,7 +47,7 @@ const mockAccount = {
     scope: Caip2ChainId.Mainnet,
     index: '1',
   },
-  methods: ['btc_sendmany'],
+  methods: [`${BtcMethod.SendBitcoin}`],
 };
 
 const mockContext: SendFlowContext = {
@@ -66,7 +68,7 @@ const createMockStateManager = () => {
   };
 };
 
-describe('SendManyController', () => {
+describe('SendBitcoinController', () => {
   afterEach(() => {
     jest.resetAllMocks();
   });
@@ -193,7 +195,7 @@ describe('SendManyController', () => {
       const { instance: stateManager, upsertRequestSpy } =
         createMockStateManager();
 
-      const controller = new SendManyController({
+      const controller = new SendBitcoinController({
         stateManager,
         request: mockRequest,
         context: mockContext,
@@ -236,7 +238,7 @@ describe('SendManyController', () => {
 
       const { instance: stateManager } = createMockStateManager();
 
-      const controller = new SendManyController({
+      const controller = new SendBitcoinController({
         stateManager,
         request: mockRequest,
         context: mockContext,
@@ -268,7 +270,7 @@ describe('SendManyController', () => {
 
       const { instance: stateManager } = createMockStateManager();
 
-      const controller = new SendManyController({
+      const controller = new SendBitcoinController({
         stateManager,
         request: mockRequest,
         context: mockContext,
@@ -306,7 +308,7 @@ describe('SendManyController', () => {
 
         const { instance: stateManager } = createMockStateManager();
 
-        const controller = new SendManyController({
+        const controller = new SendBitcoinController({
           stateManager,
           request: mockRequest,
           context: mockContext,
@@ -347,7 +349,7 @@ describe('SendManyController', () => {
 
         const { instance: stateManager } = createMockStateManager();
 
-        const controller = new SendManyController({
+        const controller = new SendBitcoinController({
           stateManager,
           request: mockRequest,
           context: mockContext,
@@ -390,7 +392,7 @@ describe('SendManyController', () => {
 
         const { instance: stateManager } = createMockStateManager();
 
-        const controller = new SendManyController({
+        const controller = new SendBitcoinController({
           stateManager,
           request: mockRequest,
           context: mockContext,
@@ -434,7 +436,7 @@ describe('SendManyController', () => {
 
         const { instance: stateManager } = createMockStateManager();
 
-        const controller = new SendManyController({
+        const controller = new SendBitcoinController({
           stateManager,
           request: mockRequest,
           context: mockContext,
@@ -476,7 +478,7 @@ describe('SendManyController', () => {
 
         const { instance: stateManager } = createMockStateManager();
 
-        const controller = new SendManyController({
+        const controller = new SendBitcoinController({
           stateManager,
           request: mockRequest,
           context: mockContext,
@@ -512,7 +514,7 @@ describe('SendManyController', () => {
 
         const { instance: stateManager } = createMockStateManager();
 
-        const controller = new SendManyController({
+        const controller = new SendBitcoinController({
           stateManager,
           request: mockRequest,
           context: mockContext,
@@ -553,7 +555,7 @@ describe('SendManyController', () => {
 
       const { instance: stateManager } = createMockStateManager();
 
-      const controller = new SendManyController({
+      const controller = new SendBitcoinController({
         stateManager,
         request: mockRequest,
         context: mockContext,
@@ -579,7 +581,7 @@ describe('SendManyController', () => {
 
       const { instance: stateManager } = createMockStateManager();
 
-      const controller = new SendManyController({
+      const controller = new SendBitcoinController({
         stateManager,
         request: mockRequest,
         context: mockContext,
@@ -610,7 +612,7 @@ describe('SendManyController', () => {
       mockRequest.recipient.address = 'address';
       const { instance: stateManager } = createMockStateManager();
 
-      const controller = new SendManyController({
+      const controller = new SendBitcoinController({
         stateManager,
         request: mockRequest,
         context: mockContext,
@@ -629,7 +631,7 @@ describe('SendManyController', () => {
       );
       const { instance: stateManager } = createMockStateManager();
 
-      const controller = new SendManyController({
+      const controller = new SendBitcoinController({
         stateManager,
         request: mockRequest,
         context: mockContext,
@@ -648,7 +650,7 @@ describe('SendManyController', () => {
       );
       const { instance: stateManager } = createMockStateManager();
 
-      const controller = new SendManyController({
+      const controller = new SendBitcoinController({
         stateManager,
         request: mockRequest,
         context: mockContext,
@@ -677,7 +679,7 @@ describe('SendManyController', () => {
       );
       const { instance: stateManager } = createMockStateManager();
 
-      const controller = new SendManyController({
+      const controller = new SendBitcoinController({
         stateManager,
         request: mockRequest,
         context: mockContext,
@@ -690,7 +692,7 @@ describe('SendManyController', () => {
       };
       expect(controller.request.status).toBe(TransactionStatus.Review);
       expect(stateManager.upsertRequest).toHaveBeenCalledWith(expectedResult);
-      expect(mockGenerateConfirmationReviewInterface).toHaveBeenCalledWith({
+      expect(mockDisplayConfirmationReview).toHaveBeenCalledWith({
         request: expectedResult,
       });
     });
@@ -705,7 +707,7 @@ describe('SendManyController', () => {
       mockRequest.status = TransactionStatus.Review;
       const { instance: stateManager } = createMockStateManager();
 
-      const controller = new SendManyController({
+      const controller = new SendBitcoinController({
         stateManager,
         request: mockRequest,
         context: mockContext,
@@ -736,7 +738,7 @@ describe('SendManyController', () => {
       );
       const { instance: stateManager } = createMockStateManager();
 
-      const controller = new SendManyController({
+      const controller = new SendBitcoinController({
         stateManager,
         request: mockRequest,
         context: mockContext,
@@ -781,7 +783,7 @@ describe('SendManyController', () => {
       );
       const { instance: stateManager } = createMockStateManager();
 
-      const controller = new SendManyController({
+      const controller = new SendBitcoinController({
         stateManager,
         request: mockRequest,
         context: mockContext,

@@ -5,7 +5,7 @@ import {
 } from '../exceptions';
 import { TransactionStatus } from '../stateManagement';
 import { AssetType } from '../ui/types';
-import { generateSendManyParams } from '../ui/utils';
+import { generateSendBitcoinParams } from '../ui/utils';
 import { StartSendTransactionFlowTest } from './__tests__/helper';
 import { startSendTransactionFlow } from './start-send-transaction-flow';
 
@@ -62,7 +62,7 @@ describe('startSendTransactionFlow', () => {
       interfaceId: 'mock-interfaceId',
       account: keyringAccount,
       scope: mockScope,
-      transaction: generateSendManyParams(mockScope),
+      transaction: generateSendBitcoinParams(mockScope),
       status: TransactionStatus.Draft,
       selectedCurrency: AssetType.BTC,
       recipient: {
@@ -104,7 +104,7 @@ describe('startSendTransactionFlow', () => {
     expect(helper.generateSendFlowSpy).toHaveBeenCalledTimes(1);
     expect(helper.upsertRequestSpy).toHaveBeenCalledTimes(4);
     expect(transactionTx).toStrictEqual({
-      txId: '0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098',
+      txId: helper.broadCastTxResp,
     });
   });
 
@@ -131,7 +131,7 @@ describe('startSendTransactionFlow', () => {
       interfaceId: 'mock-interfaceId',
       account: keyringAccount,
       scope: mockScope,
-      transaction: generateSendManyParams(mockScope),
+      transaction: generateSendBitcoinParams(mockScope),
       status: TransactionStatus.Draft,
       selectedCurrency: AssetType.BTC,
       recipient: {

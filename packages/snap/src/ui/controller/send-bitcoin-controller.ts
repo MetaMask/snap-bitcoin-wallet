@@ -7,7 +7,7 @@ import type { KeyringStateManager } from '../../stateManagement';
 import { TransactionStatus, type SendFlowRequest } from '../../stateManagement';
 import { SendFormNames } from '../components/SendForm';
 import {
-  generateConfirmationReviewInterface,
+  displayConfirmationReview,
   updateSendFlow,
 } from '../render-interfaces';
 import { AssetType, type SendFlowContext, type SendFormState } from '../types';
@@ -17,7 +17,7 @@ export const isSendFormEvent = (event: UserInputEvent): boolean => {
   return Object.values(SendFormNames).includes(event?.name as SendFormNames);
 };
 
-export class SendManyController {
+export class SendBitcoinController {
   protected stateManager: KeyringStateManager;
 
   request: SendFlowRequest;
@@ -210,7 +210,7 @@ export class SendManyController {
       case SendFormNames.Review: {
         this.request.status = TransactionStatus.Review;
         await this.persistRequest(this.request);
-        await generateConfirmationReviewInterface({ request: this.request });
+        await displayConfirmationReview({ request: this.request });
         return null;
       }
       case SendFormNames.Send: {

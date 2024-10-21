@@ -1,4 +1,5 @@
 import {
+  BtcMethod,
   KeyringEvent,
   emitSnapKeyringEvent,
   type Keyring,
@@ -23,7 +24,7 @@ import { Config } from './config';
 import { Caip2ChainId } from './constants';
 import { AccountNotFoundError, MethodNotImplementedError } from './exceptions';
 import { Factory } from './factory';
-import { getBalances, type SendManyParams, sendMany } from './rpcs';
+import { getBalances, type SendBitcoinParams, sendBitcoin } from './rpcs';
 import { createRatesAndBalances } from './rpcs/get-rates-and-balances';
 import {
   TransactionStatus,
@@ -57,7 +58,7 @@ export class BtcKeyring implements Keyring {
 
   protected readonly _options: KeyringOptions;
 
-  protected readonly _methods = ['btc_sendmany'];
+  protected readonly _methods = [`${BtcMethod.SendBitcoin}`];
 
   constructor(stateMgr: KeyringStateManager, options: KeyringOptions) {
     this._stateMgr = stateMgr;
@@ -188,12 +189,12 @@ export class BtcKeyring implements Keyring {
     this.verifyIfMethodValid(method, walletData.account);
 
     switch (method) {
-      case 'btc_sendmany': {
-        return await this.handleSendMany({
+      case `${BtcMethod.SendBitcoin}`: {
+        return await this.handleSendBitcoin({
           scope: scope as Caip2ChainId,
           walletData,
           account,
-          params: params as SendManyParams,
+          params: params as SendBitcoinParams,
         });
       }
       default:
@@ -205,7 +206,6 @@ export class BtcKeyring implements Keyring {
     event: KeyringEvent,
     data: Record<string, Json>,
   ): Promise<void> {
-    // @ts-expect-error TODO: fix type
     await emitSnapKeyringEvent(getProvider(), event, data);
   }
 
@@ -296,7 +296,7 @@ export class BtcKeyring implements Keyring {
     }
   }
 
-  protected async handleSendMany({
+  protected async handleSendBitcoin({
     scope,
     walletData,
     account,
@@ -305,7 +305,7 @@ export class BtcKeyring implements Keyring {
     scope: Caip2ChainId;
     walletData: Wallet;
     account: BtcAccount;
-    params: SendManyParams;
+    params: SendBitcoinParams;
   }): Promise<Json> {
     const asset = getAssetTypeFromScope(scope);
 
@@ -341,7 +341,7 @@ export class BtcKeyring implements Keyring {
     // this has been updated via onInputHandler
     await this._stateMgr.upsertRequest(sendFlowRequest);
     try {
-      const tx = await sendMany(account, this._options.origin, {
+      const tx = await sendBitcoin(account, this._options.origin, {
         ...sendFlowRequest.transaction,
         scope,
       });

@@ -6,7 +6,7 @@ export * from './MetaMask';
 export * from './PoweredBy';
 export * from './SnapLogo';
 export * from './Toggle';
-export * from './SendManyCard';
+export * from './SendBitcoinCard';
 export * from './GetTransactionStatusCard';
 export * from './GetBalancesCard';
 export * from './EstimateFeeCard';

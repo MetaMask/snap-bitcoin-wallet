@@ -164,8 +164,7 @@ describe('BtcWallet', () => {
         {
           utxos,
           fee: 56,
-          subtractFeeFrom: [],
-          replaceable: false,
+          replaceable: true,
         },
       );
 
@@ -194,8 +193,7 @@ describe('BtcWallet', () => {
         {
           utxos,
           fee: 50,
-          subtractFeeFrom: [],
-          replaceable: false,
+          replaceable: true,
         },
       );
 
@@ -228,8 +226,7 @@ describe('BtcWallet', () => {
         {
           utxos,
           fee: 1,
-          subtractFeeFrom: [],
-          replaceable: false,
+          replaceable: true,
         },
       );
 
@@ -248,7 +245,7 @@ describe('BtcWallet', () => {
       }
     });
 
-    it('uses `replaceable = false` if not provided', async () => {
+    it('uses `replaceable = true` if not provided', async () => {
       const network = networks.testnet;
       const { instance } = createMockDeriver(network);
       const wallet = new BtcWallet(instance, network);
@@ -263,13 +260,12 @@ describe('BtcWallet', () => {
         {
           utxos,
           fee: 1,
-          subtractFeeFrom: [],
         },
       );
 
       expect(psbtSpy).toHaveBeenCalledWith(
         expect.any(Array<TxInput>),
-        false,
+        true,
         expect.any(String),
         expect.any(Buffer),
         expect.any(Buffer),
@@ -307,8 +303,7 @@ describe('BtcWallet', () => {
         {
           utxos,
           fee: 1,
-          subtractFeeFrom: [],
-          replaceable: false,
+          replaceable: true,
         },
       );
 
@@ -332,8 +327,7 @@ describe('BtcWallet', () => {
           {
             utxos,
             fee: 20,
-            subtractFeeFrom: [],
-            replaceable: false,
+            replaceable: true,
           },
         ),
       ).rejects.toThrow('Transaction amount too small');
@@ -354,8 +348,7 @@ describe('BtcWallet', () => {
           {
             utxos,
             fee: 20,
-            subtractFeeFrom: [],
-            replaceable: false,
+            replaceable: true,
           },
         ),
       ).rejects.toThrow('Insufficient funds');
@@ -376,8 +369,7 @@ describe('BtcWallet', () => {
         {
           utxos,
           fee: 1,
-          subtractFeeFrom: [],
-          replaceable: false,
+          replaceable: true,
         },
       );
 
