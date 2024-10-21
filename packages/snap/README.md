@@ -7,9 +7,12 @@ Configurations are setup though `.env`,
 
 ```bash
 LOG_LEVEL=6
-# Description: Environment variables for API key of BlockChair
-# Required: false
-BLOCKCHAIR_API_KEY=
+# Description: Environment variables for the Testnet endpoint of QuickNode
+# Required: true
+QUICKNODE_TESTNET_ENDPOINT=
+# Description: Environment variables for the Mainnet endpoint of QuickNode
+# Required: true
+QUICKNODE_MAINNET_ENDPOINT=
 ```
 
 ## Rpcs:

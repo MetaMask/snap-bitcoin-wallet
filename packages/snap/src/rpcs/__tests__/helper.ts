@@ -2,8 +2,8 @@ import { BtcMethod, type KeyringAccount } from '@metamask/keyring-api';
 import { v4 as uuidV4 } from 'uuid';
 
 import {
-  generateBlockChairBroadcastTransactionResp,
-  generateBlockChairGetUtxosResp,
+  generateQuickNodeSendRawTransactionResp,
+  generateFormattedUtxos,
 } from '../../../test/utils';
 import type { Utxo } from '../../bitcoin/chain';
 import { BtcOnChainService } from '../../bitcoin/chain';
@@ -88,27 +88,12 @@ export function createMockGetDataForTransactionResp(
   minVal = 10000,
   maxVal = 100000,
 ) {
-  const mockResponse = generateBlockChairGetUtxosResp(
-    address,
-    counter,
-    minVal,
-    maxVal,
-  );
+  const utxos = generateFormattedUtxos(address, counter, minVal, maxVal);
 
-  let total = 0;
-  const data = mockResponse.data[address].utxo.map((utxo) => {
-    const { value } = utxo;
-    total += value;
-    return {
-      block: utxo.block_id,
-      txHash: utxo.transaction_hash,
-      index: utxo.index,
-      value,
-    };
-  });
+  const total = utxos.reduce((acc, utxo) => acc + utxo.value, 0);
 
   return {
-    data,
+    data: utxos,
     total,
   };
 }
@@ -364,6 +349,8 @@ export class SendBitcoinTest extends EstimateFeeTest {
 
   alertDialogSpy: jest.SpyInstance;
 
+  #broadCastTxResp: string | null;
+
   constructor(testCase: SendBitcoinCreateOption) {
     super(testCase);
     const { broadcastTransactionSpy } = createMockChainApiFactory();
@@ -408,7 +395,10 @@ export class SendBitcoinTest extends EstimateFeeTest {
   }
 
   get broadCastTxResp() {
-    return generateBlockChairBroadcastTransactionResp().data.transaction_hash;
+    if (!this.#broadCastTxResp) {
+      this.#broadCastTxResp = generateQuickNodeSendRawTransactionResp().result;
+    }
+    return this.#broadCastTxResp;
   }
 }
 
