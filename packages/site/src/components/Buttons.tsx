@@ -115,7 +115,7 @@ export const GetTransactionStatusButton = (
   return <Button {...props}>Get Status</Button>;
 };
 
-export const SendManyButton = (props: ComponentProps<typeof Button>) => {
+export const SendBitcoinButton = (props: ComponentProps<typeof Button>) => {
   return <Button {...props}>Send txn</Button>;
 };
 

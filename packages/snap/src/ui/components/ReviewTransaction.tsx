@@ -11,17 +11,28 @@ import {
   Text,
   Value,
   Image,
+  Link,
 } from '@metamask/snaps-sdk/jsx';
 import type { CaipAccountId } from '@metamask/utils';
 
+import { BaseExplorerUrl, Caip2ChainId } from '../../constants';
 import type { SendFlowRequest } from '../../stateManagement';
-import btcIcon from '../images/btc.svg';
+import btcIcon from '../images/btc-halo.svg';
 import { getNetworkNameFromScope } from '../utils';
 import { SendFlowHeader } from './SendFlowHeader';
 import { SendFormNames } from './SendForm';
 
 export type ReviewTransactionProps = SendFlowRequest & {
   txSpeed: string;
+};
+
+const getExplorerLink = (scope: string, address: string) => {
+  const explorerBaseLink =
+    scope === Caip2ChainId.Mainnet
+      ? BaseExplorerUrl.Mainnet
+      : BaseExplorerUrl.Testnet;
+
+  return `${explorerBaseLink}/${address}`;
 };
 
 export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
@@ -43,23 +54,31 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
       <Box>
         <SendFlowHeader heading="Review" />
         <Box alignment="center" center>
-          <Box>
+          <Box direction="horizontal" center>
             <Image src={btcIcon} />
           </Box>
-          <Heading>{`Sending ${total.amount} BTC`}</Heading>
+          <Heading size="lg">{`Sending ${total.amount} BTC`}</Heading>
           <Text color="muted">Review the transaction before proceeding</Text>
         </Box>
         <Section>
           <Row label="From">
-            <Address
-              address={`${account.type}:${account.address}` as CaipAccountId}
-            />
+            <Link href={getExplorerLink(scope, account.address)}>
+              <Address
+                address={`${account.type}:${account.address}` as CaipAccountId}
+              />
+            </Link>
           </Row>
           <Row label="Amount">
             <Value value={`${amount.amount} BTC`} extra={`$${amount.fiat}`} />
           </Row>
           <Row label="Recipient">
-            <Address address={`${account.type}:${recipient.address}`} />
+            <Link href={getExplorerLink(scope, recipient.address)}>
+              <Address
+                address={
+                  `${account.type}:${recipient.address}` as CaipAccountId
+                }
+              />
+            </Link>
           </Row>
         </Section>
         <Section>

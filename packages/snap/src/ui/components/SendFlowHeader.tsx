@@ -26,7 +26,7 @@ export const SendFlowHeader: SnapComponent<SendFlowHeaderProps> = ({
     <Button name={SendFormNames.HeaderBack}>
       <Icon name="arrow-left" color="primary" size="md" />
     </Button>
-    <Heading>{heading}</Heading>
+    <Heading size="sm">{heading}</Heading>
     <Text> </Text>
   </Box>
 );

@@ -4,6 +4,29 @@ import { Config } from '../config';
 import * as superstruct from './superstruct';
 
 describe('superstruct', () => {
+  describe('BitcoinAddressStruct', () => {
+    it.each([
+      '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
+      '3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy',
+      'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq',
+      'bc1p5d7rjq7g6rdk2yhzks9smlaqtedr4dekq08ge8ztwac72sfr9rusxg3297',
+      'tb1q9lakrt5sw0w0twnc6ww4vxs7hm0q23e03286k8',
+    ])('returns true for valid address: %s', (val: string) => {
+      expect(() => assert(val, superstruct.BitcoinAddressStruct)).not.toThrow(
+        Error,
+      );
+    });
+
+    it.each(['invalid', '0xA86Df057874BB37C324210a19d3DA51aA31A74C8'])(
+      'returns false for invalid address: %s',
+      (val: string) => {
+        expect(() => assert(val, superstruct.BitcoinAddressStruct)).toThrow(
+          Error,
+        );
+      },
+    );
+  });
+
   describe('PositiveNumberStringStruct', () => {
     it.each(['1', '1.2', '0.0023'])(
       'does not throw error if the value is valid: %s',

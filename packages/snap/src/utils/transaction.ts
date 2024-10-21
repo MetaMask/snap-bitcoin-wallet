@@ -3,7 +3,7 @@ import type { KeyringAccount } from '@metamask/keyring-api';
 import type { SendFlowRequest } from '../stateManagement';
 import { TransactionStatus, type SendFlowParams } from '../stateManagement';
 import { AssetType } from '../ui/types';
-import { generateSendManyParams } from '../ui/utils';
+import { generateSendBitcoinParams } from '../ui/utils';
 
 export const generateDefaultSendFlowParams = (): SendFlowParams => {
   return {
@@ -50,7 +50,7 @@ export const generateDefaultSendFlowRequest = (
     interfaceId,
     account,
     scope,
-    transaction: generateSendManyParams(scope),
+    transaction: generateSendBitcoinParams(scope),
     status: TransactionStatus.Draft,
     // Send flow params
     ...generateDefaultSendFlowParams(),
