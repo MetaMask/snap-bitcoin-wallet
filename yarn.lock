@@ -2833,15 +2833,15 @@ __metadata:
   linkType: hard
 
 "@metamask/eth-block-tracker@npm:^11.0.1":
-  version: 11.0.1
-  resolution: "@metamask/eth-block-tracker@npm:11.0.1"
+  version: 11.0.2
+  resolution: "@metamask/eth-block-tracker@npm:11.0.2"
   dependencies:
-    "@metamask/eth-json-rpc-provider": ^4.1.1
+    "@metamask/eth-json-rpc-provider": ^4.1.5
     "@metamask/safe-event-emitter": ^3.1.1
     "@metamask/utils": ^9.1.0
     json-rpc-random-id: ^1.0.1
     pify: ^5.0.0
-  checksum: 74c1259f7c2ee3074d5d5dc337fb81a89f562c755756210cd3eccc7fb9674c9101d58d88d6ac4c1a48a5676f85b99b87773819b26c52f41eae8e6ced454e11f9
+  checksum: 3a8a2474c8377a6af0c0fd9d0dea15dbba0c0f5794ace883804d5b467787d2411158867fa3fc810da7749b274df5b0bd6fd80282ff3128b5b334152a742fa111
   languageName: node
   linkType: hard
 
@@ -2864,7 +2864,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/eth-json-rpc-provider@npm:^4.1.1":
+"@metamask/eth-json-rpc-provider@npm:^4.1.1, @metamask/eth-json-rpc-provider@npm:^4.1.5":
   version: 4.1.5
   resolution: "@metamask/eth-json-rpc-provider@npm:4.1.5"
   dependencies:
