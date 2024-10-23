@@ -408,7 +408,6 @@ export function generateRandomTransactionId() {
 }
 
 /**
- * Method to generate formatted utxos with blockchair resp.
  * Method to generate formatted utxos with QuickNode resp.
  *
  * @param _address - the utxos owner address (deprecated).
