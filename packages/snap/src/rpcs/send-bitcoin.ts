@@ -1,10 +1,8 @@
-import { BtcP2wpkhAddressStruct } from '@metamask/keyring-api';
 import {
   object,
   string,
   type Infer,
   record,
-  array,
   boolean,
   refine,
   optional,
@@ -24,14 +22,15 @@ import {
   logger,
   AmountStruct,
   getFeeRate,
+  BitcoinAddressStruct,
 } from '../utils';
 
-export const TransactionAmountStruct = refine(
-  record(BtcP2wpkhAddressStruct, string()),
-  'TransactionAmountStruct',
+export const RecipientsStruct = refine(
+  record(BitcoinAddressStruct, string()),
+  'RecipientsStruct',
   (value: Record<string, string>) => {
     if (Object.entries(value).length === 0) {
-      return 'Transaction must have at least one recipient';
+      return 'Recipients object must have at least one recipient';
     }
 
     for (const val of Object.values(value)) {
@@ -42,27 +41,25 @@ export const TransactionAmountStruct = refine(
   },
 );
 
-export const SendManyStruct = object({
-  amounts: TransactionAmountStruct,
-  comment: string(),
-  subtractFeeFrom: array(BtcP2wpkhAddressStruct),
+export const SendBitcoinStruct = object({
+  recipients: RecipientsStruct,
   replaceable: boolean(),
   dryrun: optional(boolean()),
 });
 
-export const SendManyParamsStruct = object({
-  ...SendManyStruct.schema,
+export const SendBitcoinParamsStruct = object({
+  ...SendBitcoinStruct.schema,
   scope: ScopeStruct,
 });
 
-export const SendManyResponseStruct = object({
+export const SendBitcoinResponseStruct = object({
   txId: nonempty(string()),
   signedTransaction: optional(string()),
 });
 
-export type SendManyParams = Infer<typeof SendManyParamsStruct>;
+export type SendBitcoinParams = Infer<typeof SendBitcoinParamsStruct>;
 
-export type SendManyResponse = Infer<typeof SendManyResponseStruct>;
+export type SendBitcoinResponse = Infer<typeof SendBitcoinResponseStruct>;
 
 /**
  * Send BTC to multiple account.
@@ -70,20 +67,20 @@ export type SendManyResponse = Infer<typeof SendManyResponseStruct>;
  * @param account - The account to send the transaction.
  * @param _origin - The origin of the request.
  * @param params - The parameters for send the transaction.
- * @returns A Promise that resolves to an SendManyResponse object.
+ * @returns A Promise that resolves to an SendBitcoinResponse object.
  */
-export async function sendMany(
+export async function sendBitcoin(
   account: BtcAccount,
   _origin: string,
-  params: SendManyParams,
+  params: SendBitcoinParams,
 ) {
   // FIXME: This is a temporary solution to enable sats protection for sendMany RPC.
   const enableSatsProtection: boolean = Config.defaultSatsProtectionEnablement;
 
   try {
-    validateRequest(params, SendManyParamsStruct);
+    validateRequest(params, SendBitcoinParamsStruct);
 
-    const { dryrun, scope, subtractFeeFrom, replaceable } = params;
+    const { dryrun, scope, replaceable } = params;
     const chainApi = Factory.createOnChainServiceProvider(scope);
     const wallet = Factory.createWallet(scope);
 
@@ -91,7 +88,7 @@ export async function sendMany(
 
     const fee = getFeeRate(feesResp.fees);
 
-    const recipients = Object.entries(params.amounts).map(
+    const recipients = Object.entries(params.recipients).map(
       ([address, value]) => ({
         address,
         value: btcToSats(value),
@@ -105,7 +102,6 @@ export async function sendMany(
     const txResp = await wallet.createTransaction(account, recipients, {
       utxos,
       fee,
-      subtractFeeFrom,
       replaceable,
     });
 
@@ -130,7 +126,7 @@ export async function sendMany(
 
     logger.debug(`Submitted transaction ID: ${resp.txId}`);
 
-    validateResponse(resp, SendManyResponseStruct);
+    validateResponse(resp, SendBitcoinResponseStruct);
 
     return resp;
   } catch (error) {

@@ -49,7 +49,6 @@ export type ITxInfo = {
 export type CreateTransactionOptions = {
   utxos: Utxo[];
   fee: number;
-  subtractFeeFrom?: string[];
   //
   // BIP125 opt-in RBF flag,
   //
@@ -146,7 +145,8 @@ export class BtcWallet {
     const psbtService = new PsbtService(this._network);
     psbtService.addInputs(
       selectionResult.inputs,
-      options.replaceable ?? false,
+      // Is now enabled by default (requirement for the Keyring API v9.0.0)
+      options.replaceable ?? true,
       hdPath,
       hexToBuffer(pubkey, false),
       hexToBuffer(mfp, false),
@@ -154,7 +154,6 @@ export class BtcWallet {
 
     const txInfo = new TxInfo(address, feeRate);
 
-    // TODO: add support of subtractFeeFrom, and throw error if output is too small after subtraction
     for (const output of selectionResult.outputs) {
       psbtService.addOutput(output);
       txInfo.addRecipient(output);

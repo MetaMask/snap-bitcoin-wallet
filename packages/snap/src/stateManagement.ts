@@ -1,6 +1,6 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
 
-import { type EstimateFeeResponse, type SendManyParams } from './rpcs';
+import { type EstimateFeeResponse, type SendBitcoinParams } from './rpcs';
 import type { AssetType, Currency } from './ui/types';
 import { compactError, SnapStateManager } from './utils';
 
@@ -20,7 +20,7 @@ export type SendEstimate = {
   confirmationTime: string;
 };
 
-export type Transaction = SendManyParams & {
+export type Transaction = SendBitcoinParams & {
   sender: string;
   recipient: string;
   amount: string;
@@ -59,7 +59,7 @@ export enum TransactionStatus {
 }
 
 export type TransactionState = {
-  transaction: Omit<SendManyParams, 'scope'>;
+  transaction: Omit<SendBitcoinParams, 'scope'>;
   /* The status of the transaction 
     - draft: The transaction is being created and edited
     - review: The transaction is in a review state that is ready to be confirmed by the user to sign

@@ -17,7 +17,7 @@ export const isSendFormEvent = (event: UserInputEvent): boolean => {
   return Object.values(SendFormNames).includes(event?.name as SendFormNames);
 };
 
-export class SendManyController {
+export class SendBitcoinController {
   protected stateManager: KeyringStateManager;
 
   request: SendFlowRequest;

@@ -14,3 +14,8 @@ export const Caip2ChainIdToNetworkName: Record<CaipChainId, string> = {
   [Caip2ChainId.Mainnet]: 'Bitcoin Mainnet',
   [Caip2ChainId.Testnet]: 'Bitcoin Testnet',
 };
+
+export enum BaseExplorerUrl {
+  Mainnet = 'https://blockstream.info/address',
+  Testnet = 'https://blockstream.info/testnet/address',
+}

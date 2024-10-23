@@ -1,7 +1,19 @@
+// eslint-disable-next-line import/no-named-as-default
+import validate, { Network } from 'bitcoin-address-validation';
 import { enums, string, pattern, refine } from 'superstruct';
 
 import { Config } from '../config';
 import { btcToSats } from './unit';
+
+export const BitcoinAddressStruct = refine(
+  string(),
+  'BitcoinAddressStruct',
+  (address: string) => {
+    return (
+      validate(address, Network.mainnet) || validate(address, Network.testnet)
+    );
+  },
+);
 
 export const AssetsStruct = enums(Config.availableAssets);
 
