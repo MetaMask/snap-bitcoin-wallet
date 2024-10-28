@@ -3,8 +3,8 @@ import { networks } from 'bitcoinjs-lib';
 
 import {
   generateAccounts,
-  generateFormattedUtxos,
-  generateQuickNodeSendRawTransactionResp,
+  generateBlockChairBroadcastTransactionResp,
+  generateBlockChairGetUtxosResp,
 } from '../../../test/utils';
 import { Caip2Asset } from '../../constants';
 import { FeeRate, TransactionStatus } from './constants';
@@ -129,7 +129,13 @@ describe('BtcOnChainService', () => {
       const { instance: txService } = createMockBtcService(instance);
       const accounts = generateAccounts(1);
       const sender = accounts[0].address;
-      const utxos = generateFormattedUtxos(sender, 10);
+      const mockResponse = generateBlockChairGetUtxosResp(sender, 10);
+      const utxos = mockResponse.data[sender].utxo.map((utxo) => ({
+        block: utxo.block_id,
+        txHash: utxo.transaction_hash,
+        index: utxo.index,
+        value: utxo.value,
+      }));
 
       getUtxosSpy.mockResolvedValue(utxos);
 
@@ -201,14 +207,14 @@ describe('BtcOnChainService', () => {
       const { instance, sendTransactionSpy } = createMockDataClient();
       const { instance: txService } = createMockBtcService(instance);
 
-      const resp = generateQuickNodeSendRawTransactionResp();
-      sendTransactionSpy.mockResolvedValue(resp.result);
+      const resp = generateBlockChairBroadcastTransactionResp();
+      sendTransactionSpy.mockResolvedValue(resp.data.transaction_hash);
 
       const result = await txService.broadcastTransaction(signedTransaction);
 
       expect(sendTransactionSpy).toHaveBeenCalledWith(signedTransaction);
       expect(result).toStrictEqual({
-        transactionId: resp.result,
+        transactionId: resp.data.transaction_hash,
       });
     });
 
