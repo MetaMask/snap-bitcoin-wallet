@@ -9,10 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.8.2]
 
-### Uncategorized
+### Fixed
 
-- chore: remove localhost from permissions ([#324](https://github.com/MetaMask/snap-bitcoin-wallet/pull/324))
-- chore: remove localhost from the permissions ([#322](https://github.com/MetaMask/snap-bitcoin-wallet/pull/322))
+- Remove `localhost` from permissions ([#324](https://github.com/MetaMask/snap-bitcoin-wallet/pull/324)), ([#322](https://github.com/MetaMask/snap-bitcoin-wallet/pull/322))
 
 ## [0.8.1]
 
