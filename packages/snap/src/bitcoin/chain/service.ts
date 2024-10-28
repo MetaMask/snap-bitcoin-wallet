@@ -1,7 +1,7 @@
 import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 
-import { Caip2Asset } from '../../constants';
+import { Caip19Asset } from '../../constants';
 import { compactError } from '../../utils';
 import type { FeeRate, TransactionStatus } from './constants';
 import type { IDataClient } from './data-client';
@@ -83,12 +83,12 @@ export class BtcOnChainService {
         throw new BtcOnChainServiceError('Only one asset is supported');
       }
 
-      const allowedAssets = new Set<string>(Object.values(Caip2Asset));
+      const allowedAssets = new Set<string>(Object.values(Caip19Asset));
 
       if (
         !allowedAssets.has(assets[0]) ||
-        (this.network === networks.testnet && assets[0] !== Caip2Asset.TBtc) ||
-        (this.network === networks.bitcoin && assets[0] !== Caip2Asset.Btc)
+        (this.network === networks.testnet && assets[0] !== Caip19Asset.TBtc) ||
+        (this.network === networks.bitcoin && assets[0] !== Caip19Asset.Btc)
       ) {
         throw new BtcOnChainServiceError('Invalid asset');
       }

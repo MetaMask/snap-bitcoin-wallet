@@ -6,7 +6,7 @@ import {
   generateFormattedUtxos,
   generateQuickNodeSendRawTransactionResp,
 } from '../../../test/utils';
-import { Caip2Asset } from '../../constants';
+import { Caip19Asset } from '../../constants';
 import { FeeRate, TransactionStatus } from './constants';
 import type { IDataClient } from './data-client';
 import { BtcOnChainServiceError } from './exceptions';
@@ -73,13 +73,13 @@ describe('BtcOnChainService', () => {
         }, {}),
       );
 
-      const result = await txService.getBalances(addresses, [Caip2Asset.TBtc]);
+      const result = await txService.getBalances(addresses, [Caip19Asset.TBtc]);
 
       expect(getBalanceSpy).toHaveBeenCalledWith(addresses);
 
       Object.values(result.balances).forEach((assetBalances) => {
         expect(assetBalances).toStrictEqual({
-          [Caip2Asset.TBtc]: {
+          [Caip19Asset.TBtc]: {
             amount: BigInt(100),
           },
         });
@@ -93,7 +93,7 @@ describe('BtcOnChainService', () => {
       const addresses = accounts.map((account) => account.address);
 
       await expect(
-        txService.getBalances(addresses, [Caip2Asset.TBtc, Caip2Asset.Btc]),
+        txService.getBalances(addresses, [Caip19Asset.TBtc, Caip19Asset.Btc]),
       ).rejects.toThrow('Only one asset is supported');
     });
 
@@ -104,7 +104,7 @@ describe('BtcOnChainService', () => {
       const addresses = accounts.map((account) => account.address);
 
       await expect(
-        txService.getBalances(addresses, [Caip2Asset.Btc]),
+        txService.getBalances(addresses, [Caip19Asset.Btc]),
       ).rejects.toThrow('Invalid asset');
     });
 
@@ -118,7 +118,7 @@ describe('BtcOnChainService', () => {
       const addresses = accounts.map((account) => account.address);
 
       await expect(
-        txService.getBalances(addresses, [Caip2Asset.TBtc]),
+        txService.getBalances(addresses, [Caip19Asset.TBtc]),
       ).rejects.toThrow('Invalid asset');
     });
   });
