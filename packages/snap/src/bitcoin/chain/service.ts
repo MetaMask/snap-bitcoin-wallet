@@ -1,6 +1,7 @@
 import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 
+import { Config } from '../../config';
 import { Caip2Asset } from '../../constants';
 import { compactError } from '../../utils';
 import type { FeeRate, TransactionStatus } from './constants';
@@ -51,6 +52,10 @@ export type CommittedTransaction = {
 
 export type BtcOnChainServiceOptions = {
   network: Network;
+};
+
+export type GetDataForTransactionOptions = {
+  satsProtection: boolean;
 };
 
 export type BtcOnChainServiceClients = {
@@ -162,15 +167,17 @@ export class BtcOnChainService {
    * Gets the required metadata to build a transaction for the given addresses and transaction intent.
    *
    * @param addresses - The addresses to build the transaction for.
+   * @param [options] - The options to get the metadata.
    * @returns A promise that resolves to a `TransactionData` object.
    */
-  async getDataForTransaction(addresses: string[]): Promise<TransactionData> {
+  async getDataForTransaction(
+    addresses: string[],
+    options?: GetDataForTransactionOptions,
+  ): Promise<TransactionData> {
     try {
-      const utxos = await this._dataClient.getUtxos(addresses);
-
       return {
         data: {
-          utxos,
+          utxos: await this.getSpendableUtxos(addresses, options),
         },
       };
     } catch (error) {
@@ -178,13 +185,27 @@ export class BtcOnChainService {
     }
   }
 
-  async getSpendableUtxos(addresses: string[], utxos: Utxo[]): Promise<Utxo[]> {
-    // Sats Protection is only supported for mainnet network
-    // Therefore we don't need to filter the utxos for testnet
-    if (this.network !== networks.bitcoin) {
-      return utxos;
+  /**
+   * Get spendable UTXOs that does not contains Inscription, Runes or Rare Sats.
+   *
+   * @param addresses - An array of Bitcoin addresses to query.
+   * @param [options] - The boolean option to enable the sat protection. Defaults to true.
+   * @returns A promise that resolves to the filtered UTXOs.
+   */
+  protected async getSpendableUtxos(
+    addresses: string[],
+    options: GetDataForTransactionOptions = {
+      satsProtection: Config.defaultSatsProtectionEnablement,
+    },
+  ): Promise<Utxo[]> {
+    // Safe guard to only allow sats protection on mainnet
+    if (options.satsProtection && this.network !== networks.bitcoin) {
+      //  FIXME: For today, the SimpleHash provider does return the filtered UTXOs directly,
+      //  so it is not necessary to give the utxos to filter.
+      //  but logic may be changes if the provider changes
+      return await this._satsProtectionDataClient.filterUtxos(addresses, []);
     }
-    return await this._satsProtectionDataClient.filterUtxos(addresses, utxos);
+    return await this._dataClient.getUtxos(addresses);
   }
 
   /**

@@ -209,41 +209,6 @@ export class BtcWallet {
   }
 
   /**
-   * Get the filtered UTXOS to spend with the given account.
-   *
-   * @param account - The `IAccount` object to create the transaction.
-   * @param filters - The options to filter the UTXOs.
-   * @param filters.satsProtection - The options to filter the UTXOs that contain inscriptions, raresats, and runes.
-   * @returns A promise that resolves to the filtered the UTXOs.
-   */
-  async getSpendableUtxos(
-    account: BtcAccount,
-    filters: {
-      satsProtection: boolean;
-    },
-  ): Promise<Utxo[]> {
-    try {
-      const { satsProtection } = filters;
-
-      // TODO: add filter to filter UTXOs that has marked used
-
-      // FIXME: the account address should be an replaced by Dynamic addresses
-      const {
-        data: { utxos },
-      } = await this._chainApi.getDataForTransaction([account.address]);
-
-      if (satsProtection) {
-        // FIXME: the account address should be an replaced by Dynamic addresses
-        return await this._chainApi.getSpendableUtxos([account.address], utxos);
-      }
-
-      return utxos;
-    } catch (error) {
-      throw compactError(error, WalletError);
-    }
-  }
-
-  /**
    * Signs a transaction by the given encoded transaction string.
    *
    * @param signer - The `AccountSigner` object to sign the transaction.
