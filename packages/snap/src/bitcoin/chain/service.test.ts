@@ -49,7 +49,9 @@ describe('BtcOnChainService', () => {
     network: Network = networks.testnet,
   ) => {
     const instance = new BtcOnChainService(
-      dataClient ?? createMockDataClient().instance,
+      {
+        dataClient: dataClient ?? createMockDataClient().instance,
+      },
       {
         network,
       },

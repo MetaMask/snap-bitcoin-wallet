@@ -52,6 +52,7 @@ export type CommittedTransaction = {
 
 export type BtcOnChainServiceOptions = {
   network: Network;
+  satsProtection?: boolean;
 };
 
 export type GetDataForTransactionOptions = {
@@ -60,13 +61,13 @@ export type GetDataForTransactionOptions = {
 
 export type BtcOnChainServiceClients = {
   dataClient: IDataClient;
-  satsProtectionDataClient: ISatsProtectionDataClient;
+  satsProtectionDataClient?: ISatsProtectionDataClient;
 };
 
 export class BtcOnChainService {
   protected readonly _dataClient: IDataClient;
 
-  protected readonly _satsProtectionDataClient: ISatsProtectionDataClient;
+  protected readonly _satsProtectionDataClient?: ISatsProtectionDataClient;
 
   protected readonly _options: BtcOnChainServiceOptions;
 
@@ -76,7 +77,10 @@ export class BtcOnChainService {
   ) {
     this._dataClient = dataClient;
     this._satsProtectionDataClient = satsProtectionDataClient;
-    this._options = options;
+    this._options = {
+      satsProtection: Config.defaultSatsProtectionEnablement,
+      ...options,
+    };
   }
 
   get network(): Network {
@@ -167,17 +171,13 @@ export class BtcOnChainService {
    * Gets the required metadata to build a transaction for the given addresses and transaction intent.
    *
    * @param addresses - The addresses to build the transaction for.
-   * @param [options] - The options to get the metadata.
    * @returns A promise that resolves to a `TransactionData` object.
    */
-  async getDataForTransaction(
-    addresses: string[],
-    options?: GetDataForTransactionOptions,
-  ): Promise<TransactionData> {
+  async getDataForTransaction(addresses: string[]): Promise<TransactionData> {
     try {
       return {
         data: {
-          utxos: await this.getSpendableUtxos(addresses, options),
+          utxos: await this.getSpendableUtxos(addresses),
         },
       };
     } catch (error) {
@@ -189,17 +189,15 @@ export class BtcOnChainService {
    * Get spendable UTXOs that does not contains Inscription, Runes or Rare Sats.
    *
    * @param addresses - An array of Bitcoin addresses to query.
-   * @param [options] - The boolean option to enable the sat protection. Defaults to true.
    * @returns A promise that resolves to the filtered UTXOs.
    */
-  protected async getSpendableUtxos(
-    addresses: string[],
-    options: GetDataForTransactionOptions = {
-      satsProtection: Config.defaultSatsProtectionEnablement,
-    },
-  ): Promise<Utxo[]> {
+  protected async getSpendableUtxos(addresses: string[]): Promise<Utxo[]> {
     // Safe guard to only allow sats protection on mainnet
-    if (options.satsProtection && this.network !== networks.bitcoin) {
+    if (
+      this._options.satsProtection &&
+      this.network !== networks.bitcoin &&
+      this._satsProtectionDataClient
+    ) {
       //  FIXME: For today, the SimpleHash provider does return the filtered UTXOs directly,
       //  so it is not necessary to give the utxos to filter.
       //  but logic may be changes if the provider changes

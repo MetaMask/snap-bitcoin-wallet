@@ -18,6 +18,7 @@ export class Factory {
       },
       {
         network: btcNetwork,
+        satsProtection: Config.defaultSatsProtectionEnablement,
       },
     );
   }
