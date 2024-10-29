@@ -1,171 +1,132 @@
-import { BtcMethod, type KeyringAccount } from '@metamask/keyring-api';
 import { InvalidParamsError } from '@metamask/snaps-sdk';
-import { networks } from 'bitcoinjs-lib';
-import { v4 as uuidv4 } from 'uuid';
 
-import { generateAccounts } from '../../test/utils';
-import { BtcAccountDeriver, BtcWallet } from '../bitcoin/wallet';
 import { Config } from '../config';
-import { Caip2ChainId } from '../constants';
-import { createMockChainApiFactory } from './__tests__/helper';
+import { Caip2Asset, Caip2ChainId } from '../constants';
+import { satsToBtc } from '../utils';
+import {
+  createMockChainApiFactory,
+  createMockSender,
+  createMockWallet,
+} from './__tests__/helper';
 import { getBalances } from './get-balances';
 
 jest.mock('../utils/logger');
 jest.mock('../utils/snap');
 
 describe('getBalances', () => {
-  const asset = Config.availableAssets[0];
+  const tBtc = Caip2Asset.TBtc;
+  const btc = Caip2Asset.Btc;
 
-  const createMockDeriver = (network) => {
-    const rootSpy = jest.spyOn(BtcAccountDeriver.prototype, 'getRoot');
-    const childSpy = jest.spyOn(BtcAccountDeriver.prototype, 'getChild');
-
-    return {
-      instance: new BtcAccountDeriver(network),
-      rootSpy,
-      childSpy,
-    };
-  };
-
-  const createMockAccount = async (network, caip2ChainId) => {
-    const { instance } = createMockDeriver(network);
-    const wallet = new BtcWallet(instance, network);
-    const sender = await wallet.unlock(0, Config.wallet.defaultAccountType);
-    const keyringAccount = {
-      type: sender.type,
-      id: uuidv4(),
-      address: sender.address,
-      options: {
-        scope: caip2ChainId,
-        index: sender.index,
-      },
-      methods: [`${BtcMethod.SendBitcoin}`],
-    };
-
-    const walletData = {
-      account: keyringAccount as unknown as KeyringAccount,
-      hdPath: sender.hdPath,
-      index: sender.index,
-      scope: caip2ChainId,
-    };
+  const createMockAccount = async (caip2ChainId:string) => {
+    const wallet = createMockWallet(caip2ChainId);
+    const sender = await createMockSender(wallet);
 
     return {
-      keyringAccount,
-      walletData,
       sender,
     };
   };
 
-  it('gets balances', async () => {
-    const network = networks.testnet;
+  const prepareGetBalances = async () => {
     const caip2ChainId = Caip2ChainId.Testnet;
     const { getBalancesSpy } = createMockChainApiFactory();
+    const { sender } = await createMockAccount(caip2ChainId);
+    const addresses = [sender.address];
 
-    const { walletData, sender } = await createMockAccount(
-      network,
-      caip2ChainId,
-    );
-
-    const addresses = [walletData.account.address];
-    const mockResp = {
-      balances: addresses.reduce((acc, address) => {
-        acc[address] = {
-          [asset]: {
-            amount: BigInt(100),
-          },
-        };
-        return acc;
-      }, {}),
+    const mockGetBalanceResp = {
+      balances: {
+        [tBtc]: {
+          amount: BigInt(100),
+        },
+      },
     };
 
+    getBalancesSpy.mockResolvedValue(mockGetBalanceResp);
+
+    return {
+      getBalancesSpy,
+      caip2ChainId,
+      sender,
+      addresses,
+      mockGetBalanceResp,
+    };
+  };
+
+  it('gets the balances', async () => {
+    const {
+      getBalancesSpy,
+      caip2ChainId,
+      addresses,
+      sender,
+      mockGetBalanceResp,
+    } = await prepareGetBalances();
+
     const expected = {
-      [asset]: {
-        amount: '0.00000100',
+      [tBtc]: {
+        amount: satsToBtc(mockGetBalanceResp.balances[tBtc].amount),
         unit: Config.unit,
       },
     };
 
-    getBalancesSpy.mockResolvedValue(mockResp);
-
     const result = await getBalances(sender, {
-      scope: walletData.scope,
-      assets: [asset],
+      scope: caip2ChainId,
+      assets: [tBtc],
     });
 
-    expect(getBalancesSpy).toHaveBeenCalledWith(addresses, [asset]);
+    expect(getBalancesSpy).toHaveBeenCalledWith(addresses, [tBtc]);
     expect(result).toStrictEqual(expected);
   });
 
-  it('gets balances of the request account only', async () => {
-    const network = networks.testnet;
-    const caip2ChainId = Caip2ChainId.Testnet;
-    const { getBalancesSpy } = createMockChainApiFactory();
-    const accounts = generateAccounts(10);
-    const { walletData, sender } = await createMockAccount(
-      network,
+  it('assign 0 balance if the given asset can not be found from the account', async () => {
+    const {
+      getBalancesSpy,
       caip2ChainId,
-    );
+      addresses,
+      sender,
+      mockGetBalanceResp,
+    } = await prepareGetBalances();
 
-    const addresses = [walletData.account.address];
-    const mockResp = {
-      balances: [
-        ...addresses,
-        ...accounts.map((account) => account.address),
-      ].reduce((acc, address) => {
-        acc[address] = {
-          [asset]: {
-            amount: BigInt(100),
-          },
-          'some-asset': {
-            amount: BigInt(100),
-          },
-        };
-        return acc;
-      }, {}),
-    };
-
+    // It is a never happen case that we can enquire the balance of BTC and tBTC at the same time
+    // But we have to simulate this case to test the behavior of the function
     const expected = {
-      [asset]: {
-        amount: '0.00000100',
+      [tBtc]: {
+        amount: satsToBtc(mockGetBalanceResp.balances[tBtc].amount),
+        unit: Config.unit,
+      },
+      [btc]: {
+        amount: satsToBtc(0),
         unit: Config.unit,
       },
     };
 
-    getBalancesSpy.mockResolvedValue(mockResp);
-
     const result = await getBalances(sender, {
-      scope: Caip2ChainId.Testnet,
-      assets: [asset],
+      scope: caip2ChainId,
+      assets: [tBtc, btc],
     });
 
-    expect(getBalancesSpy).toHaveBeenCalledWith(addresses, [asset]);
+    expect(getBalancesSpy).toHaveBeenCalledWith(addresses, [tBtc, btc]);
     expect(result).toStrictEqual(expected);
   });
 
   it('throws `Fail to get the balances` when transaction status fetch failed', async () => {
-    const network = networks.testnet;
-    const caip2ChainId = Caip2ChainId.Testnet;
-    const { getBalancesSpy } = createMockChainApiFactory();
-    const { sender } = await createMockAccount(network, caip2ChainId);
+    const { getBalancesSpy, caip2ChainId, sender } = await prepareGetBalances();
 
     getBalancesSpy.mockRejectedValue(new Error('error'));
 
     await expect(
       getBalances(sender, {
-        scope: Caip2ChainId.Testnet,
-        assets: [asset],
+        scope: caip2ChainId,
+        assets: [tBtc],
       }),
     ).rejects.toThrow(`Fail to get the balances`);
   });
 
   it('throws `Request params is invalid` when request parameter is not correct', async () => {
-    const network = networks.testnet;
     const caip2ChainId = Caip2ChainId.Testnet;
-    const { sender } = await createMockAccount(network, caip2ChainId);
+    const { sender } = await createMockAccount(caip2ChainId);
 
     await expect(
       getBalances(sender, {
-        scope: Caip2ChainId.Testnet,
+        scope: caip2ChainId,
         assets: ['some-asset'],
       }),
     ).rejects.toThrow(InvalidParamsError);

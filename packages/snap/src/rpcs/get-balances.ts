@@ -52,42 +52,22 @@ export async function getBalances(
 
     const chainApi = Factory.createOnChainServiceProvider(scope);
     const addresses = [account.address];
-    const addressesSet = new Set(addresses);
-    const assetsSet = new Set(assets);
 
     const balances = await chainApi.getBalances(addresses, assets);
 
-    const balancesVals = Object.entries(balances.balances);
-    const balancesMap = new Map<string, bigint>();
+    const resp = {};
 
-    for (const [address, assetBalances] of balancesVals) {
-      if (!addressesSet.has(address)) {
-        continue;
+    assets.forEach((asset) => {
+      let amount = BigInt(0);
+      if (Object.prototype.hasOwnProperty.call(balances.balances, asset)) {
+        amount = balances.balances[asset].amount;
       }
-      for (const asset in assetBalances) {
-        if (!assetsSet.has(asset)) {
-          continue;
-        }
 
-        const { amount } = assetBalances[asset];
-        let currentAmount = balancesMap.get(asset);
-        if (currentAmount) {
-          currentAmount += amount;
-        }
-
-        balancesMap.set(asset, currentAmount ?? amount);
-      }
-    }
-
-    const resp = Object.fromEntries(
-      [...balancesMap.entries()].map(([asset, amount]) => [
-        asset,
-        {
-          amount: satsToBtc(amount),
-          unit: Config.unit,
-        },
-      ]),
-    );
+      resp[asset] = {
+        amount: satsToBtc(amount),
+        unit: Config.unit,
+      };
+    });
 
     validateResponse(resp, GetBalancesResponseStruct);
 

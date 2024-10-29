@@ -17,9 +17,7 @@ export type Balance = {
 
 export type AssetBalances = {
   balances: {
-    [address: string]: {
-      [asset: string]: Balance;
-    };
+    [asset: string]: Balance;
   };
 };
 
@@ -68,7 +66,7 @@ export class BtcOnChainService {
   }
 
   /**
-   * Gets the balances for multiple addresses and multiple assets.
+   * Gets the BTC balances from addresses.
    *
    * @param addresses - An array of addresses to fetch the balances for.
    * @param assets - An array of assets to fetch the balances of.
@@ -83,28 +81,31 @@ export class BtcOnChainService {
         throw new BtcOnChainServiceError('Only one asset is supported');
       }
 
-      const allowedAssets = new Set<string>(Object.values(Caip2Asset));
+      const asset = assets[0];
 
       if (
-        !allowedAssets.has(assets[0]) ||
-        (this.network === networks.testnet && assets[0] !== Caip2Asset.TBtc) ||
-        (this.network === networks.bitcoin && assets[0] !== Caip2Asset.Btc)
+        (this.network === networks.testnet && asset !== Caip2Asset.TBtc) ||
+        (this.network === networks.bitcoin && asset !== Caip2Asset.Btc)
       ) {
         throw new BtcOnChainServiceError('Invalid asset');
       }
 
-      const balance = await this._dataClient.getBalances(addresses);
+      const balances = await this._dataClient.getBalances(addresses);
 
-      return addresses.reduce<AssetBalances>(
-        (acc: AssetBalances, address: string) => {
-          acc.balances[address] = {
-            [assets[0]]: {
-              amount: BigInt(balance[address]),
-            },
+      return Object.values(balances).reduce<AssetBalances>(
+        (acc: AssetBalances, balance) => {
+          acc.balances[asset] = {
+            amount: BigInt(balance),
           };
           return acc;
         },
-        { balances: {} },
+        {
+          balances: {
+            [asset]: {
+              amount: BigInt(0),
+            },
+          },
+        },
       );
     } catch (error) {
       throw compactError(error, BtcOnChainServiceError);
