@@ -2,9 +2,8 @@ import type { BIP32Interface } from 'bip32';
 import { networks, type Network } from 'bitcoinjs-lib';
 import { type Buffer } from 'buffer';
 
-import { Factory } from '../../factory';
 import { bufferToString, compactError, hexToBuffer, logger } from '../../utils';
-import type { BtcOnChainService, Utxo } from '../chain';
+import type { Utxo } from '../chain';
 import type { BtcAccount } from './account';
 import {
   P2WPKHAccount,
@@ -25,7 +24,7 @@ import { AccountSigner } from './signer';
 import { TxInfo } from './transaction-info';
 import { TxInput } from './transaction-input';
 import { TxOutput } from './transaction-output';
-import { isDust, getScriptForDestination, getCaip2ChainId } from './utils';
+import { isDust, getScriptForDestination } from './utils';
 
 export type Recipient = {
   address: string;
@@ -60,14 +59,9 @@ export class BtcWallet {
 
   protected readonly _network: Network;
 
-  protected readonly _chainApi: BtcOnChainService;
-
   constructor(deriver: BtcAccountDeriver, network: Network) {
     this._deriver = deriver;
     this._network = network;
-    this._chainApi = Factory.createOnChainServiceProvider(
-      getCaip2ChainId(network),
-    );
   }
 
   /**
