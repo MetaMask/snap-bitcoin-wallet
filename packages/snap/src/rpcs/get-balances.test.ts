@@ -17,7 +17,7 @@ describe('getBalances', () => {
   const tBtc = Caip2Asset.TBtc;
   const btc = Caip2Asset.Btc;
 
-  const createMockAccount = async (caip2ChainId:string) => {
+  const createMockAccount = async (caip2ChainId: string) => {
     const wallet = createMockWallet(caip2ChainId);
     const sender = await createMockSender(wallet);
 
