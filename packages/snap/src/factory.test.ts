@@ -1,5 +1,6 @@
 import { BtcOnChainService } from './bitcoin/chain';
 import { QuickNodeClient } from './bitcoin/chain/clients/quicknode';
+import { SimpleHashClient } from './bitcoin/chain/clients/simplehash';
 import { BtcWallet } from './bitcoin/wallet';
 import { ApiClient, Config } from './config';
 import { Caip2ChainId } from './constants';
@@ -9,6 +10,7 @@ describe('Factory', () => {
   describe('createOnChainServiceProvider', () => {
     it('creates BtcOnChainService instance', () => {
       jest.spyOn(Factory, 'createQuickNodeClient').mockReturnThis();
+      jest.spyOn(Factory, 'createSimpleHashClient').mockReturnThis();
 
       const instance = Factory.createOnChainServiceProvider(
         Caip2ChainId.Testnet,
@@ -45,6 +47,34 @@ describe('Factory', () => {
 
       expect(() => Factory.createQuickNodeClient(Caip2ChainId.Testnet)).toThrow(
         'QuickNode endpoints have not been configured',
+      );
+    });
+  });
+
+  describe('createSimpleHashClient', () => {
+    afterEach(() => {
+      Config.onChainService.apiClient[ApiClient.SimpleHash].options = {
+        apiKey: undefined,
+      };
+    });
+
+    it('creates createSimpleHashClient instance', () => {
+      Config.onChainService.apiClient[ApiClient.SimpleHash].options = {
+        apiKey: 'API_KEY',
+      };
+
+      const instance = Factory.createSimpleHashClient();
+
+      expect(instance).toBeInstanceOf(SimpleHashClient);
+    });
+
+    it('throws `Simplehash api key has not been configured` error if the API key has not been provided', () => {
+      Config.onChainService.apiClient[ApiClient.SimpleHash].options = {
+        apiKey: undefined,
+      };
+
+      expect(() => Factory.createSimpleHashClient()).toThrow(
+        'Simplehash api key has not been configured',
       );
     });
   });

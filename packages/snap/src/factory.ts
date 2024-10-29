@@ -45,7 +45,7 @@ export class Factory {
       Config.onChainService.apiClient[ApiClient.SimpleHash].options;
 
     if (!apiKey) {
-      throw new Error('Simplehash api key have not been configured');
+      throw new Error('Simplehash api key has not been configured');
     }
 
     return new SimpleHashClient({
