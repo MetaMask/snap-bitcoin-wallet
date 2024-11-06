@@ -5,6 +5,7 @@ export enum InternalRpcMethod {
   EstimateFee = 'estimateFee',
   GetMaxSpendableBalance = 'getMaxSpendableBalance',
   StartSendTransactionFlow = 'startSendTransactionFlow',
+  TestBDK = 'testBDK',
 }
 
 const dappPermissions = new Set([
@@ -17,6 +18,7 @@ const dappPermissions = new Set([
   InternalRpcMethod.GetTransactionStatus,
   InternalRpcMethod.EstimateFee,
   InternalRpcMethod.GetMaxSpendableBalance,
+  InternalRpcMethod.TestBDK,
 ]);
 
 const metamaskPermissions = new Set([
@@ -41,6 +43,7 @@ const allowedOrigins = [
   'https://portfolio-builds.metafi-dev.codefi.network',
   'https://dev.portfolio.metamask.io',
   'https://ramps-dev.portfolio.metamask.io',
+  'http://localhost:3000',
 ];
 
 const metamask = 'metamask';

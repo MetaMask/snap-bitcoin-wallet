@@ -13,6 +13,7 @@ import {
   GetBalancesCard,
   EstimateFeeCard,
   GetMaxSpendableBalanceCard,
+  TestBDKButton,
 } from '../components';
 import { defaultSnapOrigin } from '../config';
 import {
@@ -20,6 +21,7 @@ import {
   useInvokeKeyring,
   useMetaMaskContext,
   useRequestSnap,
+  useInvokeSnap,
 } from '../hooks';
 import { isLocalSnap, shouldDisplayReconnectButton } from '../utils';
 
@@ -148,6 +150,7 @@ const Index = () => {
   const requestSnap = useRequestSnap();
   const invokeKeyring = useInvokeKeyring();
   const [btcAccount, setBtcAccount] = useState<KeyringAccount>();
+  const invokeSnap = useInvokeSnap();
 
   const [scope, setScope] = useState<string>(Caip2ChainId.Mainnet);
 
@@ -172,6 +175,15 @@ const Index = () => {
         accounts.find((account) => account.options.scope === scope),
       );
     }
+  };
+
+  const handleTestBDK = async () => {
+    const result = await invokeSnap({
+      method: 'testBDK',
+      params: {},
+    });
+
+    console.log(result);
   };
 
   const scopeOnChange = (chgEvent: React.ChangeEvent<HTMLSelectElement>) => {
@@ -250,6 +262,21 @@ const Index = () => {
             disabled={!installedSnap}
           />
         )}
+
+        <Card
+          content={{
+            title: 'Test BDK',
+            description: `Test BDK WASM package`,
+            button: (
+              <TestBDKButton
+                onClick={handleTestBDK}
+                disabled={!installedSnap}
+              ></TestBDKButton>
+            ),
+          }}
+          disabled={!installedSnap}
+          fullWidth={isSnapReady}
+        />
 
         <Card
           content={{

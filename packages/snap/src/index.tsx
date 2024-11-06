@@ -8,6 +8,7 @@ import {
   SnapError,
   MethodNotFoundError,
 } from '@metamask/snaps-sdk';
+import { WalletWrapper } from 'bdk-wasm';
 
 import { Config } from './config';
 import { BtcKeyring } from './keyring';
@@ -69,6 +70,19 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         return await startSendTransactionFlow(
           request.params as StartSendTransactionFlowParams,
         );
+      }
+      case InternalRpcMethod.TestBDK: {
+        const wallet = new WalletWrapper(
+          'testnet',
+          "wpkh(tprv8ZgxMBicQKsPdy6LMhUtFHAgpocR8GC6QmwMSFpZs7h6Eziw3SpThFfczTDh5rW2krkqffa11UpX3XkeTTB2FvzZKWXqPY54Y6Rq4AQ5R8L/84'/1'/0'/0/*)",
+          "wpkh(tprv8ZgxMBicQKsPdy6LMhUtFHAgpocR8GC6QmwMSFpZs7h6Eziw3SpThFfczTDh5rW2krkqffa11UpX3XkeTTB2FvzZKWXqPY54Y6Rq4AQ5R8L/84'/1'/0'/1/*)",
+          'https://blockstream.info/testnet/api/',
+        );
+
+        // await wallet.sync(20);
+        //const address = wallet.get_new_address();
+
+        return JSON.stringify({ message: wallet });
       }
 
       default:

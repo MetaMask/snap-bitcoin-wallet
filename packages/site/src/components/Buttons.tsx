@@ -109,6 +109,10 @@ export const ListAccountsButton = (props: ComponentProps<typeof Button>) => {
   return <Button {...props}>List Accounts</Button>;
 };
 
+export const TestBDKButton = (props: ComponentProps<typeof Button>) => {
+  return <Button {...props}>Test BDK</Button>;
+};
+
 export const GetTransactionStatusButton = (
   props: ComponentProps<typeof Button>,
 ) => {
