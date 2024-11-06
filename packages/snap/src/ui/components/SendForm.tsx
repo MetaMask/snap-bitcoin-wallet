@@ -11,7 +11,7 @@ import {
 } from '@metamask/snaps-sdk/jsx';
 
 import type { SendFlowParams } from '../../stateManagement';
-import btcIcon from '../images/btc-halo.svg';
+import btcIcon from '../images/bitcoin.svg';
 import jazzicon3 from '../images/jazzicon3.svg';
 import type { AccountWithBalance } from '../types';
 import { AssetType } from '../types';

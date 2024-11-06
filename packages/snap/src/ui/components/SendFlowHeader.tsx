@@ -1,6 +1,7 @@
 import type { SnapComponent } from '@metamask/snaps-sdk/jsx';
-import { Box, Button, Heading, Icon, Text } from '@metamask/snaps-sdk/jsx';
+import { Box, Button, Heading, Icon, Image } from '@metamask/snaps-sdk/jsx';
 
+import emptySpace from '../images/empty-space.svg';
 import { SendFormNames } from './SendForm';
 
 /**
@@ -27,6 +28,6 @@ export const SendFlowHeader: SnapComponent<SendFlowHeaderProps> = ({
       <Icon name="arrow-left" color="primary" size="md" />
     </Button>
     <Heading size="sm">{heading}</Heading>
-    <Text> </Text>
+    <Image src={emptySpace} />
   </Box>
 );
