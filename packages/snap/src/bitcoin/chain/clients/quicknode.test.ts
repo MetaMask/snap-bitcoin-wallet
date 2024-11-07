@@ -471,4 +471,33 @@ describe('QuickNodeClient', () => {
       );
     });
   });
+
+  describe('listTransactions', () => {
+    it('returns balances', async () => {
+      const { fetchSpy } = createMockFetch();
+      const network = networks.testnet;
+      const { accounts } = await createAccounts(network, 2);
+      const addresses = accounts.map((account) => account.address);
+
+      const expectedResult = new Map();
+      for (const address of addresses) {
+        const mockResponse = generateQuickNodeGetBalanceResp(address);
+
+        expectedResult.set(address, mockResponse.result.txids);
+
+        mockApiSuccessResponse({
+          fetchSpy,
+          mockResponse,
+        });
+      }
+
+      const client = createQuickNodeClient(network);
+      const result = await client.listTransactions(addresses);
+
+      console.log({ result });
+      console.log({ expectedResult });
+
+      expect(result).toStrictEqual(expectedResult);
+    });
+  });
 });

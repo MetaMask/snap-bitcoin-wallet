@@ -1,6 +1,46 @@
 import type { Network } from 'bitcoinjs-lib';
 import type { Infer } from 'superstruct';
-import { array, number, object, optional, string } from 'superstruct';
+import { array, number, object, optional, string, boolean } from 'superstruct';
+
+export const QuickNodeTransactionStruct = object({
+  // QuickNodeTransactionStruct is missing the hex field because it's restricted by superstruct
+  txid: string(),
+  version: string(),
+  lockTime: string(),
+  vin: array(
+    object({
+      txid: string(),
+      vout: string(),
+      sequence: string(),
+      n: string(),
+      addresses: array(string()),
+      isAddress: boolean(),
+      isOwn: boolean(),
+      value: string(),
+    }),
+  ),
+  // vout is missing the hex field because it's restricted by superstruct
+  vout: array(
+    object({
+      value: string(),
+      n: string(),
+      spent: boolean(),
+      addresses: array(string()),
+      isAddress: boolean(),
+      // hex: string(), error: Identifier 'hex' is restricted.
+    }),
+  ),
+  blockHash: string(),
+  height: string(),
+  confirmations: string(),
+  blockTime: string(),
+  size: string(),
+  vsize: string(),
+  value: string(),
+  valueIn: string(),
+  fees: string(),
+  // hex: string(), error: Identifier 'hex' is restricted.
+});
 
 export type QuickNodeClientOptions = {
   network: Network;
@@ -29,6 +69,8 @@ export const QuickNodeGetBalancesResponseStruct = object({
     unconfirmedBalance: string(),
     unconfirmedTxs: number(),
     txs: number(),
+    txids: optional(array(string())),
+    transactions: optional(array(QuickNodeTransactionStruct)),
   }),
 });
 

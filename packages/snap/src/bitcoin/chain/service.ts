@@ -187,8 +187,13 @@ export class BtcOnChainService {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  listTransactions() {
-    throw new Error('Method not implemented.');
+  /**
+   * Lists transactions for a given set of addresses.
+   *
+   * @param addresses - An array of addresses to list transactions for.
+   * @returns A promise that resolves to a map of addresses to arrays of transaction ids.
+   */
+  async listTransactions(addresses: string[]): Promise<Map<string, string[]>> {
+    return await this._dataClient.listTransactions(addresses);
   }
 }

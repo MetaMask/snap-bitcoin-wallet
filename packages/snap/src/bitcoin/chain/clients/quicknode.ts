@@ -301,4 +301,38 @@ export class QuickNodeClient implements IDataClient {
           : TransactionStatus.Pending,
     };
   }
+
+  async listTransactions(addresses: string[]): Promise<any> {
+    assert(addresses, array(BtcP2wpkhAddressStruct));
+
+    const addressTransactionsMap = new Map<string, string[]>();
+    await processBatch(addresses, async (address) => {
+      const response =
+        await this.submitJsonRPCRequest<QuickNodeGetBalancesResponse>({
+          request: {
+            method: 'bb_getaddress',
+            params: [
+              address,
+              // To Do: Improve pagination logic to fetch beyond the first 1000 transactions.
+              // This is not required for account discovery, but it is important for the transaction history.
+              {
+                page: 1,
+                size: 1000,
+                fromHeight: 0,
+                // If details is set to 'txids', the response will include the transaction IDs.
+                // But if it is set to 'txs', the response will include the full transaction data.
+                // To Do: Update the method to take the details as a parameter and return the according response.
+                details: 'txids',
+              },
+            ],
+          },
+          responseStruct: QuickNodeGetBalancesResponseStruct,
+        });
+
+      const { txids } = response.result;
+      txids && addressTransactionsMap.set(address, txids);
+    });
+
+    return addressTransactionsMap;
+  }
 }

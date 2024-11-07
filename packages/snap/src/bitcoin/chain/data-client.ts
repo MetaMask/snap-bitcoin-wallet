@@ -59,4 +59,12 @@ export type IDataClient = {
    * @returns {Promise<DataClientSendTxResp>} A promise that resolves to the transaction hash.
    */
   sendTransaction(tx: string): Promise<DataClientSendTxResp>;
+
+  /**
+   * Lists transactions for a set of Bitcoin addresses.
+   *
+   * @param {string[]} addresses - An array of Bitcoin addresses to query.
+   * @returns {Promise<Map<string, string[]>>} A promise that resolves to a map of addresses and their corresponding transaction ids.
+   */
+  listTransactions(addresses: string[]): Promise<Map<string, string[]>>;
 };
