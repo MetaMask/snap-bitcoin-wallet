@@ -51,7 +51,12 @@
       "totalSent": "100000",
       "unconfirmedBalance": "0",
       "unconfirmedTxs": 0,
-      "txs": 100
+      "txs": 100,
+      "txids": [
+        "48ceeb64b6e36ca2f81a914e266b892e9637f18ff704ad2a2ed56ca5ec3b33b6",
+        "7d7f89c6c23b3cf97992d264b0aacd781c3d8630d1dbd763ce42f5cd848fa3e8",
+        "6f6a7dc204ff338d87aa9390a24814ec007cc58479286687af54fe997f81648a"
+      ]
     },
     "jsonrpc": "2.0"
   },
