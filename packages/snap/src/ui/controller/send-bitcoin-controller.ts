@@ -67,8 +67,11 @@ export class SendBitcoinController {
     context: SendFlowContext,
     formState: SendFormState,
   ): Promise<void> {
-    console.log('context', context);
-    console.log('formState', formState);
+    // If there isn't an interfaceId, return early because the interface is not ready.
+    if (!this.context.request.interfaceId) {
+      return;
+    }
+
     formValidation(formState, context, this.context.request);
 
     switch (eventName) {
