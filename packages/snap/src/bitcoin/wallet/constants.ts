@@ -34,3 +34,7 @@ export const MaxStandardTxWeight = 400000;
 // be scanned or generated before the wallet software stops looking
 // for used addresses.
 export const addressGapLimit = 20;
+
+// Default minimum fee rate in BTC/KvB
+// To align with the response from RPC provider, we use BTC unit in KvB
+export const DefaultTxMinFeeRateInBtcPerKvb = 0.0001

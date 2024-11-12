@@ -54,6 +54,7 @@ const preinstalledSnap = {
     },
   ],
   removable: false,
+  hideSnapBranding: true,
 };
 
 // Write preinstalled-snap file

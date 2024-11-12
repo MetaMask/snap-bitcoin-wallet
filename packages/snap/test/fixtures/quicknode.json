@@ -72,5 +72,22 @@
       }
     ],
     "jsonrpc": "2.0"
+  },
+  "getmempoolinfo": {
+    "result": {
+      "loaded": true,
+      "size": 124821,
+      "bytes": 83361781,
+      "usage": 481941024,
+      "total_fee": 1.11361224,
+      "maxmempool": 2048000000,
+      "mempoolminfee": 0.00001,
+      "minrelaytxfee": 0.00001,
+      "incrementalrelayfee": 0.00001,
+      "unbroadcastcount": 0,
+      "fullrbf": true
+    },
+    "error": null,
+    "id": null
   }
 }

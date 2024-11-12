@@ -1,4 +1,5 @@
 import ecc from '@bitcoinerlab/secp256k1';
+import { BtcMethod } from '@metamask/keyring-api';
 import { BIP32Factory, type BIP32Interface } from 'bip32';
 import type { Network } from 'bitcoinjs-lib';
 import { Buffer } from 'buffer';
@@ -6,7 +7,6 @@ import ECPairFactory from 'ecpair';
 import { v4 as uuidV4 } from 'uuid';
 
 import { Caip2ChainId } from '../src/constants';
-import blockChairData from './fixtures/blockchair.json';
 import quickNodeData from './fixtures/quicknode.json';
 
 /* eslint-disable */
@@ -36,7 +36,7 @@ export function generateAccounts(cnt = 1, addressPrefix = '') {
         scope: Caip2ChainId.Testnet,
         index: i,
       },
-      methods: ['btc_sendmany'],
+      methods: [`${BtcMethod.SendBitcoin}`],
     });
   }
 
@@ -204,131 +204,6 @@ export function createMockBip32Instance(
 const randomNum = (max) => Math.floor(Math.random() * max);
 
 /**
- * Method to generate blockchair getBalance resp by addresses.
- *
- * @param addresses - Array of address in string.
- * @returns An array of blockchair getBalance response.
- */
-export function generateBlockChairGetBalanceResp(addresses: string[]) {
-  const template = blockChairData.getBalanceResp;
-  const resp: typeof template = { ...template, data: {} };
-  for (const address of addresses) {
-    resp.data[address] = randomNum(1000000);
-  }
-  return resp;
-}
-
-/**
- * Method to generate blockchair getUtxos resp by address.
- *
- * @param address - address in string.
- * @param utxosCount - utxos count.
- * @param minAmount - min amount of each utxo value.
- * @param maxAmount - max amount of each utxo value.
- * @returns An array of blockchair getUtxos response.
- */
-export function generateBlockChairGetUtxosResp(
-  address: string,
-  utxosCount: number,
-  minAmount = 0,
-  maxAmount = 1000000,
-) {
-  const template = blockChairData.getUtxoResp;
-  const data = { ...template.data.tb1qlq94vt9uh07fwunsgdyycpkv24uev05ywjua0r };
-  let idx = -1;
-  const resp = {
-    data: {
-      [address]: {
-        ...data,
-        utxo: Array.from({ length: utxosCount }, () => {
-          idx += 1;
-          return {
-            block_id: randomNum(1000000),
-            transaction_hash: randomNum(1000000)
-              .toString(16)
-              .padStart(
-                template.data.tb1qlq94vt9uh07fwunsgdyycpkv24uev05ywjua0r.utxo[0]
-                  .transaction_hash.length,
-                '0',
-              ),
-            index: idx,
-            value: Math.max(randomNum(maxAmount), minAmount),
-          };
-        }),
-      },
-    },
-  };
-  return resp;
-}
-
-/**
- * Method to generate blockchair getStats resp.
- *
- * @returns A blockchair getStats resp.
- */
-export function generateBlockChairGetStatsResp() {
-  const template = blockChairData.getStatsResp;
-  const resp: typeof template = { ...template };
-  Object.entries(template.data).forEach(([key, value]) => {
-    if (typeof value === 'number') {
-      if (value === 0) {
-        resp.data[key] = randomNum(100);
-      }
-      resp.data[key] = randomNum(value);
-    }
-  });
-  resp.data.suggested_transaction_fee_per_byte_sat = randomNum(20);
-  return resp;
-}
-
-/**
- * Method to generate blockchair BroadcastTransaction resp.
- *
- * @returns An txn id of blockchair BroadcastTransaction response.
- */
-export function generateBlockChairBroadcastTransactionResp() {
-  const template = blockChairData.broadcastTransactionResp;
-  const resp: typeof template = { ...template };
-  return resp;
-}
-
-/**
- * Method to generate blockchair transaction dashboards resp.
- *
- * @param txHash - Transaction hash of the transaction.
- * @param txnBlockHeight - Block height of the transaction.
- * @param txnBlockHeight - Block height of the last block.
- * @param lastBlockHeight - Block height of the last block.
- * @param confirmed - Confirm status of the transaction.
- * @returns A blockchair transaction dashboards resp.
- */
-export function generateBlockChairTransactionDashboard(
-  txHash: string,
-  txnBlockHeight: number,
-  lastBlockHeight: number,
-  confirmed: boolean,
-) {
-  const template = blockChairData.getDashboardTransaction;
-  const data = Object.values(template.data)[0];
-  const resp = {
-    data: {
-      [txHash]: {
-        ...data,
-        transaction: {
-          ...data.transaction,
-          block_id: confirmed ? txnBlockHeight : -1,
-        },
-      },
-    },
-    context: {
-      ...template.context,
-      state: lastBlockHeight,
-    },
-  };
-  return resp;
-}
-
-/**
  * Generate QuickNode bb_getaddress response by address.
  *
  * @param address - The account address.
@@ -382,7 +257,6 @@ export function generateQuickNodeGetUtxosResp(
       value: Math.max(minAmount, randomNum(maxAmount)).toString(),
       height: 100000 + idx,
       confirmations: Math.max(minConfirmations, randomNum(maxConfirmations)),
-
     };
   });
   return data;
@@ -428,7 +302,7 @@ export function generateQuickNodeEstimatefeeResp(
   {
     feerate
   }: {
-    feerate: number;
+    feerate: number | undefined;
   }
 ) {
   const template = quickNodeData.estimatesmartfeeResp;
@@ -438,6 +312,33 @@ export function generateQuickNodeEstimatefeeResp(
       ...template.result,
       feerate,
       block: Math.max(1000, randomNum(100000)),
+    },
+  };
+  return data;
+}
+
+/**
+ * Generate QuickNode get mempool info response.
+ *
+ * @param params - The params to generate mock get mempool info response.
+ * @param params.mempoolminfee - Minimum fee rate in BTC/kvB for tx to be accepted.
+ * @param params.minrelaytxfee - Minimum relay fee in BTC/kB for transactions.
+ * @returns A QuickNode get mempool info response.
+ */
+export function generateQuickNodeMempoolResp( {
+  mempoolminfee = Math.max(1000, randomNum(10000)),
+  minrelaytxfee,
+} : {
+  mempoolminfee?: number
+  minrelaytxfee?: number
+}) {
+  const template = quickNodeData.getmempoolinfo;
+  const data = {
+    ...template,
+    result: {
+      ...template.result,
+      mempoolminfee: mempoolminfee,
+      minrelaytxfee: minrelaytxfee ?? Math.max(mempoolminfee, randomNum(10000)),
     },
   };
   return data;
@@ -472,33 +373,32 @@ export function generateRandomTransactionId() {
 }
 
 /**
- * Method to generate formatted utxos with blockchair resp.
+ * Method to generate formatted utxos with QuickNode resp.
  *
- * @param address - the utxos owner address.
- * @param utxoCnt - count of the utxo to be generated.
- * @param minAmt - min amount of the utxo array.
- * @param maxAmt - max amount of the utxo array.
+ * @param _address - the utxos owner address (deprecated).
+ * @param utxosCount - count of the utxo to be generated.
+ * @param minAmount - min amount of the utxo array.
+ * @param maxAmount - max amount of the utxo array.
  * @returns An formatted utxo array.
  */
 export function generateFormattedUtxos(
-  address: string,
-  utxoCnt: number,
-  minAmt?: number,
-  maxAmt?: number,
+  _address: string,
+  utxosCount: number,
+  minAmount?: number,
+  maxAmount?: number,
 ) {
-  const rawUtxos = generateBlockChairGetUtxosResp(
-    address,
-    utxoCnt,
-    minAmt,
-    maxAmt,
-  );
-  const formattedUtxos = rawUtxos.data[address].utxo.map((utxo) => ({
-    block: utxo.block_id,
-    txHash: utxo.transaction_hash,
-    index: utxo.index,
-    value: utxo.value,
+  return generateQuickNodeGetUtxosResp(
+    {
+      utxosCount,
+      minAmount,
+      maxAmount,
+    }
+  ).result.map((utxo) => ({
+    block: utxo.height,
+    txHash: utxo.txid,
+    index: utxo.vout,
+    value: parseInt(utxo.value, 10),
   }));
-  return formattedUtxos;
 }
 
 /* eslint-disable */

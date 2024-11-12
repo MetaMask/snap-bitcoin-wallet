@@ -8,7 +8,7 @@ import {
   ReconnectButton,
   Card,
   ListAccountsButton,
-  SendManyCard,
+  SendBitcoinCard,
   GetTransactionStatusCard,
   GetBalancesCard,
   EstimateFeeCard,
@@ -306,7 +306,7 @@ const Index = () => {
           account={btcAccount?.id ?? ''}
           fullWidth={isSnapReady}
         />
-        <SendManyCard
+        <SendBitcoinCard
           enabled={isAccountReady}
           account={btcAccount?.id ?? ''}
           address={btcAccount?.address ?? ''}

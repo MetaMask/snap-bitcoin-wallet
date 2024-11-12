@@ -1,6 +1,8 @@
 import type { Json } from '@metamask/utils';
 import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
+import type { Struct } from 'superstruct';
+import { any } from 'superstruct';
 
 import {
   generateQuickNodeGetBalanceResp,
@@ -8,16 +10,20 @@ import {
   generateQuickNodeGetUtxosResp,
   generateQuickNodeGetRawTransactionResp,
   generateQuickNodeSendRawTransactionResp,
+  generateQuickNodeMempoolResp,
 } from '../../../../test/utils';
 import { Config } from '../../../config';
-import { btcToSats, satsKVBToVB } from '../../../utils';
+import { btcToSats, logger, satsKvbToVb } from '../../../utils';
 import * as asyncUtils from '../../../utils/async';
 import type { BtcAccount } from '../../wallet';
 import { BtcAccountDeriver, BtcWallet } from '../../wallet';
 import { TransactionStatus } from '../constants';
 import { DataClientError } from '../exceptions';
-import { QuickNodeClient } from './quicknode';
-import type { QuickNodeResponse } from './quicknode.types';
+import { NoFeeRateError, QuickNodeClient } from './quicknode';
+import type {
+  QuickNodeEstimateFeeResponse,
+  QuickNodeResponse,
+} from './quicknode.types';
 
 jest.mock('../../../utils/logger');
 jest.mock('../../../utils/snap');
@@ -27,10 +33,24 @@ describe('QuickNodeClient', () => {
   const mainnetEndpoint = 'https://api.quicknode.com/mainnet';
 
   class MockQuickNodeClient extends QuickNodeClient {
-    async post<Response extends QuickNodeResponse>(
-      body: Json,
-    ): Promise<Response> {
-      return super.post(body);
+    async submitJsonRPCRequest<ApiResponse extends QuickNodeResponse>({
+      request,
+      responseStruct,
+    }: {
+      request: {
+        method: string;
+        params: Json;
+      };
+      responseStruct: Struct;
+    }) {
+      return super.submitJsonRPCRequest<ApiResponse>({
+        request,
+        responseStruct,
+      });
+    }
+
+    getPriorityMap() {
+      return this._priorityMap;
     }
   }
 
@@ -111,11 +131,13 @@ describe('QuickNodeClient', () => {
     });
   };
 
-  describe('post', () => {
+  describe('submitJsonRPCRequest', () => {
     it('executes a request', async () => {
       const { fetchSpy } = createMockFetch();
+      const mockResponse = {
+        result: true,
+      };
 
-      const mockResponse = true;
       mockApiSuccessResponse({
         fetchSpy,
         mockResponse,
@@ -127,7 +149,10 @@ describe('QuickNodeClient', () => {
       };
 
       const client = createQuickNodeClient(networks.testnet);
-      const result = await client.post(postBody);
+      const result = await client.submitJsonRPCRequest({
+        request: postBody,
+        responseStruct: any(),
+      });
 
       expect(fetchSpy).toHaveBeenCalledWith(client.baseUrl, {
         method: 'POST',
@@ -136,16 +161,16 @@ describe('QuickNodeClient', () => {
         },
         body: JSON.stringify(postBody),
       });
+
       expect(result).toBe(mockResponse);
     });
 
-    it('throws `Failed to post data from quicknode` error if the http status is not 200', async () => {
+    it('throws `API response error` error if the http status is not 200', async () => {
       const { fetchSpy } = createMockFetch();
 
       mockErrorResponse({
         fetchSpy,
         status: 500,
-        isOk: true,
         errorResp: {
           error: 'api error',
         },
@@ -158,19 +183,24 @@ describe('QuickNodeClient', () => {
 
       const client = createQuickNodeClient(networks.testnet);
 
-      await expect(client.post(postBody)).rejects.toThrow(
-        'Failed to post data from quicknode: api error',
+      await expect(
+        client.submitJsonRPCRequest({
+          request: postBody,
+          responseStruct: any(),
+        }),
+      ).rejects.toThrow(
+        // The error message will be JSON stringified, hence the quotes here.
+        'API response error: "api error"',
       );
     });
 
-    it('throws `Failed to post data from quicknode` error if the `response.ok` is false', async () => {
+    it('throws `API response error: response body can not be deserialised.` error if the response body can not be deserialised', async () => {
       const { fetchSpy } = createMockFetch();
 
-      mockErrorResponse({
-        fetchSpy,
-        status: 200,
-        statusText: 'api error',
-        isOk: false,
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: jest.fn().mockRejectedValue(false),
       });
 
       const postBody = {
@@ -180,8 +210,13 @@ describe('QuickNodeClient', () => {
 
       const client = createQuickNodeClient(networks.testnet);
 
-      await expect(client.post(postBody)).rejects.toThrow(
-        'Failed to post data from quicknode: api error',
+      await expect(
+        client.submitJsonRPCRequest({
+          request: postBody,
+          responseStruct: any(),
+        }),
+      ).rejects.toThrow(
+        'API response error: response body can not be deserialised.',
       );
     });
   });
@@ -269,16 +304,57 @@ describe('QuickNodeClient', () => {
   });
 
   describe('getFeeRates', () => {
-    it('returns fee rates', async () => {
-      const { fetchSpy } = createMockFetch();
-      const expectedFeeRateKVB = 0.0001;
-      const mockResponse = generateQuickNodeEstimatefeeResp({
-        feerate: expectedFeeRateKVB,
+    const mockEstimateFeeRate = ({
+      fetchSpy,
+      mempoolminfee = 0.0001,
+      minrelaytxfee = 0.0001,
+      smartFee,
+      estimateFeeErrors = [],
+    }: {
+      fetchSpy: jest.SpyInstance;
+      mempoolminfee?: number;
+      minrelaytxfee?: number;
+      smartFee?: number;
+      estimateFeeErrors?: string[];
+    }) => {
+      const mockMempoolInfoResponse = generateQuickNodeMempoolResp({
+        mempoolminfee,
+        minrelaytxfee,
       });
-
+      const mockEstimateFeeResponse = generateQuickNodeEstimatefeeResp({
+        feerate: smartFee,
+      });
+      // Mock Mempool Info Response
       mockApiSuccessResponse({
         fetchSpy,
-        mockResponse,
+        mockResponse: mockMempoolInfoResponse,
+      });
+
+      let estimateFeeResponse: QuickNodeEstimateFeeResponse =
+        mockEstimateFeeResponse;
+      if (estimateFeeErrors && estimateFeeErrors.length > 0) {
+        estimateFeeResponse = {
+          ...mockEstimateFeeResponse,
+          result: {
+            ...mockEstimateFeeResponse.result,
+            errors: estimateFeeErrors,
+          },
+        };
+      }
+
+      // Mock Estimate Fee Response
+      mockApiSuccessResponse({
+        fetchSpy,
+        mockResponse: estimateFeeResponse,
+      });
+    };
+
+    it('returns fee rates', async () => {
+      const { fetchSpy } = createMockFetch();
+      const expectedFeeRateKvb = 0.0002;
+      mockEstimateFeeRate({
+        fetchSpy,
+        smartFee: expectedFeeRateKvb,
       });
 
       const client = createQuickNodeClient(networks.testnet);
@@ -286,9 +362,49 @@ describe('QuickNodeClient', () => {
 
       expect(result).toStrictEqual({
         [Config.defaultFeeRate]: Number(
-          satsKVBToVB(btcToSats(expectedFeeRateKVB.toString())),
+          satsKvbToVb(btcToSats(expectedFeeRateKvb.toString())),
         ),
       });
+    });
+
+    it('does not throw any error if the fee rate is unavailable', async () => {
+      const { fetchSpy } = createMockFetch();
+      const mempoolminfee = 0.0001;
+      const minrelaytxfee = 0.0001;
+
+      mockEstimateFeeRate({
+        fetchSpy,
+        smartFee: undefined,
+        minrelaytxfee,
+        mempoolminfee,
+        estimateFeeErrors: [NoFeeRateError],
+      });
+
+      const client = createQuickNodeClient(networks.testnet);
+      const target = client.getPriorityMap()[Config.defaultFeeRate];
+      const result = await client.getFeeRates();
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        `The feerate is unavailable on target block ${target}, use mempool data 'mempoolminfee' instead`,
+      );
+      expect(result).toStrictEqual({
+        [Config.defaultFeeRate]: Number(
+          satsKvbToVb(btcToSats(minrelaytxfee.toString())),
+        ),
+      });
+    });
+
+    it('throws an error if the fee rate is unavailable and the api response is an unexpected error', async () => {
+      const { fetchSpy } = createMockFetch();
+      mockEstimateFeeRate({
+        fetchSpy,
+        smartFee: undefined,
+        estimateFeeErrors: ['Unexpected error'],
+      });
+
+      const client = createQuickNodeClient(networks.testnet);
+
+      await expect(client.getFeeRates()).rejects.toThrow(DataClientError);
     });
 
     it('throws DataClientError if the api response is invalid', async () => {

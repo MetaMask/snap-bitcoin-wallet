@@ -17,3 +17,31 @@ export class FeeRateUnavailableError extends CustomError {
     super(errMsg ?? `No fee rates available`);
   }
 }
+
+export class SendFlowRequestNotFoundError extends CustomError {
+  constructor(errMsg?: string) {
+    super(errMsg ?? `Send flow request not found`);
+  }
+}
+
+export class CurrencyRatesNotAvailableError extends CustomError {
+  constructor(errMsg?: string) {
+    super(errMsg ?? `Currency rates not available`);
+  }
+}
+
+/**
+ * Determines if the given error is a Snap exception.
+ *
+ * @param error - The error instance to be checked.
+ * @returns A boolean indicating whether the error is a Snap .
+ */
+export function isSnapException(error: Error): boolean {
+  const errors = [
+    AccountNotFoundError,
+    MethodNotImplementedError,
+    SendFlowRequestNotFoundError,
+    CurrencyRatesNotAvailableError,
+  ];
+  return errors.some((errType) => error instanceof errType);
+}

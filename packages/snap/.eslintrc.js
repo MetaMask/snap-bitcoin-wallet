@@ -1,5 +1,14 @@
 module.exports = {
   extends: ['../../.eslintrc.js'],
+  rules: {
+    // This allows importing the `Text` JSX component.
+    '@typescript-eslint/no-shadow': [
+      'error',
+      {
+        allow: ['Text'],
+      },
+    ],
+  },
 
   parserOptions: {
     tsconfigRootDir: __dirname,

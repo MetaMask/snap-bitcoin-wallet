@@ -1,5 +1,10 @@
 import { type SLIP10NodeInterface } from '@metamask/key-tree';
-import type { Component, DialogResult, Json } from '@metamask/snaps-sdk';
+import type {
+  Component,
+  DialogResult,
+  GetCurrencyRateResult,
+  Json,
+} from '@metamask/snaps-sdk';
 import { DialogType, panel, type SnapsProvider } from '@metamask/snaps-sdk';
 
 declare const snap: SnapsProvider;
@@ -97,4 +102,38 @@ export async function setStateData<State>(data: State) {
       newState: data as unknown as Record<string, Json>,
     },
   });
+}
+
+/**
+ * Creates and sends a UI dialog with the specified interface ID.
+ *
+ * @param interfaceId - The ID of the interface to create the dialog for.
+ * @returns A Promise that resolves to the result of the dialog request.
+ */
+export async function createSendUIDialog(interfaceId: string) {
+  return await snap.request({
+    method: 'snap_dialog',
+    params: {
+      id: interfaceId,
+    },
+  });
+}
+
+/**
+ * Retrieves the currency rates from MetaMask for the specified asset.
+ *
+ * @param currency - The currency for which to retrieve the currency rates.
+ * @returns A Promise that resolves to the currency rates.
+ */
+export async function getRatesFromMetamask(
+  currency: string,
+): Promise<GetCurrencyRateResult> {
+  return (await snap.request({
+    // @ts-expect-error TODO: snaps will fix this type error
+    method: 'snap_getCurrencyRate',
+    params: {
+      // @ts-expect-error TODO: snaps will fix this type error
+      currency,
+    },
+  })) as GetCurrencyRateResult;
 }

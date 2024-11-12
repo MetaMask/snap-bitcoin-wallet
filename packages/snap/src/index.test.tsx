@@ -245,16 +245,12 @@ describe('onKeyringRequest', () => {
 
   it('throws a `Permission denied` error if the MetaMask origin requests a method that is not on the allowed list', async () => {
     for (const method of [
-      keyringApi.KeyringRpcMethod.SubmitRequest,
       keyringApi.KeyringRpcMethod.ApproveRequest,
       keyringApi.KeyringRpcMethod.RejectRequest,
       keyringApi.KeyringRpcMethod.GetRequest,
       keyringApi.KeyringRpcMethod.ListRequests,
       keyringApi.KeyringRpcMethod.ExportAccount,
       keyringApi.KeyringRpcMethod.UpdateAccount,
-      InternalRpcMethod.GetTransactionStatus,
-      InternalRpcMethod.EstimateFee,
-      InternalRpcMethod.GetMaxSpendableBalance,
     ]) {
       await expect(
         onKeyringRequest({
