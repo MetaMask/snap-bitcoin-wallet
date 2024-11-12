@@ -26,7 +26,11 @@ export const useMetaMask = () => {
       method: 'web3_clientVersion',
     });
 
-    const isFlaskDetected = (clientVersion as string[])?.includes('flask');
+    let isFlaskDetected = (clientVersion as string[])?.includes('flask');
+
+    if (process.env.NODE_ENV === 'development') {
+      isFlaskDetected = true;
+    }
 
     setIsFlask(isFlaskDetected);
   };
