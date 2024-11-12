@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Caip2ChainId } from '../../constants';
 import { estimateFee, getMaxSpendableBalance } from '../../rpcs';
 import type { SendFlowRequest } from '../../stateManagement';
-import { KeyringStateManager, TransactionStatus } from '../../stateManagement';
+import { TransactionStatus } from '../../stateManagement';
 import { generateDefaultSendFlowRequest } from '../../utils/transaction';
 import { SendFormNames } from '../components/SendForm';
 import { updateSendFlow } from '../render-interfaces';
@@ -57,18 +57,6 @@ const createMockContext = (request: SendFlowRequest) => {
     scope: mockScope,
     requestId: mockRequestId,
     request,
-  };
-};
-
-const createMockStateManager = () => {
-  const stateManager = new KeyringStateManager();
-  const upsertRequestSpy = jest
-    .spyOn(stateManager, 'upsertRequest')
-    .mockResolvedValue(undefined);
-
-  return {
-    instance: stateManager,
-    upsertRequestSpy,
   };
 };
 
