@@ -68,27 +68,27 @@ export class BtcWallet {
   /**
    * Unlocks an account by index and script type.
    *
-   * @param index - The index to derive from the node.
+   * @param _index - The index to derive from the node.
    * @param type - The script type of the unlocked account, e.g. `bip122:p2pkh`.
    * @returns A promise that resolves to a `BtcAccount` object.
    */
-  async unlock(index: number, type?: string): Promise<BtcAccount> {
+  async unlock(_index: number, type?: string): Promise<BtcAccount> {
     try {
       const AccountCtor = this.getAccountCtor(type ?? ScriptType.P2wpkh);
-      const childNodeHdPath = [`m`, `0'`, `0`, `${index}`];
       const rootNode = await this._deriver.getRoot(AccountCtor.path);
-      const childNode = await this._deriver.getChild(rootNode, childNodeHdPath);
 
-      return new AccountCtor(
+      const account = new AccountCtor(
         bufferToString(rootNode.fingerprint, 'hex'),
-        index,
-        childNodeHdPath.join('/'),
-        bufferToString(childNode.publicKey, 'hex'),
+        rootNode,
         this._network,
         AccountCtor.scriptType,
         `bip122:${AccountCtor.scriptType.toLowerCase()}`,
         this.getHdSigner(rootNode),
+        0,
       );
+
+      await account.discovery('bip122:000000000933ea01ad0ee984209779ba');
+      return account;
     } catch (error) {
       throw compactError(error, WalletError);
     }

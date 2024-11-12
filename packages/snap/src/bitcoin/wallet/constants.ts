@@ -29,3 +29,8 @@ export const DustLimit = {
 
 // Maximum weight in bytes for a standard transaction
 export const MaxStandardTxWeight = 400000;
+
+// maximum number of consecutive unused addresses that should
+// be scanned or generated before the wallet software stops looking
+// for used addresses.
+export const addressGapLimit = 20;
