@@ -1,8 +1,5 @@
 import { Caip2Asset, Caip2ChainId } from '../constants';
-import {
-  AccountNotFoundError,
-  SendFlowRequestNotFoundError,
-} from '../exceptions';
+import { AccountNotFoundError } from '../exceptions';
 import { TransactionStatus } from '../stateManagement';
 import { AssetType } from '../ui/types';
 import { generateSendBitcoinParams } from '../ui/utils';
@@ -43,7 +40,11 @@ describe('startSendTransactionFlow', () => {
 
   it('creates a new request', async () => {
     const helper = await prepareStartSendTransactionFlow(mockScope);
-    const { keyringAccount, getBalanceAndRatesSpy } = helper;
+    const {
+      keyringAccount,
+      getBalanceAndRatesSpy,
+      setupResolvedConfirmationReview,
+    } = helper;
     getBalanceAndRatesSpy.mockResolvedValue({
       balances: {
         value: {
@@ -94,7 +95,7 @@ describe('startSendTransactionFlow', () => {
         error: '',
       },
     };
-    await helper.setupGetRequest(mockRequestWithCorrectValues);
+    await helper.setupResolvedConfirmationReview(mockRequestWithCorrectValues);
 
     const transactionTx = await startSendTransactionFlow({
       account: keyringAccount.id,
@@ -102,7 +103,7 @@ describe('startSendTransactionFlow', () => {
     });
 
     expect(helper.generateSendFlowSpy).toHaveBeenCalledTimes(1);
-    expect(helper.upsertRequestSpy).toHaveBeenCalledTimes(4);
+    expect(helper.upsertRequestSpy).toHaveBeenCalledTimes(1);
     expect(transactionTx).toStrictEqual({
       txId: helper.broadCastTxResp,
     });
@@ -110,9 +111,7 @@ describe('startSendTransactionFlow', () => {
 
   it('throws an error when the user rejects the transaction', async () => {
     const helper = await prepareStartSendTransactionFlow(mockScope);
-    const { keyringAccount, getBalanceAndRatesSpy, createSendUIDialogMock } =
-      helper;
-    createSendUIDialogMock.mockResolvedValue(false);
+    const { keyringAccount, getBalanceAndRatesSpy } = helper;
     getBalanceAndRatesSpy.mockResolvedValue({
       balances: {
         value: {
@@ -181,32 +180,5 @@ describe('startSendTransactionFlow', () => {
         scope: mockScope,
       }),
     ).rejects.toThrow(AccountNotFoundError);
-  });
-
-  it('throws an error when send flow request is not found', async () => {
-    const helper = await prepareStartSendTransactionFlow(mockScope);
-    const { keyringAccount, getBalanceAndRatesSpy } = helper;
-    getBalanceAndRatesSpy.mockResolvedValue({
-      balances: {
-        value: {
-          [Caip2Asset.Btc]: { amount: '1' },
-          [Caip2Asset.TBtc]: { amount: '1' },
-        },
-        error: '',
-      },
-      rates: {
-        value: 62000,
-        error: '',
-      },
-    });
-    // @ts-expect-error - We are testing the error case
-    await helper.setupGetRequest(null);
-
-    await expect(
-      startSendTransactionFlow({
-        account: keyringAccount.id,
-        scope: mockScope,
-      }),
-    ).rejects.toThrow(SendFlowRequestNotFoundError);
   });
 });

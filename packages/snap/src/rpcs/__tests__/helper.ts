@@ -12,7 +12,7 @@ import { Config } from '../../config';
 import { Caip2Asset } from '../../constants';
 import { Factory } from '../../factory';
 import type { SendFlowRequest } from '../../stateManagement';
-import { KeyringStateManager } from '../../stateManagement';
+import { KeyringStateManager, TransactionStatus } from '../../stateManagement';
 import * as renderInterfaces from '../../ui/render-interfaces';
 import * as snapUtils from '../../utils/snap';
 import { generateDefaultSendFlowRequest } from '../../utils/transaction';
@@ -467,7 +467,6 @@ export class StartSendTransactionFlowTest extends SendBitcoinTest {
 
     this.generateSendFlowSpy.mockResolvedValue(sendFlowRequest);
     this.updateSendFlowSpy.mockResolvedValue(true);
-    this.generateConfirmationReviewInterfaceSpy.mockResolvedValue(true);
     this.getBalancesSpy.mockResolvedValue({
       balances: {
         [this.keyringAccount.address]: {
@@ -509,10 +508,16 @@ export class StartSendTransactionFlowTest extends SendBitcoinTest {
   }
 
   async setupGetRequest(sendFlowRequest: SendFlowRequest): Promise<void> {
-    this.getRequestSpy.mockReset().mockResolvedValue(sendFlowRequest);
+    this.snapRequestSpy.mockReset().mockResolvedValue(sendFlowRequest);
   }
 
   async rejectSnapRequest(): Promise<void> {
-    this.snapRequestSpy.mockResolvedValue(false);
+    this.createSendUIDialogMock.mockResolvedValue({
+      status: TransactionStatus.Rejected,
+    } as SendFlowRequest);
+  }
+
+  async setupResolvedConfirmationReview(request: SendFlowRequest) {
+    this.createSendUIDialogMock.mockResolvedValue(request);
   }
 }

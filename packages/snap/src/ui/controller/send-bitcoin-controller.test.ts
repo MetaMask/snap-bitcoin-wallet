@@ -7,7 +7,11 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Caip2ChainId } from '../../constants';
 import { estimateFee, getMaxSpendableBalance } from '../../rpcs';
-import { KeyringStateManager, TransactionStatus } from '../../stateManagement';
+import {
+  KeyringStateManager,
+  SendFlowRequest,
+  TransactionStatus,
+} from '../../stateManagement';
 import { generateDefaultSendFlowRequest } from '../../utils/transaction';
 import { SendFormNames } from '../components/SendForm';
 import { updateSendFlow } from '../render-interfaces';
@@ -50,10 +54,13 @@ const mockAccount = {
   methods: [`${BtcMethod.SendBitcoin}`],
 };
 
-const mockContext: SendFlowContext = {
-  accounts: [{ id: 'account1' } as KeyringAccount],
-  scope: mockScope,
-  requestId: mockRequestId,
+const createMockContext = (request: SendFlowRequest) => {
+  return {
+    accounts: [{ id: 'account1' } as KeyringAccount],
+    scope: mockScope,
+    requestId: mockRequestId,
+    request,
+  };
 };
 
 const createMockStateManager = () => {
@@ -192,12 +199,9 @@ describe('SendBitcoinController', () => {
         accountSelector: '',
       };
 
-      const { instance: stateManager, upsertRequestSpy } =
-        createMockStateManager();
+      const mockContext = createMockContext(mockRequest);
 
       const controller = new SendBitcoinController({
-        stateManager,
-        request: mockRequest,
         context: mockContext,
         interfaceId: mockInterfaceId,
       });
@@ -211,7 +215,6 @@ describe('SendBitcoinController', () => {
         },
       };
 
-      expect(upsertRequestSpy).toHaveBeenCalledWith(expectedRequest);
       expect(updateSendFlow).toHaveBeenCalledWith({
         request: expectedRequest,
       });
@@ -236,11 +239,9 @@ describe('SendBitcoinController', () => {
         accountSelector: '',
       };
 
-      const { instance: stateManager } = createMockStateManager();
+      const mockContext = createMockContext(mockRequest);
 
       const controller = new SendBitcoinController({
-        stateManager,
-        request: mockRequest,
         context: mockContext,
         interfaceId: mockInterfaceId,
       });
@@ -268,11 +269,9 @@ describe('SendBitcoinController', () => {
         accountSelector: '',
       };
 
-      const { instance: stateManager } = createMockStateManager();
+      const mockContext = createMockContext(mockRequest);
 
       const controller = new SendBitcoinController({
-        stateManager,
-        request: mockRequest,
         context: mockContext,
         interfaceId: mockInterfaceId,
       });
@@ -306,11 +305,9 @@ describe('SendBitcoinController', () => {
         );
         mockRequest.status = TransactionStatus.Review;
 
-        const { instance: stateManager } = createMockStateManager();
+        const mockContext = createMockContext(mockRequest);
 
         const controller = new SendBitcoinController({
-          stateManager,
-          request: mockRequest,
           context: mockContext,
           interfaceId: mockInterfaceId,
         });
@@ -319,7 +316,7 @@ describe('SendBitcoinController', () => {
           mockContext,
           mockFormState,
         );
-        expect(controller.request).toStrictEqual({
+        expect(controller.context.request).toStrictEqual({
           ...mockRequest,
           recipient: {
             address: mockAddress,
@@ -328,7 +325,7 @@ describe('SendBitcoinController', () => {
           },
         });
         expect(updateSendFlow).toHaveBeenCalledWith({
-          request: controller.request,
+          request: controller.context.request,
         });
       });
 
@@ -346,12 +343,9 @@ describe('SendBitcoinController', () => {
           mockInterfaceId,
         );
         mockRequest.status = TransactionStatus.Review;
-
-        const { instance: stateManager } = createMockStateManager();
+        const mockContext = createMockContext(mockRequest);
 
         const controller = new SendBitcoinController({
-          stateManager,
-          request: mockRequest,
           context: mockContext,
           interfaceId: mockInterfaceId,
         });
@@ -360,7 +354,7 @@ describe('SendBitcoinController', () => {
           mockContext,
           mockFormState,
         );
-        expect(controller.request).toStrictEqual({
+        expect(controller.context.request).toStrictEqual({
           ...mockRequest,
           recipient: {
             address: mockAddress,
@@ -369,7 +363,7 @@ describe('SendBitcoinController', () => {
           },
         });
         expect(updateSendFlow).toHaveBeenCalledWith({
-          request: controller.request,
+          request: controller.context.request,
         });
       });
     });
@@ -389,12 +383,9 @@ describe('SendBitcoinController', () => {
           mockInterfaceId,
         );
         mockRequest.selectedCurrency = AssetType.BTC;
-
-        const { instance: stateManager } = createMockStateManager();
+        const mockContext = createMockContext(mockRequest);
 
         const controller = new SendBitcoinController({
-          stateManager,
-          request: mockRequest,
           context: mockContext,
           interfaceId: mockInterfaceId,
         });
@@ -409,12 +400,12 @@ describe('SendBitcoinController', () => {
           mockFormState,
         );
 
-        expect(controller.request.amount.amount).toBe(mockAmount);
-        expect(controller.request.amount.fiat).toBeDefined();
-        expect(controller.request.fees.amount).toBe('0.0001');
-        expect(controller.request.total.amount).toBeDefined();
+        expect(controller.context.request.amount.amount).toBe(mockAmount);
+        expect(controller.context.request.amount.fiat).toBeDefined();
+        expect(controller.context.request.fees.amount).toBe('0.0001');
+        expect(controller.context.request.total.amount).toBeDefined();
         expect(updateSendFlow).toHaveBeenCalledWith({
-          request: controller.request,
+          request: controller.context.request,
         });
       });
 
@@ -433,12 +424,9 @@ describe('SendBitcoinController', () => {
         );
         mockRequest.selectedCurrency = AssetType.FIAT;
         mockRequest.rates = '60000';
-
-        const { instance: stateManager } = createMockStateManager();
+        const mockContext = createMockContext(mockRequest);
 
         const controller = new SendBitcoinController({
-          stateManager,
-          request: mockRequest,
           context: mockContext,
           interfaceId: mockInterfaceId,
         });
@@ -453,12 +441,12 @@ describe('SendBitcoinController', () => {
           mockFormState,
         );
 
-        expect(controller.request.amount.amount).toBe('0.00166667');
-        expect(controller.request.amount.fiat).toBe(mockAmount);
-        expect(controller.request.fees.amount).toBe('0.0001');
-        expect(controller.request.total.amount).toBeDefined();
+        expect(controller.context.request.amount.amount).toBe('0.00166667');
+        expect(controller.context.request.amount.fiat).toBe(mockAmount);
+        expect(controller.context.request.fees.amount).toBe('0.0001');
+        expect(controller.context.request.total.amount).toBeDefined();
         expect(updateSendFlow).toHaveBeenCalledWith({
-          request: controller.request,
+          request: controller.context.request,
         });
       });
 
@@ -475,12 +463,9 @@ describe('SendBitcoinController', () => {
           mockRequestId,
           mockInterfaceId,
         );
-
-        const { instance: stateManager } = createMockStateManager();
+        const mockContext = createMockContext(mockRequest);
 
         const controller = new SendBitcoinController({
-          stateManager,
-          request: mockRequest,
           context: mockContext,
           interfaceId: mockInterfaceId,
         });
@@ -491,9 +476,9 @@ describe('SendBitcoinController', () => {
           mockFormState,
         );
 
-        expect(controller.request.amount.valid).toBe(false);
+        expect(controller.context.request.amount.valid).toBe(false);
         expect(updateSendFlow).toHaveBeenCalledWith({
-          request: controller.request,
+          request: controller.context.request,
         });
       });
 
@@ -511,12 +496,9 @@ describe('SendBitcoinController', () => {
           mockInterfaceId,
         );
         mockRequest.selectedCurrency = AssetType.BTC;
-
-        const { instance: stateManager } = createMockStateManager();
+        const mockContext = createMockContext(mockRequest);
 
         const controller = new SendBitcoinController({
-          stateManager,
-          request: mockRequest,
           context: mockContext,
           interfaceId: mockInterfaceId,
         });
@@ -531,9 +513,11 @@ describe('SendBitcoinController', () => {
           mockFormState,
         );
 
-        expect(controller.request.fees.error).toBe('Fee estimation error');
+        expect(controller.context.request.fees.error).toBe(
+          'Fee estimation error',
+        );
         expect(updateSendFlow).toHaveBeenCalledWith({
-          request: controller.request,
+          request: controller.context.request,
         });
       });
     });
@@ -552,18 +536,15 @@ describe('SendBitcoinController', () => {
         mockInterfaceId,
       );
       mockRequest.status = TransactionStatus.Review;
-
-      const { instance: stateManager } = createMockStateManager();
+      const mockContext = createMockContext(mockRequest);
 
       const controller = new SendBitcoinController({
-        stateManager,
-        request: mockRequest,
         context: mockContext,
         interfaceId: mockInterfaceId,
       });
       await controller.handleButtonEvent(SendFormNames.HeaderBack);
-      expect(controller.request.status).toBe(TransactionStatus.Draft);
-      expect(controller.request).toStrictEqual({
+      expect(controller.context.request.status).toBe(TransactionStatus.Draft);
+      expect(controller.context.request).toStrictEqual({
         ...mockRequest,
         status: TransactionStatus.Draft,
       });
@@ -578,18 +559,17 @@ describe('SendBitcoinController', () => {
         mockInterfaceId,
       );
       mockRequest.status = TransactionStatus.Draft;
-
-      const { instance: stateManager } = createMockStateManager();
+      const mockContext = createMockContext(mockRequest);
 
       const controller = new SendBitcoinController({
-        stateManager,
-        request: mockRequest,
         context: mockContext,
         interfaceId: mockInterfaceId,
       });
       await controller.handleButtonEvent(SendFormNames.HeaderBack);
-      expect(controller.request.status).toBe(TransactionStatus.Rejected);
-      expect(controller.request).toStrictEqual({
+      expect(controller.context.request.status).toBe(
+        TransactionStatus.Rejected,
+      );
+      expect(controller.context.request).toStrictEqual({
         ...mockRequest,
         status: TransactionStatus.Rejected,
       });
@@ -597,7 +577,7 @@ describe('SendBitcoinController', () => {
         method: 'snap_resolveInterface',
         params: {
           id: controller.interfaceId,
-          value: false,
+          value: controller.context.request,
         },
       });
     });
@@ -610,16 +590,14 @@ describe('SendBitcoinController', () => {
         mockInterfaceId,
       );
       mockRequest.recipient.address = 'address';
-      const { instance: stateManager } = createMockStateManager();
+      const mockContext = createMockContext(mockRequest);
 
       const controller = new SendBitcoinController({
-        stateManager,
-        request: mockRequest,
         context: mockContext,
         interfaceId: mockInterfaceId,
       });
       await controller.handleButtonEvent(SendFormNames.Clear);
-      expect(controller.request.recipient.address).toBe('');
+      expect(controller.context.request.recipient.address).toBe('');
     });
 
     it('should handle "Cancel" button event', async () => {
@@ -629,16 +607,16 @@ describe('SendBitcoinController', () => {
         mockRequestId,
         mockInterfaceId,
       );
-      const { instance: stateManager } = createMockStateManager();
+      const mockContext = createMockContext(mockRequest);
 
       const controller = new SendBitcoinController({
-        stateManager,
-        request: mockRequest,
         context: mockContext,
         interfaceId: mockInterfaceId,
       });
       await controller.handleButtonEvent(SendFormNames.Cancel);
-      expect(controller.request.status).toBe(TransactionStatus.Rejected);
+      expect(controller.context.request.status).toBe(
+        TransactionStatus.Rejected,
+      );
     });
 
     it('should handle "SwapCurrencyDisplay" button event', async () => {
@@ -648,11 +626,9 @@ describe('SendBitcoinController', () => {
         mockRequestId,
         mockInterfaceId,
       );
-      const { instance: stateManager } = createMockStateManager();
+      const mockContext = createMockContext(mockRequest);
 
       const controller = new SendBitcoinController({
-        stateManager,
-        request: mockRequest,
         context: mockContext,
         interfaceId: mockInterfaceId,
       });
@@ -661,8 +637,7 @@ describe('SendBitcoinController', () => {
         ...mockRequest,
         selectedCurrency: AssetType.FIAT,
       };
-      expect(controller.request.selectedCurrency).toBe(AssetType.FIAT);
-      expect(stateManager.upsertRequest).toHaveBeenCalledWith(expectedResult);
+      expect(controller.context.request.selectedCurrency).toBe(AssetType.FIAT);
       expect(updateSendFlow).toHaveBeenCalledWith({
         request: expectedResult,
         flushToAddress: false,
@@ -677,11 +652,9 @@ describe('SendBitcoinController', () => {
         mockRequestId,
         mockInterfaceId,
       );
-      const { instance: stateManager } = createMockStateManager();
+      const mockContext = createMockContext(mockRequest);
 
       const controller = new SendBitcoinController({
-        stateManager,
-        request: mockRequest,
         context: mockContext,
         interfaceId: mockInterfaceId,
       });
@@ -690,8 +663,7 @@ describe('SendBitcoinController', () => {
         ...mockRequest,
         status: TransactionStatus.Review,
       };
-      expect(controller.request.status).toBe(TransactionStatus.Review);
-      expect(stateManager.upsertRequest).toHaveBeenCalledWith(expectedResult);
+      expect(controller.context.request.status).toBe(TransactionStatus.Review);
       expect(mockDisplayConfirmationReview).toHaveBeenCalledWith({
         request: expectedResult,
       });
@@ -705,11 +677,9 @@ describe('SendBitcoinController', () => {
         mockInterfaceId,
       );
       mockRequest.status = TransactionStatus.Review;
-      const { instance: stateManager } = createMockStateManager();
+      const mockContext = createMockContext(mockRequest);
 
       const controller = new SendBitcoinController({
-        stateManager,
-        request: mockRequest,
         context: mockContext,
         interfaceId: mockInterfaceId,
       });
@@ -718,13 +688,12 @@ describe('SendBitcoinController', () => {
         ...mockRequest,
         status: TransactionStatus.Signed,
       };
-      expect(controller.request.status).toBe(TransactionStatus.Signed);
-      expect(stateManager.upsertRequest).toHaveBeenCalledWith(expectedResult);
+      expect(controller.context.request.status).toBe(TransactionStatus.Signed);
       expect(snap.request).toHaveBeenCalledWith({
         method: 'snap_resolveInterface',
         params: {
           id: expectedResult.interfaceId,
-          value: true,
+          value: controller.context.request,
         },
       });
     });
@@ -736,11 +705,9 @@ describe('SendBitcoinController', () => {
         mockRequestId,
         mockInterfaceId,
       );
-      const { instance: stateManager } = createMockStateManager();
+      const mockContext = createMockContext(mockRequest);
 
       const controller = new SendBitcoinController({
-        stateManager,
-        request: mockRequest,
         context: mockContext,
         interfaceId: mockInterfaceId,
       });
@@ -750,26 +717,25 @@ describe('SendBitcoinController', () => {
         fee: { amount: '0.0001' },
       };
 
-      jest.spyOn(controller, 'persistRequest').mockResolvedValue(undefined);
       (getMaxSpendableBalance as jest.Mock).mockResolvedValue(
         mockMaxSpendableBalance,
       );
 
       await controller.handleButtonEvent(SendFormNames.SetMax);
 
-      expect(controller.request.amount.amount).toBe(
+      expect(controller.context.request.amount.amount).toBe(
         mockMaxSpendableBalance.balance.amount,
       );
-      expect(controller.request.fees.amount).toBe(
+      expect(controller.context.request.fees.amount).toBe(
         mockMaxSpendableBalance.fee.amount,
       );
-      expect(controller.request.total.amount).toBe(
+      expect(controller.context.request.total.amount).toBe(
         new BigNumber(mockMaxSpendableBalance.balance.amount)
           .plus(new BigNumber(mockMaxSpendableBalance.fee.amount))
           .toString(),
       );
       expect(updateSendFlow).toHaveBeenCalledWith({
-        request: controller.request,
+        request: controller.context.request,
         currencySwitched: true,
       });
     });
@@ -781,28 +747,25 @@ describe('SendBitcoinController', () => {
         mockRequestId,
         mockInterfaceId,
       );
-      const { instance: stateManager } = createMockStateManager();
+      const mockContext = createMockContext(mockRequest);
 
       const controller = new SendBitcoinController({
-        stateManager,
-        request: mockRequest,
         context: mockContext,
         interfaceId: mockInterfaceId,
       });
 
-      jest.spyOn(controller, 'persistRequest').mockResolvedValue(undefined);
       (getMaxSpendableBalance as jest.Mock).mockRejectedValue(
         new Error('Error fetching max amount'),
       );
 
       await controller.handleButtonEvent(SendFormNames.SetMax);
 
-      expect(controller.request.amount.error).toBe(
+      expect(controller.context.request.amount.error).toBe(
         'Error fetching max amount: Error fetching max amount',
       );
-      expect(controller.request.fees.loading).toBe(false);
+      expect(controller.context.request.fees.loading).toBe(false);
       expect(updateSendFlow).toHaveBeenCalledWith({
-        request: controller.request,
+        request: controller.context.request,
         currencySwitched: true,
       });
     });

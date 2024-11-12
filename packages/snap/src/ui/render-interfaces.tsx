@@ -37,6 +37,15 @@ export async function generateSendFlow({
         requestId,
         accounts: [account],
         scope,
+        request: {
+          id: requestId,
+          interfaceId: '', // to be set in the next update
+          account,
+          scope,
+          transaction: {},
+          status: 'draft',
+          ...sendFlowProps,
+        },
       },
     },
   });
@@ -79,6 +88,12 @@ export async function updateSendFlow({
           backEventTriggered={backEventTriggered}
         />
       ),
+      context: {
+        requestId: request.id,
+        accounts: [request.account],
+        scope: request.scope,
+        request,
+      },
     },
   });
 }
@@ -120,6 +135,12 @@ export async function displayConfirmationReview({
     params: {
       id: request.interfaceId,
       ui: <ReviewTransaction {...request} txSpeed="30m" />,
+      context: {
+        requestId: request.id,
+        accounts: [request.account],
+        scope: request.scope,
+        request,
+      },
     },
   });
 }

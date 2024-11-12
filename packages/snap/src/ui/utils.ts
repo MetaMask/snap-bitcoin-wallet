@@ -30,32 +30,35 @@ export function formValidation(
   context: SendFlowContext,
   request: SendFlowRequest,
 ): SendFlowRequest {
-  // reset errors
-  request.amount.error = '';
-  request.recipient.error = '';
-  request.fees.error = '';
+  // Only update the update from input change event
+  // This is because if we validate both, there can be a race condition that causes a valid input to be shown as invalid
 
-  const formAmount = formState.amount ?? '0';
-  const cryptoAmount =
-    request.selectedCurrency === AssetType.BTC
-      ? formAmount
-      : fiatToBtc(formAmount, request.rates);
+  const { amount } = formState;
 
-  request.recipient = validateRecipient(formState.to, context.scope);
-  request.amount = validateAmount(
-    cryptoAmount,
-    request.balance.amount,
-    request.rates,
-  );
+  if (amount !== request.amount.amount) {
+    const formAmount = formState.amount ?? '0';
+    const cryptoAmount =
+      request.selectedCurrency === AssetType.BTC
+        ? formAmount
+        : fiatToBtc(formAmount, request.rates);
+    request.amount = validateAmount(
+      cryptoAmount,
+      request.balance.amount,
+      request.rates,
+    );
+    // Reset the fees if the amount is invalid
+    if (request.amount.error) {
+      request.fees = {
+        amount: '',
+        fiat: '',
+        loading: false,
+        error: '',
+      };
+    }
+  }
 
-  // Reset the fees if the amount is invalid
-  if (request.amount.error) {
-    request.fees = {
-      amount: '',
-      fiat: '',
-      loading: false,
-      error: '',
-    };
+  if (formState.to !== request.recipient.address) {
+    request.recipient = validateRecipient(formState.to, context.scope);
   }
 
   return request;
