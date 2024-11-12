@@ -40,11 +40,7 @@ describe('startSendTransactionFlow', () => {
 
   it('creates a new request', async () => {
     const helper = await prepareStartSendTransactionFlow(mockScope);
-    const {
-      keyringAccount,
-      getBalanceAndRatesSpy,
-      setupResolvedConfirmationReview,
-    } = helper;
+    const { keyringAccount, getBalanceAndRatesSpy } = helper;
     getBalanceAndRatesSpy.mockResolvedValue({
       balances: {
         value: {

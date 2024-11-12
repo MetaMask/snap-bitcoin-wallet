@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Caip2ChainId, Caip2ChainIdToNetworkName } from '../constants';
 import type { SendBitcoinParams } from '../rpcs';
+import { TransactionStatus } from '../stateManagement';
 import { generateDefaultSendFlowRequest } from '../utils/transaction';
 import { AssetType, SendFormError } from './types';
 import {
@@ -17,7 +18,6 @@ import {
   formValidation,
   getNetworkNameFromScope,
 } from './utils';
-import { TransactionStatus } from '../stateManagement';
 
 const mockEstimateFee = jest.fn();
 jest.mock('../rpcs/estimate-fee', () => ({

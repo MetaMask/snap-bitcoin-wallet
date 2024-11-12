@@ -7,15 +7,12 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Caip2ChainId } from '../../constants';
 import { estimateFee, getMaxSpendableBalance } from '../../rpcs';
-import {
-  KeyringStateManager,
-  SendFlowRequest,
-  TransactionStatus,
-} from '../../stateManagement';
+import type { SendFlowRequest } from '../../stateManagement';
+import { KeyringStateManager, TransactionStatus } from '../../stateManagement';
 import { generateDefaultSendFlowRequest } from '../../utils/transaction';
 import { SendFormNames } from '../components/SendForm';
 import { updateSendFlow } from '../render-interfaces';
-import type { SendFlowContext, SendFormState } from '../types';
+import type { SendFormState } from '../types';
 import { AssetType } from '../types';
 import {
   SendBitcoinController,
