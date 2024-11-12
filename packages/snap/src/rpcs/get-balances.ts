@@ -51,7 +51,7 @@ export async function getBalances(
     const { assets, scope } = params;
 
     const chainApi = Factory.createOnChainServiceProvider(scope);
-    const addresses = [account.address];
+    const addresses = account.addressList;
     const addressesSet = new Set(addresses);
     const assetsSet = new Set(assets);
 

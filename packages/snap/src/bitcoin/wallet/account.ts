@@ -106,6 +106,20 @@ export abstract class BtcAccount {
     return this.#deriveAddress({ change: 0, index: this.addressIndex });
   }
 
+  /**
+   * A getter function to return an array of all used addresses.
+   * It includes internal and external addresses.
+   *
+   * @returns Address array.
+   */
+  get addressList(): string[] {
+    const mapSize = this.#addressMap.size;
+    if (mapSize === 0) {
+      throw new Error('Address map is empty');
+    }
+    return [...this.#addressMap.keys()];
+  }
+
   async discovery(
     scope: string,
     gapLimit: number = addressGapLimit,
