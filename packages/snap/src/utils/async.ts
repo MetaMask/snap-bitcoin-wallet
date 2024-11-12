@@ -11,15 +11,8 @@ export async function processBatch<Data>(
   callback: (item: Data) => Promise<void>,
   batchSize = 50,
 ): Promise<void> {
-  let from = 0;
-  let to = batchSize;
-  while (from < dataList.length) {
-    const batch: Promise<void>[] = [];
-    for (let i = from; i < Math.min(to, dataList.length); i++) {
-      batch.push(callback(dataList[i]));
-    }
+  for (let i = 0; i < dataList.length; i += batchSize) {
+    const batch = dataList.slice(i, i + batchSize).map(callback);
     await Promise.all(batch);
-    from += batchSize;
-    to += batchSize;
   }
 }
