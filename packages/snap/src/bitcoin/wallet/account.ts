@@ -147,6 +147,7 @@ export abstract class BtcAccount {
 
       if (used.length === 0) {
         unusedAddresses.push(...unused);
+        this.#updateAddressMap([unusedAddresses[0]], currentAddressIndex);
         console.log('unusedAddresses', unusedAddresses.length, unusedAddresses);
       } else {
         usedAddresses.push(...unusedAddresses, ...used);
@@ -157,7 +158,6 @@ export abstract class BtcAccount {
         console.log('unusedAddresses', unusedAddresses.length, unusedAddresses);
 
         this.#updateAddressMap(usedAddresses, currentAddressIndex);
-        this.#updateAddressIndex();
         // Clear the used addresses array to add the new set of addresses in the next iteration
         usedAddresses.length = 0;
       }
@@ -165,6 +165,7 @@ export abstract class BtcAccount {
       discoveredAddresses.length = 0;
     }
 
+    this.#updateAddressIndex();
     console.log('Address map', this.#addressMap);
     console.log('Address index', this.addressIndex);
   }
@@ -224,7 +225,7 @@ export abstract class BtcAccount {
   };
 
   #updateAddressIndex = (): void => {
-    this.addressIndex = this.#addressMap.size / 2;
+    this.addressIndex = this.#addressMap.size / 2 - 1;
     console.log('addressIndex ->', this.addressIndex);
   };
 }

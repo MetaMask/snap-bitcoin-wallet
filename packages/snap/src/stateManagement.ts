@@ -6,8 +6,7 @@ import { compactError, SnapStateManager } from './utils';
 
 export type Wallet = {
   account: KeyringAccount;
-  hdPath: string;
-  index: number;
+  accountIndex: number;
   scope: string;
 };
 
@@ -148,16 +147,16 @@ export class KeyringStateManager extends SnapStateManager<SnapState> {
           throw new Error(`Account id ${account.id} does not exist`);
         }
 
-        const wallet = state.wallets[account.id];
-        const accountInState = wallet.account;
+        // const wallet = state.wallets[account.id];
+        // const accountInState = wallet.account;
 
-        if (
-          accountInState.address.toLowerCase() !==
-            account.address.toLowerCase() ||
-          accountInState.type !== account.type
-        ) {
-          throw new Error(`Account address or type is immutable`);
-        }
+        // if (
+        //   accountInState.address.toLowerCase() !==
+        //     account.address.toLowerCase() ||
+        //   accountInState.type !== account.type
+        // ) {
+        //   throw new Error(`Account address or type is immutable`);
+        // }
 
         state.wallets[account.id].account = account;
       });

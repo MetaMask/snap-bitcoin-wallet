@@ -112,8 +112,7 @@ export class BtcKeyring implements Keyring {
       await this._stateMgr.withTransaction(async () => {
         await this._stateMgr.addWallet({
           account: keyringAccount,
-          hdPath: account.hdPath,
-          index: account.index,
+          accountIndex: account.accountIndex,
           scope: options.scope,
         });
 
@@ -218,7 +217,7 @@ export class BtcKeyring implements Keyring {
       const wallet = this.getBtcWallet(walletData.scope);
       const account = await this.discoverAccount(
         wallet,
-        walletData.index,
+        walletData.accountIndex,
         walletData.account.type,
       );
 
