@@ -55,6 +55,8 @@ export type CreateTransactionOptions = {
 };
 
 export class BtcWallet {
+  protected readonly _accounts = new Map<number, BtcAccount>();
+
   protected readonly _deriver: BtcAccountDeriver;
 
   protected readonly _network: Network;
@@ -67,24 +69,15 @@ export class BtcWallet {
   /**
    * Unlocks an account by index and script type.
    *
-   * @param _index - The index to derive from the node.
+   * @param accountIndex - The index to derive from the node.
    * @param type - The script type of the unlocked account, e.g. `bip122:p2pkh`.
    * @returns A promise that resolves to a `BtcAccount` object.
    */
-  async unlock(_index: number, type?: string): Promise<BtcAccount> {
+  async unlock(accountIndex: number, type?: string): Promise<BtcAccount> {
     try {
-      const AccountCtor = this.getAccountCtor(type ?? ScriptType.P2wpkh);
-      const rootNode = await this._deriver.getRoot(AccountCtor.path);
-
-      const account = new AccountCtor(
-        bufferToString(rootNode.fingerprint, 'hex'),
-        rootNode,
-        this._network,
-        AccountCtor.scriptType,
-        `bip122:${AccountCtor.scriptType.toLowerCase()}`,
-        this.getHdSigner(rootNode),
-        0,
-      );
+      const account =
+        this._accounts.get(accountIndex) ??
+        (await this.#createNewAccount(accountIndex, type));
 
       await account.discovery('bip122:000000000933ea01ad0ee984209779ba');
       return account;
@@ -282,5 +275,23 @@ export class BtcWallet {
     // READ THIS CAREFULLY:
     // Do not ever accept a 0 fee rate, we need to ensure it is at least 1
     return Math.max(feeRate, 1);
+  }
+
+  async #createNewAccount(accountIndex: number, type?: string) {
+    const AccountCtor = this.getAccountCtor(type ?? ScriptType.P2wpkh);
+    const rootNode = await this._deriver.getRoot(AccountCtor.path);
+
+    const account = new AccountCtor(
+      bufferToString(rootNode.fingerprint, 'hex'),
+      rootNode,
+      this._network,
+      AccountCtor.scriptType,
+      `bip122:${AccountCtor.scriptType.toLowerCase()}`,
+      this.getHdSigner(rootNode),
+      accountIndex,
+    );
+
+    this._accounts.set(accountIndex, account);
+    return account;
   }
 }
