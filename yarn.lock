@@ -6685,8 +6685,8 @@ __metadata:
 
 "bdk-wasm@file:../../../bdk-wasm/pkg::locator=%40metamask%2Fbitcoin-wallet-snap%40workspace%3Apackages%2Fsnap":
   version: 0.1.0
-  resolution: "bdk-wasm@file:../../../bdk-wasm/pkg#../../../bdk-wasm/pkg::hash=fb6e11&locator=%40metamask%2Fbitcoin-wallet-snap%40workspace%3Apackages%2Fsnap"
-  checksum: eae964c2ca145e7cb14c9ccb76272cb9258bb1216855e3ac2d06de1771a82033948633f3dceca90150ffd60927554585f606ade7a2c70e8c52e543eaa656bfaf
+  resolution: "bdk-wasm@file:../../../bdk-wasm/pkg#../../../bdk-wasm/pkg::hash=f35749&locator=%40metamask%2Fbitcoin-wallet-snap%40workspace%3Apackages%2Fsnap"
+  checksum: 246f7aaa84c6f6ea8680d716908f2a36e3685349ca24266179a134d3b51bbd337e272405fe79c0343edfd2c3efb6efa6432e97645e3533a1a410ccb7baf64029
   languageName: node
   linkType: hard
 
