@@ -41,7 +41,7 @@ export type Utxo = {
 
 export type TransactionData = {
   data: {
-    utxos: Utxo[];
+    utxos: Map<string, Utxo[]>;
   };
 };
 
@@ -150,12 +150,12 @@ export class BtcOnChainService {
   /**
    * Gets the required metadata to build a transaction for the given address and transaction intent.
    *
-   * @param address - The address to build the transaction for.
+   * @param addresses - Array of addresses to build the transaction for.
    * @returns A promise that resolves to a `TransactionData` object.
    */
-  async getDataForTransaction(address: string): Promise<TransactionData> {
+  async getDataForTransaction(addresses: string[]): Promise<TransactionData> {
     try {
-      const data = await this._dataClient.getUtxos(address);
+      const data = await this._dataClient.getUtxos(addresses);
       return {
         data: {
           utxos: data,

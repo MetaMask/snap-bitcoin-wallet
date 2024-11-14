@@ -60,7 +60,7 @@ export async function startSendTransactionFlow(
 
     const wallet = Factory.createWallet(walletData.scope);
     const btcAccount = await wallet.unlock(
-      walletData.index,
+      walletData.accountIndex,
       walletData.account.type,
     );
     verifyIfAccountValid(btcAccount, walletData.account);

@@ -179,7 +179,7 @@ export class BtcKeyring implements Keyring {
     const wallet = this.getBtcWallet(walletData.scope);
     const account = await this.discoverAccount(
       wallet,
-      walletData.index,
+      walletData.accountIndex,
       walletData.account.type,
     );
 
@@ -250,10 +250,10 @@ export class BtcKeyring implements Keyring {
 
   protected async discoverAccount(
     wallet: BtcWallet,
-    index: number,
+    accountIndex: number,
     type: string,
   ): Promise<BtcAccount> {
-    return await wallet.unlock(index, type);
+    return await wallet.unlock(accountIndex, type);
   }
 
   protected verifyIfMethodValid(

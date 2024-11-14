@@ -191,34 +191,39 @@ export class QuickNodeClient extends ApiClient implements IDataClient {
   }
 
   async getUtxos(
-    address: string,
+    addresses: string[],
     includeUnconfirmed?: boolean,
   ): Promise<DataClientGetUtxosResp> {
-    assert(address, BtcP2wpkhAddressStruct);
+    assert(addresses, array(BtcP2wpkhAddressStruct));
+    const addressUtxosMap = new Map();
 
-    const response = await this.submitJsonRPCRequest<QuickNodeGetUtxosResponse>(
-      {
-        request: {
-          method: 'bb_getutxos',
-          params: [
-            address,
-            {
-              confirmed: !includeUnconfirmed,
-            },
-          ],
-        },
-        responseStruct: QuickNodeGetUtxosResponseStruct,
-      },
-    );
+    await processBatch(addresses, async (address) => {
+      const response =
+        await this.submitJsonRPCRequest<QuickNodeGetUtxosResponse>({
+          request: {
+            method: 'bb_getutxos',
+            params: [
+              address,
+              {
+                confirmed: !includeUnconfirmed,
+              },
+            ],
+          },
+          responseStruct: QuickNodeGetUtxosResponseStruct,
+        });
 
-    return response.result.map((utxo) => ({
-      block: utxo.height,
-      txHash: utxo.txid,
-      index: utxo.vout,
-      // the utxo.value will be return as sats
-      // it is safe to use number in bitcoin rather than big int, due to max sats will not exceed 2100000000000000
-      value: parseInt(utxo.value, 10),
-    }));
+      const utxos = response.result.map((utxo) => ({
+        block: utxo.height,
+        txHash: utxo.txid,
+        index: utxo.vout,
+        // the utxo.value will be return as sats
+        // it is safe to use number in bitcoin rather than big int, due to max sats will not exceed 2100000000000000
+        value: parseInt(utxo.value, 10),
+      }));
+      addressUtxosMap.set(address, utxos);
+    });
+
+    return addressUtxosMap;
   }
 
   async getFeeRates(): Promise<DataClientGetFeeRatesResp> {
@@ -268,6 +273,7 @@ export class QuickNodeClient extends ApiClient implements IDataClient {
             `The feerate is unavailable on target block ${target}, use mempool data 'mempoolminfee' instead`,
           );
         } else if (errors) {
+          console.log(errors);
           throw new DataClientError(
             `Failed to get fee rate from quicknode: ${JSON.stringify(errors)}`,
           );

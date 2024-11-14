@@ -1,6 +1,5 @@
 import type { BIP32Interface } from 'bip32';
-// import type { Network, Payment } from 'bitcoinjs-lib';
-import type { Network } from 'bitcoinjs-lib';
+import type { Network, Payment } from 'bitcoinjs-lib';
 import type { Buffer } from 'buffer';
 import type { Infer } from 'superstruct';
 import { object, refine, number, enums } from 'superstruct';
@@ -120,6 +119,26 @@ export abstract class BtcAccount {
     return [...this.#addressMap.keys()];
   }
 
+  getScriptOutputByAddress(address: string): Buffer {
+    const payment = this.getPaymentByAddress(address);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return payment.output!;
+  }
+
+  getPaymentByAddress(address: string): Payment {
+    const derivationPathSegment = this.#addressMap.get(address);
+    if (!derivationPathSegment) {
+      throw new Error('Address not found');
+    }
+
+    const { change, index } = derivationPathSegment;
+    const pubKeyBuffer = this.#generatePubKeyByDerivationPathSegment({
+      change,
+      index,
+    });
+    return getBtcPaymentInst(this.scriptType, pubKeyBuffer, this.network);
+  }
+
   async discovery(
     scope: string,
     gapLimit: number = addressGapLimit,
@@ -139,23 +158,17 @@ export abstract class BtcAccount {
         );
       }
 
-      console.log({ discoveredAddresses });
       const { usedAddresses: used, unusedAddresses: unused } =
         await linearSearch(scope, discoveredAddresses);
-
-      console.log({ used, unused });
 
       if (used.length === 0) {
         unusedAddresses.push(...unused);
         this.#updateAddressMap([unusedAddresses[0]], currentAddressIndex);
-        console.log('unusedAddresses', unusedAddresses.length, unusedAddresses);
       } else {
         usedAddresses.push(...unusedAddresses, ...used);
-        console.log('usedAddresses', usedAddresses.length, usedAddresses);
         // Clear the unused addresses array to add the new set of addresses
         unusedAddresses.length = 0;
         unusedAddresses.push(...unused);
-        console.log('unusedAddresses', unusedAddresses.length, unusedAddresses);
 
         this.#updateAddressMap(usedAddresses, currentAddressIndex);
         // Clear the used addresses array to add the new set of addresses in the next iteration

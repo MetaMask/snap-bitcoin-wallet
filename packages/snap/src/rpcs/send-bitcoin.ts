@@ -93,7 +93,9 @@ export async function sendBitcoin(
 
     const {
       data: { utxos },
-    } = await chainApi.getDataForTransaction(account.address);
+    } = await chainApi.getDataForTransaction(account.addressList);
+
+    console.log(`utxos`, { utxos });
 
     const txResp = await wallet.createTransaction(account, recipients, {
       utxos,

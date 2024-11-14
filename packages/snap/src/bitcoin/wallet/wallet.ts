@@ -46,7 +46,7 @@ export type ITxInfo = {
 };
 
 export type CreateTransactionOptions = {
-  utxos: Utxo[];
+  utxos: Map<string, Utxo[]>;
   fee: number;
   //
   // BIP125 opt-in RBF flag,
@@ -180,9 +180,9 @@ export class BtcWallet {
     recipients: Recipient[],
     options: CreateTransactionOptions,
   ): Promise<SelectionResult> {
-    const { scriptType, script: scriptOutput } = account;
+    const { scriptType } = account;
 
-    const inputs = this.createTxInput(options.utxos, scriptOutput);
+    const inputs = this.createTxInput(options.utxos, account);
     const outputs = this.createTxOutput(recipients, scriptType);
     // TODO: We could have the minimum fee rate coming from the parameter and use it here:
     const feeRate = this.getFeeRate(options.fee);
@@ -190,7 +190,11 @@ export class BtcWallet {
     return this.selectCoins(
       inputs,
       outputs,
-      new TxOutput(0, account.address, scriptOutput),
+      new TxOutput(
+        0,
+        account.address,
+        account.getScriptOutputByAddress(account.address),
+      ),
       feeRate,
     );
   }
@@ -226,8 +230,16 @@ export class BtcWallet {
     }
   }
 
-  protected createTxInput(utxos: Utxo[], scriptOutput: Buffer): TxInput[] {
-    return utxos.map((utxo) => new TxInput(utxo, scriptOutput));
+  protected createTxInput(
+    addressUtxosMap: Map<string, Utxo[]>,
+    account: BtcAccount,
+  ): TxInput[] {
+    const txInputs: TxInput[] = [];
+    for (const [address, utxos] of addressUtxosMap.entries()) {
+      const scriptOutput = account.getScriptOutputByAddress(address);
+      txInputs.push(...utxos.map((utxo) => new TxInput(utxo, scriptOutput)));
+    }
+    return txInputs;
   }
 
   protected createTxOutput(
