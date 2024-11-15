@@ -8,7 +8,6 @@ import {
   SnapError,
   MethodNotFoundError,
 } from '@metamask/snaps-sdk';
-import { WalletWrapper } from 'bdk-wasm';
 
 import { Config } from './config';
 import { BtcKeyring } from './keyring';
@@ -32,6 +31,7 @@ import {
 } from './ui/controller/send-bitcoin-controller';
 import type { SendFlowContext, SendFormState } from './ui/types';
 import { isSnapRpcError, logger } from './utils';
+import { WalletWrapper } from './bdk/bdk_wasm';
 
 export const validateOrigin = (origin: string, method: string): void => {
   if (!origin) {
