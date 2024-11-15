@@ -73,16 +73,17 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       }
       case InternalRpcMethod.TestBDK: {
         const wallet = new WalletWrapper(
-          'testnet',
-          "wpkh(tprv8ZgxMBicQKsPdy6LMhUtFHAgpocR8GC6QmwMSFpZs7h6Eziw3SpThFfczTDh5rW2krkqffa11UpX3XkeTTB2FvzZKWXqPY54Y6Rq4AQ5R8L/84'/1'/0'/0/*)",
-          "wpkh(tprv8ZgxMBicQKsPdy6LMhUtFHAgpocR8GC6QmwMSFpZs7h6Eziw3SpThFfczTDh5rW2krkqffa11UpX3XkeTTB2FvzZKWXqPY54Y6Rq4AQ5R8L/84'/1'/0'/1/*)",
-          'https://blockstream.info/testnet/api/',
+          'signet',
+          "wpkh([aafa6322/84'/1'/0']tpubDCfvzhCuifJtWDVdrBcPvZU7U5uyixL7QULk8hXA7KjqiNnry9Te1nwm7yStqenPCQhy5MwzxKkLBD2GmKNgvMYqXgo53iYqQ7Vu4vQbN2N/0/*)#mlua264t",
+          "wpkh([aafa6322/84'/1'/0']tpubDCfvzhCuifJtWDVdrBcPvZU7U5uyixL7QULk8hXA7KjqiNnry9Te1nwm7yStqenPCQhy5MwzxKkLBD2GmKNgvMYqXgo53iYqQ7Vu4vQbN2N/1/*)#2teuh09n",
+          'https://mutinynet.com/api',
         );
 
-        // await wallet.sync(20);
-        //const address = wallet.get_new_address();
+        await wallet.sync(5);
+        const address = wallet.get_new_address();
+        const balance = wallet.balance();
 
-        return JSON.stringify({ message: wallet });
+        return JSON.stringify({ address, balance: balance.toString() });
       }
 
       default:
