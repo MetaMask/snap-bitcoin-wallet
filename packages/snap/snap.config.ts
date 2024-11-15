@@ -7,9 +7,6 @@ require('dotenv').config();
 const config: SnapConfig = {
   bundler: 'webpack',
   input: resolve(__dirname, 'src/index.tsx'),
-  output: {
-    minimize: false,
-  },
   server: {
     port: 8080,
   },
