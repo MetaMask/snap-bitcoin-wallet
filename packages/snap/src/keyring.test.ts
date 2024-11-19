@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { generateAccounts } from '../test/utils';
 import { BtcAccount, BtcWallet, ScriptType } from './bitcoin/wallet';
 import { Config } from './config';
-import { Caip2Asset, Caip2ChainId } from './constants';
+import { Caip19Asset, Caip2ChainId } from './constants';
 import { AccountNotFoundError, MethodNotImplementedError } from './exceptions';
 import { Factory } from './factory';
 import type { CreateAccountOptions } from './keyring';
@@ -356,7 +356,7 @@ describe('BtcKeyring', () => {
         txId: 'txid',
       });
       getBalanceRpcSpy.mockResolvedValue({
-        [Caip2Asset.TBtc]: {
+        [Caip19Asset.TBtc]: {
           amount: '1',
           unit: Config.unit,
         },
@@ -523,7 +523,7 @@ describe('BtcKeyring', () => {
         hdPath: sender.hdPath,
       });
 
-      const assets = [Caip2Asset.TBtc];
+      const assets = [Caip19Asset.TBtc];
       const expectedResp = assets.reduce((acc, asset) => {
         acc[asset] = {
           amount: '1',
@@ -534,7 +534,7 @@ describe('BtcKeyring', () => {
 
       getBalanceRpcSpy.mockResolvedValue(expectedResp);
 
-      await keyring.getAccountBalances(keyringAccount.id, [Caip2Asset.TBtc]);
+      await keyring.getAccountBalances(keyringAccount.id, [Caip19Asset.TBtc]);
 
       expect(getBalanceRpcSpy).toHaveBeenCalledWith(expect.any(BtcAccount), {
         scope: caip2ChainId,
@@ -549,7 +549,7 @@ describe('BtcKeyring', () => {
       const account = generateAccounts(1)[0];
 
       await expect(
-        keyring.getAccountBalances(account.id, [Caip2Asset.TBtc]),
+        keyring.getAccountBalances(account.id, [Caip19Asset.TBtc]),
       ).rejects.toThrow(Error);
     });
   });

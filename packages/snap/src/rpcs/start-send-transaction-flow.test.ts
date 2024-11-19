@@ -1,4 +1,4 @@
-import { Caip2Asset, Caip2ChainId } from '../constants';
+import { Caip19Asset, Caip2ChainId } from '../constants';
 import {
   AccountNotFoundError,
   SendFlowRequestNotFoundError,
@@ -47,8 +47,8 @@ describe('startSendTransactionFlow', () => {
     getBalanceAndRatesSpy.mockResolvedValue({
       balances: {
         value: {
-          [Caip2Asset.Btc]: { amount: '1' },
-          [Caip2Asset.TBtc]: { amount: '1' },
+          [Caip19Asset.Btc]: { amount: '1' },
+          [Caip19Asset.TBtc]: { amount: '1' },
         },
         error: '',
       },
@@ -116,8 +116,8 @@ describe('startSendTransactionFlow', () => {
     getBalanceAndRatesSpy.mockResolvedValue({
       balances: {
         value: {
-          [Caip2Asset.Btc]: { amount: '1' },
-          [Caip2Asset.TBtc]: { amount: '1' },
+          [Caip19Asset.Btc]: { amount: '1' },
+          [Caip19Asset.TBtc]: { amount: '1' },
         },
         error: '',
       },
@@ -189,8 +189,8 @@ describe('startSendTransactionFlow', () => {
     getBalanceAndRatesSpy.mockResolvedValue({
       balances: {
         value: {
-          [Caip2Asset.Btc]: { amount: '1' },
-          [Caip2Asset.TBtc]: { amount: '1' },
+          [Caip19Asset.Btc]: { amount: '1' },
+          [Caip19Asset.TBtc]: { amount: '1' },
         },
         error: '',
       },

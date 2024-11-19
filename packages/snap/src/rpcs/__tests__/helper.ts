@@ -9,7 +9,7 @@ import type { Utxo } from '../../bitcoin/chain';
 import { BtcOnChainService } from '../../bitcoin/chain';
 import type { BtcAccount, BtcWallet } from '../../bitcoin/wallet';
 import { Config } from '../../config';
-import { Caip2Asset } from '../../constants';
+import { Caip19Asset } from '../../constants';
 import { Factory } from '../../factory';
 import type { SendFlowRequest } from '../../stateManagement';
 import { KeyringStateManager } from '../../stateManagement';
@@ -471,10 +471,10 @@ export class StartSendTransactionFlowTest extends SendBitcoinTest {
     this.getBalancesSpy.mockResolvedValue({
       balances: {
         [this.keyringAccount.address]: {
-          [Caip2Asset.TBtc]: {
+          [Caip19Asset.TBtc]: {
             amount: '100000000',
           },
-          [Caip2Asset.Btc]: {
+          [Caip19Asset.Btc]: {
             amount: '100000000',
           },
         },
@@ -488,10 +488,10 @@ export class StartSendTransactionFlowTest extends SendBitcoinTest {
       },
       balances: {
         value: {
-          [Caip2Asset.TBtc]: {
+          [Caip19Asset.TBtc]: {
             amount: '1',
           },
-          [Caip2Asset.Btc]: {
+          [Caip19Asset.Btc]: {
             amount: '1',
           },
           error: '',
