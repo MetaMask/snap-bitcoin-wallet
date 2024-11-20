@@ -219,8 +219,8 @@ export class QuickNodeClient extends ApiClient implements IDataClient {
           block: utxo.height,
           txHash: utxo.txid,
           index: utxo.vout,
-          // the utxo.value will be return as sats
-          // it is safe to use number in bitcoin rather than big int, due to max sats will not exceed 2100000000000000
+          // `utxo.value` will be returned as sats.
+          // It is safe to use `number` in Bitcoin rather than `BigInt`, max sats will not exceed 2100000000000000 (which fits in 64 bit).
           value: parseInt(utxo.value, 10),
         });
       });

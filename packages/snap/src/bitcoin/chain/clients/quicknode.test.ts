@@ -427,8 +427,7 @@ describe('QuickNodeClient', () => {
     it('returns utxos', async () => {
       const { fetchSpy } = createMockFetch();
       const network = networks.testnet;
-      const accountsCount = 5;
-      const addresses = await createAccountAddresses(network, accountsCount);
+      const addresses = await createAccountAddresses(network, 5);
       let expectedResult: Utxo[] = [];
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -456,7 +455,7 @@ describe('QuickNodeClient', () => {
       const result = await client.getUtxos(addresses);
 
       expect(result).toStrictEqual(expectedResult);
-      expect(fetchSpy).toHaveBeenCalledTimes(accountsCount);
+      expect(fetchSpy).toHaveBeenCalledTimes(addresses.length);
     });
 
     it('throws DataClientError if the api response is invalid', async () => {
