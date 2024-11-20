@@ -6,7 +6,7 @@ import {
   generateFormattedUtxos,
   generateQuickNodeSendRawTransactionResp,
 } from '../../../test/utils';
-import { Caip2Asset } from '../../constants';
+import { Caip19Asset } from '../../constants';
 import { FeeRate, TransactionStatus } from './constants';
 import type { IDataClient, ISatsProtectionDataClient } from './data-client';
 import { BtcOnChainServiceError } from './exceptions';
@@ -251,20 +251,20 @@ describe('BtcOnChainService', () => {
       const { service, addresses } = prepareGetBalances();
 
       await expect(
-        service.getBalances(addresses, [Caip2Asset.TBtc, Caip2Asset.Btc]),
+        txService.getBalances(addresses, [Caip19Asset.TBtc, Caip19Asset.Btc]),
       ).rejects.toThrow('Only one asset is supported');
     });
 
     it.each([
       {
         assetName: 'BTC',
-        asset: Caip2Asset.Btc,
+        asset: Caip19Asset.Btc,
         network: networks.testnet,
         networkName: 'testnet',
       },
       {
         assetName: 'TBTC',
-        asset: Caip2Asset.TBtc,
+        asset: Caip19Asset.TBtc,
         network: networks.bitcoin,
         networkName: 'mainnet',
       },

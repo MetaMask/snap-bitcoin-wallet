@@ -28,7 +28,7 @@ export type IDataClient = {
   /**
    * Gets the UTXOs for a Bitcoin address.
    *
-   * @param {string} addresses - The Bitcoin address to query.
+   * @param {string[]} addresses - An array of Bitcoin addresses to query.
    * @param {boolean} [includeUnconfirmed] - Whether or not to include unconfirmed UTXOs in the response. Defaults to false.
    * @returns {Promise<DataClientGetUtxosResp>} A promise that resolves to an array of UTXOs.
    */
@@ -66,11 +66,11 @@ export type IDataClient = {
  */
 export type ISatsProtectionDataClient = {
   /**
-   * Filter Utxos that contains Inscription, Runes or Rare Sats.
+   * Filters UTXOs that contain Inscriptions, Runes or Rare Sats.
    *
-   * @param {string[]} addresses - An array of Bitcoin addresses to query.
+   * @param {string[]} address - An array of Bitcoin addresses to query.
    * @param {Utxo[]} utxos - An array of UTXOs to filter.
    * @returns {Promise<Utxo[]>} A promise that resolves to the filtered UTXOs.
    */
-  filterUtxos(addresses: string[], utxos: Utxo[]): Promise<Utxo[]>;
+  filterUtxos(address: string[], utxos: Utxo[]): Promise<Utxo[]>;
 };

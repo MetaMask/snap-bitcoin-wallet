@@ -2,7 +2,7 @@ import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 
 import { Config } from '../../config';
-import { Caip2Asset } from '../../constants';
+import { Caip19Asset } from '../../constants';
 import { compactError } from '../../utils';
 import type { FeeRate, TransactionStatus } from './constants';
 import type { IDataClient, ISatsProtectionDataClient } from './data-client';
@@ -105,8 +105,8 @@ export class BtcOnChainService {
       const asset = assets[0];
 
       if (
-        (this.network === networks.testnet && asset !== Caip2Asset.TBtc) ||
-        (this.network === networks.bitcoin && asset !== Caip2Asset.Btc)
+        (this.network === networks.testnet && asset !== Caip19Asset.TBtc) ||
+        (this.network === networks.bitcoin && asset !== Caip19Asset.Btc)
       ) {
         throw new BtcOnChainServiceError('Invalid asset');
       }

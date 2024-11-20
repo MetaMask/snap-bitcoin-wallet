@@ -63,7 +63,7 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
         />
       </Row>
       <Row label="Transaction speed" tooltip="The estimated time of the TX">
-        <Text>30m</Text>
+        <Text>30 min</Text>
       </Row>
       <Row label="Total">
         <Value

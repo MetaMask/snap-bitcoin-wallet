@@ -1,7 +1,7 @@
 import { InvalidParamsError } from '@metamask/snaps-sdk';
 
 import { Config } from '../config';
-import { Caip2Asset, Caip2ChainId } from '../constants';
+import { Caip19Asset, Caip2ChainId } from '../constants';
 import { satsToBtc } from '../utils';
 import {
   createMockChainApiFactory,
@@ -14,8 +14,8 @@ jest.mock('../utils/logger');
 jest.mock('../utils/snap');
 
 describe('getBalances', () => {
-  const tBtc = Caip2Asset.TBtc;
-  const btc = Caip2Asset.Btc;
+  const tBtc = Caip19Asset.TBtc;
+  const btc = Caip19Asset.Btc;
 
   const createMockAccount = async (caip2ChainId: string) => {
     const wallet = createMockWallet(caip2ChainId);
@@ -85,8 +85,8 @@ describe('getBalances', () => {
       mockGetBalanceResp,
     } = await prepareGetBalances();
 
-    // It is a never happen case that we can enquire the balance of BTC and tBTC at the same time
-    // But we have to simulate this case to test the behavior of the function
+    // Getting BTC and tBTC at the same time should never really happen, but
+    // we have to simulate this case to test the behavior of the function.
     const expected = {
       [tBtc]: {
         amount: satsToBtc(mockGetBalanceResp.balances[tBtc].amount),

@@ -29,7 +29,7 @@ export class SimpleHashClient
     this._options = options;
   }
 
-  protected getApiUrl(endpoint: string): string {
+  protected getApiUrl(endpoint: `/${string}`): string {
     const url = new URL(`${this.baseUrl}${endpoint}`);
     return url.toString();
   }
@@ -57,7 +57,7 @@ export class SimpleHashClient
     responseStruct,
     requestName,
   }: {
-    endpoint: string;
+    endpoint: `/${string}`;
     responseStruct: Struct;
     requestName: string;
   }): Promise<ApiResponse> {
@@ -75,18 +75,17 @@ export class SimpleHashClient
   // An output is the combination of the transaction hash and the vout, serving as a unique identifier for an UTXO
   // e.g 123456789558bd40a14d1cc2f42f5e0476a34ab8589bdc84f65b4eb305b9b925:0
   // Transaction hash is the first part before the colon, and the index/vout is the second part after the colon.
-  protected outputToTxHashNVout(output: string): [string, number] {
+  protected outputToTxHashAndVout(output: string): [string, number] {
     const [txHash, vout] = output.split(':');
     return [txHash, parseInt(vout, 10)];
   }
 
-  // The API returns UTXOs that does not contain inscriptions, raresats, and runes,
+  // The API returns UTXOs that does not contain Inscriptions, Rare Sats, and Runes,
   // which eliminates the need for UTXO filtering.
   // As a result, the argument _utxos will be disregarded, and the UTXOs can be directly returned from this API.
   async filterUtxos(addresses: string[], _utxos: Utxo[]): Promise<Utxo[]> {
-    // A safeguard to deduplicate the addresses and prevent duplicated utxos returned by the API.
+    // A safeguard to deduplicate the addresses and prevent duplicated UTXOs returned by the API.
     const uniqueAddresses = Array.from(new Set(addresses));
-
     assert(uniqueAddresses, array(BtcP2wpkhAddressStruct));
 
     const utxos: Utxo[] = [];
@@ -101,7 +100,7 @@ export class SimpleHashClient
         });
 
       for (const utxo of result.utxos) {
-        const [txHash, vout] = this.outputToTxHashNVout(utxo.output);
+        const [txHash, vout] = this.outputToTxHashAndVout(utxo.output);
         // The UTXO will not be duplicated,
         // therefore we are safe to store the UTXO into an array.
         utxos.push({

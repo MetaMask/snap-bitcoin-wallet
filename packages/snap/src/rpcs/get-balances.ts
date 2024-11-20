@@ -58,10 +58,8 @@ export async function getBalances(
     const resp = {};
 
     assets.forEach((asset) => {
-      let amount = BigInt(0);
-      if (Object.prototype.hasOwnProperty.call(balances.balances, asset)) {
-        amount = balances.balances[asset].amount;
-      }
+      // If we cannot find the asset, we fallback to an amount of 0.
+      const amount = balances.balances[asset]?.amount ?? BigInt(0);
 
       resp[asset] = {
         amount: satsToBtc(amount),
