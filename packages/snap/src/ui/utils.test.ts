@@ -439,6 +439,7 @@ describe('utils', () => {
         selectedCurrency: AssetType.BTC,
         rates,
         balance: { amount: balance, fiat: '62000.00' },
+        // We are only validating the inputs here.
         total: {
           amount: '',
           fiat: '',
