@@ -79,7 +79,7 @@ export async function getMaxSpendableBalance(
 
     const {
       data: { utxos },
-    } = await chainApi.getDataForTransaction(account.address);
+    } = await chainApi.getDataForTransaction([account.address]);
 
     let spendable = BigInt(0);
     let estimatedFee = BigInt(0);
