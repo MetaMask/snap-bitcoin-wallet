@@ -29,7 +29,7 @@ export class SimpleHashClient
     this._options = options;
   }
 
-  protected getApiUrl(endpoint: string): string {
+  protected getApiUrl(endpoint: `/${string}`): string {
     const url = new URL(`${this.baseUrl}${endpoint}`);
     return url.toString();
   }
@@ -57,7 +57,7 @@ export class SimpleHashClient
     responseStruct,
     requestName,
   }: {
-    endpoint: string;
+    endpoint: `/${string}`;
     responseStruct: Struct;
     requestName: string;
   }): Promise<ApiResponse> {
@@ -80,13 +80,12 @@ export class SimpleHashClient
     return [txHash, parseInt(vout, 10)];
   }
 
-  // The API returns UTXOs that does not contain inscriptions, raresats, and runes,
+  // The API returns UTXOs that does not contain Inscriptions, Rare Sats, and Runes,
   // which eliminates the need for UTXO filtering.
   // As a result, the argument _utxos will be disregarded, and the UTXOs can be directly returned from this API.
   async filterUtxos(addresses: string[], _utxos: Utxo[]): Promise<Utxo[]> {
-    // A safeguard to deduplicate the addresses and prevent duplicated utxos returned by the API.
+    // A safeguard to deduplicate the addresses and prevent duplicated UTXOs returned by the API.
     const uniqueAddresses = Array.from(new Set(addresses));
-
     assert(uniqueAddresses, array(BtcP2wpkhAddressStruct));
 
     const utxos: Utxo[] = [];

@@ -66,7 +66,7 @@ export type IDataClient = {
  */
 export type ISatsProtectionDataClient = {
   /**
-   * Filter Utxos that contains Inscription, Runes or Rare Sats.
+   * Filters UTXOs that contain Inscriptions, Runes or Rare Sats.
    *
    * @param {string[]} address - An array of Bitcoin addresses to query.
    * @param {Utxo[]} utxos - An array of UTXOs to filter.

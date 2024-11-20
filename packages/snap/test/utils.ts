@@ -326,12 +326,12 @@ export function generateQuickNodeEstimatefeeResp(
  * @param params.minrelaytxfee - Minimum relay fee in BTC/kB for transactions.
  * @returns A QuickNode get mempool info response.
  */
-export function generateQuickNodeMempoolResp( {
+export function generateQuickNodeMempoolResp({
   mempoolminfee = Math.max(1000, randomNum(10000)),
   minrelaytxfee,
-} : {
-  mempoolminfee?: number
-  minrelaytxfee?: number
+}: {
+  mempoolminfee?: number;
+  minrelaytxfee?: number;
 }) {
   const template = quickNodeData.getmempoolinfo;
   const data = {
@@ -365,23 +365,21 @@ export function generateQuickNodeSendRawTransactionResp() {
  * @param count - The number of utxo to generate.
  * @returns A SimpleHash wallet_assets_by_utxo response.
  */
-export function generateSimpleHashWalletAssetsByAddressResp(address:string, count: number) {
+export function generateSimpleHashWalletAssetsByAddressResp(address: string, count: number) {
   const template = simpleHashData.walletAssetsByAddress;
-  const data: typeof template = {
-    ...template, 
-    utxos: []
-  };
-  
-  data.utxos = Array.from({ length: count }, (idx:number) => {
+  const utxos = Array.from({ length: count }, (idx: number) => {
     return {
-      output: `${generateTransactionId(Number(address) + idx)}: ${randomNum(100)}`,
+      output: `${generateTransactionId(Number(address) + idx)}:${randomNum(100)}`,
       value: randomNum(1000000),
       block_number: randomNum(1000000),
     };
   });
-  data.count = data.utxos.length;
 
-  return data;
+  return {
+    ...template,
+    utxos,
+    count: utxos.length
+  };
 }
 
 /**
@@ -391,11 +389,11 @@ export function generateSimpleHashWalletAssetsByAddressResp(address:string, coun
  */
 export function generateTransactionId(id: number) {
   return id
-  .toString(16)
-  .padStart(
-    64,
-    '0',
-  )
+    .toString(16)
+    .padStart(
+      64,
+      '0',
+    );
 }
 
 /**
