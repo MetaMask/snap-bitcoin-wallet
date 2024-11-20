@@ -104,27 +104,27 @@ export async function startSendTransactionFlow(
     });
 
     // The dialog resolves into the send flow request that has been confirmed by the user
-    const sendFlowResult = (await sendFlowPromise) as SendFlowRequest;
+    const updatedSendFlowRequest = (await sendFlowPromise) as SendFlowRequest;
 
-    if (sendFlowResult.status === TransactionStatus.Rejected) {
+    if (updatedSendFlowRequest.status === TransactionStatus.Rejected) {
       throw new UserRejectedRequestError() as unknown as Error;
     }
 
     const sendBitcoinParams = generateSendBitcoinParams(
       walletData.scope,
-      sendFlowResult,
+      updatedSendFlowRequest,
     );
-    sendFlowResult.transaction = sendBitcoinParams;
-    sendFlowResult.status = TransactionStatus.Confirmed;
+    updatedSendFlowRequest.transaction = sendBitcoinParams;
+    updatedSendFlowRequest.status = TransactionStatus.Confirmed;
 
     const tx = await sendBitcoin(btcAccount, scope, {
-      ...sendFlowResult.transaction,
+      ...updatedSendFlowRequest.transaction,
       scope,
     });
 
-    sendFlowResult.txId = tx.txId;
+    updatedSendFlowRequest.txId = tx.txId;
 
-    await stateManager.upsertRequest(sendFlowResult);
+    await stateManager.upsertRequest(updatedSendFlowRequest);
     return tx;
   } catch (error) {
     logger.error('Failed to start send transaction flow', error);
