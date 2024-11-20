@@ -30,10 +30,10 @@ export function formValidation(
   context: SendFlowContext,
   request: SendFlowRequest,
 ): SendFlowRequest {
-  // Only update the update from input change event
-  // This is because if we validate both, there can be a race condition that causes a valid input to be shown as invalid
+  // We only validate the values that have changed
+  // If we validate all the values on every change there can be a race condition.
 
-  const { amount } = formState;
+  const { amount, to } = formState;
 
   if (amount !== request.amount.amount) {
     const formAmount = formState.amount ?? '0';
@@ -57,8 +57,8 @@ export function formValidation(
     }
   }
 
-  if (formState.to !== request.recipient.address) {
-    request.recipient = validateRecipient(formState.to, context.scope);
+  if (to !== request.recipient.address) {
+    request.recipient = validateRecipient(to, context.scope);
   }
 
   return request;

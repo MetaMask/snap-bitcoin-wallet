@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 
-import type { SendFlowRequest } from '../stateManagement';
+import { TransactionStatus, type SendFlowRequest } from '../stateManagement';
 import {
   generateDefaultSendFlowParams,
   generateDefaultSendFlowRequest,
@@ -43,7 +43,7 @@ export async function generateSendFlow({
           account,
           scope,
           transaction: {},
-          status: 'draft',
+          status: TransactionStatus.Draft,
           ...sendFlowProps,
         },
       },
