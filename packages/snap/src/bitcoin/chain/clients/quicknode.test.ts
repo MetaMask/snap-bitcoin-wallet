@@ -19,6 +19,7 @@ import type { BtcAccount } from '../../wallet';
 import { BtcAccountDeriver, BtcWallet } from '../../wallet';
 import { TransactionStatus } from '../constants';
 import { DataClientError } from '../exceptions';
+import type { Utxo } from '../service';
 import { NoFeeRateError, QuickNodeClient } from './quicknode';
 import type {
   QuickNodeEstimateFeeResponse,
@@ -79,6 +80,11 @@ describe('QuickNodeClient', () => {
     return {
       accounts,
     };
+  };
+
+  const createAccountAddresses = async (network: Network, count: number) => {
+    const { accounts } = await createAccounts(network, count);
+    return accounts.map((account) => account.address);
   };
 
   const createQuickNodeClient = (network: Network) => {
@@ -245,8 +251,7 @@ describe('QuickNodeClient', () => {
     it('returns balances', async () => {
       const { fetchSpy } = createMockFetch();
       const network = networks.testnet;
-      const { accounts } = await createAccounts(network, 5);
-      const addresses = accounts.map((account) => account.address);
+      const addresses = await createAccountAddresses(network, 5);
 
       const expectedResult = {};
       for (const address of addresses) {
@@ -269,8 +274,7 @@ describe('QuickNodeClient', () => {
     // This case should never happen, but to ensure the test is 100% covered, hence we mock the processBatch to not process any request
     it('assigns 0 balance to the address if it cannot be found in the hashmap', async () => {
       const network = networks.testnet;
-      const { accounts } = await createAccounts(network, 5);
-      const addresses = accounts.map((account) => account.address);
+      const addresses = await createAccountAddresses(network, 5);
 
       jest.spyOn(asyncUtils, 'processBatch').mockReturnThis();
 
@@ -288,8 +292,7 @@ describe('QuickNodeClient', () => {
     it('throws DataClientError if the api response is invalid', async () => {
       const { fetchSpy } = createMockFetch();
       const network = networks.testnet;
-      const { accounts } = await createAccounts(network, 5);
-      const addresses = accounts.map((account) => account.address);
+      const addresses = await createAccountAddresses(network, 5);
 
       mockErrorResponse({
         fetchSpy,
@@ -424,36 +427,41 @@ describe('QuickNodeClient', () => {
     it('returns utxos', async () => {
       const { fetchSpy } = createMockFetch();
       const network = networks.testnet;
-      const {
-        accounts: [{ address }],
-      } = await createAccounts(network, 1);
-      const mockResponse = generateQuickNodeGetUtxosResp({
-        utxosCount: 10,
-      });
-      const expectedResult = mockResponse.result.map((utxo) => ({
-        block: utxo.height,
-        txHash: utxo.txid,
-        index: utxo.vout,
-        value: parseInt(utxo.value, 10),
-      }));
+      const addresses = await createAccountAddresses(network, 5);
+      let expectedResult: Utxo[] = [];
 
-      mockApiSuccessResponse({
-        fetchSpy,
-        mockResponse,
-      });
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      for (const _ of addresses) {
+        const mockResponse = generateQuickNodeGetUtxosResp({
+          utxosCount: 10,
+        });
+
+        expectedResult = expectedResult.concat(
+          mockResponse.result.map((utxo) => ({
+            block: utxo.height,
+            txHash: utxo.txid,
+            index: utxo.vout,
+            value: parseInt(utxo.value, 10),
+          })),
+        );
+
+        mockApiSuccessResponse({
+          fetchSpy,
+          mockResponse,
+        });
+      }
 
       const client = createQuickNodeClient(network);
-      const result = await client.getUtxos(address);
+      const result = await client.getUtxos(addresses);
 
       expect(result).toStrictEqual(expectedResult);
+      expect(fetchSpy).toHaveBeenCalledTimes(addresses.length);
     });
 
     it('throws DataClientError if the api response is invalid', async () => {
       const { fetchSpy } = createMockFetch();
       const network = networks.testnet;
-      const {
-        accounts: [{ address }],
-      } = await createAccounts(network, 1);
+      const addresses = await createAccountAddresses(network, 1);
 
       mockErrorResponse({
         fetchSpy,
@@ -461,7 +469,7 @@ describe('QuickNodeClient', () => {
 
       const client = createQuickNodeClient(network);
 
-      await expect(client.getUtxos(address)).rejects.toThrow(DataClientError);
+      await expect(client.getUtxos(addresses)).rejects.toThrow(DataClientError);
     });
   });
 

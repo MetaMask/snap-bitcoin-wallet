@@ -1,10 +1,10 @@
 import type { BtcAccount } from '../bitcoin/wallet';
-import type { Caip2Asset } from '../constants';
+import type { Caip19Asset } from '../constants';
 import { getRates } from '../utils/rates';
 import { getBalances } from './get-balances';
 
 export type GetRatesAndBalancesParams = {
-  asset: Caip2Asset;
+  asset: Caip19Asset;
   scope: string;
   btcAccount: BtcAccount;
 };

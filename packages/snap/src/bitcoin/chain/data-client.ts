@@ -28,12 +28,12 @@ export type IDataClient = {
   /**
    * Gets the UTXOs for a Bitcoin address.
    *
-   * @param {string} address - The Bitcoin address to query.
+   * @param {string[]} addresses - An array of Bitcoin addresses to query.
    * @param {boolean} [includeUnconfirmed] - Whether or not to include unconfirmed UTXOs in the response. Defaults to false.
    * @returns {Promise<DataClientGetUtxosResp>} A promise that resolves to an array of UTXOs.
    */
   getUtxos(
-    address: string,
+    addresses: string[],
     includeUnconfirmed?: boolean,
   ): Promise<DataClientGetUtxosResp>;
 

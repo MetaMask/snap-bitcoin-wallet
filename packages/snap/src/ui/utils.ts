@@ -4,7 +4,7 @@ import validate, { Network } from 'bitcoin-address-validation';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
-  Caip2Asset,
+  Caip19Asset,
   Caip2ChainId,
   Caip2ChainIdToNetworkName,
 } from '../constants';
@@ -342,8 +342,8 @@ export async function sendBitcoinParamsToSendFlowParams(
  * @param scope - The scope of the network (mainnet or testnet).
  * @returns The asset type corresponding to the scope.
  */
-export function getAssetTypeFromScope(scope: string): Caip2Asset {
-  return scope === Caip2ChainId.Mainnet ? Caip2Asset.Btc : Caip2Asset.TBtc;
+export function getAssetTypeFromScope(scope: string): Caip19Asset {
+  return scope === Caip2ChainId.Mainnet ? Caip19Asset.Btc : Caip19Asset.TBtc;
 }
 
 /**

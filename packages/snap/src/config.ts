@@ -1,5 +1,5 @@
 import { FeeRate } from './bitcoin/chain/constants';
-import { Caip2ChainId, Caip2Asset } from './constants';
+import { Caip2ChainId, Caip19Asset } from './constants';
 
 export type SnapChainConfig = {
   onChainService: {
@@ -41,7 +41,7 @@ export const Config: SnapChainConfig = {
     defaultAccountType: 'bip122:p2wpkh',
   },
   availableNetworks: Object.values(Caip2ChainId),
-  availableAssets: Object.values(Caip2Asset),
+  availableAssets: Object.values(Caip19Asset),
   defaultFeeRate: FeeRate.Medium,
   unit: 'BTC',
   explorer: {
