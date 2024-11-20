@@ -66,9 +66,11 @@ describe('BtcOnChainService', () => {
       const { instance: txService } = createMockBtcService(instance);
       const accounts = generateAccounts(2);
       const addresses = accounts.map((account) => account.address);
+      const balanceForEachAddress = 100;
+
       getBalanceSpy.mockResolvedValue(
         addresses.reduce((acc, address) => {
-          acc[address] = 100;
+          acc[address] = balanceForEachAddress;
           return acc;
         }, {}),
       );
@@ -76,11 +78,10 @@ describe('BtcOnChainService', () => {
       const result = await txService.getBalances(addresses, [Caip19Asset.TBtc]);
 
       expect(getBalanceSpy).toHaveBeenCalledWith(addresses);
-
       expect(result).toStrictEqual({
         balances: {
           [Caip19Asset.TBtc]: {
-            amount: BigInt(100),
+            amount: BigInt(balanceForEachAddress) * BigInt(addresses.length),
           },
         },
       });

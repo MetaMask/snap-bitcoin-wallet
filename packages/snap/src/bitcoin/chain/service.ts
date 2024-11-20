@@ -92,21 +92,20 @@ export class BtcOnChainService {
 
       const balances = await this._dataClient.getBalances(addresses);
 
-      return Object.values(balances).reduce<AssetBalances>(
-        (acc: AssetBalances, balance) => {
-          acc.balances[asset] = {
-            amount: BigInt(balance),
-          };
-          return acc;
-        },
-        {
-          balances: {
-            [asset]: {
-              amount: BigInt(0),
-            },
+      // Sum up all balances of each addresses (assuming there belonging to the same
+      // account).
+      const amount = Object.values(balances).reduce(
+        (acc: bigint, balance) => acc + BigInt(balance),
+        BigInt(0),
+      );
+
+      return {
+        balances: {
+          [asset]: {
+            amount,
           },
         },
-      );
+      };
     } catch (error) {
       throw compactError(error, BtcOnChainServiceError);
     }
