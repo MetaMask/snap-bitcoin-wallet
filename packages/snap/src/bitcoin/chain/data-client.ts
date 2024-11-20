@@ -20,10 +20,10 @@ export type IDataClient = {
   /**
    * Gets the balances for a set of Bitcoin addresses.
    *
-   * @param {string[]} address - An array of Bitcoin addresses to query.
+   * @param {string[]} addresses - An array of Bitcoin addresses to query.
    * @returns {Promise<DataClientGetBalancesResp>} A promise that resolves to a record of addresses and their corresponding balances.
    */
-  getBalances(address: string[]): Promise<DataClientGetBalancesResp>;
+  getBalances(addresses: string[]): Promise<DataClientGetBalancesResp>;
 
   /**
    * Gets the UTXOs for a Bitcoin address.

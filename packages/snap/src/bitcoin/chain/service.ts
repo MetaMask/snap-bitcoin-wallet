@@ -17,9 +17,7 @@ export type Balance = {
 
 export type AssetBalances = {
   balances: {
-    [address: string]: {
-      [asset: string]: Balance;
-    };
+    [asset: string]: Balance;
   };
 };
 
@@ -68,7 +66,7 @@ export class BtcOnChainService {
   }
 
   /**
-   * Gets the balances for multiple addresses and multiple assets.
+   * Gets the BTC balances from addresses.
    *
    * @param addresses - An array of addresses to fetch the balances for.
    * @param assets - An array of assets to fetch the balances of.
@@ -83,29 +81,31 @@ export class BtcOnChainService {
         throw new BtcOnChainServiceError('Only one asset is supported');
       }
 
-      const allowedAssets = new Set<string>(Object.values(Caip19Asset));
+      const asset = assets[0];
 
       if (
-        !allowedAssets.has(assets[0]) ||
-        (this.network === networks.testnet && assets[0] !== Caip19Asset.TBtc) ||
-        (this.network === networks.bitcoin && assets[0] !== Caip19Asset.Btc)
+        (this.network === networks.testnet && asset !== Caip19Asset.TBtc) ||
+        (this.network === networks.bitcoin && asset !== Caip19Asset.Btc)
       ) {
         throw new BtcOnChainServiceError('Invalid asset');
       }
 
-      const balance = await this._dataClient.getBalances(addresses);
+      const balances = await this._dataClient.getBalances(addresses);
 
-      return addresses.reduce<AssetBalances>(
-        (acc: AssetBalances, address: string) => {
-          acc.balances[address] = {
-            [assets[0]]: {
-              amount: BigInt(balance[address]),
-            },
-          };
-          return acc;
-        },
-        { balances: {} },
+      // Sum up all balances of each addresses (assuming there belonging to the same
+      // account).
+      const amount = Object.values(balances).reduce(
+        (acc: bigint, balance) => acc + BigInt(balance),
+        BigInt(0),
       );
+
+      return {
+        balances: {
+          [asset]: {
+            amount,
+          },
+        },
+      };
     } catch (error) {
       throw compactError(error, BtcOnChainServiceError);
     }

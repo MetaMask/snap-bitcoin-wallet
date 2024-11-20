@@ -61,14 +61,16 @@ describe('BtcOnChainService', () => {
   };
 
   describe('getBalance', () => {
-    it('calls getBalances with readClient', async () => {
+    it('returns balances', async () => {
       const { instance, getBalanceSpy } = createMockDataClient();
       const { instance: txService } = createMockBtcService(instance);
       const accounts = generateAccounts(2);
       const addresses = accounts.map((account) => account.address);
+      const balanceForEachAddress = 100;
+
       getBalanceSpy.mockResolvedValue(
         addresses.reduce((acc, address) => {
-          acc[address] = 100;
+          acc[address] = balanceForEachAddress;
           return acc;
         }, {}),
       );
@@ -76,13 +78,12 @@ describe('BtcOnChainService', () => {
       const result = await txService.getBalances(addresses, [Caip19Asset.TBtc]);
 
       expect(getBalanceSpy).toHaveBeenCalledWith(addresses);
-
-      Object.values(result.balances).forEach((assetBalances) => {
-        expect(assetBalances).toStrictEqual({
+      expect(result).toStrictEqual({
+        balances: {
           [Caip19Asset.TBtc]: {
-            amount: BigInt(100),
+            amount: BigInt(balanceForEachAddress) * BigInt(addresses.length),
           },
-        });
+        },
       });
     });
 
@@ -97,30 +98,32 @@ describe('BtcOnChainService', () => {
       ).rejects.toThrow('Only one asset is supported');
     });
 
-    it('throws `Invalid asset` error if the BTC asset is given and current network is testnet network', async () => {
-      const { instance } = createMockDataClient();
-      const { instance: txService } = createMockBtcService(instance);
-      const accounts = generateAccounts(2);
-      const addresses = accounts.map((account) => account.address);
+    it.each([
+      {
+        assetName: 'BTC',
+        asset: Caip19Asset.Btc,
+        network: networks.testnet,
+        networkName: 'testnet',
+      },
+      {
+        assetName: 'TBTC',
+        asset: Caip19Asset.TBtc,
+        network: networks.bitcoin,
+        networkName: 'mainnet',
+      },
+    ])(
+      'throws `Invalid asset` error if the asset is $assetName and current network is $networkName',
+      async ({ asset, network }) => {
+        const { instance } = createMockDataClient();
+        const { instance: txService } = createMockBtcService(instance, network);
+        const accounts = generateAccounts(2);
+        const addresses = accounts.map((account) => account.address);
 
-      await expect(
-        txService.getBalances(addresses, [Caip19Asset.Btc]),
-      ).rejects.toThrow('Invalid asset');
-    });
-
-    it('throws `Invalid asset` error if the TBTC asset is given and current network is bitcoin network', async () => {
-      const { instance } = createMockDataClient();
-      const { instance: txService } = createMockBtcService(
-        instance,
-        networks.bitcoin,
-      );
-      const accounts = generateAccounts(2);
-      const addresses = accounts.map((account) => account.address);
-
-      await expect(
-        txService.getBalances(addresses, [Caip19Asset.TBtc]),
-      ).rejects.toThrow('Invalid asset');
-    });
+        await expect(txService.getBalances(addresses, [asset])).rejects.toThrow(
+          'Invalid asset',
+        );
+      },
+    );
   });
 
   describe('getUtxos', () => {
