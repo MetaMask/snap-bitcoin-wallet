@@ -210,14 +210,14 @@ describe('BtcOnChainService', () => {
         totalBalanceFromGetBalances,
       } = prepareGetBalances(networks.testnet, false);
 
-      const result = await service.getBalances(addresses, [Caip2Asset.TBtc]);
+      const result = await service.getBalances(addresses, [Caip19Asset.TBtc]);
 
       expect(getBalancesSpy).toHaveBeenCalledWith(addresses);
       expect(filterUtxosSpy).not.toHaveBeenCalled();
 
       expect(result).toStrictEqual({
         balances: {
-          [Caip2Asset.TBtc]: {
+          [Caip19Asset.TBtc]: {
             amount: totalBalanceFromGetBalances,
           },
         },
@@ -233,14 +233,14 @@ describe('BtcOnChainService', () => {
         totalBalanceFromUtxos,
       } = prepareGetBalances(networks.bitcoin, true);
 
-      const result = await service.getBalances(addresses, [Caip2Asset.Btc]);
+      const result = await service.getBalances(addresses, [Caip19Asset.Btc]);
 
       expect(filterUtxosSpy).toHaveBeenCalledWith(addresses, []);
       expect(getBalancesSpy).not.toHaveBeenCalled();
 
       expect(result).toStrictEqual({
         balances: {
-          [Caip2Asset.Btc]: {
+          [Caip19Asset.Btc]: {
             amount: totalBalanceFromUtxos,
           },
         },
@@ -251,7 +251,7 @@ describe('BtcOnChainService', () => {
       const { service, addresses } = prepareGetBalances();
 
       await expect(
-        txService.getBalances(addresses, [Caip19Asset.TBtc, Caip19Asset.Btc]),
+        service.getBalances(addresses, [Caip19Asset.TBtc, Caip19Asset.Btc]),
       ).rejects.toThrow('Only one asset is supported');
     });
 
