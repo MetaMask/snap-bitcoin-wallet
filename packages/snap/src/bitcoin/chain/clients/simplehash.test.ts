@@ -17,8 +17,8 @@ jest.mock('../../../utils/snap');
 
 describe('SimpleHashClient', () => {
   class MockSimpleHashClient extends SimpleHashClient {
-    public outputToTxHashNVout(output: string): [string, number] {
-      return super.outputToTxHashNVout(output);
+    public outputToTxHashAndVout(output: string): [string, number] {
+      return super.outputToTxHashAndVout(output);
     }
   }
 
@@ -63,7 +63,7 @@ describe('SimpleHashClient', () => {
       client: MockSimpleHashClient;
     }) => {
       return apiResponse.utxos.map((utxo) => {
-        const [txHash, vout] = client.outputToTxHashNVout(utxo.output);
+        const [txHash, vout] = client.outputToTxHashAndVout(utxo.output);
         return {
           txHash,
           index: vout,
@@ -95,7 +95,7 @@ describe('SimpleHashClient', () => {
       expect(fetchSpy).toHaveBeenCalledTimes(addresses.length);
     });
 
-    it('deduplicates the query addresses to prevent duplicated UTXOs returned', async () => {
+    it('deduplicates the query addresses to prevent duplicated UTXOs being returned', async () => {
       const fetchSpy = createMockFetch();
       const [address] = await createAccountAddresses(1);
       const client = createSimpleHashClient();

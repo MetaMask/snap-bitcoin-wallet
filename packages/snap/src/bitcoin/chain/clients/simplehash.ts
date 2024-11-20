@@ -75,7 +75,7 @@ export class SimpleHashClient
   // An output is the combination of the transaction hash and the vout, serving as a unique identifier for an UTXO
   // e.g 123456789558bd40a14d1cc2f42f5e0476a34ab8589bdc84f65b4eb305b9b925:0
   // Transaction hash is the first part before the colon, and the index/vout is the second part after the colon.
-  protected outputToTxHashNVout(output: string): [string, number] {
+  protected outputToTxHashAndVout(output: string): [string, number] {
     const [txHash, vout] = output.split(':');
     return [txHash, parseInt(vout, 10)];
   }
@@ -100,7 +100,7 @@ export class SimpleHashClient
         });
 
       for (const utxo of result.utxos) {
-        const [txHash, vout] = this.outputToTxHashNVout(utxo.output);
+        const [txHash, vout] = this.outputToTxHashAndVout(utxo.output);
         // The UTXO will not be duplicated,
         // therefore we are safe to store the UTXO into an array.
         utxos.push({
