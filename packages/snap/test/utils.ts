@@ -389,11 +389,11 @@ export function generateSimpleHashWalletAssetsByAddressResp(address: string, cou
  */
 export function generateTransactionId(id: number) {
   return id
-  .toString(16)
-  .padStart(
-    64,
-    '0',
-  )
+    .toString(16)
+    .padStart(
+      64,
+      '0',
+    );
 }
 
 /**
