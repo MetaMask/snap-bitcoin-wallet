@@ -201,7 +201,7 @@ describe('BtcOnChainService', () => {
       };
     };
 
-    it('returns total balances if sats protection is disabled', async () => {
+    it('returns total balances if Sats Protection is disabled', async () => {
       const {
         service,
         addresses,
@@ -224,7 +224,7 @@ describe('BtcOnChainService', () => {
       });
     });
 
-    it('returns sats protected balances if sats protection is enable', async () => {
+    it('returns sats protected balances if Sats Protection is enable', async () => {
       const {
         service,
         addresses,
@@ -315,7 +315,7 @@ describe('BtcOnChainService', () => {
       };
     };
 
-    it('returns all UTXOs if sats protection is disabled', async () => {
+    it('returns all UTXOs if Sats Protection is disabled', async () => {
       const { service, addresses, getUtxosSpy, filterUtxosSpy, utxos } =
         prepareGetUtxos(networks.testnet, false);
 
@@ -330,12 +330,14 @@ describe('BtcOnChainService', () => {
       });
     });
 
-    it('returns protected UTXOs if sats protection is enabled', async () => {
+    it('returns UTXOs that does not contain Inscriptions, Rare Sats, and Runes if Sats Protection is enabled', async () => {
       const { service, addresses, getUtxosSpy, filterUtxosSpy, utxos } =
         prepareGetUtxos(networks.bitcoin, true);
 
       const result = await service.getDataForTransaction(addresses);
 
+      // If Sats Protection is enabled, we are calling `filterUtxos` instead
+      // of `getUtxos`.
       expect(filterUtxosSpy).toHaveBeenCalledWith(addresses, []);
       expect(getUtxosSpy).not.toHaveBeenCalled();
       expect(result).toStrictEqual({

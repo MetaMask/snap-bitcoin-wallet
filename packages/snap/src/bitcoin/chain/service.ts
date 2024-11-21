@@ -50,7 +50,7 @@ export type CommittedTransaction = {
 
 export type BtcOnChainServiceOptions = {
   network: Network;
-  satsProtection?: boolean;
+  satsProtection: boolean;
 };
 
 export type GetDataForTransactionOptions = {
@@ -75,11 +75,7 @@ export class BtcOnChainService {
   ) {
     this._dataClient = dataClient;
     this._satsProtectionDataClient = satsProtectionDataClient;
-    this._options = {
-      // Sats protection is enable by default, unless explicitly disabled
-      satsProtection: Config.defaultSatsProtectionEnablement,
-      ...options,
-    };
+    this._options = options;
   }
 
   get network(): Network {
@@ -111,7 +107,7 @@ export class BtcOnChainService {
         throw new BtcOnChainServiceError('Invalid asset');
       }
 
-      const balance = await this.getSpendableBTCBalances(addresses);
+      const balance = await this.getSpendableBalance(addresses);
 
       return {
         balances: {
@@ -187,26 +183,24 @@ export class BtcOnChainService {
    */
   protected async getSpendableUtxos(addresses: string[]): Promise<Utxo[]> {
     if (this.isSatsProtectionEnabled()) {
-      //  FIXME: For today, the SimpleHash provider does return the filtered UTXOs directly,
-      //  so it is not necessary to give the utxos to filter.
-      //  but logic may be changes if the provider changes
+      // FIXME: SimpleHash provider does return the filtered UTXOs directly,
+      // so it is not necessary to give the list of UTXOs to filter (hence the `[]`).
+      // This logic may change if we change our provider.
       return await this._satsProtectionDataClient.filterUtxos(addresses, []);
     }
     return await this._dataClient.getUtxos(addresses);
   }
 
   /**
-   * Get the spendable BTC balance that does not contains Inscription, Runes or Rare Sats.
+   * Get the spendable balance that does not contain Inscription, Runes or Rare Sats.
    *
    * @param addresses - An array of Bitcoin addresses to query.
    * @returns A promise that resolves to the spendable BTC balance.
    */
-  protected async getSpendableBTCBalances(
-    addresses: string[],
-  ): Promise<bigint> {
+  protected async getSpendableBalance(addresses: string[]): Promise<bigint> {
     if (this.isSatsProtectionEnabled()) {
-      // There is no API supported for getting the spendable balance directly,
-      // so we need to get the spendable UTXOs and sum the values.
+      // There is no API to get the spendable balance directly, so
+      // we need to get the spendable UTXOs and sum the values.
       const utxos = await this.getSpendableUtxos(addresses);
       return utxos.reduce((acc, utxo) => acc + BigInt(utxo.value), BigInt(0));
     }
@@ -219,10 +213,9 @@ export class BtcOnChainService {
   }
 
   protected isSatsProtectionEnabled(): boolean {
-    // Safeguard to only allow sats protection on mainnet
-    return (
-      this._options.satsProtection === true && this.network === networks.bitcoin
-    );
+    // Safeguard to only allow Sats Protection on mainnet (since SimpleHash
+    // does not support testnet for this use case).
+    return this._options.satsProtection && this.network === networks.bitcoin;
   }
 
   /**

@@ -68,13 +68,13 @@ describe('Factory', () => {
       expect(instance).toBeInstanceOf(SimpleHashClient);
     });
 
-    it('throws `Simplehash api key has not been configured` error if the API key has not been provided', () => {
+    it('throws `Simplehash API key has not been configured` error if the API key has not been provided', () => {
       Config.onChainService.apiClient[ApiClient.SimpleHash].options = {
         apiKey: undefined,
       };
 
       expect(() => Factory.createSimpleHashClient()).toThrow(
-        'Simplehash api key has not been configured',
+        'Simplehash API key has not been configured',
       );
     });
   });

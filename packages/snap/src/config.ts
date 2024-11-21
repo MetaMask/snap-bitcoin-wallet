@@ -35,7 +35,7 @@ export type SnapChainConfig = {
   };
   logLevel: string;
   defaultConfirmationThreshold: number;
-  defaultSatsProtectionEnablement: boolean;
+  defaultSatsProtectionEnabled: boolean;
 };
 
 export const Config: SnapChainConfig = {
@@ -76,5 +76,5 @@ export const Config: SnapChainConfig = {
   logLevel: process.env.LOG_LEVEL ?? '0',
   // the number of confirmations required for a transaction to be considered confirmed
   defaultConfirmationThreshold: 6,
-  defaultSatsProtectionEnablement: true,
+  defaultSatsProtectionEnabled: true,
 };

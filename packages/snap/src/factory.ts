@@ -18,7 +18,8 @@ export class Factory {
       },
       {
         network: btcNetwork,
-        satsProtection: Config.defaultSatsProtectionEnablement,
+        // Sats Protection is enabled by default.
+        satsProtection: Config.defaultSatsProtectionEnabled,
       },
     );
   }
@@ -45,7 +46,7 @@ export class Factory {
       Config.onChainService.apiClient[ApiClient.SimpleHash].options;
 
     if (!apiKey) {
-      throw new Error('Simplehash api key has not been configured');
+      throw new Error('Simplehash API key has not been configured');
     }
 
     return new SimpleHashClient({
