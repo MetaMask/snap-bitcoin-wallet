@@ -1,7 +1,6 @@
 import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 
-import { Config } from '../../config';
 import { Caip19Asset } from '../../constants';
 import { compactError } from '../../utils';
 import type { FeeRate, TransactionStatus } from './constants';
