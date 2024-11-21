@@ -8,6 +8,7 @@ import {
 } from '@metamask/snaps-sdk/jsx';
 
 import { shortenAddress } from '../../utils';
+import type { Locale } from '../../utils/locale';
 import jazzicon1 from '../images/jazzicon1.svg';
 import type { Currency } from '../types';
 
@@ -19,31 +20,32 @@ import type { Currency } from '../types';
  * @property accounts - The available accounts.
  */
 export type AccountSelectorProps = {
+  locale: Locale;
   selectedAccount: string;
   balance: Currency;
   accounts: KeyringAccount[];
 };
 
-const loadingMessage = 'Loading';
-
 /**
  * A component that shows the account selector.
  *
  * @param props - The component props.
+ * @param props.locale - The locale of the user.
  * @param props.selectedAccount - The currently selected account.
  * @param props.accounts - The available accounts.
  * @param props.balance - The balance of the selected account.
  * @returns The AccountSelector component.
  */
 export const AccountSelector: SnapComponent<AccountSelectorProps> = ({
+  locale,
   selectedAccount,
   accounts,
   balance,
 }) => (
-  <Field label={'From account'}>
+  <Field label={locale.fromAccount.message}>
     <Selector
       name="accountSelector"
-      title="From account"
+      title={locale.fromAccount.message}
       value={selectedAccount}
     >
       {accounts.map(({ address }) => {
@@ -55,10 +57,12 @@ export const AccountSelector: SnapComponent<AccountSelectorProps> = ({
               value={
                 balance?.amount
                   ? `${balance.amount.toString()} BTC`
-                  : loadingMessage
+                  : locale.loading.message
               }
               extra={
-                balance?.amount ? `$${balance.fiat.toString()}` : loadingMessage
+                balance?.amount
+                  ? `$${balance.fiat.toString()}`
+                  : locale.loading.message
               }
               title={'Bitcoin Account'}
             />

@@ -3,6 +3,7 @@ import type { KeyringAccount } from '@metamask/keyring-api';
 import { type EstimateFeeResponse, type SendBitcoinParams } from './rpcs';
 import type { AssetType, Currency } from './ui/types';
 import { compactError, SnapStateManager } from './utils';
+import type { Locale } from './utils/locale';
 
 export type Wallet = {
   account: KeyringAccount;
@@ -75,7 +76,7 @@ export type TransactionState = {
 
 export type SendFlowRequest = BaseRequestState &
   SendFlowParams &
-  TransactionState;
+  TransactionState & { locale: Locale };
 
 export type SnapState = {
   walletIds: string[];

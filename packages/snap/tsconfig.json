@@ -10,5 +10,12 @@
     "jsx": "react-jsx",
     "jsxImportSource": "@metamask/snaps-sdk"
   },
-  "include": ["**/*.ts", "**/*.tsx", "src/**/*.tsx", "src/index.tsx"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "src/**/*.tsx",
+    "src/index.tsx",
+    "locales/*.json",
+    "scripts/populate-en-locale.ss"
+  ]
 }

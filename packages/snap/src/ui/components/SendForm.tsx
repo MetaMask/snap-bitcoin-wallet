@@ -11,6 +11,7 @@ import {
 } from '@metamask/snaps-sdk/jsx';
 
 import type { SendFlowParams } from '../../stateManagement';
+import type { Locale } from '../../utils/locale';
 import btcIcon from '../images/bitcoin.svg';
 import jazzicon3 from '../images/jazzicon3.svg';
 import type { AccountWithBalance } from '../types';
@@ -41,6 +42,7 @@ export enum SendFormNames {
  * @property flushToAddress - Whether to flush the address field or not.
  */
 export type SendFormProps = {
+  locale: Locale;
   selectedAccount: string;
   accounts: AccountWithBalance[];
   balance: SendFlowParams['balance'];
@@ -64,6 +66,7 @@ const getAmountFrom = (
  * A component that shows the send form.
  *
  * @param props - The component props.
+ * @param props.locale - The locale of the user.
  * @param props.selectedAccount - The currently selected account.
  * @param props.accounts - The available accounts.
  * @param props.balance - The balance of the account.
@@ -77,6 +80,7 @@ const getAmountFrom = (
  * @returns The SendForm component.
  */
 export const SendForm: SnapComponent<SendFormProps> = ({
+  locale,
   selectedAccount,
   accounts,
   selectedCurrency,
@@ -104,11 +108,15 @@ export const SendForm: SnapComponent<SendFormProps> = ({
   return (
     <Form name="sendForm">
       <AccountSelectorComponent
+        locale={locale}
         selectedAccount={selectedAccount}
         accounts={accounts}
         balance={balance}
       />
-      <Field label="Send amount" error={amount.error || total.error}>
+      <Field
+        label={locale.sendAmount.message}
+        error={amount.error || total.error}
+      >
         <Box direction="horizontal" center>
           <Image src={btcIcon} />
         </Box>
@@ -117,7 +125,7 @@ export const SendForm: SnapComponent<SendFormProps> = ({
           type="number"
           min={0}
           step={0.00000001}
-          placeholder="Enter amount to send"
+          placeholder={locale.amountToSendPlaceholder.message}
           value={amountToDisplay}
         />
         <Box direction="horizontal" center>
@@ -134,13 +142,15 @@ export const SendForm: SnapComponent<SendFormProps> = ({
         alignment={balance.fiat ? 'space-between' : 'end'}
       >
         {Boolean(balance.fiat) && (
-          <Text color="muted">{`Balance: $${balance.fiat.toLocaleLowerCase()}`}</Text>
+          <Text color="muted">{`${
+            locale.balance.message
+          }: $${balance.fiat.toLocaleLowerCase()}`}</Text>
         )}
         <Button name={SendFormNames.SetMax} disabled={Boolean(!balance.amount)}>
-          Max
+          {locale.max.message}
         </Button>
       </Box>
-      <Field label="To account" error={recipient.error}>
+      <Field label={locale.toAccount.message} error={recipient.error}>
         {recipient.valid && (
           <Box>
             <Image src={jazzicon3} />
@@ -148,7 +158,7 @@ export const SendForm: SnapComponent<SendFormProps> = ({
         )}
         <Input
           name={SendFormNames.To}
-          placeholder="Enter receiving address"
+          placeholder={locale.receivingAddressPlaceholder.message}
           value={addressToDisplay}
         />
         {Boolean(recipient.address) && (
@@ -159,7 +169,9 @@ export const SendForm: SnapComponent<SendFormProps> = ({
           </Box>
         )}
       </Field>
-      {showRecipientError && <Text color="success">Valid bitcoin address</Text>}
+      {showRecipientError && (
+        <Text color="success">{locale.validAddress.message}</Text>
+      )}
     </Form>
   );
 };

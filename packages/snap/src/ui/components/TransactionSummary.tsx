@@ -9,6 +9,7 @@ import {
 } from '@metamask/snaps-sdk/jsx';
 
 import type { SendFlowRequest } from '../../stateManagement';
+import type { Locale } from '../../utils/locale';
 
 /**
  * The props for the {@link TransactionSummary} component.
@@ -17,6 +18,7 @@ import type { SendFlowRequest } from '../../stateManagement';
  * @property total - The total cost of the transaction.
  */
 export type TransactionSummaryProps = {
+  locale: Locale;
   fees: SendFlowRequest['fees'];
   total: SendFlowRequest['total'];
 };
@@ -25,11 +27,13 @@ export type TransactionSummaryProps = {
  * A component that shows the transaction summary.
  *
  * @param props - The component props.
+ * @param props.locale - The locale of the user.
  * @param props.fees - The fees for the transaction.
  * @param props.total - The total cost of the transaction.
  * @returns The TransactionSummary component.
  */
 export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
+  locale,
   fees,
   total,
 }) => {
@@ -38,7 +42,7 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
       <Section>
         <Box direction="vertical" alignment="center" center>
           <Spinner />
-          <Text>Preparing transaction</Text>
+          <Text>{locale.preparingTransaction.message}</Text>
         </Box>
       </Section>
     );
@@ -47,7 +51,7 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
   if (fees.error) {
     return (
       <Section>
-        <Row label="Error">
+        <Row label={locale.error.message}>
           <Text>{fees.error}</Text>
         </Row>
       </Section>
@@ -56,16 +60,22 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
 
   return (
     <Section>
-      <Row label="Network fee" tooltip="The estimated network fee">
+      <Row
+        label={locale.networkFee.message}
+        tooltip={locale.networkFeeTooltip.message}
+      >
         <Value
           value={`${fees.amount.toString()} BTC`}
           extra={`$${fees.fiat.toString()}`}
         />
       </Row>
-      <Row label="Transaction speed" tooltip="The estimated time of the TX">
-        <Text>30 min</Text>
+      <Row
+        label={locale.transactionSpeed.message}
+        tooltip={locale.transactionSpeedTooltip.message}
+      >
+        <Text>{locale.estimatedTransactionSpeed.message}</Text>
       </Row>
-      <Row label="Total">
+      <Row label={locale.total.message}>
         <Value
           value={`${total.amount.toString()} BTC`}
           extra={`$${total.fiat.toString()}`}
