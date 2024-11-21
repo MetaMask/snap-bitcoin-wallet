@@ -99,6 +99,32 @@ export function createMockGetDataForTransactionResp(
 }
 
 /**
+ * Create a mock wallet.
+ *
+ * @param caip2ChainId - The Caip2 Chain ID.
+ * @returns The `BtcWallet` object.
+ */
+export function createMockWallet(caip2ChainId: string) {
+  return Factory.createWallet(caip2ChainId);
+}
+
+/**
+ * Create a mock sender account.
+ *
+ * @param wallet - The `BtcWallet` object.
+ * @param index - The index of the account to be derived. Default is 0.
+ * @param type - The type of the account. Default is `Config.wallet.defaultAccountType`.
+ * @returns The `BtcAccount` object.
+ */
+export async function createMockSender(
+  wallet: BtcWallet,
+  index = 0,
+  type: string = Config.wallet.defaultAccountType,
+) {
+  return wallet.unlock(index, type);
+}
+
+/**
  * Create a mock `keyringAccount`.
  *
  * @param account - The `BtcAccount` object.
@@ -239,8 +265,8 @@ export class AccountTest {
 
   async setup() {
     const { caip2ChainId } = this.testCase;
-    this.wallet = Factory.createWallet(caip2ChainId);
-    this.sender = await this.wallet.unlock(0, Config.wallet.defaultAccountType);
+    this.wallet = createMockWallet(caip2ChainId);
+    this.sender = await createMockSender(this.wallet);
 
     const { keyringAccount, getWalletSpy } = await createMockKeyringAccount(
       this.sender,

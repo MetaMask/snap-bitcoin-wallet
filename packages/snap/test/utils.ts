@@ -8,6 +8,7 @@ import { v4 as uuidV4 } from 'uuid';
 
 import { Caip2ChainId } from '../src/constants';
 import quickNodeData from './fixtures/quicknode.json';
+import simpleHashData from './fixtures/simplehash.json';
 
 /* eslint-disable */
 
@@ -325,12 +326,12 @@ export function generateQuickNodeEstimatefeeResp(
  * @param params.minrelaytxfee - Minimum relay fee in BTC/kB for transactions.
  * @returns A QuickNode get mempool info response.
  */
-export function generateQuickNodeMempoolResp( {
+export function generateQuickNodeMempoolResp({
   mempoolminfee = Math.max(1000, randomNum(10000)),
   minrelaytxfee,
-} : {
-  mempoolminfee?: number
-  minrelaytxfee?: number
+}: {
+  mempoolminfee?: number;
+  minrelaytxfee?: number;
 }) {
   const template = quickNodeData.getmempoolinfo;
   const data = {
@@ -359,17 +360,49 @@ export function generateQuickNodeSendRawTransactionResp() {
 }
 
 /**
+ * Generate SimpleHash wallet_assets_by_utxo response.
+ *
+ * @param count - The number of utxo to generate.
+ * @returns A SimpleHash wallet_assets_by_utxo response.
+ */
+export function generateSimpleHashWalletAssetsByAddressResp(address: string, count: number) {
+  const template = simpleHashData.walletAssetsByAddress;
+  const utxos = Array.from({ length: count }, (idx: number) => {
+    return {
+      output: `${generateTransactionId(Number(address) + idx)}:${randomNum(100)}`,
+      value: randomNum(1000000),
+      block_number: randomNum(1000000),
+    };
+  });
+
+  return {
+    ...template,
+    utxos,
+    count: utxos.length
+  };
+}
+
+/**
+ * Generate a 64 long hex transaction id.
+ *
+ * @returns A 64 long hex transaction id.
+ */
+export function generateTransactionId(id: number) {
+  return id
+    .toString(16)
+    .padStart(
+      64,
+      '0',
+    );
+}
+
+/**
  * Generate a random 64 long hex transaction id.
  *
  * @returns A 64 long hex transaction id.
  */
 export function generateRandomTransactionId() {
-  return randomNum(100000000)
-  .toString(16)
-  .padStart(
-    64,
-    '0',
-  )
+  return generateTransactionId(randomNum(100000000));
 }
 
 /**
