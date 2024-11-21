@@ -224,7 +224,7 @@ describe('BtcOnChainService', () => {
       });
     });
 
-    it('returns sats protected balances if Sats Protection is enable', async () => {
+    it('returns sats protected balances if Sats Protection is enabled', async () => {
       const {
         service,
         addresses,

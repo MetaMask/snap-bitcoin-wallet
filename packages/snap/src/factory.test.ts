@@ -21,15 +21,18 @@ describe('Factory', () => {
   });
 
   describe('createQuickNodeClient', () => {
+    const quickNodeConfig =
+      Config.onChainService.apiClient[ApiClient.QuickNode];
+
     afterEach(() => {
-      Config.onChainService.apiClient[ApiClient.QuickNode].options = {
+      quickNodeConfig.options = {
         mainnetEndpoint: undefined,
         testnetEndpoint: undefined,
       };
     });
 
     it('creates CreateQuickNodeClient instance', () => {
-      Config.onChainService.apiClient[ApiClient.QuickNode].options = {
+      quickNodeConfig.options = {
         mainnetEndpoint: 'http://mainnetEndpoint',
         testnetEndpoint: 'http://testnetEndpoint',
       };
@@ -40,7 +43,7 @@ describe('Factory', () => {
     });
 
     it('throws `QuickNode endpoints have not been configured` error if the endpoints have not been provided', () => {
-      Config.onChainService.apiClient[ApiClient.QuickNode].options = {
+      quickNodeConfig.options = {
         mainnetEndpoint: undefined,
         testnetEndpoint: undefined,
       };
@@ -52,14 +55,17 @@ describe('Factory', () => {
   });
 
   describe('createSimpleHashClient', () => {
+    const simpleHashConfig =
+      Config.onChainService.apiClient[ApiClient.SimpleHash];
+
     afterEach(() => {
-      Config.onChainService.apiClient[ApiClient.SimpleHash].options = {
+      simpleHashConfig.options = {
         apiKey: undefined,
       };
     });
 
     it('creates createSimpleHashClient instance', () => {
-      Config.onChainService.apiClient[ApiClient.SimpleHash].options = {
+      simpleHashConfig.options = {
         apiKey: 'API_KEY',
       };
 
@@ -69,10 +75,6 @@ describe('Factory', () => {
     });
 
     it('throws `Simplehash API key has not been configured` error if the API key has not been provided', () => {
-      Config.onChainService.apiClient[ApiClient.SimpleHash].options = {
-        apiKey: undefined,
-      };
-
       expect(() => Factory.createSimpleHashClient()).toThrow(
         'Simplehash API key has not been configured',
       );
