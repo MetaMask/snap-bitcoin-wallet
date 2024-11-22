@@ -16,6 +16,6 @@
     "src/**/*.tsx",
     "src/index.tsx",
     "locales/*.json",
-    "scripts/populate-en-locale.ss"
+    "scripts/populate-en-locale.js"
   ]
 }
