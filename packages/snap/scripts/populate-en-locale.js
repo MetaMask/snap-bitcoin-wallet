@@ -9,7 +9,7 @@ const englishLocale = Object.assign(
   { locale: 'en' },
   Object.entries(messages).reduce(
     (acc, [key, value]) => {
-      acc.messages[key] = value.message;
+      acc.messages[key] = { message: value.message };
       return acc;
     },
     { messages: {} },
