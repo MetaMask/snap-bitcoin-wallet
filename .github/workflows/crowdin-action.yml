@@ -32,10 +32,7 @@ jobs:
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
 
       # Update the snap manifest.
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Update manifest
         uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'yarn'
       - run: yarn --immutable --immutable-cache
       - run: yarn build
