@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Caip2ChainId } from '../../constants';
 import { estimateFee, getMaxSpendableBalance } from '../../rpcs';
 import { KeyringStateManager, TransactionStatus } from '../../stateManagement';
+import type { Locale } from '../../utils/locale';
 import { generateDefaultSendFlowRequest } from '../../utils/transaction';
 import { SendFormNames } from '../components/SendForm';
 import { updateSendFlow } from '../render-interfaces';
@@ -49,11 +50,13 @@ const mockAccount = {
   },
   methods: [`${BtcMethod.SendBitcoin}`],
 };
+const mockLocale = {} as Locale;
 
 const mockContext: SendFlowContext = {
   accounts: [{ id: 'account1' } as KeyringAccount],
   scope: mockScope,
   requestId: mockRequestId,
+  locale: mockLocale,
 };
 
 const createMockStateManager = () => {
@@ -174,6 +177,7 @@ describe('SendBitcoinController', () => {
   describe('handleEvent', () => {
     it('should handle input change event', async () => {
       const mockRequest = generateDefaultSendFlowRequest(
+        mockLocale,
         mockAccount,
         mockScope,
         mockRequestId,
@@ -219,6 +223,7 @@ describe('SendBitcoinController', () => {
 
     it('should handle button click event', async () => {
       const mockRequest = generateDefaultSendFlowRequest(
+        mockLocale,
         mockAccount,
         mockScope,
         mockRequestId,
@@ -251,6 +256,7 @@ describe('SendBitcoinController', () => {
 
     it('should not handle unknown event type', async () => {
       const mockRequest = generateDefaultSendFlowRequest(
+        mockLocale,
         mockAccount,
         mockScope,
         mockRequestId,
@@ -299,6 +305,7 @@ describe('SendBitcoinController', () => {
           accountSelector: '',
         };
         const mockRequest = generateDefaultSendFlowRequest(
+          mockLocale,
           mockAccount,
           mockScope,
           mockRequestId,
@@ -340,6 +347,7 @@ describe('SendBitcoinController', () => {
           accountSelector: '',
         };
         const mockRequest = generateDefaultSendFlowRequest(
+          mockLocale,
           mockAccount,
           mockScope,
           mockRequestId,
@@ -383,6 +391,7 @@ describe('SendBitcoinController', () => {
           accountSelector: '',
         };
         const mockRequest = generateDefaultSendFlowRequest(
+          mockLocale,
           mockAccount,
           mockScope,
           mockRequestId,
@@ -426,6 +435,7 @@ describe('SendBitcoinController', () => {
           accountSelector: '',
         };
         const mockRequest = generateDefaultSendFlowRequest(
+          mockLocale,
           mockAccount,
           mockScope,
           mockRequestId,
@@ -470,6 +480,7 @@ describe('SendBitcoinController', () => {
           accountSelector: '',
         };
         const mockRequest = generateDefaultSendFlowRequest(
+          mockLocale,
           mockAccount,
           mockScope,
           mockRequestId,
@@ -505,6 +516,7 @@ describe('SendBitcoinController', () => {
           accountSelector: '',
         };
         const mockRequest = generateDefaultSendFlowRequest(
+          mockLocale,
           mockAccount,
           mockScope,
           mockRequestId,
@@ -546,6 +558,7 @@ describe('SendBitcoinController', () => {
 
     it('should handle "HeaderBack" button event when the status is in review', async () => {
       const mockRequest = generateDefaultSendFlowRequest(
+        mockLocale,
         mockAccount,
         mockScope,
         mockRequestId,
@@ -561,7 +574,7 @@ describe('SendBitcoinController', () => {
         context: mockContext,
         interfaceId: mockInterfaceId,
       });
-      await controller.handleButtonEvent(SendFormNames.HeaderBack);
+      await controller.handleButtonEvent(SendFormNames.HeaderBack, mockContext);
       expect(controller.request.status).toBe(TransactionStatus.Draft);
       expect(controller.request).toStrictEqual({
         ...mockRequest,
@@ -572,6 +585,7 @@ describe('SendBitcoinController', () => {
 
     it('should handle "HeaderBack" button event when the status is in draft', async () => {
       const mockRequest = generateDefaultSendFlowRequest(
+        mockLocale,
         mockAccount,
         mockScope,
         mockRequestId,
@@ -587,7 +601,7 @@ describe('SendBitcoinController', () => {
         context: mockContext,
         interfaceId: mockInterfaceId,
       });
-      await controller.handleButtonEvent(SendFormNames.HeaderBack);
+      await controller.handleButtonEvent(SendFormNames.HeaderBack, mockContext);
       expect(controller.request.status).toBe(TransactionStatus.Rejected);
       expect(controller.request).toStrictEqual({
         ...mockRequest,
@@ -604,6 +618,7 @@ describe('SendBitcoinController', () => {
 
     it('should handle "Clear" button event', async () => {
       const mockRequest = generateDefaultSendFlowRequest(
+        mockLocale,
         mockAccount,
         mockScope,
         mockRequestId,
@@ -618,12 +633,13 @@ describe('SendBitcoinController', () => {
         context: mockContext,
         interfaceId: mockInterfaceId,
       });
-      await controller.handleButtonEvent(SendFormNames.Clear);
+      await controller.handleButtonEvent(SendFormNames.Clear, mockContext);
       expect(controller.request.recipient.address).toBe('');
     });
 
     it('should handle "Cancel" button event', async () => {
       const mockRequest = generateDefaultSendFlowRequest(
+        mockLocale,
         mockAccount,
         mockScope,
         mockRequestId,
@@ -637,12 +653,13 @@ describe('SendBitcoinController', () => {
         context: mockContext,
         interfaceId: mockInterfaceId,
       });
-      await controller.handleButtonEvent(SendFormNames.Cancel);
+      await controller.handleButtonEvent(SendFormNames.Cancel, mockContext);
       expect(controller.request.status).toBe(TransactionStatus.Rejected);
     });
 
     it('should handle "SwapCurrencyDisplay" button event', async () => {
       const mockRequest = generateDefaultSendFlowRequest(
+        mockLocale,
         mockAccount,
         mockScope,
         mockRequestId,
@@ -656,7 +673,10 @@ describe('SendBitcoinController', () => {
         context: mockContext,
         interfaceId: mockInterfaceId,
       });
-      await controller.handleButtonEvent(SendFormNames.SwapCurrencyDisplay);
+      await controller.handleButtonEvent(
+        SendFormNames.SwapCurrencyDisplay,
+        mockContext,
+      );
       const expectedResult = {
         ...mockRequest,
         selectedCurrency: AssetType.FIAT,
@@ -672,6 +692,7 @@ describe('SendBitcoinController', () => {
 
     it('should handle "Review" button event', async () => {
       const mockRequest = generateDefaultSendFlowRequest(
+        mockLocale,
         mockAccount,
         mockScope,
         mockRequestId,
@@ -685,7 +706,7 @@ describe('SendBitcoinController', () => {
         context: mockContext,
         interfaceId: mockInterfaceId,
       });
-      await controller.handleButtonEvent(SendFormNames.Review);
+      await controller.handleButtonEvent(SendFormNames.Review, mockContext);
       const expectedResult = {
         ...mockRequest,
         status: TransactionStatus.Review,
@@ -699,6 +720,7 @@ describe('SendBitcoinController', () => {
 
     it('should handle "Send" button event', async () => {
       const mockRequest = generateDefaultSendFlowRequest(
+        mockLocale,
         mockAccount,
         mockScope,
         mockRequestId,
@@ -713,7 +735,7 @@ describe('SendBitcoinController', () => {
         context: mockContext,
         interfaceId: mockInterfaceId,
       });
-      await controller.handleButtonEvent(SendFormNames.Send);
+      await controller.handleButtonEvent(SendFormNames.Send, mockContext);
       const expectedResult = {
         ...mockRequest,
         status: TransactionStatus.Signed,
@@ -731,6 +753,7 @@ describe('SendBitcoinController', () => {
 
     it('should handle "SetMax" button event', async () => {
       const mockRequest = generateDefaultSendFlowRequest(
+        mockLocale,
         mockAccount,
         mockScope,
         mockRequestId,
@@ -755,7 +778,7 @@ describe('SendBitcoinController', () => {
         mockMaxSpendableBalance,
       );
 
-      await controller.handleButtonEvent(SendFormNames.SetMax);
+      await controller.handleButtonEvent(SendFormNames.SetMax, mockContext);
 
       expect(controller.request.amount.amount).toBe(
         mockMaxSpendableBalance.balance.amount,
@@ -776,6 +799,7 @@ describe('SendBitcoinController', () => {
 
     it('should handle "SetMax" button event with error', async () => {
       const mockRequest = generateDefaultSendFlowRequest(
+        mockLocale,
         mockAccount,
         mockScope,
         mockRequestId,
@@ -795,7 +819,7 @@ describe('SendBitcoinController', () => {
         new Error('Error fetching max amount'),
       );
 
-      await controller.handleButtonEvent(SendFormNames.SetMax);
+      await controller.handleButtonEvent(SendFormNames.SetMax, mockContext);
 
       expect(controller.request.amount.error).toBe(
         'Error fetching max amount: Error fetching max amount',

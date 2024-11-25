@@ -4,6 +4,7 @@ import type { SendFlowRequest } from '../stateManagement';
 import { TransactionStatus, type SendFlowParams } from '../stateManagement';
 import { AssetType } from '../ui/types';
 import { generateSendBitcoinParams } from '../ui/utils';
+import type { Locale } from './locale';
 
 export const generateDefaultSendFlowParams = (): SendFlowParams => {
   return {
@@ -40,6 +41,7 @@ export const generateDefaultSendFlowParams = (): SendFlowParams => {
 };
 
 export const generateDefaultSendFlowRequest = (
+  locale: Locale,
   account: KeyringAccount,
   scope: string,
   requestId: string,
@@ -54,5 +56,6 @@ export const generateDefaultSendFlowRequest = (
     status: TransactionStatus.Draft,
     // Send flow params
     ...generateDefaultSendFlowParams(),
+    locale,
   };
 };

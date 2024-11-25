@@ -36,6 +36,7 @@ const mockAccount = {
   },
   methods: [`${BtcMethod.SendBitcoin}`],
 };
+const mockLocale = {};
 
 describe('utils', () => {
   describe('validateAmount', () => {
@@ -185,6 +186,7 @@ describe('utils', () => {
     it('should convert send state to SendBitcoinParams correctly', async () => {
       const request = {
         ...generateDefaultSendFlowRequest(
+          mockLocale,
           mockAccount,
           mockScope,
           mockRequestId,

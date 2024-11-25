@@ -440,6 +440,7 @@ export class StartSendTransactionFlowTest extends SendBitcoinTest {
     this.createSendUIDialogMock = createSendUIDialogMock();
     const { getRequestSpy, upsertRequestSpy } = createRequestMocks(
       generateDefaultSendFlowRequest(
+        {},
         this.keyringAccount,
         this.scope,
         this.requestId,
@@ -459,6 +460,7 @@ export class StartSendTransactionFlowTest extends SendBitcoinTest {
     });
     // expect to be override by the test case
     const sendFlowRequest = generateDefaultSendFlowRequest(
+      {},
       this.keyringAccount,
       this.scope,
       this.requestId,

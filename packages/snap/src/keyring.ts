@@ -39,6 +39,8 @@ import {
   verifyIfAccountValid,
   createSendUIDialog,
 } from './utils';
+import type { Locale } from './utils/locale';
+import { getUserLocale } from './utils/locale';
 
 export type KeyringOptions = Record<string, Json> & {
   defaultIndex: number;
@@ -187,10 +189,12 @@ export class BtcKeyring implements Keyring {
     verifyIfAccountValid(account, walletData.account);
 
     this.verifyIfMethodValid(method, walletData.account);
+    const locale = await getUserLocale();
 
     switch (method) {
       case `${BtcMethod.SendBitcoin}`: {
         return await this.handleSendBitcoin({
+          locale,
           scope: scope as Caip2ChainId,
           walletData,
           account,
@@ -298,11 +302,13 @@ export class BtcKeyring implements Keyring {
 
   protected async handleSendBitcoin({
     scope,
+    locale,
     walletData,
     account,
     params,
   }: {
     scope: Caip2ChainId;
+    locale: Locale;
     walletData: Wallet;
     account: BtcAccount;
     params: SendBitcoinParams;
@@ -326,6 +332,7 @@ export class BtcKeyring implements Keyring {
       TransactionStatus.Review,
       rates.value,
       balances.value,
+      locale,
       params,
     );
 

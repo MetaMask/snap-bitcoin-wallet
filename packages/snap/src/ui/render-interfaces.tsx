@@ -46,6 +46,7 @@ export async function generateSendFlow({
   });
 
   const sendFlowRequest = generateDefaultSendFlowRequest(
+    locale,
     account,
     scope,
     requestId,
