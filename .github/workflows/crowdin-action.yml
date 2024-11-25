@@ -1,0 +1,41 @@
+name: Crowdin Action
+
+permissions:
+  contents: write
+  pull-requests: write
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  synchronize-with-crowdin:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: crowdin action
+        uses: crowdin/github-action@v2
+        with:
+          upload_sources: false
+          upload_translations: false
+          download_translations: true
+          github_user_name: metamaskbot
+          github_user_email: metamaskbot@users.noreply.github.com
+        env:
+          GITHUB_ACTOR: metamaskbot
+          GITHUB_TOKEN: ${{ secrets.METAMASKBOT_CROWDIN_TOKEN }}
+          CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
+
+      # Update the snap manifest.
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'yarn'
+      - run: yarn --immutable --immutable-cache
+      - run: yarn build
