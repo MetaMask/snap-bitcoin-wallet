@@ -14,6 +14,7 @@ import {
   EstimateFeeCard,
   GetMaxSpendableBalanceCard,
   TestBDKButton,
+  GetStateButton,
 } from '../components';
 import { defaultSnapOrigin } from '../config';
 import {
@@ -23,7 +24,12 @@ import {
   useRequestSnap,
   useInvokeSnap,
 } from '../hooks';
-import { isLocalSnap, shouldDisplayReconnectButton } from '../utils';
+import {
+  AddressType,
+  isLocalSnap,
+  Network,
+  shouldDisplayReconnectButton,
+} from '../utils';
 
 const Container = styled.div`
   display: flex;
@@ -144,6 +150,22 @@ export enum Caip2ChainId {
   Testnet = 'bip122:000000000933ea01ad0ee984209779ba',
 }
 
+const networkToChainId = {
+  [Network.Bitcoin]: Caip2ChainId.Mainnet,
+  [Network.Testnet]: Caip2ChainId.Testnet,
+  [Network.Testnet4]: Caip2ChainId.Testnet,
+  [Network.Signet]: Caip2ChainId.Testnet,
+  [Network.Regtest]: Caip2ChainId.Testnet,
+};
+
+const networkToProvider = {
+  [Network.Bitcoin]: 'https://blockstream.info/api',
+  [Network.Testnet]: 'https://blockstream.info/testnet/api',
+  [Network.Testnet4]: 'https://mempool.space/testnet4/api/v1',
+  [Network.Signet]: 'https://mutinynet.com/api',
+  [Network.Regtest]: 'https://localhost:3000',
+};
+
 const Index = () => {
   const { error, resp, loading } = useMetaMaskContext();
   const { isFlask, snapsDetected, installedSnap } = useMetaMask();
@@ -152,7 +174,10 @@ const Index = () => {
   const [btcAccount, setBtcAccount] = useState<KeyringAccount>();
   const invokeSnap = useInvokeSnap();
 
-  const [scope, setScope] = useState<string>(Caip2ChainId.Mainnet);
+  const [network, setNetwork] = useState<Network>(Network.Testnet);
+  const [addressType, setAddressType] = useState<AddressType>(
+    AddressType.P2wpkh,
+  );
 
   const isMetaMaskReady = isLocalSnap(defaultSnapOrigin)
     ? isFlask
@@ -172,7 +197,7 @@ const Index = () => {
 
     if (accounts.length) {
       setBtcAccount(
-        accounts.find((account) => account.options.scope === scope),
+        accounts.find((account) => account.options.scope === network),
       );
     }
   };
@@ -180,20 +205,29 @@ const Index = () => {
   const handleTestBDK = async () => {
     const result = await invokeSnap({
       method: 'testBDK',
-      params: {},
+      params: {
+        network,
+        addressType,
+        provider: networkToProvider[network],
+      },
     });
-
-    console.log(result);
   };
 
-  const scopeOnChange = (chgEvent: React.ChangeEvent<HTMLSelectElement>) => {
-    if (
-      Object.values(Caip2ChainId).includes(
-        chgEvent.target.value as unknown as Caip2ChainId,
-      )
-    ) {
-      setScope(chgEvent.target.value);
-    }
+  const handleGetState = async () => {
+    const result = await invokeSnap({
+      method: 'getState',
+      params: {},
+    });
+  };
+
+  const networkOnChange = (chgEvent: React.ChangeEvent<HTMLSelectElement>) => {
+    setNetwork(chgEvent.target.value as unknown as Network);
+  };
+
+  const addressTypeOnChange = (
+    chgEvent: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
+    setAddressType(chgEvent.target.value as unknown as AddressType);
   };
 
   return (
@@ -266,7 +300,7 @@ const Index = () => {
         <Card
           content={{
             title: 'Test BDK',
-            description: `Test BDK WASM package`,
+            description: `Test BDK WASM package at ${networkToProvider[network]}`,
             button: (
               <TestBDKButton
                 onClick={handleTestBDK}
@@ -281,22 +315,47 @@ const Index = () => {
         <Card
           content={{
             title: 'Select Network',
-            description: `Current: ${scope}`,
+            description: `Current: ${network}`,
             button: (
-              <Dropdown onChange={scopeOnChange}>
-                <option
-                  value={Caip2ChainId.Mainnet}
-                  selected={scope === Caip2ChainId.Mainnet}
-                >
-                  Mainnet
-                </option>
-                <option
-                  value={Caip2ChainId.Testnet}
-                  selected={scope === Caip2ChainId.Testnet}
-                >
-                  Testnet
-                </option>
+              <Dropdown onChange={networkOnChange} value={network}>
+                <option value={Network.Bitcoin}>Bitcoin</option>
+                <option value={Network.Testnet}>Testnet</option>
+                <option value={Network.Testnet4}>Testnet4</option>
+                <option value={Network.Signet}>Signet</option>
+                <option value={Network.Regtest}>Regtest</option>
               </Dropdown>
+            ),
+          }}
+          disabled={!installedSnap}
+          fullWidth={isSnapReady}
+        />
+
+        <Card
+          content={{
+            title: 'Select Address Type',
+            description: `Current: ${addressType}`,
+            button: (
+              <Dropdown onChange={addressTypeOnChange} value={addressType}>
+                <option value={AddressType.P2pkh}>Legacy</option>
+                <option value={AddressType.P2sh}>Segwit</option>
+                <option value={AddressType.P2wpkh}>Native Segwit</option>
+                <option value={AddressType.P2tr}>Taproot</option>
+              </Dropdown>
+            ),
+          }}
+          disabled={!installedSnap}
+          fullWidth={isSnapReady}
+        />
+
+        <Card
+          content={{
+            title: 'Display State',
+            description: `Get the current state data`,
+            button: (
+              <GetStateButton
+                onClick={handleGetState}
+                disabled={!installedSnap}
+              />
             ),
           }}
           disabled={!installedSnap}
@@ -320,7 +379,7 @@ const Index = () => {
         <GetBalancesCard
           enabled={isAccountReady}
           account={btcAccount?.id ?? ''}
-          scope={scope}
+          scope={networkToChainId[network]}
           fullWidth={isSnapReady}
         />
         <EstimateFeeCard
@@ -337,13 +396,13 @@ const Index = () => {
           enabled={isAccountReady}
           account={btcAccount?.id ?? ''}
           address={btcAccount?.address ?? ''}
-          scope={scope}
+          scope={networkToChainId[network]}
           fullWidth={isSnapReady}
         />
 
         <GetTransactionStatusCard
           enabled={isAccountReady}
-          scope={scope}
+          scope={networkToChainId[network]}
           fullWidth={isSnapReady}
         />
       </CardContainer>

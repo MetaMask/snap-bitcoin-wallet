@@ -7,6 +7,7 @@ import type { Buffer } from 'buffer';
 import { compactError, hexToBuffer, getBip32Deriver } from '../../utils';
 import { DeriverError } from './exceptions';
 import { deriveByPath } from './utils/deriver';
+import { SupportedCurve } from '@metamask/key-tree';
 
 /**
  * This class provides a mechanism for deriving Bitcoin accounts using BIP32.
@@ -19,7 +20,7 @@ export class BtcAccountDeriver {
   /**
    * The curve to use for account derivation. Defaults to 'secp256k1'.
    */
-  readonly curve: 'secp256k1' | 'ed25519' = 'secp256k1';
+  readonly curve: SupportedCurve = 'secp256k1';
 
   constructor(network: Network) {
     this._bip32Api = BIP32Factory(ecc);
@@ -48,6 +49,7 @@ export class BtcAccountDeriver {
         privateKeyBuffer,
         chainCodeBuffer,
       );
+
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       // ignore checking since no function to set depth for node

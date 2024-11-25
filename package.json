@@ -19,6 +19,7 @@
     "build": "yarn workspaces foreach --parallel --verbose --topological run build",
     "build:dapp": "yarn workspace @metamask/bitcoin-wallet-test-dapp build",
     "build:snap": "yarn workspace @metamask/bitcoin-wallet-snap build",
+    "clean": "rimraf node_modules",
     "lint": "yarn workspaces foreach --parallel --verbose run lint",
     "lint:deps": "yarn workspaces foreach --parallel --verbose run depcheck",
     "lint:eslint": "yarn workspaces foreach --parallel --verbose run lint:eslint",
@@ -26,8 +27,10 @@
     "lint:misc": "yarn workspaces foreach --parallel --verbose run lint:misc",
     "lint:types": "yarn workspaces foreach --parallel --verbose run lint:types",
     "start": "yarn workspaces foreach --parallel --verbose --interlaced run start",
-    "test": "yarn workspaces foreach --parallel --verbose run test",
-    "clean": "rimraf node_modules"
+    "test": "yarn workspaces foreach --parallel --verbose run test"
+  },
+  "resolutions": {
+    "@metamask/key-tree@^9.1.2": "file:../key-tree"
   },
   "devDependencies": {
     "@lavamoat/allow-scripts": "^3.1.0",

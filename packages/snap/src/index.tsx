@@ -8,6 +8,13 @@ import {
   SnapError,
   MethodNotFoundError,
 } from '@metamask/snaps-sdk';
+import {
+  EsploraWallet,
+  KeychainKind,
+  Network,
+  AddressType,
+  slip10_to_extended,
+} from 'bdk-wasm';
 
 import { Config } from './config';
 import { BtcKeyring } from './keyring';
@@ -30,8 +37,13 @@ import {
   SendBitcoinController,
 } from './ui/controller/send-bitcoin-controller';
 import type { SendFlowContext, SendFormState } from './ui/types';
-import { isSnapRpcError, logger } from './utils';
-import { WalletWrapper } from './bdk/bdk_wasm';
+import {
+  getBip32Deriver,
+  getStateData,
+  isSnapRpcError,
+  logger,
+  setStateData,
+} from './utils';
 
 export const validateOrigin = (origin: string, method: string): void => {
   if (!origin) {
@@ -72,18 +84,63 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         );
       }
       case InternalRpcMethod.TestBDK: {
-        const wallet = new WalletWrapper(
-          'signet',
-          "wpkh([aafa6322/84'/1'/0']tpubDCfvzhCuifJtWDVdrBcPvZU7U5uyixL7QULk8hXA7KjqiNnry9Te1nwm7yStqenPCQhy5MwzxKkLBD2GmKNgvMYqXgo53iYqQ7Vu4vQbN2N/0/*)#mlua264t",
-          "wpkh([aafa6322/84'/1'/0']tpubDCfvzhCuifJtWDVdrBcPvZU7U5uyixL7QULk8hXA7KjqiNnry9Te1nwm7yStqenPCQhy5MwzxKkLBD2GmKNgvMYqXgo53iYqQ7Vu4vQbN2N/1/*)#2teuh09n",
-          'https://mutinynet.com/api',
+        const params = request.params as any;
+        console.log('params:', params);
+
+        const addressTypeToPurpose = {
+          [AddressType.P2pkh]: "44'",
+          [AddressType.P2sh]: "49'",
+          [AddressType.P2wpkh]: "84'",
+          [AddressType.P2tr]: "86'",
+        };
+
+        const networkToCoinType = {
+          [Network.Bitcoin]: "0'",
+          [Network.Testnet]: "1'",
+          [Network.Testnet4]: "1'",
+          [Network.Signet]: "1'",
+          [Network.Regtest]: "1'",
+        };
+
+        const derivationPath = [
+          'm',
+          addressTypeToPurpose[params.addressType as AddressType],
+          networkToCoinType[params.network as Network],
+          "0'",
+        ];
+
+        const slip10 = await getBip32Deriver(derivationPath, 'secp256k1');
+        const xpriv = slip10_to_extended(slip10, params.network);
+
+        const wallet = EsploraWallet.from_xpriv(
+          xpriv,
+          slip10.masterFingerprint!.toString(16),
+          params.network,
+          params.addressType,
+          params.provider,
         );
 
-        await wallet.sync(5);
-        const address = wallet.get_new_address();
+        await wallet.full_scan(5, 1);
+
+        const state = await getStateData<any>();
+        await setStateData({
+          ...state,
+          wallet: wallet.take_staged(),
+        });
+
+        const address = wallet.next_unused_address(KeychainKind.External);
         const balance = wallet.balance();
 
-        return JSON.stringify({ address, balance: balance.toString() });
+        return JSON.stringify({
+          address: address.address,
+          balance: balance.toString(),
+        });
+      }
+      case InternalRpcMethod.GetState: {
+        const state = await getStateData<any>();
+        console.log('state:', state);
+
+        return JSON.stringify(state);
       }
 
       default:

@@ -8,6 +8,7 @@ import { v4 as uuidV4 } from 'uuid';
 
 import { Caip2ChainId } from '../src/constants';
 import quickNodeData from './fixtures/quicknode.json';
+import { SupportedCurve } from '@metamask/key-tree';
 
 /* eslint-disable */
 
@@ -54,7 +55,7 @@ export function generateAccounts(cnt = 1, addressPrefix = '') {
 export function createRandomBip32Data(
   network: Network,
   path: string[],
-  curve: string,
+  curve: SupportedCurve,
 ) {
   const ECPair = ECPairFactory(ecc);
   const bip32 = BIP32Factory(ecc);
@@ -212,11 +213,12 @@ const randomNum = (max) => Math.floor(Math.random() * max);
 export function generateQuickNodeGetBalanceResp(address: string) {
   const template = quickNodeData.bb_getaddressResp;
   const data: typeof template = {
-    ...template, result: {
+    ...template,
+    result: {
       ...template.result,
       address: address,
       balance: randomNum(1000000).toString(),
-    }
+    },
   };
 
   return data;
@@ -233,21 +235,19 @@ export function generateQuickNodeGetBalanceResp(address: string) {
  * @param params.maxConfirmations - The max confirmation of each utxo.
  * @returns A QuickNode bb_getutxos response.
  */
-export function generateQuickNodeGetUtxosResp(
-  {
-    utxosCount,
-    minAmount = 0,
-    maxAmount = 1000000,
-    minConfirmations = 1000,
-    maxConfirmations = 10000,
-  }: {
-    utxosCount: number,
-    minAmount?: number,
-    maxAmount?: number,
-    minConfirmations?: number,
-    maxConfirmations?: number,
-  }
-) {
+export function generateQuickNodeGetUtxosResp({
+  utxosCount,
+  minAmount = 0,
+  maxAmount = 1000000,
+  minConfirmations = 1000,
+  maxConfirmations = 10000,
+}: {
+  utxosCount: number;
+  minAmount?: number;
+  maxAmount?: number;
+  minConfirmations?: number;
+  maxConfirmations?: number;
+}) {
   const template = quickNodeData.bb_getutxosResp;
   const data = { ...template };
   data.result = Array.from({ length: utxosCount }, (_, idx) => {
@@ -270,15 +270,13 @@ export function generateQuickNodeGetUtxosResp(
  * @param params.confirmations - The number of confirmations of the transaction.
  * @returns A QuickNode get rawtransaction response.
  */
-export function generateQuickNodeGetRawTransactionResp(
-  {
-    txid,
-    confirmations,
-  }: {
-    txid: string,
-    confirmations: number | undefined,
-  }
-) {
+export function generateQuickNodeGetRawTransactionResp({
+  txid,
+  confirmations,
+}: {
+  txid: string;
+  confirmations: number | undefined;
+}) {
   const template = quickNodeData.getrawtransactionResp;
   const data = {
     ...template,
@@ -298,13 +296,11 @@ export function generateQuickNodeGetRawTransactionResp(
  * @param params.feerate - The fee rate in btc unit.
  * @returns A QuickNode estimate smartfee response.
  */
-export function generateQuickNodeEstimatefeeResp(
-  {
-    feerate
-  }: {
-    feerate: number | undefined;
-  }
-) {
+export function generateQuickNodeEstimatefeeResp({
+  feerate,
+}: {
+  feerate: number | undefined;
+}) {
   const template = quickNodeData.estimatesmartfeeResp;
   const data = {
     ...template,
@@ -325,12 +321,12 @@ export function generateQuickNodeEstimatefeeResp(
  * @param params.minrelaytxfee - Minimum relay fee in BTC/kB for transactions.
  * @returns A QuickNode get mempool info response.
  */
-export function generateQuickNodeMempoolResp( {
+export function generateQuickNodeMempoolResp({
   mempoolminfee = Math.max(1000, randomNum(10000)),
   minrelaytxfee,
-} : {
-  mempoolminfee?: number
-  minrelaytxfee?: number
+}: {
+  mempoolminfee?: number;
+  minrelaytxfee?: number;
 }) {
   const template = quickNodeData.getmempoolinfo;
   const data = {
@@ -364,12 +360,7 @@ export function generateQuickNodeSendRawTransactionResp() {
  * @returns A 64 long hex transaction id.
  */
 export function generateRandomTransactionId() {
-  return randomNum(100000000)
-  .toString(16)
-  .padStart(
-    64,
-    '0',
-  )
+  return randomNum(100000000).toString(16).padStart(64, '0');
 }
 
 /**
@@ -387,13 +378,11 @@ export function generateFormattedUtxos(
   minAmount?: number,
   maxAmount?: number,
 ) {
-  return generateQuickNodeGetUtxosResp(
-    {
-      utxosCount,
-      minAmount,
-      maxAmount,
-    }
-  ).result.map((utxo) => ({
+  return generateQuickNodeGetUtxosResp({
+    utxosCount,
+    minAmount,
+    maxAmount,
+  }).result.map((utxo) => ({
     block: utxo.height,
     txHash: utxo.txid,
     index: utxo.vout,

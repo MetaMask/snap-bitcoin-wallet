@@ -6,6 +6,7 @@ export enum InternalRpcMethod {
   GetMaxSpendableBalance = 'getMaxSpendableBalance',
   StartSendTransactionFlow = 'startSendTransactionFlow',
   TestBDK = 'testBDK',
+  GetState = 'getState',
 }
 
 const dappPermissions = new Set([
@@ -19,6 +20,7 @@ const dappPermissions = new Set([
   InternalRpcMethod.EstimateFee,
   InternalRpcMethod.GetMaxSpendableBalance,
   InternalRpcMethod.TestBDK,
+  InternalRpcMethod.GetState,
 ]);
 
 const metamaskPermissions = new Set([
