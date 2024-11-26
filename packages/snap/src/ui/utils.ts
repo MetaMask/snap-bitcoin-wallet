@@ -83,7 +83,9 @@ export function validateAmount(
     };
   }
 
-  if (amount && new BigNumber(amount).lte(new BigNumber(0))) {
+  const fiatAmount = tryFiatConversion(rates, amount);
+
+  if (new BigNumber(amount).lte(new BigNumber(0))) {
     return {
       amount: '0',
       fiat: '0',
@@ -92,10 +94,10 @@ export function validateAmount(
     };
   }
 
-  if (amount && new BigNumber(amount).gt(new BigNumber(balance))) {
+  if (new BigNumber(amount).gt(new BigNumber(balance))) {
     return {
       amount,
-      fiat: btcToFiat(amount, rates),
+      fiat: fiatAmount,
       error: SendFormError.InsufficientFunds,
       valid: false,
     };
@@ -103,7 +105,7 @@ export function validateAmount(
 
   return {
     amount,
-    fiat: btcToFiat(amount, rates),
+    fiat: fiatAmount,
     error: '',
     valid: true,
   };
@@ -124,7 +126,7 @@ export function validateTotal(
   balance: string,
   rates: string,
 ): SendFlowRequest['total'] {
-  if ([amount, fees, balance, rates].some((value) => isNaN(Number(value)))) {
+  if ([amount, fees, balance].some((value) => isNaN(Number(value)))) {
     return {
       amount: '',
       fiat: '',
@@ -134,10 +136,12 @@ export function validateTotal(
   }
 
   const total = new BigNumber(amount).plus(new BigNumber(fees));
+  const fiatTotal = tryFiatConversion(rates, total.toString());
+
   if (total.gt(new BigNumber(balance))) {
     return {
       amount,
-      fiat: btcToFiat(amount, rates),
+      fiat: fiatTotal,
       error: SendFormError.TotalExceedsBalance,
       valid: false,
     };
@@ -146,7 +150,7 @@ export function validateTotal(
   const newTotal = total.toString();
   return {
     amount: newTotal,
-    fiat: btcToFiat(newTotal, rates),
+    fiat: fiatTotal,
     error: '',
     valid: true,
   };
@@ -351,4 +355,36 @@ export function getAssetTypeFromScope(scope: string): Caip19Asset {
  */
 export function getNetworkNameFromScope(scope: string): string {
   return Caip2ChainIdToNetworkName[scope] ?? 'Unknown Network';
+}
+
+/**
+ * Returns an empty string if the provided value is not a number, otherwise returns the value.
+ *
+ * @param value - The value to be checked.
+ * @param prefix - The prefix to be added before the value if it is a number.
+ * @param suffix - The suffix to be added after the value if it is a number.
+ * @returns The original value if it is a number, otherwise an empty string.
+ */
+export function displayEmptyStringIfNaN(
+  value: string,
+  prefix = '',
+  suffix = '',
+): string {
+  return isNaN(Number(value)) || Number(value) === 0
+    ? ''
+    : `${prefix} ${value} ${suffix}`;
+}
+
+/**
+ * Tries to convert a Bitcoin amount to its equivalent fiat value.
+ *
+ * @param rates - The conversion rate from Bitcoin to fiat.
+ * @param amount - The amount of Bitcoin to convert.
+ * @returns The equivalent fiat value as a string, or an empty string if the rates are invalid.
+ */
+export function tryFiatConversion(rates: string, amount: string): string {
+  // We do not want to block a user from sending if the rates are not available
+  const isValidRates = rates && !isNaN(Number(rates));
+  const fiatTotal = isValidRates ? btcToFiat(amount, rates) : '';
+  return fiatTotal;
 }

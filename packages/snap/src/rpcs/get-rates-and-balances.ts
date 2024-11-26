@@ -24,7 +24,6 @@ export async function createRatesAndBalances({
   btcAccount,
 }: GetRatesAndBalancesParams) {
   const errors = {
-    rates: '',
     balances: '',
   };
   let rates;
@@ -36,16 +35,16 @@ export async function createRatesAndBalances({
   ]);
 
   if (ratesResult.status === 'fulfilled') {
-    rates = ratesResult.value;
-  } else {
-    errors.rates = `Rates error: ${ratesResult.reason.message as string}`;
+    rates = ratesResult.value ?? '';
   }
 
   if (balancesResult.status === 'fulfilled') {
     balances = balancesResult.value[asset]?.amount;
     // Double-check that `getBalances` returned a valid amount for that asset.
     if (balances === undefined) {
-      errors.balances = `Balances error: no balance found for "${asset}"`;
+      errors.balances = `Balances error: no balance found for "${
+        asset as string
+      }"`;
     }
   } else {
     errors.balances = `Balances error: ${
@@ -56,7 +55,6 @@ export async function createRatesAndBalances({
   return {
     rates: {
       value: rates,
-      error: errors.rates,
     },
     balances: {
       value: balances,

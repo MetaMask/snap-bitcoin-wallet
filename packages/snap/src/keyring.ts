@@ -315,10 +315,8 @@ export class BtcKeyring implements Keyring {
       btcAccount: account,
     });
 
-    if (rates.error || balances.error) {
-      throw new Error(
-        `Error fetching rates and balances: ${rates.error ?? balances.error}`,
-      );
+    if (balances.error) {
+      throw new Error(`Error fetching rates and balances: ${balances.error}`);
     }
 
     const sendFlowRequest = await generateSendFlowRequest(

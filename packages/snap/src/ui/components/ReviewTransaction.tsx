@@ -18,7 +18,7 @@ import type { CaipAccountId } from '@metamask/utils';
 import { BaseExplorerUrl, Caip2ChainId } from '../../constants';
 import type { SendFlowRequest } from '../../stateManagement';
 import btcIcon from '../images/btc-halo.svg';
-import { getNetworkNameFromScope } from '../utils';
+import { displayEmptyStringIfNaN, getNetworkNameFromScope } from '../utils';
 import { SendFlowHeader } from './SendFlowHeader';
 import { SendFormNames } from './SendForm';
 
@@ -69,7 +69,10 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
             </Link>
           </Row>
           <Row label="Amount">
-            <Value value={`${amount.amount} BTC`} extra={`$${amount.fiat}`} />
+            <Value
+              value={`${amount.amount} BTC`}
+              extra={displayEmptyStringIfNaN(amount.fiat, '$')}
+            />
           </Row>
           <Row label="Recipient">
             <Link href={getExplorerLink(scope, recipient.address)}>
@@ -92,10 +95,16 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
             <Text>{txSpeed}</Text>
           </Row>
           <Row label="Network fee" tooltip="The estimated network fee">
-            <Value value={`${fees.amount} BTC`} extra={`$${fees.fiat}`} />
+            <Value
+              value={`${fees.amount} BTC`}
+              extra={displayEmptyStringIfNaN(fees.fiat, '$')}
+            />
           </Row>
           <Row label="Total">
-            <Value value={`${total.amount} BTC`} extra={`$${total.fiat}`} />
+            <Value
+              value={`${total.amount} BTC`}
+              extra={displayEmptyStringIfNaN(total.fiat, '$')}
+            />
           </Row>
         </Section>
         {Boolean(recipient.error) && (

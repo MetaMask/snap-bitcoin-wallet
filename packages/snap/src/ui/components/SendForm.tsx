@@ -48,6 +48,7 @@ export type SendFormProps = {
   selectedCurrency: SendFlowParams['selectedCurrency'];
   recipient: SendFlowParams['recipient'];
   total: SendFlowParams['total'];
+  rates: SendFlowParams['rates'];
   flushToAddress?: boolean;
   currencySwitched: boolean;
   backEventTriggered: boolean;
@@ -73,6 +74,7 @@ const getAmountFrom = (
  * @param props.recipient - The recipient details including address and validation status.
  * @param props.total - The total amount including fees.
  * @param props.currencySwitched - Whether the currency display has been switched.
+ * @param props.rates - The exchange rates for the selected currency.
  * @param props.backEventTriggered - Whether the back event has been triggered.
  * @returns The SendForm component.
  */
@@ -85,6 +87,7 @@ export const SendForm: SnapComponent<SendFormProps> = ({
   amount,
   recipient,
   total,
+  rates,
   currencySwitched,
   backEventTriggered,
 }) => {
@@ -120,20 +123,24 @@ export const SendForm: SnapComponent<SendFormProps> = ({
           placeholder="Enter amount to send"
           value={amountToDisplay}
         />
-        <Box direction="horizontal" center>
-          <Text color="alternative">
-            {selectedCurrency === AssetType.FIAT ? 'USD' : selectedCurrency}
-          </Text>
-          <Button name={SendFormNames.SwapCurrencyDisplay}>
-            <Icon name="swap-vertical" color="primary" size="md" />
-          </Button>
-        </Box>
+        {Boolean(rates) && (
+          <Box direction="horizontal" center>
+            <Text color="alternative">
+              {selectedCurrency === AssetType.FIAT ? 'USD' : selectedCurrency}
+            </Text>
+            <Button name={SendFormNames.SwapCurrencyDisplay}>
+              <Icon name="swap-vertical" color="primary" size="md" />
+            </Button>
+          </Box>
+        )}
       </Field>
       <Box
         direction="horizontal"
         alignment={balance.fiat ? 'space-between' : 'end'}
       >
-        {Boolean(balance.fiat) && (
+        {isNaN(Number(balance.fiat)) ? (
+          <Text color="muted">{`Balance: ${balance.amount} BTC`}</Text>
+        ) : (
           <Text color="muted">{`Balance: $${balance.fiat.toLocaleLowerCase()}`}</Text>
         )}
         <Button name={SendFormNames.SetMax} disabled={Boolean(!balance.amount)}>
