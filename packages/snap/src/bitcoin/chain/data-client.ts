@@ -62,7 +62,7 @@ export type IDataClient = {
 };
 
 /**
- * This interface defines the methods available on a data client for sats protection.
+ * This interface defines the methods available on a data client for Sats Protection.
  */
 export type ISatsProtectionDataClient = {
   /**

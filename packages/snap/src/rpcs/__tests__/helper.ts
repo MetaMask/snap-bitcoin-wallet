@@ -46,11 +46,17 @@ export function createMockChainApiFactory() {
   );
 
   const createQuickNodeClientSpy = jest.spyOn(Factory, 'createQuickNodeClient');
+  const createSimpleHashClientSpy = jest.spyOn(
+    Factory,
+    'createSimpleHashClient',
+  );
 
   createQuickNodeClientSpy.mockReturnThis();
+  createSimpleHashClientSpy.mockReturnThis();
 
   return {
     createQuickNodeClientSpy,
+    createSimpleHashClientSpy,
     getDataForTransactionSpy,
     broadcastTransactionSpy,
     getTransactionStatusSpy,
