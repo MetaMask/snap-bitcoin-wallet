@@ -106,7 +106,11 @@ export class AddressInfo {
  */
   readonly address: string;
 /**
- * Type of keychain
+ * Gets the address type of the address.
+ *
+ * # Returns
+ *
+ * None if unknown, non-standard or related to the future witness version.
  */
   readonly address_type: AddressType | undefined;
 /**

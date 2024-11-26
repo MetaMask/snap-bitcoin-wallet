@@ -1,4 +1,3 @@
-import type { KeyringAccount } from '@metamask/keyring-api';
 import { useState } from 'react';
 import styled from 'styled-components';
 
@@ -7,18 +6,11 @@ import {
   InstallFlaskButton,
   ReconnectButton,
   Card,
-  ListAccountsButton,
-  SendBitcoinCard,
-  GetTransactionStatusCard,
-  GetBalancesCard,
-  EstimateFeeCard,
-  GetMaxSpendableBalanceCard,
   Button,
 } from '../components';
 import { defaultSnapOrigin } from '../config';
 import {
   useMetaMask,
-  useInvokeKeyring,
   useMetaMaskContext,
   useRequestSnap,
   useInvokeSnap,
@@ -151,19 +143,6 @@ const InputText = styled.input`
   border: 1px solid ${({ theme }) => theme.colors.border?.default};
 `;
 
-export enum Caip2ChainId {
-  Mainnet = 'bip122:000000000019d6689c085ae165831e93',
-  Testnet = 'bip122:000000000933ea01ad0ee984209779ba',
-}
-
-const networkToChainId = {
-  [Network.Bitcoin]: Caip2ChainId.Mainnet,
-  [Network.Testnet]: Caip2ChainId.Testnet,
-  [Network.Testnet4]: Caip2ChainId.Testnet,
-  [Network.Signet]: Caip2ChainId.Testnet,
-  [Network.Regtest]: Caip2ChainId.Testnet,
-};
-
 const networkToProvider = {
   [Network.Bitcoin]: 'https://blockstream.info/api',
   [Network.Testnet]: 'https://blockstream.info/testnet/api',
@@ -176,8 +155,6 @@ const Index = () => {
   const { error, resp, loading } = useMetaMaskContext();
   const { isFlask, snapsDetected, installedSnap } = useMetaMask();
   const requestSnap = useRequestSnap();
-  const invokeKeyring = useInvokeKeyring();
-  const [btcAccount, setBtcAccount] = useState<KeyringAccount>();
   const invokeSnap = useInvokeSnap();
 
   const [network, setNetwork] = useState(Network.Testnet);
@@ -194,20 +171,6 @@ const Index = () => {
     isMetaMaskReady &&
     Boolean(installedSnap) &&
     !shouldDisplayReconnectButton(installedSnap);
-
-  const isAccountReady = Boolean(installedSnap) && btcAccount !== undefined;
-
-  const handleListAccountClick = async () => {
-    const accounts = (await invokeKeyring({
-      method: 'keyring_listAccounts',
-    })) as KeyringAccount[];
-
-    if (accounts.length) {
-      setBtcAccount(
-        accounts.find((account) => account.options.scope === network),
-      );
-    }
-  };
 
   const handleCreateWallet = async () => {
     const provider = networkToProvider[network];
@@ -226,13 +189,14 @@ const Index = () => {
   };
 
   const handleLoadWallet = async () => {
-    await invokeSnap({
+    const network = (await invokeSnap({
       method: 'loadWallet',
       params: {
         provider,
       },
-    });
+    })) as Network;
 
+    setProvider(networkToProvider[network]);
     setIsSynced(true);
   };
 
@@ -560,50 +524,6 @@ const Index = () => {
             ),
           }}
           disabled={!isSynced}
-          fullWidth={isSnapReady}
-        />
-
-        <Card
-          content={{
-            title: 'List Account',
-            description: `List BTC Account from Snap state`,
-            button: (
-              <ListAccountsButton
-                onClick={handleListAccountClick}
-                disabled={!installedSnap}
-              />
-            ),
-          }}
-          disabled={!installedSnap}
-          fullWidth={isSnapReady}
-        />
-        <GetBalancesCard
-          enabled={isAccountReady}
-          account={btcAccount?.id ?? ''}
-          scope={networkToChainId[network]}
-          fullWidth={isSnapReady}
-        />
-        <EstimateFeeCard
-          enabled={isAccountReady}
-          account={btcAccount?.id ?? ''}
-          fullWidth={isSnapReady}
-        />
-        <GetMaxSpendableBalanceCard
-          enabled={isAccountReady}
-          account={btcAccount?.id ?? ''}
-          fullWidth={isSnapReady}
-        />
-        <SendBitcoinCard
-          enabled={isAccountReady}
-          account={btcAccount?.id ?? ''}
-          address={btcAccount?.address ?? ''}
-          scope={networkToChainId[network]}
-          fullWidth={isSnapReady}
-        />
-
-        <GetTransactionStatusCard
-          enabled={isAccountReady}
-          scope={networkToChainId[network]}
           fullWidth={isSnapReady}
         />
       </CardContainer>

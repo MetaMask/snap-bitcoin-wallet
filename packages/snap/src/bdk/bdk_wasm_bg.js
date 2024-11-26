@@ -465,7 +465,11 @@ export class AddressInfo {
         return ret;
     }
     /**
-     * Type of keychain
+     * Gets the address type of the address.
+     *
+     * # Returns
+     *
+     * None if unknown, non-standard or related to the future witness version.
      * @returns {AddressType | undefined}
      */
     get address_type() {

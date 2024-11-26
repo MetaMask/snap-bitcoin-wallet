@@ -14,7 +14,7 @@ import {
   Network,
   AddressType,
   slip10_to_extended,
-} from './bdk/bdk_wasm.js';
+} from './bdk/bdk_wasm';
 import { stringify, parse } from 'superjson';
 
 import { Config } from './config';
@@ -153,7 +153,15 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         const state = await getStateData<any>();
         const wallet = EsploraWallet.load(parse(state.wallet), params.provider);
 
-        return wallet.balance().toString();
+        const balance = wallet.balance();
+        return {
+          immature: balance.immature.toString(),
+          confirmed: balance.confirmed.toString(),
+          trusted_pending: balance.trusted_pending.toString(),
+          untrusted_pending: balance.untrusted_pending.toString(),
+          trusted_spendable: balance.trusted_spendable.toString(),
+          total: balance.total.toString(),
+        };
       }
 
       case InternalRpcMethod.Sync: {
@@ -164,7 +172,9 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
 
         await wallet.sync(PARALLEL_REQUESTS);
 
-        return wallet.take_staged();
+        console.log('changeset', wallet.take_staged());
+
+        return true;
       }
 
       case InternalRpcMethod.GetNextUnusedAddress: {
@@ -190,11 +200,12 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
 
         const address = wallet.reveal_next_address(KeychainKind.External);
 
+        console.log('changeset', wallet.take_staged());
+
         return {
           address: address.address,
           index: address.index,
           keychain: address.keychain,
-          newState: wallet.take_staged(),
         };
       }
 
