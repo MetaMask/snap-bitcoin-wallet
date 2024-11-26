@@ -55,7 +55,6 @@ describe('BtcOnChainService', () => {
     dataClient?: IDataClient,
     satsProtectionClient?: ISatsProtectionDataClient,
     network: Network = networks.testnet,
-    satsProtection = false,
   ) => {
     const {
       dataClient: _dataClient,
@@ -81,7 +80,6 @@ describe('BtcOnChainService', () => {
       },
       {
         network,
-        satsProtection,
       },
     );
 
@@ -90,63 +88,6 @@ describe('BtcOnChainService', () => {
       service,
     };
   };
-
-  describe('isSatsProtectionEnabled', () => {
-    const prepareIsSatsProtectionEnabled = (
-      network: Network = networks.testnet,
-      isSatsProtectionEnabled = false,
-    ) => {
-      const { dataClient, satsProtectionClient } = createMockDataClient();
-
-      const { service } = createMockBtcService(
-        dataClient,
-        satsProtectionClient,
-        network,
-        isSatsProtectionEnabled,
-      );
-
-      return {
-        service,
-      };
-    };
-
-    it.each([
-      {
-        network: networks.bitcoin,
-        networkName: 'mainnet',
-        satsProtection: true,
-        expected: true,
-      },
-      {
-        network: networks.bitcoin,
-        networkName: 'mainnet',
-        satsProtection: false,
-        expected: false,
-      },
-      {
-        network: networks.testnet,
-        networkName: 'testnet',
-        satsProtection: false,
-        expected: false,
-      },
-      {
-        network: networks.testnet,
-        networkName: 'testnet',
-        satsProtection: false,
-        expected: false,
-      },
-    ])(
-      'return $expected when: satsProtection - $satsProtection, network - $networkName',
-      async ({ network, satsProtection, expected }) => {
-        const { service } = prepareIsSatsProtectionEnabled(
-          network,
-          satsProtection,
-        );
-
-        expect(service.isSatsProtectionEnabled()).toBe(expected);
-      },
-    );
-  });
 
   describe('getBalances', () => {
     const prepareGetBalances = (
@@ -164,7 +105,6 @@ describe('BtcOnChainService', () => {
         dataClient,
         satsProtectionClient,
         network,
-        isSatsProtectionEnabled,
       );
 
       const accounts = generateAccounts(10);
@@ -291,8 +231,7 @@ describe('BtcOnChainService', () => {
       const { service, isSatsProtectionEnabledSpy } = createMockBtcService(
         dataClient,
         satsProtectionClient,
-        network,
-        isSatsProtectionEnabled,
+        network
       );
 
       const accounts = generateAccounts(2);

@@ -18,8 +18,6 @@ export class Factory {
       },
       {
         network: btcNetwork,
-        // Sats Protection is enabled by default.
-        satsProtection: Config.defaultSatsProtectionEnabled,
       },
     );
   }

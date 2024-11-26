@@ -3,6 +3,7 @@ import { networks } from 'bitcoinjs-lib';
 
 import { Caip19Asset } from '../../constants';
 import { compactError } from '../../utils';
+import { isSatsProtectionEnabled } from '../../utils/config';
 import type { FeeRate, TransactionStatus } from './constants';
 import type { IDataClient, ISatsProtectionDataClient } from './data-client';
 import { BtcOnChainServiceError } from './exceptions';
@@ -49,11 +50,6 @@ export type CommittedTransaction = {
 
 export type BtcOnChainServiceOptions = {
   network: Network;
-  satsProtection: boolean;
-};
-
-export type GetDataForTransactionOptions = {
-  satsProtection: boolean;
 };
 
 export type BtcOnChainServiceClients = {
@@ -212,9 +208,7 @@ export class BtcOnChainService {
   }
 
   protected isSatsProtectionEnabled(): boolean {
-    // Safeguard to only allow Sats Protection on mainnet (since SimpleHash
-    // does not support testnet for this use case).
-    return this._options.satsProtection && this.network === networks.bitcoin;
+    return isSatsProtectionEnabled(this.network);
   }
 
   /**
