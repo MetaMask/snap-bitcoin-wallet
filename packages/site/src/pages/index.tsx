@@ -180,10 +180,9 @@ const Index = () => {
   const [btcAccount, setBtcAccount] = useState<KeyringAccount>();
   const invokeSnap = useInvokeSnap();
 
-  const [network, setNetwork] = useState<Network>(Network.Testnet);
-  const [addressType, setAddressType] = useState<AddressType>(
-    AddressType.P2wpkh,
-  );
+  const [network, setNetwork] = useState(Network.Testnet);
+  const [provider, setProvider] = useState(networkToProvider[network]);
+  const [addressType, setAddressType] = useState(AddressType.P2wpkh);
   const [isSynced, setIsSynced] = useState(false);
   const [peekIndex, setPeekIndex] = useState(0);
 
@@ -211,14 +210,29 @@ const Index = () => {
   };
 
   const handleCreateWallet = async () => {
+    const provider = networkToProvider[network];
+
     await invokeSnap({
       method: 'createWallet',
       params: {
         network,
         addressType,
-        provider: networkToProvider[network],
+        provider,
       },
     });
+
+    setProvider(provider);
+    setIsSynced(true);
+  };
+
+  const handleLoadWallet = async () => {
+    await invokeSnap({
+      method: 'loadWallet',
+      params: {
+        provider,
+      },
+    });
+
     setIsSynced(true);
   };
 
@@ -299,8 +313,13 @@ const Index = () => {
     });
   };
 
+  const providerOnChange = (chgEvent: React.ChangeEvent<HTMLSelectElement>) => {
+    setProvider(chgEvent.target.value);
+  };
+
   const networkOnChange = (chgEvent: React.ChangeEvent<HTMLSelectElement>) => {
-    setNetwork(chgEvent.target.value as unknown as Network);
+    const n = chgEvent.target.value as unknown as Network;
+    setNetwork(n);
   };
 
   const addressTypeOnChange = (
@@ -378,36 +397,29 @@ const Index = () => {
 
         <Card
           content={{
-            title: 'Select Network',
-            description: `Provider: ${networkToProvider[network]}`,
+            title: 'Select Provider',
+            description: `Current: ${provider}`,
             button: (
-              <Dropdown onChange={networkOnChange} value={network}>
-                <option value={Network.Bitcoin}>Bitcoin</option>
-                <option value={Network.Testnet}>Testnet</option>
-                <option value={Network.Testnet4}>Testnet4</option>
-                <option value={Network.Signet}>Signet</option>
-                <option value={Network.Regtest}>Regtest</option>
+              <Dropdown onChange={providerOnChange} value={provider}>
+                <option value={networkToProvider[Network.Bitcoin]}>
+                  Blockstream (Bitcoin)
+                </option>
+                <option value={networkToProvider[Network.Testnet]}>
+                  Blockstream (Testnet)
+                </option>
+                <option value={networkToProvider[Network.Testnet4]}>
+                  Mempool Space (Testnet4)
+                </option>
+                <option value={networkToProvider[Network.Signet]}>
+                  Mutiny (Signet)
+                </option>
+                <option value={networkToProvider[Network.Regtest]}>
+                  Local (Regtest)
+                </option>
               </Dropdown>
             ),
           }}
-          disabled={!installedSnap}
-          fullWidth={isSnapReady}
-        />
-
-        <Card
-          content={{
-            title: 'Select Address Type',
-            description: "Select the address type you'd like to use",
-            button: (
-              <Dropdown onChange={addressTypeOnChange} value={addressType}>
-                <option value={AddressType.P2pkh}>Legacy</option>
-                <option value={AddressType.P2sh}>Segwit</option>
-                <option value={AddressType.P2wpkh}>Native Segwit</option>
-                <option value={AddressType.P2tr}>Taproot</option>
-              </Dropdown>
-            ),
-          }}
-          disabled={!installedSnap}
+          disabled={isSynced}
           fullWidth={isSnapReady}
         />
 
@@ -415,10 +427,44 @@ const Index = () => {
           content={{
             title: 'Create Wallet',
             description:
-              'New wallet will be created and full scanned with the provider',
-            button: <Button onClick={handleCreateWallet}>Create Wallet</Button>,
+              'New wallet will be created and full scanned with the provider. Will replace any existing wallet.',
+            button: (
+              <>
+                <Dropdown onChange={addressTypeOnChange} value={addressType}>
+                  <option value={AddressType.P2pkh}>Legacy</option>
+                  <option value={AddressType.P2sh}>Segwit</option>
+                  <option value={AddressType.P2wpkh}>Native Segwit</option>
+                  <option value={AddressType.P2tr}>Taproot</option>
+                </Dropdown>
+
+                <br />
+
+                <Dropdown onChange={networkOnChange} value={network}>
+                  <option value={Network.Bitcoin}>Bitcoin</option>
+                  <option value={Network.Testnet}>Testnet</option>
+                  <option value={Network.Testnet4}>Testnet4</option>
+                  <option value={Network.Signet}>Signet</option>
+                  <option value={Network.Regtest}>Regtest</option>
+                </Dropdown>
+
+                <br />
+
+                <Button onClick={handleCreateWallet}>Create Wallet</Button>
+              </>
+            ),
           }}
           disabled={!installedSnap}
+          fullWidth={isSnapReady}
+        />
+
+        <Card
+          content={{
+            title: 'Load Wallet',
+            description:
+              'Get Wallet from the state or errors if it does not exist',
+            button: <Button onClick={handleLoadWallet}>Load Wallet</Button>,
+          }}
+          disabled={isSynced}
           fullWidth={isSnapReady}
         />
 

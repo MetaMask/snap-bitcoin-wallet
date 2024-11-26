@@ -4,7 +4,11 @@ export function __wbg_set_wasm(val) {
 }
 
 
-let WASM_VECTOR_LEN = 0;
+const lTextDecoder = typeof TextDecoder === 'undefined' ? (0, module.require)('util').TextDecoder : TextDecoder;
+
+let cachedTextDecoder = new lTextDecoder('utf-8', { ignoreBOM: true, fatal: true });
+
+cachedTextDecoder.decode();
 
 let cachedUint8ArrayMemory0 = null;
 
@@ -14,6 +18,26 @@ function getUint8ArrayMemory0() {
     }
     return cachedUint8ArrayMemory0;
 }
+
+function getStringFromWasm0(ptr, len) {
+    ptr = ptr >>> 0;
+    return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
+}
+
+function isLikeNone(x) {
+    return x === undefined || x === null;
+}
+
+let cachedDataViewMemory0 = null;
+
+function getDataViewMemory0() {
+    if (cachedDataViewMemory0 === null || cachedDataViewMemory0.buffer.detached === true || (cachedDataViewMemory0.buffer.detached === undefined && cachedDataViewMemory0.buffer !== wasm.memory.buffer)) {
+        cachedDataViewMemory0 = new DataView(wasm.memory.buffer);
+    }
+    return cachedDataViewMemory0;
+}
+
+let WASM_VECTOR_LEN = 0;
 
 const lTextEncoder = typeof TextEncoder === 'undefined' ? (0, module.require)('util').TextEncoder : TextEncoder;
 
@@ -69,30 +93,6 @@ function passStringToWasm0(arg, malloc, realloc) {
 
     WASM_VECTOR_LEN = offset;
     return ptr;
-}
-
-function isLikeNone(x) {
-    return x === undefined || x === null;
-}
-
-let cachedDataViewMemory0 = null;
-
-function getDataViewMemory0() {
-    if (cachedDataViewMemory0 === null || cachedDataViewMemory0.buffer.detached === true || (cachedDataViewMemory0.buffer.detached === undefined && cachedDataViewMemory0.buffer !== wasm.memory.buffer)) {
-        cachedDataViewMemory0 = new DataView(wasm.memory.buffer);
-    }
-    return cachedDataViewMemory0;
-}
-
-const lTextDecoder = typeof TextDecoder === 'undefined' ? (0, module.require)('util').TextDecoder : TextDecoder;
-
-let cachedTextDecoder = new lTextDecoder('utf-8', { ignoreBOM: true, fatal: true });
-
-cachedTextDecoder.decode();
-
-function getStringFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
 }
 
 function debugString(val) {
@@ -191,7 +191,7 @@ function makeMutClosure(arg0, arg1, dtor, f) {
     return real;
 }
 function __wbg_adapter_52(arg0, arg1, arg2) {
-    wasm.closure776_externref_shim(arg0, arg1, arg2);
+    wasm.closure753_externref_shim(arg0, arg1, arg2);
 }
 
 function __wbg_adapter_55(arg0, arg1) {
@@ -208,8 +208,6 @@ function getArrayJsValueFromWasm0(ptr, len) {
     wasm.__externref_drop_slice(ptr, len);
     return result;
 }
-
-function notDefined(what) { return () => { throw new Error(`${what} is not defined`); }; }
 
 function takeFromExternrefTable0(idx) {
     const value = wasm.__wbindgen_export_2.get(idx);
@@ -326,6 +324,8 @@ export function slip10_to_extended(slip10, network) {
     }
 }
 
+function notDefined(what) { return () => { throw new Error(`${what} is not defined`); }; }
+
 function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
     wasm.__wbindgen_export_2.set(idx, obj);
@@ -340,8 +340,8 @@ function handleError(f, args) {
         wasm.__wbindgen_exn_store(idx);
     }
 }
-function __wbg_adapter_197(arg0, arg1, arg2, arg3) {
-    wasm.closure1245_externref_shim(arg0, arg1, arg2, arg3);
+function __wbg_adapter_205(arg0, arg1, arg2, arg3) {
+    wasm.closure1223_externref_shim(arg0, arg1, arg2, arg3);
 }
 
 /**
@@ -433,6 +433,7 @@ export class AddressInfo {
         wasm.__wbg_addressinfo_free(ptr, 0);
     }
     /**
+     * Child index of this address
      * @returns {number}
      */
     get index() {
@@ -440,6 +441,7 @@ export class AddressInfo {
         return ret >>> 0;
     }
     /**
+     * Address
      * @returns {string}
      */
     get address() {
@@ -455,11 +457,100 @@ export class AddressInfo {
         }
     }
     /**
+     * Type of keychain
      * @returns {KeychainKind}
      */
     get keychain() {
         const ret = wasm.addressinfo_keychain(this.__wbg_ptr);
         return ret;
+    }
+    /**
+     * Type of keychain
+     * @returns {AddressType | undefined}
+     */
+    get address_type() {
+        const ret = wasm.addressinfo_address_type(this.__wbg_ptr);
+        return ret === 4 ? undefined : ret;
+    }
+}
+
+const BalanceFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_balance_free(ptr >>> 0, 1));
+/**
+ * Balance, differentiated into various categories.
+ */
+export class Balance {
+
+    static __wrap(ptr) {
+        ptr = ptr >>> 0;
+        const obj = Object.create(Balance.prototype);
+        obj.__wbg_ptr = ptr;
+        BalanceFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
+
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        BalanceFinalization.unregister(this);
+        return ptr;
+    }
+
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_balance_free(ptr, 0);
+    }
+    /**
+     * All coinbase outputs not yet matured
+     * @returns {bigint}
+     */
+    get immature() {
+        const ret = wasm.balance_immature(this.__wbg_ptr);
+        return BigInt.asUintN(64, ret);
+    }
+    /**
+     * Unconfirmed UTXOs generated by a wallet tx
+     * @returns {bigint}
+     */
+    get trusted_pending() {
+        const ret = wasm.balance_trusted_pending(this.__wbg_ptr);
+        return BigInt.asUintN(64, ret);
+    }
+    /**
+     * Unconfirmed UTXOs received from an external wallet
+     * @returns {bigint}
+     */
+    get untrusted_pending() {
+        const ret = wasm.balance_untrusted_pending(this.__wbg_ptr);
+        return BigInt.asUintN(64, ret);
+    }
+    /**
+     * Confirmed and immediately spendable balance
+     * @returns {bigint}
+     */
+    get confirmed() {
+        const ret = wasm.balance_confirmed(this.__wbg_ptr);
+        return BigInt.asUintN(64, ret);
+    }
+    /**
+     * Get sum of trusted_pending and confirmed coins.
+     *
+     * This is the balance you can spend right now that shouldn't get cancelled via another party
+     * double spending it.
+     * @returns {bigint}
+     */
+    get trusted_spendable() {
+        const ret = wasm.balance_trusted_spendable(this.__wbg_ptr);
+        return BigInt.asUintN(64, ret);
+    }
+    /**
+     * Get the whole balance visible to the wallet.
+     * @returns {bigint}
+     */
+    get total() {
+        const ret = wasm.balance_total(this.__wbg_ptr);
+        return BigInt.asUintN(64, ret);
     }
 }
 
@@ -803,11 +894,18 @@ export class EsploraWallet {
         return ret;
     }
     /**
-     * @returns {bigint}
+     * @returns {Network}
+     */
+    network() {
+        const ret = wasm.esplorawallet_network(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {Balance}
      */
     balance() {
         const ret = wasm.esplorawallet_balance(this.__wbg_ptr);
-        return BigInt.asUintN(64, ret);
+        return Balance.__wrap(ret);
     }
     /**
      * @param {KeychainKind} keychain
@@ -901,6 +999,18 @@ export class EsploraWallet {
     }
 }
 
+export const __wbg_request_f6a41be736fe6eb3 = typeof snap.request == 'function' ? snap.request : notDefined('snap.request');
+
+export function __wbindgen_error_new(arg0, arg1) {
+    const ret = new Error(getStringFromWasm0(arg0, arg1));
+    return ret;
+};
+
+export function __wbg_esplorammwallet_new(arg0) {
+    const ret = EsploraMMWallet.__wrap(arg0);
+    return ret;
+};
+
 export function __wbg_addressinfo_new(arg0) {
     const ret = AddressInfo.__wrap(arg0);
     return ret;
@@ -911,9 +1021,11 @@ export function __wbindgen_number_new(arg0) {
     return ret;
 };
 
-export function __wbg_esplorammwallet_new(arg0) {
-    const ret = EsploraMMWallet.__wrap(arg0);
-    return ret;
+export function __wbindgen_number_get(arg0, arg1) {
+    const obj = arg1;
+    const ret = typeof(obj) === 'number' ? obj : undefined;
+    getDataViewMemory0().setFloat64(arg0 + 8 * 1, isLikeNone(ret) ? 0 : ret, true);
+    getDataViewMemory0().setInt32(arg0 + 4 * 0, !isLikeNone(ret), true);
 };
 
 export function __wbindgen_string_get(arg0, arg1) {
@@ -925,23 +1037,14 @@ export function __wbindgen_string_get(arg0, arg1) {
     getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
 };
 
+export function __wbindgen_as_number(arg0) {
+    const ret = +arg0;
+    return ret;
+};
+
 export function __wbindgen_string_new(arg0, arg1) {
     const ret = getStringFromWasm0(arg0, arg1);
     return ret;
-};
-
-export const __wbg_request_f6a41be736fe6eb3 = typeof snap.request == 'function' ? snap.request : notDefined('snap.request');
-
-export function __wbindgen_error_new(arg0, arg1) {
-    const ret = new Error(getStringFromWasm0(arg0, arg1));
-    return ret;
-};
-
-export function __wbindgen_number_get(arg0, arg1) {
-    const obj = arg1;
-    const ret = typeof(obj) === 'number' ? obj : undefined;
-    getDataViewMemory0().setFloat64(arg0 + 8 * 1, isLikeNone(ret) ? 0 : ret, true);
-    getDataViewMemory0().setInt32(arg0 + 4 * 0, !isLikeNone(ret), true);
 };
 
 export function __wbindgen_is_undefined(arg0) {
@@ -988,11 +1091,6 @@ export function __wbindgen_bigint_from_u64(arg0) {
 
 export function __wbindgen_is_string(arg0) {
     const ret = typeof(arg0) === 'string';
-    return ret;
-};
-
-export function __wbindgen_as_number(arg0) {
-    const ret = +arg0;
     return ret;
 };
 
@@ -1293,7 +1391,7 @@ export function __wbg_new_1073970097e5a420(arg0, arg1) {
             const a = state0.a;
             state0.a = 0;
             try {
-                return __wbg_adapter_197(a, state0.b, arg0, arg1);
+                return __wbg_adapter_205(a, state0.b, arg0, arg1);
             } finally {
                 state0.a = a;
             }
@@ -1389,13 +1487,13 @@ export function __wbindgen_memory() {
     return ret;
 };
 
-export function __wbindgen_closure_wrapper2899(arg0, arg1, arg2) {
-    const ret = makeMutClosure(arg0, arg1, 777, __wbg_adapter_52);
+export function __wbindgen_closure_wrapper2884(arg0, arg1, arg2) {
+    const ret = makeMutClosure(arg0, arg1, 754, __wbg_adapter_52);
     return ret;
 };
 
-export function __wbindgen_closure_wrapper2926(arg0, arg1, arg2) {
-    const ret = makeMutClosure(arg0, arg1, 789, __wbg_adapter_55);
+export function __wbindgen_closure_wrapper2911(arg0, arg1, arg2) {
+    const ret = makeMutClosure(arg0, arg1, 766, __wbg_adapter_55);
     return ret;
 };
 

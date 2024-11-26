@@ -14,7 +14,8 @@ import {
   Network,
   AddressType,
   slip10_to_extended,
-} from 'bdk-wasm';
+} from './bdk/bdk_wasm.js';
+import { stringify, parse } from 'superjson';
 
 import { Config } from './config';
 import { BtcKeyring } from './keyring';
@@ -122,21 +123,27 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         );
 
         await wallet.full_scan(STOP_GAP, PARALLEL_REQUESTS);
-        const walletState = wallet.take_staged();
-
-        console.log('walletState', walletState);
 
         const state = await getStateData<any>();
         await setStateData({
           ...state,
-          wallet: walletState,
+          wallet: stringify(wallet.take_staged()),
         });
 
         return true;
       }
+
+      case InternalRpcMethod.LoadWallet: {
+        const params = request.params as any;
+
+        const state = await getStateData<any>();
+        const wallet = EsploraWallet.load(parse(state.wallet), params.provider);
+
+        return wallet.network();
+      }
+
       case InternalRpcMethod.GetState: {
         const state = await getStateData<any>();
-        console.log('state', state);
         return state.wallet;
       }
 
@@ -144,7 +151,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         const params = request.params as any;
 
         const state = await getStateData<any>();
-        const wallet = EsploraWallet.load(state.wallet, params.provider);
+        const wallet = EsploraWallet.load(parse(state.wallet), params.provider);
 
         return wallet.balance().toString();
       }
@@ -153,22 +160,25 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         const params = request.params as any;
 
         const state = await getStateData<any>();
-        const wallet = EsploraWallet.load(state.wallet, params.provider);
+        const wallet = EsploraWallet.load(parse(state.wallet), params.provider);
 
         await wallet.sync(PARALLEL_REQUESTS);
-        return true;
+
+        return wallet.take_staged();
       }
 
       case InternalRpcMethod.GetNextUnusedAddress: {
         const params = request.params as any;
 
         const state = await getStateData<any>();
-        const wallet = EsploraWallet.load(state.wallet, params.provider);
+        const wallet = EsploraWallet.load(parse(state.wallet), params.provider);
 
         const address = wallet.next_unused_address(KeychainKind.External);
 
         return {
-          ...address,
+          address: address.address,
+          index: address.index,
+          keychain: address.keychain,
         };
       }
 
@@ -176,12 +186,15 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         const params = request.params as any;
 
         const state = await getStateData<any>();
-        const wallet = EsploraWallet.load(state.wallet, params.provider);
+        const wallet = EsploraWallet.load(parse(state.wallet), params.provider);
 
         const address = wallet.reveal_next_address(KeychainKind.External);
 
         return {
-          ...address,
+          address: address.address,
+          index: address.index,
+          keychain: address.keychain,
+          newState: wallet.take_staged(),
         };
       }
 
@@ -189,7 +202,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         const params = request.params as any;
 
         const state = await getStateData<any>();
-        const wallet = EsploraWallet.load(state.wallet, params.provider);
+        const wallet = EsploraWallet.load(parse(state.wallet), params.provider);
 
         const address = wallet.peek_address(
           KeychainKind.External,
@@ -197,7 +210,9 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         );
 
         return {
-          ...address,
+          address: address.address,
+          index: address.index,
+          keychain: address.keychain,
         };
       }
 
@@ -205,12 +220,15 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         const params = request.params as any;
 
         const state = await getStateData<any>();
-        const wallet = EsploraWallet.load(state.wallet, params.provider);
+        const wallet = EsploraWallet.load(parse(state.wallet), params.provider);
 
+        wallet.reveal_next_address(KeychainKind.External);
         const addresses = wallet.list_unused_addresses(KeychainKind.External);
 
         return addresses.map((address) => ({
-          ...address,
+          address: address.address,
+          index: address.index,
+          keychain: address.keychain,
         }));
       }
 
@@ -218,7 +236,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         const params = request.params as any;
 
         const state = await getStateData<any>();
-        const wallet = EsploraWallet.load(state.wallet, params.provider);
+        const wallet = EsploraWallet.load(parse(state.wallet), params.provider);
 
         const outputs = wallet.list_unspent();
 
