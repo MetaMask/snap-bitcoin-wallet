@@ -78,7 +78,7 @@ const getAmountFrom = (
  * @param props.total - The total amount including fees.
  * @param props.currencySwitched - Whether the currency display has been switched.
  * @param props.backEventTriggered - Whether the back event has been triggered.
- * @param props.scope - The CAIP-2 scope.
+ * @param props.scope - The CAIP-2 Chain ID.
  * @returns The SendForm component.
  */
 export const SendForm: SnapComponent<SendFormProps> = ({
