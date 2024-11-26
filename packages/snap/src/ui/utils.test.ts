@@ -284,6 +284,7 @@ describe('utils', () => {
           error: '',
         },
         selectedCurrency: AssetType.BTC,
+        scope,
       });
     });
 

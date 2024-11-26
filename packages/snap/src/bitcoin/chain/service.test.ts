@@ -231,7 +231,7 @@ describe('BtcOnChainService', () => {
       const { service, isSatsProtectionEnabledSpy } = createMockBtcService(
         dataClient,
         satsProtectionClient,
-        network
+        network,
       );
 
       const accounts = generateAccounts(2);

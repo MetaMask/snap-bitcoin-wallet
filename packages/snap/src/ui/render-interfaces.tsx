@@ -21,7 +21,7 @@ export async function generateSendFlow({
   scope,
 }: GenerateSendFlowParams): Promise<SendFlowRequest> {
   const requestId = uuidv4();
-  const sendFlowProps = generateDefaultSendFlowParams();
+  const sendFlowProps = generateDefaultSendFlowParams(scope);
   const interfaceId = await snap.request({
     method: 'snap_createInterface',
     params: {
