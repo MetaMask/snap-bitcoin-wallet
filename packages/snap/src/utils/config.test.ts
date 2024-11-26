@@ -26,7 +26,7 @@ describe('isSatsProtectionEnabled', () => {
     {
       network: networks.testnet,
       networkName: 'testnet',
-      satsProtection: false,
+      satsProtection: true,
       expected: false,
     },
     {
