@@ -8,6 +8,6 @@
   [
     {
       'source': 'packages/snap/locales/en.json',
-      'translation': 'locales/%two_letters_code%.json',
+      'translation': 'locales/%locale%.json',
     },
   ]

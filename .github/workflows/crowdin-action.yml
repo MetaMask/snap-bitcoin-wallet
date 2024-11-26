@@ -1,27 +1,25 @@
-name: Crowdin Action
+name: Crowdin
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 */12 * * *'
 
 permissions:
   contents: write
   pull-requests: write
 
-on:
-  push:
-    branches:
-      - main
-
 jobs:
-  synchronize-with-crowdin:
+  synchronize-crowdin:
+    name: Synchronize with Crowdin
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: crowdin action
-        uses: crowdin/github-action@v2
+      - uses: actions/checkout@v4
+      - name: Run Crowdin
+        uses: crowdin/github-action@a3160b9e5a9e00739392c23da5e580c6cabe526d
         with:
-          upload_sources: false
-          upload_translations: false
+          upload_translations: true
           download_translations: true
           github_user_name: metamaskbot
           github_user_email: metamaskbot@users.noreply.github.com
