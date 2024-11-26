@@ -33,7 +33,7 @@ const Link = styled.a`
   }
 `;
 
-const Button = styled.button`
+export const Button = styled.button`
   display: flex;
   align-self: flex-start;
   align-items: center;
@@ -107,14 +107,6 @@ export const GetBTCAccountBalanceButton = (
 
 export const ListAccountsButton = (props: ComponentProps<typeof Button>) => {
   return <Button {...props}>List Accounts</Button>;
-};
-
-export const TestBDKButton = (props: ComponentProps<typeof Button>) => {
-  return <Button {...props}>Test BDK</Button>;
-};
-
-export const GetStateButton = (props: ComponentProps<typeof Button>) => {
-  return <Button {...props}>Get State</Button>;
 };
 
 export const GetTransactionStatusButton = (

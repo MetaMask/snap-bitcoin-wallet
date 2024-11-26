@@ -5,8 +5,15 @@ export enum InternalRpcMethod {
   EstimateFee = 'estimateFee',
   GetMaxSpendableBalance = 'getMaxSpendableBalance',
   StartSendTransactionFlow = 'startSendTransactionFlow',
-  TestBDK = 'testBDK',
+  CreateWallet = 'createWallet',
   GetState = 'getState',
+  Sync = 'sync',
+  GetBalance = 'getBalance',
+  GetNextUnusedAddress = 'getNextUnusedAddress',
+  RevealNextAddress = 'revealNextAddress',
+  PeekAddress = 'peekAddress',
+  ListUnusedAddresses = 'listUnusedAddresses',
+  ListUnspentOutputs = 'listUnspentOutputs',
 }
 
 const dappPermissions = new Set([
@@ -19,8 +26,15 @@ const dappPermissions = new Set([
   InternalRpcMethod.GetTransactionStatus,
   InternalRpcMethod.EstimateFee,
   InternalRpcMethod.GetMaxSpendableBalance,
-  InternalRpcMethod.TestBDK,
+  InternalRpcMethod.CreateWallet,
   InternalRpcMethod.GetState,
+  InternalRpcMethod.Sync,
+  InternalRpcMethod.GetBalance,
+  InternalRpcMethod.GetNextUnusedAddress,
+  InternalRpcMethod.RevealNextAddress,
+  InternalRpcMethod.PeekAddress,
+  InternalRpcMethod.ListUnusedAddresses,
+  InternalRpcMethod.ListUnspentOutputs,
 ]);
 
 const metamaskPermissions = new Set([

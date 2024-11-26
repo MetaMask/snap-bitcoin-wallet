@@ -45,6 +45,9 @@ import {
   setStateData,
 } from './utils';
 
+const PARALLEL_REQUESTS = 1;
+const STOP_GAP = 5;
+
 export const validateOrigin = (origin: string, method: string): void => {
   if (!origin) {
     // eslint-disable-next-line @typescript-eslint/no-throw-literal
@@ -83,10 +86,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
           request.params as StartSendTransactionFlowParams,
         );
       }
-      case InternalRpcMethod.TestBDK: {
+      case InternalRpcMethod.CreateWallet: {
         const params = request.params as any;
-        console.log('params:', params);
-
         const addressTypeToPurpose = {
           [AddressType.P2pkh]: "44'",
           [AddressType.P2sh]: "49'",
@@ -120,27 +121,110 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
           params.provider,
         );
 
-        await wallet.full_scan(5, 1);
+        await wallet.full_scan(STOP_GAP, PARALLEL_REQUESTS);
+        const walletState = wallet.take_staged();
+
+        console.log('walletState', walletState);
 
         const state = await getStateData<any>();
         await setStateData({
           ...state,
-          wallet: wallet.take_staged(),
+          wallet: walletState,
         });
 
-        const address = wallet.next_unused_address(KeychainKind.External);
-        const balance = wallet.balance();
-
-        return JSON.stringify({
-          address: address.address,
-          balance: balance.toString(),
-        });
+        return true;
       }
       case InternalRpcMethod.GetState: {
         const state = await getStateData<any>();
-        console.log('state:', state);
+        console.log('state', state);
+        return state.wallet;
+      }
 
-        return JSON.stringify(state);
+      case InternalRpcMethod.GetBalance: {
+        const params = request.params as any;
+
+        const state = await getStateData<any>();
+        const wallet = EsploraWallet.load(state.wallet, params.provider);
+
+        return wallet.balance().toString();
+      }
+
+      case InternalRpcMethod.Sync: {
+        const params = request.params as any;
+
+        const state = await getStateData<any>();
+        const wallet = EsploraWallet.load(state.wallet, params.provider);
+
+        await wallet.sync(PARALLEL_REQUESTS);
+        return true;
+      }
+
+      case InternalRpcMethod.GetNextUnusedAddress: {
+        const params = request.params as any;
+
+        const state = await getStateData<any>();
+        const wallet = EsploraWallet.load(state.wallet, params.provider);
+
+        const address = wallet.next_unused_address(KeychainKind.External);
+
+        return {
+          ...address,
+        };
+      }
+
+      case InternalRpcMethod.RevealNextAddress: {
+        const params = request.params as any;
+
+        const state = await getStateData<any>();
+        const wallet = EsploraWallet.load(state.wallet, params.provider);
+
+        const address = wallet.reveal_next_address(KeychainKind.External);
+
+        return {
+          ...address,
+        };
+      }
+
+      case InternalRpcMethod.PeekAddress: {
+        const params = request.params as any;
+
+        const state = await getStateData<any>();
+        const wallet = EsploraWallet.load(state.wallet, params.provider);
+
+        const address = wallet.peek_address(
+          KeychainKind.External,
+          params.index,
+        );
+
+        return {
+          ...address,
+        };
+      }
+
+      case InternalRpcMethod.ListUnusedAddresses: {
+        const params = request.params as any;
+
+        const state = await getStateData<any>();
+        const wallet = EsploraWallet.load(state.wallet, params.provider);
+
+        const addresses = wallet.list_unused_addresses(KeychainKind.External);
+
+        return addresses.map((address) => ({
+          ...address,
+        }));
+      }
+
+      case InternalRpcMethod.ListUnspentOutputs: {
+        const params = request.params as any;
+
+        const state = await getStateData<any>();
+        const wallet = EsploraWallet.load(state.wallet, params.provider);
+
+        const outputs = wallet.list_unspent();
+
+        return outputs.map((output) => ({
+          ...output,
+        }));
       }
 
       default:

@@ -13,8 +13,7 @@ import {
   GetBalancesCard,
   EstimateFeeCard,
   GetMaxSpendableBalanceCard,
-  TestBDKButton,
-  GetStateButton,
+  Button,
 } from '../components';
 import { defaultSnapOrigin } from '../config';
 import {
@@ -145,6 +144,13 @@ const Dropdown = styled.select`
   padding: 1.2rem;
 `;
 
+const InputText = styled.input`
+  margin-top: 2.4rem;
+  margin-bottom: 2.4rem;
+  padding: 1rem;
+  border: 1px solid ${({ theme }) => theme.colors.border?.default};
+`;
+
 export enum Caip2ChainId {
   Mainnet = 'bip122:000000000019d6689c085ae165831e93',
   Testnet = 'bip122:000000000933ea01ad0ee984209779ba',
@@ -178,6 +184,8 @@ const Index = () => {
   const [addressType, setAddressType] = useState<AddressType>(
     AddressType.P2wpkh,
   );
+  const [isSynced, setIsSynced] = useState(false);
+  const [peekIndex, setPeekIndex] = useState(0);
 
   const isMetaMaskReady = isLocalSnap(defaultSnapOrigin)
     ? isFlask
@@ -202,21 +210,92 @@ const Index = () => {
     }
   };
 
-  const handleTestBDK = async () => {
-    const result = await invokeSnap({
-      method: 'testBDK',
+  const handleCreateWallet = async () => {
+    await invokeSnap({
+      method: 'createWallet',
       params: {
         network,
         addressType,
         provider: networkToProvider[network],
       },
     });
+    setIsSynced(true);
   };
 
   const handleGetState = async () => {
-    const result = await invokeSnap({
+    await invokeSnap({
       method: 'getState',
       params: {},
+    });
+  };
+
+  const handleSync = async () => {
+    await invokeSnap({
+      method: 'sync',
+      params: {
+        provider: networkToProvider[network],
+      },
+    });
+  };
+
+  const handleGetBalance = async () => {
+    await invokeSnap({
+      method: 'getBalance',
+      params: {
+        provider: networkToProvider[network],
+      },
+    });
+  };
+
+  const handleGetNextUnusedAddress = async () => {
+    await invokeSnap({
+      method: 'getNextUnusedAddress',
+      params: {
+        provider: networkToProvider[network],
+      },
+    });
+  };
+
+  const handleRevealNextAddress = async () => {
+    await invokeSnap({
+      method: 'revealNextAddress',
+      params: {
+        provider: networkToProvider[network],
+      },
+    });
+  };
+
+  const handlePeekAddress = async () => {
+    await invokeSnap({
+      method: 'peekAddress',
+      params: {
+        provider: networkToProvider[network],
+        index: peekIndex,
+      },
+    });
+  };
+
+  const handlePeekOnChange = (
+    chgEvent: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    setPeekIndex(chgEvent.target.value as unknown as number);
+  };
+
+  const handleListUnusedAddresses = async () => {
+    await invokeSnap({
+      method: 'listUnusedAddresses',
+      params: {
+        provider: networkToProvider[network],
+      },
+    });
+  };
+
+  const handleListUnspentOutputs = async () => {
+    await invokeSnap({
+      method: 'listUnspentOutputs',
+      params: {
+        provider: networkToProvider[network],
+      },
     });
   };
 
@@ -299,23 +378,8 @@ const Index = () => {
 
         <Card
           content={{
-            title: 'Test BDK',
-            description: `Test BDK WASM package at ${networkToProvider[network]}`,
-            button: (
-              <TestBDKButton
-                onClick={handleTestBDK}
-                disabled={!installedSnap}
-              ></TestBDKButton>
-            ),
-          }}
-          disabled={!installedSnap}
-          fullWidth={isSnapReady}
-        />
-
-        <Card
-          content={{
             title: 'Select Network',
-            description: `Current: ${network}`,
+            description: `Provider: ${networkToProvider[network]}`,
             button: (
               <Dropdown onChange={networkOnChange} value={network}>
                 <option value={Network.Bitcoin}>Bitcoin</option>
@@ -333,7 +397,7 @@ const Index = () => {
         <Card
           content={{
             title: 'Select Address Type',
-            description: `Current: ${addressType}`,
+            description: "Select the address type you'd like to use",
             button: (
               <Dropdown onChange={addressTypeOnChange} value={addressType}>
                 <option value={AddressType.P2pkh}>Legacy</option>
@@ -349,16 +413,107 @@ const Index = () => {
 
         <Card
           content={{
-            title: 'Display State',
-            description: `Get the current state data`,
-            button: (
-              <GetStateButton
-                onClick={handleGetState}
-                disabled={!installedSnap}
-              />
-            ),
+            title: 'Create Wallet',
+            description:
+              'New wallet will be created and full scanned with the provider',
+            button: <Button onClick={handleCreateWallet}>Create Wallet</Button>,
           }}
           disabled={!installedSnap}
+          fullWidth={isSnapReady}
+        />
+
+        <Card
+          content={{
+            title: 'Display State',
+            description: `Get the current state data`,
+            button: <Button onClick={handleGetState}>Get State</Button>,
+          }}
+          disabled={!isSynced}
+          fullWidth={isSnapReady}
+        />
+
+        <Card
+          content={{
+            title: 'Sync',
+            description: `Sync state with the provider`,
+            button: <Button onClick={handleSync}>Sync State</Button>,
+          }}
+          disabled={!isSynced}
+          fullWidth={isSnapReady}
+        />
+
+        <Card
+          content={{
+            title: 'Get Balance',
+            description: `Get the current balance`,
+            button: <Button onClick={handleGetBalance}>Get Balance</Button>,
+          }}
+          disabled={!isSynced}
+          fullWidth={isSnapReady}
+        />
+
+        <Card
+          content={{
+            title: 'Get Next Unused Address',
+            description: 'Address is already revealed',
+            button: (
+              <Button onClick={handleGetNextUnusedAddress}>Get Address</Button>
+            ),
+          }}
+          disabled={!isSynced}
+          fullWidth={isSnapReady}
+        />
+
+        <Card
+          content={{
+            title: 'Reveal Next Address',
+            description: 'New address will be revealed',
+            button: (
+              <Button onClick={handleRevealNextAddress}>Get Address</Button>
+            ),
+          }}
+          disabled={!isSynced}
+          fullWidth={isSnapReady}
+        />
+
+        <Card
+          content={{
+            title: 'Peek Address',
+            description: 'Address will NOT be revealed',
+            button: (
+              <>
+                <InputText onChange={handlePeekOnChange}></InputText>
+                <Button onClick={handlePeekAddress}>Get Address</Button>
+              </>
+            ),
+          }}
+          disabled={!isSynced}
+          fullWidth={isSnapReady}
+        />
+
+        <Card
+          content={{
+            title: 'List Unused Addresses',
+            description: 'All current revealed unused addresses',
+            button: (
+              <Button onClick={handleListUnusedAddresses}>
+                List Addresses
+              </Button>
+            ),
+          }}
+          disabled={!isSynced}
+          fullWidth={isSnapReady}
+        />
+
+        <Card
+          content={{
+            title: 'List Unspent Outputs',
+            description: 'All current unspent outputs',
+            button: (
+              <Button onClick={handleListUnspentOutputs}>List UTXOs</Button>
+            ),
+          }}
+          disabled={!isSynced}
           fullWidth={isSnapReady}
         />
 

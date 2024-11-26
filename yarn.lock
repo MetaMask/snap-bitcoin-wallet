@@ -2626,7 +2626,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.42.1
     "@typescript-eslint/parser": ^5.42.1
     async-mutex: ^0.3.2
-    bdk-wasm: "file:../../../bdk-wasm/pkg"
+    bdk-wasm: "file:../../bdk"
     bignumber.js: 9.1.2
     bip32: 4.0.0
     bitcoin-address-validation: ^2.2.3
@@ -6657,10 +6657,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bdk-wasm@file:../../../bdk-wasm/pkg::locator=%40metamask%2Fbitcoin-wallet-snap%40workspace%3Apackages%2Fsnap":
+"bdk-wasm@file:../../bdk::locator=%40metamask%2Fbitcoin-wallet-snap%40workspace%3Apackages%2Fsnap":
   version: 0.1.0
-  resolution: "bdk-wasm@file:../../../bdk-wasm/pkg#../../../bdk-wasm/pkg::hash=c11e1d&locator=%40metamask%2Fbitcoin-wallet-snap%40workspace%3Apackages%2Fsnap"
-  checksum: 9c6f9d74921c75b6f05f5bc0f18525d3405443febbf8af92788a6f0a1c469951cabe103e5e88fe801ca7aa3bddcd4f1efd255bc23f6d30b71edafa5cb1ddf5a9
+  resolution: "bdk-wasm@file:../../bdk#../../bdk::hash=58d941&locator=%40metamask%2Fbitcoin-wallet-snap%40workspace%3Apackages%2Fsnap"
+  checksum: abaf1c02412da6f57165bff06cee823334b8292ce0b81f345d2ced31cf58d12588009bf45be47beb2afe28395b26d5bf722598c74980b99e5ea1bf7fc4163dd9
   languageName: node
   linkType: hard
 

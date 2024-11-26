@@ -48,7 +48,7 @@
     "@typescript-eslint/eslint-plugin": "^5.42.1",
     "@typescript-eslint/parser": "^5.42.1",
     "async-mutex": "^0.3.2",
-    "bdk-wasm": "file:../../../bdk-wasm/pkg",
+    "bdk-wasm": "file:../../bdk",
     "bignumber.js": "9.1.2",
     "bip32": "4.0.0",
     "bitcoin-address-validation": "^2.2.3",
