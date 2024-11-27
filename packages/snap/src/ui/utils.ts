@@ -262,7 +262,6 @@ export async function generateSendFlowRequest(
   const sendFlowRequest = {
     id: uuidv4(),
     account: wallet.account,
-    scope: wallet.scope,
     transaction: sendBitcoinParams,
     interfaceId: '',
     status: status ?? TransactionStatus.Draft,
@@ -301,7 +300,7 @@ export async function sendBitcoinParamsToSendFlowParams(
   rates: string,
   balance: string,
 ): Promise<SendFlowParams> {
-  const defaultParams = generateDefaultSendFlowParams();
+  const defaultParams = generateDefaultSendFlowParams(scope);
   // This is safe because we validate the recipient in `validateRecipient` if it is not defined.
   const recipient = Object.keys(params.recipients)[0];
   const amount = params.recipients[recipient];
