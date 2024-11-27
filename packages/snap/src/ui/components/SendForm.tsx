@@ -15,8 +15,8 @@ import btcIcon from '../images/bitcoin.svg';
 import jazzicon3 from '../images/jazzicon3.svg';
 import type { AccountWithBalance } from '../types';
 import { AssetType } from '../types';
-import { AccountSelector as AccountSelectorComponent } from './AccountSelector';
 import { amountNotAvailable } from '../utils';
+import { AccountSelector as AccountSelectorComponent } from './AccountSelector';
 
 export enum SendFormNames {
   Amount = 'amount',
