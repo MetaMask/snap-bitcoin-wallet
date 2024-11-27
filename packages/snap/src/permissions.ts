@@ -62,6 +62,7 @@ const allowedOrigins = [
   'https://dev.portfolio.metamask.io',
   'https://ramps-dev.portfolio.metamask.io',
   'http://localhost:3000',
+  'localhost', // needed for mobile which only uses the entire url in the origin
 ];
 
 const metamask = 'metamask';

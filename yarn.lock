@@ -2619,7 +2619,7 @@ __metadata:
     "@metamask/eslint-config-typescript": ^12.1.0
     "@metamask/key-tree": ^9.1.2
     "@metamask/keyring-api": ^9.0.0
-    "@metamask/snaps-cli": ^6.5.0
+    "@metamask/snaps-cli": ^6.5.3
     "@metamask/snaps-jest": ^8.6.0
     "@metamask/snaps-sdk": ^6.9.0
     "@metamask/utils": ^9.1.0
@@ -2892,16 +2892,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/key-tree@file:../key-tree::locator=bitcoin-wallet-snap-monorepo%40workspace%3A.":
+"@metamask/key-tree@npm:^9.1.2":
   version: 9.1.2
-  resolution: "@metamask/key-tree@file:../key-tree#../key-tree::hash=ab7de5&locator=bitcoin-wallet-snap-monorepo%40workspace%3A."
+  resolution: "@metamask/key-tree@npm:9.1.2"
   dependencies:
     "@metamask/scure-bip39": ^2.1.1
     "@metamask/utils": ^9.0.0
     "@noble/curves": ^1.2.0
     "@noble/hashes": ^1.3.2
     "@scure/base": ^1.0.0
-  checksum: 60d597b265daee6ae44869a2d5e85308c3fa16c834c516a07e907aa22fb0eaa552f5a984bd17697805a8d8de4b9ee018bff23a640b41b30c2a054dfdc82d058c
+  checksum: eb60bdbfa1806c2f248bf2602cd242e21b0fbe8bbb00ec97c3891739956a81e26c0dae125282a6207dbbe0643e727ff3574067b48210a0b01f12aae7b3159b77
   languageName: node
   linkType: hard
 
@@ -3072,9 +3072,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/snaps-cli@npm:^6.5.0":
-  version: 6.5.2
-  resolution: "@metamask/snaps-cli@npm:6.5.2"
+"@metamask/snaps-cli@npm:^6.5.3":
+  version: 6.5.3
+  resolution: "@metamask/snaps-cli@npm:6.5.3"
   dependencies:
     "@babel/core": ^7.23.2
     "@babel/plugin-transform-class-properties": ^7.22.5
@@ -3084,8 +3084,8 @@ __metadata:
     "@babel/plugin-transform-runtime": ^7.13.2
     "@babel/preset-env": ^7.23.2
     "@babel/preset-typescript": ^7.23.2
-    "@metamask/snaps-sdk": ^6.10.0
-    "@metamask/snaps-utils": ^8.5.0
+    "@metamask/snaps-sdk": ^6.11.0
+    "@metamask/snaps-utils": ^8.6.0
     "@metamask/snaps-webpack-plugin": ^4.1.2
     "@metamask/superstruct": ^3.1.0
     "@metamask/utils": ^10.0.0
@@ -3128,7 +3128,7 @@ __metadata:
     yargs: ^17.7.1
   bin:
     mm-snap: ./dist/main.cjs
-  checksum: ccb667a1fe296f001fa03391b04d456557e4ac36ae01a9ba6b0bf91d01acc513a2f7b0f0d654cb82b70d80da38e894d6b0439d8e8d63663a9ee38a30d2069f28
+  checksum: 3282310c104e8fd6e5a4b18184002715fdc9688ae8abf398b06b5d1d68c61274bf0038cef35b15ed62ae825f7c05c4cf8c953495da732f024a732075fe082203
   languageName: node
   linkType: hard
 
@@ -3250,6 +3250,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@metamask/snaps-sdk@npm:^6.11.0":
+  version: 6.12.0
+  resolution: "@metamask/snaps-sdk@npm:6.12.0"
+  dependencies:
+    "@metamask/key-tree": ^9.1.2
+    "@metamask/providers": ^18.1.1
+    "@metamask/rpc-errors": ^7.0.1
+    "@metamask/superstruct": ^3.1.0
+    "@metamask/utils": ^10.0.0
+  checksum: 878dde330e161ee1eaa01a87899e9e1ea8c88561bfd20bc827c337271baf2748d9bdbad53e1eddf210325e9c8187f4585798118995fa725b1b8d8c4f4c53d821
+  languageName: node
+  linkType: hard
+
 "@metamask/snaps-simulation@npm:^1.3.0":
   version: 1.3.0
   resolution: "@metamask/snaps-simulation@npm:1.3.0"
@@ -3304,6 +3317,37 @@ __metadata:
     ses: ^1.1.0
     validate-npm-package-name: ^5.0.0
   checksum: 17e3fb3f252757a57b1cfcf44badd0051c9fed4ff37b1217c95b6867b3addaf7e62159ee1d6c9fc4780812af681b9498e36ecc0ccbee188f13b90306e838247d
+  languageName: node
+  linkType: hard
+
+"@metamask/snaps-utils@npm:^8.6.0":
+  version: 8.6.0
+  resolution: "@metamask/snaps-utils@npm:8.6.0"
+  dependencies:
+    "@babel/core": ^7.23.2
+    "@babel/types": ^7.23.0
+    "@metamask/base-controller": ^7.0.2
+    "@metamask/key-tree": ^9.1.2
+    "@metamask/permission-controller": ^11.0.3
+    "@metamask/rpc-errors": ^7.0.1
+    "@metamask/slip44": ^4.0.0
+    "@metamask/snaps-registry": ^3.2.2
+    "@metamask/snaps-sdk": ^6.11.0
+    "@metamask/superstruct": ^3.1.0
+    "@metamask/utils": ^10.0.0
+    "@noble/hashes": ^1.3.1
+    "@scure/base": ^1.1.1
+    chalk: ^4.1.2
+    cron-parser: ^4.5.0
+    fast-deep-equal: ^3.1.3
+    fast-json-stable-stringify: ^2.1.0
+    fast-xml-parser: ^4.4.1
+    marked: ^12.0.1
+    rfdc: ^1.3.0
+    semver: ^7.5.4
+    ses: ^1.1.0
+    validate-npm-package-name: ^5.0.0
+  checksum: 65f5ce507ee820959ead9c056025f82ea8c3d65a9539f5af08c9fcf4052d2109b29df24c2b5781aaea65c3e5db2d0063eb5a0ba958ea3cfabb9f49db1fa20e80
   languageName: node
   linkType: hard
 
