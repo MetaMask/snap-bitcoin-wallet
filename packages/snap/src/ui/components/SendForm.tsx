@@ -143,8 +143,8 @@ export const SendForm: SnapComponent<SendFormProps> = ({
         alignment={balance.fiat ? 'space-between' : 'end'}
       >
         <Text color="muted">
-          `Balance:
-          {fiatNotAvailable ? `${balance.amount} BTC` : `$${balance.fiat}`}`
+          {`Balance:
+          ${fiatNotAvailable ? `${balance.amount} BTC` : `$${balance.fiat}`}`}
         </Text>
         <Button name={SendFormNames.SetMax} disabled={Boolean(!balance.amount)}>
           Max
