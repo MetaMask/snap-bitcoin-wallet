@@ -104,6 +104,9 @@ export const SendForm: SnapComponent<SendFormProps> = ({
     addressToDisplay = '';
   }
 
+  // Fiat might not be available if rates are still loading or cannot be fetched.
+  const fiatNotAvailable = isNaN(Number(balance.fiat));
+
   return (
     <Form name="sendForm">
       <AccountSelectorComponent
@@ -138,11 +141,10 @@ export const SendForm: SnapComponent<SendFormProps> = ({
         direction="horizontal"
         alignment={balance.fiat ? 'space-between' : 'end'}
       >
-        {isNaN(Number(balance.fiat)) ? (
-          <Text color="muted">{`Balance: ${balance.amount} BTC`}</Text>
-        ) : (
-          <Text color="muted">{`Balance: $${balance.fiat.toLocaleLowerCase()}`}</Text>
-        )}
+        <Text color="muted">
+          `Balance:
+          {fiatNotAvailable ? `${balance.amount} BTC` : `$${balance.fiat}`}`
+        </Text>
         <Button name={SendFormNames.SetMax} disabled={Boolean(!balance.amount)}>
           Max
         </Button>

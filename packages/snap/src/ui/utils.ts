@@ -360,6 +360,16 @@ export function getNetworkNameFromScope(scope: string): string {
 }
 
 /**
+ * Checks if the given amount is available.
+ *
+ * @param amount - The amount to check.
+ * @returns True if the amount is an empty string or not a number, otherwise false.
+ */
+export function amountNotAvailable(amount: string): boolean {
+  return amount === '' || isNaN(Number(amount));
+}
+
+/**
  * Returns an empty string if the provided value is not a number, otherwise returns the value.
  *
  * @param value - The value to be checked.
@@ -367,14 +377,12 @@ export function getNetworkNameFromScope(scope: string): string {
  * @param suffix - The suffix to be added after the value if it is a number.
  * @returns The original value if it is a number, otherwise an empty string.
  */
-export function displayEmptyStringIfNaN(
+export function displayEmptyStringIfAmountNotAvailable(
   value: string,
   prefix = '',
   suffix = '',
 ): string {
-  return isNaN(Number(value)) || Number(value) === 0
-    ? ''
-    : `${prefix} ${value} ${suffix}`;
+  return amountNotAvailable(value) ? '' : `${prefix} ${value} ${suffix}`;
 }
 
 /**
