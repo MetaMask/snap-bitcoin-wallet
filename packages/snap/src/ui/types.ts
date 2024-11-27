@@ -65,6 +65,7 @@ export type SendFlowContext = {
   scope: string;
   requestId: string;
   locale: Locale;
+  request: SendFlowRequest;
 };
 
 export type AccountWithBalance = KeyringAccount & { balance?: Currency };

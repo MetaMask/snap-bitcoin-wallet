@@ -13,6 +13,9 @@ QUICKNODE_TESTNET_ENDPOINT=
 # Description: Environment variables for the Mainnet endpoint of QuickNode
 # Required: true
 QUICKNODE_MAINNET_ENDPOINT=
+# Description: Environment variables for the SimpleHash API key
+# Required: true
+SIMPLEHASH_API_KEY=
 ```
 
 ## Rpcs:

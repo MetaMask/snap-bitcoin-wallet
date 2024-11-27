@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 
-import type { SendFlowRequest } from '../stateManagement';
+import { TransactionStatus, type SendFlowRequest } from '../stateManagement';
 import {
   generateDefaultSendFlowParams,
   generateDefaultSendFlowRequest,
@@ -41,6 +41,15 @@ export async function generateSendFlow({
         accounts: [account],
         scope,
         locale,
+        request: {
+          id: requestId,
+          interfaceId: '', // to be set in the next update
+          account,
+          scope,
+          transaction: {},
+          status: TransactionStatus.Draft,
+          ...sendFlowProps,
+        },
       },
     },
   });
@@ -87,6 +96,12 @@ export async function updateSendFlow({
           backEventTriggered={backEventTriggered}
         />
       ),
+      context: {
+        requestId: request.id,
+        accounts: [request.account],
+        scope: request.scope,
+        request,
+      },
     },
   });
 }
@@ -128,6 +143,12 @@ export async function displayConfirmationReview({
     params: {
       id: request.interfaceId,
       ui: <ReviewTransaction {...request} txSpeed="30m" />,
+      context: {
+        requestId: request.id,
+        accounts: [request.account],
+        scope: request.scope,
+        request,
+      },
     },
   });
 }

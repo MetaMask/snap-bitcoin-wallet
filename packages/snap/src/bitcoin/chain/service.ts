@@ -3,8 +3,9 @@ import { networks } from 'bitcoinjs-lib';
 
 import { Caip19Asset } from '../../constants';
 import { compactError } from '../../utils';
+import { isSatsProtectionEnabled } from '../../utils/config';
 import type { FeeRate, TransactionStatus } from './constants';
-import type { IDataClient } from './data-client';
+import type { IDataClient, ISatsProtectionDataClient } from './data-client';
 import { BtcOnChainServiceError } from './exceptions';
 
 export type TransactionStatusData = {
@@ -17,9 +18,7 @@ export type Balance = {
 
 export type AssetBalances = {
   balances: {
-    [address: string]: {
-      [asset: string]: Balance;
-    };
+    [asset: string]: Balance;
   };
 };
 
@@ -53,13 +52,24 @@ export type BtcOnChainServiceOptions = {
   network: Network;
 };
 
+export type BtcOnChainServiceClients = {
+  dataClient: IDataClient;
+  satsProtectionDataClient: ISatsProtectionDataClient;
+};
+
 export class BtcOnChainService {
   protected readonly _dataClient: IDataClient;
 
+  protected readonly _satsProtectionDataClient: ISatsProtectionDataClient;
+
   protected readonly _options: BtcOnChainServiceOptions;
 
-  constructor(dataClient: IDataClient, options: BtcOnChainServiceOptions) {
+  constructor(
+    { dataClient, satsProtectionDataClient }: BtcOnChainServiceClients,
+    options: BtcOnChainServiceOptions,
+  ) {
     this._dataClient = dataClient;
+    this._satsProtectionDataClient = satsProtectionDataClient;
     this._options = options;
   }
 
@@ -68,7 +78,7 @@ export class BtcOnChainService {
   }
 
   /**
-   * Gets the balances for multiple addresses and multiple assets.
+   * Gets the BTC balances from addresses.
    *
    * @param addresses - An array of addresses to fetch the balances for.
    * @param assets - An array of assets to fetch the balances of.
@@ -83,29 +93,24 @@ export class BtcOnChainService {
         throw new BtcOnChainServiceError('Only one asset is supported');
       }
 
-      const allowedAssets = new Set<string>(Object.values(Caip19Asset));
+      const asset = assets[0];
 
       if (
-        !allowedAssets.has(assets[0]) ||
-        (this.network === networks.testnet && assets[0] !== Caip19Asset.TBtc) ||
-        (this.network === networks.bitcoin && assets[0] !== Caip19Asset.Btc)
+        (this.network === networks.testnet && asset !== Caip19Asset.TBtc) ||
+        (this.network === networks.bitcoin && asset !== Caip19Asset.Btc)
       ) {
         throw new BtcOnChainServiceError('Invalid asset');
       }
 
-      const balance = await this._dataClient.getBalances(addresses);
+      const balance = await this.getSpendableBalance(addresses);
 
-      return addresses.reduce<AssetBalances>(
-        (acc: AssetBalances, address: string) => {
-          acc.balances[address] = {
-            [assets[0]]: {
-              amount: BigInt(balance[address]),
-            },
-          };
-          return acc;
+      return {
+        balances: {
+          [asset]: {
+            amount: balance,
+          },
         },
-        { balances: {} },
-      );
+      };
     } catch (error) {
       throw compactError(error, BtcOnChainServiceError);
     }
@@ -155,15 +160,55 @@ export class BtcOnChainService {
    */
   async getDataForTransaction(addresses: string[]): Promise<TransactionData> {
     try {
-      const data = await this._dataClient.getUtxos(addresses);
       return {
         data: {
-          utxos: data,
+          utxos: await this.getSpendableUtxos(addresses),
         },
       };
     } catch (error) {
       throw compactError(error, BtcOnChainServiceError);
     }
+  }
+
+  /**
+   * Get the spendable UTXOs that does not contains Inscription, Runes or Rare Sats.
+   *
+   * @param addresses - An array of Bitcoin addresses to query.
+   * @returns A promise that resolves to the filtered UTXOs.
+   */
+  protected async getSpendableUtxos(addresses: string[]): Promise<Utxo[]> {
+    if (this.isSatsProtectionEnabled()) {
+      // FIXME: SimpleHash provider does return the filtered UTXOs directly,
+      // so it is not necessary to give the list of UTXOs to filter (hence the `[]`).
+      // This logic may change if we change our provider.
+      return await this._satsProtectionDataClient.filterUtxos(addresses, []);
+    }
+    return await this._dataClient.getUtxos(addresses);
+  }
+
+  /**
+   * Get the spendable balance that does not contain Inscription, Runes or Rare Sats.
+   *
+   * @param addresses - An array of Bitcoin addresses to query.
+   * @returns A promise that resolves to the spendable BTC balance.
+   */
+  protected async getSpendableBalance(addresses: string[]): Promise<bigint> {
+    if (this.isSatsProtectionEnabled()) {
+      // There is no API to get the spendable balance directly, so
+      // we need to get the spendable UTXOs and sum the values.
+      const utxos = await this.getSpendableUtxos(addresses);
+      return utxos.reduce((acc, utxo) => acc + BigInt(utxo.value), BigInt(0));
+    }
+
+    const balances = await this._dataClient.getBalances(addresses);
+    return Object.values(balances).reduce(
+      (acc, balance) => acc + BigInt(balance),
+      BigInt(0),
+    );
+  }
+
+  protected isSatsProtectionEnabled(): boolean {
+    return isSatsProtectionEnabled(this.network);
   }
 
   /**

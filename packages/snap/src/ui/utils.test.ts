@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Caip2ChainId, Caip2ChainIdToNetworkName } from '../constants';
 import type { SendBitcoinParams } from '../rpcs';
+import { TransactionStatus } from '../stateManagement';
 import { generateDefaultSendFlowRequest } from '../utils/transaction';
 import { AssetType, SendFormError } from './types';
 import {
@@ -394,11 +395,22 @@ describe('utils', () => {
 
     it('should validate form correctly with valid data', () => {
       const formState = {
+        accountSelector: 'testAccount',
         amount: '0.1',
         to: 'bc1q26a367uz34eg5mufwhlscwdcplu6frtgf00r7a',
       };
       const request = {
-        total: { amount: '', fiat: '' },
+        id: 'test-id',
+        interfaceId: 'test-interface-id',
+        account: mockAccount,
+        scope: Caip2ChainId.Mainnet,
+        status: TransactionStatus.Draft,
+        transaction: {
+          recipients: {},
+          replaceable: true,
+          dryrun: false,
+        },
+        total: { amount: '', fiat: '', error: '', valid: false },
         recipient: { address: '', error: '', valid: false },
         amount: { amount: '', fiat: '', error: '', valid: false },
         fees: { amount: '', fiat: '', loading: false, error: '' },
@@ -406,10 +418,14 @@ describe('utils', () => {
         rates,
         balance: { amount: balance, fiat: '62000.00' },
       };
-      // @ts-expect-error test only request params and not the whole object
-      const result = formValidation(formState, context, request);
+      const result = formValidation(
+        formState,
+        { ...context, request, accounts: [mockAccount], requestId: 'test-id' },
+        request,
+      );
 
       expect(result).toStrictEqual({
+        ...request,
         recipient: {
           address: 'bc1q26a367uz34eg5mufwhlscwdcplu6frtgf00r7a',
           error: '',
@@ -425,9 +441,12 @@ describe('utils', () => {
         selectedCurrency: AssetType.BTC,
         rates,
         balance: { amount: balance, fiat: '62000.00' },
+        // We are only validating the inputs here.
         total: {
           amount: '',
           fiat: '',
+          error: '',
+          valid: false,
         },
       });
     });
