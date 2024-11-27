@@ -143,16 +143,15 @@ export function validateTotal(
 
   if (total.gt(new BigNumber(balance))) {
     return {
-      amount,
+      amount: total.toString(),
       fiat: fiatTotal,
       error: SendFormError.TotalExceedsBalance,
       valid: false,
     };
   }
 
-  const newTotal = total.toString();
   return {
-    amount: newTotal,
+    amount: total.toString(),
     fiat: fiatTotal,
     error: '',
     valid: true,
