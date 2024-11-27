@@ -3,8 +3,9 @@ import { networks } from 'bitcoinjs-lib';
 
 import { Caip19Asset } from '../../constants';
 import { compactError } from '../../utils';
+import { isSatsProtectionEnabled } from '../../utils/config';
 import type { FeeRate, TransactionStatus } from './constants';
-import type { IDataClient } from './data-client';
+import type { IDataClient, ISatsProtectionDataClient } from './data-client';
 import { BtcOnChainServiceError } from './exceptions';
 
 export type TransactionStatusData = {
@@ -51,13 +52,24 @@ export type BtcOnChainServiceOptions = {
   network: Network;
 };
 
+export type BtcOnChainServiceClients = {
+  dataClient: IDataClient;
+  satsProtectionDataClient: ISatsProtectionDataClient;
+};
+
 export class BtcOnChainService {
   protected readonly _dataClient: IDataClient;
 
+  protected readonly _satsProtectionDataClient: ISatsProtectionDataClient;
+
   protected readonly _options: BtcOnChainServiceOptions;
 
-  constructor(dataClient: IDataClient, options: BtcOnChainServiceOptions) {
+  constructor(
+    { dataClient, satsProtectionDataClient }: BtcOnChainServiceClients,
+    options: BtcOnChainServiceOptions,
+  ) {
     this._dataClient = dataClient;
+    this._satsProtectionDataClient = satsProtectionDataClient;
     this._options = options;
   }
 
@@ -90,19 +102,12 @@ export class BtcOnChainService {
         throw new BtcOnChainServiceError('Invalid asset');
       }
 
-      const balances = await this._dataClient.getBalances(addresses);
-
-      // Sum up all balances of each addresses (assuming there belonging to the same
-      // account).
-      const amount = Object.values(balances).reduce(
-        (acc: bigint, balance) => acc + BigInt(balance),
-        BigInt(0),
-      );
+      const balance = await this.getSpendableBalance(addresses);
 
       return {
         balances: {
           [asset]: {
-            amount,
+            amount: balance,
           },
         },
       };
@@ -155,15 +160,55 @@ export class BtcOnChainService {
    */
   async getDataForTransaction(addresses: string[]): Promise<TransactionData> {
     try {
-      const data = await this._dataClient.getUtxos(addresses);
       return {
         data: {
-          utxos: data,
+          utxos: await this.getSpendableUtxos(addresses),
         },
       };
     } catch (error) {
       throw compactError(error, BtcOnChainServiceError);
     }
+  }
+
+  /**
+   * Get the spendable UTXOs that does not contains Inscription, Runes or Rare Sats.
+   *
+   * @param addresses - An array of Bitcoin addresses to query.
+   * @returns A promise that resolves to the filtered UTXOs.
+   */
+  protected async getSpendableUtxos(addresses: string[]): Promise<Utxo[]> {
+    if (this.isSatsProtectionEnabled()) {
+      // FIXME: SimpleHash provider does return the filtered UTXOs directly,
+      // so it is not necessary to give the list of UTXOs to filter (hence the `[]`).
+      // This logic may change if we change our provider.
+      return await this._satsProtectionDataClient.filterUtxos(addresses, []);
+    }
+    return await this._dataClient.getUtxos(addresses);
+  }
+
+  /**
+   * Get the spendable balance that does not contain Inscription, Runes or Rare Sats.
+   *
+   * @param addresses - An array of Bitcoin addresses to query.
+   * @returns A promise that resolves to the spendable BTC balance.
+   */
+  protected async getSpendableBalance(addresses: string[]): Promise<bigint> {
+    if (this.isSatsProtectionEnabled()) {
+      // There is no API to get the spendable balance directly, so
+      // we need to get the spendable UTXOs and sum the values.
+      const utxos = await this.getSpendableUtxos(addresses);
+      return utxos.reduce((acc, utxo) => acc + BigInt(utxo.value), BigInt(0));
+    }
+
+    const balances = await this._dataClient.getBalances(addresses);
+    return Object.values(balances).reduce(
+      (acc, balance) => acc + BigInt(balance),
+      BigInt(0),
+    );
+  }
+
+  protected isSatsProtectionEnabled(): boolean {
+    return isSatsProtectionEnabled(this.network);
   }
 
   /**
