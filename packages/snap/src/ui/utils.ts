@@ -377,7 +377,7 @@ export function amountNotAvailable(amount: string): boolean {
  * @param suffix - The suffix to be added after the value if it is a number.
  * @returns The original value if it is a number, otherwise an empty string.
  */
-export function displayEmptyStringIfAmountNotAvailable(
+export function displayEmptyStringIfAmountNotAvailableorEmptyAmount(
   value: string,
   prefix = '',
   suffix = '',

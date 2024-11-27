@@ -19,7 +19,7 @@ import { BaseExplorerUrl, Caip2ChainId } from '../../constants';
 import type { SendFlowRequest } from '../../stateManagement';
 import btcIcon from '../images/btc-halo.svg';
 import {
-  displayEmptyStringIfAmountNotAvailable,
+  displayEmptyStringIfAmountNotAvailableorEmptyAmount,
   getNetworkNameFromScope,
 } from '../utils';
 import { SendFlowHeader } from './SendFlowHeader';
@@ -74,7 +74,10 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
           <Row label="Amount">
             <Value
               value={`${amount.amount} BTC`}
-              extra={displayEmptyStringIfAmountNotAvailable(amount.fiat, '$')}
+              extra={displayEmptyStringIfAmountNotAvailableorEmptyAmount(
+                amount.fiat,
+                '$',
+              )}
             />
           </Row>
           <Row label="Recipient">
@@ -100,13 +103,19 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
           <Row label="Network fee" tooltip="The estimated network fee">
             <Value
               value={`${fees.amount} BTC`}
-              extra={displayEmptyStringIfAmountNotAvailable(fees.fiat, '$')}
+              extra={displayEmptyStringIfAmountNotAvailableorEmptyAmount(
+                fees.fiat,
+                '$',
+              )}
             />
           </Row>
           <Row label="Total">
             <Value
               value={`${total.amount} BTC`}
-              extra={displayEmptyStringIfAmountNotAvailable(total.fiat, '$')}
+              extra={displayEmptyStringIfAmountNotAvailableorEmptyAmount(
+                total.fiat,
+                '$',
+              )}
             />
           </Row>
         </Section>

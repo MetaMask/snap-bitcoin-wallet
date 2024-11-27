@@ -10,7 +10,7 @@ import {
 import { shortenAddress } from '../../utils';
 import jazzicon1 from '../images/jazzicon1.svg';
 import type { Currency } from '../types';
-import { displayEmptyStringIfAmountNotAvailable } from '../utils';
+import { displayEmptyStringIfAmountNotAvailableorEmptyAmount } from '../utils';
 
 /**
  * The props for the {@link AccountSelector} component.
@@ -60,7 +60,7 @@ export const AccountSelector: SnapComponent<AccountSelectorProps> = ({
               }
               extra={
                 balance?.fiat
-                  ? `${displayEmptyStringIfAmountNotAvailable(
+                  ? `${displayEmptyStringIfAmountNotAvailableorEmptyAmount(
                       balance.fiat,
                       '$',
                     )}`
