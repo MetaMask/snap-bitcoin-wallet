@@ -41,7 +41,6 @@ export async function generateSendFlow({
           id: requestId,
           interfaceId: '', // to be set in the next update
           account,
-          scope,
           transaction: {},
           status: TransactionStatus.Draft,
           ...sendFlowProps,
