@@ -16,6 +16,7 @@ import jazzicon3 from '../images/jazzicon3.svg';
 import type { AccountWithBalance } from '../types';
 import { AssetType } from '../types';
 import { AccountSelector as AccountSelectorComponent } from './AccountSelector';
+import { amountNotAvailable } from '../utils';
 
 export enum SendFormNames {
   Amount = 'amount',
@@ -105,7 +106,7 @@ export const SendForm: SnapComponent<SendFormProps> = ({
   }
 
   // Fiat might not be available if rates are still loading or cannot be fetched.
-  const fiatNotAvailable = isNaN(Number(balance.fiat));
+  const fiatNotAvailable = amountNotAvailable(balance.fiat);
 
   return (
     <Form name="sendForm">

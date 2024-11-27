@@ -77,7 +77,7 @@ export function validateAmount(
   balance: string,
   rates: string,
 ): SendFlowRequest['amount'] {
-  if (amount && isNaN(Number(amount))) {
+  if (!amount || isNaN(Number(amount))) {
     return {
       amount: '',
       fiat: '',
