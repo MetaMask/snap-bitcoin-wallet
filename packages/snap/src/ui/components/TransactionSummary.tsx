@@ -9,7 +9,7 @@ import {
 } from '@metamask/snaps-sdk/jsx';
 
 import type { SendFlowRequest } from '../../stateManagement';
-import { displayEmptyStringIfAmountNotAvailableorEmptyAmount } from '../utils';
+import { displayEmptyStringIfAmountNotAvailableOrEmptyAmount } from '../utils';
 
 /**
  * The props for the {@link TransactionSummary} component.
@@ -60,7 +60,7 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
       <Row label="Network fee" tooltip="The estimated network fee">
         <Value
           value={`${fees.amount.toString()} BTC`}
-          extra={displayEmptyStringIfAmountNotAvailableorEmptyAmount(fees.fiat)}
+          extra={displayEmptyStringIfAmountNotAvailableOrEmptyAmount(fees.fiat)}
         />
       </Row>
       <Row label="Transaction speed" tooltip="The estimated time of the TX">
@@ -69,7 +69,7 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
       <Row label="Total">
         <Value
           value={`${total.amount.toString()} BTC`}
-          extra={displayEmptyStringIfAmountNotAvailableorEmptyAmount(
+          extra={displayEmptyStringIfAmountNotAvailableOrEmptyAmount(
             total.fiat,
           )}
         />

@@ -19,7 +19,7 @@ import { BaseExplorerUrl, Caip2ChainId } from '../../constants';
 import type { SendFlowRequest } from '../../stateManagement';
 import btcIcon from '../images/btc-halo.svg';
 import {
-  displayEmptyStringIfAmountNotAvailableorEmptyAmount,
+  displayEmptyStringIfAmountNotAvailableOrEmptyAmount,
   getNetworkNameFromScope,
 } from '../utils';
 import { SendFlowHeader } from './SendFlowHeader';
@@ -74,7 +74,7 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
           <Row label="Amount">
             <Value
               value={`${amount.amount} BTC`}
-              extra={displayEmptyStringIfAmountNotAvailableorEmptyAmount(
+              extra={displayEmptyStringIfAmountNotAvailableOrEmptyAmount(
                 amount.fiat,
                 '$',
               )}
@@ -103,7 +103,7 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
           <Row label="Network fee" tooltip="The estimated network fee">
             <Value
               value={`${fees.amount} BTC`}
-              extra={displayEmptyStringIfAmountNotAvailableorEmptyAmount(
+              extra={displayEmptyStringIfAmountNotAvailableOrEmptyAmount(
                 fees.fiat,
                 '$',
               )}
@@ -112,7 +112,7 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
           <Row label="Total">
             <Value
               value={`${total.amount} BTC`}
-              extra={displayEmptyStringIfAmountNotAvailableorEmptyAmount(
+              extra={displayEmptyStringIfAmountNotAvailableOrEmptyAmount(
                 total.fiat,
                 '$',
               )}
