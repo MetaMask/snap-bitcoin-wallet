@@ -17,6 +17,7 @@ import btcIcon from '../images/bitcoin.svg';
 import jazzicon3 from '../images/jazzicon3.svg';
 import type { AccountWithBalance } from '../types';
 import { AssetType } from '../types';
+import { amountNotAvailable } from '../utils';
 import { AccountSelector as AccountSelectorComponent } from './AccountSelector';
 import { SatsProtectionToolTip } from './SatsProtectionToolTip';
 
@@ -51,6 +52,7 @@ export type SendFormProps = {
   selectedCurrency: SendFlowParams['selectedCurrency'];
   recipient: SendFlowParams['recipient'];
   total: SendFlowParams['total'];
+  rates: SendFlowParams['rates'];
   flushToAddress?: boolean;
   currencySwitched: boolean;
   backEventTriggered: boolean;
@@ -77,6 +79,7 @@ const getAmountFrom = (
  * @param props.recipient - The recipient details including address and validation status.
  * @param props.total - The total amount including fees.
  * @param props.currencySwitched - Whether the currency display has been switched.
+ * @param props.rates - The exchange rates for the selected currency.
  * @param props.backEventTriggered - Whether the back event has been triggered.
  * @param props.scope - The CAIP-2 Chain ID.
  * @returns The SendForm component.
@@ -90,6 +93,7 @@ export const SendForm: SnapComponent<SendFormProps> = ({
   amount,
   recipient,
   total,
+  rates,
   currencySwitched,
   backEventTriggered,
   scope,
@@ -106,6 +110,9 @@ export const SendForm: SnapComponent<SendFormProps> = ({
   } else if (flushToAddress) {
     addressToDisplay = '';
   }
+
+  // Fiat might not be available if rates are still loading or cannot be fetched.
+  const fiatNotAvailable = amountNotAvailable(balance.fiat);
 
   return (
     <Form name="sendForm">
@@ -126,27 +133,30 @@ export const SendForm: SnapComponent<SendFormProps> = ({
           placeholder="Enter amount to send"
           value={amountToDisplay}
         />
-        <Box direction="horizontal" center>
-          <Text color="alternative">
-            {selectedCurrency === AssetType.FIAT ? 'USD' : selectedCurrency}
-          </Text>
-          <Button name={SendFormNames.SwapCurrencyDisplay}>
-            <Icon name="swap-vertical" color="primary" size="md" />
-          </Button>
-        </Box>
+        {Boolean(rates) && (
+          <Box direction="horizontal" center>
+            <Text color="alternative">
+              {selectedCurrency === AssetType.FIAT ? 'USD' : selectedCurrency}
+            </Text>
+            <Button name={SendFormNames.SwapCurrencyDisplay}>
+              <Icon name="swap-vertical" color="primary" size="md" />
+            </Button>
+          </Box>
+        )}
       </Field>
       <Box
         direction="horizontal"
         alignment={balance.fiat ? 'space-between' : 'end'}
       >
-        {Boolean(balance.fiat) && (
-          <Box direction="horizontal">
-            <Text color="muted">{`Balance: $${balance.fiat.toLocaleLowerCase()}`}</Text>
-            {Boolean(isSatsProtectionEnabled(getBtcNetwork(scope))) && (
-              <SatsProtectionToolTip />
-            )}
-          </Box>
-        )}
+        <Box direction="horizontal">
+          <Text color="muted">
+            {`Balance:
+          ${fiatNotAvailable ? `${balance.amount} BTC` : `$${balance.fiat}`}`}
+          </Text>
+          {Boolean(isSatsProtectionEnabled(getBtcNetwork(scope))) && (
+            <SatsProtectionToolTip />
+          )}
+        </Box>
 
         <Button name={SendFormNames.SetMax} disabled={Boolean(!balance.amount)}>
           Max

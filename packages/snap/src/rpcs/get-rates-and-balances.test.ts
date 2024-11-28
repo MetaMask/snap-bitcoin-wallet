@@ -36,7 +36,6 @@ describe('getRatesAndBalances', () => {
     expect(result).toStrictEqual({
       rates: {
         value: 'mockRates',
-        error: '',
       },
       balances: {
         value: 'mockBalance',
@@ -56,7 +55,6 @@ describe('getRatesAndBalances', () => {
     expect(result).toStrictEqual({
       rates: {
         value: undefined,
-        error: 'Rates error: Rates error',
       },
       balances: {
         value: 'mockBalance',
@@ -74,7 +72,6 @@ describe('getRatesAndBalances', () => {
     expect(result).toStrictEqual({
       rates: {
         value: 'mockRates',
-        error: '',
       },
       balances: {
         value: undefined,
@@ -92,7 +89,6 @@ describe('getRatesAndBalances', () => {
     expect(result).toStrictEqual({
       rates: {
         value: undefined,
-        error: 'Rates error: Rates error',
       },
       balances: {
         value: undefined,

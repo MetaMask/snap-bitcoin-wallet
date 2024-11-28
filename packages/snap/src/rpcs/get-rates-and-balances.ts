@@ -24,7 +24,6 @@ export async function createRatesAndBalances({
   btcAccount,
 }: GetRatesAndBalancesParams) {
   const errors = {
-    rates: '',
     balances: '',
   };
   let rates;
@@ -36,9 +35,9 @@ export async function createRatesAndBalances({
   ]);
 
   if (ratesResult.status === 'fulfilled') {
-    rates = ratesResult.value;
-  } else {
-    errors.rates = `Rates error: ${ratesResult.reason.message as string}`;
+    // Rates are "optional" here (hence the ''). If they are not available, no conversion
+    // will be done.
+    rates = ratesResult.value ?? '';
   }
 
   if (balancesResult.status === 'fulfilled') {
@@ -56,7 +55,6 @@ export async function createRatesAndBalances({
   return {
     rates: {
       value: rates,
-      error: errors.rates,
     },
     balances: {
       value: balances,
