@@ -35,6 +35,8 @@ export async function createRatesAndBalances({
   ]);
 
   if (ratesResult.status === 'fulfilled') {
+    // Rates are "optional" here (hence the ''). If they are not available, no conversion
+    // will be done.
     rates = ratesResult.value ?? '';
   }
 
