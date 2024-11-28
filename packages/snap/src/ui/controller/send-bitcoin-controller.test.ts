@@ -7,11 +7,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Caip2ChainId } from '../../constants';
 import { estimateFee, getMaxSpendableBalance } from '../../rpcs';
-import {
-  KeyringStateManager,
-  SendFlowRequest,
-  TransactionStatus,
-} from '../../stateManagement';
+import type { SendFlowRequest } from '../../stateManagement';
+import { TransactionStatus } from '../../stateManagement';
 import type { Locale } from '../../utils/locale';
 import { generateDefaultSendFlowRequest } from '../../utils/transaction';
 import { SendFormNames } from '../components/SendForm';
@@ -208,6 +205,7 @@ describe('SendBitcoinController', () => {
       };
 
       expect(updateSendFlow).toHaveBeenCalledWith({
+        locale: mockLocale,
         request: expectedRequest,
       });
     });
@@ -240,7 +238,10 @@ describe('SendBitcoinController', () => {
       });
       jest.spyOn(controller, 'handleButtonEvent').mockResolvedValue(undefined);
       await controller.handleEvent(mockEvent, mockContext, mockFormState);
-      expect(controller.handleButtonEvent).toHaveBeenCalledWith(mockEvent.name);
+      expect(controller.handleButtonEvent).toHaveBeenCalledWith(
+        mockEvent.name,
+        mockContext,
+      );
     });
 
     it('should not handle unknown event type', async () => {
@@ -320,6 +321,7 @@ describe('SendBitcoinController', () => {
           },
         });
         expect(updateSendFlow).toHaveBeenCalledWith({
+          locale: mockLocale,
           request: controller.context.request,
         });
       });
@@ -359,6 +361,7 @@ describe('SendBitcoinController', () => {
           },
         });
         expect(updateSendFlow).toHaveBeenCalledWith({
+          locale: mockLocale,
           request: controller.context.request,
         });
       });
@@ -402,6 +405,7 @@ describe('SendBitcoinController', () => {
         expect(controller.context.request.fees.amount).toBe('0.0001');
         expect(controller.context.request.total.amount).toBeDefined();
         expect(updateSendFlow).toHaveBeenCalledWith({
+          locale: mockLocale,
           request: controller.context.request,
         });
       });
@@ -444,6 +448,7 @@ describe('SendBitcoinController', () => {
         expect(controller.context.request.fees.amount).toBe('0.0001');
         expect(controller.context.request.total.amount).toBeDefined();
         expect(updateSendFlow).toHaveBeenCalledWith({
+          locale: mockLocale,
           request: controller.context.request,
         });
       });
@@ -477,6 +482,7 @@ describe('SendBitcoinController', () => {
 
         expect(controller.context.request.amount.valid).toBe(false);
         expect(updateSendFlow).toHaveBeenCalledWith({
+          locale: mockLocale,
           request: controller.context.request,
         });
       });
@@ -517,6 +523,7 @@ describe('SendBitcoinController', () => {
           'Fee estimation error',
         );
         expect(updateSendFlow).toHaveBeenCalledWith({
+          locale: mockLocale,
           request: controller.context.request,
         });
       });
@@ -647,6 +654,7 @@ describe('SendBitcoinController', () => {
       };
       expect(controller.context.request.selectedCurrency).toBe(AssetType.FIAT);
       expect(updateSendFlow).toHaveBeenCalledWith({
+        locale: mockLocale,
         request: expectedResult,
         flushToAddress: false,
         currencySwitched: true,
@@ -746,6 +754,7 @@ describe('SendBitcoinController', () => {
           .toString(),
       );
       expect(updateSendFlow).toHaveBeenCalledWith({
+        locale: mockLocale,
         request: controller.context.request,
         currencySwitched: true,
       });
@@ -777,6 +786,7 @@ describe('SendBitcoinController', () => {
       );
       expect(controller.context.request.fees.loading).toBe(false);
       expect(updateSendFlow).toHaveBeenCalledWith({
+        locale: mockLocale,
         request: controller.context.request,
         currencySwitched: true,
       });

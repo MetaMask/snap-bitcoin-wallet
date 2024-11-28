@@ -96,7 +96,7 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
           </Row>
           <Row
             label={locale.networkFee.message}
-            tooltip={locale.networkFeeTooltip.message}
+            tooltip={locale.networkFeeToolTip.message}
           >
             <Value value={`${fees.amount} BTC`} extra={`$${fees.fiat}`} />
           </Row>
