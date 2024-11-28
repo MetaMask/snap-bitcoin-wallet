@@ -1,12 +1,24 @@
 import { FeeRate } from './bitcoin/chain/constants';
-import { Caip2ChainId, Caip2Asset } from './constants';
+import { Caip2ChainId, Caip19Asset } from './constants';
+
+export enum ApiClient {
+  QuickNode = 'QuickNode',
+  SimpleHash = 'SimpleHash',
+}
 
 export type SnapChainConfig = {
   onChainService: {
-    dataClient: {
-      options: {
-        mainnetEndpoint: string | undefined;
-        testnetEndpoint: string | undefined;
+    apiClient: {
+      [ApiClient.QuickNode]: {
+        options: {
+          mainnetEndpoint: string | undefined;
+          testnetEndpoint: string | undefined;
+        };
+      };
+      [ApiClient.SimpleHash]: {
+        options: {
+          apiKey: string | undefined;
+        };
       };
     };
   };
@@ -23,16 +35,25 @@ export type SnapChainConfig = {
   };
   logLevel: string;
   defaultConfirmationThreshold: number;
+  defaultSatsProtectionEnabled: boolean;
 };
 
 export const Config: SnapChainConfig = {
   onChainService: {
-    dataClient: {
-      options: {
-        // eslint-disable-next-line no-restricted-globals
-        testnetEndpoint: process.env.QUICKNODE_TESTNET_ENDPOINT,
-        // eslint-disable-next-line no-restricted-globals
-        mainnetEndpoint: process.env.QUICKNODE_MAINNET_ENDPOINT,
+    apiClient: {
+      [ApiClient.QuickNode]: {
+        options: {
+          // eslint-disable-next-line no-restricted-globals
+          testnetEndpoint: process.env.QUICKNODE_TESTNET_ENDPOINT,
+          // eslint-disable-next-line no-restricted-globals
+          mainnetEndpoint: process.env.QUICKNODE_MAINNET_ENDPOINT,
+        },
+      },
+      [ApiClient.SimpleHash]: {
+        options: {
+          // eslint-disable-next-line no-restricted-globals
+          apiKey: process.env.SIMPLEHASH_API_KEY,
+        },
       },
     },
   },
@@ -41,7 +62,7 @@ export const Config: SnapChainConfig = {
     defaultAccountType: 'bip122:p2wpkh',
   },
   availableNetworks: Object.values(Caip2ChainId),
-  availableAssets: Object.values(Caip2Asset),
+  availableAssets: Object.values(Caip19Asset),
   defaultFeeRate: FeeRate.Medium,
   unit: 'BTC',
   explorer: {
@@ -55,4 +76,5 @@ export const Config: SnapChainConfig = {
   logLevel: process.env.LOG_LEVEL ?? '0',
   // the number of confirmations required for a transaction to be considered confirmed
   defaultConfirmationThreshold: 6,
+  defaultSatsProtectionEnabled: true,
 };

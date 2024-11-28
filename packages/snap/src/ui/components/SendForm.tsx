@@ -10,12 +10,15 @@ import {
   type SnapComponent,
 } from '@metamask/snaps-sdk/jsx';
 
+import { getBtcNetwork } from '../../bitcoin/wallet';
 import type { SendFlowParams } from '../../stateManagement';
+import { isSatsProtectionEnabled } from '../../utils/config';
 import btcIcon from '../images/bitcoin.svg';
 import jazzicon3 from '../images/jazzicon3.svg';
 import type { AccountWithBalance } from '../types';
 import { AssetType } from '../types';
 import { AccountSelector as AccountSelectorComponent } from './AccountSelector';
+import { SatsProtectionToolTip } from './SatsProtectionToolTip';
 
 export enum SendFormNames {
   Amount = 'amount',
@@ -51,6 +54,7 @@ export type SendFormProps = {
   flushToAddress?: boolean;
   currencySwitched: boolean;
   backEventTriggered: boolean;
+  scope: string;
 };
 
 const getAmountFrom = (
@@ -74,6 +78,7 @@ const getAmountFrom = (
  * @param props.total - The total amount including fees.
  * @param props.currencySwitched - Whether the currency display has been switched.
  * @param props.backEventTriggered - Whether the back event has been triggered.
+ * @param props.scope - The CAIP-2 Chain ID.
  * @returns The SendForm component.
  */
 export const SendForm: SnapComponent<SendFormProps> = ({
@@ -87,6 +92,7 @@ export const SendForm: SnapComponent<SendFormProps> = ({
   total,
   currencySwitched,
   backEventTriggered,
+  scope,
 }) => {
   const showRecipientError = recipient.address.length > 0 && !recipient.error;
   const amountToDisplay =
@@ -134,8 +140,14 @@ export const SendForm: SnapComponent<SendFormProps> = ({
         alignment={balance.fiat ? 'space-between' : 'end'}
       >
         {Boolean(balance.fiat) && (
-          <Text color="muted">{`Balance: $${balance.fiat.toLocaleLowerCase()}`}</Text>
+          <Box direction="horizontal">
+            <Text color="muted">{`Balance: $${balance.fiat.toLocaleLowerCase()}`}</Text>
+            {Boolean(isSatsProtectionEnabled(getBtcNetwork(scope))) && (
+              <SatsProtectionToolTip />
+            )}
+          </Box>
         )}
+
         <Button name={SendFormNames.SetMax} disabled={Boolean(!balance.amount)}>
           Max
         </Button>

@@ -4,7 +4,7 @@ import validate, { Network } from 'bitcoin-address-validation';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
-  Caip2Asset,
+  Caip19Asset,
   Caip2ChainId,
   Caip2ChainIdToNetworkName,
 } from '../constants';
@@ -30,32 +30,35 @@ export function formValidation(
   context: SendFlowContext,
   request: SendFlowRequest,
 ): SendFlowRequest {
-  // reset errors
-  request.amount.error = '';
-  request.recipient.error = '';
-  request.fees.error = '';
+  // We only validate the values that have changed
+  // If we validate all the values on every change there can be a race condition.
 
-  const formAmount = formState.amount ?? '0';
-  const cryptoAmount =
-    request.selectedCurrency === AssetType.BTC
-      ? formAmount
-      : fiatToBtc(formAmount, request.rates);
+  const { amount, to } = formState;
 
-  request.recipient = validateRecipient(formState.to, context.scope);
-  request.amount = validateAmount(
-    cryptoAmount,
-    request.balance.amount,
-    request.rates,
-  );
+  if (amount !== request.amount.amount) {
+    const formAmount = formState.amount ?? '0';
+    const cryptoAmount =
+      request.selectedCurrency === AssetType.BTC
+        ? formAmount
+        : fiatToBtc(formAmount, request.rates);
+    request.amount = validateAmount(
+      cryptoAmount,
+      request.balance.amount,
+      request.rates,
+    );
+    // Reset the fees if the amount is invalid
+    if (request.amount.error) {
+      request.fees = {
+        amount: '',
+        fiat: '',
+        loading: false,
+        error: '',
+      };
+    }
+  }
 
-  // Reset the fees if the amount is invalid
-  if (request.amount.error) {
-    request.fees = {
-      amount: '',
-      fiat: '',
-      loading: false,
-      error: '',
-    };
+  if (to !== request.recipient.address) {
+    request.recipient = validateRecipient(to, context.scope);
   }
 
   return request;
@@ -259,7 +262,6 @@ export async function generateSendFlowRequest(
   const sendFlowRequest = {
     id: uuidv4(),
     account: wallet.account,
-    scope: wallet.scope,
     transaction: sendBitcoinParams,
     interfaceId: '',
     status: status ?? TransactionStatus.Draft,
@@ -298,7 +300,7 @@ export async function sendBitcoinParamsToSendFlowParams(
   rates: string,
   balance: string,
 ): Promise<SendFlowParams> {
-  const defaultParams = generateDefaultSendFlowParams();
+  const defaultParams = generateDefaultSendFlowParams(scope);
   // This is safe because we validate the recipient in `validateRecipient` if it is not defined.
   const recipient = Object.keys(params.recipients)[0];
   const amount = params.recipients[recipient];
@@ -339,8 +341,8 @@ export async function sendBitcoinParamsToSendFlowParams(
  * @param scope - The scope of the network (mainnet or testnet).
  * @returns The asset type corresponding to the scope.
  */
-export function getAssetTypeFromScope(scope: string): Caip2Asset {
-  return scope === Caip2ChainId.Mainnet ? Caip2Asset.Btc : Caip2Asset.TBtc;
+export function getAssetTypeFromScope(scope: string): Caip19Asset {
+  return scope === Caip2ChainId.Mainnet ? Caip19Asset.Btc : Caip19Asset.TBtc;
 }
 
 /**

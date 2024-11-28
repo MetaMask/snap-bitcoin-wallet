@@ -173,7 +173,7 @@ const Index = () => {
     !shouldDisplayReconnectButton(installedSnap);
 
   const handleCreateWallet = async () => {
-    const provider = networkToProvider[network];
+    setProvider(networkToProvider[network]);
 
     await invokeSnap({
       method: 'createWallet',
@@ -184,7 +184,6 @@ const Index = () => {
       },
     });
 
-    setProvider(provider);
     setIsSynced(true);
   };
 
@@ -201,14 +200,14 @@ const Index = () => {
   };
 
   const handleLoadWallet = async () => {
-    const network = (await invokeSnap({
+    const result = (await invokeSnap({
       method: 'loadWallet',
       params: {
         provider,
       },
     })) as Network;
 
-    setProvider(networkToProvider[network]);
+    setProvider(networkToProvider[result]);
     setIsSynced(true);
   };
 
@@ -290,9 +289,9 @@ const Index = () => {
   };
 
   const networkOnChange = (chgEvent: React.ChangeEvent<HTMLSelectElement>) => {
-    const network = chgEvent.target.value as unknown as Network;
-    setNetwork(network);
-    setProvider(networkToProvider[network]);
+    const value = chgEvent.target.value as unknown as Network;
+    setNetwork(value);
+    setProvider(networkToProvider[value]);
   };
 
   const addressTypeOnChange = (

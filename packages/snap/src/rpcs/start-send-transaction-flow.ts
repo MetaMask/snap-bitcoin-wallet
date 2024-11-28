@@ -3,12 +3,9 @@ import { enums, nonempty, object, string } from 'superstruct';
 
 import { TxValidationError } from '../bitcoin/wallet';
 import { Caip2ChainId } from '../constants';
-import {
-  AccountNotFoundError,
-  isSnapException,
-  SendFlowRequestNotFoundError,
-} from '../exceptions';
+import { AccountNotFoundError, isSnapException } from '../exceptions';
 import { Factory } from '../factory';
+import type { SendFlowRequest } from '../stateManagement';
 import { KeyringStateManager, TransactionStatus } from '../stateManagement';
 import { generateSendFlow, updateSendFlow } from '../ui/render-interfaces';
 import {
@@ -72,8 +69,6 @@ export async function startSendTransactionFlow(
       scope,
     });
 
-    await stateManager.upsertRequest(sendFlowRequest);
-
     // This will be awaited later on the flow in order to display the UI as soon as possible.
     // If we don't, then the UI will be displayed after the balances and rates call are finished.
     const sendFlowPromise = createSendUIDialog(sendFlowRequest.interfaceId);
@@ -101,7 +96,6 @@ export async function startSendTransactionFlow(
     sendFlowRequest.balance.amount = balances.value;
     sendFlowRequest.balance.fiat = btcToFiat(balances.value, rates.value);
     sendFlowRequest.rates = rates.value;
-    await stateManager.upsertRequest(sendFlowRequest);
 
     await updateSendFlow({
       request: {
@@ -109,45 +103,28 @@ export async function startSendTransactionFlow(
       },
     });
 
-    const sendFlowResult = await sendFlowPromise;
+    // The dialog resolves into the send flow request that has been confirmed by the user
+    const updatedSendFlowRequest = (await sendFlowPromise) as SendFlowRequest;
 
-    if (!sendFlowResult) {
-      await stateManager.removeRequest(sendFlowRequest.id);
+    if (updatedSendFlowRequest.status === TransactionStatus.Rejected) {
       throw new UserRejectedRequestError() as unknown as Error;
-    }
-
-    // Get the latest send flow request from the state manager
-    // this has been updated via onInputHandler
-    const updatedSendFlowRequest = await stateManager.getRequest(
-      sendFlowRequest.id,
-    );
-
-    if (!updatedSendFlowRequest) {
-      throw new SendFlowRequestNotFoundError();
     }
 
     const sendBitcoinParams = generateSendBitcoinParams(
       walletData.scope,
       updatedSendFlowRequest,
     );
-    sendFlowRequest.transaction = sendBitcoinParams;
-    sendFlowRequest.status = TransactionStatus.Confirmed;
-    await stateManager.upsertRequest(sendFlowRequest);
+    updatedSendFlowRequest.transaction = sendBitcoinParams;
+    updatedSendFlowRequest.status = TransactionStatus.Confirmed;
 
-    let tx;
-    try {
-      tx = await sendBitcoin(btcAccount, scope, {
-        ...sendFlowRequest.transaction,
-        scope,
-      });
+    const tx = await sendBitcoin(btcAccount, scope, {
+      ...updatedSendFlowRequest.transaction,
+      scope,
+    });
 
-      sendFlowRequest.txId = tx.txId;
-    } catch (error) {
-      await stateManager.removeRequest(sendFlowRequest.id);
-      throw error;
-    }
+    updatedSendFlowRequest.txId = tx.txId;
 
-    await stateManager.upsertRequest(sendFlowRequest);
+    await stateManager.upsertRequest(updatedSendFlowRequest);
     return tx;
   } catch (error) {
     logger.error('Failed to start send transaction flow', error);

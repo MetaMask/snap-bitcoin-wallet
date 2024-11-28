@@ -20,20 +20,20 @@ export type IDataClient = {
   /**
    * Gets the balances for a set of Bitcoin addresses.
    *
-   * @param {string[]} address - An array of Bitcoin addresses to query.
+   * @param {string[]} addresses - An array of Bitcoin addresses to query.
    * @returns {Promise<DataClientGetBalancesResp>} A promise that resolves to a record of addresses and their corresponding balances.
    */
-  getBalances(address: string[]): Promise<DataClientGetBalancesResp>;
+  getBalances(addresses: string[]): Promise<DataClientGetBalancesResp>;
 
   /**
    * Gets the UTXOs for a Bitcoin address.
    *
-   * @param {string} address - The Bitcoin address to query.
+   * @param {string[]} addresses - An array of Bitcoin addresses to query.
    * @param {boolean} [includeUnconfirmed] - Whether or not to include unconfirmed UTXOs in the response. Defaults to false.
    * @returns {Promise<DataClientGetUtxosResp>} A promise that resolves to an array of UTXOs.
    */
   getUtxos(
-    address: string,
+    addresses: string[],
     includeUnconfirmed?: boolean,
   ): Promise<DataClientGetUtxosResp>;
 
@@ -59,4 +59,18 @@ export type IDataClient = {
    * @returns {Promise<DataClientSendTxResp>} A promise that resolves to the transaction hash.
    */
   sendTransaction(tx: string): Promise<DataClientSendTxResp>;
+};
+
+/**
+ * This interface defines the methods available on a data client for Sats Protection.
+ */
+export type ISatsProtectionDataClient = {
+  /**
+   * Filters UTXOs that contain Inscriptions, Runes or Rare Sats.
+   *
+   * @param {string[]} address - An array of Bitcoin addresses to query.
+   * @param {Utxo[]} utxos - An array of UTXOs to filter.
+   * @returns {Promise<Utxo[]>} A promise that resolves to the filtered UTXOs.
+   */
+  filterUtxos(address: string[], utxos: Utxo[]): Promise<Utxo[]>;
 };

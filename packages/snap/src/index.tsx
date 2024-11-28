@@ -353,23 +353,13 @@ export const onUserInput: OnUserInputHandler = async ({
   event,
   context,
 }) => {
-  const { requestId } = context as SendFlowContext;
   const state = await snap.request({
     method: 'snap_getInterfaceState',
     params: { id },
   });
 
-  const stateManager = new KeyringStateManager(true);
-  const request = await stateManager.getRequest(requestId);
-
-  if (!request) {
-    throw new Error('Request not found');
-  }
-
   if (isSendFormEvent(event)) {
     const sendBitcoinController = new SendBitcoinController({
-      stateManager,
-      request,
       context: context as SendFlowContext,
       interfaceId: id,
     });
