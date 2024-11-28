@@ -11,6 +11,7 @@ import { shortenAddress } from '../../utils';
 import type { Locale } from '../../utils/locale';
 import jazzicon1 from '../images/jazzicon1.svg';
 import type { Currency } from '../types';
+import { displayEmptyStringIfAmountNotAvailableOrEmptyAmount } from '../utils';
 
 /**
  * The props for the {@link AccountSelector} component.
@@ -60,8 +61,11 @@ export const AccountSelector: SnapComponent<AccountSelectorProps> = ({
                   : locale.loading.message
               }
               extra={
-                balance?.amount
-                  ? `$${balance.fiat.toString()}`
+                balance?.fiat
+                  ? `${displayEmptyStringIfAmountNotAvailableOrEmptyAmount(
+                      balance.fiat,
+                      '$',
+                    )}`
                   : locale.loading.message
               }
               title={'Bitcoin Account'}

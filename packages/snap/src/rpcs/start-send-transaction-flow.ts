@@ -84,10 +84,6 @@ export async function startSendTransactionFlow(
 
     const errors: string[] = [];
 
-    if (rates.error) {
-      errors.push(rates.error);
-    }
-
     if (balances.error) {
       errors.push(balances.error);
     }

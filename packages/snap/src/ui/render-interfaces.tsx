@@ -23,7 +23,7 @@ export async function generateSendFlow({
   locale,
 }: GenerateSendFlowParams): Promise<SendFlowRequest> {
   const requestId = uuidv4();
-  const sendFlowProps = generateDefaultSendFlowParams();
+  const sendFlowProps = generateDefaultSendFlowParams(scope);
   const interfaceId = await snap.request({
     method: 'snap_createInterface',
     params: {
@@ -45,7 +45,6 @@ export async function generateSendFlow({
           id: requestId,
           interfaceId: '', // to be set in the next update
           account,
-          scope,
           transaction: {},
           status: TransactionStatus.Draft,
           ...sendFlowProps,

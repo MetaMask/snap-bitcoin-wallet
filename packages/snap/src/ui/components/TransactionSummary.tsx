@@ -10,6 +10,7 @@ import {
 
 import type { SendFlowRequest } from '../../stateManagement';
 import type { Locale } from '../../utils/locale';
+import { displayEmptyStringIfAmountNotAvailableOrEmptyAmount } from '../utils';
 
 /**
  * The props for the {@link TransactionSummary} component.
@@ -66,7 +67,7 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
       >
         <Value
           value={`${fees.amount.toString()} BTC`}
-          extra={`$${fees.fiat.toString()}`}
+          extra={displayEmptyStringIfAmountNotAvailableOrEmptyAmount(fees.fiat)}
         />
       </Row>
       <Row
@@ -78,7 +79,9 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
       <Row label={locale.total.message}>
         <Value
           value={`${total.amount.toString()} BTC`}
-          extra={`$${total.fiat.toString()}`}
+          extra={displayEmptyStringIfAmountNotAvailableOrEmptyAmount(
+            total.fiat,
+          )}
         />
       </Row>
     </Section>

@@ -36,6 +36,7 @@ export type BaseRequestState = {
 };
 
 export type SendFlowParams = {
+  scope: string;
   selectedCurrency: AssetType;
   recipient: {
     address: string;

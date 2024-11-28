@@ -6,7 +6,9 @@ import { AssetType } from '../ui/types';
 import { generateSendBitcoinParams } from '../ui/utils';
 import type { Locale } from './locale';
 
-export const generateDefaultSendFlowParams = (): SendFlowParams => {
+export const generateDefaultSendFlowParams = (
+  scope: string,
+): SendFlowParams => {
   return {
     selectedCurrency: AssetType.BTC,
     recipient: {
@@ -37,6 +39,7 @@ export const generateDefaultSendFlowParams = (): SendFlowParams => {
       error: '',
       valid: false,
     },
+    scope,
   };
 };
 
@@ -51,11 +54,10 @@ export const generateDefaultSendFlowRequest = (
     id: requestId,
     interfaceId,
     account,
-    scope,
     transaction: generateSendBitcoinParams(scope),
     status: TransactionStatus.Draft,
     // Send flow params
-    ...generateDefaultSendFlowParams(),
+    ...generateDefaultSendFlowParams(scope),
     locale,
   };
 };

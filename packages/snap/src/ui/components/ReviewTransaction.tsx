@@ -19,7 +19,10 @@ import { BaseExplorerUrl, Caip2ChainId } from '../../constants';
 import type { SendFlowRequest } from '../../stateManagement';
 import type { Locale } from '../../utils/locale';
 import btcIcon from '../images/btc-halo.svg';
-import { getNetworkNameFromScope } from '../utils';
+import {
+  displayEmptyStringIfAmountNotAvailableOrEmptyAmount,
+  getNetworkNameFromScope,
+} from '../utils';
 import { SendFlowHeader } from './SendFlowHeader';
 import { SendFormNames } from './SendForm';
 
@@ -72,7 +75,13 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
             </Link>
           </Row>
           <Row label={locale.amount.message}>
-            <Value value={`${amount.amount} BTC`} extra={`$${amount.fiat}`} />
+            <Value
+              value={`${amount.amount} BTC`}
+              extra={displayEmptyStringIfAmountNotAvailableOrEmptyAmount(
+                amount.fiat,
+                '$',
+              )}
+            />
           </Row>
           <Row label={locale.recipient.message}>
             <Link href={getExplorerLink(scope, recipient.address)}>
@@ -98,10 +107,22 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
             label={locale.networkFee.message}
             tooltip={locale.networkFeeToolTip.message}
           >
-            <Value value={`${fees.amount} BTC`} extra={`$${fees.fiat}`} />
+            <Value
+              value={`${fees.amount} BTC`}
+              extra={displayEmptyStringIfAmountNotAvailableOrEmptyAmount(
+                fees.fiat,
+                '$',
+              )}
+            />
           </Row>
           <Row label={locale.total.message}>
-            <Value value={`${total.amount} BTC`} extra={`$${total.fiat}`} />
+            <Value
+              value={`${total.amount} BTC`}
+              extra={displayEmptyStringIfAmountNotAvailableOrEmptyAmount(
+                total.fiat,
+                '$',
+              )}
+            />
           </Row>
         </Section>
         {Boolean(recipient.error) && (
