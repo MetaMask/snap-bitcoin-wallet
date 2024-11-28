@@ -188,6 +188,18 @@ const Index = () => {
     setIsSynced(true);
   };
 
+  const handleCreateWalletPersist = async () => {
+    await invokeSnap({
+      method: 'createWalletPersist',
+      params: {
+        network,
+        addressType,
+      },
+    });
+
+    setIsSynced(true);
+  };
+
   const handleLoadWallet = async () => {
     const network = (await invokeSnap({
       method: 'loadWallet',
@@ -277,13 +289,10 @@ const Index = () => {
     });
   };
 
-  const providerOnChange = (chgEvent: React.ChangeEvent<HTMLSelectElement>) => {
-    setProvider(chgEvent.target.value);
-  };
-
   const networkOnChange = (chgEvent: React.ChangeEvent<HTMLSelectElement>) => {
-    const n = chgEvent.target.value as unknown as Network;
-    setNetwork(n);
+    const network = chgEvent.target.value as unknown as Network;
+    setNetwork(network);
+    setProvider(networkToProvider[network]);
   };
 
   const addressTypeOnChange = (
@@ -361,29 +370,10 @@ const Index = () => {
 
         <Card
           content={{
-            title: 'Select Provider',
-            description: `Current: ${provider}`,
-            button: (
-              <Dropdown onChange={providerOnChange} value={provider}>
-                <option value={networkToProvider[Network.Bitcoin]}>
-                  Blockstream (Bitcoin)
-                </option>
-                <option value={networkToProvider[Network.Testnet]}>
-                  Blockstream (Testnet)
-                </option>
-                <option value={networkToProvider[Network.Testnet4]}>
-                  Mempool Space (Testnet4)
-                </option>
-                <option value={networkToProvider[Network.Signet]}>
-                  Mutiny (Signet)
-                </option>
-                <option value={networkToProvider[Network.Regtest]}>
-                  Local (Regtest)
-                </option>
-              </Dropdown>
-            ),
+            title: 'Provider',
+            description: provider,
           }}
-          disabled={isSynced}
+          disabled={!installedSnap}
           fullWidth={isSnapReady}
         />
 
@@ -414,6 +404,41 @@ const Index = () => {
                 <br />
 
                 <Button onClick={handleCreateWallet}>Create Wallet</Button>
+              </>
+            ),
+          }}
+          disabled={!installedSnap}
+          fullWidth={isSnapReady}
+        />
+
+        <Card
+          content={{
+            title: 'Create Wallet Persist',
+            description: 'New wallet with auto persistence (no full-scan)',
+            button: (
+              <>
+                <Dropdown onChange={addressTypeOnChange} value={addressType}>
+                  <option value={AddressType.P2pkh}>Legacy</option>
+                  <option value={AddressType.P2sh}>Segwit</option>
+                  <option value={AddressType.P2wpkh}>Native Segwit</option>
+                  <option value={AddressType.P2tr}>Taproot</option>
+                </Dropdown>
+
+                <br />
+
+                <Dropdown onChange={networkOnChange} value={network}>
+                  <option value={Network.Bitcoin}>Bitcoin</option>
+                  <option value={Network.Testnet}>Testnet</option>
+                  <option value={Network.Testnet4}>Testnet4</option>
+                  <option value={Network.Signet}>Signet</option>
+                  <option value={Network.Regtest}>Regtest</option>
+                </Dropdown>
+
+                <br />
+
+                <Button onClick={handleCreateWalletPersist}>
+                  Create Wallet
+                </Button>
               </>
             ),
           }}

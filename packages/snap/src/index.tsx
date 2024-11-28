@@ -9,12 +9,13 @@ import {
   MethodNotFoundError,
 } from '@metamask/snaps-sdk';
 import {
+  MetaMaskWallet,
   EsploraWallet,
   KeychainKind,
   Network,
   AddressType,
   slip10_to_extended,
-} from './bdk/bdk_wasm';
+} from 'bdk-wasm';
 import { stringify, parse } from 'superjson';
 
 import { Config } from './config';
@@ -87,6 +88,43 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
           request.params as StartSendTransactionFlowParams,
         );
       }
+      case InternalRpcMethod.CreateWalletPersist: {
+        const params = request.params as any;
+        const addressTypeToPurpose = {
+          [AddressType.P2pkh]: "44'",
+          [AddressType.P2sh]: "49'",
+          [AddressType.P2wpkh]: "84'",
+          [AddressType.P2tr]: "86'",
+        };
+
+        const networkToCoinType = {
+          [Network.Bitcoin]: "0'",
+          [Network.Testnet]: "1'",
+          [Network.Testnet4]: "1'",
+          [Network.Signet]: "1'",
+          [Network.Regtest]: "1'",
+        };
+
+        const derivationPath = [
+          'm',
+          addressTypeToPurpose[params.addressType as AddressType],
+          networkToCoinType[params.network as Network],
+          "0'",
+        ];
+
+        const slip10 = await getBip32Deriver(derivationPath, 'secp256k1');
+        const xpriv = slip10_to_extended(slip10, params.network);
+
+        await MetaMaskWallet.from_xpriv(
+          xpriv,
+          slip10.masterFingerprint!.toString(16),
+          params.network,
+          params.addressType,
+        );
+
+        return true;
+      }
+
       case InternalRpcMethod.CreateWallet: {
         const params = request.params as any;
         const addressTypeToPurpose = {
@@ -168,11 +206,15 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         const params = request.params as any;
 
         const state = await getStateData<any>();
-        const wallet = EsploraWallet.load(parse(state.wallet), params.provider);
+        const changeSet = parse(state.wallet);
+        const wallet = EsploraWallet.load(changeSet, params.provider);
 
         await wallet.sync(PARALLEL_REQUESTS);
 
-        console.log('changeset', wallet.take_staged());
+        await setStateData({
+          ...state,
+          wallet: stringify(wallet.take_merged(changeSet)),
+        });
 
         return true;
       }
@@ -196,11 +238,15 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         const params = request.params as any;
 
         const state = await getStateData<any>();
-        const wallet = EsploraWallet.load(parse(state.wallet), params.provider);
+        const changeSet = parse(state.wallet);
+        const wallet = EsploraWallet.load(changeSet, params.provider);
 
         const address = wallet.reveal_next_address(KeychainKind.External);
 
-        console.log('changeset', wallet.take_staged());
+        await setStateData({
+          ...state,
+          wallet: stringify(wallet.take_merged(changeSet)),
+        });
 
         return {
           address: address.address,
@@ -233,7 +279,6 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         const state = await getStateData<any>();
         const wallet = EsploraWallet.load(parse(state.wallet), params.provider);
 
-        wallet.reveal_next_address(KeychainKind.External);
         const addresses = wallet.list_unused_addresses(KeychainKind.External);
 
         return addresses.map((address) => ({
