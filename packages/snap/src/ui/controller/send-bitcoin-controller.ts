@@ -2,6 +2,7 @@ import type { UserInputEvent } from '@metamask/snaps-sdk';
 import { UserInputEventType } from '@metamask/snaps-sdk';
 import { BigNumber } from 'bignumber.js';
 
+import { TransactionDustError } from '../../bitcoin/wallet';
 import { estimateFee, getMaxSpendableBalance } from '../../rpcs';
 import type { KeyringStateManager } from '../../stateManagement';
 import { TransactionStatus, type SendFlowRequest } from '../../stateManagement';
@@ -134,12 +135,17 @@ export class SendBitcoinController {
             this.context.request.rates,
           );
         } catch (feeError) {
-          this.context.request.fees = {
-            fiat: '',
-            amount: '',
-            loading: false,
-            error: feeError.message,
-          };
+          if (feeError instanceof TransactionDustError) {
+            this.context.request.amount.error = feeError.message;
+            this.context.request.fees.loading = false;
+          } else {
+            this.context.request.fees = {
+              fiat: '',
+              amount: '',
+              loading: false,
+              error: feeError.message,
+            };
+          }
         }
         await updateSendFlow({
           request: this.context.request,
