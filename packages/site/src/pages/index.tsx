@@ -173,48 +173,45 @@ const Index = () => {
     !shouldDisplayReconnectButton(installedSnap);
 
   const handleCreateWallet = async () => {
-    setProvider(networkToProvider[network]);
+    try {
+      const result = (await invokeSnap({
+        method: 'createWallet',
+        params: {
+          network,
+          addressType,
+          provider,
+        },
+      })) as Network;
 
-    await invokeSnap({
-      method: 'createWallet',
-      params: {
-        network,
-        addressType,
-        provider,
-      },
-    });
-
-    setIsSynced(true);
-  };
-
-  const handleCreateWalletPersist = async () => {
-    await invokeSnap({
-      method: 'createWalletPersist',
-      params: {
-        network,
-        addressType,
-      },
-    });
-
-    setIsSynced(true);
+      setProvider(networkToProvider[result]);
+      setIsSynced(true);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleLoadWallet = async () => {
-    const result = (await invokeSnap({
-      method: 'loadWallet',
-      params: {
-        provider,
-      },
-    })) as Network;
+    try {
+      const result = (await invokeSnap({
+        method: 'loadWallet',
+        params: {
+          provider,
+        },
+      })) as Network;
 
-    setProvider(networkToProvider[result]);
-    setIsSynced(true);
+      setProvider(networkToProvider[result]);
+      setIsSynced(true);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
-  const handleGetState = async () => {
+  const handleFullScan = async () => {
     await invokeSnap({
-      method: 'getState',
-      params: {},
+      method: 'fullScan',
+      params: {
+        provider: networkToProvider[network],
+      },
     });
   };
 
@@ -224,6 +221,12 @@ const Index = () => {
       params: {
         provider: networkToProvider[network],
       },
+    });
+  };
+  const handleGetState = async () => {
+    await invokeSnap({
+      method: 'getState',
+      params: {},
     });
   };
 
@@ -305,6 +308,7 @@ const Index = () => {
       <Heading>
         <Span>BTC Snap</Span>
       </Heading>
+      <p>Provider: {provider}</p>
       <CardContainer>
         {loading && (
           <Loading>
@@ -369,15 +373,6 @@ const Index = () => {
 
         <Card
           content={{
-            title: 'Provider',
-            description: provider,
-          }}
-          disabled={!installedSnap}
-          fullWidth={isSnapReady}
-        />
-
-        <Card
-          content={{
             title: 'Create Wallet',
             description:
               'New wallet will be created and full scanned with the provider. Will replace any existing wallet.',
@@ -412,47 +407,19 @@ const Index = () => {
 
         <Card
           content={{
-            title: 'Create Wallet Persist',
-            description: 'New wallet with auto persistence (no full-scan)',
-            button: (
-              <>
-                <Dropdown onChange={addressTypeOnChange} value={addressType}>
-                  <option value={AddressType.P2pkh}>Legacy</option>
-                  <option value={AddressType.P2sh}>Segwit</option>
-                  <option value={AddressType.P2wpkh}>Native Segwit</option>
-                  <option value={AddressType.P2tr}>Taproot</option>
-                </Dropdown>
-
-                <br />
-
-                <Dropdown onChange={networkOnChange} value={network}>
-                  <option value={Network.Bitcoin}>Bitcoin</option>
-                  <option value={Network.Testnet}>Testnet</option>
-                  <option value={Network.Testnet4}>Testnet4</option>
-                  <option value={Network.Signet}>Signet</option>
-                  <option value={Network.Regtest}>Regtest</option>
-                </Dropdown>
-
-                <br />
-
-                <Button onClick={handleCreateWalletPersist}>
-                  Create Wallet
-                </Button>
-              </>
-            ),
-          }}
-          disabled={!installedSnap}
-          fullWidth={isSnapReady}
-        />
-
-        <Card
-          content={{
             title: 'Load Wallet',
             description:
               'Get Wallet from the state or errors if it does not exist',
-            button: <Button onClick={handleLoadWallet}>Load Wallet</Button>,
+            button: (
+              <Button
+                onClick={handleLoadWallet}
+                disabled={!installedSnap || isSynced}
+              >
+                Load Wallet
+              </Button>
+            ),
           }}
-          disabled={isSynced}
+          disabled={!installedSnap || isSynced}
           fullWidth={isSnapReady}
         />
 
@@ -460,7 +427,25 @@ const Index = () => {
           content={{
             title: 'Display State',
             description: `Get the current state data`,
-            button: <Button onClick={handleGetState}>Get State</Button>,
+            button: (
+              <Button onClick={handleGetState} disabled={!isSynced}>
+                Get State
+              </Button>
+            ),
+          }}
+          disabled={!isSynced}
+          fullWidth={isSnapReady}
+        />
+
+        <Card
+          content={{
+            title: 'Full Scan',
+            description: `Full Scan state with the provider`,
+            button: (
+              <Button onClick={handleFullScan} disabled={!isSynced}>
+                Full Scan
+              </Button>
+            ),
           }}
           disabled={!isSynced}
           fullWidth={isSnapReady}
@@ -470,7 +455,11 @@ const Index = () => {
           content={{
             title: 'Sync',
             description: `Sync state with the provider`,
-            button: <Button onClick={handleSync}>Sync State</Button>,
+            button: (
+              <Button onClick={handleSync} disabled={!isSynced}>
+                Sync
+              </Button>
+            ),
           }}
           disabled={!isSynced}
           fullWidth={isSnapReady}
@@ -480,7 +469,11 @@ const Index = () => {
           content={{
             title: 'Get Balance',
             description: `Get the current balance`,
-            button: <Button onClick={handleGetBalance}>Get Balance</Button>,
+            button: (
+              <Button onClick={handleGetBalance} disabled={!isSynced}>
+                Get Balance
+              </Button>
+            ),
           }}
           disabled={!isSynced}
           fullWidth={isSnapReady}
@@ -491,7 +484,9 @@ const Index = () => {
             title: 'Get Next Unused Address',
             description: 'Address is already revealed',
             button: (
-              <Button onClick={handleGetNextUnusedAddress}>Get Address</Button>
+              <Button onClick={handleGetNextUnusedAddress} disabled={!isSynced}>
+                Get Address
+              </Button>
             ),
           }}
           disabled={!isSynced}
@@ -503,7 +498,9 @@ const Index = () => {
             title: 'Reveal Next Address',
             description: 'New address will be revealed',
             button: (
-              <Button onClick={handleRevealNextAddress}>Get Address</Button>
+              <Button onClick={handleRevealNextAddress} disabled={!isSynced}>
+                Get Address
+              </Button>
             ),
           }}
           disabled={!isSynced}
@@ -516,8 +513,13 @@ const Index = () => {
             description: 'Address will NOT be revealed',
             button: (
               <>
-                <InputText onChange={handlePeekOnChange}></InputText>
-                <Button onClick={handlePeekAddress}>Get Address</Button>
+                <InputText
+                  onChange={handlePeekOnChange}
+                  disabled={!isSynced}
+                ></InputText>
+                <Button onClick={handlePeekAddress} disabled={!isSynced}>
+                  Get Address
+                </Button>
               </>
             ),
           }}
@@ -530,7 +532,7 @@ const Index = () => {
             title: 'List Unused Addresses',
             description: 'All current revealed unused addresses',
             button: (
-              <Button onClick={handleListUnusedAddresses}>
+              <Button onClick={handleListUnusedAddresses} disabled={!isSynced}>
                 List Addresses
               </Button>
             ),
@@ -544,7 +546,9 @@ const Index = () => {
             title: 'List Unspent Outputs',
             description: 'All current unspent outputs',
             button: (
-              <Button onClick={handleListUnspentOutputs}>List UTXOs</Button>
+              <Button onClick={handleListUnspentOutputs} disabled={!isSynced}>
+                List UTXOs
+              </Button>
             ),
           }}
           disabled={!isSynced}

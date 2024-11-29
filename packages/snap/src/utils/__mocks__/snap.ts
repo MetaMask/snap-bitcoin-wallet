@@ -1,4 +1,4 @@
-import { JsonSLIP10Node, SupportedCurve } from '@metamask/key-tree';
+import type { JsonSLIP10Node, SupportedCurve } from '@metamask/key-tree';
 import { networks } from 'bitcoinjs-lib';
 
 import { createRandomBip32Data } from '../../../test/utils';

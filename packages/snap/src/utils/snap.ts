@@ -1,4 +1,4 @@
-import { JsonSLIP10Node } from '@metamask/key-tree';
+import type { JsonSLIP10Node } from '@metamask/key-tree';
 import type {
   Component,
   DialogResult,
@@ -128,11 +128,11 @@ export async function createSendUIDialog(interfaceId: string) {
 export async function getRatesFromMetamask(
   currency: string,
 ): Promise<GetCurrencyRateResult> {
-  return (await snap.request({
+  return await snap.request({
     method: 'snap_getCurrencyRate',
     params: {
       // @ts-expect-error TODO: snaps will fix this type error
       currency,
     },
-  })) as GetCurrencyRateResult;
+  });
 }
