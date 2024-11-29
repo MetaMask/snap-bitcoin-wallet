@@ -1,8 +1,14 @@
+import type { KeyringAccount } from '@metamask/keyring-api';
 import { assert, enums } from 'superstruct';
 
 import type { Fee } from '../bitcoin/chain';
 import { FeeRate } from '../bitcoin/chain/constants';
-import { DefaultTxMinFeeRateInBtcPerKvb } from '../bitcoin/wallet';
+import {
+  BtcAccount,
+  BtcAccountTypeToScriptType,
+  DefaultTxMinFeeRateInBtcPerKvb,
+  DustLimit,
+} from '../bitcoin/wallet';
 import { Config } from '../config';
 import { FeeRateUnavailableError } from '../exceptions';
 
@@ -54,4 +60,18 @@ export function getMinimumFeeRateInKvb(
   );
 
   return minRequiredFee;
+}
+
+/**
+ * Retrieves the dust threshold for a given account.
+ *
+ * @param account - The account for which to retrieve the dust threshold.
+ * @returns The dust threshold for the given account.
+ */
+export function getDustThreshold(account: KeyringAccount | BtcAccount): number {
+  if (account instanceof BtcAccount) {
+    return DustLimit[account.scriptType];
+  }
+  const scriptType = BtcAccountTypeToScriptType[account.type];
+  return DustLimit[scriptType];
 }
