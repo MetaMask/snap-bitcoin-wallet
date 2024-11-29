@@ -72,7 +72,6 @@ export function getDustThreshold(account: KeyringAccount | BtcAccount): number {
   if (account instanceof BtcAccount) {
     return DustLimit[account.scriptType];
   }
-  // account.type is consist of the string pattern: bip122:xxxx
   const scriptType = BtcAccountTypeToScriptType[account.type];
   return DustLimit[scriptType];
 }

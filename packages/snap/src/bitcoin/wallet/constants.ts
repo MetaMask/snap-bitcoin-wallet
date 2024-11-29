@@ -1,6 +1,8 @@
 import { BtcAccountType } from '@metamask/keyring-api';
 
-export const BtcAccountTypeToScriptType = {
+// We type it explicitly here, so that the compiler will complain about
+// missing `BtcAccountType` enum members:
+export const BtcAccountTypeToScriptType: Record<BtcAccountType, ScriptType> = {
   [BtcAccountType.P2wpkh]: 'p2wpkh',
 };
 
