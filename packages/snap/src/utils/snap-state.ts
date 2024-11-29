@@ -18,7 +18,12 @@ export abstract class SnapStateManager<State> {
 
   #transaction: Transaction<State>;
 
-  constructor(createLock = false) {
+  #encryptedMode: boolean;
+
+  constructor({
+    createLock = false,
+    encrypted = true,
+  }: { createLock?: boolean; encrypted?: boolean } = {}) {
     this.mtx = acquireLock(createLock);
     this.#transaction = {
       id: undefined,
@@ -27,14 +32,15 @@ export abstract class SnapStateManager<State> {
       isRollingBack: false,
       hasCommitted: false,
     };
+    this.#encryptedMode = encrypted;
   }
 
   protected async get(): Promise<State> {
-    return getStateData<State>();
+    return getStateData<State>(this.#encryptedMode);
   }
 
   protected async set(state: State): Promise<void> {
-    return setStateData<State>(state);
+    return setStateData<State>({ data: state, encrypted: this.#encryptedMode });
   }
 
   protected async update(

@@ -66,7 +66,10 @@ export async function estimateFee(params: EstimateFeeParams) {
 
     const chainApi = Factory.createOnChainServiceProvider(walletData.scope);
 
-    const feesResp = await chainApi.getFeeRates();
+    const cachedFeeRates = await getCachedFeeRates(walletData.scope);
+    const feesResp = cachedFeeRate.expired
+      ? await chainApi.getFeeRates()
+      : cachedFeeRates.value;
 
     const fee = getFeeRate(feesResp.fees);
 
