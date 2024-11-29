@@ -1,3 +1,9 @@
+import { BtcAccountType } from '@metamask/keyring-api';
+
+export const BtcAccountTypeToScriptType = {
+  [BtcAccountType.P2wpkh]: 'p2wpkh',
+};
+
 export enum ScriptType {
   P2pkh = 'p2pkh',
   P2shP2wkh = 'p2sh-p2wpkh',
@@ -32,4 +38,4 @@ export const MaxStandardTxWeight = 400000;
 
 // Default minimum fee rate in BTC/KvB
 // To align with the response from RPC provider, we use BTC unit in KvB
-export const DefaultTxMinFeeRateInBtcPerKvb = 0.0001
+export const DefaultTxMinFeeRateInBtcPerKvb = 0.0001;
