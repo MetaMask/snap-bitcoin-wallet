@@ -1,16 +1,16 @@
 import { BtcAccountType } from '@metamask/keyring-api';
 
-// We type it explicitly here, so that the compiler will complain about
-// missing `BtcAccountType` enum members:
-export const BtcAccountTypeToScriptType: Record<BtcAccountType, ScriptType> = {
-  [BtcAccountType.P2wpkh]: 'p2wpkh',
-};
-
 export enum ScriptType {
   P2pkh = 'p2pkh',
   P2shP2wkh = 'p2sh-p2wpkh',
   P2wpkh = 'p2wpkh',
 }
+
+// We type it explicitly here, so that the compiler will complain about
+// missing `BtcAccountType` enum members:
+export const BtcAccountTypeToScriptType: Record<BtcAccountType, ScriptType> = {
+  [BtcAccountType.P2wpkh]: ScriptType.P2wpkh,
+};
 
 // reference https://help.magiceden.io/en/articles/8665399-navigating-bitcoin-dust-understanding-limits-and-safeguarding-your-transactions-on-magic-eden
 // "Dust" is defined in terms of dustRelayFee,
