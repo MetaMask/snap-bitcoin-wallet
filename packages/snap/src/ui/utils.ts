@@ -35,6 +35,7 @@ export function formValidation(
 
   const { amount, to } = formState;
 
+  // `amount` won't be defined during the first initialization:
   if (amount && amount !== request.amount.amount) {
     const formAmount = formState.amount ?? '0';
     const cryptoAmount =
@@ -57,6 +58,7 @@ export function formValidation(
     }
   }
 
+  // `to` won't be defined during the first initialization:
   if (to && to !== request.recipient.address) {
     request.recipient = validateRecipient(to, context.scope);
   }
