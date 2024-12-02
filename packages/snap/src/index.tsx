@@ -14,7 +14,7 @@ import {
   Network,
   AddressType,
   slip10_to_extended,
-} from 'bdk-wasm';
+} from './bdk';
 
 import { Config } from './config';
 import { BtcKeyring } from './keyring';

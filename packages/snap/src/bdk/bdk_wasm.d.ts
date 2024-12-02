@@ -37,6 +37,7 @@ export function mnemonic_to_xpriv(mnemonic: string, passphrase: string, network:
  * @returns {string}
  */
 export function slip10_to_extended(slip10: any, network: Network): string;
+export function start(): void;
 /**
  * The different types of addresses.
  */
@@ -168,66 +169,6 @@ export class DescriptorPair {
   readonly external: string;
   readonly internal: string;
 }
-export class EsploraMMWallet {
-  free(): void;
-  /**
-   * @param {Network} network
-   * @param {string} external_descriptor
-   * @param {string} internal_descriptor
-   * @param {string} url
-   * @returns {Promise<EsploraMMWallet>}
-   */
-  static new(network: Network, external_descriptor: string, internal_descriptor: string, url: string): Promise<EsploraMMWallet>;
-  /**
-   * @param {number} stop_gap
-   * @param {number} parallel_requests
-   * @returns {Promise<void>}
-   */
-  full_scan(stop_gap: number, parallel_requests: number): Promise<void>;
-  /**
-   * @param {number} parallel_requests
-   * @returns {Promise<void>}
-   */
-  sync(parallel_requests: number): Promise<void>;
-  /**
-   * @returns {bigint}
-   */
-  balance(): bigint;
-  /**
-   * @param {KeychainKind} keychain
-   * @returns {AddressInfo}
-   */
-  next_unused_address(keychain: KeychainKind): AddressInfo;
-  /**
-   * @param {KeychainKind} keychain
-   * @param {number} index
-   * @returns {AddressInfo}
-   */
-  peek_address(keychain: KeychainKind, index: number): AddressInfo;
-  /**
-   * @param {KeychainKind} keychain
-   * @returns {AddressInfo}
-   */
-  reveal_next_address(keychain: KeychainKind): AddressInfo;
-  /**
-   * @param {KeychainKind} keychain
-   * @returns {(AddressInfo)[]}
-   */
-  list_unused_addresses(keychain: KeychainKind): (AddressInfo)[];
-  /**
-   * @returns {any}
-   */
-  take_staged(): any;
-  /**
-   * @param {string} block_hash
-   * @returns {Promise<any>}
-   */
-  get_block_by_hash(block_hash: string): Promise<any>;
-  /**
-   * @returns {Promise<boolean>}
-   */
-  persist(): Promise<boolean>;
-}
 export class EsploraWallet {
   free(): void;
   /**
@@ -330,8 +271,200 @@ export class EsploraWallet {
    */
   take_staged(): any;
   /**
-   * @param {string} block_hash
-   * @returns {Promise<any>}
+   * @param {any} previous
+   * @returns {any}
    */
-  get_block_by_hash(block_hash: string): Promise<any>;
+  take_merged(previous: any): any;
+}
+export class MetaMaskWallet {
+  free(): void;
+  /**
+   * @param {Network} network
+   * @param {string} external_descriptor
+   * @param {string} internal_descriptor
+   * @param {string} url
+   * @returns {Promise<MetaMaskWallet>}
+   */
+  static from_descriptors(network: Network, external_descriptor: string, internal_descriptor: string, url: string): Promise<MetaMaskWallet>;
+  /**
+   * @param {string} mnemonic
+   * @param {string} passphrase
+   * @param {Network} network
+   * @param {AddressType} address_type
+   * @param {string} url
+   * @returns {Promise<MetaMaskWallet>}
+   */
+  static from_mnemonic(mnemonic: string, passphrase: string, network: Network, address_type: AddressType, url: string): Promise<MetaMaskWallet>;
+  /**
+   * @param {string} extended_privkey
+   * @param {string} fingerprint
+   * @param {Network} network
+   * @param {AddressType} address_type
+   * @param {string} url
+   * @returns {Promise<MetaMaskWallet>}
+   */
+  static from_xpriv(extended_privkey: string, fingerprint: string, network: Network, address_type: AddressType, url: string): Promise<MetaMaskWallet>;
+  /**
+   * @param {string} extended_pubkey
+   * @param {string} fingerprint
+   * @param {Network} network
+   * @param {AddressType} address_type
+   * @param {string} url
+   * @returns {Promise<MetaMaskWallet>}
+   */
+  static from_xpub(extended_pubkey: string, fingerprint: string, network: Network, address_type: AddressType, url: string): Promise<MetaMaskWallet>;
+  /**
+   * @param {string} url
+   * @returns {Promise<MetaMaskWallet>}
+   */
+  static load(url: string): Promise<MetaMaskWallet>;
+  /**
+   * @param {number} stop_gap
+   * @param {number} parallel_requests
+   * @returns {Promise<void>}
+   */
+  full_scan(stop_gap: number, parallel_requests: number): Promise<void>;
+  /**
+   * @param {number} parallel_requests
+   * @returns {Promise<void>}
+   */
+  sync(parallel_requests: number): Promise<void>;
+  /**
+   * @returns {Network}
+   */
+  network(): Network;
+  /**
+   * @returns {Balance}
+   */
+  balance(): Balance;
+  /**
+   * @param {KeychainKind} keychain
+   * @returns {AddressInfo}
+   */
+  next_unused_address(keychain: KeychainKind): AddressInfo;
+  /**
+   * @param {KeychainKind} keychain
+   * @param {number} index
+   * @returns {AddressInfo}
+   */
+  peek_address(keychain: KeychainKind, index: number): AddressInfo;
+  /**
+   * @param {KeychainKind} keychain
+   * @returns {AddressInfo}
+   */
+  reveal_next_address(keychain: KeychainKind): AddressInfo;
+  /**
+   * @param {KeychainKind} keychain
+   * @param {number} index
+   * @returns {(AddressInfo)[]}
+   */
+  reveal_addresses_to(keychain: KeychainKind, index: number): (AddressInfo)[];
+  /**
+   * @param {KeychainKind} keychain
+   * @returns {(AddressInfo)[]}
+   */
+  list_unused_addresses(keychain: KeychainKind): (AddressInfo)[];
+  /**
+   * @returns {any[]}
+   */
+  list_unspent(): any[];
+  /**
+   * @returns {any[]}
+   */
+  transactions(): any[];
+  /**
+   * @returns {Promise<boolean>}
+   */
+  persist(): Promise<boolean>;
+}
+export class Wallet {
+  free(): void;
+  /**
+   * @param {Network} network
+   * @param {string} external_descriptor
+   * @param {string} internal_descriptor
+   * @returns {Wallet}
+   */
+  static from_descriptors(network: Network, external_descriptor: string, internal_descriptor: string): Wallet;
+  /**
+   * @param {string} mnemonic
+   * @param {string} passphrase
+   * @param {Network} network
+   * @param {AddressType} address_type
+   * @returns {Wallet}
+   */
+  static from_mnemonic(mnemonic: string, passphrase: string, network: Network, address_type: AddressType): Wallet;
+  /**
+   * @param {string} extended_privkey
+   * @param {string} fingerprint
+   * @param {Network} network
+   * @param {AddressType} address_type
+   * @returns {Wallet}
+   */
+  static from_xpriv(extended_privkey: string, fingerprint: string, network: Network, address_type: AddressType): Wallet;
+  /**
+   * @param {string} extended_pubkey
+   * @param {string} fingerprint
+   * @param {Network} network
+   * @param {AddressType} address_type
+   * @returns {Wallet}
+   */
+  static from_xpub(extended_pubkey: string, fingerprint: string, network: Network, address_type: AddressType): Wallet;
+  /**
+   * @param {any} changeset
+   * @returns {Wallet}
+   */
+  static load(changeset: any): Wallet;
+  /**
+   * @returns {Network}
+   */
+  network(): Network;
+  /**
+   * @returns {Balance}
+   */
+  balance(): Balance;
+  /**
+   * @param {KeychainKind} keychain
+   * @returns {AddressInfo}
+   */
+  next_unused_address(keychain: KeychainKind): AddressInfo;
+  /**
+   * @param {KeychainKind} keychain
+   * @param {number} index
+   * @returns {AddressInfo}
+   */
+  peek_address(keychain: KeychainKind, index: number): AddressInfo;
+  /**
+   * @param {KeychainKind} keychain
+   * @returns {AddressInfo}
+   */
+  reveal_next_address(keychain: KeychainKind): AddressInfo;
+  /**
+   * @param {KeychainKind} keychain
+   * @param {number} index
+   * @returns {(AddressInfo)[]}
+   */
+  reveal_addresses_to(keychain: KeychainKind, index: number): (AddressInfo)[];
+  /**
+   * @param {KeychainKind} keychain
+   * @returns {(AddressInfo)[]}
+   */
+  list_unused_addresses(keychain: KeychainKind): (AddressInfo)[];
+  /**
+   * @returns {any[]}
+   */
+  list_unspent(): any[];
+  /**
+   * @returns {any[]}
+   */
+  transactions(): any[];
+  /**
+   * @returns {any}
+   */
+  take_staged(): any;
+  /**
+   * @param {any} previous
+   * @returns {any}
+   */
+  take_merged(previous: any): any;
 }
