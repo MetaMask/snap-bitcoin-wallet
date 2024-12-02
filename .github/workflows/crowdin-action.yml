@@ -25,12 +25,6 @@ jobs:
           github_user_email: metamaskbot@users.noreply.github.com
         env:
           GITHUB_ACTOR: metamaskbot
-          GITHUB_TOKEN: ${{ secrets.METAMASKBOT_CROWDIN_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
-
-      # Update the snap manifest.
-      - name: Update manifest
-        uses: actions/setup-node@v3
-      - run: yarn --immutable --immutable-cache
-      - run: yarn build
