@@ -1,4 +1,12 @@
 {
+  "snapDescription": {
+    "message": "Manage Bitcoin using MetaMask",
+    "description": "This is the description located in the snap manifest."
+  },
+  "snapProposedName": {
+    "message": "Bitcoin",
+    "description": "This is the proposed name in the snap manifest."
+  },
   "loading": {
     "message": "Loading"
   },

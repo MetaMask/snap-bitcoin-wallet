@@ -1,6 +1,12 @@
 {
   "locale": "en",
   "messages": {
+    "snapDescription": {
+      "message": "Manage Bitcoin using MetaMask"
+    },
+    "snapProposedName": {
+      "message": "Bitcoin"
+    },
     "loading": {
       "message": "Loading"
     },
