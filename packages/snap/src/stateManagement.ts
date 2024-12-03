@@ -1,5 +1,8 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
 
+import type { Fees } from './bitcoin/chain';
+import { DefaultCacheTtl } from './bitcoin/wallet';
+import { Caip2ChainId } from './constants';
 import { type EstimateFeeResponse, type SendBitcoinParams } from './rpcs';
 import type { AssetType, Currency } from './ui/types';
 import { compactError, SnapStateManager } from './utils';
@@ -85,6 +88,71 @@ export type SnapState = {
     [id: string]: SendFlowRequest;
   };
 };
+
+export type CachedValue<ValueType> = {
+  value: ValueType;
+  expiration: number;
+};
+
+export type CacheState = {
+  feeRate: Record<Caip2ChainId, CachedValue<Fees>>;
+};
+
+export class CacheStateManager extends SnapStateManager<CacheState> {
+  constructor() {
+    super({ encrypted: false });
+  }
+
+  protected override async get(): Promise<CacheState> {
+    return super.get().then((state: CacheState) => {
+      if (!state) {
+        // eslint-disable-next-line no-param-reassign
+        state = {
+          feeRate: {
+            [Caip2ChainId.Mainnet]: {
+              value: { fees: [] },
+              expiration: 0,
+            },
+            [Caip2ChainId.Testnet]: {
+              value: { fees: [] },
+              expiration: 0,
+            },
+          },
+        };
+      }
+
+      return state;
+    });
+  }
+
+  async getFeeRate(scope: Caip2ChainId): Promise<CachedValue<Fees>> {
+    try {
+      const state = await this.get();
+      const cachedValue = state.feeRate[scope];
+      return (
+        cachedValue ?? {
+          value: { fees: [] },
+          expiration: 0,
+        }
+      );
+    } catch (error) {
+      throw compactError(error, Error);
+    }
+  }
+
+  async setFeeRate(scope: Caip2ChainId, value: Fees): Promise<void> {
+    try {
+      await this.update(async (state: CacheState) => {
+        state.feeRate[scope] = {
+          value,
+          expiration: Date.now() + DefaultCacheTtl,
+        };
+      });
+    } catch (error) {
+      throw compactError(error, Error);
+    }
+  }
+}
 
 export class KeyringStateManager extends SnapStateManager<SnapState> {
   protected override async get(): Promise<SnapState> {

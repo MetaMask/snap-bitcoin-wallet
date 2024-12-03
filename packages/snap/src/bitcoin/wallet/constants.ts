@@ -41,3 +41,5 @@ export const MaxStandardTxWeight = 400000;
 // Default minimum fee rate in BTC/KvB
 // To align with the response from RPC provider, we use BTC unit in KvB
 export const DefaultTxMinFeeRateInBtcPerKvb = 0.0001;
+
+export const DefaultCacheTtl = 6000;

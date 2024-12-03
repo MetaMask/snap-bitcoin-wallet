@@ -2,8 +2,10 @@ import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 
 import { Caip19Asset } from '../../constants';
+import type { CacheStateManager } from '../../stateManagement';
 import { compactError } from '../../utils';
 import { isSatsProtectionEnabled } from '../../utils/config';
+import { getCaip2ChainId } from '../wallet';
 import type { FeeRate, TransactionStatus } from './constants';
 import type { IDataClient, ISatsProtectionDataClient } from './data-client';
 import { BtcOnChainServiceError } from './exceptions';
@@ -55,6 +57,7 @@ export type BtcOnChainServiceOptions = {
 export type BtcOnChainServiceClients = {
   dataClient: IDataClient;
   satsProtectionDataClient: ISatsProtectionDataClient;
+  cacheStateManager: CacheStateManager;
 };
 
 export class BtcOnChainService {
@@ -62,14 +65,21 @@ export class BtcOnChainService {
 
   protected readonly _satsProtectionDataClient: ISatsProtectionDataClient;
 
+  protected readonly _cacheStateManager: CacheStateManager;
+
   protected readonly _options: BtcOnChainServiceOptions;
 
   constructor(
-    { dataClient, satsProtectionDataClient }: BtcOnChainServiceClients,
+    {
+      dataClient,
+      satsProtectionDataClient,
+      cacheStateManager,
+    }: BtcOnChainServiceClients,
     options: BtcOnChainServiceOptions,
   ) {
     this._dataClient = dataClient;
     this._satsProtectionDataClient = satsProtectionDataClient;
+    this._cacheStateManager = cacheStateManager;
     this._options = options;
   }
 
@@ -122,10 +132,18 @@ export class BtcOnChainService {
    * @returns A promise that resolves to a `Fees` object.
    */
   async getFeeRates(): Promise<Fees> {
+    const cachedValue = await this._cacheStateManager.getFeeRate(
+      getCaip2ChainId(this.network),
+    );
+
+    if (cachedValue.expiration > Date.now()) {
+      return cachedValue.value;
+    }
+
     try {
       const result = await this._dataClient.getFeeRates();
 
-      return {
+      const fees = {
         fees: Object.entries(result).map(
           ([key, value]: [key: FeeRate, value: number]) => ({
             type: key,
@@ -133,6 +151,13 @@ export class BtcOnChainService {
           }),
         ),
       };
+
+      await this._cacheStateManager.setFeeRate(
+        getCaip2ChainId(this.network),
+        fees,
+      );
+
+      return fees;
     } catch (error) {
       throw compactError(error, BtcOnChainServiceError);
     }
