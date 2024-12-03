@@ -7,6 +7,7 @@ import {
   generateQuickNodeSendRawTransactionResp,
 } from '../../../test/utils';
 import { Caip19Asset } from '../../constants';
+import { CacheStateManager } from '../../stateManagement';
 import { FeeRate, TransactionStatus } from './constants';
 import type { IDataClient, ISatsProtectionDataClient } from './data-client';
 import { BtcOnChainServiceError } from './exceptions';
@@ -22,7 +23,6 @@ describe('BtcOnChainService', () => {
     const getTransactionStatusSpy = jest.fn();
     const sendTransactionSpy = jest.fn();
     const filterUtxosSpy = jest.fn();
-
     class MockReadDataClient implements IDataClient {
       getBalances = getBalancesSpy;
 
@@ -51,15 +51,29 @@ describe('BtcOnChainService', () => {
     };
   };
 
+  const createMockCacheStateManager = () => {
+    const cachedStateManager = new CacheStateManager();
+    const getFeeRateSpy = jest.spyOn(cachedStateManager, 'getFeeRate');
+    const setFeeRateSpy = jest.spyOn(cachedStateManager, 'setFeeRate');
+    return {
+      instance: new CacheStateManager(),
+      getFeeRateSpy,
+      setFeeRateSpy,
+    };
+  };
+
   const createMockBtcService = (
     dataClient?: IDataClient,
     satsProtectionClient?: ISatsProtectionDataClient,
+    cacheStateManager?: CacheStateManager,
     network: Network = networks.testnet,
   ) => {
     const {
       dataClient: _dataClient,
       satsProtectionClient: _satsProtectionDataClient,
     } = createMockDataClient();
+
+    const { instance: _cacheStateManager } = createMockCacheStateManager();
 
     class MockBtcOnChainService extends BtcOnChainService {
       isSatsProtectionEnabled() {
@@ -77,6 +91,7 @@ describe('BtcOnChainService', () => {
         dataClient: dataClient ?? _dataClient,
         satsProtectionDataClient:
           satsProtectionClient ?? _satsProtectionDataClient,
+        cacheStateManager: cacheStateManager ?? _cacheStateManager,
       },
       {
         network,
@@ -101,9 +116,12 @@ describe('BtcOnChainService', () => {
         filterUtxosSpy,
       } = createMockDataClient();
 
+      const { instance: cacheStateManager } = createMockCacheStateManager();
+
       const { service, isSatsProtectionEnabledSpy } = createMockBtcService(
         dataClient,
         satsProtectionClient,
+        cacheStateManager,
         network,
       );
 
@@ -228,9 +246,12 @@ describe('BtcOnChainService', () => {
       const { dataClient, satsProtectionClient, getUtxosSpy, filterUtxosSpy } =
         createMockDataClient();
 
+      const { instance: cacheStateManager } = createMockCacheStateManager();
+
       const { service, isSatsProtectionEnabledSpy } = createMockBtcService(
         dataClient,
         satsProtectionClient,
+        cacheStateManager,
         network,
       );
 
