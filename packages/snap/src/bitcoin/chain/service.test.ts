@@ -8,6 +8,7 @@ import {
 } from '../../../test/utils';
 import { Caip19Asset } from '../../constants';
 import { CacheStateManager } from '../../stateManagement';
+import { getCaip2ChainId } from '../wallet';
 import { FeeRate, TransactionStatus } from './constants';
 import type { IDataClient, ISatsProtectionDataClient } from './data-client';
 import { BtcOnChainServiceError } from './exceptions';
@@ -56,7 +57,7 @@ describe('BtcOnChainService', () => {
     const getFeeRateSpy = jest.spyOn(cachedStateManager, 'getFeeRate');
     const setFeeRateSpy = jest.spyOn(cachedStateManager, 'setFeeRate');
     return {
-      instance: new CacheStateManager(),
+      instance: cachedStateManager,
       getFeeRateSpy,
       setFeeRateSpy,
     };
@@ -353,6 +354,131 @@ describe('BtcOnChainService', () => {
       await expect(service.getFeeRates()).rejects.toThrow(
         BtcOnChainServiceError,
       );
+    });
+
+    describe('feeRateCache', () => {
+      it('returns the cached value if available', async () => {
+        const { dataClient } = createMockDataClient();
+        const { instance: cacheStateManager, getFeeRateSpy } =
+          createMockCacheStateManager();
+        const { service } = createMockBtcService(
+          dataClient,
+          undefined,
+          cacheStateManager,
+        );
+
+        const cachedFees = {
+          fees: [
+            {
+              type: FeeRate.Fast,
+              rate: BigInt(1),
+            },
+            {
+              type: FeeRate.Medium,
+              rate: BigInt(2),
+            },
+          ],
+        };
+
+        getFeeRateSpy.mockResolvedValue({
+          value: cachedFees,
+          expiration: Date.now() + 10000, // valid for 10 more seconds
+        });
+
+        const result = await service.getFeeRates();
+
+        expect(getFeeRateSpy).toHaveBeenCalledTimes(1);
+        expect(result).toStrictEqual(cachedFees);
+      });
+
+      it('fetches new fee rates if cache is expired', async () => {
+        const { dataClient, getFeeRatesSpy } = createMockDataClient();
+        const {
+          instance: cacheStateManager,
+          getFeeRateSpy,
+          setFeeRateSpy,
+        } = createMockCacheStateManager();
+        const { service } = createMockBtcService(
+          dataClient,
+          undefined,
+          cacheStateManager,
+        );
+
+        getFeeRateSpy.mockResolvedValue({
+          value: { fees: [{ rate: BigInt('123'), type: FeeRate.Fast }] },
+          expiration: Date.now() - 10000, // expired 10 seconds ago
+        });
+
+        const newFees = {
+          fees: [
+            {
+              type: FeeRate.Fast,
+              rate: BigInt(1),
+            },
+            {
+              type: FeeRate.Medium,
+              rate: BigInt(2),
+            },
+          ],
+        };
+
+        getFeeRatesSpy.mockResolvedValue({
+          [FeeRate.Fast]: 1,
+          [FeeRate.Medium]: 2,
+        });
+
+        const result = await service.getFeeRates();
+
+        expect(getFeeRateSpy).toHaveBeenCalledTimes(1);
+        expect(setFeeRateSpy).toHaveBeenCalledWith(
+          getCaip2ChainId(service.network),
+          newFees,
+        );
+        expect(result).toStrictEqual(newFees);
+      });
+
+      it('fetches new fee rates if cache is not available', async () => {
+        const { dataClient, getFeeRatesSpy } = createMockDataClient();
+        const {
+          instance: cacheStateManager,
+          getFeeRateSpy,
+          setFeeRateSpy,
+        } = createMockCacheStateManager();
+        const { service } = createMockBtcService(
+          dataClient,
+          undefined,
+          cacheStateManager,
+        );
+
+        getFeeRateSpy.mockResolvedValue(null);
+
+        const newFees = {
+          fees: [
+            {
+              type: FeeRate.Fast,
+              rate: BigInt(1),
+            },
+            {
+              type: FeeRate.Medium,
+              rate: BigInt(2),
+            },
+          ],
+        };
+
+        getFeeRatesSpy.mockResolvedValue({
+          [FeeRate.Fast]: 1,
+          [FeeRate.Medium]: 2,
+        });
+
+        const result = await service.getFeeRates();
+
+        expect(getFeeRateSpy).toHaveBeenCalledTimes(1);
+        expect(setFeeRateSpy).toHaveBeenCalledWith(
+          getCaip2ChainId(service.network),
+          newFees,
+        );
+        expect(result).toStrictEqual(newFees);
+      });
     });
   });
 

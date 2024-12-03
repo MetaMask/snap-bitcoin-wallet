@@ -144,7 +144,7 @@ export class BtcOnChainService {
       getCaip2ChainId(this.network),
     );
 
-    if (cachedValue.expiration > Date.now()) {
+    if (cachedValue && cachedValue.expiration > Date.now()) {
       return cachedValue.value;
     }
 

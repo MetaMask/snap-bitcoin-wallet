@@ -5,7 +5,7 @@ import { DefaultCacheTtl } from './bitcoin/wallet';
 import { Caip2ChainId } from './constants';
 import { type EstimateFeeResponse, type SendBitcoinParams } from './rpcs';
 import type { AssetType, Currency } from './ui/types';
-import { compactError, SnapStateManager } from './utils';
+import { compactError, logger, SnapStateManager } from './utils';
 
 export type Wallet = {
   account: KeyringAccount;
@@ -125,7 +125,7 @@ export class CacheStateManager extends SnapStateManager<CacheState> {
     });
   }
 
-  async getFeeRate(scope: Caip2ChainId): Promise<CachedValue<Fees>> {
+  async getFeeRate(scope: Caip2ChainId): Promise<CachedValue<Fees> | null> {
     try {
       const state = await this.get();
       const cachedValue = state.feeRate[scope];
@@ -141,7 +141,8 @@ export class CacheStateManager extends SnapStateManager<CacheState> {
 
       return fee;
     } catch (error) {
-      throw compactError(error, Error);
+      logger.warn('Failed to get fee rate', error);
+      return null;
     }
   }
 
