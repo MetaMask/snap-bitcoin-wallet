@@ -33,6 +33,14 @@ export type Fees = {
   fees: Fee[];
 };
 
+export type SerializableFee = Omit<Fee, 'rate'> & {
+  rate: string;
+};
+
+export type SerializableFees = {
+  fees: SerializableFee[];
+};
+
 export type Utxo = {
   block: number;
   txHash: string;

@@ -1,6 +1,6 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
 
-import type { Fees } from './bitcoin/chain';
+import type { Fees, SerializableFees } from './bitcoin/chain';
 import { DefaultCacheTtl } from './bitcoin/wallet';
 import { Caip2ChainId } from './constants';
 import { type EstimateFeeResponse, type SendBitcoinParams } from './rpcs';
@@ -95,7 +95,7 @@ export type CachedValue<ValueType> = {
 };
 
 export type CacheState = {
-  feeRate: Record<Caip2ChainId, CachedValue<Fees>>;
+  feeRate: Record<Caip2ChainId, CachedValue<SerializableFees>>;
 };
 
 export class CacheStateManager extends SnapStateManager<CacheState> {
@@ -129,12 +129,17 @@ export class CacheStateManager extends SnapStateManager<CacheState> {
     try {
       const state = await this.get();
       const cachedValue = state.feeRate[scope];
-      return (
-        cachedValue ?? {
-          value: { fees: [] },
-          expiration: 0,
-        }
-      );
+      const fee = {
+        ...cachedValue,
+        value: {
+          fees: cachedValue.value.fees.map((serializedFee) => ({
+            ...serializedFee,
+            rate: BigInt(serializedFee.rate),
+          })),
+        },
+      };
+
+      return fee;
     } catch (error) {
       throw compactError(error, Error);
     }
@@ -144,7 +149,12 @@ export class CacheStateManager extends SnapStateManager<CacheState> {
     try {
       await this.update(async (state: CacheState) => {
         state.feeRate[scope] = {
-          value,
+          value: {
+            fees: value.fees.map((serializedFee) => ({
+              ...serializedFee,
+              rate: serializedFee.rate.toString(),
+            })),
+          },
           expiration: Date.now() + DefaultCacheTtl,
         };
       });
