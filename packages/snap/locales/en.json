@@ -84,6 +84,9 @@
     },
     "error": {
       "message": "Error"
+    },
+    "satProtectionTooltip": {
+      "message": "MetaMask is protecting your Ordinials, Rare SATs, and Runes to be send in Bitcoin Transactions."
     }
   }
 }
