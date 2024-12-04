@@ -9,7 +9,6 @@ import { Caip2ChainId } from '../../constants';
 import { estimateFee, getMaxSpendableBalance } from '../../rpcs';
 import type { SendFlowRequest } from '../../stateManagement';
 import { TransactionStatus } from '../../stateManagement';
-import type { Locale } from '../../utils/locale';
 import { generateDefaultSendFlowRequest } from '../../utils/transaction';
 import { SendFormNames } from '../components/SendForm';
 import { updateSendFlow } from '../render-interfaces';
@@ -51,7 +50,6 @@ const mockAccount = {
   },
   methods: [`${BtcMethod.SendBitcoin}`],
 };
-const mockLocale = {} as Locale;
 
 const createMockContext = (request: SendFlowRequest) => {
   return {
@@ -59,7 +57,6 @@ const createMockContext = (request: SendFlowRequest) => {
     scope: mockScope,
     requestId: mockRequestId,
     request,
-    locale: mockLocale,
   };
 };
 
@@ -169,7 +166,6 @@ describe('SendBitcoinController', () => {
   describe('handleEvent', () => {
     it('should handle input change event', async () => {
       const mockRequest = generateDefaultSendFlowRequest(
-        mockLocale,
         mockAccount,
         mockScope,
         mockRequestId,
@@ -205,14 +201,12 @@ describe('SendBitcoinController', () => {
       };
 
       expect(updateSendFlow).toHaveBeenCalledWith({
-        locale: mockLocale,
         request: expectedRequest,
       });
     });
 
     it('should handle button click event', async () => {
       const mockRequest = generateDefaultSendFlowRequest(
-        mockLocale,
         mockAccount,
         mockScope,
         mockRequestId,
@@ -238,15 +232,11 @@ describe('SendBitcoinController', () => {
       });
       jest.spyOn(controller, 'handleButtonEvent').mockResolvedValue(undefined);
       await controller.handleEvent(mockEvent, mockContext, mockFormState);
-      expect(controller.handleButtonEvent).toHaveBeenCalledWith(
-        mockEvent.name,
-        mockContext,
-      );
+      expect(controller.handleButtonEvent).toHaveBeenCalledWith(mockEvent.name);
     });
 
     it('should not handle unknown event type', async () => {
       const mockRequest = generateDefaultSendFlowRequest(
-        mockLocale,
         mockAccount,
         mockScope,
         mockRequestId,
@@ -293,7 +283,6 @@ describe('SendBitcoinController', () => {
           accountSelector: '',
         };
         const mockRequest = generateDefaultSendFlowRequest(
-          mockLocale,
           mockAccount,
           mockScope,
           mockRequestId,
@@ -321,7 +310,6 @@ describe('SendBitcoinController', () => {
           },
         });
         expect(updateSendFlow).toHaveBeenCalledWith({
-          locale: mockLocale,
           request: controller.context.request,
         });
       });
@@ -334,7 +322,6 @@ describe('SendBitcoinController', () => {
           accountSelector: '',
         };
         const mockRequest = generateDefaultSendFlowRequest(
-          mockLocale,
           mockAccount,
           mockScope,
           mockRequestId,
@@ -361,7 +348,6 @@ describe('SendBitcoinController', () => {
           },
         });
         expect(updateSendFlow).toHaveBeenCalledWith({
-          locale: mockLocale,
           request: controller.context.request,
         });
       });
@@ -376,7 +362,6 @@ describe('SendBitcoinController', () => {
           accountSelector: '',
         };
         const mockRequest = generateDefaultSendFlowRequest(
-          mockLocale,
           mockAccount,
           mockScope,
           mockRequestId,
@@ -405,7 +390,6 @@ describe('SendBitcoinController', () => {
         expect(controller.context.request.fees.amount).toBe('0.0001');
         expect(controller.context.request.total.amount).toBeDefined();
         expect(updateSendFlow).toHaveBeenCalledWith({
-          locale: mockLocale,
           request: controller.context.request,
         });
       });
@@ -418,7 +402,6 @@ describe('SendBitcoinController', () => {
           accountSelector: '',
         };
         const mockRequest = generateDefaultSendFlowRequest(
-          mockLocale,
           mockAccount,
           mockScope,
           mockRequestId,
@@ -448,7 +431,6 @@ describe('SendBitcoinController', () => {
         expect(controller.context.request.fees.amount).toBe('0.0001');
         expect(controller.context.request.total.amount).toBeDefined();
         expect(updateSendFlow).toHaveBeenCalledWith({
-          locale: mockLocale,
           request: controller.context.request,
         });
       });
@@ -461,7 +443,6 @@ describe('SendBitcoinController', () => {
           accountSelector: '',
         };
         const mockRequest = generateDefaultSendFlowRequest(
-          mockLocale,
           mockAccount,
           mockScope,
           mockRequestId,
@@ -482,7 +463,6 @@ describe('SendBitcoinController', () => {
 
         expect(controller.context.request.amount.valid).toBe(false);
         expect(updateSendFlow).toHaveBeenCalledWith({
-          locale: mockLocale,
           request: controller.context.request,
         });
       });
@@ -495,7 +475,6 @@ describe('SendBitcoinController', () => {
           accountSelector: '',
         };
         const mockRequest = generateDefaultSendFlowRequest(
-          mockLocale,
           mockAccount,
           mockScope,
           mockRequestId,
@@ -523,7 +502,6 @@ describe('SendBitcoinController', () => {
           'Fee estimation error',
         );
         expect(updateSendFlow).toHaveBeenCalledWith({
-          locale: mockLocale,
           request: controller.context.request,
         });
       });
@@ -537,7 +515,6 @@ describe('SendBitcoinController', () => {
 
     it('should handle "HeaderBack" button event when the status is in review', async () => {
       const mockRequest = generateDefaultSendFlowRequest(
-        mockLocale,
         mockAccount,
         mockScope,
         mockRequestId,
@@ -550,7 +527,7 @@ describe('SendBitcoinController', () => {
         context: mockContext,
         interfaceId: mockInterfaceId,
       });
-      await controller.handleButtonEvent(SendFormNames.HeaderBack, mockContext);
+      await controller.handleButtonEvent(SendFormNames.HeaderBack);
       expect(controller.context.request.status).toBe(TransactionStatus.Draft);
       expect(controller.context.request).toStrictEqual({
         ...mockRequest,
@@ -561,7 +538,6 @@ describe('SendBitcoinController', () => {
 
     it('should handle "HeaderBack" button event when the status is in draft', async () => {
       const mockRequest = generateDefaultSendFlowRequest(
-        mockLocale,
         mockAccount,
         mockScope,
         mockRequestId,
@@ -574,7 +550,7 @@ describe('SendBitcoinController', () => {
         context: mockContext,
         interfaceId: mockInterfaceId,
       });
-      await controller.handleButtonEvent(SendFormNames.HeaderBack, mockContext);
+      await controller.handleButtonEvent(SendFormNames.HeaderBack);
       expect(controller.context.request.status).toBe(
         TransactionStatus.Rejected,
       );
@@ -593,7 +569,6 @@ describe('SendBitcoinController', () => {
 
     it('should handle "Clear" button event', async () => {
       const mockRequest = generateDefaultSendFlowRequest(
-        mockLocale,
         mockAccount,
         mockScope,
         mockRequestId,
@@ -606,13 +581,12 @@ describe('SendBitcoinController', () => {
         context: mockContext,
         interfaceId: mockInterfaceId,
       });
-      await controller.handleButtonEvent(SendFormNames.Clear, mockContext);
+      await controller.handleButtonEvent(SendFormNames.Clear);
       expect(controller.context.request.recipient.address).toBe('');
     });
 
     it('should handle "Cancel" button event', async () => {
       const mockRequest = generateDefaultSendFlowRequest(
-        mockLocale,
         mockAccount,
         mockScope,
         mockRequestId,
@@ -624,7 +598,7 @@ describe('SendBitcoinController', () => {
         context: mockContext,
         interfaceId: mockInterfaceId,
       });
-      await controller.handleButtonEvent(SendFormNames.Cancel, mockContext);
+      await controller.handleButtonEvent(SendFormNames.Cancel);
       expect(controller.context.request.status).toBe(
         TransactionStatus.Rejected,
       );
@@ -632,7 +606,6 @@ describe('SendBitcoinController', () => {
 
     it('should handle "SwapCurrencyDisplay" button event', async () => {
       const mockRequest = generateDefaultSendFlowRequest(
-        mockLocale,
         mockAccount,
         mockScope,
         mockRequestId,
@@ -644,17 +617,13 @@ describe('SendBitcoinController', () => {
         context: mockContext,
         interfaceId: mockInterfaceId,
       });
-      await controller.handleButtonEvent(
-        SendFormNames.SwapCurrencyDisplay,
-        mockContext,
-      );
+      await controller.handleButtonEvent(SendFormNames.SwapCurrencyDisplay);
       const expectedResult = {
         ...mockRequest,
         selectedCurrency: AssetType.FIAT,
       };
       expect(controller.context.request.selectedCurrency).toBe(AssetType.FIAT);
       expect(updateSendFlow).toHaveBeenCalledWith({
-        locale: mockLocale,
         request: expectedResult,
         flushToAddress: false,
         currencySwitched: true,
@@ -663,7 +632,6 @@ describe('SendBitcoinController', () => {
 
     it('should handle "Review" button event', async () => {
       const mockRequest = generateDefaultSendFlowRequest(
-        mockLocale,
         mockAccount,
         mockScope,
         mockRequestId,
@@ -675,7 +643,7 @@ describe('SendBitcoinController', () => {
         context: mockContext,
         interfaceId: mockInterfaceId,
       });
-      await controller.handleButtonEvent(SendFormNames.Review, mockContext);
+      await controller.handleButtonEvent(SendFormNames.Review);
       const expectedResult = {
         ...mockRequest,
         status: TransactionStatus.Review,
@@ -688,7 +656,6 @@ describe('SendBitcoinController', () => {
 
     it('should handle "Send" button event', async () => {
       const mockRequest = generateDefaultSendFlowRequest(
-        mockLocale,
         mockAccount,
         mockScope,
         mockRequestId,
@@ -701,7 +668,7 @@ describe('SendBitcoinController', () => {
         context: mockContext,
         interfaceId: mockInterfaceId,
       });
-      await controller.handleButtonEvent(SendFormNames.Send, mockContext);
+      await controller.handleButtonEvent(SendFormNames.Send);
       const expectedResult = {
         ...mockRequest,
         status: TransactionStatus.Signed,
@@ -718,7 +685,6 @@ describe('SendBitcoinController', () => {
 
     it('should handle "SetMax" button event', async () => {
       const mockRequest = generateDefaultSendFlowRequest(
-        mockLocale,
         mockAccount,
         mockScope,
         mockRequestId,
@@ -740,7 +706,7 @@ describe('SendBitcoinController', () => {
         mockMaxSpendableBalance,
       );
 
-      await controller.handleButtonEvent(SendFormNames.SetMax, mockContext);
+      await controller.handleButtonEvent(SendFormNames.SetMax);
 
       expect(controller.context.request.amount.amount).toBe(
         mockMaxSpendableBalance.balance.amount,
@@ -754,7 +720,6 @@ describe('SendBitcoinController', () => {
           .toString(),
       );
       expect(updateSendFlow).toHaveBeenCalledWith({
-        locale: mockLocale,
         request: controller.context.request,
         currencySwitched: true,
       });
@@ -762,7 +727,6 @@ describe('SendBitcoinController', () => {
 
     it('should handle "SetMax" button event with error', async () => {
       const mockRequest = generateDefaultSendFlowRequest(
-        mockLocale,
         mockAccount,
         mockScope,
         mockRequestId,
@@ -779,14 +743,13 @@ describe('SendBitcoinController', () => {
         new Error('Error fetching max amount'),
       );
 
-      await controller.handleButtonEvent(SendFormNames.SetMax, mockContext);
+      await controller.handleButtonEvent(SendFormNames.SetMax);
 
       expect(controller.context.request.amount.error).toBe(
         'Error fetching max amount: Error fetching max amount',
       );
       expect(controller.context.request.fees.loading).toBe(false);
       expect(updateSendFlow).toHaveBeenCalledWith({
-        locale: mockLocale,
         request: controller.context.request,
         currencySwitched: true,
       });

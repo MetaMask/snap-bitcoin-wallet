@@ -188,7 +188,6 @@ describe('utils', () => {
     it('should convert send state to SendBitcoinParams correctly', async () => {
       const request = {
         ...generateDefaultSendFlowRequest(
-          mockLocale,
           mockAccount,
           mockScope,
           mockRequestId,
@@ -428,7 +427,6 @@ describe('utils', () => {
           request,
           accounts: [mockAccount],
           requestId: 'test-id',
-          locale: mockLocale,
         },
         request,
       );

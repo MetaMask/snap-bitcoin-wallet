@@ -495,7 +495,6 @@ describe('KeyringStateManager', () => {
             error: '',
             valid: true,
           },
-          locale: {},
         };
 
         await instance.upsertRequest(newRequest);
@@ -547,7 +546,6 @@ describe('KeyringStateManager', () => {
             error: '',
             valid: true,
           },
-          locale: {},
         };
         state.requests[requestId] = existingRequest;
         getDataSpy.mockResolvedValue(state);
@@ -606,7 +604,6 @@ describe('KeyringStateManager', () => {
             error: '',
             valid: true,
           },
-          locale: {},
         };
 
         await expect(instance.upsertRequest(request)).rejects.toThrow(Error);
@@ -655,7 +652,6 @@ describe('KeyringStateManager', () => {
             error: '',
             valid: true,
           },
-          locale: {},
         };
         state.requests[requestId] = request;
         getDataSpy.mockResolvedValue(state);
