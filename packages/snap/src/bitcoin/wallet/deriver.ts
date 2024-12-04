@@ -19,7 +19,7 @@ export class BtcAccountDeriver {
   /**
    * The curve to use for account derivation. Defaults to 'secp256k1'.
    */
-  readonly curve = 'secp256k1';
+  readonly curve: 'secp256k1' | 'ed25519' = 'secp256k1';
 
   constructor(network: Network) {
     this._bip32Api = BIP32Factory(ecc);
@@ -48,7 +48,6 @@ export class BtcAccountDeriver {
         privateKeyBuffer,
         chainCodeBuffer,
       );
-
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       // ignore checking since no function to set depth for node

@@ -1,4 +1,4 @@
-import type { JsonSLIP10Node, SupportedCurve } from '@metamask/key-tree';
+import { type SLIP10NodeInterface } from '@metamask/key-tree';
 import { networks } from 'bitcoinjs-lib';
 
 import { createRandomBip32Data } from '../../../test/utils';
@@ -14,12 +14,13 @@ export const getProvider = jest.fn();
  */
 export async function getBip32Deriver(
   path: string[],
-  curve: SupportedCurve,
-): Promise<JsonSLIP10Node> {
+  curve: 'secp256k1' | 'ed25519',
+): Promise<SLIP10NodeInterface> {
   const { data } = createRandomBip32Data(networks.bitcoin, path, curve);
   return {
     ...data,
-  };
+    toJSON: jest.fn().mockReturnValue(data),
+  } as SLIP10NodeInterface;
 }
 
 export const getBip44Deriver = jest.fn();

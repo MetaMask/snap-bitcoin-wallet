@@ -19,7 +19,6 @@
     "build": "yarn workspaces foreach --parallel --verbose --topological run build",
     "build:dapp": "yarn workspace @metamask/bitcoin-wallet-test-dapp build",
     "build:snap": "yarn workspace @metamask/bitcoin-wallet-snap build",
-    "clean": "rimraf node_modules",
     "lint": "yarn workspaces foreach --parallel --verbose run lint",
     "lint:deps": "yarn workspaces foreach --parallel --verbose run depcheck",
     "lint:eslint": "yarn workspaces foreach --parallel --verbose run lint:eslint",
@@ -49,7 +48,6 @@
     "eslint-plugin-promise": "^6.1.1",
     "prettier": "^2.7.1",
     "prettier-plugin-packagejson": "^2.2.18",
-    "rimraf": "^3.0.2",
     "sharp": "^0.32.6",
     "typescript": "^4.7.4"
   },
