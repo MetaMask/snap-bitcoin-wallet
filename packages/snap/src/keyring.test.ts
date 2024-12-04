@@ -37,6 +37,11 @@ jest.mock('./rpcs/get-rates-and-balances', () => ({
     })(),
 }));
 
+jest.mock('./utils/locale', () => ({
+  ...jest.requireActual('./utils/locale'),
+  getTranslator: () => jest.fn().mockReturnValue('mock value'),
+}));
+
 class MockBtcKeyring extends BtcKeyring {
   // Mock protected method getKeyringAccountNameSuggestion to public for test purpose
   public getKeyringAccountNameSuggestion(options?: CreateAccountOptions) {
