@@ -1,8 +1,16 @@
+import { BtcAccountType } from '@metamask/keyring-api';
+
 export enum ScriptType {
   P2pkh = 'p2pkh',
   P2shP2wkh = 'p2sh-p2wpkh',
   P2wpkh = 'p2wpkh',
 }
+
+// We type it explicitly here, so that the compiler will complain about
+// missing `BtcAccountType` enum members:
+export const BtcAccountTypeToScriptType: Record<BtcAccountType, ScriptType> = {
+  [BtcAccountType.P2wpkh]: ScriptType.P2wpkh,
+};
 
 // reference https://help.magiceden.io/en/articles/8665399-navigating-bitcoin-dust-understanding-limits-and-safeguarding-your-transactions-on-magic-eden
 // "Dust" is defined in terms of dustRelayFee,
@@ -32,4 +40,4 @@ export const MaxStandardTxWeight = 400000;
 
 // Default minimum fee rate in BTC/KvB
 // To align with the response from RPC provider, we use BTC unit in KvB
-export const DefaultTxMinFeeRateInBtcPerKvb = 0.0001
+export const DefaultTxMinFeeRateInBtcPerKvb = 0.0001;
