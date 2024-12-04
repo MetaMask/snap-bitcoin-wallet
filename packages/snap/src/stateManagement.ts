@@ -1,11 +1,10 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
 
-import type { Fees, SerializableFees } from './bitcoin/chain';
-import { DefaultCacheTtl } from './bitcoin/wallet';
-import { Caip2ChainId } from './constants';
+import type { SerializableFees } from './cacheManager';
+import type { Caip2ChainId } from './constants';
 import { type EstimateFeeResponse, type SendBitcoinParams } from './rpcs';
 import type { AssetType, Currency } from './ui/types';
-import { compactError, logger, SnapStateManager } from './utils';
+import { compactError, SnapStateManager } from './utils';
 
 export type Wallet = {
   account: KeyringAccount;
@@ -97,73 +96,6 @@ export type CachedValue<ValueType> = {
 export type CacheState = {
   feeRate: Record<Caip2ChainId, CachedValue<SerializableFees>>;
 };
-
-export class CacheStateManager extends SnapStateManager<CacheState> {
-  constructor() {
-    super({ encrypted: false });
-  }
-
-  protected override async get(): Promise<CacheState> {
-    return super.get().then((state: CacheState) => {
-      if (!state) {
-        // eslint-disable-next-line no-param-reassign
-        state = {
-          feeRate: {
-            [Caip2ChainId.Mainnet]: {
-              value: { fees: [] },
-              expiration: 0,
-            },
-            [Caip2ChainId.Testnet]: {
-              value: { fees: [] },
-              expiration: 0,
-            },
-          },
-        };
-      }
-
-      return state;
-    });
-  }
-
-  async getFeeRate(scope: Caip2ChainId): Promise<CachedValue<Fees> | null> {
-    try {
-      const state = await this.get();
-      const cachedValue = state.feeRate[scope];
-      const fee = {
-        ...cachedValue,
-        value: {
-          fees: cachedValue.value.fees.map((serializedFee) => ({
-            ...serializedFee,
-            rate: BigInt(serializedFee.rate),
-          })),
-        },
-      };
-
-      return fee;
-    } catch (error) {
-      logger.warn('Failed to get fee rate', error);
-      return null;
-    }
-  }
-
-  async setFeeRate(scope: Caip2ChainId, value: Fees): Promise<void> {
-    try {
-      await this.update(async (state: CacheState) => {
-        state.feeRate[scope] = {
-          value: {
-            fees: value.fees.map((serializedFee) => ({
-              ...serializedFee,
-              rate: serializedFee.rate.toString(),
-            })),
-          },
-          expiration: Date.now() + DefaultCacheTtl,
-        };
-      });
-    } catch (error) {
-      throw compactError(error, Error);
-    }
-  }
-}
 
 export class KeyringStateManager extends SnapStateManager<SnapState> {
   protected override async get(): Promise<SnapState> {

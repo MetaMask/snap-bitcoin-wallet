@@ -1,30 +1,46 @@
-import type { SerializedFees, Fees } from './bitcoin/chain';
+import type { Fees, Fee } from './bitcoin/chain';
 import { DefaultCacheTtl } from './config';
 import { Caip2ChainId } from './constants';
 import { SnapStateManager, logger, compactError } from './utils';
 
-type ISerializable<Data, SerializeData> = {
+export type SerializedFee = Omit<Fee, 'rate'> & {
+  rate: string;
+};
+
+export type SerializedFees = {
+  fees: SerializedFee[];
+  expiration: number;
+};
+
+type WithExpiration<Value> = Value & { expiration: number };
+
+export type ISerializable<Data, SerializeData> = {
   data: Data;
   serializedData: SerializeData;
 
+  update(data: Data): void;
   serialize(): SerializeData;
   deserialize(serializeData: SerializeData): void;
 };
 
-class SerializableFees implements ISerializable<Fees, SerializedFees> {
+export class SerializableFees
+  implements ISerializable<WithExpiration<Fees>, SerializedFees>
+{
   serializedData: SerializedFees = {
     fees: [],
     expiration: 0,
   };
 
-  data: Fees = {
+  data: WithExpiration<Fees> = {
     fees: [],
     expiration: 0,
   };
 
-  addFeeRate(key: string, value: number) {
-    this.data[key] = BigInt(value);
-    this.serializedData[key] = value.toString();
+  update(data: Fees) {
+    this.data = {
+      ...data,
+      expiration: Date.now() + DefaultCacheTtl,
+    };
   }
 
   valueOf() {
@@ -37,9 +53,10 @@ class SerializableFees implements ISerializable<Fees, SerializedFees> {
 
   deserialize(serializeData: SerializedFees): void {
     Object.entries(serializeData.fees).forEach(([key, value]) => {
+      const fee = value as { type: string; rate: string };
       this.data.fees[key] = {
-        type: value.type,
-        rate: BigInt(value.rate),
+        type: fee.type,
+        rate: BigInt(fee.rate),
       };
     });
   }
@@ -90,19 +107,11 @@ export class CacheStateManager extends SnapStateManager<CacheState> {
     });
   }
 
-  async getFeeRate(scope: Caip2ChainId): Promise<CachedValue<Fees> | null> {
+  async getFeeRate(scope: Caip2ChainId): Promise<Fees | null> {
     try {
       const state = await this.get();
       const cachedValue = state.feeRate[scope];
-      const fee = {
-        ...cachedValue,
-        value: {
-          fees: cachedValue.value.fees.map((serializedFee) => ({
-            ...serializedFee,
-            rate: BigInt(serializedFee.rate),
-          })),
-        },
-      };
+      const fee = cachedValue.value.valueOf();
 
       return fee;
     } catch (error) {
@@ -114,15 +123,7 @@ export class CacheStateManager extends SnapStateManager<CacheState> {
   async setFeeRate(scope: Caip2ChainId, value: Fees): Promise<void> {
     try {
       await this.update(async (state: CacheState) => {
-        state.feeRate[scope] = {
-          value: {
-            fees: value.fees.map((serializedFee) => ({
-              ...serializedFee,
-              rate: serializedFee.rate.toString(),
-            })),
-          },
-          expiration: Date.now() + DefaultCacheTtl,
-        };
+        state.feeRate[scope].value.update(value);
       });
     } catch (error) {
       throw compactError(error, Error);
