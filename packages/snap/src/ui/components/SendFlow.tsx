@@ -1,6 +1,6 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
 import type { SnapComponent } from '@metamask/snaps-sdk/jsx';
-import { Box, Container, Text } from '@metamask/snaps-sdk/jsx';
+import { Box, Container } from '@metamask/snaps-sdk/jsx';
 
 import type { SendFlowParams } from '../../stateManagement';
 import { getTranslator } from '../../utils/locale';
