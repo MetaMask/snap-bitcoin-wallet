@@ -5,14 +5,14 @@ const messages = require('../messages.json');
 
 console.log('[populate-en-locale] - attempt to populate en locale');
 
-const englishLocale = Object.assign(
-  { locale: 'en' },
-  Object.entries(messages).reduce(
-    (acc, [key, value]) => {
-      acc.messages[key] = { message: value.message };
+const englishLocale = {
+  locale: 'en'
+  messages: Object.entries(messages).reduce(
+    (messages, [key, { message }]) => {
+      messages[key] = { message };
       return acc;
     },
-    { messages: {} },
+    {},
   ),
 );
 

@@ -48,7 +48,6 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
   txSpeed,
   fees,
 }) => {
-  // eslint-disable-next-line id-length
   const t = getTranslator();
   const network = getNetworkNameFromScope(scope);
   const disabledSend = Boolean(

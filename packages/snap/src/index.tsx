@@ -129,6 +129,7 @@ export const onUserInput: OnUserInputHandler = async ({
   context,
 }) => {
   await loadLocale();
+  
   const state = await snap.request({
     method: 'snap_getInterfaceState',
     params: { id },

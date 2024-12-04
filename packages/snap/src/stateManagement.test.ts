@@ -408,7 +408,6 @@ describe('KeyringStateManager', () => {
             error: '',
             valid: true,
           },
-          locale: {},
         };
         state.requests[requestId] = request;
         getDataSpy.mockResolvedValue(state);
