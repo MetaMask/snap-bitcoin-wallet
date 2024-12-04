@@ -14,13 +14,11 @@ import type { GenerateSendFlowParams, UpdateSendFlowParams } from './types';
  * @param params - The parameters for the send form.
  * @param params.account - The selected account.
  * @param params.scope - The scope of the send flow.
- * @param params.locale - The locale of the user.
  * @returns The interface ID.
  */
 export async function generateSendFlow({
   account,
   scope,
-  locale,
 }: GenerateSendFlowParams): Promise<SendFlowRequest> {
   const requestId = uuidv4();
   const sendFlowProps = generateDefaultSendFlowParams(scope);
@@ -33,14 +31,12 @@ export async function generateSendFlow({
           sendFlowParams={{
             ...sendFlowProps,
           }}
-          locale={locale}
         />
       ),
       context: {
         requestId,
         accounts: [account],
         scope,
-        locale,
         request: {
           id: requestId,
           interfaceId: '', // to be set in the next update
@@ -54,7 +50,6 @@ export async function generateSendFlow({
   });
 
   const sendFlowRequest = generateDefaultSendFlowRequest(
-    locale,
     account,
     scope,
     requestId,
@@ -68,14 +63,12 @@ export async function generateSendFlow({
  * Update the send flow interface.
  *
  * @param options - The options for updating the send flow.
- * @param options.locale - The locale of the user.
  * @param options.request - The send flow request object.
  * @param options.flushToAddress - Whether to flush to address.
  * @param options.currencySwitched - Whether the currency was switched.
  * @param options.backEventTriggered - Whether the back event was triggered.
  */
 export async function updateSendFlow({
-  locale,
   request,
   flushToAddress = false,
   currencySwitched = false,
@@ -87,7 +80,6 @@ export async function updateSendFlow({
       id: request.interfaceId,
       ui: (
         <SendFlow
-          locale={locale}
           account={request.account}
           sendFlowParams={request}
           flushToAddress={flushToAddress}

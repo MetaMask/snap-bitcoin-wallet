@@ -17,7 +17,7 @@ import type { CaipAccountId } from '@metamask/utils';
 
 import { BaseExplorerUrl, Caip2ChainId } from '../../constants';
 import type { SendFlowRequest } from '../../stateManagement';
-import type { Locale } from '../../utils/locale';
+import { getTranslator } from '../../utils/locale';
 import btcIcon from '../images/btc-halo.svg';
 import {
   displayEmptyStringIfAmountNotAvailableOrEmptyAmount,
@@ -27,7 +27,6 @@ import { SendFlowHeader } from './SendFlowHeader';
 import { SendFormNames } from './SendForm';
 
 export type ReviewTransactionProps = SendFlowRequest & {
-  locale: Locale;
   txSpeed: string;
 };
 
@@ -41,7 +40,6 @@ const getExplorerLink = (scope: string, address: string) => {
 };
 
 export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
-  locale,
   account,
   amount,
   total,
@@ -50,6 +48,8 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
   txSpeed,
   fees,
 }) => {
+  // eslint-disable-next-line id-length
+  const t = getTranslator();
   const network = getNetworkNameFromScope(scope);
   const disabledSend = Boolean(
     amount.error || recipient.error || total.error || fees.error,
@@ -58,23 +58,23 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
   return (
     <Container>
       <Box>
-        <SendFlowHeader heading={locale.review.message} />
+        <SendFlowHeader heading={t('review')} />
         <Box alignment="center" center>
           <Box direction="horizontal" center>
             <Image src={btcIcon} />
           </Box>
-          <Heading size="lg">{`${locale.sending.message} ${total.amount} BTC`}</Heading>
-          <Text color="muted">Review the transaction before proceeding</Text>
+          <Heading size="lg">{`${t('sending')} ${total.amount} BTC`}</Heading>
+          <Text color="muted">{t('reviewTransactionWarning')}</Text>
         </Box>
         <Section>
-          <Row label={locale.from.message}>
+          <Row label={t('from')}>
             <Link href={getExplorerLink(scope, account.address)}>
               <Address
                 address={`${account.type}:${account.address}` as CaipAccountId}
               />
             </Link>
           </Row>
-          <Row label={locale.amount.message}>
+          <Row label={t('amount')}>
             <Value
               value={`${amount.amount} BTC`}
               extra={displayEmptyStringIfAmountNotAvailableOrEmptyAmount(
@@ -83,7 +83,7 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
               )}
             />
           </Row>
-          <Row label={locale.recipient.message}>
+          <Row label={t('recipient')}>
             <Link href={getExplorerLink(scope, recipient.address)}>
               <Address
                 address={
@@ -94,19 +94,16 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
           </Row>
         </Section>
         <Section>
-          <Row label={locale.network.message}>
+          <Row label={t('network')}>
             <Text>{network}</Text>
           </Row>
           <Row
-            label={locale.transactionSpeed.message}
-            tooltip={locale.transactionSpeedTooltip.message}
+            label={t('transactionSpeed')}
+            tooltip={t('transactionSpeedTooltip')}
           >
             <Text>{txSpeed}</Text>
           </Row>
-          <Row
-            label={locale.networkFee.message}
-            tooltip={locale.networkFeeToolTip.message}
-          >
+          <Row label={t('networkFee')} tooltip={t('networkFeeToolTip')}>
             <Value
               value={`${fees.amount} BTC`}
               extra={displayEmptyStringIfAmountNotAvailableOrEmptyAmount(
@@ -115,7 +112,7 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
               )}
             />
           </Row>
-          <Row label={locale.total.message}>
+          <Row label={t('total')}>
             <Value
               value={`${total.amount} BTC`}
               extra={displayEmptyStringIfAmountNotAvailableOrEmptyAmount(
@@ -134,7 +131,7 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
       </Box>
       <Footer>
         <Button name={SendFormNames.Send} type="submit" disabled={disabledSend}>
-          {locale.send.message}
+          {t('send')}
         </Button>
       </Footer>
     </Container>

@@ -13,7 +13,7 @@ import {
 import { getBtcNetwork } from '../../bitcoin/wallet';
 import type { SendFlowParams } from '../../stateManagement';
 import { isSatsProtectionEnabled } from '../../utils/config';
-import type { Locale } from '../../utils/locale';
+import { getTranslator } from '../../utils/locale';
 import btcIcon from '../images/bitcoin.svg';
 import jazzicon3 from '../images/jazzicon3.svg';
 import type { AccountWithBalance } from '../types';
@@ -46,7 +46,6 @@ export enum SendFormNames {
  * @property flushToAddress - Whether to flush the address field or not.
  */
 export type SendFormProps = {
-  locale: Locale;
   selectedAccount: string;
   accounts: AccountWithBalance[];
   balance: SendFlowParams['balance'];
@@ -72,7 +71,6 @@ const getAmountFrom = (
  * A component that shows the send form.
  *
  * @param props - The component props.
- * @param props.locale - The locale of the user.
  * @param props.selectedAccount - The currently selected account.
  * @param props.accounts - The available accounts.
  * @param props.balance - The balance of the account.
@@ -88,7 +86,6 @@ const getAmountFrom = (
  * @returns The SendForm component.
  */
 export const SendForm: SnapComponent<SendFormProps> = ({
-  locale,
   selectedAccount,
   accounts,
   selectedCurrency,
@@ -102,6 +99,8 @@ export const SendForm: SnapComponent<SendFormProps> = ({
   backEventTriggered,
   scope,
 }) => {
+  // eslint-disable-next-line id-length, @typescript-eslint/no-unused-vars
+  const t = getTranslator();
   const showRecipientError = recipient.address.length > 0 && !recipient.error;
   const amountToDisplay =
     currencySwitched || backEventTriggered
@@ -121,15 +120,11 @@ export const SendForm: SnapComponent<SendFormProps> = ({
   return (
     <Form name="sendForm">
       <AccountSelectorComponent
-        locale={locale}
         selectedAccount={selectedAccount}
         accounts={accounts}
         balance={balance}
       />
-      <Field
-        label={locale.sendAmount.message}
-        error={amount.error || total.error}
-      >
+      <Field label={t('sendAmount')} error={amount.error || total.error}>
         <Box direction="horizontal" center>
           <Image src={btcIcon} />
         </Box>
@@ -138,7 +133,7 @@ export const SendForm: SnapComponent<SendFormProps> = ({
           type="number"
           min={0}
           step={0.00000001}
-          placeholder={locale.amountToSendPlaceholder.message}
+          placeholder={t('amountToSendPlaceholder')}
           value={amountToDisplay}
         />
         {Boolean(rates) && (
@@ -158,8 +153,10 @@ export const SendForm: SnapComponent<SendFormProps> = ({
       >
         <Box direction="horizontal">
           <Text color="muted">
-            {`${locale.balance.message}
-          ${fiatNotAvailable ? `${balance.amount} BTC` : `$${balance.fiat}`}`}
+            {t('balance')}
+            {`${
+              fiatNotAvailable ? `${balance.amount} BTC` : `$${balance.fiat}`
+            }`}
           </Text>
           {Boolean(isSatsProtectionEnabled(getBtcNetwork(scope))) && (
             <SatsProtectionToolTip />
@@ -167,10 +164,10 @@ export const SendForm: SnapComponent<SendFormProps> = ({
         </Box>
 
         <Button name={SendFormNames.SetMax} disabled={Boolean(!balance.amount)}>
-          {locale.max.message}
+          {t('max')}
         </Button>
       </Box>
-      <Field label={locale.toAccount.message} error={recipient.error}>
+      <Field label={t('toAccount')} error={recipient.error}>
         {recipient.valid && (
           <Box>
             <Image src={jazzicon3} />
@@ -178,7 +175,7 @@ export const SendForm: SnapComponent<SendFormProps> = ({
         )}
         <Input
           name={SendFormNames.To}
-          placeholder={locale.receivingAddressPlaceholder.message}
+          placeholder={t('receivingAddressPlaceholder')}
           value={addressToDisplay}
         />
         {Boolean(recipient.address) && (
@@ -189,9 +186,7 @@ export const SendForm: SnapComponent<SendFormProps> = ({
           </Box>
         )}
       </Field>
-      {showRecipientError && (
-        <Text color="success">{locale.validAddress.message}</Text>
-      )}
+      {showRecipientError && <Text color="success">{t('validAddress')}</Text>}
     </Form>
   );
 };

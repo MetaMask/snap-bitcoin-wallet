@@ -12,7 +12,6 @@ import type { SendBitcoinParams } from '../rpcs';
 import { estimateFee } from '../rpcs';
 import type { SendFlowParams, Wallet } from '../stateManagement';
 import { TransactionStatus, type SendFlowRequest } from '../stateManagement';
-import type { Locale } from '../utils/locale';
 import { generateDefaultSendFlowParams } from '../utils/transaction';
 import { generateConfirmationReviewInterface } from './render-interfaces';
 import { AssetType, SendFormError } from './types';
@@ -253,7 +252,6 @@ export function validateRecipient(
  * @param status - The current transaction status.
  * @param rates - The conversion rates from Bitcoin to fiat.
  * @param balance - The current balance of the account.
- * @param locale - The locale of the user.
  * @param transaction - Optional transaction details.
  * @returns A promise that resolves to the SendFlowRequest object.
  */
@@ -262,7 +260,6 @@ export async function generateSendFlowRequest(
   status: TransactionStatus,
   rates: string,
   balance: string,
-  locale: Locale,
   transaction?: SendFlowRequest['transaction'],
 ): Promise<SendFlowRequest> {
   const sendBitcoinParams =
@@ -280,7 +277,6 @@ export async function generateSendFlowRequest(
       rates,
       balance,
     )),
-    locale,
   };
 
   const interfaceId = await generateConfirmationReviewInterface({

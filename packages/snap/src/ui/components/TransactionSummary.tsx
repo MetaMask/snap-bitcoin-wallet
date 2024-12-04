@@ -9,7 +9,7 @@ import {
 } from '@metamask/snaps-sdk/jsx';
 
 import type { SendFlowRequest } from '../../stateManagement';
-import type { Locale } from '../../utils/locale';
+import { getTranslator } from '../../utils/locale';
 import { displayEmptyStringIfAmountNotAvailableOrEmptyAmount } from '../utils';
 
 /**
@@ -19,7 +19,6 @@ import { displayEmptyStringIfAmountNotAvailableOrEmptyAmount } from '../utils';
  * @property total - The total cost of the transaction.
  */
 export type TransactionSummaryProps = {
-  locale: Locale;
   fees: SendFlowRequest['fees'];
   total: SendFlowRequest['total'];
 };
@@ -28,22 +27,23 @@ export type TransactionSummaryProps = {
  * A component that shows the transaction summary.
  *
  * @param props - The component props.
- * @param props.locale - The locale of the user.
  * @param props.fees - The fees for the transaction.
  * @param props.total - The total cost of the transaction.
  * @returns The TransactionSummary component.
  */
 export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
-  locale,
   fees,
   total,
 }) => {
+  // eslint-disable-next-line id-length, @typescript-eslint/no-unused-vars
+  const t = getTranslator();
+
   if (fees.loading) {
     return (
       <Section>
         <Box direction="vertical" alignment="center" center>
           <Spinner />
-          <Text>{locale.preparingTransaction.message}</Text>
+          <Text>{t('preparingTransaction')}</Text>
         </Box>
       </Section>
     );
@@ -52,7 +52,7 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
   if (fees.error) {
     return (
       <Section>
-        <Row label={locale.error.message}>
+        <Row label={t('error')}>
           <Text>{fees.error}</Text>
         </Row>
       </Section>
@@ -61,22 +61,16 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
 
   return (
     <Section>
-      <Row
-        label={locale.networkFee.message}
-        tooltip={locale.networkFeeTooltip.message}
-      >
+      <Row label={t('networkFee')} tooltip={t('networkFeeTooltip')}>
         <Value
           value={`${fees.amount.toString()} BTC`}
           extra={displayEmptyStringIfAmountNotAvailableOrEmptyAmount(fees.fiat)}
         />
       </Row>
-      <Row
-        label={locale.transactionSpeed.message}
-        tooltip={locale.transactionSpeedTooltip.message}
-      >
-        <Text>{locale.estimatedTransactionSpeed.message}</Text>
+      <Row label={t('transactionSpeed')} tooltip={t('transactionSpeedTooltip')}>
+        <Text>{t('estimatedTransactionSpeed')}</Text>
       </Row>
-      <Row label={locale.total.message}>
+      <Row label={t('total')}>
         <Value
           value={`${total.amount.toString()} BTC`}
           extra={displayEmptyStringIfAmountNotAvailableOrEmptyAmount(

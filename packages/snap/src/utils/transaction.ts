@@ -44,7 +44,6 @@ export const generateDefaultSendFlowParams = (
 };
 
 export const generateDefaultSendFlowRequest = (
-  locale: Locale,
   account: KeyringAccount,
   scope: string,
   requestId: string,
@@ -58,6 +57,5 @@ export const generateDefaultSendFlowRequest = (
     status: TransactionStatus.Draft,
     // Send flow params
     ...generateDefaultSendFlowParams(scope),
-    locale,
   };
 };

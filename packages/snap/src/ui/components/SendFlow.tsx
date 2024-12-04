@@ -1,9 +1,9 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
 import type { SnapComponent } from '@metamask/snaps-sdk/jsx';
-import { Box, Container } from '@metamask/snaps-sdk/jsx';
+import { Box, Container, Text } from '@metamask/snaps-sdk/jsx';
 
 import type { SendFlowParams } from '../../stateManagement';
-import type { Locale } from '../../utils/locale';
+import { getTranslator } from '../../utils/locale';
 import { SendFlowFooter } from './SendFlowFooter';
 import { SendFlowHeader } from './SendFlowHeader';
 import { SendForm } from './SendForm';
@@ -19,7 +19,6 @@ import { TransactionSummary } from './TransactionSummary';
  * @property backEventTriggered - Flag indicating if the back event was triggered.
  */
 export type SendFlowProps = {
-  locale: Locale;
   account: KeyringAccount;
   flushToAddress?: boolean;
   sendFlowParams: SendFlowParams;
@@ -31,7 +30,6 @@ export type SendFlowProps = {
  * A send flow component, which shows the user a form to send funds to another.
  *
  * @param props - The properties object.
- * @param props.locale - The locale of the user.
  * @param props.account - The account information for the transaction.
  * @param props.flushToAddress - Flag to flush to address.
  * @param props.sendFlowParams - Additional parameters for the send flow.
@@ -40,13 +38,14 @@ export type SendFlowProps = {
  * @returns The rendered SendFlow component.
  */
 export const SendFlow: SnapComponent<SendFlowProps> = ({
-  locale,
   account,
   sendFlowParams,
   flushToAddress = false,
   currencySwitched = false,
   backEventTriggered = false,
 }) => {
+  // eslint-disable-next-line id-length
+  const t = getTranslator();
   const { amount, recipient, fees, total } = sendFlowParams;
 
   const disabledReview = Boolean(
@@ -63,9 +62,8 @@ export const SendFlow: SnapComponent<SendFlowProps> = ({
   return (
     <Container>
       <Box>
-        <SendFlowHeader heading={locale.send.message} />
+        <SendFlowHeader heading={t('send')} />
         <SendForm
-          locale={locale}
           selectedAccount={account.address}
           accounts={[account]}
           flushToAddress={flushToAddress}
@@ -75,13 +73,12 @@ export const SendFlow: SnapComponent<SendFlowProps> = ({
         />
         {showTransactionSummary && (
           <TransactionSummary
-            locale={locale}
             fees={sendFlowParams.fees}
             total={sendFlowParams.total}
           />
         )}
       </Box>
-      <SendFlowFooter locale={locale} disabled={disabledReview} />
+      <SendFlowFooter disabled={disabledReview} />
     </Container>
   );
 };

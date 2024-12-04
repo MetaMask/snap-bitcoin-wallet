@@ -1,7 +1,6 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
 
 import type { SendFlowRequest } from '../stateManagement';
-import type { Locale } from '../utils/locale';
 
 /**
  * The state of the send form.
@@ -64,7 +63,6 @@ export type SendFlowContext = {
   accounts: AccountWithBalance[];
   scope: string;
   requestId: string;
-  locale: Locale;
   request: SendFlowRequest;
 };
 
@@ -78,11 +76,9 @@ export enum AssetType {
 export type GenerateSendFlowParams = {
   account: KeyringAccount;
   scope: string;
-  locale: Locale;
 };
 
 export type UpdateSendFlowParams = {
-  locale: Locale;
   request: SendFlowRequest;
   flushToAddress?: boolean;
   currencySwitched?: boolean;

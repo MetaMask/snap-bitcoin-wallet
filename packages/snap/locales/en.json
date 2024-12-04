@@ -7,6 +7,9 @@
     "snapProposedName": {
       "message": "Bitcoin"
     },
+    "reviewTransactionWarning": {
+      "message": "Review the transaction before proceeding"
+    },
     "loading": {
       "message": "Loading"
     },

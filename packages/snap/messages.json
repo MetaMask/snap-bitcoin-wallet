@@ -7,6 +7,9 @@
     "message": "Bitcoin",
     "description": "This is the proposed name in the snap manifest."
   },
+  "reviewTransactionWarning": {
+    "message": "Review the transaction before proceeding"
+  },
   "loading": {
     "message": "Loading"
   },

@@ -90,7 +90,6 @@ describe('startSendTransactionFlow', () => {
         valid: true,
         error: '',
       },
-      locale: {},
     };
     await helper.setupResolvedConfirmationReview(mockRequestWithCorrectValues);
 
@@ -158,7 +157,6 @@ describe('startSendTransactionFlow', () => {
         valid: true,
         error: '',
       },
-      locale: {},
     };
     await helper.setupGetRequest(mockRequestWithCorrectValues);
     await helper.rejectSnapRequest();

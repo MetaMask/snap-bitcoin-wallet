@@ -56,7 +56,7 @@ export class SendBitcoinController {
         break;
       }
       case UserInputEventType.ButtonClickEvent: {
-        await this.handleButtonEvent(event.name as SendFormNames, context);
+        await this.handleButtonEvent(event.name as SendFormNames);
         break;
       }
       default:
@@ -83,7 +83,6 @@ export class SendBitcoinController {
           !this.context.request.recipient.error,
         );
         await updateSendFlow({
-          locale: context.locale,
           request: this.context.request,
         });
         break;
@@ -91,7 +90,6 @@ export class SendBitcoinController {
       case SendFormNames.Amount: {
         if (this.context.request.amount.error) {
           await updateSendFlow({
-            locale: context.locale,
             request: this.context.request,
           });
           return;
@@ -103,7 +101,6 @@ export class SendBitcoinController {
 
         // show loading state for fees
         await updateSendFlow({
-          locale: context.locale,
           request: this.context.request,
         });
 
@@ -154,7 +151,6 @@ export class SendBitcoinController {
           }
         }
         await updateSendFlow({
-          locale: context.locale,
           request: this.context.request,
         });
         break;
@@ -164,16 +160,12 @@ export class SendBitcoinController {
     }
   }
 
-  async handleButtonEvent(
-    eventName: SendFormNames,
-    context: SendFlowContext,
-  ): Promise<void | null> {
+  async handleButtonEvent(eventName: SendFormNames): Promise<void | null> {
     switch (eventName) {
       case SendFormNames.HeaderBack: {
         if (this.context.request.status === TransactionStatus.Review) {
           this.context.request.status = TransactionStatus.Draft;
           return await updateSendFlow({
-            locale: context.locale,
             request: this.context.request,
             flushToAddress: false,
             backEventTriggered: true,
@@ -191,7 +183,6 @@ export class SendBitcoinController {
           valid: false,
         };
         return await updateSendFlow({
-          locale: context.locale,
           request: this.context.request,
           flushToAddress: true,
         });
@@ -207,7 +198,6 @@ export class SendBitcoinController {
             ? AssetType.FIAT
             : AssetType.BTC;
         return await updateSendFlow({
-          locale: context.locale,
           request: this.context.request,
           flushToAddress: false,
           currencySwitched: true,
@@ -226,10 +216,9 @@ export class SendBitcoinController {
       case SendFormNames.SetMax: {
         this.context.request.fees.loading = true;
         await updateSendFlow({
-          locale: context.locale,
           request: this.context.request,
         });
-        return await this.handleSetMax(context);
+        return await this.handleSetMax();
       }
       default:
         return null;
@@ -246,7 +235,7 @@ export class SendBitcoinController {
     });
   }
 
-  async handleSetMax(context: SendFlowContext) {
+  async handleSetMax() {
     try {
       const maxAmount = await getMaxSpendableBalance({
         account: this.context.accounts[0].id,
@@ -282,7 +271,6 @@ export class SendBitcoinController {
     }
 
     return await updateSendFlow({
-      locale: context.locale,
       request: this.context.request,
       currencySwitched: true,
     });
