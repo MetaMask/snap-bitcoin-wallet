@@ -22,19 +22,16 @@ export type SendFlowHeaderProps = {
  */
 export const SendFlowHeader: SnapComponent<SendFlowHeaderProps> = ({
   heading,
-}) => {
-  console.log('heading', heading);
-  return (
-    <Box direction="horizontal" alignment="space-between" center>
-      <Button name={SendFormNames.HeaderBack}>
-        <Icon name="arrow-left" color="primary" size="md" />
-      </Button>
-      <Heading size="sm">{heading}</Heading>
-      {/* FIXME: This empty space is needed to center-align the header text.
-       * The Snap UI centers the text within its container, but the container
-       * itself is misaligned in the header due to the back arrow.
-       */}
-      <Image src={emptySpace} />
-    </Box>
-  );
-};
+}) => (
+  <Box direction="horizontal" alignment="space-between" center>
+    <Button name={SendFormNames.HeaderBack}>
+      <Icon name="arrow-left" color="primary" size="md" />
+    </Button>
+    <Heading size="sm">{heading}</Heading>
+    {/* FIXME: This empty space is needed to center-align the header text.
+     * The Snap UI centers the text within its container, but the container
+     * itself is misaligned in the header due to the back arrow.
+     */}
+    <Image src={emptySpace} />
+  </Box>
+);

@@ -17,10 +17,6 @@ jest.mock('../../locales/en.json', () => ({
 };
 
 describe('locale utils', () => {
-  beforeEach(() => {
-    jest.resetAllMocks();
-  });
-
   describe('getUserLocale', () => {
     it("returns the locale messages for the user's preferred locale", async () => {
       const locale = await getUserLocalePreference();

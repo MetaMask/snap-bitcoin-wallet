@@ -57,7 +57,6 @@ export type Currency = {
  * @property accounts - The available accounts.
  * @property fees - The fees for the transaction.
  * @property requestId - The ID of the send flow request.
- * @property locale - The locale of the user.
  */
 export type SendFlowContext = {
   accounts: AccountWithBalance[];

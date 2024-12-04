@@ -20,7 +20,6 @@ import {
   validateRequest,
   verifyIfAccountValid,
 } from '../utils';
-import { loadLocale } from '../utils/locale';
 import { createRatesAndBalances } from './get-rates-and-balances';
 import { sendBitcoin } from './send-bitcoin';
 
@@ -65,7 +64,6 @@ export async function startSendTransactionFlow(
 
     const asset = getAssetTypeFromScope(scope);
 
-    await loadLocale();
     const sendFlowRequest = await generateSendFlow({
       account: walletData.account,
       scope,

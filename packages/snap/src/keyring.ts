@@ -39,7 +39,6 @@ import {
   verifyIfAccountValid,
   createSendUIDialog,
 } from './utils';
-import { loadLocale } from './utils/locale';
 
 export type KeyringOptions = Record<string, Json> & {
   defaultIndex: number;
@@ -308,7 +307,6 @@ export class BtcKeyring implements Keyring {
     account: BtcAccount;
     params: SendBitcoinParams;
   }): Promise<Json> {
-    await loadLocale();
     const asset = getAssetTypeFromScope(scope);
 
     const { rates, balances } = await createRatesAndBalances({

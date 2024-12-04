@@ -22,7 +22,6 @@ export type SendFlowFooterProps = {
 export const SendFlowFooter: SnapComponent<SendFlowFooterProps> = ({
   disabled,
 }: SendFlowFooterProps) => {
-  // eslint-disable-next-line id-length
   const t = getTranslator();
 
   return (

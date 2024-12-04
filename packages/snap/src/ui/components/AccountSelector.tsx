@@ -40,7 +40,6 @@ export const AccountSelector: SnapComponent<AccountSelectorProps> = ({
   accounts,
   balance,
 }) => {
-  // eslint-disable-next-line id-length
   const t = getTranslator();
   return (
     <Field label={t('fromAccount')}>

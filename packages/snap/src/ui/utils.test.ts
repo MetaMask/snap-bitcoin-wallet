@@ -3,7 +3,6 @@ import { BtcAccountType, BtcMethod } from '@metamask/keyring-api';
 import { BigNumber } from 'bignumber.js';
 import { v4 as uuidv4 } from 'uuid';
 
-import locale from '../../locales/en.json';
 import { Caip2ChainId, Caip2ChainIdToNetworkName } from '../constants';
 import type { SendBitcoinParams } from '../rpcs';
 import { TransactionStatus } from '../stateManagement';
@@ -38,7 +37,6 @@ const mockAccount = {
   },
   methods: [`${BtcMethod.SendBitcoin}`],
 };
-const mockLocale = locale.messages;
 
 describe('utils', () => {
   describe('validateAmount', () => {
@@ -418,7 +416,6 @@ describe('utils', () => {
         selectedCurrency: AssetType.BTC,
         rates,
         balance: { amount: balance, fiat: '62000.00' },
-        locale: mockLocale,
       };
       const result = formValidation(
         formState,

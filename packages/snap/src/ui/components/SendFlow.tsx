@@ -44,7 +44,6 @@ export const SendFlow: SnapComponent<SendFlowProps> = ({
   currencySwitched = false,
   backEventTriggered = false,
 }) => {
-  // eslint-disable-next-line id-length
   const t = getTranslator();
   const { amount, recipient, fees, total } = sendFlowParams;
 

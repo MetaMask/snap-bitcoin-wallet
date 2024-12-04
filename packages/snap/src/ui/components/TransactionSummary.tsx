@@ -35,7 +35,6 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
   fees,
   total,
 }) => {
-  // eslint-disable-next-line id-length, @typescript-eslint/no-unused-vars
   const t = getTranslator();
 
   if (fees.loading) {

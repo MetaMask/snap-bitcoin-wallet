@@ -99,7 +99,6 @@ export const SendForm: SnapComponent<SendFormProps> = ({
   backEventTriggered,
   scope,
 }) => {
-  // eslint-disable-next-line id-length, @typescript-eslint/no-unused-vars
   const t = getTranslator();
   const showRecipientError = recipient.address.length > 0 && !recipient.error;
   const amountToDisplay =
