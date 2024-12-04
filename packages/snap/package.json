@@ -33,6 +33,7 @@
   "devDependencies": {
     "@babel/preset-typescript": "^7.23.3",
     "@bitcoinerlab/secp256k1": "1.1.1",
+    "@dario_nakamoto/bdk": "^0.1.0",
     "@jest/globals": "^29.5.0",
     "@metamask/auto-changelog": "^3.4.4",
     "@metamask/eslint-config": "^12.2.0",

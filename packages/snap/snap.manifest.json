@@ -7,7 +7,7 @@
     "url": "https://github.com/MetaMask/snap-bitcoin-wallet.git"
   },
   "source": {
-    "shasum": "B38R8VOihnuOKHewoBAcq3ug3vMS+CI29leUzImIbUU=",
+    "shasum": "mYZLtSdjV4Baqw1gdLkTwQPG2MkBORZDc0y5XFR4LEU=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
@@ -40,67 +40,35 @@
     },
     "snap_getBip32Entropy": [
       {
-        "path": [
-          "m",
-          "44'",
-          "0'"
-        ],
+        "path": ["m", "44'", "0'"],
         "curve": "secp256k1"
       },
       {
-        "path": [
-          "m",
-          "44'",
-          "1'"
-        ],
+        "path": ["m", "44'", "1'"],
         "curve": "secp256k1"
       },
       {
-        "path": [
-          "m",
-          "49'",
-          "0'"
-        ],
+        "path": ["m", "49'", "0'"],
         "curve": "secp256k1"
       },
       {
-        "path": [
-          "m",
-          "49'",
-          "1'"
-        ],
+        "path": ["m", "49'", "1'"],
         "curve": "secp256k1"
       },
       {
-        "path": [
-          "m",
-          "84'",
-          "0'"
-        ],
+        "path": ["m", "84'", "0'"],
         "curve": "secp256k1"
       },
       {
-        "path": [
-          "m",
-          "84'",
-          "1'"
-        ],
+        "path": ["m", "84'", "1'"],
         "curve": "secp256k1"
       },
       {
-        "path": [
-          "m",
-          "86'",
-          "0'"
-        ],
+        "path": ["m", "86'", "0'"],
         "curve": "secp256k1"
       },
       {
-        "path": [
-          "m",
-          "86'",
-          "1'"
-        ],
+        "path": ["m", "86'", "1'"],
         "curve": "secp256k1"
       }
     ],

@@ -9,12 +9,12 @@ import {
   MethodNotFoundError,
 } from '@metamask/snaps-sdk';
 import {
-  MetaMaskWallet,
+  SnapWallet,
   KeychainKind,
   Network,
   AddressType,
   slip10_to_extended,
-} from './bdk';
+} from '@dario_nakamoto/bdk';
 
 import { Config } from './config';
 import { BtcKeyring } from './keyring';
@@ -108,7 +108,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         const slip10 = await getBip32Deriver(derivationPath, 'secp256k1');
         const xpriv = slip10_to_extended(slip10, params.network);
 
-        const wallet = await MetaMaskWallet.from_xpriv(
+        const wallet = await SnapWallet.from_xpriv(
           xpriv,
           slip10.masterFingerprint!.toString(16),
           params.network,
@@ -121,7 +121,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
 
       case InternalRpcMethod.LoadWallet: {
         const params = request.params as any;
-        const wallet = await MetaMaskWallet.load(params.provider);
+        const wallet = await SnapWallet.load(params.provider);
 
         return wallet.network();
       }
@@ -129,7 +129,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       case InternalRpcMethod.FullScan: {
         const params = request.params as any;
 
-        const wallet = await MetaMaskWallet.load(params.provider);
+        const wallet = await SnapWallet.load(params.provider);
         await wallet.full_scan(STOP_GAP, PARALLEL_REQUESTS);
         await wallet.persist();
 
@@ -139,7 +139,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       case InternalRpcMethod.Sync: {
         const params = request.params as any;
 
-        const wallet = await MetaMaskWallet.load(params.provider);
+        const wallet = await SnapWallet.load(params.provider);
         await wallet.sync(PARALLEL_REQUESTS);
         await wallet.persist();
 
@@ -153,7 +153,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       case InternalRpcMethod.GetBalance: {
         const params = request.params as any;
 
-        const wallet = await MetaMaskWallet.load(params.provider);
+        const wallet = await SnapWallet.load(params.provider);
 
         const balance = wallet.balance();
         return {
@@ -169,7 +169,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       case InternalRpcMethod.Sync: {
         const params = request.params as any;
 
-        const wallet = await MetaMaskWallet.load(params.provider);
+        const wallet = await SnapWallet.load(params.provider);
         await wallet.sync(PARALLEL_REQUESTS);
         await wallet.persist();
 
@@ -179,7 +179,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       case InternalRpcMethod.GetNextUnusedAddress: {
         const params = request.params as any;
 
-        const wallet = await MetaMaskWallet.load(params.provider);
+        const wallet = await SnapWallet.load(params.provider);
         const address = wallet.next_unused_address(KeychainKind.External);
 
         return {
@@ -192,7 +192,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       case InternalRpcMethod.RevealNextAddress: {
         const params = request.params as any;
 
-        const wallet = await MetaMaskWallet.load(params.provider);
+        const wallet = await SnapWallet.load(params.provider);
         const address = wallet.reveal_next_address(KeychainKind.External);
         await wallet.persist();
 
@@ -206,7 +206,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       case InternalRpcMethod.PeekAddress: {
         const params = request.params as any;
 
-        const wallet = await MetaMaskWallet.load(params.provider);
+        const wallet = await SnapWallet.load(params.provider);
         const address = wallet.peek_address(
           KeychainKind.External,
           params.index,
@@ -222,7 +222,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       case InternalRpcMethod.ListUnusedAddresses: {
         const params = request.params as any;
 
-        const wallet = await MetaMaskWallet.load(params.provider);
+        const wallet = await SnapWallet.load(params.provider);
         const addresses = wallet.list_unused_addresses(KeychainKind.External);
 
         return addresses.map((address) => ({
@@ -235,7 +235,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       case InternalRpcMethod.ListUnspentOutputs: {
         const params = request.params as any;
 
-        const wallet = await MetaMaskWallet.load(params.provider);
+        const wallet = await SnapWallet.load(params.provider);
         const outputs = wallet.list_unspent();
 
         return outputs.map((output) => ({

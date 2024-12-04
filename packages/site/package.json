@@ -14,7 +14,7 @@
     "lint:fix": "yarn lint:eslint --fix && yarn lint:misc --write",
     "lint:misc": "prettier '**/*.json' '**/*.md' --check",
     "lint:types": "tsc --noEmit",
-    "start": "GATSBY_TELEMETRY_DISABLED=1 gatsby develop  --port 3000"
+    "start": "GATSBY_TELEMETRY_DISABLED=1 gatsby develop --port 3000"
   },
   "browserslist": {
     "production": [
