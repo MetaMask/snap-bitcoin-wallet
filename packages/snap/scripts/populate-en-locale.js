@@ -6,15 +6,12 @@ const messages = require('../messages.json');
 console.log('[populate-en-locale] - attempt to populate en locale');
 
 const englishLocale = {
-  locale: 'en'
-  messages: Object.entries(messages).reduce(
-    (messages, [key, { message }]) => {
-      messages[key] = { message };
-      return acc;
-    },
-    {},
-  ),
-);
+  locale: 'en',
+  messages: Object.entries(messages).reduce((acc, [key, { message }]) => {
+    acc[key] = { message };
+    return acc;
+  }, {}),
+};
 
 // Write en locale file
 try {
