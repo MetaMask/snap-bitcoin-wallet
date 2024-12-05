@@ -1,5 +1,6 @@
 import { Button, Footer, type SnapComponent } from '@metamask/snaps-sdk/jsx';
 
+import { getTranslator } from '../../utils/locale';
 import { SendFormNames } from './SendForm';
 
 /**
@@ -20,11 +21,15 @@ export type SendFlowFooterProps = {
  */
 export const SendFlowFooter: SnapComponent<SendFlowFooterProps> = ({
   disabled,
-}: SendFlowFooterProps) => (
-  <Footer>
-    <Button name={SendFormNames.Cancel}>Cancel</Button>
-    <Button name={SendFormNames.Review} disabled={disabled}>
-      Review
-    </Button>
-  </Footer>
-);
+}: SendFlowFooterProps) => {
+  const t = getTranslator();
+
+  return (
+    <Footer>
+      <Button name={SendFormNames.Cancel}>{t('cancel')}</Button>
+      <Button name={SendFormNames.Review} disabled={disabled}>
+        {t('review')}
+      </Button>
+    </Footer>
+  );
+};

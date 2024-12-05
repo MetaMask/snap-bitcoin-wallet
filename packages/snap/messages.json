@@ -1,0 +1,91 @@
+{
+  "snapDescription": {
+    "message": "Manage Bitcoin using MetaMask",
+    "description": "This is the description located in the snap manifest."
+  },
+  "snapProposedName": {
+    "message": "Bitcoin",
+    "description": "This is the proposed name in the snap manifest."
+  },
+  "reviewTransactionWarning": {
+    "message": "Review the transaction before proceeding"
+  },
+  "loading": {
+    "message": "Loading"
+  },
+  "from": {
+    "message": "From"
+  },
+  "toAccount": {
+    "message": "To Account"
+  },
+  "fromAccount": {
+    "message": "From Account"
+  },
+  "review": {
+    "message": "Review"
+  },
+  "cancel": {
+    "message": "Cancel"
+  },
+  "amount": {
+    "message": "Amount"
+  },
+  "balance": {
+    "message": "Balance"
+  },
+  "recipient": {
+    "message": "Recipient"
+  },
+  "network": {
+    "message": "Network"
+  },
+  "estimatedTransactionSpeed": {
+    "message": "30 min"
+  },
+  "transactionSpeed": {
+    "message": "Transaction Speed"
+  },
+  "transactionSpeedTooltip": {
+    "message": "The estimated time of the transaction"
+  },
+  "networkFee": {
+    "message": "Network Fee"
+  },
+  "networkFeeToolTip": {
+    "message": "The estimated network fee"
+  },
+  "total": {
+    "message": "Total"
+  },
+  "send": {
+    "message": "Send"
+  },
+  "sending": {
+    "message": "Sending"
+  },
+  "sendAmount": {
+    "message": "Send Amount"
+  },
+  "amountToSendPlaceholder": {
+    "message": "Enter amount to send"
+  },
+  "max": {
+    "message": "Max"
+  },
+  "receivingAddressPlaceholder": {
+    "message": "Enter receiving address"
+  },
+  "validAddress": {
+    "message": "Valid bitcoin address"
+  },
+  "preparingTransaction": {
+    "message": "Preparing transaction"
+  },
+  "error": {
+    "message": "Error"
+  },
+  "satProtectionTooltip": {
+    "message": "MetaMask is protecting your Ordinials, Rare SATs, and Runes to be send in Bitcoin Transactions."
+  }
+}
