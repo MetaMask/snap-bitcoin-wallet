@@ -19,6 +19,7 @@ const config: SnapConfig = {
     /* eslint-disable */
   },
   polyfills: true,
+  experimental: { wasm: true },
 };
 
 export default config;

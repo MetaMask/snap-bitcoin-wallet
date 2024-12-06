@@ -10,7 +10,7 @@ import {
 } from '@metamask/snaps-sdk';
 
 import { Config } from './config';
-import { BtcKeyring } from './keyring';
+import { BtcKeyring } from './services/keyring';
 import { InternalRpcMethod, originPermissions } from './permissions';
 import type {
   GetTransactionStatusParams,
@@ -31,6 +31,7 @@ import {
 } from './ui/controller/send-bitcoin-controller';
 import type { SendFlowContext, SendFormState } from './ui/types';
 import { isSnapRpcError, logger } from './utils';
+import { MasterKeyring } from './services/MasterKeyring';
 
 export const validateOrigin = (origin: string, method: string): void => {
   if (!origin) {
@@ -96,10 +97,7 @@ export const onKeyringRequest: OnKeyringRequestHandler = async ({
   try {
     validateOrigin(origin, request.method);
 
-    const keyring = new BtcKeyring(new KeyringStateManager(), {
-      defaultIndex: Config.wallet.defaultAccountIndex,
-      origin,
-    });
+    const keyring = new MasterKeyring(origin);
 
     return (await handleKeyringRequest(
       keyring,

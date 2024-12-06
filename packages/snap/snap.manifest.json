@@ -24,6 +24,7 @@
     "https://ramps-dev.portfolio.metamask.io": {}
   },
   "initialPermissions": {
+    "endowment:webassembly": {},
     "endowment:rpc": {
       "dapps": true,
       "snaps": false
@@ -38,19 +39,11 @@
     },
     "snap_getBip32Entropy": [
       {
-        "path": [
-          "m",
-          "84'",
-          "0'"
-        ],
+        "path": ["m", "84'", "0'"],
         "curve": "secp256k1"
       },
       {
-        "path": [
-          "m",
-          "84'",
-          "1'"
-        ],
+        "path": ["m", "84'", "1'"],
         "curve": "secp256k1"
       }
     ],

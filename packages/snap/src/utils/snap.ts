@@ -1,4 +1,4 @@
-import { type SLIP10NodeInterface } from '@metamask/key-tree';
+import type { JsonSLIP10Node } from '@metamask/key-tree';
 import type {
   Component,
   DialogResult,
@@ -19,24 +19,24 @@ export function getProvider(): SnapsProvider {
 }
 
 /**
- * Retrieves a `SLIP10NodeInterface` object for the specified path and curve.
+ * Retrieves a `JsonSLIP10Node` object for the specified path and curve.
  *
- * @param path - The BIP32 derivation path for which to retrieve a `SLIP10NodeInterface`.
+ * @param path - The BIP32 derivation path for which to retrieve a `JsonSLIP10Node`.
  * @param curve - The elliptic curve to use for key derivation.
- * @returns A Promise that resolves to a `SLIP10NodeInterface` object.
+ * @returns A Promise that resolves to a `JsonSLIP10Node` object.
  */
 export async function getBip32Deriver(
   path: string[],
   curve: 'secp256k1' | 'ed25519',
-): Promise<SLIP10NodeInterface> {
-  const node = await snap.request({
+): Promise<JsonSLIP10Node> {
+  const jsonNode: JsonSLIP10Node = await snap.request({
     method: 'snap_getBip32Entropy',
     params: {
       path,
       curve,
     },
   });
-  return node as SLIP10NodeInterface;
+  return jsonNode;
 }
 
 /**
@@ -128,12 +128,11 @@ export async function createSendUIDialog(interfaceId: string) {
 export async function getRatesFromMetamask(
   currency: string,
 ): Promise<GetCurrencyRateResult> {
-  return (await snap.request({
-    // @ts-expect-error TODO: snaps will fix this type error
+  return await snap.request({
     method: 'snap_getCurrencyRate',
     params: {
       // @ts-expect-error TODO: snaps will fix this type error
       currency,
     },
-  })) as GetCurrencyRateResult;
+  });
 }

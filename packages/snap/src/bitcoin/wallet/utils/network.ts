@@ -1,6 +1,5 @@
-import type { Network } from 'bitcoinjs-lib';
+import type { Network as BitcoinJSNetwork } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
-
 import { Caip2ChainId } from '../../../constants';
 
 /**
@@ -27,8 +26,9 @@ export function getBtcNetwork(caip2ChainId: string) {
  * @param network - The instance of bitcoinjs-lib network.
  * @returns The CAIP-2 Chain ID.
  * @throws An error if an invalid network is provided.
+ *
  */
-export function getCaip2ChainId(network: Network): Caip2ChainId {
+export function getCaip2ChainId(network: BitcoinJSNetwork): Caip2ChainId {
   switch (network) {
     case networks.bitcoin:
       return Caip2ChainId.Mainnet;

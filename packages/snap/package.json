@@ -30,6 +30,9 @@
     "start": "mm-snap watch",
     "test": "jest --passWithNoTests"
   },
+  "dependencies": {
+    "superjson": "^2.2.1"
+  },
   "devDependencies": {
     "@babel/preset-typescript": "^7.23.3",
     "@bitcoinerlab/secp256k1": "1.1.1",
@@ -41,13 +44,14 @@
     "@metamask/eslint-config-typescript": "^12.1.0",
     "@metamask/key-tree": "^9.1.2",
     "@metamask/keyring-api": "^9.0.0",
-    "@metamask/snaps-cli": "^6.5.0",
+    "@metamask/snaps-cli": "^6.5.4",
     "@metamask/snaps-jest": "^8.6.0",
     "@metamask/snaps-sdk": "^6.9.0",
     "@metamask/utils": "^9.1.0",
     "@typescript-eslint/eslint-plugin": "^5.42.1",
     "@typescript-eslint/parser": "^5.42.1",
     "async-mutex": "^0.3.2",
+    "bdk_wasm": "file:../../../bdk-wasm/pkg",
     "bignumber.js": "9.1.2",
     "bip32": "4.0.0",
     "bitcoin-address-validation": "^2.2.3",
