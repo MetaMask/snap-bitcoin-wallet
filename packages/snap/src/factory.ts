@@ -2,8 +2,8 @@ import { BtcOnChainService } from './bitcoin/chain';
 import { QuickNodeClient } from './bitcoin/chain/clients/quicknode';
 import { SimpleHashClient } from './bitcoin/chain/clients/simplehash';
 import { BtcAccountDeriver, BtcWallet, getBtcNetwork } from './bitcoin/wallet';
+import { CacheStateManager } from './cacheManager';
 import { ApiClient, Config } from './config';
-import { CacheStateManager } from './stateManagement';
 
 export class Factory {
   static createOnChainServiceProvider(scope: string): BtcOnChainService {

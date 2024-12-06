@@ -1,7 +1,5 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
 
-import type { SerializableFees } from './cacheManager';
-import type { Caip2ChainId } from './constants';
 import { type EstimateFeeResponse, type SendBitcoinParams } from './rpcs';
 import type { AssetType, Currency } from './ui/types';
 import { compactError, SnapStateManager } from './utils';
@@ -86,15 +84,6 @@ export type SnapState = {
   requests: {
     [id: string]: SendFlowRequest;
   };
-};
-
-export type CachedValue<ValueType> = {
-  value: ValueType;
-  expiration: number;
-};
-
-export type CacheState = {
-  feeRate: Record<Caip2ChainId, CachedValue<SerializableFees>>;
 };
 
 export class KeyringStateManager extends SnapStateManager<SnapState> {

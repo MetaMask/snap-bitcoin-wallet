@@ -16,9 +16,7 @@ type WithExpiration<Value> = Value & { expiration: number };
 
 export type ISerializable<Data, SerializeData> = {
   data: Data;
-  serializedData: SerializeData;
 
-  update(data: Data): void;
   serialize(): SerializeData;
   deserialize(serializeData: SerializeData): void;
 };
@@ -26,21 +24,23 @@ export type ISerializable<Data, SerializeData> = {
 export class SerializableFees
   implements ISerializable<WithExpiration<Fees>, SerializedFees>
 {
-  serializedData: SerializedFees = {
-    fees: [],
-    expiration: 0,
-  };
-
   data: WithExpiration<Fees> = {
     fees: [],
     expiration: 0,
   };
 
-  update(data: Fees) {
+  constructor(data: Fees = { fees: [] }, expiresIn = DefaultCacheTtl) {
+    console.log('SerializableFees', data, expiresIn);
     this.data = {
-      ...data,
-      expiration: Date.now() + DefaultCacheTtl,
+      fees: data.fees,
+      expiration: expiresIn ?? Date.now() + DefaultCacheTtl,
     };
+  }
+
+  static fromSerialized(serializeData: SerializedFees): SerializableFees {
+    const fees = new SerializableFees();
+    fees.deserialize(serializeData);
+    return fees;
   }
 
   valueOf() {
@@ -48,19 +48,32 @@ export class SerializableFees
   }
 
   serialize() {
-    return this.serializedData;
+    console.log('serialize', this.data);
+    return {
+      fees: this.data.fees.map((fee) => ({
+        ...fee,
+        rate: fee.rate.toString(),
+      })),
+      expiration: this.data.expiration,
+    };
   }
 
   deserialize(serializeData: SerializedFees): void {
     Object.entries(serializeData.fees).forEach(([key, value]) => {
+      console.log('deserialize', key, value);
       const fee = value as { type: string; rate: string };
       this.data.fees[key] = {
         type: fee.type,
         rate: BigInt(fee.rate),
+        expiration: serializeData.expiration,
       };
     });
   }
 }
+
+export type SerializedCacheState = {
+  feeRate: Record<Caip2ChainId, SerializedFees>;
+};
 
 export type CacheState = {
   feeRate: Record<Caip2ChainId, CachedValue<SerializableFees>>;
@@ -82,37 +95,62 @@ export class CachedValue<ValueType> {
   }
 }
 
-export class CacheStateManager extends SnapStateManager<CacheState> {
+export class CacheStateManager extends SnapStateManager<SerializedCacheState> {
   constructor() {
     super({ encrypted: false });
   }
 
-  protected override async get(): Promise<CacheState> {
-    return super.get().then((state: CacheState) => {
-      if (!state) {
+  protected override async get(): Promise<SerializedCacheState> {
+    return super.get().then((persistedState: SerializedCacheState) => {
+      // if (persistedState) {
+      //   Object.entries(persistedState.feeRate).forEach(([key, value]) => {
+      //     this.#cache.feeRate[key] = new CachedValue(
+      //       new SerializableFees().deserialize(value),
+      //     );
+      //   });
+      // } else {
+      if (!persistedState) {
         // eslint-disable-next-line no-param-reassign
-        state = {
+        persistedState = {
           feeRate: {
-            [Caip2ChainId.Mainnet]: new CachedValue<SerializableFees>({
+            [Caip2ChainId.Mainnet]: {
               fees: [],
-            }),
-            [Caip2ChainId.Testnet]: new CachedValue<SerializableFees>({
+              expiration: 0,
+            },
+            [Caip2ChainId.Testnet]: {
               fees: [],
-            }),
+              expiration: 0,
+            },
           },
         };
       }
 
-      return state;
+      // Object.entries(this.#cache.feeRate).forEach(([key, value]) => {
+      //   if (value.isExpired()) {
+      //     this.#cache.feeRate[key] = new CachedValue(
+      //       new SerializableFees({ fees: [] }, 0),
+      //     );
+      //   } else {
+      //     this.#cache.feeRate[key] = new CachedValue(
+      //       new SerializableFees(value.value.valueOf(), value.expiredAt),
+      //     );
+      //   }
+      // });
+
+      return persistedState;
     });
   }
 
-  async getFeeRate(scope: Caip2ChainId): Promise<Fees | null> {
+  async getFeeRate(
+    scope: Caip2ChainId,
+  ): Promise<CachedValue<SerializableFees> | null> {
     try {
       const state = await this.get();
-      const cachedValue = state.feeRate[scope];
-      const fee = cachedValue.value.valueOf();
-
+      const serializedFee = state.feeRate[scope];
+      const fee = new CachedValue(
+        SerializableFees.fromSerialized(serializedFee),
+        serializedFee.expiration,
+      );
       return fee;
     } catch (error) {
       logger.warn('Failed to get fee rate', error);
@@ -122,8 +160,9 @@ export class CacheStateManager extends SnapStateManager<CacheState> {
 
   async setFeeRate(scope: Caip2ChainId, value: Fees): Promise<void> {
     try {
-      await this.update(async (state: CacheState) => {
-        state.feeRate[scope].value.update(value);
+      console.log('setFeeRate', scope, value);
+      await this.update(async (state: SerializedCacheState) => {
+        state.feeRate[scope] = new SerializableFees(value).serialize();
       });
     } catch (error) {
       throw compactError(error, Error);

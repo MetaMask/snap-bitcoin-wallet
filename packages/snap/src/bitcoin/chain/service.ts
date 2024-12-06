@@ -1,8 +1,8 @@
 import type { Network } from 'bitcoinjs-lib';
 import { networks } from 'bitcoinjs-lib';
 
+import type { CacheStateManager } from '../../cacheManager';
 import { Caip19Asset } from '../../constants';
-import type { CacheStateManager } from '../../stateManagement';
 import { compactError } from '../../utils';
 import { isSatsProtectionEnabled } from '../../utils/config';
 import { getCaip2ChainId } from '../wallet';
@@ -136,13 +136,12 @@ export class BtcOnChainService {
       getCaip2ChainId(this.network),
     );
 
-    if (cachedValue && cachedValue.expiration > Date.now()) {
-      return cachedValue.value;
+    if (cachedValue && !cachedValue.isExpired()) {
+      return cachedValue.value.valueOf();
     }
 
     try {
       const result = await this._dataClient.getFeeRates();
-
       const fees = {
         fees: Object.entries(result).map(
           ([key, value]: [key: FeeRate, value: number]) => ({

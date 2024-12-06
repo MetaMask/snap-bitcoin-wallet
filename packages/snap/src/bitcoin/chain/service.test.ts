@@ -6,8 +6,9 @@ import {
   generateFormattedUtxos,
   generateQuickNodeSendRawTransactionResp,
 } from '../../../test/utils';
+import { CachedValue } from '../../cacheManager';
+import { CacheStateManager, SerializableFees } from '../../cacheManager';
 import { Caip19Asset } from '../../constants';
-import { CacheStateManager } from '../../stateManagement';
 import { getCaip2ChainId } from '../wallet';
 import { FeeRate, TransactionStatus } from './constants';
 import type { IDataClient, ISatsProtectionDataClient } from './data-client';
@@ -55,7 +56,9 @@ describe('BtcOnChainService', () => {
   const createMockCacheStateManager = () => {
     const cachedStateManager = new CacheStateManager();
     const getFeeRateSpy = jest.spyOn(cachedStateManager, 'getFeeRate');
-    const setFeeRateSpy = jest.spyOn(cachedStateManager, 'setFeeRate');
+    const setFeeRateSpy = jest
+      .spyOn(cachedStateManager, 'setFeeRate')
+      .mockResolvedValue();
     return {
       instance: cachedStateManager,
       getFeeRateSpy,
@@ -367,28 +370,29 @@ describe('BtcOnChainService', () => {
           cacheStateManager,
         );
 
-        const cachedFees = {
-          fees: [
+        const cachedFees = new CachedValue<SerializableFees>(
+          new SerializableFees(
             {
-              type: FeeRate.Fast,
-              rate: BigInt(1),
+              fees: [
+                {
+                  type: FeeRate.Fast,
+                  rate: BigInt(1),
+                },
+                {
+                  type: FeeRate.Medium,
+                  rate: BigInt(2),
+                },
+              ],
             },
-            {
-              type: FeeRate.Medium,
-              rate: BigInt(2),
-            },
-          ],
-        };
-
-        getFeeRateSpy.mockResolvedValue({
-          value: cachedFees,
-          expiration: Date.now() + 10000, // valid for 10 more seconds
-        });
+            10 * 1000, // expires in 10 seconds
+          ),
+        );
+        getFeeRateSpy.mockResolvedValue(cachedFees);
 
         const result = await service.getFeeRates();
 
         expect(getFeeRateSpy).toHaveBeenCalledTimes(1);
-        expect(result).toStrictEqual(cachedFees);
+        expect(result).toStrictEqual(cachedFees.value.valueOf());
       });
 
       it('fetches new fee rates if cache is expired', async () => {
@@ -407,7 +411,8 @@ describe('BtcOnChainService', () => {
         getFeeRateSpy.mockResolvedValue({
           value: { fees: [{ rate: BigInt('123'), type: FeeRate.Fast }] },
           expiration: Date.now() - 10000, // expired 10 seconds ago
-        });
+          isExpired: () => true,
+        } as unknown as CachedValue<SerializableFees>);
 
         const newFees = {
           fees: [
