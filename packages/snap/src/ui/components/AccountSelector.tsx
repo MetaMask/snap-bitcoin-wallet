@@ -8,6 +8,7 @@ import {
 } from '@metamask/snaps-sdk/jsx';
 
 import { shortenAddress } from '../../utils';
+import { getTranslator } from '../../utils/locale';
 import jazzicon1 from '../images/jazzicon1.svg';
 import type { Currency } from '../types';
 import { displayEmptyStringIfAmountNotAvailableOrEmptyAmount } from '../utils';
@@ -25,8 +26,6 @@ export type AccountSelectorProps = {
   accounts: KeyringAccount[];
 };
 
-const loadingMessage = 'Loading';
-
 /**
  * A component that shows the account selector.
  *
@@ -40,37 +39,40 @@ export const AccountSelector: SnapComponent<AccountSelectorProps> = ({
   selectedAccount,
   accounts,
   balance,
-}) => (
-  <Field label={'From account'}>
-    <Selector
-      name="accountSelector"
-      title="From account"
-      value={selectedAccount}
-    >
-      {accounts.map(({ address }) => {
-        return (
-          <SelectorOption value={address}>
-            <Card
-              image={jazzicon1}
-              description={shortenAddress(address)}
-              value={
-                balance?.amount
-                  ? `${balance.amount.toString()} BTC`
-                  : loadingMessage
-              }
-              extra={
-                balance?.fiat
-                  ? `${displayEmptyStringIfAmountNotAvailableOrEmptyAmount(
-                      balance.fiat,
-                      '$',
-                    )}`
-                  : loadingMessage
-              }
-              title={'Bitcoin Account'}
-            />
-          </SelectorOption>
-        );
-      })}
-    </Selector>
-  </Field>
-);
+}) => {
+  const t = getTranslator();
+  return (
+    <Field label={t('fromAccount')}>
+      <Selector
+        name="accountSelector"
+        title={t('fromAccount')}
+        value={selectedAccount}
+      >
+        {accounts.map(({ address }) => {
+          return (
+            <SelectorOption value={address}>
+              <Card
+                image={jazzicon1}
+                description={shortenAddress(address)}
+                value={
+                  balance?.amount
+                    ? `${balance.amount.toString()} BTC`
+                    : t('loading')
+                }
+                extra={
+                  balance?.fiat
+                    ? `${displayEmptyStringIfAmountNotAvailableOrEmptyAmount(
+                        balance.fiat,
+                        '$',
+                      )}`
+                    : t('loading')
+                }
+                title={'Bitcoin Account'}
+              />
+            </SelectorOption>
+          );
+        })}
+      </Selector>
+    </Field>
+  );
+};

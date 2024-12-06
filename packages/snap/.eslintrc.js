@@ -8,6 +8,11 @@ module.exports = {
         allow: ['Text'],
       },
     ],
+    'id-length': [
+      'warn',
+      // Used for the localized translator helper.
+      { exceptions: ['t'] },
+    ],
   },
 
   parserOptions: {

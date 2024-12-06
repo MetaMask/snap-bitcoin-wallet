@@ -5,21 +5,18 @@ import {
   type SnapComponent,
 } from '@metamask/snaps-sdk/jsx';
 
+import { getTranslator } from '../../utils/locale';
+
 /**
  * A component that shows a tooltip for SATs protection.
  *
  * @returns The SatsProtectionToolTip component.
  */
 export const SatsProtectionToolTip: SnapComponent = () => {
+  const t = getTranslator();
+
   return (
-    <Tooltip
-      content={
-        <Text>
-          MetaMask is protecting your Ordinials, Rare SATs, and Runes to be send
-          in Bitcoin Transactions.
-        </Text>
-      }
-    >
+    <Tooltip content={<Text>{t('satProtectionTooltip')}</Text>}>
       <Icon name="question" size="md" />
     </Tooltip>
   );

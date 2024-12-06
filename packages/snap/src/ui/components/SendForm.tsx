@@ -13,6 +13,7 @@ import {
 import { getBtcNetwork } from '../../bitcoin/wallet';
 import type { SendFlowParams } from '../../stateManagement';
 import { isSatsProtectionEnabled } from '../../utils/config';
+import { getTranslator } from '../../utils/locale';
 import btcIcon from '../images/bitcoin.svg';
 import jazzicon3 from '../images/jazzicon3.svg';
 import type { AccountWithBalance } from '../types';
@@ -98,6 +99,7 @@ export const SendForm: SnapComponent<SendFormProps> = ({
   backEventTriggered,
   scope,
 }) => {
+  const t = getTranslator();
   const showRecipientError = recipient.address.length > 0 && !recipient.error;
   const amountToDisplay =
     currencySwitched || backEventTriggered
@@ -121,7 +123,7 @@ export const SendForm: SnapComponent<SendFormProps> = ({
         accounts={accounts}
         balance={balance}
       />
-      <Field label="Send amount" error={amount.error || total.error}>
+      <Field label={t('sendAmount')} error={amount.error || total.error}>
         <Box direction="horizontal" center>
           <Image src={btcIcon} />
         </Box>
@@ -130,7 +132,7 @@ export const SendForm: SnapComponent<SendFormProps> = ({
           type="number"
           min={0}
           step={0.00000001}
-          placeholder="Enter amount to send"
+          placeholder={t('amountToSendPlaceholder')}
           value={amountToDisplay}
         />
         {Boolean(rates) && (
@@ -150,8 +152,10 @@ export const SendForm: SnapComponent<SendFormProps> = ({
       >
         <Box direction="horizontal">
           <Text color="muted">
-            {`Balance:
-          ${fiatNotAvailable ? `${balance.amount} BTC` : `$${balance.fiat}`}`}
+            {t('balance')}
+            {`${
+              fiatNotAvailable ? `${balance.amount} BTC` : `$${balance.fiat}`
+            }`}
           </Text>
           {Boolean(isSatsProtectionEnabled(getBtcNetwork(scope))) && (
             <SatsProtectionToolTip />
@@ -159,10 +163,10 @@ export const SendForm: SnapComponent<SendFormProps> = ({
         </Box>
 
         <Button name={SendFormNames.SetMax} disabled={Boolean(!balance.amount)}>
-          Max
+          {t('max')}
         </Button>
       </Box>
-      <Field label="To account" error={recipient.error}>
+      <Field label={t('toAccount')} error={recipient.error}>
         {recipient.valid && (
           <Box>
             <Image src={jazzicon3} />
@@ -170,7 +174,7 @@ export const SendForm: SnapComponent<SendFormProps> = ({
         )}
         <Input
           name={SendFormNames.To}
-          placeholder="Enter receiving address"
+          placeholder={t('receivingAddressPlaceholder')}
           value={addressToDisplay}
         />
         {Boolean(recipient.address) && (
@@ -181,7 +185,7 @@ export const SendForm: SnapComponent<SendFormProps> = ({
           </Box>
         )}
       </Field>
-      {showRecipientError && <Text color="success">Valid bitcoin address</Text>}
+      {showRecipientError && <Text color="success">{t('validAddress')}</Text>}
     </Form>
   );
 };

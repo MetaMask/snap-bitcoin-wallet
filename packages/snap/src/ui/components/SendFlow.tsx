@@ -3,6 +3,7 @@ import type { SnapComponent } from '@metamask/snaps-sdk/jsx';
 import { Box, Container } from '@metamask/snaps-sdk/jsx';
 
 import type { SendFlowParams } from '../../stateManagement';
+import { getTranslator } from '../../utils/locale';
 import { SendFlowFooter } from './SendFlowFooter';
 import { SendFlowHeader } from './SendFlowHeader';
 import { SendForm } from './SendForm';
@@ -43,6 +44,7 @@ export const SendFlow: SnapComponent<SendFlowProps> = ({
   currencySwitched = false,
   backEventTriggered = false,
 }) => {
+  const t = getTranslator();
   const { amount, recipient, fees, total } = sendFlowParams;
 
   const disabledReview = Boolean(
@@ -59,7 +61,7 @@ export const SendFlow: SnapComponent<SendFlowProps> = ({
   return (
     <Container>
       <Box>
-        <SendFlowHeader heading="Send" />
+        <SendFlowHeader heading={t('send')} />
         <SendForm
           selectedAccount={account.address}
           accounts={[account]}

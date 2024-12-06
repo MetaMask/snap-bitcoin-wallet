@@ -9,6 +9,7 @@ import {
 } from '@metamask/snaps-sdk/jsx';
 
 import type { SendFlowRequest } from '../../stateManagement';
+import { getTranslator } from '../../utils/locale';
 import { displayEmptyStringIfAmountNotAvailableOrEmptyAmount } from '../utils';
 
 /**
@@ -34,12 +35,14 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
   fees,
   total,
 }) => {
+  const t = getTranslator();
+
   if (fees.loading) {
     return (
       <Section>
         <Box direction="vertical" alignment="center" center>
           <Spinner />
-          <Text>Preparing transaction</Text>
+          <Text>{t('preparingTransaction')}</Text>
         </Box>
       </Section>
     );
@@ -48,7 +51,7 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
   if (fees.error) {
     return (
       <Section>
-        <Row label="Error">
+        <Row label={t('error')}>
           <Text>{fees.error}</Text>
         </Row>
       </Section>
@@ -57,16 +60,16 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
 
   return (
     <Section>
-      <Row label="Network fee" tooltip="The estimated network fee">
+      <Row label={t('networkFee')} tooltip={t('networkFeeTooltip')}>
         <Value
           value={`${fees.amount.toString()} BTC`}
           extra={displayEmptyStringIfAmountNotAvailableOrEmptyAmount(fees.fiat)}
         />
       </Row>
-      <Row label="Transaction speed" tooltip="The estimated time of the TX">
-        <Text>30 min</Text>
+      <Row label={t('transactionSpeed')} tooltip={t('transactionSpeedTooltip')}>
+        <Text>{t('estimatedTransactionSpeed')}</Text>
       </Row>
-      <Row label="Total">
+      <Row label={t('total')}>
         <Value
           value={`${total.amount.toString()} BTC`}
           extra={displayEmptyStringIfAmountNotAvailableOrEmptyAmount(
