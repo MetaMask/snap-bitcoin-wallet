@@ -13,8 +13,8 @@ import { object } from 'superstruct';
 import { Config } from '../config';
 import { KeyringStateManager } from '../stateManagement';
 import { ScopeStruct } from '../utils';
-import { BtcKeyring } from './keyring';
-import { BitcoinKeyring } from './BitcoinKeyring';
+import { BtcKeyring } from '../keyring';
+import { KeyringService } from './KeyringService';
 import { Json } from '@metamask/utils';
 import { BdkAccountRepository } from '../store/BdkAccountRepository';
 
@@ -28,10 +28,10 @@ export type CreateAccountOptions = Record<string, Json> &
 /**
  * Temporary Keyring implementation during the transition to the new Keyring (using BDK)
  */
-export class MasterKeyring implements Keyring {
+export class MasterKeyringService implements Keyring {
   protected readonly _keyringV1: BtcKeyring;
 
-  protected readonly _keyringV2: BitcoinKeyring;
+  protected readonly _keyringV2: KeyringService;
 
   constructor(origin: string) {
     this._keyringV1 = new BtcKeyring(new KeyringStateManager(), {
@@ -39,7 +39,7 @@ export class MasterKeyring implements Keyring {
       origin,
     });
 
-    this._keyringV2 = new BitcoinKeyring(
+    this._keyringV2 = new KeyringService(
       new BdkAccountRepository(Config.wallet.defaultAccountIndex),
     );
   }

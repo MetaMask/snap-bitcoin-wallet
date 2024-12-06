@@ -15,7 +15,7 @@ import { assert, enums, object, optional, StructError } from 'superstruct';
 import { getProvider, logger } from '../utils';
 import { Json } from '@metamask/utils';
 import { AccountRepository } from '../store';
-import { ConfigV2 } from '../config-v2';
+import { ConfigV2 } from '../configv2';
 import { Caip2AddressType, Caip2ChainId } from '../entities';
 import { AddressType, Network } from 'bdk_wasm';
 
@@ -39,7 +39,7 @@ export const caip2ToAddressType: Record<Caip2AddressType, AddressType> = {
   [Caip2AddressType.P2tr]: AddressType.P2tr,
 };
 
-export class BitcoinKeyring implements Keyring {
+export class KeyringService implements Keyring {
   protected readonly _accounts: AccountRepository;
 
   constructor(accounts: AccountRepository) {

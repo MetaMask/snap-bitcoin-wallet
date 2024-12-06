@@ -3,17 +3,17 @@ import { BtcMethod } from '@metamask/keyring-api';
 import { MethodNotFoundError, UnauthorizedError } from '@metamask/snaps-sdk';
 import { v4 as uuidv4 } from 'uuid';
 
-import { generateAccounts } from '../../test/utils';
-import { BtcAccount, BtcWallet, ScriptType } from '../bitcoin/wallet';
-import { Config } from '../config';
-import { Caip19Asset, Caip2ChainId } from '../constants';
-import { AccountNotFoundError, MethodNotImplementedError } from '../exceptions';
-import { Factory } from '../factory';
+import { generateAccounts } from '../test/utils';
+import { BtcAccount, BtcWallet, ScriptType } from './bitcoin/wallet';
+import { Config } from './config';
+import { Caip19Asset, Caip2ChainId } from './constants';
+import { AccountNotFoundError, MethodNotImplementedError } from './exceptions';
+import { Factory } from './factory';
 import type { CreateAccountOptions } from './keyring';
 import { BtcKeyring } from './keyring';
-import * as getBalanceRpc from '../rpcs/get-balances';
-import * as sendBitcoinRpc from '../rpcs/send-bitcoin';
-import { KeyringStateManager } from '../stateManagement';
+import * as getBalanceRpc from './rpcs/get-balances';
+import * as sendBitcoinRpc from './rpcs/send-bitcoin';
+import { KeyringStateManager } from './stateManagement';
 
 jest.mock('./utils/logger');
 jest.mock('./utils/snap');

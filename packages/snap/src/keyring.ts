@@ -15,38 +15,43 @@ import {
   UserRejectedRequestError,
   type Json,
 } from '@metamask/snaps-sdk';
-import { assert, StructError } from 'superstruct';
+import type { Infer } from 'superstruct';
+import { assert, object, StructError } from 'superstruct';
 import { v4 as uuidv4 } from 'uuid';
 
-import { type BtcAccount, type BtcWallet } from '../bitcoin/wallet';
-import { Config } from '../config';
-import { Caip2ChainId } from '../constants';
-import { AccountNotFoundError, MethodNotImplementedError } from '../exceptions';
-import { Factory } from '../factory';
-import { getBalances, type SendBitcoinParams, sendBitcoin } from '../rpcs';
-import { createRatesAndBalances } from '../rpcs/get-rates-and-balances';
+import { type BtcAccount, type BtcWallet } from './bitcoin/wallet';
+import { Config } from './config';
+import { Caip2ChainId } from './constants';
+import { AccountNotFoundError, MethodNotImplementedError } from './exceptions';
+import { Factory } from './factory';
+import { getBalances, type SendBitcoinParams, sendBitcoin } from './rpcs';
+import { createRatesAndBalances } from './rpcs/get-rates-and-balances';
 import {
   TransactionStatus,
   type KeyringStateManager,
   type Wallet,
-} from '../stateManagement';
-import { generateSendFlowRequest, getAssetTypeFromScope } from '../ui/utils';
+} from './stateManagement';
+import { generateSendFlowRequest, getAssetTypeFromScope } from './ui/utils';
 import {
   getProvider,
+  ScopeStruct,
   logger,
   verifyIfAccountValid,
   createSendUIDialog,
-} from '../utils';
-import {
-  CreateAccountOptions,
-  CreateAccountOptionsStruct,
-} from './MasterKeyring';
+} from './utils';
 
 export type KeyringOptions = Record<string, Json> & {
   defaultIndex: number;
   multiAccount?: boolean;
   origin: string;
 };
+
+export const CreateAccountOptionsStruct = object({
+  scope: ScopeStruct,
+});
+
+export type CreateAccountOptions = Record<string, Json> &
+  Infer<typeof CreateAccountOptionsStruct>;
 
 export class BtcKeyring implements Keyring {
   protected readonly _stateMgr: KeyringStateManager;
@@ -80,7 +85,7 @@ export class BtcKeyring implements Keyring {
     try {
       assert(options, CreateAccountOptionsStruct);
 
-      const wallet = this.getWallet(options.scope);
+      const wallet = this.getBtcWallet(options.scope);
 
       // TODO: Create account with index 0 for now for phase 1 scope, update to use increment index later
       const index = this._options.defaultIndex;
@@ -93,15 +98,10 @@ export class BtcKeyring implements Keyring {
         `[BtcKeyring.createAccount] Account unlocked: ${account.address}`,
       );
 
-      const keyringAccount = {
-        type: account.type,
-        id: uuidv4(),
-        address: account.address,
-        options: {
-          ...options,
-        },
-        methods: this._methods,
-      } as unknown as KeyringAccount;
+      const keyringAccount = this.newKeyringAccount(account, {
+        scope: options.scope,
+        index,
+      });
 
       logger.info(
         `[BtcKeyring.createAccount] Keyring account data: ${JSON.stringify(
@@ -177,7 +177,7 @@ export class BtcKeyring implements Keyring {
       );
     }
 
-    const wallet = this.getWallet(walletData.scope);
+    const wallet = this.getBtcWallet(walletData.scope);
     const account = await this.discoverAccount(
       wallet,
       walletData.index,
@@ -215,7 +215,7 @@ export class BtcKeyring implements Keyring {
   ): Promise<Record<CaipAssetType, Balance>> {
     try {
       const walletData = await this.getWalletData(id);
-      const wallet = this.getWallet(walletData.scope);
+      const wallet = this.getBtcWallet(walletData.scope);
       const account = await this.discoverAccount(
         wallet,
         walletData.index,
@@ -245,7 +245,7 @@ export class BtcKeyring implements Keyring {
     return walletData;
   }
 
-  protected getWallet(scope: string): BtcWallet {
+  protected getBtcWallet(scope: string): BtcWallet {
     return Factory.createWallet(scope);
   }
 
@@ -264,6 +264,21 @@ export class BtcKeyring implements Keyring {
     if (!keyringAccount.methods.includes(method)) {
       throw new UnauthorizedError(`Permission denied`) as unknown as Error;
     }
+  }
+
+  protected newKeyringAccount(
+    account: BtcAccount,
+    options?: CreateAccountOptions,
+  ): KeyringAccount {
+    return {
+      type: account.type,
+      id: uuidv4(),
+      address: account.address,
+      options: {
+        ...options,
+      },
+      methods: this._methods,
+    } as unknown as KeyringAccount;
   }
 
   protected getKeyringAccountNameSuggestion(

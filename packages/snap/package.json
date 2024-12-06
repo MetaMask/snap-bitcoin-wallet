@@ -30,9 +30,6 @@
     "start": "mm-snap watch",
     "test": "jest --passWithNoTests"
   },
-  "dependencies": {
-    "superjson": "^2.2.1"
-  },
   "devDependencies": {
     "@babel/preset-typescript": "^7.23.3",
     "@bitcoinerlab/secp256k1": "1.1.1",
@@ -71,6 +68,7 @@
     "jest-transform-stub": "2.0.0",
     "prettier": "^2.7.1",
     "rimraf": "^3.0.2",
+    "superjson": "^2.2.1",
     "superstruct": "^1.0.3",
     "ts-jest": "^29.1.0",
     "typescript": "^4.7.4",
