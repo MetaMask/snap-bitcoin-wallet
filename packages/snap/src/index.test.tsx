@@ -8,7 +8,7 @@ import {
 import { onRpcRequest, validateOrigin, onKeyringRequest } from '.';
 import * as entry from '.';
 import { Config } from './config';
-import { BtcKeyring } from './services/keyring';
+import { BtcKeyring } from './keyring';
 import { InternalRpcMethod, originPermissions } from './permissions';
 import * as estimateFeeRpc from './rpcs/estimate-fee';
 import * as getTxStatusRpc from './rpcs/get-transaction-status';
