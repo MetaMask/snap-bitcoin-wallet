@@ -11,13 +11,16 @@
   "files": [
     "dist/",
     "images/",
-    "snap.manifest.json"
+    "snap.manifest.json",
+    "locales/"
   ],
   "scripts": {
     "allow-scripts": "yarn workspace root allow-scripts",
-    "build": "mm-snap build && yarn build-preinstalled-snap",
+    "build": "mm-snap build && yarn build:locale && yarn build-preinstalled-snap",
     "build-preinstalled-snap": "node scripts/build-preinstalled-snap.js",
-    "build:clean": "yarn clean && yarn build",
+    "build:clean": "yarn clean && yarn build:locale && yarn build",
+    "build:locale": "node ./scripts/populate-en-locale.js && prettier 'locales/**/*.json' -w",
+    "build:locale:watch": "npx nodemon --watch packages/snap/messages.json --exec \"node ./scripts/populate-en-locale.js && prettier 'locales/**/*.json' -w\"",
     "clean": "rimraf dist",
     "lint": "yarn lint:eslint && yarn lint:misc && yarn lint:deps && yarn lint:types",
     "lint:deps": "depcheck",
@@ -27,7 +30,7 @@
     "lint:types": "tsc --noEmit",
     "prepublishOnly": "mm-snap manifest",
     "serve": "mm-snap serve",
-    "start": "mm-snap watch",
+    "start": "concurrently \"mm-snap watch\" \"yarn build:locale:watch\"",
     "test": "jest --passWithNoTests"
   },
   "devDependencies": {
@@ -54,6 +57,7 @@
     "bitcoin-address-validation": "^2.2.3",
     "bitcoinjs-lib": "6.1.5",
     "coinselect": "3.1.13",
+    "concurrently": "^9.1.0",
     "dotenv": "^16.4.5",
     "ecpair": "2.1.0",
     "eslint": "^8.45.0",

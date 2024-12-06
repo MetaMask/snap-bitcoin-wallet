@@ -30,6 +30,7 @@ import {
 import type { SendFlowContext, SendFormState } from './ui/types';
 import { isSnapRpcError, logger } from './utils';
 import { MasterKeyringService } from './services/MasterKeyringService';
+import { loadLocale } from './utils/locale';
 
 export const validateOrigin = (origin: string, method: string): void => {
   if (!origin) {
@@ -47,6 +48,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   request,
 }): Promise<Json> => {
   logger.logLevel = parseInt(Config.logLevel, 10);
+
+  await loadLocale();
 
   try {
     const { method } = request;
@@ -92,6 +95,8 @@ export const onKeyringRequest: OnKeyringRequestHandler = async ({
 }): Promise<Json> => {
   logger.logLevel = parseInt(Config.logLevel, 10);
 
+  await loadLocale();
+
   try {
     validateOrigin(origin, request.method);
 
@@ -119,6 +124,8 @@ export const onUserInput: OnUserInputHandler = async ({
   event,
   context,
 }) => {
+  await loadLocale();
+
   const state = await snap.request({
     method: 'snap_getInterfaceState',
     params: { id },

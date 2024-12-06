@@ -419,7 +419,12 @@ describe('utils', () => {
       };
       const result = formValidation(
         formState,
-        { ...context, request, accounts: [mockAccount], requestId: 'test-id' },
+        {
+          ...context,
+          request,
+          accounts: [mockAccount],
+          requestId: 'test-id',
+        },
         request,
       );
 

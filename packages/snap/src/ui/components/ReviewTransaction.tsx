@@ -17,6 +17,7 @@ import type { CaipAccountId } from '@metamask/utils';
 
 import { BaseExplorerUrl, Caip2ChainId } from '../../constants';
 import type { SendFlowRequest } from '../../stateManagement';
+import { getTranslator } from '../../utils/locale';
 import btcIcon from '../images/btc-halo.svg';
 import {
   displayEmptyStringIfAmountNotAvailableOrEmptyAmount,
@@ -47,6 +48,7 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
   txSpeed,
   fees,
 }) => {
+  const t = getTranslator();
   const network = getNetworkNameFromScope(scope);
   const disabledSend = Boolean(
     amount.error || recipient.error || total.error || fees.error,
@@ -55,23 +57,23 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
   return (
     <Container>
       <Box>
-        <SendFlowHeader heading="Review" />
+        <SendFlowHeader heading={t('review')} />
         <Box alignment="center" center>
           <Box direction="horizontal" center>
             <Image src={btcIcon} />
           </Box>
-          <Heading size="lg">{`Sending ${total.amount} BTC`}</Heading>
-          <Text color="muted">Review the transaction before proceeding</Text>
+          <Heading size="lg">{`${t('sending')} ${total.amount} BTC`}</Heading>
+          <Text color="muted">{t('reviewTransactionWarning')}</Text>
         </Box>
         <Section>
-          <Row label="From">
+          <Row label={t('from')}>
             <Link href={getExplorerLink(scope, account.address)}>
               <Address
                 address={`${account.type}:${account.address}` as CaipAccountId}
               />
             </Link>
           </Row>
-          <Row label="Amount">
+          <Row label={t('amount')}>
             <Value
               value={`${amount.amount} BTC`}
               extra={displayEmptyStringIfAmountNotAvailableOrEmptyAmount(
@@ -80,7 +82,7 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
               )}
             />
           </Row>
-          <Row label="Recipient">
+          <Row label={t('recipient')}>
             <Link href={getExplorerLink(scope, recipient.address)}>
               <Address
                 address={
@@ -91,16 +93,16 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
           </Row>
         </Section>
         <Section>
-          <Row label="Network">
+          <Row label={t('network')}>
             <Text>{network}</Text>
           </Row>
           <Row
-            label="Transaction speed"
-            tooltip="The estimated time of the transaction"
+            label={t('transactionSpeed')}
+            tooltip={t('transactionSpeedTooltip')}
           >
             <Text>{txSpeed}</Text>
           </Row>
-          <Row label="Network fee" tooltip="The estimated network fee">
+          <Row label={t('networkFee')} tooltip={t('networkFeeToolTip')}>
             <Value
               value={`${fees.amount} BTC`}
               extra={displayEmptyStringIfAmountNotAvailableOrEmptyAmount(
@@ -109,7 +111,7 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
               )}
             />
           </Row>
-          <Row label="Total">
+          <Row label={t('total')}>
             <Value
               value={`${total.amount} BTC`}
               extra={displayEmptyStringIfAmountNotAvailableOrEmptyAmount(
@@ -128,7 +130,7 @@ export const ReviewTransaction: SnapComponent<ReviewTransactionProps> = ({
       </Box>
       <Footer>
         <Button name={SendFormNames.Send} type="submit" disabled={disabledSend}>
-          Send
+          {t('send')}
         </Button>
       </Footer>
     </Container>
