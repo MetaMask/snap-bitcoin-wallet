@@ -1,4 +1,4 @@
-import { handleKeyringRequest } from '@metamask/keyring-api';
+import { handleKeyringRequest, Keyring } from '@metamask/keyring-api';
 import {
   type OnRpcRequestHandler,
   type OnKeyringRequestHandler,
@@ -23,7 +23,6 @@ import {
 } from './rpcs';
 import type { StartSendTransactionFlowParams } from './rpcs/start-send-transaction-flow';
 import { startSendTransactionFlow } from './rpcs/start-send-transaction-flow';
-import { MasterKeyringService } from './services/MasterKeyringService';
 import {
   isSendFormEvent,
   SendBitcoinController,
@@ -31,6 +30,11 @@ import {
 import type { SendFlowContext, SendFormState } from './ui/types';
 import { isSnapRpcError, logger } from './utils';
 import { loadLocale } from './utils/locale';
+import { ConfigV2 } from './configv2';
+import { BdkAccountRepository } from './store/BdkAccountRepository';
+import { KeyringHandler } from './handlers/KeyringHandler';
+import { BtcKeyring } from './keyring';
+import { KeyringStateManager } from './stateManagement';
 
 export const validateOrigin = (origin: string, method: string): void => {
   if (!origin) {
@@ -100,7 +104,17 @@ export const onKeyringRequest: OnKeyringRequestHandler = async ({
   try {
     validateOrigin(origin, request.method);
 
-    const keyring = new MasterKeyringService(origin);
+    let keyring: Keyring;
+    if (ConfigV2.keyringVersion == 'v1') {
+      keyring = new BtcKeyring(new KeyringStateManager(), {
+        defaultIndex: Config.wallet.defaultAccountIndex,
+        origin,
+      });
+    } else {
+      keyring = new KeyringHandler(
+        new BdkAccountRepository(Config.wallet.defaultAccountIndex),
+      );
+    }
 
     return (await handleKeyringRequest(
       keyring,

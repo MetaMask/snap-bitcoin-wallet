@@ -8,6 +8,7 @@ import {
   type CaipAssetType,
   emitSnapKeyringEvent,
   KeyringEvent,
+  BtcMethod,
 } from '@metamask/keyring-api';
 import type { Json } from '@metamask/utils';
 import { AddressType, Network } from 'bdk_wasm';
@@ -38,8 +39,17 @@ export const caip2ToAddressType: Record<Caip2AddressType, AddressType> = {
   [Caip2AddressType.P2tr]: AddressType.P2tr,
 };
 
-export class KeyringService implements Keyring {
+export const addressTypeToCaip2: Record<AddressType, Caip2AddressType> =
+  Object.fromEntries(
+    Object.entries(caip2ToAddressType).map(([caip2, addrType]) => [
+      addrType,
+      caip2,
+    ]),
+  ) as Record<AddressType, Caip2AddressType>;
+
+export class KeyringHandler implements Keyring {
   protected readonly _accounts: AccountRepository;
+  protected readonly _methods = [BtcMethod.SendBitcoin];
 
   constructor(accounts: AccountRepository) {
     this._accounts = accounts;
@@ -67,9 +77,11 @@ export class KeyringService implements Keyring {
       );
 
       const keyringAccount = {
-        type: options.addressType,
+        type: addressTypeToCaip2[account.addressType],
         id: account.id,
-        address: account.nextUnusedAddress().address,
+        address: account.nextUnusedAddress.address,
+        options: {},
+        methods: this._methods,
       } as KeyringAccount;
 
       await emitSnapKeyringEvent(getProvider(), KeyringEvent.AccountCreated, {

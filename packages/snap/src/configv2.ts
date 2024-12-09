@@ -5,6 +5,7 @@ import { Caip2AddressType, Caip2ChainId } from './entities';
 export type SnapConfig = {
   accounts: AccountsConfig;
   chain: ChainConfig;
+  keyringVersion: string;
 };
 
 export type AccountsConfig = {
@@ -22,6 +23,7 @@ export type ChainConfig = {
 };
 
 export const ConfigV2: SnapConfig = {
+  keyringVersion: process.env.KEYRING_VERSION ?? 'v1',
   accounts: {
     accountIndex: 0,
     defaultNetwork: process.env.DEFAULT_NETWORK ?? Caip2ChainId.Bitcoin,

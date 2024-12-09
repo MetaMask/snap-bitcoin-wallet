@@ -1,10 +1,11 @@
-import type { AddressInfo, Balance } from 'bdk_wasm';
+import type { AddressInfo, AddressType, Balance } from 'bdk_wasm';
 
 export type BitcoinAccount = {
   id: string;
   suggestedName: string;
-  balance(): Balance;
+  balance: Balance;
+  addressType: AddressType;
+  nextUnusedAddress: AddressInfo;
   peekAddress(index: number): AddressInfo;
-  nextUnusedAddress(): AddressInfo;
   takeStaged(): any;
 };

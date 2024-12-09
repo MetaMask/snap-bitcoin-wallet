@@ -5,7 +5,7 @@ import {
   slip10_to_extended,
   Wallet,
 } from 'bdk_wasm';
-import { stringify } from 'superjson';
+import { stringify, parse } from 'superjson';
 import { v4 as uuidv4 } from 'uuid';
 
 import type { AccountRepository } from '.';
@@ -36,7 +36,13 @@ export class BdkAccountRepository implements AccountRepository {
   }
 
   async get(id: string): Promise<BitcoinAccount | null> {
-    throw new Error('Method not implemented.');
+    const state = await this.#getState();
+    const wallet = this.#decodeWallet(state, id);
+    if (!wallet) {
+      return null;
+    }
+
+    return new BdkAccountAdapter(id, wallet);
   }
 
   async list(): Promise<string[]> {
@@ -58,10 +64,13 @@ export class BdkAccountRepository implements AccountRepository {
 
     // Idempotent account creation + ensures only one account per derivation path
     const derivationPathId = derivationPath.join('/');
-    if (state.derivationPaths[derivationPathId]) {
-      const account = await this.get(state.derivationPaths[derivationPathId]);
-      if (account) {
-        return account;
+    const existingId = state.accounts.derivationPaths[derivationPathId];
+    if (existingId) {
+      const wallet = this.#decodeWallet(state, existingId);
+      state.accounts.wallets[state.accounts.derivationPaths[derivationPathId]];
+
+      if (wallet) {
+        return new BdkAccountAdapter(existingId, wallet);
       }
     }
 
@@ -96,8 +105,8 @@ export class BdkAccountRepository implements AccountRepository {
 
     const id = uuidv4();
     const account = new BdkAccountAdapter(id, wallet);
-    state.accounts[id] = stringify(account.takeStaged());
-    state.derivationPaths[derivationPathId] = id;
+    state.accounts.wallets[id] = stringify(account.takeStaged());
+    state.accounts.derivationPaths[derivationPathId] = id;
     await this.#setState(state);
 
     return account;
@@ -111,6 +120,15 @@ export class BdkAccountRepository implements AccountRepository {
     throw new Error('Method not implemented.');
   }
 
+  #decodeWallet(state: SnapState, id: string): Wallet | null {
+    const walletState = state.accounts.wallets[id];
+    if (!walletState) {
+      return null;
+    }
+
+    return Wallet.load(parse(walletState));
+  }
+
   async #getState(): Promise<SnapState> {
     const state = await snap.request({
       method: 'snap_manageState',
@@ -119,7 +137,9 @@ export class BdkAccountRepository implements AccountRepository {
       },
     });
 
-    return (state as SnapState) ?? { accounts: {} };
+    return (
+      (state as SnapState) ?? { accounts: { derivationPaths: {}, wallets: {} } }
+    );
   }
 
   async #setState(newState: SnapState): Promise<void> {

@@ -1,4 +1,4 @@
-import type { AddressInfo, Balance, Wallet } from 'bdk_wasm';
+import type { AddressInfo, AddressType, Balance, Wallet } from 'bdk_wasm';
 import { KeychainKind, Network } from 'bdk_wasm';
 
 import type { BitcoinAccount } from '../entities';
@@ -30,16 +30,27 @@ export class BdkAccountAdapter implements BitcoinAccount {
     }
   }
 
-  balance(): Balance {
+  get balance(): Balance {
     return this._wallet.balance();
+  }
+
+  get addressType(): AddressType {
+    const addressType = this.peekAddress(0).address_type;
+    if (!addressType) {
+      throw new Error(
+        'unknown, non-standard or related to the future witness version.',
+      );
+    }
+
+    return addressType;
+  }
+
+  get nextUnusedAddress(): AddressInfo {
+    return this._wallet.next_unused_address(KeychainKind.External);
   }
 
   peekAddress(index: number): AddressInfo {
     return this._wallet.peek_address(KeychainKind.External, index);
-  }
-
-  nextUnusedAddress(): AddressInfo {
-    return this._wallet.next_unused_address(KeychainKind.External);
   }
 
   takeStaged(): any {

@@ -1,4 +1,6 @@
 export type SnapState = {
-  derivationPaths: Record<string, string>;
-  accounts: Record<string, string>;
+  accounts: {
+    derivationPaths: Record<string, string>;
+    wallets: Record<string, string>;
+  };
 };
