@@ -411,9 +411,22 @@ describe('BtcOnChainService', () => {
           cacheStateManager,
         );
 
+        const expiredFees = {
+          fees: [
+            {
+              type: FeeRate.Fast,
+              rate: BigInt(123),
+            },
+            {
+              type: FeeRate.Medium,
+              rate: BigInt(456),
+            },
+          ],
+        };
+        
         getFeeRateSpy.mockResolvedValue({
-          value: { fees: [{ rate: BigInt('123'), type: FeeRate.Fast }] },
-          expiration: Date.now() - 10000, // expired 10 seconds ago
+          value: expiredFees,
+          expiration: Date.now() - (10 * 1000), // Expired 10 seconds ago.
           isExpired: () => true,
         } as unknown as CachedValue<SerializableFees>);
 
