@@ -6,8 +6,11 @@ import {
   generateFormattedUtxos,
   generateQuickNodeSendRawTransactionResp,
 } from '../../../test/utils';
-import { CachedValue } from '../../cacheManager';
-import { CacheStateManager, SerializableFees } from '../../cacheManager';
+import {
+  CacheStateManager,
+  SerializableFees,
+  CachedValue,
+} from '../../cacheManager';
 import { Caip19Asset } from '../../constants';
 import { getCaip2ChainId } from '../wallet';
 import { FeeRate, TransactionStatus } from './constants';
