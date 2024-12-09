@@ -1,10 +1,11 @@
-import { AddressType, Network } from 'bdk_wasm';
-import { BitcoinAccount } from '../entities';
+import type { AddressType, Network } from 'bdk_wasm';
 
-export interface AccountRepository {
+import type { BitcoinAccount } from '../entities';
+
+export type AccountRepository = {
   get(id: string): Promise<BitcoinAccount | null>;
   list(): Promise<string[]>;
   insert(network: Network, addressType: AddressType): Promise<BitcoinAccount>;
   update(id: string, wallet: BitcoinAccount): Promise<BitcoinAccount>;
   delete(id: string): Promise<void>;
-}
+};

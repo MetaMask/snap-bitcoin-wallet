@@ -1,5 +1,3 @@
-import { AddressType, Network } from 'bdk_wasm';
-
 export enum Caip2ChainId {
   Bitcoin = 'bip122:000000000019d6689c085ae165831e93',
   Testnet = 'bip122:000000000933ea01ad0ee984209779ba',

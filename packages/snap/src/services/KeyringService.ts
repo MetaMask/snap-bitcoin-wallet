@@ -1,3 +1,4 @@
+import type { KeyringAccountData } from '@metamask/keyring-api';
 import {
   type Keyring,
   type KeyringAccount,
@@ -5,22 +6,20 @@ import {
   type KeyringResponse,
   type Balance,
   type CaipAssetType,
-  KeyringAccountData,
   emitSnapKeyringEvent,
   KeyringEvent,
 } from '@metamask/keyring-api';
-
+import type { Json } from '@metamask/utils';
+import { AddressType, Network } from 'bdk_wasm';
 import { assert, enums, object, optional, StructError } from 'superstruct';
 
-import { getProvider, logger } from '../utils';
-import { Json } from '@metamask/utils';
-import { AccountRepository } from '../store';
 import { ConfigV2 } from '../configv2';
 import { Caip2AddressType, Caip2ChainId } from '../entities';
-import { AddressType, Network } from 'bdk_wasm';
+import type { AccountRepository } from '../store';
+import { getProvider, logger } from '../utils';
 
 const CreateAccountOptionsStruct = object({
-  network: optional(enums(Object.values(Caip2ChainId))),
+  scope: optional(enums(Object.values(Caip2ChainId))),
   addressType: optional(enums(Object.values(Caip2AddressType))),
 });
 
@@ -46,10 +45,11 @@ export class KeyringService implements Keyring {
     this._accounts = accounts;
   }
 
-  listAccounts(): Promise<KeyringAccount[]> {
+  async listAccounts(): Promise<KeyringAccount[]> {
     throw new Error('Method not implemented.');
   }
-  getAccount(id: string): Promise<KeyringAccount | undefined> {
+
+  async getAccount(id: string): Promise<KeyringAccount | undefined> {
     throw new Error('Method not implemented.');
   }
 
@@ -60,18 +60,16 @@ export class KeyringService implements Keyring {
       assert(options, CreateAccountOptionsStruct);
 
       const account = await this._accounts.insert(
-        caip2ToNetwork[options.network ?? ConfigV2.accounts.defaultNetwork],
+        caip2ToNetwork[options.scope ?? ConfigV2.accounts.defaultNetwork],
         caip2ToAddressType[
           options.addressType ?? ConfigV2.accounts.defaultAddressType
         ],
       );
 
-      // TODO: Perform a full scan on account creation?
-
       const keyringAccount = {
         type: options.addressType,
         id: account.id,
-        address: account.peekAddress(0).address,
+        address: account.nextUnusedAddress().address,
       } as KeyringAccount;
 
       await emitSnapKeyringEvent(getProvider(), KeyringEvent.AccountCreated, {
@@ -97,30 +95,39 @@ export class KeyringService implements Keyring {
   ): Promise<Record<CaipAssetType, Balance>> {
     throw new Error('Method not implemented.');
   }
-  filterAccountChains(id: string, chains: string[]): Promise<string[]> {
+
+  async filterAccountChains(id: string, chains: string[]): Promise<string[]> {
     throw new Error('Method not implemented.');
   }
-  updateAccount(account: KeyringAccount): Promise<void> {
+
+  async updateAccount(account: KeyringAccount): Promise<void> {
     throw new Error('Method not implemented.');
   }
-  deleteAccount(id: string): Promise<void> {
+
+  async deleteAccount(id: string): Promise<void> {
     throw new Error('Method not implemented.');
   }
+
   exportAccount?(id: string): Promise<KeyringAccountData> {
     throw new Error('Method not implemented.');
   }
+
   listRequests?(): Promise<KeyringRequest[]> {
     throw new Error('Method not implemented.');
   }
+
   getRequest?(id: string): Promise<KeyringRequest | undefined> {
     throw new Error('Method not implemented.');
   }
-  submitRequest(request: KeyringRequest): Promise<KeyringResponse> {
+
+  async submitRequest(request: KeyringRequest): Promise<KeyringResponse> {
     throw new Error('Method not implemented.');
   }
+
   approveRequest?(id: string, data?: Record<string, Json>): Promise<void> {
     throw new Error('Method not implemented.');
   }
+
   rejectRequest?(id: string): Promise<void> {
     throw new Error('Method not implemented.');
   }

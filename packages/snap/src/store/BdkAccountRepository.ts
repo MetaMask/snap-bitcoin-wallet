@@ -1,9 +1,17 @@
-import { AddressType, Network, slip10_to_extended, Wallet } from 'bdk_wasm';
-import { BitcoinAccount } from '../entities';
-import { AccountRepository } from '.';
-import { BdkAccountAdapter } from '../adapters';
+import {
+  AddressType,
+  KeychainKind,
+  Network,
+  slip10_to_extended,
+  Wallet,
+} from 'bdk_wasm';
 import { stringify } from 'superjson';
-import { SnapState } from './models';
+import { v4 as uuidv4 } from 'uuid';
+
+import type { AccountRepository } from '.';
+import { BdkAccountAdapter } from '../adapters';
+import type { BitcoinAccount } from '../entities';
+import type { SnapState } from './models';
 
 const addressTypeToPurpose = {
   [AddressType.P2pkh]: "44'",
@@ -27,11 +35,11 @@ export class BdkAccountRepository implements AccountRepository {
     this._accountIndex = accountIndex;
   }
 
-  get(id: string): Promise<BitcoinAccount | null> {
+  async get(id: string): Promise<BitcoinAccount | null> {
     throw new Error('Method not implemented.');
   }
 
-  list(): Promise<string[]> {
+  async list(): Promise<string[]> {
     throw new Error('Method not implemented.');
   }
 
@@ -46,8 +54,16 @@ export class BdkAccountRepository implements AccountRepository {
       `${this._accountIndex}'`,
     ];
 
-    let state = await this.#getAccountsState();
-    const id = derivationPath.join('/');
+    const state = await this.#getState();
+
+    // Idempotent account creation + ensures only one account per derivation path
+    const derivationPathId = derivationPath.join('/');
+    if (state.derivationPaths[derivationPathId]) {
+      const account = await this.get(state.derivationPaths[derivationPathId]);
+      if (account) {
+        return account;
+      }
+    }
 
     const slip10 = await snap.request({
       method: 'snap_getBip32Entropy',
@@ -76,23 +92,26 @@ export class BdkAccountRepository implements AccountRepository {
         addressType,
       );
     }
+    wallet.next_unused_address(KeychainKind.External);
 
+    const id = uuidv4();
     const account = new BdkAccountAdapter(id, wallet);
     state.accounts[id] = stringify(account.takeStaged());
-    await this.#setAccountsState(state);
+    state.derivationPaths[derivationPathId] = id;
+    await this.#setState(state);
 
     return account;
   }
 
-  update(id: string, wallet: BitcoinAccount): Promise<BitcoinAccount> {
+  async update(id: string, wallet: BitcoinAccount): Promise<BitcoinAccount> {
     throw new Error('Method not implemented.');
   }
 
-  delete(id: string): Promise<void> {
+  async delete(id: string): Promise<void> {
     throw new Error('Method not implemented.');
   }
 
-  async #getAccountsState(): Promise<SnapState> {
+  async #getState(): Promise<SnapState> {
     const state = await snap.request({
       method: 'snap_manageState',
       params: {
@@ -103,7 +122,7 @@ export class BdkAccountRepository implements AccountRepository {
     return (state as SnapState) ?? { accounts: {} };
   }
 
-  async #setAccountsState(newState: SnapState): Promise<void> {
+  async #setState(newState: SnapState): Promise<void> {
     await snap.request({
       method: 'snap_manageState',
       params: {

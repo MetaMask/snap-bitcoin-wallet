@@ -2732,11 +2732,11 @@ __metadata:
     jest-transform-stub: 2.0.0
     prettier: ^2.7.1
     rimraf: ^3.0.2
-    superjson: ^2.2.1
+    superjson: ^2.2.2
     superstruct: ^1.0.3
     ts-jest: ^29.1.0
     typescript: ^4.7.4
-    uuid: ^9.0.1
+    uuid: ^11.0.3
   languageName: unknown
   linkType: soft
 
@@ -18761,12 +18761,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"superjson@npm:^2.2.1":
-  version: 2.2.1
-  resolution: "superjson@npm:2.2.1"
+"superjson@npm:^2.2.2":
+  version: 2.2.2
+  resolution: "superjson@npm:2.2.2"
   dependencies:
     copy-anything: ^3.0.2
-  checksum: 42f327474a9de80165a70641d66c2afd9ce7f0eb241c32af7e2d5777f893aac6defa6c1584bd35f022658dbdfd2b7bcf0d170acfe62a07e7d1d01238cf5b4a57
+  checksum: 5120086d24dedc180284524e5bb247a146f3ecf17d2b5e0eafecc1fe7dc7eb74a5dcfd3c250684edccb9c15db0d5ce24ac968c68cd908285c0160a3138435707
   languageName: node
   linkType: hard
 
@@ -19705,6 +19705,15 @@ __metadata:
   version: 1.0.1
   resolution: "utils-merge@npm:1.0.1"
   checksum: c81095493225ecfc28add49c106ca4f09cdf56bc66731aa8dabc2edbbccb1e1bfe2de6a115e5c6a380d3ea166d1636410b62ef216bb07b3feb1cfde1d95d5080
+  languageName: node
+  linkType: hard
+
+"uuid@npm:^11.0.3":
+  version: 11.0.3
+  resolution: "uuid@npm:11.0.3"
+  bin:
+    uuid: dist/esm/bin/uuid
+  checksum: 646181c77e8b8df9bd07254faa703943e1c4d5ccde7d080312edf12f443f6c5750801fd9b27bf2e628594182165e6b1b880c0382538f7eca00b26622203741dc
   languageName: node
   linkType: hard
 

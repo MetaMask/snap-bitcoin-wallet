@@ -6,17 +6,16 @@ import {
   type Balance,
   type CaipAssetType,
 } from '@metamask/keyring-api';
-
+import type { Json } from '@metamask/utils';
 import type { Infer } from 'superstruct';
 import { object } from 'superstruct';
 
 import { Config } from '../config';
-import { KeyringStateManager } from '../stateManagement';
-import { ScopeStruct } from '../utils';
 import { BtcKeyring } from '../keyring';
-import { KeyringService } from './KeyringService';
-import { Json } from '@metamask/utils';
+import { KeyringStateManager } from '../stateManagement';
 import { BdkAccountRepository } from '../store/BdkAccountRepository';
+import { ScopeStruct } from '../utils';
+import { KeyringService } from './KeyringService';
 
 export const CreateAccountOptionsStruct = object({
   scope: ScopeStruct,
@@ -44,11 +43,11 @@ export class MasterKeyringService implements Keyring {
     );
   }
 
-  listAccounts(): Promise<KeyringAccount[]> {
+  async listAccounts(): Promise<KeyringAccount[]> {
     return this._keyringV1.listAccounts();
   }
 
-  getAccount(id: string): Promise<KeyringAccount | undefined> {
+  async getAccount(id: string): Promise<KeyringAccount | undefined> {
     return this._keyringV1.getAccount(id);
   }
 
@@ -64,19 +63,19 @@ export class MasterKeyringService implements Keyring {
     return this._keyringV1.getAccountBalances(id, assets);
   }
 
-  filterAccountChains(id: string, chains: string[]): Promise<string[]> {
+  async filterAccountChains(id: string, chains: string[]): Promise<string[]> {
     return this._keyringV1.filterAccountChains(id, chains);
   }
 
-  updateAccount(account: KeyringAccount): Promise<void> {
+  async updateAccount(account: KeyringAccount): Promise<void> {
     return this._keyringV1.updateAccount(account);
   }
 
-  deleteAccount(id: string): Promise<void> {
+  async deleteAccount(id: string): Promise<void> {
     return this._keyringV1.deleteAccount(id);
   }
 
-  submitRequest(request: KeyringRequest): Promise<KeyringResponse> {
+  async submitRequest(request: KeyringRequest): Promise<KeyringResponse> {
     return this._keyringV1.submitRequest(request);
   }
 }

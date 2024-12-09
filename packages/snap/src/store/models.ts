@@ -1,5 +1,4 @@
 export type SnapState = {
-  accounts: AccountsState;
+  derivationPaths: Record<string, string>;
+  accounts: Record<string, string>;
 };
-
-export type AccountsState = Record<string, string>;

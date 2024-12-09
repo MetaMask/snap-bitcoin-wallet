@@ -23,13 +23,13 @@ import {
 } from './rpcs';
 import type { StartSendTransactionFlowParams } from './rpcs/start-send-transaction-flow';
 import { startSendTransactionFlow } from './rpcs/start-send-transaction-flow';
+import { MasterKeyringService } from './services/MasterKeyringService';
 import {
   isSendFormEvent,
   SendBitcoinController,
 } from './ui/controller/send-bitcoin-controller';
 import type { SendFlowContext, SendFormState } from './ui/types';
 import { isSnapRpcError, logger } from './utils';
-import { MasterKeyringService } from './services/MasterKeyringService';
 import { loadLocale } from './utils/locale';
 
 export const validateOrigin = (origin: string, method: string): void => {

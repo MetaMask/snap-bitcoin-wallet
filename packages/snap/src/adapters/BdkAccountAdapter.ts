@@ -1,8 +1,12 @@
-import { AddressInfo, Balance, KeychainKind, Network, Wallet } from 'bdk_wasm';
-import { BitcoinAccount } from '../entities';
+import type { AddressInfo, Balance, Wallet } from 'bdk_wasm';
+import { KeychainKind, Network } from 'bdk_wasm';
+
+import type { BitcoinAccount } from '../entities';
 
 export class BdkAccountAdapter implements BitcoinAccount {
   protected readonly _id: string;
+
+  // TODO: Use MetamaskWallet instead of Wallet from bdk-wasm once snap_manageState can handle key patches.
   protected readonly _wallet: Wallet;
 
   constructor(id: string, wallet: Wallet) {
