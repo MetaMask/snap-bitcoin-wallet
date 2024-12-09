@@ -67,8 +67,6 @@ export class BdkAccountRepository implements AccountRepository {
     const existingId = state.accounts.derivationPaths[derivationPathId];
     if (existingId) {
       const wallet = this.#decodeWallet(state, existingId);
-      state.accounts.wallets[state.accounts.derivationPaths[derivationPathId]];
-
       if (wallet) {
         return new BdkAccountAdapter(existingId, wallet);
       }
