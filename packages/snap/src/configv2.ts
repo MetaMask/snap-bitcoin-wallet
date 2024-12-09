@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import { Network } from 'bdk_wasm';
 
 import { Caip2AddressType, Caip2ChainId } from './entities';

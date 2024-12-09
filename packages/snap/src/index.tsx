@@ -1,4 +1,5 @@
-import { handleKeyringRequest, Keyring } from '@metamask/keyring-api';
+import type { Keyring } from '@metamask/keyring-api';
+import { handleKeyringRequest } from '@metamask/keyring-api';
 import {
   type OnRpcRequestHandler,
   type OnKeyringRequestHandler,
@@ -10,6 +11,9 @@ import {
 } from '@metamask/snaps-sdk';
 
 import { Config } from './config';
+import { ConfigV2 } from './configv2';
+import { KeyringHandler } from './handlers/KeyringHandler';
+import { BtcKeyring } from './keyring';
 import { InternalRpcMethod, originPermissions } from './permissions';
 import type {
   GetTransactionStatusParams,
@@ -23,6 +27,8 @@ import {
 } from './rpcs';
 import type { StartSendTransactionFlowParams } from './rpcs/start-send-transaction-flow';
 import { startSendTransactionFlow } from './rpcs/start-send-transaction-flow';
+import { KeyringStateManager } from './stateManagement';
+import { BdkAccountRepository } from './store/BdkAccountRepository';
 import {
   isSendFormEvent,
   SendBitcoinController,
@@ -30,11 +36,6 @@ import {
 import type { SendFlowContext, SendFormState } from './ui/types';
 import { isSnapRpcError, logger } from './utils';
 import { loadLocale } from './utils/locale';
-import { ConfigV2 } from './configv2';
-import { BdkAccountRepository } from './store/BdkAccountRepository';
-import { KeyringHandler } from './handlers/KeyringHandler';
-import { BtcKeyring } from './keyring';
-import { KeyringStateManager } from './stateManagement';
 
 export const validateOrigin = (origin: string, method: string): void => {
   if (!origin) {
@@ -105,7 +106,7 @@ export const onKeyringRequest: OnKeyringRequestHandler = async ({
     validateOrigin(origin, request.method);
 
     let keyring: Keyring;
-    if (ConfigV2.keyringVersion == 'v1') {
+    if (ConfigV2.keyringVersion === 'v1') {
       keyring = new BtcKeyring(new KeyringStateManager(), {
         defaultIndex: Config.wallet.defaultAccountIndex,
         origin,

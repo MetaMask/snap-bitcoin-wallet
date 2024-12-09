@@ -49,6 +49,7 @@ export const addressTypeToCaip2: Record<AddressType, Caip2AddressType> =
 
 export class KeyringHandler implements Keyring {
   protected readonly _accounts: AccountRepository;
+
   protected readonly _methods = [BtcMethod.SendBitcoin];
 
   constructor(accounts: AccountRepository) {
