@@ -423,10 +423,10 @@ describe('BtcOnChainService', () => {
             },
           ],
         };
-        
+
         getFeeRateSpy.mockResolvedValue({
           value: expiredFees,
-          expiration: Date.now() - (10 * 1000), // Expired 10 seconds ago.
+          expiration: Date.now() - 10 * 1000, // Expired 10 seconds ago.
           isExpired: () => true,
         } as unknown as CachedValue<SerializableFees>);
 
