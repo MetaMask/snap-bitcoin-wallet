@@ -1,4 +1,10 @@
-import type { AddressInfo, AddressType, Balance, Wallet } from 'bdk_wasm';
+import type {
+  AddressInfo,
+  AddressType,
+  Balance,
+  EsploraWallet,
+  Wallet,
+} from 'bdk_wasm';
 import { KeychainKind, Network } from 'bdk_wasm';
 
 import type { BitcoinAccount } from '../entities';
@@ -7,9 +13,9 @@ export class BdkAccountAdapter implements BitcoinAccount {
   protected readonly _id: string;
 
   // TODO: Use MetamaskWallet instead of Wallet from bdk-wasm once snap_manageState can handle key patches.
-  protected readonly _wallet: Wallet;
+  protected readonly _wallet: EsploraWallet;
 
-  constructor(id: string, wallet: Wallet) {
+  constructor(id: string, wallet: EsploraWallet) {
     this._id = id;
     this._wallet = wallet;
   }
@@ -49,11 +55,31 @@ export class BdkAccountAdapter implements BitcoinAccount {
     return this._wallet.next_unused_address(KeychainKind.External);
   }
 
+  get network(): Network {
+    return this._wallet.network();
+  }
+
+  get isScanned(): boolean {
+    return this._wallet.latest_checkpoint().height > 0;
+  }
+
   peekAddress(index: number): AddressInfo {
     return this._wallet.peek_address(KeychainKind.External, index);
   }
 
+  async fullScan(stopGap: number, parallelRequests: number) {
+    await this._wallet.full_scan(stopGap, parallelRequests);
+  }
+
+  async sync(parallelRequests: number) {
+    await this._wallet.sync(parallelRequests);
+  }
+
   takeStaged(): any {
     return this._wallet.take_staged();
+  }
+
+  takeMerged(previousState: any): any {
+    return this._wallet.take_merged(previousState);
   }
 }

@@ -113,7 +113,8 @@ export const onKeyringRequest: OnKeyringRequestHandler = async ({
       });
     } else {
       keyring = new KeyringHandler(
-        new BdkAccountRepository(Config.wallet.defaultAccountIndex),
+        new BdkAccountRepository(ConfigV2.accounts.accountIndex),
+        ConfigV2.chain,
       );
     }
 

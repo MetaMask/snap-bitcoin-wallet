@@ -1,9 +1,9 @@
 import {
   AddressType,
+  EsploraWallet,
   KeychainKind,
   Network,
   slip10_to_extended,
-  Wallet,
 } from 'bdk_wasm';
 import { stringify, parse } from 'superjson';
 import { v4 as uuidv4 } from 'uuid';
@@ -12,6 +12,7 @@ import type { AccountRepository } from '.';
 import { BdkAccountAdapter } from '../adapters';
 import type { BitcoinAccount } from '../entities';
 import type { SnapState } from './models';
+import { ConfigV2 } from '../configv2';
 
 const addressTypeToPurpose = {
   [AddressType.P2pkh]: "44'",
@@ -28,6 +29,14 @@ const networkToCoinType = {
   [Network.Regtest]: "1'",
 };
 
+const networkNameToNetwork = {
+  bitcoin: Network.Bitcoin,
+  testnet: Network.Testnet,
+  testnet4: Network.Testnet4,
+  signet: Network.Signet,
+  regtest: Network.Regtest,
+};
+
 export class BdkAccountRepository implements AccountRepository {
   protected readonly _accountIndex: number;
 
@@ -37,12 +46,13 @@ export class BdkAccountRepository implements AccountRepository {
 
   async get(id: string): Promise<BitcoinAccount | null> {
     const state = await this.#getState();
-    const wallet = this.#decodeWallet(state, id);
-    if (!wallet) {
+    const walletData = this.#decodeWallet(state, id);
+    if (!walletData) {
       return null;
     }
 
-    return new BdkAccountAdapter(id, wallet);
+    const url = ConfigV2.chain.url[networkNameToNetwork[walletData.network]];
+    return new BdkAccountAdapter(id, EsploraWallet.load(walletData, url));
   }
 
   async list(): Promise<string[]> {
@@ -59,6 +69,7 @@ export class BdkAccountRepository implements AccountRepository {
       networkToCoinType[network],
       `${this._accountIndex}'`,
     ];
+    const url = ConfigV2.chain.url[network];
 
     const state = await this.#getState();
 
@@ -66,9 +77,12 @@ export class BdkAccountRepository implements AccountRepository {
     const derivationPathId = derivationPath.join('/');
     const existingId = state.accounts.derivationPaths[derivationPathId];
     if (existingId) {
-      const wallet = this.#decodeWallet(state, existingId);
-      if (wallet) {
-        return new BdkAccountAdapter(existingId, wallet);
+      const walletData = this.#decodeWallet(state, existingId);
+      if (walletData) {
+        return new BdkAccountAdapter(
+          existingId,
+          EsploraWallet.load(walletData, url),
+        );
       }
     }
 
@@ -81,22 +95,24 @@ export class BdkAccountRepository implements AccountRepository {
     });
     const fingerprint = slip10.masterFingerprint ?? slip10.parentFingerprint;
 
-    let wallet: Wallet;
+    let wallet: EsploraWallet;
     if (slip10.privateKey) {
       const xpriv = slip10_to_extended(slip10, network);
-      wallet = Wallet.from_xpriv(
+      wallet = EsploraWallet.from_xpriv(
         xpriv,
         fingerprint.toString(16),
         network,
         addressType,
+        url,
       );
     } else {
       const xpub = slip10_to_extended(slip10, network);
-      wallet = Wallet.from_xpub(
+      wallet = EsploraWallet.from_xpub(
         xpub,
         fingerprint.toString(16),
         network,
         addressType,
+        url,
       );
     }
     wallet.next_unused_address(KeychainKind.External);
@@ -110,21 +126,31 @@ export class BdkAccountRepository implements AccountRepository {
     return account;
   }
 
-  async update(id: string, wallet: BitcoinAccount): Promise<BitcoinAccount> {
-    throw new Error('Method not implemented.');
+  async update(account: BitcoinAccount): Promise<void> {
+    const state = await this.#getState();
+    const walletData = this.#decodeWallet(state, account.id);
+    if (!walletData) {
+      state.accounts.wallets[account.id] = stringify(account.takeStaged());
+      return this.#setState(state);
+    }
+
+    state.accounts.wallets[account.id] = stringify(
+      account.takeMerged(walletData),
+    );
+    await this.#setState(state);
   }
 
   async delete(id: string): Promise<void> {
     throw new Error('Method not implemented.');
   }
 
-  #decodeWallet(state: SnapState, id: string): Wallet | null {
+  #decodeWallet(state: SnapState, id: string) {
     const walletState = state.accounts.wallets[id];
     if (!walletState) {
       return null;
     }
 
-    return Wallet.load(parse(walletState));
+    return parse(walletState) as any;
   }
 
   async #getState(): Promise<SnapState> {
@@ -132,6 +158,7 @@ export class BdkAccountRepository implements AccountRepository {
       method: 'snap_manageState',
       params: {
         operation: 'get',
+        encrypted: false,
       },
     });
 
@@ -146,6 +173,7 @@ export class BdkAccountRepository implements AccountRepository {
       params: {
         operation: 'update',
         newState,
+        encrypted: false,
       },
     });
   }

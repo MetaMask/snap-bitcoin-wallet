@@ -8,28 +8,26 @@ import {
   type CaipAssetType,
   emitSnapKeyringEvent,
   KeyringEvent,
-  BtcMethod,
 } from '@metamask/keyring-api';
 import type { Json } from '@metamask/utils';
 import { assert, StructError } from 'superstruct';
 
-import { ConfigV2 } from '../configv2';
+import { ChainConfig, ConfigV2 } from '../configv2';
 import type { AccountRepository } from '../store';
 import { getProvider, logger } from '../utils';
 import { CreateAccountRquest } from './requests';
-import {
-  addressTypeToCaip2,
-  caip2ToAddressType,
-  caip2ToNetwork,
-} from './caip2';
+import { caip2ToAddressType, caip2ToNetwork } from './caip2';
+import { networkToCaip19 } from './caip19';
+import { toKeyringAccount } from './responses';
 
 export class KeyringHandler implements Keyring {
   protected readonly _accounts: AccountRepository;
 
-  protected readonly _methods = [BtcMethod.SendBitcoin];
+  protected readonly _config: ChainConfig;
 
-  constructor(accounts: AccountRepository) {
+  constructor(accounts: AccountRepository, config: ChainConfig) {
     this._accounts = accounts;
+    this._config = config;
   }
 
   async listAccounts(): Promise<KeyringAccount[]> {
@@ -37,11 +35,19 @@ export class KeyringHandler implements Keyring {
   }
 
   async getAccount(id: string): Promise<KeyringAccount | undefined> {
-    throw new Error('Method not implemented.');
+    logger.trace('Fetching account. ID: %s', id);
+
+    const account = await this._accounts.get(id);
+    if (!account) {
+      return undefined;
+    }
+
+    logger.debug('Account fetched successfully: %s', account.id);
+    return toKeyringAccount(account);
   }
 
   async createAccount(options?: Record<string, Json>): Promise<KeyringAccount> {
-    logger.debug('Creating new Bitcoin account: %o', options);
+    logger.debug('Creating new Bitcoin account with options: %j', options);
 
     try {
       assert(options, CreateAccountRquest);
@@ -53,23 +59,17 @@ export class KeyringHandler implements Keyring {
         ],
       );
 
-      const keyringAccount = {
-        type: addressTypeToCaip2[account.addressType],
-        id: account.id,
-        address: account.nextUnusedAddress.address,
-        options: {},
-        methods: this._methods,
-      } as KeyringAccount;
+      const keyringAccount = toKeyringAccount(account);
 
       await emitSnapKeyringEvent(getProvider(), KeyringEvent.AccountCreated, {
         account: keyringAccount,
         accountNameSuggestion: account.suggestedName,
       });
 
-      logger.info('Bitcoin account created successfully: %o', options);
+      logger.info('Bitcoin account created successfully: %s', account.id);
       return keyringAccount;
     } catch (error) {
-      logger.error('failed to create Bitcoin account: %o', error);
+      logger.error('failed to create Bitcoin account. Error: %o', error);
 
       if (error instanceof StructError) {
         throw new Error('Invalid params to create an account');
@@ -78,11 +78,39 @@ export class KeyringHandler implements Keyring {
     }
   }
 
-  getAccountBalances?(
+  async getAccountBalances?(
     id: string,
     assets: CaipAssetType[],
   ): Promise<Record<CaipAssetType, Balance>> {
-    throw new Error('Method not implemented.');
+    logger.trace('Fetching balance. ID: %s. Assets: %o', id, assets);
+
+    const account = await this._accounts.get(id);
+    if (!account) {
+      return {};
+    }
+
+    // If the account is already scanned, we just sync it,
+    // otherwise we do a full scan.
+    if (account.isScanned) {
+      logger.info('Syncing account. ID: %s', id);
+      await account.sync(this._config.parallelRequests);
+    } else {
+      logger.info('Performing initial full scan. ID: %s', id);
+      await account.fullScan(
+        this._config.stopGap,
+        this._config.parallelRequests,
+      );
+    }
+
+    await this._accounts.update(account);
+
+    logger.debug('Balance fetched successfully for account %s', id);
+    return {
+      [networkToCaip19[account.network]]: {
+        amount: account.balance.trusted_spendable.to_btc().toString(),
+        unit: 'BTC',
+      },
+    };
   }
 
   async filterAccountChains(id: string, chains: string[]): Promise<string[]> {
