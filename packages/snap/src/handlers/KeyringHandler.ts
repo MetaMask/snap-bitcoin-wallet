@@ -11,41 +11,17 @@ import {
   BtcMethod,
 } from '@metamask/keyring-api';
 import type { Json } from '@metamask/utils';
-import { AddressType, Network } from 'bdk_wasm';
-import { assert, enums, object, optional, StructError } from 'superstruct';
+import { assert, StructError } from 'superstruct';
 
 import { ConfigV2 } from '../configv2';
-import { Caip2AddressType, Caip2ChainId } from '../entities';
 import type { AccountRepository } from '../store';
 import { getProvider, logger } from '../utils';
-
-const CreateAccountOptionsStruct = object({
-  scope: optional(enums(Object.values(Caip2ChainId))),
-  addressType: optional(enums(Object.values(Caip2AddressType))),
-});
-
-export const caip2ToNetwork: Record<Caip2ChainId, Network> = {
-  [Caip2ChainId.Bitcoin]: Network.Bitcoin,
-  [Caip2ChainId.Testnet]: Network.Testnet,
-  [Caip2ChainId.Testnet4]: Network.Testnet4,
-  [Caip2ChainId.Signet]: Network.Signet,
-  [Caip2ChainId.Regtest]: Network.Regtest,
-};
-
-export const caip2ToAddressType: Record<Caip2AddressType, AddressType> = {
-  [Caip2AddressType.P2pkh]: AddressType.P2pkh,
-  [Caip2AddressType.P2sh]: AddressType.P2sh,
-  [Caip2AddressType.P2wpkh]: AddressType.P2wpkh,
-  [Caip2AddressType.P2tr]: AddressType.P2tr,
-};
-
-export const addressTypeToCaip2: Record<AddressType, Caip2AddressType> =
-  Object.fromEntries(
-    Object.entries(caip2ToAddressType).map(([caip2, addrType]) => [
-      addrType,
-      caip2,
-    ]),
-  ) as Record<AddressType, Caip2AddressType>;
+import { CreateAccountRquest } from './requests';
+import {
+  addressTypeToCaip2,
+  caip2ToAddressType,
+  caip2ToNetwork,
+} from './caip2';
 
 export class KeyringHandler implements Keyring {
   protected readonly _accounts: AccountRepository;
@@ -68,7 +44,7 @@ export class KeyringHandler implements Keyring {
     logger.debug('Creating new Bitcoin account: %o', options);
 
     try {
-      assert(options, CreateAccountOptionsStruct);
+      assert(options, CreateAccountRquest);
 
       const account = await this._accounts.insert(
         caip2ToNetwork[options.scope ?? ConfigV2.accounts.defaultNetwork],

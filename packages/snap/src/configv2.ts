@@ -1,8 +1,7 @@
 /* eslint-disable */
 
 import { Network } from 'bdk_wasm';
-
-import { Caip2AddressType, Caip2ChainId } from './entities';
+import { Caip2AddressType, Caip2ChainId } from './handlers';
 
 export type SnapConfig = {
   accounts: AccountsConfig;
