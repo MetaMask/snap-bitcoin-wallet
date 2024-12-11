@@ -92,7 +92,6 @@ export class KeyringHandler implements Keyring {
     // If the account is already scanned, we just sync it,
     // otherwise we do a full scan.
     if (account.isScanned) {
-      logger.info('Syncing account. ID: %s', id);
       await account.sync(this._config.parallelRequests);
     } else {
       logger.info('Performing initial full scan. ID: %s', id);
@@ -104,7 +103,7 @@ export class KeyringHandler implements Keyring {
 
     await this._accounts.update(account);
 
-    logger.debug('Balance fetched successfully for account %s', id);
+    logger.info('Balance fetched successfully for account %s', id);
     return {
       [networkToCaip19[account.network]]: {
         amount: account.balance.trusted_spendable.to_btc().toString(),
