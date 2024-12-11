@@ -30,7 +30,6 @@ export class SerializableFees
   };
 
   constructor(data: Fees = { fees: [] }, expiresIn = DefaultCacheTtl) {
-    console.log('SerializableFees', data, expiresIn);
     this.data = {
       fees: data.fees,
       expiration: expiresIn ?? Date.now() + DefaultCacheTtl,
@@ -48,7 +47,6 @@ export class SerializableFees
   }
 
   serialize() {
-    console.log('serialize', this.data);
     return {
       fees: this.data.fees.map((fee) => ({
         ...fee,
@@ -60,7 +58,6 @@ export class SerializableFees
 
   deserialize(serializeData: SerializedFees): void {
     Object.entries(serializeData.fees).forEach(([key, value]) => {
-      console.log('deserialize', key, value);
       const fee = value as { type: string; rate: string };
       this.data.fees[key] = {
         type: fee.type,
@@ -160,7 +157,6 @@ export class CacheStateManager extends SnapStateManager<SerializedCacheState> {
 
   async setFeeRate(scope: Caip2ChainId, value: Fees): Promise<void> {
     try {
-      console.log('setFeeRate', scope, value);
       await this.update(async (state: SerializedCacheState) => {
         state.feeRate[scope] = new SerializableFees(value).serialize();
       });
