@@ -11,25 +11,33 @@ import {
   BtcMethod,
 } from '@metamask/keyring-api';
 import type { Json } from '@metamask/utils';
-import { assert, StructError } from 'superstruct';
+import { assert, enums, object, optional } from 'superstruct';
 
-import { ConfigV2 } from '../configv2';
-import type { AccountRepository } from '../store';
-import { getProvider, logger } from '../utils';
-import { CreateAccountRquest } from './requests';
+import type { AccountsConfig } from '../configv2';
+import type { BitcoinAccount } from '../entities';
+import type { AccountUseCases } from '../usecases/AccountUseCases';
+import { getProvider } from '../utils';
 import {
   addressTypeToCaip2,
+  Caip2AddressType,
+  Caip2ChainId,
   caip2ToAddressType,
   caip2ToNetwork,
 } from './caip2';
 
+export const CreateAccountRequest = object({
+  scope: optional(enums(Object.values(Caip2ChainId))),
+  addressType: optional(enums(Object.values(Caip2AddressType))),
+});
+
 export class KeyringHandler implements Keyring {
-  protected readonly _accounts: AccountRepository;
+  protected readonly _accounts: AccountUseCases;
 
-  protected readonly _methods = [BtcMethod.SendBitcoin];
+  protected readonly _config: AccountsConfig;
 
-  constructor(accounts: AccountRepository) {
+  constructor(accounts: AccountUseCases, config: AccountsConfig) {
     this._accounts = accounts;
+    this._config = config;
   }
 
   async listAccounts(): Promise<KeyringAccount[]> {
@@ -41,41 +49,23 @@ export class KeyringHandler implements Keyring {
   }
 
   async createAccount(options?: Record<string, Json>): Promise<KeyringAccount> {
-    logger.debug('Creating new Bitcoin account: %o', options);
+    assert(options, CreateAccountRequest);
 
-    try {
-      assert(options, CreateAccountRquest);
+    const account = await this._accounts.createAccount(
+      caip2ToNetwork[options.scope ?? this._config.defaultNetwork],
+      caip2ToAddressType[
+        options.addressType ?? this._config.defaultAddressType
+      ],
+    );
 
-      const account = await this._accounts.insert(
-        caip2ToNetwork[options.scope ?? ConfigV2.accounts.defaultNetwork],
-        caip2ToAddressType[
-          options.addressType ?? ConfigV2.accounts.defaultAddressType
-        ],
-      );
+    const keyringAccount = this.#toKeyringAccount(account);
 
-      const keyringAccount = {
-        type: addressTypeToCaip2[account.addressType],
-        id: account.id,
-        address: account.nextUnusedAddress.address,
-        options: {},
-        methods: this._methods,
-      } as KeyringAccount;
+    await emitSnapKeyringEvent(getProvider(), KeyringEvent.AccountCreated, {
+      account: keyringAccount,
+      accountNameSuggestion: account.suggestedName,
+    });
 
-      await emitSnapKeyringEvent(getProvider(), KeyringEvent.AccountCreated, {
-        account: keyringAccount,
-        accountNameSuggestion: account.suggestedName,
-      });
-
-      logger.info('Bitcoin account created successfully: %o', options);
-      return keyringAccount;
-    } catch (error) {
-      logger.error('failed to create Bitcoin account: %o', error);
-
-      if (error instanceof StructError) {
-        throw new Error('Invalid params to create an account');
-      }
-      throw new Error(error);
-    }
+    return keyringAccount;
   }
 
   getAccountBalances?(
@@ -119,5 +109,15 @@ export class KeyringHandler implements Keyring {
 
   rejectRequest?(id: string): Promise<void> {
     throw new Error('Method not implemented.');
+  }
+
+  #toKeyringAccount(account: BitcoinAccount): KeyringAccount {
+    return {
+      type: addressTypeToCaip2[account.addressType],
+      id: account.id,
+      address: account.nextUnusedAddress().address,
+      options: {},
+      methods: [BtcMethod.SendBitcoin],
+    } as KeyringAccount;
   }
 }

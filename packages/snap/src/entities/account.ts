@@ -5,7 +5,8 @@ export type BitcoinAccount = {
   suggestedName: string;
   balance: Balance;
   addressType: AddressType;
-  nextUnusedAddress: AddressInfo;
   peekAddress(index: number): AddressInfo;
+  nextUnusedAddress(): AddressInfo;
+  revealNextAddress(): AddressInfo;
   takeStaged(): any;
 };

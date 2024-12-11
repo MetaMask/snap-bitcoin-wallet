@@ -34,6 +34,7 @@ import {
   SendBitcoinController,
 } from './ui/controller/send-bitcoin-controller';
 import type { SendFlowContext, SendFormState } from './ui/types';
+import { AccountUseCases } from './usecases';
 import { isSnapRpcError, logger } from './utils';
 import { loadLocale } from './utils/locale';
 
@@ -112,9 +113,9 @@ export const onKeyringRequest: OnKeyringRequestHandler = async ({
         origin,
       });
     } else {
-      keyring = new KeyringHandler(
-        new BdkAccountRepository(Config.wallet.defaultAccountIndex),
-      );
+      const repository = new BdkAccountRepository();
+      const useCases = new AccountUseCases(repository, ConfigV2.accounts.index);
+      keyring = new KeyringHandler(useCases, ConfigV2.accounts);
     }
 
     return (await handleKeyringRequest(

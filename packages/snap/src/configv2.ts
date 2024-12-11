@@ -10,7 +10,7 @@ export type SnapConfig = {
 };
 
 export type AccountsConfig = {
-  accountIndex: number;
+  index: number;
   defaultNetwork: string;
   defaultAddressType: string;
 };
@@ -26,7 +26,7 @@ export type ChainConfig = {
 export const ConfigV2: SnapConfig = {
   keyringVersion: process.env.KEYRING_VERSION ?? 'v1',
   accounts: {
-    accountIndex: 0,
+    index: 0,
     defaultNetwork: process.env.DEFAULT_NETWORK ?? Caip2ChainId.Bitcoin,
     defaultAddressType:
       process.env.DEFAULT_ADDRESS_TYPE ?? Caip2AddressType.P2wpkh,
