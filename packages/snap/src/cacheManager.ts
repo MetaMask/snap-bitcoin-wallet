@@ -99,16 +99,8 @@ export class CacheStateManager extends SnapStateManager<SerializedCacheState> {
 
   protected override async get(): Promise<SerializedCacheState> {
     return super.get().then((persistedState: SerializedCacheState) => {
-      // if (persistedState) {
-      //   Object.entries(persistedState.feeRate).forEach(([key, value]) => {
-      //     this.#cache.feeRate[key] = new CachedValue(
-      //       new SerializableFees().deserialize(value),
-      //     );
-      //   });
-      // } else {
-      if (!persistedState) {
-        // eslint-disable-next-line no-param-reassign
-        persistedState = {
+      return (
+        persistedState || {
           feeRate: {
             [Caip2ChainId.Mainnet]: {
               fees: [],
@@ -119,22 +111,8 @@ export class CacheStateManager extends SnapStateManager<SerializedCacheState> {
               expiration: 0,
             },
           },
-        };
-      }
-
-      // Object.entries(this.#cache.feeRate).forEach(([key, value]) => {
-      //   if (value.isExpired()) {
-      //     this.#cache.feeRate[key] = new CachedValue(
-      //       new SerializableFees({ fees: [] }, 0),
-      //     );
-      //   } else {
-      //     this.#cache.feeRate[key] = new CachedValue(
-      //       new SerializableFees(value.value.valueOf(), value.expiredAt),
-      //     );
-      //   }
-      // });
-
-      return persistedState;
+        }
+      );
     });
   }
 
