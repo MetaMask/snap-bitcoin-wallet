@@ -1,7 +1,6 @@
 import {
   BtcMethod,
   KeyringEvent,
-  emitSnapKeyringEvent,
   type Keyring,
   type KeyringAccount,
   type KeyringRequest,
@@ -9,6 +8,7 @@ import {
   type Balance,
   type CaipAssetType,
 } from '@metamask/keyring-api';
+import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
 import {
   MethodNotFoundError,
   UnauthorizedError,

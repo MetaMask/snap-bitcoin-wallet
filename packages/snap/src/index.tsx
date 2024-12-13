@@ -1,4 +1,4 @@
-import { handleKeyringRequest } from '@metamask/keyring-api';
+import { handleKeyringRequest } from '@metamask/keyring-snap-sdk';
 import {
   type OnRpcRequestHandler,
   type OnKeyringRequestHandler,
