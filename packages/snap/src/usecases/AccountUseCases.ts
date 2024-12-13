@@ -1,5 +1,4 @@
-import { AddressType, Network } from 'bdk_wasm';
-
+import { AddressType, Network } from 'bdk_wasm/bdk_wasm_bg';
 import type { BitcoinAccount } from '../entities';
 import type { AccountRepository } from '../store';
 import { logger } from '../utils';

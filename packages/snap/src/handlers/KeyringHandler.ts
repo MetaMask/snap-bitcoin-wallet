@@ -49,17 +49,15 @@ export class KeyringHandler implements Keyring {
   }
 
   async createAccount(options?: Record<string, Json>): Promise<KeyringAccount> {
-    assert(options, CreateAccountRequest);
+    const opts = options ?? {};
+    assert(opts, CreateAccountRequest);
 
     const account = await this._accounts.createAccount(
-      caip2ToNetwork[options.scope ?? this._config.defaultNetwork],
-      caip2ToAddressType[
-        options.addressType ?? this._config.defaultAddressType
-      ],
+      caip2ToNetwork[opts.scope ?? this._config.defaultNetwork],
+      caip2ToAddressType[opts.addressType ?? this._config.defaultAddressType],
     );
 
     const keyringAccount = this.#toKeyringAccount(account);
-
     await emitSnapKeyringEvent(getProvider(), KeyringEvent.AccountCreated, {
       account: keyringAccount,
       accountNameSuggestion: account.suggestedName,
@@ -68,7 +66,7 @@ export class KeyringHandler implements Keyring {
     return keyringAccount;
   }
 
-  getAccountBalances?(
+  getAccountBalances(
     id: string,
     assets: CaipAssetType[],
   ): Promise<Record<CaipAssetType, Balance>> {
@@ -87,15 +85,15 @@ export class KeyringHandler implements Keyring {
     throw new Error('Method not implemented.');
   }
 
-  exportAccount?(id: string): Promise<KeyringAccountData> {
+  exportAccount(id: string): Promise<KeyringAccountData> {
     throw new Error('Method not implemented.');
   }
 
-  listRequests?(): Promise<KeyringRequest[]> {
+  listRequests(): Promise<KeyringRequest[]> {
     throw new Error('Method not implemented.');
   }
 
-  getRequest?(id: string): Promise<KeyringRequest | undefined> {
+  getRequest(id: string): Promise<KeyringRequest | undefined> {
     throw new Error('Method not implemented.');
   }
 
@@ -103,11 +101,11 @@ export class KeyringHandler implements Keyring {
     throw new Error('Method not implemented.');
   }
 
-  approveRequest?(id: string, data?: Record<string, Json>): Promise<void> {
+  approveRequest(id: string, data?: Record<string, Json>): Promise<void> {
     throw new Error('Method not implemented.');
   }
 
-  rejectRequest?(id: string): Promise<void> {
+  rejectRequest(id: string): Promise<void> {
     throw new Error('Method not implemented.');
   }
 

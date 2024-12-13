@@ -2729,6 +2729,7 @@ __metadata:
     eslint-plugin-prettier: ^4.2.1
     eslint-plugin-promise: ^6.1.1
     jest: ^29.5.0
+    jest-mock-extended: ^4.0.0-beta1
     jest-transform-stub: 2.0.0
     prettier: ^2.7.1
     rimraf: ^3.0.2
@@ -6939,8 +6940,8 @@ __metadata:
 
 "bdk_wasm@file:../../../bdk-wasm/pkg::locator=%40metamask%2Fbitcoin-wallet-snap%40workspace%3Apackages%2Fsnap":
   version: 0.1.0
-  resolution: "bdk_wasm@file:../../../bdk-wasm/pkg#../../../bdk-wasm/pkg::hash=8a65af&locator=%40metamask%2Fbitcoin-wallet-snap%40workspace%3Apackages%2Fsnap"
-  checksum: 97b6a50fb1ce2005984f64b9590df00a82ff107c95325f55b9650be45aa89050ceefb0c1a47299ed8ff819de994529f8c50e5a22dadfcd4598fd984fbaa8429e
+  resolution: "bdk_wasm@file:../../../bdk-wasm/pkg#../../../bdk-wasm/pkg::hash=f0da99&locator=%40metamask%2Fbitcoin-wallet-snap%40workspace%3Apackages%2Fsnap"
+  checksum: f6461c47c540f121246df56cd91a6fed0f0099735c2ae24c7153a93abad7b1b083ceeb908a1d4bb5be140d472e54b45d198f564044e49da2c3dd1a085390ad40
   languageName: node
   linkType: hard
 
@@ -13575,6 +13576,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jest-mock-extended@npm:^4.0.0-beta1":
+  version: 4.0.0-beta1
+  resolution: "jest-mock-extended@npm:4.0.0-beta1"
+  dependencies:
+    ts-essentials: ^10.0.2
+  peerDependencies:
+    "@jest/globals": ^28.0.0 || ^29.0.0
+    jest: ^24.0.0 || ^25.0.0 || ^26.0.0 || ^27.0.0 || ^28.0.0 || ^29.0.0
+    typescript: ^3.0.0 || ^4.0.0 || ^5.0.0
+  checksum: de84487f07a4a812fcfdcfde5234dedb35676103a8542bd30b4dd8b7ee4fdaa4f5d5c60b6c076539d10a8d303af36cbee24a9a16a20aa4f43413a69427a4e99b
+  languageName: node
+  linkType: hard
+
 "jest-mock@npm:^29.5.0":
   version: 29.5.0
   resolution: "jest-mock@npm:29.5.0"
@@ -19150,6 +19164,18 @@ __metadata:
   version: 2.2.1
   resolution: "true-case-path@npm:2.2.1"
   checksum: fd5f1c2a87a122a65ffb1f84b580366be08dac7f552ea0fa4b5a6ab0a013af950b0e752beddb1c6c1652e6d6a2b293b7b3fd86a5a1706242ad365b68f1b5c6f1
+  languageName: node
+  linkType: hard
+
+"ts-essentials@npm:^10.0.2":
+  version: 10.0.3
+  resolution: "ts-essentials@npm:10.0.3"
+  peerDependencies:
+    typescript: ">=4.5.0"
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  checksum: 7919df8b46be0dcfaade3ddbc98c0fd5236585ea0b8a46c898eda1a7229c17673e0286179c6bece41c26e16e62037f0fda38f4f5246a61026698022427806354
   languageName: node
   linkType: hard
 
