@@ -1,23 +1,60 @@
-import type {
+import type { JsonSLIP10Node } from '@metamask/key-tree';
+import {
+  Wallet,
+  KeychainKind,
+  Network,
+  slip10_to_extended,
   AddressInfo,
   AddressType,
   Balance,
-  EsploraWallet,
-  Wallet,
+  FullScanRequest,
+  SyncRequest,
+  Update,
 } from 'bdk_wasm';
-import { KeychainKind, Network } from 'bdk_wasm';
 
 import type { BitcoinAccount } from '../entities';
 
 export class BdkAccountAdapter implements BitcoinAccount {
   protected readonly _id: string;
 
-  // TODO: Use MetamaskWallet instead of Wallet from bdk-wasm once snap_manageState can handle key patches.
-  protected readonly _wallet: EsploraWallet;
+  protected readonly _wallet: Wallet;
 
-  constructor(id: string, wallet: EsploraWallet) {
+  constructor(id: string, wallet: Wallet) {
     this._id = id;
     this._wallet = wallet;
+  }
+
+  static fromSLIP10(
+    id: string,
+    slip10: JsonSLIP10Node,
+    network: Network,
+    addressType: AddressType,
+  ): BdkAccountAdapter {
+    const fingerprint = slip10.masterFingerprint ?? slip10.parentFingerprint;
+
+    let wallet: Wallet;
+    if (slip10.privateKey) {
+      const xpriv = slip10_to_extended(slip10, network);
+      wallet = Wallet.from_xpriv(
+        xpriv,
+        fingerprint.toString(16),
+        network,
+        addressType,
+      );
+    } else {
+      const xpub = slip10_to_extended(slip10, network);
+      wallet = Wallet.from_xpub(
+        xpub,
+        fingerprint.toString(16),
+        network,
+        addressType,
+      );
+    }
+    return new BdkAccountAdapter(id, wallet);
+  }
+
+  static load(id: string, walletData: any): BdkAccountAdapter {
+    return new BdkAccountAdapter(id, Wallet.load(walletData));
   }
 
   get id(): string {
@@ -51,10 +88,6 @@ export class BdkAccountAdapter implements BitcoinAccount {
     return addressType;
   }
 
-  get nextUnusedAddress(): AddressInfo {
-    return this._wallet.next_unused_address(KeychainKind.External);
-  }
-
   get network(): Network {
     return this._wallet.network();
   }
@@ -67,12 +100,24 @@ export class BdkAccountAdapter implements BitcoinAccount {
     return this._wallet.peek_address(KeychainKind.External, index);
   }
 
-  async fullScan(stopGap: number, parallelRequests: number) {
-    await this._wallet.full_scan(stopGap, parallelRequests);
+  nextUnusedAddress(): AddressInfo {
+    return this._wallet.next_unused_address(KeychainKind.External);
   }
 
-  async sync(parallelRequests: number) {
-    await this._wallet.sync(parallelRequests);
+  revealNextAddress(): AddressInfo {
+    return this._wallet.reveal_next_address(KeychainKind.External);
+  }
+
+  startFullScan(): FullScanRequest {
+    return this._wallet.start_full_scan();
+  }
+
+  startSync(): SyncRequest {
+    return this._wallet.start_sync_with_revealed_spks();
+  }
+
+  applyUpdate(update: Update) {
+    return this._wallet.apply_update(update);
   }
 
   takeStaged(): any {

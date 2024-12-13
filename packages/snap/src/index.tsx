@@ -34,8 +34,10 @@ import {
   SendBitcoinController,
 } from './ui/controller/send-bitcoin-controller';
 import type { SendFlowContext, SendFormState } from './ui/types';
+import { AccountUseCases } from './usecases';
 import { isSnapRpcError, logger } from './utils';
 import { loadLocale } from './utils/locale';
+import { EsploraClientAdapter } from './adapters/EsploraClientAdapter';
 
 export const validateOrigin = (origin: string, method: string): void => {
   if (!origin) {
@@ -112,10 +114,14 @@ export const onKeyringRequest: OnKeyringRequestHandler = async ({
         origin,
       });
     } else {
-      keyring = new KeyringHandler(
-        new BdkAccountRepository(ConfigV2.accounts.accountIndex),
-        ConfigV2.chain,
+      const repository = new BdkAccountRepository();
+      const blockchainClients = new EsploraClientAdapter(ConfigV2.chain);
+      const useCases = new AccountUseCases(
+        repository,
+        blockchainClients,
+        ConfigV2.accounts.index,
       );
+      keyring = new KeyringHandler(useCases, ConfigV2.accounts);
     }
 
     return (await handleKeyringRequest(

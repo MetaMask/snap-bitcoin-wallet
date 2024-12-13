@@ -1,16 +1,26 @@
-import type { AddressInfo, AddressType, Balance, Network } from 'bdk_wasm';
+import {
+  FullScanRequest,
+  SyncRequest,
+  AddressInfo,
+  AddressType,
+  Balance,
+  Network,
+  Update,
+} from 'bdk_wasm/bdk_wasm_bg';
 
 export type BitcoinAccount = {
   id: string;
   suggestedName: string;
   balance: Balance;
   addressType: AddressType;
-  nextUnusedAddress: AddressInfo;
   network: Network;
   isScanned: boolean;
   peekAddress(index: number): AddressInfo;
+  nextUnusedAddress(): AddressInfo;
+  revealNextAddress(): AddressInfo;
+  startFullScan(): FullScanRequest;
+  startSync(): SyncRequest;
+  applyUpdate(update: Update): void;
   takeStaged(): any;
   takeMerged(previousState: any): any;
-  fullScan(stopGap: number, parallelRequests: number): Promise<void>;
-  sync(parallelRequests: number): Promise<void>;
 };
