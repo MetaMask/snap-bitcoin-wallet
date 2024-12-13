@@ -1,7 +1,7 @@
 import { AddressType, Network } from 'bdk_wasm/bdk_wasm_bg';
 import { AccountUseCases } from './AccountUseCases';
 import type { BitcoinAccount } from '../entities';
-import type { AccountRepository } from '../store';
+import type { AccountRepository } from '../repositories';
 
 import { mock } from 'jest-mock-extended';
 

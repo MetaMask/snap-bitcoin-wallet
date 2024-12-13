@@ -4,6 +4,7 @@ import { Network } from 'bdk_wasm/bdk_wasm_bg';
 import { Caip2AddressType, Caip2ChainId } from './handlers';
 
 export type SnapConfig = {
+  encrypt: boolean;
   accounts: AccountsConfig;
   chain: ChainConfig;
   keyringVersion: string;
@@ -24,6 +25,7 @@ export type ChainConfig = {
 };
 
 export const ConfigV2: SnapConfig = {
+  encrypt: false,
   keyringVersion: process.env.KEYRING_VERSION ?? 'v1',
   accounts: {
     index: 0,

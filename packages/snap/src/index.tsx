@@ -28,7 +28,7 @@ import {
 import type { StartSendTransactionFlowParams } from './rpcs/start-send-transaction-flow';
 import { startSendTransactionFlow } from './rpcs/start-send-transaction-flow';
 import { KeyringStateManager } from './stateManagement';
-import { BdkAccountRepository } from './store/BdkAccountRepository';
+import { SnapAccountRepository } from './repositories/SnapAccountRepository';
 import {
   isSendFormEvent,
   SendBitcoinController,
@@ -37,6 +37,7 @@ import type { SendFlowContext, SendFormState } from './ui/types';
 import { AccountUseCases } from './usecases';
 import { isSnapRpcError, logger } from './utils';
 import { loadLocale } from './utils/locale';
+import { SnapStore } from './infra';
 
 export const validateOrigin = (origin: string, method: string): void => {
   if (!origin) {
@@ -113,8 +114,13 @@ export const onKeyringRequest: OnKeyringRequestHandler = async ({
         origin,
       });
     } else {
-      const repository = new BdkAccountRepository();
+      // Infra layer
+      const store = new SnapStore(ConfigV2.encrypt);
+      // Data layer
+      const repository = new SnapAccountRepository(store);
+      // Business layer
       const useCases = new AccountUseCases(repository, ConfigV2.accounts.index);
+      // Application layer
       keyring = new KeyringHandler(useCases, ConfigV2.accounts);
     }
 

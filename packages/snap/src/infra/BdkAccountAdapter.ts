@@ -1,6 +1,10 @@
-import type { JsonSLIP10Node } from '@metamask/key-tree';
-import type { AddressInfo, AddressType, Balance } from 'bdk_wasm';
-import { Wallet, KeychainKind, Network, slip10_to_extended } from 'bdk_wasm';
+import type {
+  AddressInfo,
+  AddressType,
+  Balance,
+  DescriptorPair,
+} from 'bdk_wasm';
+import { Wallet, KeychainKind, Network, ChangeSet } from 'bdk_wasm';
 
 import type { BitcoinAccount } from '../entities';
 
@@ -14,37 +18,24 @@ export class BdkAccountAdapter implements BitcoinAccount {
     this._wallet = wallet;
   }
 
-  static fromSLIP10(
+  static create(
     id: string,
-    slip10: JsonSLIP10Node,
+    descriptors: DescriptorPair,
     network: Network,
-    addressType: AddressType,
   ): BdkAccountAdapter {
-    const fingerprint = slip10.masterFingerprint ?? slip10.parentFingerprint;
-
-    let wallet: Wallet;
-    if (slip10.privateKey) {
-      const xpriv = slip10_to_extended(slip10, network);
-      wallet = Wallet.from_xpriv(
-        xpriv,
-        fingerprint.toString(16),
+    return new BdkAccountAdapter(
+      id,
+      Wallet.from_descriptors(
         network,
-        addressType,
-      );
-    } else {
-      const xpub = slip10_to_extended(slip10, network);
-      wallet = Wallet.from_xpub(
-        xpub,
-        fingerprint.toString(16),
-        network,
-        addressType,
-      );
-    }
-    return new BdkAccountAdapter(id, wallet);
+        descriptors.external,
+        descriptors.internal,
+      ),
+    );
   }
 
-  static load(id: string, walletData: any): BdkAccountAdapter {
-    return new BdkAccountAdapter(id, Wallet.load(walletData));
+  static load(id: string, walletData: string): BdkAccountAdapter {
+    const changeSet = ChangeSet.from_json(walletData);
+    return new BdkAccountAdapter(id, Wallet.load(changeSet));
   }
 
   get id(): string {
@@ -90,7 +81,7 @@ export class BdkAccountAdapter implements BitcoinAccount {
     return this._wallet.reveal_next_address(KeychainKind.External);
   }
 
-  takeStaged(): any {
+  takeStaged(): ChangeSet | undefined {
     return this._wallet.take_staged();
   }
 }
