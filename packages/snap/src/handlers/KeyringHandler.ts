@@ -66,7 +66,7 @@ export class KeyringHandler implements Keyring {
     return keyringAccount;
   }
 
-  getAccountBalances(
+  async getAccountBalances(
     id: string,
     assets: CaipAssetType[],
   ): Promise<Record<CaipAssetType, Balance>> {
@@ -85,15 +85,15 @@ export class KeyringHandler implements Keyring {
     throw new Error('Method not implemented.');
   }
 
-  exportAccount(id: string): Promise<KeyringAccountData> {
+  async exportAccount(id: string): Promise<KeyringAccountData> {
     throw new Error('Method not implemented.');
   }
 
-  listRequests(): Promise<KeyringRequest[]> {
+  async listRequests(): Promise<KeyringRequest[]> {
     throw new Error('Method not implemented.');
   }
 
-  getRequest(id: string): Promise<KeyringRequest | undefined> {
+  async getRequest(id: string): Promise<KeyringRequest | undefined> {
     throw new Error('Method not implemented.');
   }
 
@@ -101,11 +101,11 @@ export class KeyringHandler implements Keyring {
     throw new Error('Method not implemented.');
   }
 
-  approveRequest(id: string, data?: Record<string, Json>): Promise<void> {
+  async approveRequest(id: string, data?: Record<string, Json>): Promise<void> {
     throw new Error('Method not implemented.');
   }
 
-  rejectRequest(id: string): Promise<void> {
+  async rejectRequest(id: string): Promise<void> {
     throw new Error('Method not implemented.');
   }
 

@@ -1,4 +1,4 @@
-import type { AddressType, Network } from 'bdk_wasm';
+import type { AddressType, Network } from 'bdk_wasm/bdk_wasm_bg';
 import { stringify, parse } from 'superjson';
 import { v4 as uuidv4 } from 'uuid';
 
