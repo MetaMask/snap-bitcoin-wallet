@@ -4,6 +4,20 @@ import { networks } from 'bitcoinjs-lib';
 import { Caip2ChainId } from '../../../constants';
 
 /**
+ * Asserts a scope (CAIP-2 Chain ID) is supported.
+ *
+ * @param scope - A CAIP-2 Chain ID (scope).
+ * @throws An error if an invalid network is provided.
+ */
+export function assertScopeIsSupported(scope: string) {
+  const scopes = Object.keys(Caip2ChainId);
+
+  if (!scopes.includes(scope)) {
+    throw new Error(`Invalid scope, must be one of: ${scopes.join(', ')}`);
+  }
+}
+
+/**
  * Gets a bitcoinjs-lib network instance based on a given CAIP-2 Chain ID.
  *
  * @param caip2ChainId - The CAIP-2 Chain ID.
