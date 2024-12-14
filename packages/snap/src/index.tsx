@@ -13,8 +13,10 @@ import {
 import { Config } from './config';
 import { ConfigV2 } from './configv2';
 import { KeyringHandler } from './handlers/KeyringHandler';
+import { SnapStore } from './infra';
 import { BtcKeyring } from './keyring';
 import { InternalRpcMethod, originPermissions } from './permissions';
+import { SnapAccountRepository } from './repositories/SnapAccountRepository';
 import type {
   GetTransactionStatusParams,
   EstimateFeeParams,
@@ -28,7 +30,6 @@ import {
 import type { StartSendTransactionFlowParams } from './rpcs/start-send-transaction-flow';
 import { startSendTransactionFlow } from './rpcs/start-send-transaction-flow';
 import { KeyringStateManager } from './stateManagement';
-import { SnapAccountRepository } from './repositories/SnapAccountRepository';
 import {
   isSendFormEvent,
   SendBitcoinController,
@@ -37,7 +38,6 @@ import type { SendFlowContext, SendFormState } from './ui/types';
 import { AccountUseCases } from './usecases';
 import { isSnapRpcError, logger } from './utils';
 import { loadLocale } from './utils/locale';
-import { SnapStore } from './infra';
 
 export const validateOrigin = (origin: string, method: string): void => {
   if (!origin) {

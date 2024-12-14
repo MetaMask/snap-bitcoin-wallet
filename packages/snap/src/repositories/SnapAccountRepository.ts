@@ -1,16 +1,15 @@
-import { v4 as uuidv4 } from 'uuid';
-
-import { BdkAccountAdapter, SnapStore } from '../infra';
-import type { BitcoinAccount } from '../entities';
+import type { AddressType, Network, DescriptorPair } from 'bdk_wasm';
 import {
-  AddressType,
-  Network,
   slip10_to_extended,
   xpriv_to_descriptor,
-  DescriptorPair,
   xpub_to_descriptor,
 } from 'bdk_wasm';
-import { AccountRepository } from '.';
+import { v4 as uuidv4 } from 'uuid';
+
+import type { AccountRepository } from '.';
+import type { BitcoinAccount } from '../entities';
+import type { SnapStore } from '../infra';
+import { BdkAccountAdapter } from '../infra';
 
 export class SnapAccountRepository implements AccountRepository {
   protected readonly _store: SnapStore;
@@ -78,7 +77,7 @@ export class SnapAccountRepository implements AccountRepository {
 
     const state = await this._store.get();
     state.accounts.derivationPaths[derivationPath.join('/')] = id;
-    state.accounts.wallets[id] = account.takeStaged()!.to_json();
+    state.accounts.wallets[id] = account.takeStaged()?.to_json() ?? '';
     await this._store.set(state);
 
     return account;

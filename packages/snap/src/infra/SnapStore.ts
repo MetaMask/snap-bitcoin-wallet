@@ -1,4 +1,4 @@
-import { JsonSLIP10Node } from '@metamask/key-tree';
+import type { JsonSLIP10Node } from '@metamask/key-tree';
 
 export type State = {
   accounts: {

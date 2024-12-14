@@ -1,11 +1,12 @@
-import { mock } from 'jest-mock-extended';
-import { SnapAccountRepository } from './SnapAccountRepository';
-import { SnapStore } from '../infra';
-import { BdkAccountAdapter } from '../infra';
-import { BitcoinAccount } from '../entities';
+import type { JsonSLIP10Node } from '@metamask/key-tree';
 import { ChangeSet, AddressType, Network } from 'bdk_wasm';
+import { mock } from 'jest-mock-extended';
 import { v4 as uuidv4 } from 'uuid';
-import { JsonSLIP10Node } from '@metamask/key-tree';
+
+import type { BitcoinAccount } from '../entities';
+import { BdkAccountAdapter } from '../infra';
+import type { SnapStore } from '../infra';
+import { SnapAccountRepository } from './SnapAccountRepository';
 
 jest.mock('../infra/BdkAccountAdapter', () => ({
   BdkAccountAdapter: {

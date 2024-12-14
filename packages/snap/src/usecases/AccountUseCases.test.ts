@@ -1,9 +1,9 @@
 import { AddressType, Network } from 'bdk_wasm/bdk_wasm_bg';
-import { AccountUseCases } from './AccountUseCases';
+import { mock } from 'jest-mock-extended';
+
 import type { BitcoinAccount } from '../entities';
 import type { AccountRepository } from '../repositories';
-
-import { mock } from 'jest-mock-extended';
+import { AccountUseCases } from './AccountUseCases';
 
 jest.mock('../utils/logger');
 
@@ -26,16 +26,16 @@ describe('AccountUseCases', () => {
     });
 
     it.each([
-      { addressType: AddressType.P2pkh, purpose: "44'" },
-      { addressType: AddressType.P2sh, purpose: "49'" },
-      { addressType: AddressType.P2wpkh, purpose: "84'" },
-      { addressType: AddressType.P2tr, purpose: "86'" },
+      { tAddressType: AddressType.P2pkh, purpose: "44'" },
+      { tAddressType: AddressType.P2sh, purpose: "49'" },
+      { tAddressType: AddressType.P2wpkh, purpose: "84'" },
+      { tAddressType: AddressType.P2tr, purpose: "86'" },
     ])(
       'should create an account of type: %s',
-      async ({ purpose, addressType }) => {
+      async ({ purpose, tAddressType }) => {
         const derivationPath = ['m', purpose, "0'", `${accountIndex}'`];
 
-        await useCases.createAccount(network, addressType);
+        await useCases.createAccount(network, tAddressType);
 
         expect(mockRepository.getByDerivationPath).toHaveBeenCalledWith(
           derivationPath,
@@ -49,14 +49,14 @@ describe('AccountUseCases', () => {
     );
 
     it.each([
-      { network: Network.Bitcoin, coinType: "0'" },
-      { network: Network.Testnet, coinType: "1'" },
-      { network: Network.Testnet4, coinType: "1'" },
-      { network: Network.Signet, coinType: "1'" },
-      { network: Network.Regtest, coinType: "1'" },
+      { tNetwork: Network.Bitcoin, coinType: "0'" },
+      { tNetwork: Network.Testnet, coinType: "1'" },
+      { tNetwork: Network.Testnet4, coinType: "1'" },
+      { tNetwork: Network.Signet, coinType: "1'" },
+      { tNetwork: Network.Regtest, coinType: "1'" },
     ])(
       'should create an account on network: %s',
-      async ({ network, coinType }) => {
+      async ({ tNetwork, coinType }) => {
         const expectedDerivationPath = [
           'm',
           "84'",
@@ -64,7 +64,7 @@ describe('AccountUseCases', () => {
           `${accountIndex}'`,
         ];
 
-        await useCases.createAccount(network, addressType);
+        await useCases.createAccount(tNetwork, addressType);
 
         expect(mockRepository.getByDerivationPath).toHaveBeenCalledWith(
           expectedDerivationPath,
