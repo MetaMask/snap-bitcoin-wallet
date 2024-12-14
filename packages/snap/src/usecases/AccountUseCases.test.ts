@@ -43,7 +43,7 @@ describe('AccountUseCases', () => {
         expect(mockRepository.insert).toHaveBeenCalledWith(
           derivationPath,
           network,
-          addressType,
+          tAddressType,
         );
       },
     );
@@ -71,7 +71,7 @@ describe('AccountUseCases', () => {
         );
         expect(mockRepository.insert).toHaveBeenCalledWith(
           expectedDerivationPath,
-          network,
+          tNetwork,
           addressType,
         );
       },

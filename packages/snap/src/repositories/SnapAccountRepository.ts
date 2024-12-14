@@ -4,7 +4,7 @@ import {
   xpriv_to_descriptor,
   xpub_to_descriptor,
 } from 'bdk_wasm';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 } from 'uuid';
 
 import type { AccountRepository } from '.';
 import type { BitcoinAccount } from '../entities';
@@ -53,7 +53,8 @@ export class SnapAccountRepository implements AccountRepository {
     addressType: AddressType,
   ): Promise<BitcoinAccount> {
     const slip10 = await this._store.getSLIP10(derivationPath);
-    const id = uuidv4();
+    const id = v4();
+    console.log('id', id);
     const fingerprint = (
       slip10.masterFingerprint ?? slip10.parentFingerprint
     ).toString(16);
