@@ -3,8 +3,8 @@ import type {
   AddressType,
   Balance,
   DescriptorPair,
-} from 'bdk_wasm';
-import { Wallet, KeychainKind, Network, ChangeSet } from 'bdk_wasm';
+} from '@dario_nakamoto/bdk';
+import { Wallet, KeychainKind, Network, ChangeSet } from '@dario_nakamoto/bdk';
 
 import type { BitcoinAccount } from '../entities';
 

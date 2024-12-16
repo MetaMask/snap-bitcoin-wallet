@@ -1,5 +1,5 @@
+import { AddressType, Network } from '@dario_nakamoto/bdk';
 import type { JsonSLIP10Node } from '@metamask/key-tree';
-import { AddressType, Network } from 'bdk_wasm';
 import { mock } from 'jest-mock-extended';
 
 import type { BitcoinAccount } from '../entities';
@@ -9,7 +9,7 @@ import { SnapAccountRepository } from './SnapAccountRepository';
 
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
 /* eslint-disable @typescript-eslint/naming-convention */
-jest.mock('bdk_wasm', () => {
+jest.mock('@dario_nakamoto/bdk', () => {
   return {
     slip10_to_extended: jest.fn().mockReturnValue('mock-extended'),
     xpriv_to_descriptor: jest

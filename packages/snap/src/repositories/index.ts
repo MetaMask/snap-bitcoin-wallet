@@ -1,4 +1,4 @@
-import type { AddressType, Network } from 'bdk_wasm';
+import type { AddressType, Network } from '@dario_nakamoto/bdk';
 
 import type { BitcoinAccount } from '../entities';
 

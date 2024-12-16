@@ -1,4 +1,4 @@
-import { AddressType, Network } from 'bdk_wasm/bdk_wasm_bg';
+import { AddressType, Network } from '@dario_nakamoto/bdk/bdk_wasm_bg';
 
 export enum Caip2ChainId {
   Bitcoin = 'bip122:000000000019d6689c085ae165831e93',
