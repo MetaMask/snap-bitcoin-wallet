@@ -1,11 +1,14 @@
-import { mock } from 'jest-mock-extended';
-import { SnapAccountRepository } from './SnapAccountRepository';
-import type { SnapStore } from '../infra';
-import type { BitcoinAccount } from '../entities';
-import { BdkAccountAdapter } from '../infra';
+import type { JsonSLIP10Node } from '@metamask/key-tree';
 import { AddressType, Network } from 'bdk_wasm';
-import { JsonSLIP10Node } from '@metamask/key-tree';
+import { mock } from 'jest-mock-extended';
 
+import type { BitcoinAccount } from '../entities';
+import type { SnapStore } from '../infra';
+import { BdkAccountAdapter } from '../infra';
+import { SnapAccountRepository } from './SnapAccountRepository';
+
+// TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
+/* eslint-disable @typescript-eslint/naming-convention */
 jest.mock('bdk_wasm', () => {
   return {
     slip10_to_extended: jest.fn().mockReturnValue('mock-extended'),

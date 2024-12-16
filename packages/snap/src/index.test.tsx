@@ -14,7 +14,7 @@ import * as estimateFeeRpc from './rpcs/estimate-fee';
 import * as getTxStatusRpc from './rpcs/get-transaction-status';
 
 jest.mock('./utils/logger');
-jest.mock('bdk_wasm', () => {});
+jest.mock('bdk_wasm');
 jest.mock('@metamask/keyring-api', () => ({
   ...jest.requireActual('@metamask/keyring-api'),
   handleKeyringRequest: jest.fn(),

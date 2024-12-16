@@ -30,6 +30,9 @@ export const CreateAccountRequest = object({
   addressType: optional(enums(Object.values(Caip2AddressType))),
 });
 
+// TODO: enable when all methods are implemented
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 export class KeyringHandler implements Keyring {
   protected readonly _accounts: AccountUseCases;
 

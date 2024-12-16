@@ -1,3 +1,6 @@
+// TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
+/* eslint-disable camelcase */
+
 import type { AddressType, Network, DescriptorPair } from 'bdk_wasm';
 import {
   slip10_to_extended,
