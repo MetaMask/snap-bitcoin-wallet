@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 
-import { Network } from 'bdk_wasm/bdk_wasm_bg';
+import { Network } from '@dario_nakamoto/bdk/bdk_wasm_bg';
 
 import type { SnapConfig } from './entities';
 import { Caip2AddressType, Caip2ChainId } from './handlers';
