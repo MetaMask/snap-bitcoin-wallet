@@ -2,6 +2,7 @@ import { BtcOnChainService } from './bitcoin/chain';
 import { QuickNodeClient } from './bitcoin/chain/clients/quicknode';
 import { SimpleHashClient } from './bitcoin/chain/clients/simplehash';
 import { BtcAccountDeriver, BtcWallet, getBtcNetwork } from './bitcoin/wallet';
+import { CacheStateManager } from './cacheManager';
 import { ApiClient, Config } from './config';
 
 export class Factory {
@@ -10,11 +11,13 @@ export class Factory {
 
     const quickNodeClient = Factory.createQuickNodeClient(scope);
     const simpleHashClient = Factory.createSimpleHashClient();
+    const cachedStateManager = Factory.createCachedStateManager();
 
     return new BtcOnChainService(
       {
         dataClient: quickNodeClient,
         satsProtectionDataClient: simpleHashClient,
+        cacheStateManager: cachedStateManager,
       },
       {
         network: btcNetwork,
@@ -55,5 +58,9 @@ export class Factory {
   static createWallet(scope: string): BtcWallet {
     const btcNetwork = getBtcNetwork(scope);
     return new BtcWallet(new BtcAccountDeriver(btcNetwork), btcNetwork);
+  }
+
+  static createCachedStateManager(): CacheStateManager {
+    return new CacheStateManager();
   }
 }

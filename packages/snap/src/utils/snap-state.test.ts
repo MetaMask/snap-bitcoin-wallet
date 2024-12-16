@@ -31,11 +31,12 @@ type MockExecuteTransactionInput = {
 describe('SnapStateManager', () => {
   const createMockStateManager = <State, StateDataInput>(
     createLock?: boolean,
+    encrypted?: boolean,
   ) => {
     const updateDataSpy = jest.fn();
     class MockSnapStateManager extends SnapStateManager<State> {
       constructor() {
-        super(createLock);
+        super({ createLock, encrypted });
       }
 
       async getData() {
@@ -85,7 +86,12 @@ describe('SnapStateManager', () => {
   };
 
   const createMockState = (initState: MockState) => {
-    const setStateDataFn = async (data: MockState) => {
+    const setStateDataFn = async ({
+      data,
+    }: {
+      data: MockState;
+      encrypted: boolean;
+    }) => {
       initState.transaction = [...data.transaction];
       initState.transactionDetails = Object.entries(
         data.transactionDetails,
@@ -223,7 +229,10 @@ describe('SnapStateManager', () => {
 
       expect(readSpy).toHaveBeenCalledTimes(1);
       expect(writeSpy).toHaveBeenCalledTimes(1);
-      expect(writeSpy).toHaveBeenCalledWith(testcase.state);
+      expect(writeSpy).toHaveBeenCalledWith({
+        data: testcase.state,
+        encrypted: true,
+      });
       expect(testcase.state.transaction).toHaveLength(2);
       expect(updateDataSpy).toHaveBeenCalledTimes(1);
     });
