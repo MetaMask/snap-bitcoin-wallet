@@ -6,8 +6,7 @@ import {
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
-import type { AccountsConfig } from '../configv2';
-import type { BitcoinAccount } from '../entities';
+import type { BitcoinAccount, AccountsConfig } from '../entities';
 import type { AccountUseCases } from '../usecases/AccountUseCases';
 import { getProvider } from '../utils';
 import {

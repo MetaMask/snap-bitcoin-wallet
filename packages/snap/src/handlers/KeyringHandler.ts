@@ -13,8 +13,7 @@ import {
 import type { Json } from '@metamask/utils';
 import { assert, enums, object, optional } from 'superstruct';
 
-import type { AccountsConfig } from '../configv2';
-import type { BitcoinAccount } from '../entities';
+import type { BitcoinAccount, AccountsConfig } from '../entities';
 import type { AccountUseCases } from '../usecases/AccountUseCases';
 import { getProvider } from '../utils';
 import {
