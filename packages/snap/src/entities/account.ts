@@ -1,8 +1,4 @@
-import type {
-  AddressInfo,
-  AddressType,
-  Balance,
-} from '@dario_nakamoto/bdk/bdk_wasm_bg';
+import type { AddressInfo, AddressType, Balance } from '@dario_nakamoto/bdk';
 
 export type BitcoinAccount = {
   id: string;

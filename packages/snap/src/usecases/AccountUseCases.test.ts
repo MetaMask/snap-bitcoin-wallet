@@ -1,4 +1,4 @@
-import { AddressType, Network } from '@dario_nakamoto/bdk/bdk_wasm_bg';
+import type { AddressType, Network } from '@dario_nakamoto/bdk';
 import { mock } from 'jest-mock-extended';
 
 import type { BitcoinAccount } from '../entities';
@@ -17,8 +17,8 @@ describe('AccountUseCases', () => {
   });
 
   describe('createAccount', () => {
-    const network = Network.Bitcoin;
-    const addressType = AddressType.P2wpkh;
+    const network: Network = 'bitcoin';
+    const addressType: AddressType = 'p2wpkh';
     const mockAccount = mock<BitcoinAccount>();
 
     beforeEach(() => {
@@ -26,13 +26,14 @@ describe('AccountUseCases', () => {
     });
 
     it.each([
-      { tAddressType: AddressType.P2pkh, purpose: "44'" },
-      { tAddressType: AddressType.P2sh, purpose: "49'" },
-      { tAddressType: AddressType.P2wpkh, purpose: "84'" },
-      { tAddressType: AddressType.P2tr, purpose: "86'" },
-    ])(
+      { tAddressType: 'p2pkh', purpose: "44'" },
+      { tAddressType: 'p2sh', purpose: "45'" },
+      { tAddressType: 'p2wsh', purpose: "49'" },
+      { tAddressType: 'p2wpkh', purpose: "84'" },
+      { tAddressType: 'p2tr', purpose: "86'" },
+    ] as { tAddressType: AddressType; purpose: string }[])(
       'should create an account of type: %s',
-      async ({ purpose, tAddressType }) => {
+      async ({ tAddressType, purpose }) => {
         const derivationPath = ['m', purpose, "0'", `${accountIndex}'`];
 
         await useCases.createAccount(network, tAddressType);
@@ -49,12 +50,12 @@ describe('AccountUseCases', () => {
     );
 
     it.each([
-      { tNetwork: Network.Bitcoin, coinType: "0'" },
-      { tNetwork: Network.Testnet, coinType: "1'" },
-      { tNetwork: Network.Testnet4, coinType: "1'" },
-      { tNetwork: Network.Signet, coinType: "1'" },
-      { tNetwork: Network.Regtest, coinType: "1'" },
-    ])(
+      { tNetwork: 'bitcoin', coinType: "0'" },
+      { tNetwork: 'testnet', coinType: "1'" },
+      { tNetwork: 'testnet4', coinType: "1'" },
+      { tNetwork: 'signet', coinType: "1'" },
+      { tNetwork: 'regtest', coinType: "1'" },
+    ] as { tNetwork: Network; coinType: string }[])(
       'should create an account on network: %s',
       async ({ tNetwork, coinType }) => {
         const expectedDerivationPath = [

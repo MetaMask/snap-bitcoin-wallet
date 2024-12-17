@@ -3,8 +3,9 @@ import type {
   AddressType,
   Balance,
   DescriptorPair,
+  Network,
 } from '@dario_nakamoto/bdk';
-import { Wallet, KeychainKind, Network, ChangeSet } from '@dario_nakamoto/bdk';
+import { Wallet, ChangeSet } from '@dario_nakamoto/bdk';
 
 import type { BitcoinAccount } from '../entities';
 
@@ -37,9 +38,9 @@ export class BdkAccountAdapter implements BitcoinAccount {
 
   get suggestedName(): string {
     switch (this._wallet.network()) {
-      case Network.Bitcoin:
+      case 'bitcoin':
         return 'Bitcoin Account';
-      case Network.Testnet:
+      case 'testnet':
         return 'Bitcoin Testnet Account';
       default:
         // Leave it blank to fallback to auto-suggested name on the extension side
@@ -63,15 +64,15 @@ export class BdkAccountAdapter implements BitcoinAccount {
   }
 
   peekAddress(index: number): AddressInfo {
-    return this._wallet.peek_address(KeychainKind.External, index);
+    return this._wallet.peek_address('external', index);
   }
 
   nextUnusedAddress(): AddressInfo {
-    return this._wallet.next_unused_address(KeychainKind.External);
+    return this._wallet.next_unused_address('external');
   }
 
   revealNextAddress(): AddressInfo {
-    return this._wallet.reveal_next_address(KeychainKind.External);
+    return this._wallet.reveal_next_address('external');
   }
 
   takeStaged(): ChangeSet | undefined {

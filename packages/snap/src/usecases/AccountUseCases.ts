@@ -1,22 +1,23 @@
-import { AddressType, Network } from '@dario_nakamoto/bdk/bdk_wasm_bg';
+import type { AddressType, Network } from '@dario_nakamoto/bdk/bdk_wasm';
 
 import type { BitcoinAccount } from '../entities';
 import type { AccountRepository } from '../repositories';
 import { logger } from '../utils';
 
-const addressTypeToPurpose = {
-  [AddressType.P2pkh]: "44'",
-  [AddressType.P2sh]: "49'",
-  [AddressType.P2wpkh]: "84'",
-  [AddressType.P2tr]: "86'",
+const addressTypeToPurpose: Record<AddressType, string> = {
+  p2pkh: "44'",
+  p2sh: "45'",
+  p2wsh: "49'",
+  p2wpkh: "84'",
+  p2tr: "86'",
 };
 
-const networkToCoinType = {
-  [Network.Bitcoin]: "0'",
-  [Network.Testnet]: "1'",
-  [Network.Testnet4]: "1'",
-  [Network.Signet]: "1'",
-  [Network.Regtest]: "1'",
+const networkToCoinType: Record<Network, string> = {
+  bitcoin: "0'",
+  testnet: "1'",
+  testnet4: "1'",
+  signet: "1'",
+  regtest: "1'",
 };
 
 export class AccountUseCases {

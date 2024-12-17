@@ -1666,10 +1666,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@dario_nakamoto/bdk@npm:^0.1.1":
-  version: 0.1.1
-  resolution: "@dario_nakamoto/bdk@npm:0.1.1"
-  checksum: b49e73147b691d386e5142a9ab49d58e071c252c9cfd9e475b76db08fc730e9266025d2c59450720afea5027f5fd0577f63b70804a131c27b05eac25e27310ea
+"@dario_nakamoto/bdk@file:../../../bdk-wasm/pkg::locator=%40metamask%2Fbitcoin-wallet-snap%40workspace%3Apackages%2Fsnap":
+  version: 0.1.0
+  resolution: "@dario_nakamoto/bdk@file:../../../bdk-wasm/pkg#../../../bdk-wasm/pkg::hash=c6def9&locator=%40metamask%2Fbitcoin-wallet-snap%40workspace%3Apackages%2Fsnap"
+  checksum: 4578325be8fc7c77deae57ccb2f45ed574748b9dbd6a0a909538e2acc6c55785eaa98defbb444b1366c275f5443f9654e1e2200dcbb925f422fa4c177e5ddb82
   languageName: node
   linkType: hard
 
@@ -2703,7 +2703,7 @@ __metadata:
   dependencies:
     "@babel/preset-typescript": ^7.23.3
     "@bitcoinerlab/secp256k1": 1.1.1
-    "@dario_nakamoto/bdk": ^0.1.1
+    "@dario_nakamoto/bdk": ../../../bdk-wasm/pkg
     "@jest/globals": ^29.5.0
     "@metamask/auto-changelog": ^3.4.4
     "@metamask/eslint-config": ^12.2.0

@@ -1,4 +1,4 @@
-import { AddressType, Network } from '@dario_nakamoto/bdk/bdk_wasm_bg';
+import type { AddressType, Network } from '@dario_nakamoto/bdk';
 
 export enum Caip2ChainId {
   Bitcoin = 'bip122:000000000019d6689c085ae165831e93',
@@ -11,23 +11,25 @@ export enum Caip2ChainId {
 export enum Caip2AddressType {
   P2pkh = 'bip122:p2pkh',
   P2sh = 'bip122:p2sh',
+  P2wsh = 'bip122:p2wsh',
   P2wpkh = 'bip122:p2wpkh',
   P2tr = 'bip122:p2tr',
 }
 
 export const caip2ToNetwork: Record<Caip2ChainId, Network> = {
-  [Caip2ChainId.Bitcoin]: Network.Bitcoin,
-  [Caip2ChainId.Testnet]: Network.Testnet,
-  [Caip2ChainId.Testnet4]: Network.Testnet4,
-  [Caip2ChainId.Signet]: Network.Signet,
-  [Caip2ChainId.Regtest]: Network.Regtest,
+  [Caip2ChainId.Bitcoin]: 'bitcoin',
+  [Caip2ChainId.Testnet]: 'testnet',
+  [Caip2ChainId.Testnet4]: 'testnet4',
+  [Caip2ChainId.Signet]: 'signet',
+  [Caip2ChainId.Regtest]: 'regtest',
 };
 
 export const caip2ToAddressType: Record<Caip2AddressType, AddressType> = {
-  [Caip2AddressType.P2pkh]: AddressType.P2pkh,
-  [Caip2AddressType.P2sh]: AddressType.P2sh,
-  [Caip2AddressType.P2wpkh]: AddressType.P2wpkh,
-  [Caip2AddressType.P2tr]: AddressType.P2tr,
+  [Caip2AddressType.P2pkh]: 'p2pkh',
+  [Caip2AddressType.P2sh]: 'p2sh',
+  [Caip2AddressType.P2wsh]: 'p2wsh',
+  [Caip2AddressType.P2wpkh]: 'p2wpkh',
+  [Caip2AddressType.P2tr]: 'p2tr',
 };
 
 export const addressTypeToCaip2: Record<AddressType, Caip2AddressType> =

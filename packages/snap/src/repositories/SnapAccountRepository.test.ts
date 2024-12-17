@@ -1,4 +1,3 @@
-import { AddressType, Network } from '@dario_nakamoto/bdk';
 import type { JsonSLIP10Node } from '@metamask/key-tree';
 import { mock } from 'jest-mock-extended';
 
@@ -18,8 +17,6 @@ jest.mock('@dario_nakamoto/bdk', () => {
     xpub_to_descriptor: jest
       .fn()
       .mockReturnValue({ external: 'ext-desc', internal: 'int-desc' }),
-    AddressType: { P2wpkh: 'P2wpkh' },
-    Network: { Bitcoin: 'Bitcoin' },
   };
 });
 
@@ -113,7 +110,7 @@ describe('SnapAccountRepository', () => {
       } as unknown as BitcoinAccount;
       (BdkAccountAdapter.create as jest.Mock).mockReturnValue(mockAccount);
 
-      await repo.insert(derivationPath, Network.Bitcoin, AddressType.P2wpkh);
+      await repo.insert(derivationPath, 'bitcoin', 'p2wpkh');
 
       expect(mockStore.set).toHaveBeenCalledWith({
         accounts: {
@@ -137,7 +134,7 @@ describe('SnapAccountRepository', () => {
       } as unknown as BitcoinAccount;
       (BdkAccountAdapter.create as jest.Mock).mockReturnValue(mockAccount);
 
-      await repo.insert(derivationPath, Network.Bitcoin, AddressType.P2wpkh);
+      await repo.insert(derivationPath, 'bitcoin', 'p2wpkh');
 
       expect(mockStore.set).toHaveBeenCalledWith({
         accounts: {

@@ -1,4 +1,4 @@
-import type { Network } from '@dario_nakamoto/bdk/bdk_wasm_bg';
+import type { Network } from '@dario_nakamoto/bdk';
 
 export type SnapConfig = {
   encrypt: boolean;
