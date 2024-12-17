@@ -36,5 +36,5 @@ module.exports = {
   moduleNameMapper: {
     '^.+.(svg)$': 'jest-transform-stub',
   },
-  transformIgnorePatterns: ['/node_modules/(?!(@dario_nakamoto/bdk)/)'],
+  transformIgnorePatterns: ['/node_modules/(?!(bdk)/)'],
 };

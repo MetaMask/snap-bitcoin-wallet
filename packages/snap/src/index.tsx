@@ -39,6 +39,20 @@ import { AccountUseCases } from './usecases';
 import { isSnapRpcError, logger } from './utils';
 import { loadLocale } from './utils/locale';
 
+logger.logLevel = parseInt(Config.logLevel, 10);
+
+let keyring: Keyring;
+if (ConfigV2.keyringVersion === 'v2') {
+  // Infra layer
+  const store = new SnapStore(ConfigV2.encrypt);
+  // Data layer
+  const repository = new SnapAccountRepository(store);
+  // Business layer
+  const useCases = new AccountUseCases(repository, ConfigV2.accounts.index);
+  // Application layer
+  keyring = new KeyringHandler(useCases, ConfigV2.accounts);
+}
+
 export const validateOrigin = (origin: string, method: string): void => {
   if (!origin) {
     // eslint-disable-next-line @typescript-eslint/no-throw-literal
@@ -54,8 +68,6 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   origin,
   request,
 }): Promise<Json> => {
-  logger.logLevel = parseInt(Config.logLevel, 10);
-
   await loadLocale();
 
   try {
@@ -100,28 +112,16 @@ export const onKeyringRequest: OnKeyringRequestHandler = async ({
   origin,
   request,
 }): Promise<Json> => {
-  logger.logLevel = parseInt(Config.logLevel, 10);
-
   await loadLocale();
 
   try {
     validateOrigin(origin, request.method);
 
-    let keyring: Keyring;
-    if (ConfigV2.keyringVersion === 'v1') {
+    if (!keyring) {
       keyring = new BtcKeyring(new KeyringStateManager(), {
         defaultIndex: Config.wallet.defaultAccountIndex,
         origin,
       });
-    } else {
-      // Infra layer
-      const store = new SnapStore(ConfigV2.encrypt);
-      // Data layer
-      const repository = new SnapAccountRepository(store);
-      // Business layer
-      const useCases = new AccountUseCases(repository, ConfigV2.accounts.index);
-      // Application layer
-      keyring = new KeyringHandler(useCases, ConfigV2.accounts);
     }
 
     return (await handleKeyringRequest(

@@ -4,8 +4,8 @@ import type {
   Balance,
   DescriptorPair,
   Network,
-} from '@dario_nakamoto/bdk';
-import { Wallet, ChangeSet } from '@dario_nakamoto/bdk';
+} from 'bdk';
+import { Wallet, ChangeSet } from 'bdk';
 
 import type { BitcoinAccount } from '../entities';
 

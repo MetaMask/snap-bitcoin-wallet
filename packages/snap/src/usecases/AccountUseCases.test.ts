@@ -1,4 +1,4 @@
-import type { AddressType, Network } from '@dario_nakamoto/bdk';
+import type { AddressType, Network } from 'bdk';
 import { mock } from 'jest-mock-extended';
 
 import type { BitcoinAccount } from '../entities';

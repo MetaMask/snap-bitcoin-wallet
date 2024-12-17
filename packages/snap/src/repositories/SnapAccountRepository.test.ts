@@ -8,7 +8,7 @@ import { SnapAccountRepository } from './SnapAccountRepository';
 
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
 /* eslint-disable @typescript-eslint/naming-convention */
-jest.mock('@dario_nakamoto/bdk', () => {
+jest.mock('bdk', () => {
   return {
     slip10_to_extended: jest.fn().mockReturnValue('mock-extended'),
     xpriv_to_descriptor: jest
