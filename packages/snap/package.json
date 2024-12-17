@@ -42,7 +42,7 @@
     "@metamask/eslint-config-jest": "^12.1.0",
     "@metamask/eslint-config-nodejs": "^12.1.0",
     "@metamask/eslint-config-typescript": "^12.1.0",
-    "@metamask/key-tree": "^9.1.2",
+    "@metamask/key-tree": "^10.0.1",
     "@metamask/keyring-api": "^9.0.0",
     "@metamask/snaps-cli": "^6.5.0",
     "@metamask/snaps-jest": "^8.6.0",
