@@ -9,9 +9,8 @@ export type State = {
 };
 
 /**
- * The SnapStore class provides methods to interact with the MetaMask Snap state and manage BIP-32 entropy.
- * It supports encrypted state management and provides methods to get and set the state, as well as retrieve
- * private and public entropy for given derivation paths.
+ * The SnapStore represents the MetaMask Snap state and manages the BIP-32 entropy from the Wallet SRP.
+ * It supports encryption of the state.
  */
 export class SnapStore {
   protected readonly _encrypt: boolean;
