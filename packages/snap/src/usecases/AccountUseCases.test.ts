@@ -53,7 +53,7 @@ describe('AccountUseCases', () => {
     });
   });
 
-  describe('createAccount', () => {
+  describe('create', () => {
     const network: Network = 'bitcoin';
     const addressType: AddressType = 'p2wpkh';
     const mockAccount = mock<BitcoinAccount>();
