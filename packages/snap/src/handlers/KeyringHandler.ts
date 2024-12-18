@@ -13,8 +13,7 @@ import {
 import type { Json } from '@metamask/utils';
 import { assert, enums, object, optional } from 'superstruct';
 
-import type { AccountsConfig } from '../configv2';
-import type { BitcoinAccount } from '../entities';
+import type { BitcoinAccount, AccountsConfig } from '../entities';
 import type { AccountUseCases } from '../usecases/AccountUseCases';
 import { getProvider } from '../utils';
 import {
@@ -30,6 +29,9 @@ export const CreateAccountRequest = object({
   scope: optional(enums(Object.values(Caip2ChainId))),
   addressType: optional(enums(Object.values(Caip2AddressType))),
 });
+
+// TODO: enable when all methods are implemented
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 export class KeyringHandler implements Keyring {
   protected readonly _accounts: AccountUseCases;
@@ -72,10 +74,11 @@ export class KeyringHandler implements Keyring {
     _: CaipAssetType[],
   ): Promise<Record<CaipAssetType, Balance>> {
     const account = await this._accounts.synchronize(id);
+    const balance = account.balance.trusted_spendable.to_btc().toString();
 
     return {
       [networkToCaip19[account.network]]: {
-        amount: account.balance.trusted_spendable.to_btc().toString(),
+        amount: balance,
         unit: 'BTC',
       },
     };

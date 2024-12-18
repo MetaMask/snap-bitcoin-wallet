@@ -13,8 +13,10 @@ import {
 import { Config } from './config';
 import { ConfigV2 } from './configv2';
 import { KeyringHandler } from './handlers/KeyringHandler';
+import { SnapStore } from './infra';
 import { BtcKeyring } from './keyring';
 import { InternalRpcMethod, originPermissions } from './permissions';
+import { SnapAccountRepository } from './repositories/SnapAccountRepository';
 import type {
   GetTransactionStatusParams,
   EstimateFeeParams,
@@ -28,7 +30,6 @@ import {
 import type { StartSendTransactionFlowParams } from './rpcs/start-send-transaction-flow';
 import { startSendTransactionFlow } from './rpcs/start-send-transaction-flow';
 import { KeyringStateManager } from './stateManagement';
-import { BdkAccountRepository } from './store/BdkAccountRepository';
 import {
   isSendFormEvent,
   SendBitcoinController,
@@ -37,7 +38,26 @@ import type { SendFlowContext, SendFormState } from './ui/types';
 import { AccountUseCases } from './usecases';
 import { isSnapRpcError, logger } from './utils';
 import { loadLocale } from './utils/locale';
-import { EsploraClientAdapter } from './adapters/EsploraClientAdapter';
+import { EsploraClientAdapter } from './infra/EsploraClientAdapter';
+
+logger.logLevel = parseInt(Config.logLevel, 10);
+
+let keyring: Keyring;
+if (ConfigV2.keyringVersion === 'v2') {
+  // Infra layer
+  const store = new SnapStore(ConfigV2.encrypt);
+  const chainClient = new EsploraClientAdapter(ConfigV2.chain);
+  // Data layer
+  const repository = new SnapAccountRepository(store);
+  // Business layer
+  const useCases = new AccountUseCases(
+    repository,
+    chainClient,
+    ConfigV2.accounts.index,
+  );
+  // Application layer
+  keyring = new KeyringHandler(useCases, ConfigV2.accounts);
+}
 
 export const validateOrigin = (origin: string, method: string): void => {
   if (!origin) {
@@ -54,8 +74,6 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   origin,
   request,
 }): Promise<Json> => {
-  logger.logLevel = parseInt(Config.logLevel, 10);
-
   await loadLocale();
 
   try {
@@ -100,28 +118,16 @@ export const onKeyringRequest: OnKeyringRequestHandler = async ({
   origin,
   request,
 }): Promise<Json> => {
-  logger.logLevel = parseInt(Config.logLevel, 10);
-
   await loadLocale();
 
   try {
     validateOrigin(origin, request.method);
 
-    let keyring: Keyring;
-    if (ConfigV2.keyringVersion === 'v1') {
+    if (!keyring) {
       keyring = new BtcKeyring(new KeyringStateManager(), {
         defaultIndex: Config.wallet.defaultAccountIndex,
         origin,
       });
-    } else {
-      const repository = new BdkAccountRepository();
-      const blockchainClients = new EsploraClientAdapter(ConfigV2.chain);
-      const useCases = new AccountUseCases(
-        repository,
-        blockchainClients,
-        ConfigV2.accounts.index,
-      );
-      keyring = new KeyringHandler(useCases, ConfigV2.accounts);
     }
 
     return (await handleKeyringRequest(

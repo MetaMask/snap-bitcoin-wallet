@@ -1,16 +1,14 @@
-import type { JsonSLIP10Node } from '@metamask/key-tree';
-import {
-  Wallet,
-  KeychainKind,
-  Network,
-  slip10_to_extended,
+import type {
   AddressInfo,
   AddressType,
   Balance,
+  DescriptorPair,
   FullScanRequest,
+  Network,
   SyncRequest,
   Update,
-} from 'bdk_wasm';
+} from 'bitcoindevkit';
+import { Wallet, ChangeSet } from 'bitcoindevkit';
 
 import type { BitcoinAccount } from '../entities';
 
@@ -24,36 +22,15 @@ export class BdkAccountAdapter implements BitcoinAccount {
     this._wallet = wallet;
   }
 
-  static fromSLIP10(
+  static create(
     id: string,
-    slip10: JsonSLIP10Node,
+    descriptors: DescriptorPair,
     network: Network,
-    addressType: AddressType,
   ): BdkAccountAdapter {
-    const fingerprint = slip10.masterFingerprint ?? slip10.parentFingerprint;
-
-    let wallet: Wallet;
-    if (slip10.privateKey) {
-      const xpriv = slip10_to_extended(slip10, network);
-      wallet = Wallet.from_xpriv(
-        xpriv,
-        fingerprint.toString(16),
-        network,
-        addressType,
-      );
-    } else {
-      const xpub = slip10_to_extended(slip10, network);
-      wallet = Wallet.from_xpub(
-        xpub,
-        fingerprint.toString(16),
-        network,
-        addressType,
-      );
-    }
-    return new BdkAccountAdapter(id, wallet);
+    return new BdkAccountAdapter(id, Wallet.create(network, descriptors));
   }
 
-  static load(id: string, walletData: any): BdkAccountAdapter {
+  static load(id: string, walletData: ChangeSet): BdkAccountAdapter {
     return new BdkAccountAdapter(id, Wallet.load(walletData));
   }
 
@@ -63,9 +40,9 @@ export class BdkAccountAdapter implements BitcoinAccount {
 
   get suggestedName(): string {
     switch (this._wallet.network()) {
-      case Network.Bitcoin:
+      case 'bitcoin':
         return 'Bitcoin Account';
-      case Network.Testnet:
+      case 'testnet':
         return 'Bitcoin Testnet Account';
       default:
         // Leave it blank to fallback to auto-suggested name on the extension side
@@ -97,15 +74,15 @@ export class BdkAccountAdapter implements BitcoinAccount {
   }
 
   peekAddress(index: number): AddressInfo {
-    return this._wallet.peek_address(KeychainKind.External, index);
+    return this._wallet.peek_address('external', index);
   }
 
   nextUnusedAddress(): AddressInfo {
-    return this._wallet.next_unused_address(KeychainKind.External);
+    return this._wallet.next_unused_address('external');
   }
 
   revealNextAddress(): AddressInfo {
-    return this._wallet.reveal_next_address(KeychainKind.External);
+    return this._wallet.reveal_next_address('external');
   }
 
   startFullScan(): FullScanRequest {
@@ -120,11 +97,7 @@ export class BdkAccountAdapter implements BitcoinAccount {
     return this._wallet.apply_update(update);
   }
 
-  takeStaged(): any {
+  takeStaged(): ChangeSet | undefined {
     return this._wallet.take_staged();
-  }
-
-  takeMerged(previousState: any): any {
-    return this._wallet.take_merged(previousState);
   }
 }

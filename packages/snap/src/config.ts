@@ -78,3 +78,5 @@ export const Config: SnapChainConfig = {
   defaultConfirmationThreshold: 6,
   defaultSatsProtectionEnabled: true,
 };
+
+export const DefaultCacheTtl = 60 * 1000;

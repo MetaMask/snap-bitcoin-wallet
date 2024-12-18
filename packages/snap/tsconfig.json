@@ -9,7 +9,7 @@
     "strictNullChecks": true /* Enable strict null checks. */,
     "jsx": "react-jsx",
     "jsxImportSource": "@metamask/snaps-sdk",
-    "allowJs": true /* Allow JavaScript files to be imported in TypeScript files. Needed to directly import the BDK assets without loading the WASM */,
+    "allowJs": true /* Allow JavaScript files to be imported in TypeScript files. Needed to directly import the BDK assets without loading the WASM */
   },
   "include": [
     "**/*.ts",

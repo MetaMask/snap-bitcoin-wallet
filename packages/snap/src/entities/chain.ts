@@ -1,7 +1,17 @@
-import { Update } from 'bdk_wasm/bdk_wasm_bg';
 import { BitcoinAccount } from './account';
 
 export type BlockchainClient = {
-  fullScan(account: BitcoinAccount): Promise<Update>;
-  sync(account: BitcoinAccount): Promise<Update>;
+  /**
+   * Perform a full scan operation on the account.
+   * Note that this operation modifies the account in place.
+   * @param account the account to full scan.
+   */
+  fullScan(account: BitcoinAccount): Promise<void>;
+
+  /**
+   * Perform a sync operation on the account.
+   * Note that this operation modifies the account in place.
+   * @param account the account to sync.
+   */
+  sync(account: BitcoinAccount): Promise<void>;
 };

@@ -6,7 +6,13 @@ import {
   generateFormattedUtxos,
   generateQuickNodeSendRawTransactionResp,
 } from '../../../test/utils';
+import {
+  CacheStateManager,
+  SerializableFees,
+  CachedValue,
+} from '../../cacheManager';
 import { Caip19Asset } from '../../constants';
+import { getCaip2ChainId } from '../wallet';
 import { FeeRate, TransactionStatus } from './constants';
 import type { IDataClient, ISatsProtectionDataClient } from './data-client';
 import { BtcOnChainServiceError } from './exceptions';
@@ -22,7 +28,6 @@ describe('BtcOnChainService', () => {
     const getTransactionStatusSpy = jest.fn();
     const sendTransactionSpy = jest.fn();
     const filterUtxosSpy = jest.fn();
-
     class MockReadDataClient implements IDataClient {
       getBalances = getBalancesSpy;
 
@@ -51,15 +56,31 @@ describe('BtcOnChainService', () => {
     };
   };
 
+  const createMockCacheStateManager = () => {
+    const cachedStateManager = new CacheStateManager();
+    const getFeeRateSpy = jest.spyOn(cachedStateManager, 'getFeeRate');
+    const setFeeRateSpy = jest
+      .spyOn(cachedStateManager, 'setFeeRate')
+      .mockResolvedValue();
+    return {
+      instance: cachedStateManager,
+      getFeeRateSpy,
+      setFeeRateSpy,
+    };
+  };
+
   const createMockBtcService = (
     dataClient?: IDataClient,
     satsProtectionClient?: ISatsProtectionDataClient,
+    cacheStateManager?: CacheStateManager,
     network: Network = networks.testnet,
   ) => {
     const {
       dataClient: _dataClient,
       satsProtectionClient: _satsProtectionDataClient,
     } = createMockDataClient();
+
+    const { instance: _cacheStateManager } = createMockCacheStateManager();
 
     class MockBtcOnChainService extends BtcOnChainService {
       isSatsProtectionEnabled() {
@@ -77,6 +98,7 @@ describe('BtcOnChainService', () => {
         dataClient: dataClient ?? _dataClient,
         satsProtectionDataClient:
           satsProtectionClient ?? _satsProtectionDataClient,
+        cacheStateManager: cacheStateManager ?? _cacheStateManager,
       },
       {
         network,
@@ -101,9 +123,12 @@ describe('BtcOnChainService', () => {
         filterUtxosSpy,
       } = createMockDataClient();
 
+      const { instance: cacheStateManager } = createMockCacheStateManager();
+
       const { service, isSatsProtectionEnabledSpy } = createMockBtcService(
         dataClient,
         satsProtectionClient,
+        cacheStateManager,
         network,
       );
 
@@ -228,9 +253,12 @@ describe('BtcOnChainService', () => {
       const { dataClient, satsProtectionClient, getUtxosSpy, filterUtxosSpy } =
         createMockDataClient();
 
+      const { instance: cacheStateManager } = createMockCacheStateManager();
+
       const { service, isSatsProtectionEnabledSpy } = createMockBtcService(
         dataClient,
         satsProtectionClient,
+        cacheStateManager,
         network,
       );
 
@@ -332,6 +360,146 @@ describe('BtcOnChainService', () => {
       await expect(service.getFeeRates()).rejects.toThrow(
         BtcOnChainServiceError,
       );
+    });
+
+    describe('feeRateCache', () => {
+      it('returns the cached value if available', async () => {
+        const { dataClient } = createMockDataClient();
+        const { instance: cacheStateManager, getFeeRateSpy } =
+          createMockCacheStateManager();
+        const { service } = createMockBtcService(
+          dataClient,
+          undefined,
+          cacheStateManager,
+        );
+
+        const cachedFees = new CachedValue<SerializableFees>(
+          new SerializableFees(
+            {
+              fees: [
+                {
+                  type: FeeRate.Fast,
+                  rate: BigInt(1),
+                },
+                {
+                  type: FeeRate.Medium,
+                  rate: BigInt(2),
+                },
+              ],
+            },
+            10 * 1000, // expires in 10 seconds
+          ),
+        );
+        getFeeRateSpy.mockResolvedValue(cachedFees);
+
+        const result = await service.getFeeRates();
+
+        expect(getFeeRateSpy).toHaveBeenCalledTimes(1);
+        expect(result).toStrictEqual(cachedFees.value.valueOf());
+      });
+
+      it('fetches new fee rates if cache is expired', async () => {
+        const { dataClient, getFeeRatesSpy } = createMockDataClient();
+        const {
+          instance: cacheStateManager,
+          getFeeRateSpy,
+          setFeeRateSpy,
+        } = createMockCacheStateManager();
+        const { service } = createMockBtcService(
+          dataClient,
+          undefined,
+          cacheStateManager,
+        );
+
+        const expiredFees = {
+          fees: [
+            {
+              type: FeeRate.Fast,
+              rate: BigInt(123),
+            },
+            {
+              type: FeeRate.Medium,
+              rate: BigInt(456),
+            },
+          ],
+        };
+
+        getFeeRateSpy.mockResolvedValue({
+          value: expiredFees,
+          expiration: Date.now() - 10 * 1000, // Expired 10 seconds ago.
+          isExpired: () => true,
+        } as unknown as CachedValue<SerializableFees>);
+
+        const newFees = {
+          fees: [
+            {
+              type: FeeRate.Fast,
+              rate: BigInt(1),
+            },
+            {
+              type: FeeRate.Medium,
+              rate: BigInt(2),
+            },
+          ],
+        };
+
+        getFeeRatesSpy.mockResolvedValue({
+          [FeeRate.Fast]: 1,
+          [FeeRate.Medium]: 2,
+        });
+
+        const result = await service.getFeeRates();
+
+        expect(getFeeRateSpy).toHaveBeenCalledTimes(1);
+        expect(setFeeRateSpy).toHaveBeenCalledWith(
+          getCaip2ChainId(service.network),
+          newFees,
+        );
+        expect(result).toStrictEqual(newFees);
+      });
+
+      it('fetches new fee rates if cache is not available', async () => {
+        const { dataClient, getFeeRatesSpy } = createMockDataClient();
+        const {
+          instance: cacheStateManager,
+          getFeeRateSpy,
+          setFeeRateSpy,
+        } = createMockCacheStateManager();
+        const { service } = createMockBtcService(
+          dataClient,
+          undefined,
+          cacheStateManager,
+        );
+
+        getFeeRateSpy.mockResolvedValue(null);
+
+        const newFees = {
+          fees: [
+            {
+              type: FeeRate.Fast,
+              rate: BigInt(1),
+            },
+            {
+              type: FeeRate.Medium,
+              rate: BigInt(2),
+            },
+          ],
+        };
+
+        getFeeRatesSpy.mockResolvedValue({
+          [FeeRate.Fast]: 1,
+          [FeeRate.Medium]: 2,
+        });
+
+        const result = await service.getFeeRates();
+
+        expect(getFeeRateSpy).toHaveBeenCalledTimes(1);
+        expect(setFeeRateSpy).toHaveBeenCalledWith(
+          getCaip2ChainId(service.network),
+          newFees,
+        );
+        expect(result).toStrictEqual(newFees);
+      });
     });
   });
 

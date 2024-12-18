@@ -273,11 +273,14 @@ describe('KeyringStateManager', () => {
       expect(getDataSpy).toHaveBeenCalledTimes(1);
       expect(setDataSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          wallets: expect.objectContaining({
-            [accToUpdate.id]: expect.objectContaining({
-              account: accToUpdate,
+          data: expect.objectContaining({
+            wallets: expect.objectContaining({
+              [accToUpdate.id]: expect.objectContaining({
+                account: accToUpdate,
+              }),
             }),
           }),
+          encrypted: true,
         }),
       );
     });

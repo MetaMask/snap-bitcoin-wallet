@@ -1,24 +1,24 @@
-import { AddressType, Network } from 'bdk_wasm/bdk_wasm_bg';
-import type { BitcoinAccount, BlockchainClient } from '../entities';
-import type { AccountRepository } from '../store';
-import { logger } from '../utils';
-import { ChainConfig } from '../configv2';
-import { AccountNotFoundError } from '../exceptions';
-import { ResourceNotFoundError } from '@metamask/snaps-sdk';
+import type { AddressType, Network } from 'bitcoindevkit';
 
-const addressTypeToPurpose = {
-  [AddressType.P2pkh]: "44'",
-  [AddressType.P2sh]: "49'",
-  [AddressType.P2wpkh]: "84'",
-  [AddressType.P2tr]: "86'",
+import type { BitcoinAccount, BlockchainClient } from '../entities';
+import type { AccountRepository } from '../repositories';
+import { logger } from '../utils';
+import { AccountNotFoundError } from '../exceptions';
+
+const addressTypeToPurpose: Record<AddressType, string> = {
+  p2pkh: "44'",
+  p2sh: "45'",
+  p2wsh: "49'",
+  p2wpkh: "84'",
+  p2tr: "86'",
 };
 
-const networkToCoinType = {
-  [Network.Bitcoin]: "0'",
-  [Network.Testnet]: "1'",
-  [Network.Testnet4]: "1'",
-  [Network.Signet]: "1'",
-  [Network.Regtest]: "1'",
+const networkToCoinType: Record<Network, string> = {
+  bitcoin: "0'",
+  testnet: "1'",
+  testnet4: "1'",
+  signet: "1'",
+  regtest: "1'",
 };
 
 export class AccountUseCases {
@@ -27,8 +27,6 @@ export class AccountUseCases {
   protected readonly _chain: BlockchainClient;
 
   protected readonly _accountIndex: number;
-
-  protected readonly _chainConfig: ChainConfig;
 
   constructor(
     repository: AccountRepository,

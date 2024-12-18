@@ -1,29 +1,10 @@
-/* eslint-disable */
+/* eslint-disable no-restricted-globals */
 
-import { Network } from 'bdk_wasm';
+import type { SnapConfig } from './entities';
 import { Caip2AddressType, Caip2ChainId } from './handlers';
 
-export type SnapConfig = {
-  accounts: AccountsConfig;
-  chain: ChainConfig;
-  keyringVersion: string;
-};
-
-export type AccountsConfig = {
-  index: number;
-  defaultNetwork: string;
-  defaultAddressType: string;
-};
-
-export type ChainConfig = {
-  parallelRequests: number;
-  stopGap: number;
-  url: {
-    [network in Network]: string;
-  };
-};
-
 export const ConfigV2: SnapConfig = {
+  encrypt: false,
   keyringVersion: process.env.KEYRING_VERSION ?? 'v1',
   accounts: {
     index: 0,
@@ -35,18 +16,17 @@ export const ConfigV2: SnapConfig = {
     parallelRequests: 1,
     stopGap: 10,
     url: {
-      [Network.Bitcoin]:
+      bitcoin:
         process.env.ESPLORA_PROVIDER_BITCOIN ?? 'https://blockstream.info/api',
-      [Network.Testnet]:
+      testnet:
         process.env.ESPLORA_PROVIDER_TESTNET ??
         'https://blockstream.info/testnet/api',
-      [Network.Testnet4]:
+      testnet4:
         process.env.ESPLORA_PROVIDER_TESTNET4 ??
         'https://mempool.space/testnet4/api/v1',
-      [Network.Signet]:
+      signet:
         process.env.ESPLORA_PROVIDER_SIGNET ?? 'https://mutinynet.com/api',
-      [Network.Regtest]:
-        process.env.ESPLORA_PROVIDER_REGTEST ?? 'https://localhost:3000',
+      regtest: process.env.ESPLORA_PROVIDER_REGTEST ?? 'https://localhost:3000',
     },
   },
 };

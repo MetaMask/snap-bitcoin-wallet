@@ -65,12 +65,13 @@ describe('getStateData', () => {
     };
 
     spy.mockResolvedValue(testcase.state);
-    const result = await snapUtil.getStateData();
+    const result = await snapUtil.getStateData(true);
 
     expect(spy).toHaveBeenCalledWith({
       method: 'snap_manageState',
       params: {
         operation: 'get',
+        encrypted: true,
       },
     });
 
@@ -92,13 +93,14 @@ describe('setStateData', () => {
       },
     };
 
-    await snapUtil.setStateData(testcase.state);
+    await snapUtil.setStateData({ data: testcase.state, encrypted: true });
 
     expect(spy).toHaveBeenCalledWith({
       method: 'snap_manageState',
       params: {
         operation: 'update',
         newState: testcase.state,
+        encrypted: true,
       },
     });
   });

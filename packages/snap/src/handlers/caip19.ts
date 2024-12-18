@@ -1,4 +1,4 @@
-import { Network } from 'bdk_wasm';
+import { Network } from 'bitcoindevkit';
 
 export enum Caip19Asset {
   Bitcoin = 'bip122:000000000019d6689c085ae165831e93/slip44:0',
@@ -9,9 +9,9 @@ export enum Caip19Asset {
 }
 
 export const networkToCaip19: Record<Network, Caip19Asset> = {
-  [Network.Bitcoin]: Caip19Asset.Bitcoin,
-  [Network.Testnet]: Caip19Asset.Testnet,
-  [Network.Testnet4]: Caip19Asset.Testnet4,
-  [Network.Signet]: Caip19Asset.Signet,
-  [Network.Regtest]: Caip19Asset.Regtest,
+  bitcoin: Caip19Asset.Bitcoin,
+  testnet: Caip19Asset.Testnet,
+  testnet4: Caip19Asset.Testnet4,
+  signet: Caip19Asset.Signet,
+  regtest: Caip19Asset.Regtest,
 };

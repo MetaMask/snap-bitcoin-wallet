@@ -1,10 +1,13 @@
-import { BtcMethod, KeyringEvent } from '@metamask/keyring-api';
+import {
+  BtcMethod,
+  KeyringEvent,
+  emitSnapKeyringEvent,
+} from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
-import { KeyringHandler, CreateAccountRequest } from './KeyringHandler';
+import { assert } from 'superstruct';
+
+import type { BitcoinAccount, AccountsConfig } from '../entities';
 import type { AccountUseCases } from '../usecases/AccountUseCases';
-import type { AccountsConfig } from '../configv2';
-import type { BitcoinAccount } from '../entities';
-import { emitSnapKeyringEvent } from '@metamask/keyring-api';
 import { getProvider } from '../utils';
 import {
   caip2ToNetwork,
@@ -12,7 +15,7 @@ import {
   Caip2ChainId,
   Caip2AddressType,
 } from './caip2';
-import { assert } from 'superstruct';
+import { KeyringHandler, CreateAccountRequest } from './KeyringHandler';
 
 jest.mock('../utils', () => ({
   getProvider: jest.fn(),
@@ -101,7 +104,7 @@ describe('KeyringHandler', () => {
       const error = new Error();
       mockAccounts.createAccount.mockRejectedValue(error);
 
-      await expect(handler.createAccount()).rejects.toThrowError(error);
+      await expect(handler.createAccount()).rejects.toThrow(error);
       expect(mockAccounts.createAccount).toHaveBeenCalled();
       expect(emitSnapKeyringEvent).not.toHaveBeenCalled();
     });
@@ -111,61 +114,65 @@ describe('KeyringHandler', () => {
       mockAccounts.createAccount.mockResolvedValue(mockAccount);
       (emitSnapKeyringEvent as jest.Mock).mockRejectedValue(error);
 
-      await expect(handler.createAccount()).rejects.toThrowError(error);
+      await expect(handler.createAccount()).rejects.toThrow(error);
       expect(mockAccounts.createAccount).toHaveBeenCalled();
       expect(emitSnapKeyringEvent).toHaveBeenCalled();
     });
   });
 
   describe('unimplemented methods', () => {
+    const errMsg = 'Method not implemented.';
+
     it('listAccounts should throw', async () => {
-      await expect(handler.listAccounts()).rejects.toThrow();
+      await expect(handler.listAccounts()).rejects.toThrow(errMsg);
     });
 
     it('getAccount should throw', async () => {
-      await expect(handler.getAccount('some-id')).rejects.toThrow();
+      await expect(handler.getAccount('some-id')).rejects.toThrow(errMsg);
     });
 
     it('getAccountBalances should throw', async () => {
-      await expect(handler.getAccountBalances('some-id', [])).rejects.toThrow();
+      await expect(handler.getAccountBalances('some-id', [])).rejects.toThrow(
+        errMsg,
+      );
     });
 
     it('filterAccountChains should throw', async () => {
-      await expect(
-        handler.filterAccountChains('some-id', []),
-      ).rejects.toThrow();
+      await expect(handler.filterAccountChains('some-id', [])).rejects.toThrow(
+        errMsg,
+      );
     });
 
     it('updateAccount should throw', async () => {
-      await expect(handler.updateAccount({} as any)).rejects.toThrow();
+      await expect(handler.updateAccount({} as any)).rejects.toThrow(errMsg);
     });
 
     it('deleteAccount should throw', async () => {
-      await expect(handler.deleteAccount('some-id')).rejects.toThrow();
+      await expect(handler.deleteAccount('some-id')).rejects.toThrow(errMsg);
     });
 
     it('exportAccount should throw', async () => {
-      await expect(handler.exportAccount('some-id')).rejects.toThrow();
+      await expect(handler.exportAccount('some-id')).rejects.toThrow(errMsg);
     });
 
     it('listRequests should throw', async () => {
-      await expect(handler.listRequests()).rejects.toThrow();
+      await expect(handler.listRequests()).rejects.toThrow(errMsg);
     });
 
     it('getRequest should throw', async () => {
-      await expect(handler.getRequest('some-id')).rejects.toThrowError();
+      await expect(handler.getRequest('some-id')).rejects.toThrow(errMsg);
     });
 
     it('submitRequest should throw', async () => {
-      await expect(handler.submitRequest({} as any)).rejects.toThrow();
+      await expect(handler.submitRequest({} as any)).rejects.toThrow(errMsg);
     });
 
     it('approveRequest should throw', async () => {
-      await expect(handler.approveRequest({} as any)).rejects.toThrow();
+      await expect(handler.approveRequest({} as any)).rejects.toThrow(errMsg);
     });
 
     it('rejectRequest should throw', async () => {
-      await expect(handler.rejectRequest({} as any)).rejects.toThrow();
+      await expect(handler.rejectRequest({} as any)).rejects.toThrow(errMsg);
     });
   });
 });

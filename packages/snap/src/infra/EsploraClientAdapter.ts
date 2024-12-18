@@ -1,8 +1,7 @@
-import { EsploraClient, Network } from 'bdk_wasm';
+import { EsploraClient, Network } from 'bitcoindevkit';
 
 import { BlockchainClient as BlockchainClient } from '../entities/chain';
-import { BitcoinAccount } from '../entities';
-import { ChainConfig } from '../configv2';
+import { BitcoinAccount, ChainConfig } from '../entities';
 
 export class EsploraClientAdapter implements BlockchainClient {
   // Should be a Repository but we don't support custom networks so we can save in memory from config values
@@ -12,11 +11,11 @@ export class EsploraClientAdapter implements BlockchainClient {
 
   constructor(config: ChainConfig) {
     this._clients = {
-      [Network.Bitcoin]: new EsploraClient(config.url[Network.Bitcoin]),
-      [Network.Testnet]: new EsploraClient(config.url[Network.Testnet]),
-      [Network.Testnet4]: new EsploraClient(config.url[Network.Testnet4]),
-      [Network.Signet]: new EsploraClient(config.url[Network.Signet]),
-      [Network.Regtest]: new EsploraClient(config.url[Network.Regtest]),
+      bitcoin: new EsploraClient(config.url['bitcoin']),
+      testnet: new EsploraClient(config.url['testnet']),
+      testnet4: new EsploraClient(config.url['testnet4']),
+      signet: new EsploraClient(config.url['signet']),
+      regtest: new EsploraClient(config.url['regtest']),
     };
 
     this._config = config;
@@ -33,7 +32,7 @@ export class EsploraClientAdapter implements BlockchainClient {
   }
 
   async sync(account: BitcoinAccount) {
-    const request = account.startFullScan();
+    const request = account.startSync();
     const update = await this._clients[account.network].sync(
       request,
       this._config.parallelRequests,
