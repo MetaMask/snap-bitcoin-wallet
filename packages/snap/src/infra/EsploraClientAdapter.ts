@@ -1,7 +1,8 @@
-import { EsploraClient, Network } from 'bitcoindevkit';
+import type { Network } from 'bitcoindevkit';
+import { EsploraClient } from 'bitcoindevkit';
 
-import { BlockchainClient as BlockchainClient } from '../entities/chain';
-import { BitcoinAccount, ChainConfig } from '../entities';
+import type { BitcoinAccount, ChainConfig } from '../entities';
+import type { BlockchainClient } from '../entities/chain';
 
 export class EsploraClientAdapter implements BlockchainClient {
   // Should be a Repository but we don't support custom networks so we can save in memory from config values
@@ -11,11 +12,11 @@ export class EsploraClientAdapter implements BlockchainClient {
 
   constructor(config: ChainConfig) {
     this._clients = {
-      bitcoin: new EsploraClient(config.url['bitcoin']),
-      testnet: new EsploraClient(config.url['testnet']),
-      testnet4: new EsploraClient(config.url['testnet4']),
-      signet: new EsploraClient(config.url['signet']),
-      regtest: new EsploraClient(config.url['regtest']),
+      bitcoin: new EsploraClient(config.url.bitcoin),
+      testnet: new EsploraClient(config.url.testnet),
+      testnet4: new EsploraClient(config.url.testnet4),
+      signet: new EsploraClient(config.url.signet),
+      regtest: new EsploraClient(config.url.regtest),
     };
 
     this._config = config;

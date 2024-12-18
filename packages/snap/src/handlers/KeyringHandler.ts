@@ -16,6 +16,7 @@ import { assert, enums, object, optional } from 'superstruct';
 import type { BitcoinAccount, AccountsConfig } from '../entities';
 import type { AccountUseCases } from '../usecases/AccountUseCases';
 import { getProvider } from '../utils';
+import { networkToCaip19 } from './caip19';
 import {
   addressTypeToCaip2,
   Caip2AddressType,
@@ -23,7 +24,6 @@ import {
   caip2ToAddressType,
   caip2ToNetwork,
 } from './caip2';
-import { networkToCaip19 } from './caip19';
 
 export const CreateAccountRequest = object({
   scope: optional(enums(Object.values(Caip2ChainId))),

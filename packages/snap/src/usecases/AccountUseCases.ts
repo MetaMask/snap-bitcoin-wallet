@@ -1,9 +1,9 @@
 import type { AddressType, Network } from 'bitcoindevkit';
 
 import type { BitcoinAccount, BlockchainClient } from '../entities';
+import { AccountNotFoundError } from '../exceptions';
 import type { AccountRepository } from '../repositories';
 import { logger } from '../utils';
-import { AccountNotFoundError } from '../exceptions';
 
 const addressTypeToPurpose: Record<AddressType, string> = {
   p2pkh: "44'",

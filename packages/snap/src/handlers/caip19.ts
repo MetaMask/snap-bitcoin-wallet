@@ -1,4 +1,4 @@
-import { Network } from 'bitcoindevkit';
+import type { Network } from 'bitcoindevkit';
 
 export enum Caip19Asset {
   Bitcoin = 'bip122:000000000019d6689c085ae165831e93/slip44:0',

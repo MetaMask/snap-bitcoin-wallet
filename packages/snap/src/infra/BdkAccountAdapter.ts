@@ -7,8 +7,9 @@ import type {
   Network,
   SyncRequest,
   Update,
+  ChangeSet,
 } from 'bitcoindevkit';
-import { Wallet, ChangeSet } from 'bitcoindevkit';
+import { Wallet } from 'bitcoindevkit';
 
 import type { BitcoinAccount } from '../entities';
 

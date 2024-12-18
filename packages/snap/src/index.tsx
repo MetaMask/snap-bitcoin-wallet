@@ -14,6 +14,7 @@ import { Config } from './config';
 import { ConfigV2 } from './configv2';
 import { KeyringHandler } from './handlers/KeyringHandler';
 import { SnapStore } from './infra';
+import { EsploraClientAdapter } from './infra/EsploraClientAdapter';
 import { BtcKeyring } from './keyring';
 import { InternalRpcMethod, originPermissions } from './permissions';
 import { SnapAccountRepository } from './repositories/SnapAccountRepository';
@@ -38,7 +39,6 @@ import type { SendFlowContext, SendFormState } from './ui/types';
 import { AccountUseCases } from './usecases';
 import { isSnapRpcError, logger } from './utils';
 import { loadLocale } from './utils/locale';
-import { EsploraClientAdapter } from './infra/EsploraClientAdapter';
 
 logger.logLevel = parseInt(Config.logLevel, 10);
 
