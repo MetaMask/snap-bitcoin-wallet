@@ -1,4 +1,4 @@
-import type { Network } from 'bdk';
+import type { Network } from 'bitcoindevkit';
 
 export type SnapConfig = {
   encrypt: boolean;

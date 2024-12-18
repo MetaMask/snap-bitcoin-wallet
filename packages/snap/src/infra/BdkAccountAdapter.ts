@@ -4,8 +4,8 @@ import type {
   Balance,
   DescriptorPair,
   Network,
-} from 'bdk';
-import { Wallet, ChangeSet } from 'bdk';
+} from 'bitcoindevkit';
+import { Wallet, ChangeSet } from 'bitcoindevkit';
 
 import type { BitcoinAccount } from '../entities';
 

@@ -1,12 +1,12 @@
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
 /* eslint-disable camelcase */
 
-import type { AddressType, Network, DescriptorPair } from 'bdk';
+import type { AddressType, Network, DescriptorPair } from 'bitcoindevkit';
 import {
   slip10_to_extended,
   xpriv_to_descriptor,
   xpub_to_descriptor,
-} from 'bdk';
+} from 'bitcoindevkit';
 import { v4 } from 'uuid';
 
 import type { AccountRepository } from '.';

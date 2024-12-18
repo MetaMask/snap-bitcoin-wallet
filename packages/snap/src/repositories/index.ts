@@ -1,4 +1,4 @@
-import type { AddressType, Network } from 'bdk';
+import type { AddressType, Network } from 'bitcoindevkit';
 
 import type { BitcoinAccount } from '../entities';
 

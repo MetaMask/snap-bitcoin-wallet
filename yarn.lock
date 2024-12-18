@@ -2711,10 +2711,10 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.42.1
     "@typescript-eslint/parser": ^5.42.1
     async-mutex: ^0.3.2
-    bdk: ../../../bdk-wasm/pkg
     bignumber.js: 9.1.2
     bip32: 4.0.0
     bitcoin-address-validation: ^2.2.3
+    bitcoindevkit: ^0.1.1
     bitcoinjs-lib: 6.1.5
     coinselect: 3.1.13
     concurrently: ^9.1.0
@@ -6937,13 +6937,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bdk@file:../../../bdk-wasm/pkg::locator=%40metamask%2Fbitcoin-wallet-snap%40workspace%3Apackages%2Fsnap":
-  version: 0.1.1
-  resolution: "bdk@file:../../../bdk-wasm/pkg#../../../bdk-wasm/pkg::hash=75b5d2&locator=%40metamask%2Fbitcoin-wallet-snap%40workspace%3Apackages%2Fsnap"
-  checksum: ac3409555a8e04c1ef067d23eb31955348ad1e4f88c458d80bf1c487d74bd477f06f1a22a94c53d1014e6b9b706b8bc950652dfd4ed2d451625f4b16f2fae5d2
-  languageName: node
-  linkType: hard
-
 "bech32@npm:^2.0.0":
   version: 2.0.0
   resolution: "bech32@npm:2.0.0"
@@ -7051,6 +7044,13 @@ __metadata:
     typescript: ^4.7.4
   languageName: unknown
   linkType: soft
+
+"bitcoindevkit@npm:^0.1.1":
+  version: 0.1.1
+  resolution: "bitcoindevkit@npm:0.1.1"
+  checksum: 9045f05099a437cf908849a4b89ffd642dc02f59d6a608be6b3e2f422f173d1bb57ffc9b55f4d1dadfdeb80a4513d0912d4af2cb57d0a61c497cb61759235755
+  languageName: node
+  linkType: hard
 
 "bitcoinjs-lib@npm:6.1.5":
   version: 6.1.5

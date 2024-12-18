@@ -1,4 +1,4 @@
-import type { AddressType, Network } from 'bdk';
+import type { AddressType, Network } from 'bitcoindevkit';
 
 export enum Caip2ChainId {
   Bitcoin = 'bip122:000000000019d6689c085ae165831e93',
