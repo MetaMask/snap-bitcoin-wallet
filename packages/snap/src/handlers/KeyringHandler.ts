@@ -48,14 +48,15 @@ export class KeyringHandler implements Keyring {
   }
 
   async getAccount(id: string): Promise<KeyringAccount | undefined> {
-    throw new Error('Method not implemented.');
+    const account = await this._accounts.get(id);
+    return this.#toKeyringAccount(account);
   }
 
   async createAccount(options?: Record<string, Json>): Promise<KeyringAccount> {
     const opts = options ?? {};
     assert(opts, CreateAccountRequest);
 
-    const account = await this._accounts.createAccount(
+    const account = await this._accounts.create(
       caip2ToNetwork[opts.scope ?? this._config.defaultNetwork],
       caip2ToAddressType[opts.addressType ?? this._config.defaultAddressType],
     );

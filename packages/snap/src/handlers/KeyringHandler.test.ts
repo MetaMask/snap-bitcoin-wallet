@@ -64,7 +64,7 @@ describe('KeyringHandler', () => {
     });
 
     it('should create a new account with default config when no options are passed', async () => {
-      mockAccounts.createAccount.mockResolvedValue(mockAccount);
+      mockAccounts.create.mockResolvedValue(mockAccount);
       const expectedKeyringAccount = {
         id: 'some-id',
         type: mockConfig.defaultAddressType,
@@ -75,7 +75,7 @@ describe('KeyringHandler', () => {
 
       const result = await handler.createAccount();
       expect(assert).toHaveBeenCalledWith({}, CreateAccountRequest);
-      expect(mockAccounts.createAccount).toHaveBeenCalledWith(
+      expect(mockAccounts.create).toHaveBeenCalledWith(
         caip2ToNetwork[mockConfig.defaultNetwork],
         caip2ToAddressType[mockConfig.defaultAddressType],
       );
@@ -91,7 +91,7 @@ describe('KeyringHandler', () => {
     });
 
     it('should respect provided scope and addressType', async () => {
-      mockAccounts.createAccount.mockResolvedValue(mockAccount);
+      mockAccounts.create.mockResolvedValue(mockAccount);
 
       const options = {
         scope: Caip2ChainId.Signet,
@@ -100,7 +100,7 @@ describe('KeyringHandler', () => {
       await handler.createAccount(options);
 
       expect(assert).toHaveBeenCalledWith(options, CreateAccountRequest);
-      expect(mockAccounts.createAccount).toHaveBeenCalledWith(
+      expect(mockAccounts.create).toHaveBeenCalledWith(
         caip2ToNetwork[Caip2ChainId.Signet],
         caip2ToAddressType[Caip2AddressType.P2pkh],
       );
@@ -108,20 +108,20 @@ describe('KeyringHandler', () => {
 
     it('should propagate errors from createAccount', async () => {
       const error = new Error();
-      mockAccounts.createAccount.mockRejectedValue(error);
+      mockAccounts.create.mockRejectedValue(error);
 
       await expect(handler.createAccount()).rejects.toThrow(error);
-      expect(mockAccounts.createAccount).toHaveBeenCalled();
+      expect(mockAccounts.create).toHaveBeenCalled();
       expect(emitSnapKeyringEvent).not.toHaveBeenCalled();
     });
 
     it('should propagate errors from emitSnapKeyringEvent', async () => {
       const error = new Error();
-      mockAccounts.createAccount.mockResolvedValue(mockAccount);
+      mockAccounts.create.mockResolvedValue(mockAccount);
       (emitSnapKeyringEvent as jest.Mock).mockRejectedValue(error);
 
       await expect(handler.createAccount()).rejects.toThrow(error);
-      expect(mockAccounts.createAccount).toHaveBeenCalled();
+      expect(mockAccounts.create).toHaveBeenCalled();
       expect(emitSnapKeyringEvent).toHaveBeenCalled();
     });
   });
@@ -168,15 +168,36 @@ describe('KeyringHandler', () => {
     });
   });
 
+  describe('getAccount', () => {
+    it('should get account', async () => {
+      mockAccounts.get.mockResolvedValue(mockAccount);
+      const expectedKeyringAccount = {
+        id: 'some-id',
+        type: mockConfig.defaultAddressType,
+        address: 'bc1qaddress...',
+        options: {},
+        methods: [BtcMethod.SendBitcoin],
+      };
+
+      const result = await handler.getAccount('some-id');
+      expect(mockAccounts.get).toHaveBeenCalledWith('some-id');
+      expect(result).toStrictEqual(expectedKeyringAccount);
+    });
+
+    it('should propagate errors from get', async () => {
+      const error = new Error();
+      mockAccounts.get.mockRejectedValue(error);
+
+      await expect(handler.getAccount('some-id')).rejects.toThrow(error);
+      expect(mockAccounts.get).toHaveBeenCalled();
+    });
+  });
+
   describe('unimplemented methods', () => {
     const errMsg = 'Method not implemented.';
 
     it('listAccounts should throw', async () => {
       await expect(handler.listAccounts()).rejects.toThrow(errMsg);
-    });
-
-    it('getAccount should throw', async () => {
-      await expect(handler.getAccount('some-id')).rejects.toThrow(errMsg);
     });
 
     it('filterAccountChains should throw', async () => {

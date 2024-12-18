@@ -37,7 +37,19 @@ export class AccountUseCases {
     this._accountIndex = accountIndex;
   }
 
-  async createAccount(
+  async get(id: string): Promise<BitcoinAccount> {
+    logger.trace('Fetching account. ID: %s', id);
+
+    const account = await this._repository.get(id);
+    if (!account) {
+      throw new Error(`Account not found: ${id}`);
+    }
+
+    logger.debug('Account found: %s', account.id);
+    return account;
+  }
+
+  async create(
     network: Network,
     addressType: AddressType,
   ): Promise<BitcoinAccount> {

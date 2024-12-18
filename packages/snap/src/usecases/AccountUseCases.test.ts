@@ -17,6 +17,42 @@ describe('AccountUseCases', () => {
     useCases = new AccountUseCases(mockRepository, mockChain, accountIndex);
   });
 
+  describe('get', () => {
+    it('should return account', async () => {
+      const mockAccount = mock<BitcoinAccount>();
+      mockAccount.id = 'some-id';
+
+      mockRepository.get.mockResolvedValue(mockAccount);
+
+      const result = await useCases.get('some-id');
+
+      expect(mockRepository.get).toHaveBeenCalledWith('some-id');
+      expect(result).toBe(mockAccount);
+    });
+
+    it('should throw Error if account is not found', async () => {
+      mockRepository.get.mockResolvedValue(null);
+
+      await expect(useCases.get('some-id')).rejects.toThrow(
+        'Account not found: some-id',
+      );
+
+      expect(mockRepository.get).toHaveBeenCalledWith('some-id');
+    });
+
+    it('should propagate an error if the repository get fails', async () => {
+      const mockAccount = mock<BitcoinAccount>();
+      mockAccount.id = 'some-id';
+
+      const error = new Error('Get failed');
+      mockRepository.get.mockRejectedValue(error);
+
+      await expect(useCases.synchronize('some-id')).rejects.toBe(error);
+
+      expect(mockRepository.get).toHaveBeenCalledWith('some-id');
+    });
+  });
+
   describe('createAccount', () => {
     const network: Network = 'bitcoin';
     const addressType: AddressType = 'p2wpkh';
@@ -37,7 +73,7 @@ describe('AccountUseCases', () => {
       async ({ tAddressType, purpose }) => {
         const derivationPath = ['m', purpose, "0'", `${accountIndex}'`];
 
-        await useCases.createAccount(network, tAddressType);
+        await useCases.create(network, tAddressType);
 
         expect(mockRepository.getByDerivationPath).toHaveBeenCalledWith(
           derivationPath,
@@ -66,7 +102,7 @@ describe('AccountUseCases', () => {
           `${accountIndex}'`,
         ];
 
-        await useCases.createAccount(tNetwork, addressType);
+        await useCases.create(tNetwork, addressType);
 
         expect(mockRepository.getByDerivationPath).toHaveBeenCalledWith(
           expectedDerivationPath,
@@ -83,7 +119,7 @@ describe('AccountUseCases', () => {
       const mockExistingAccount = mock<BitcoinAccount>();
       mockRepository.getByDerivationPath.mockResolvedValue(mockExistingAccount);
 
-      const result = await useCases.createAccount(network, addressType);
+      const result = await useCases.create(network, addressType);
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).not.toHaveBeenCalled();
@@ -93,7 +129,7 @@ describe('AccountUseCases', () => {
     it('should create a new account if one does not exist', async () => {
       mockRepository.getByDerivationPath.mockResolvedValue(null);
 
-      const result = await useCases.createAccount(network, addressType);
+      const result = await useCases.create(network, addressType);
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).toHaveBeenCalled();
@@ -105,9 +141,7 @@ describe('AccountUseCases', () => {
       const error = new Error();
       mockRepository.getByDerivationPath.mockRejectedValue(error);
 
-      await expect(useCases.createAccount(network, addressType)).rejects.toBe(
-        error,
-      );
+      await expect(useCases.create(network, addressType)).rejects.toBe(error);
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).not.toHaveBeenCalled();
@@ -118,9 +152,7 @@ describe('AccountUseCases', () => {
       mockRepository.getByDerivationPath.mockResolvedValue(null);
       mockRepository.insert.mockRejectedValue(error);
 
-      await expect(useCases.createAccount(network, addressType)).rejects.toBe(
-        error,
-      );
+      await expect(useCases.create(network, addressType)).rejects.toBe(error);
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).toHaveBeenCalled();
@@ -128,7 +160,7 @@ describe('AccountUseCases', () => {
   });
 
   describe('synchronize', () => {
-    it('should throw AccountNotFoundError if account is not found', async () => {
+    it('should throw Error if account is not found', async () => {
       mockRepository.get.mockResolvedValue(null);
 
       await expect(useCases.synchronize('some-id')).rejects.toThrow(
