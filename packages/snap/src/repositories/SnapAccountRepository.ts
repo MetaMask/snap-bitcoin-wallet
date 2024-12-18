@@ -1,12 +1,8 @@
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
 /* eslint-disable camelcase */
 
-import type { AddressType, Network, DescriptorPair } from 'bitcoindevkit';
-import {
-  slip10_to_extended,
-  xpriv_to_descriptor,
-  xpub_to_descriptor,
-} from 'bitcoindevkit';
+import type { AddressType, Network } from 'bitcoindevkit';
+import { slip10_to_extended, xpub_to_descriptor } from 'bitcoindevkit';
 import { v4 } from 'uuid';
 
 import type { AccountRepository } from '.';
@@ -55,27 +51,19 @@ export class SnapAccountRepository implements AccountRepository {
     network: Network,
     addressType: AddressType,
   ): Promise<BitcoinAccount> {
-    const slip10 = await this._store.getSLIP10(derivationPath);
+    const slip10 = await this._store.getPublicEntropy(derivationPath);
     const id = v4();
-    console.log('id', id);
     const fingerprint = (
       slip10.masterFingerprint ?? slip10.parentFingerprint
     ).toString(16);
 
-    // Xpub for watch-only or xpriv for signing capabilities depending on the slip10 node
-    let descriptors: DescriptorPair;
-    if (slip10.privateKey) {
-      const xpriv = slip10_to_extended(slip10, network);
-      descriptors = xpriv_to_descriptor(
-        xpriv,
-        fingerprint,
-        network,
-        addressType,
-      );
-    } else {
-      const xpub = slip10_to_extended(slip10, network);
-      descriptors = xpub_to_descriptor(xpub, fingerprint, network, addressType);
-    }
+    const xpub = slip10_to_extended(slip10, network);
+    const descriptors = xpub_to_descriptor(
+      xpub,
+      fingerprint,
+      network,
+      addressType,
+    );
 
     const account = BdkAccountAdapter.create(id, descriptors, network);
 

@@ -1,4 +1,4 @@
-import type { JsonSLIP10Node } from '@metamask/key-tree';
+import type { SLIP10Node } from '@metamask/key-tree';
 import { mock } from 'jest-mock-extended';
 
 import type { BitcoinAccount } from '../entities';
@@ -11,9 +11,6 @@ import { SnapAccountRepository } from './SnapAccountRepository';
 jest.mock('bitcoindevkit', () => {
   return {
     slip10_to_extended: jest.fn().mockReturnValue('mock-extended'),
-    xpriv_to_descriptor: jest
-      .fn()
-      .mockReturnValue({ external: 'ext-desc', internal: 'int-desc' }),
     xpub_to_descriptor: jest
       .fn()
       .mockReturnValue({ external: 'ext-desc', internal: 'int-desc' }),
@@ -95,39 +92,14 @@ describe('SnapAccountRepository', () => {
   });
 
   describe('insert', () => {
-    it('inserts a new account with xpriv if privateKey is present', async () => {
+    it('inserts a new account with xpub', async () => {
       const derivationPath = ['m', "84'", "0'", "0'"];
       mockStore.get.mockResolvedValue({
         accounts: { derivationPaths: {}, wallets: {} },
       });
-      mockStore.getSLIP10.mockResolvedValue({
-        privateKey: new Uint8Array([1, 2, 3]),
+      mockStore.getPublicEntropy.mockResolvedValue({
         masterFingerprint: 0xdeadbeef,
-      } as unknown as JsonSLIP10Node);
-
-      const mockAccount = {
-        takeStaged: () => ({ to_json: () => '{}' }),
-      } as unknown as BitcoinAccount;
-      (BdkAccountAdapter.create as jest.Mock).mockReturnValue(mockAccount);
-
-      await repo.insert(derivationPath, 'bitcoin', 'p2wpkh');
-
-      expect(mockStore.set).toHaveBeenCalledWith({
-        accounts: {
-          derivationPaths: { [derivationPath.join('/')]: 'mock-uuid' },
-          wallets: { 'mock-uuid': '{}' },
-        },
-      });
-    });
-
-    it('inserts a new account with xpub if privateKey is not present', async () => {
-      const derivationPath = ['m', "84'", "0'", "0'"];
-      mockStore.get.mockResolvedValue({
-        accounts: { derivationPaths: {}, wallets: {} },
-      });
-      mockStore.getSLIP10.mockResolvedValue({
-        masterFingerprint: 0xdeadbeef,
-      } as unknown as JsonSLIP10Node);
+      } as unknown as SLIP10Node);
 
       const mockAccount = {
         takeStaged: () => ({ to_json: () => '{}' }),
