@@ -1,5 +1,6 @@
 import type { Keyring } from '@metamask/keyring-api';
 import { handleKeyringRequest } from '@metamask/keyring-api';
+import type { OnInstallHandler } from '@metamask/snaps-sdk';
 import {
   type OnRpcRequestHandler,
   type OnKeyringRequestHandler,
@@ -43,14 +44,16 @@ import { loadLocale } from './utils/locale';
 logger.logLevel = parseInt(Config.logLevel, 10);
 
 let keyring: Keyring;
+let store: SnapStore;
+let useCases: AccountUseCases;
 if (ConfigV2.keyringVersion === 'v2') {
   // Infra layer
-  const store = new SnapStore(ConfigV2.encrypt);
+  store = new SnapStore(ConfigV2.encrypt);
   const chainClient = new EsploraClientAdapter(ConfigV2.chain);
   // Data layer
   const repository = new SnapAccountRepository(store);
   // Business layer
-  const useCases = new AccountUseCases(
+  useCases = new AccountUseCases(
     repository,
     chainClient,
     ConfigV2.accounts.index,
@@ -67,6 +70,29 @@ export const validateOrigin = (origin: string, method: string): void => {
   if (!originPermissions.get(origin)?.has(method)) {
     // eslint-disable-next-line @typescript-eslint/no-throw-literal
     throw new UnauthorizedError(`Permission denied`);
+  }
+};
+
+export const onInstall: OnInstallHandler = async () => {
+  try {
+    // No need for a handler given the lack of request
+    if (store && useCases) {
+      await store.initialize();
+      await useCases.create(
+        ConfigV2.accounts.defaultNetwork,
+        ConfigV2.accounts.defaultAddressType,
+      );
+    }
+  } catch (error) {
+    let snapError = error;
+
+    if (!isSnapRpcError(error)) {
+      snapError = new SnapError(error);
+    }
+    logger.error(
+      `onInstall error: ${JSON.stringify(snapError.toJSON(), null, 2)}`,
+    );
+    throw snapError;
   }
 };
 

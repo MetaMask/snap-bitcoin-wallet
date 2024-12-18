@@ -56,10 +56,14 @@ export class KeyringHandler implements Keyring {
     const opts = options ?? {};
     assert(opts, CreateAccountRequest);
 
-    const account = await this._accounts.create(
-      caip2ToNetwork[opts.scope ?? this._config.defaultNetwork],
-      caip2ToAddressType[opts.addressType ?? this._config.defaultAddressType],
-    );
+    const network = opts.scope
+      ? caip2ToNetwork[opts.scope]
+      : this._config.defaultNetwork;
+    const addressType = opts.addressType
+      ? caip2ToAddressType[opts.addressType]
+      : this._config.defaultAddressType;
+
+    const account = await this._accounts.create(network, addressType);
 
     const keyringAccount = this.#toKeyringAccount(account);
     await emitSnapKeyringEvent(getProvider(), KeyringEvent.AccountCreated, {

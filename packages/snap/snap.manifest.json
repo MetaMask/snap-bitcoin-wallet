@@ -72,6 +72,7 @@
         "curve": "secp256k1"
       }
     ],
+    "endowment:lifecycle-hooks": {},
     "endowment:network-access": {},
     "snap_manageAccounts": {},
     "snap_manageState": {},

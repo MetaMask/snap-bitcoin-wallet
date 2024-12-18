@@ -20,21 +20,24 @@ export class SnapStore {
   }
 
   /**
+   * Initializes the Snap to an empty state.
+   */
+  async initialize(): Promise<void> {
+    await this.set({ accounts: { derivationPaths: {}, wallets: {} } });
+  }
+
+  /**
    * Get the Snap state.
    * @returns The Snap state.
    */
   async get(): Promise<State> {
-    const state = await snap.request({
+    return (await snap.request({
       method: 'snap_manageState',
       params: {
         operation: 'get',
         encrypted: this._encrypt,
       },
-    });
-
-    return (
-      (state as State) ?? { accounts: { derivationPaths: {}, wallets: {} } }
-    );
+    })) as State;
   }
 
   /**
