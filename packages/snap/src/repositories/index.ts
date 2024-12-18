@@ -35,7 +35,7 @@ export type AccountRepository = {
 
   /**
    * Update an account.
-   * @param wallet
+   * @param account
    */
-  update(wallet: BitcoinAccount): Promise<void>;
+  update(account: BitcoinAccount): Promise<void>;
 };

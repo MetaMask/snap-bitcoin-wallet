@@ -9,6 +9,7 @@ import { assert } from 'superstruct';
 import type { BitcoinAccount, AccountsConfig } from '../entities';
 import type { AccountUseCases } from '../usecases/AccountUseCases';
 import { getProvider } from '../utils';
+import { Caip19Asset } from './caip19';
 import {
   caip2ToNetwork,
   caip2ToAddressType,
@@ -38,10 +39,15 @@ describe('KeyringHandler', () => {
     defaultNetwork: Caip2ChainId.Bitcoin,
     defaultAddressType: Caip2AddressType.P2wpkh,
   };
+
+  // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
+  /* eslint-disable @typescript-eslint/naming-convention */
   const mockAccount = {
     id: 'some-id',
     addressType: caip2ToAddressType[mockConfig.defaultAddressType],
     suggestedName: 'My Bitcoin Account',
+    balance: { trusted_spendable: { to_btc: () => 1 } },
+    network: 'bitcoin',
     nextUnusedAddress: () => ({ address: 'bc1qaddress...' }),
   } as unknown as BitcoinAccount;
 
@@ -120,6 +126,48 @@ describe('KeyringHandler', () => {
     });
   });
 
+  describe('getAccountBalances', () => {
+    it('should synchronize the account before getting the balance', async () => {
+      mockAccounts.synchronize.mockResolvedValue(mockAccount);
+      const expectedResponse = {
+        [Caip19Asset.Bitcoin]: {
+          amount: '1',
+          unit: 'BTC',
+        },
+      };
+
+      const result = await handler.getAccountBalances(mockAccount.id, []);
+      expect(mockAccounts.synchronize).toHaveBeenCalledWith(mockAccount.id);
+      expect(result).toStrictEqual(expectedResponse);
+    });
+
+    it('should ignore the assets list', async () => {
+      mockAccounts.synchronize.mockResolvedValue(mockAccount);
+      const expectedResponse = {
+        [Caip19Asset.Bitcoin]: {
+          amount: '1',
+          unit: 'BTC',
+        },
+      };
+
+      const result = await handler.getAccountBalances(mockAccount.id, [
+        'ignored-asset',
+      ]);
+      expect(mockAccounts.synchronize).toHaveBeenCalledWith(mockAccount.id);
+      expect(result).toStrictEqual(expectedResponse);
+    });
+
+    it('should propagate errors from synchronize', async () => {
+      const error = new Error();
+      mockAccounts.synchronize.mockRejectedValue(error);
+
+      await expect(
+        handler.getAccountBalances(mockAccount.id, []),
+      ).rejects.toThrow(error);
+      expect(mockAccounts.synchronize).toHaveBeenCalled();
+    });
+  });
+
   describe('unimplemented methods', () => {
     const errMsg = 'Method not implemented.';
 
@@ -129,12 +177,6 @@ describe('KeyringHandler', () => {
 
     it('getAccount should throw', async () => {
       await expect(handler.getAccount('some-id')).rejects.toThrow(errMsg);
-    });
-
-    it('getAccountBalances should throw', async () => {
-      await expect(handler.getAccountBalances('some-id', [])).rejects.toThrow(
-        errMsg,
-      );
     });
 
     it('filterAccountChains should throw', async () => {

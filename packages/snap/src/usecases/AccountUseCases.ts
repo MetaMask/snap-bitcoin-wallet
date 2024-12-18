@@ -1,7 +1,6 @@
 import type { AddressType, Network } from 'bitcoindevkit';
 
 import type { BitcoinAccount, BlockchainClient } from '../entities';
-import { AccountNotFoundError } from '../exceptions';
 import type { AccountRepository } from '../repositories';
 import { logger } from '../utils';
 
@@ -72,12 +71,17 @@ export class AccountUseCases {
     return newAccount;
   }
 
+  /**
+   * Synchronize an account with the blockchain and update its state.
+   * @param id - The account id.
+   * @returns The updated account.
+   */
   async synchronize(id: string): Promise<BitcoinAccount> {
     logger.debug('Synchronizing account. ID: %s', id);
 
     const account = await this._repository.get(id);
     if (!account) {
-      throw new AccountNotFoundError();
+      throw new Error(`Account not found: ${id}`);
     }
 
     // If the account is already scanned, we just sync it, otherwise we do a full scan.

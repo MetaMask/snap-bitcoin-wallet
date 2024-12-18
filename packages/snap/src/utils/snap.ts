@@ -139,12 +139,12 @@ export async function createSendUIDialog(interfaceId: string) {
 export async function getRatesFromMetamask(
   currency: string,
 ): Promise<GetCurrencyRateResult> {
-  return await snap.request({
+  return (await snap.request({
     // @ts-expect-error TODO: snaps will fix this type error
     method: 'snap_getCurrencyRate',
     params: {
       // @ts-expect-error TODO: snaps will fix this type error
       currency,
     },
-  });
+  })) as GetCurrencyRateResult;
 }

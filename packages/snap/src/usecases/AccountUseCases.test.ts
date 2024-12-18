@@ -126,4 +126,100 @@ describe('AccountUseCases', () => {
       expect(mockRepository.insert).toHaveBeenCalled();
     });
   });
+
+  describe('synchronize', () => {
+    it('should throw AccountNotFoundError if account is not found', async () => {
+      mockRepository.get.mockResolvedValue(null);
+
+      await expect(useCases.synchronize('some-id')).rejects.toThrow(
+        'Account not found: some-id',
+      );
+
+      expect(mockRepository.get).toHaveBeenCalledWith('some-id');
+      expect(mockChain.sync).not.toHaveBeenCalled();
+      expect(mockChain.fullScan).not.toHaveBeenCalled();
+      expect(mockRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('should perform a regular sync if the account is already scanned', async () => {
+      const mockAccount = mock<BitcoinAccount>();
+      mockAccount.id = 'some-id';
+      mockAccount.isScanned = true;
+
+      mockRepository.get.mockResolvedValue(mockAccount);
+
+      const result = await useCases.synchronize('some-id');
+
+      expect(mockRepository.get).toHaveBeenCalledWith('some-id');
+      expect(mockChain.sync).toHaveBeenCalledWith(mockAccount);
+      expect(mockChain.fullScan).not.toHaveBeenCalled();
+      expect(mockRepository.update).toHaveBeenCalledWith(mockAccount);
+      expect(result).toBe(mockAccount);
+    });
+
+    it('should perform a full scan if the account is not scanned', async () => {
+      const mockAccount = mock<BitcoinAccount>();
+      mockAccount.id = 'some-id';
+      mockAccount.isScanned = false;
+
+      mockRepository.get.mockResolvedValue(mockAccount);
+
+      const result = await useCases.synchronize('some-id');
+
+      expect(mockRepository.get).toHaveBeenCalledWith('some-id');
+      expect(mockChain.fullScan).toHaveBeenCalledWith(mockAccount);
+      expect(mockChain.sync).not.toHaveBeenCalled();
+      expect(mockRepository.update).toHaveBeenCalledWith(mockAccount);
+      expect(result).toBe(mockAccount);
+    });
+
+    it('should propagate an error if the chain sync fails', async () => {
+      const mockAccount = mock<BitcoinAccount>();
+      mockAccount.id = 'some-id';
+      mockAccount.isScanned = true;
+
+      mockRepository.get.mockResolvedValue(mockAccount);
+      const error = new Error('Sync failed');
+      mockChain.sync.mockRejectedValue(error);
+
+      await expect(useCases.synchronize('some-id')).rejects.toBe(error);
+
+      expect(mockRepository.get).toHaveBeenCalledWith('some-id');
+      expect(mockChain.sync).toHaveBeenCalledWith(mockAccount);
+      expect(mockRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('should propagate an error if the chain full scan fails', async () => {
+      const mockAccount = mock<BitcoinAccount>();
+      mockAccount.id = 'some-id';
+      mockAccount.isScanned = false;
+
+      mockRepository.get.mockResolvedValue(mockAccount);
+      const error = new Error('Full scan failed');
+      mockChain.fullScan.mockRejectedValue(error);
+
+      await expect(useCases.synchronize('some-id')).rejects.toBe(error);
+
+      expect(mockRepository.get).toHaveBeenCalledWith('some-id');
+      expect(mockChain.fullScan).toHaveBeenCalledWith(mockAccount);
+      expect(mockRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('should propagate an error if the repository update fails', async () => {
+      const mockAccount = mock<BitcoinAccount>();
+      mockAccount.id = 'some-id';
+      mockAccount.isScanned = true;
+
+      mockRepository.get.mockResolvedValue(mockAccount);
+      mockChain.sync.mockResolvedValue();
+      const error = new Error('Update failed');
+      mockRepository.update.mockRejectedValue(error);
+
+      await expect(useCases.synchronize('some-id')).rejects.toBe(error);
+
+      expect(mockRepository.get).toHaveBeenCalledWith('some-id');
+      expect(mockChain.sync).toHaveBeenCalledWith(mockAccount);
+      expect(mockRepository.update).toHaveBeenCalledWith(mockAccount);
+    });
+  });
 });
