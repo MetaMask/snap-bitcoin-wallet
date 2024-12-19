@@ -5,7 +5,7 @@ import {
   MethodNotFoundError,
 } from '@metamask/snaps-sdk';
 
-import { onRpcRequest, validateOrigin, onKeyringRequest } from '.';
+import { onRpcRequest, validateOrigin, onKeyringRequest, onInstall } from '.';
 import * as entry from '.';
 import { Config } from './config';
 import { BtcKeyring } from './keyring';
