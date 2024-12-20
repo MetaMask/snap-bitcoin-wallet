@@ -1,6 +1,9 @@
-import { installSnap, Snap } from '@metamask/snaps-jest';
+import type { KeyringAccount } from '@metamask/keyring-api';
+import { BtcMethod } from '@metamask/keyring-api';
+import type { Snap } from '@metamask/snaps-jest';
+import { installSnap } from '@metamask/snaps-jest';
+
 import { Caip2AddressType, Caip2ChainId } from '../../src/handlers';
-import { BtcMethod, KeyringAccount } from '@metamask/keyring-api';
 
 describe('Bitcoin Snap', () => {
   let snap: Snap;

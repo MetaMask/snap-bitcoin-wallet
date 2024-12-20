@@ -5,9 +5,7 @@ import {
   type OnKeyringRequestHandler,
   type OnUserInputHandler,
   type Json,
-  UnauthorizedError,
   SnapError,
-  MethodNotFoundError,
 } from '@metamask/snaps-sdk';
 
 import { Config } from './config';
@@ -55,17 +53,17 @@ if (ConfigV2.keyringVersion === 'v2') {
 
 export const validateOrigin = (origin: string, method: string): void => {
   if (!origin) {
-    throw new UnauthorizedError('Missing origin');
+    throw new Error('Missing origin');
   }
 
   const permissions = originPermissions.get(origin);
   if (!permissions) {
-    throw new UnauthorizedError(`Origin ${origin} not allowed`);
+    throw new Error(`Origin ${origin} not allowed`);
   }
 
   if (!permissions.has(method)) {
     console.log('permissions', permissions);
-    throw new UnauthorizedError(`Permission denied for method: ${method}`);
+    throw new Error(`Permission denied for method: ${method}`);
   }
 };
 
@@ -98,7 +96,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       }
 
       default:
-        throw new MethodNotFoundError() as unknown as Error;
+        throw new Error('Method not found');
     }
   } catch (error) {
     let snapError = error;
