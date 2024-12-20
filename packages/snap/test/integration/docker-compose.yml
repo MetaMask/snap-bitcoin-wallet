@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  bitcoin-regtest:
+    image: lncm/bitcoind:v27.0
+    container_name: bitcoin-regtest
+    ports:
+      - "18443:18443"
+      - "18444:18444"
+    command: [
+      "bitcoind",
+      "-regtest",
+      "-server",
+      "-rpcuser=user",
+      "-rpcpassword=pass",
+      "-rpcallowip=::/0",
+      "-rpcbind=0.0.0.0",
+      "-txindex=1",
+      "-fallbackfee=0.0002"
+    ]
+    

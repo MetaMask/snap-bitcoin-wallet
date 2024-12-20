@@ -55,12 +55,17 @@ if (ConfigV2.keyringVersion === 'v2') {
 
 export const validateOrigin = (origin: string, method: string): void => {
   if (!origin) {
-    // eslint-disable-next-line @typescript-eslint/no-throw-literal
-    throw new UnauthorizedError('Origin not found');
+    throw new UnauthorizedError('Missing origin');
   }
-  if (!originPermissions.get(origin)?.has(method)) {
-    // eslint-disable-next-line @typescript-eslint/no-throw-literal
-    throw new UnauthorizedError(`Permission denied`);
+
+  const permissions = originPermissions.get(origin);
+  if (!permissions) {
+    throw new UnauthorizedError(`Origin ${origin} not allowed`);
+  }
+
+  if (!permissions.has(method)) {
+    console.log('permissions', permissions);
+    throw new UnauthorizedError(`Permission denied for method: ${method}`);
   }
 };
 

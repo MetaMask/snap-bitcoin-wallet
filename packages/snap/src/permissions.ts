@@ -42,7 +42,6 @@ const allowedOrigins = [
   'https://dev.portfolio.metamask.io',
   'https://ramps-dev.portfolio.metamask.io',
 ];
-
 const metamask = 'metamask';
 
 export const originPermissions = new Map<string, Set<string>>([]);

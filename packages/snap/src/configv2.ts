@@ -26,7 +26,8 @@ export const ConfigV2: SnapConfig = {
         'https://mempool.space/testnet4/api/v1',
       signet:
         process.env.ESPLORA_PROVIDER_SIGNET ?? 'https://mutinynet.com/api',
-      regtest: process.env.ESPLORA_PROVIDER_REGTEST ?? 'https://localhost:3000',
+      regtest:
+        process.env.ESPLORA_PROVIDER_REGTEST ?? 'https://localhost:18443',
     },
   },
 };

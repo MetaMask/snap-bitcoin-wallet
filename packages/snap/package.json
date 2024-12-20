@@ -31,7 +31,8 @@
     "prepublishOnly": "mm-snap manifest",
     "serve": "mm-snap serve",
     "start": "concurrently \"mm-snap watch\" \"yarn build:locale:watch\"",
-    "test": "jest --passWithNoTests"
+    "test": "jest --passWithNoTests",
+    "test:integration": "./test/integration/run-integration.sh"
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.23.3",
@@ -45,7 +46,7 @@
     "@metamask/key-tree": "^9.1.2",
     "@metamask/keyring-api": "^9.0.0",
     "@metamask/snaps-cli": "^6.5.4",
-    "@metamask/snaps-jest": "^8.6.0",
+    "@metamask/snaps-jest": "^8.9.0",
     "@metamask/snaps-sdk": "^6.9.0",
     "@metamask/utils": "^9.1.0",
     "@typescript-eslint/eslint-plugin": "^5.42.1",

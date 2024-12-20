@@ -60,7 +60,11 @@ export class AccountUseCases {
       addressType,
     );
 
-    logger.info('Bitcoin account created successfully: %s', newAccount.id);
+    logger.info(
+      'Bitcoin account created successfully: %s. derivationPath: %s',
+      newAccount.id,
+      derivationPath.join('/'),
+    );
     return newAccount;
   }
 }
