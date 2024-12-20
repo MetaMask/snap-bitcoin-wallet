@@ -6,8 +6,8 @@ import { logger } from '../utils';
 
 const addressTypeToPurpose: Record<AddressType, string> = {
   p2pkh: "44'",
-  p2sh: "45'",
-  p2wsh: "49'",
+  p2sh: "49'",
+  p2wsh: "45'",
   p2wpkh: "84'",
   p2tr: "86'",
 };

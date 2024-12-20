@@ -26,7 +26,8 @@
     "lint:misc": "yarn workspaces foreach --parallel --verbose run lint:misc",
     "lint:types": "yarn workspaces foreach --parallel --verbose run lint:types",
     "start": "yarn workspaces foreach --parallel --verbose --interlaced run start",
-    "test": "yarn workspaces foreach --parallel --verbose run test"
+    "test": "yarn workspaces foreach --parallel --verbose run test",
+    "test:integration": "yarn workspaces foreach --parallel --verbose run test:integration"
   },
   "devDependencies": {
     "@lavamoat/allow-scripts": "^3.1.0",

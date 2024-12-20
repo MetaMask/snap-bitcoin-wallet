@@ -65,7 +65,7 @@ describe('Bitcoin Snap', () => {
     {
       addressType: Caip2AddressType.P2pkh,
       scope: Caip2ChainId.Bitcoin,
-      expectedAddress: 'mjPQaLkhZN3MxsYN8Nebzwevuz8vdTaRCq',
+      expectedAddress: '15feVv7kK3z7jxA4RZZzY7Fwdu3yqFwzcT',
     },
     {
       addressType: Caip2AddressType.P2pkh,
@@ -90,27 +90,27 @@ describe('Bitcoin Snap', () => {
     {
       addressType: Caip2AddressType.P2sh,
       scope: Caip2ChainId.Bitcoin,
-      expectedAddress: 'tb1q832zlt4tgnqy88vd20mazw77dlt0j0wf2naw8q',
+      expectedAddress: '3QVSaDYjxEh4L3K24eorrQjfVxPAKJMys2',
     },
     {
       addressType: Caip2AddressType.P2sh,
       scope: Caip2ChainId.Testnet,
-      expectedAddress: 'tb1q832zlt4tgnqy88vd20mazw77dlt0j0wf2naw8q',
+      expectedAddress: '2NBG623WvXp1zxKB6gK2mnMe2mSDCur5qRU',
     },
     {
       addressType: Caip2AddressType.P2sh,
       scope: Caip2ChainId.Testnet4,
-      expectedAddress: 'tb1q832zlt4tgnqy88vd20mazw77dlt0j0wf2naw8q',
+      expectedAddress: '2NBG623WvXp1zxKB6gK2mnMe2mSDCur5qRU',
     },
     {
       addressType: Caip2AddressType.P2sh,
       scope: Caip2ChainId.Signet,
-      expectedAddress: 'tb1q832zlt4tgnqy88vd20mazw77dlt0j0wf2naw8q',
+      expectedAddress: '2NBG623WvXp1zxKB6gK2mnMe2mSDCur5qRU',
     },
     {
       addressType: Caip2AddressType.P2sh,
       scope: Caip2ChainId.Regtest,
-      expectedAddress: 'tb1q832zlt4tgnqy88vd20mazw77dlt0j0wf2naw8q',
+      expectedAddress: '2NBG623WvXp1zxKB6gK2mnMe2mSDCur5qRU',
     },
     {
       addressType: Caip2AddressType.P2tr,
@@ -163,7 +163,6 @@ describe('Bitcoin Snap', () => {
         methods: [BtcMethod.SendBitcoin],
       });
 
-      console.log(response.response);
       accounts[`${addressType}:${scope}`] = response.response
         .result as KeyringAccount;
     },
