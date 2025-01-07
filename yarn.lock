@@ -2729,7 +2729,7 @@ __metadata:
     eslint-plugin-prettier: ^4.2.1
     eslint-plugin-promise: ^6.1.1
     jest: ^29.5.0
-    jest-mock-extended: ^4.0.0-beta1
+    jest-mock-extended: ^3.0.7
     jest-transform-stub: 2.0.0
     prettier: ^2.7.1
     rimraf: ^3.0.2
@@ -13559,16 +13559,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jest-mock-extended@npm:^4.0.0-beta1":
-  version: 4.0.0-beta1
-  resolution: "jest-mock-extended@npm:4.0.0-beta1"
+"jest-mock-extended@npm:^3.0.7":
+  version: 3.0.7
+  resolution: "jest-mock-extended@npm:3.0.7"
   dependencies:
-    ts-essentials: ^10.0.2
+    ts-essentials: ^10.0.0
   peerDependencies:
-    "@jest/globals": ^28.0.0 || ^29.0.0
     jest: ^24.0.0 || ^25.0.0 || ^26.0.0 || ^27.0.0 || ^28.0.0 || ^29.0.0
     typescript: ^3.0.0 || ^4.0.0 || ^5.0.0
-  checksum: de84487f07a4a812fcfdcfde5234dedb35676103a8542bd30b4dd8b7ee4fdaa4f5d5c60b6c076539d10a8d303af36cbee24a9a16a20aa4f43413a69427a4e99b
+  checksum: 59ab510934b0b66e0752c170b6e069f8c93a5b9de40ea2bd3e734f773a70be4b0c251451f8770e60c1c3754d5ddbd25dd1f55568a6379f396d109694d6d3ab79
   languageName: node
   linkType: hard
 
@@ -19141,15 +19140,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ts-essentials@npm:^10.0.2":
-  version: 10.0.3
-  resolution: "ts-essentials@npm:10.0.3"
+"ts-essentials@npm:^10.0.0":
+  version: 10.0.4
+  resolution: "ts-essentials@npm:10.0.4"
   peerDependencies:
     typescript: ">=4.5.0"
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 7919df8b46be0dcfaade3ddbc98c0fd5236585ea0b8a46c898eda1a7229c17673e0286179c6bece41c26e16e62037f0fda38f4f5246a61026698022427806354
+  checksum: 623bed6950d07b2ca2366e12bc6c0542431a398f052da7b5c78d626267c752312c7fc1c2bc969bd66f157dd68dcb8d9864e7fd59bccd0132c6a29a3a22e9327e
   languageName: node
   linkType: hard
 
