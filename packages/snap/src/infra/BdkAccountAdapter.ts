@@ -10,13 +10,13 @@ import { Wallet, ChangeSet } from 'bitcoindevkit';
 import type { BitcoinAccount } from '../entities';
 
 export class BdkAccountAdapter implements BitcoinAccount {
-  protected readonly _id: string;
+  readonly #id: string;
 
-  protected readonly _wallet: Wallet;
+  readonly #wallet: Wallet;
 
   constructor(id: string, wallet: Wallet) {
-    this._id = id;
-    this._wallet = wallet;
+    this.#id = id;
+    this.#wallet = wallet;
   }
 
   static create(
@@ -33,11 +33,11 @@ export class BdkAccountAdapter implements BitcoinAccount {
   }
 
   get id(): string {
-    return this._id;
+    return this.#id;
   }
 
   get suggestedName(): string {
-    switch (this._wallet.network()) {
+    switch (this.#wallet.network()) {
       case 'bitcoin':
         return 'Bitcoin Account';
       case 'testnet':
@@ -49,7 +49,7 @@ export class BdkAccountAdapter implements BitcoinAccount {
   }
 
   get balance(): Balance {
-    return this._wallet.balance();
+    return this.#wallet.balance();
   }
 
   get addressType(): AddressType {
@@ -64,18 +64,18 @@ export class BdkAccountAdapter implements BitcoinAccount {
   }
 
   peekAddress(index: number): AddressInfo {
-    return this._wallet.peek_address('external', index);
+    return this.#wallet.peek_address('external', index);
   }
 
   nextUnusedAddress(): AddressInfo {
-    return this._wallet.next_unused_address('external');
+    return this.#wallet.next_unused_address('external');
   }
 
   revealNextAddress(): AddressInfo {
-    return this._wallet.reveal_next_address('external');
+    return this.#wallet.reveal_next_address('external');
   }
 
   takeStaged(): ChangeSet | undefined {
-    return this._wallet.take_staged();
+    return this.#wallet.take_staged();
   }
 }

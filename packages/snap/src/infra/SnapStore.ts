@@ -13,10 +13,10 @@ export type State = {
  * It supports encryption of the state.
  */
 export class SnapStore {
-  protected readonly _encrypt: boolean;
+  readonly #encrypt: boolean;
 
   constructor(encrypt = false) {
-    this._encrypt = encrypt;
+    this.#encrypt = encrypt;
   }
 
   /**
@@ -28,7 +28,7 @@ export class SnapStore {
       method: 'snap_manageState',
       params: {
         operation: 'get',
-        encrypted: this._encrypt,
+        encrypted: this.#encrypt,
       },
     });
 
@@ -47,7 +47,7 @@ export class SnapStore {
       params: {
         operation: 'update',
         newState,
-        encrypted: this._encrypt,
+        encrypted: this.#encrypt,
       },
     });
   }
