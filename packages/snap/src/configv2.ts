@@ -5,6 +5,7 @@ import { Caip2AddressType, Caip2ChainId } from './handlers';
 
 export const ConfigV2: SnapConfig = {
   encrypt: false,
+  // Defaults to v1 to use the "original" keyring.
   keyringVersion: process.env.KEYRING_VERSION ?? 'v1',
   accounts: {
     index: 0,

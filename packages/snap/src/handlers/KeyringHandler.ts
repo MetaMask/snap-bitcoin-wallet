@@ -50,8 +50,7 @@ export class KeyringHandler implements Keyring {
     throw new Error('Method not implemented.');
   }
 
-  async createAccount(options?: Record<string, Json>): Promise<KeyringAccount> {
-    const opts = options ?? {};
+  async createAccount(opts: Record<string, Json> = {}): Promise<KeyringAccount> {
     assert(opts, CreateAccountRequest);
 
     const account = await this._accounts.createAccount(

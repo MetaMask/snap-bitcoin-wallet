@@ -32,7 +32,7 @@ describe('AccountUseCases', () => {
       { tAddressType: 'p2wpkh', purpose: "84'" },
       { tAddressType: 'p2tr', purpose: "86'" },
     ] as { tAddressType: AddressType; purpose: string }[])(
-      'should create an account of type: %s',
+      'creates an account of type: %s',
       async ({ tAddressType, purpose }) => {
         const derivationPath = ['m', purpose, "0'", `${accountIndex}'`];
 
@@ -78,7 +78,7 @@ describe('AccountUseCases', () => {
       },
     );
 
-    it('should return an existing account if one already exists', async () => {
+    it('returns an existing account if one already exists', async () => {
       const mockExistingAccount = mock<BitcoinAccount>();
       mockRepository.getByDerivationPath.mockResolvedValue(mockExistingAccount);
 
@@ -89,7 +89,7 @@ describe('AccountUseCases', () => {
       expect(result).toBe(mockExistingAccount);
     });
 
-    it('should create a new account if one does not exist', async () => {
+    it('creates a new account if one does not exist', async () => {
       mockRepository.getByDerivationPath.mockResolvedValue(null);
 
       const result = await useCases.createAccount(network, addressType);
@@ -100,7 +100,7 @@ describe('AccountUseCases', () => {
       expect(result).toBe(mockAccount);
     });
 
-    it('should propagate an error if getByDerivationPath throws', async () => {
+    it('propagates an error if getByDerivationPath throws', async () => {
       const error = new Error();
       mockRepository.getByDerivationPath.mockRejectedValue(error);
 
@@ -112,7 +112,7 @@ describe('AccountUseCases', () => {
       expect(mockRepository.insert).not.toHaveBeenCalled();
     });
 
-    it('should propagate an error if insert throws', async () => {
+    it('propagates an error if insert throws', async () => {
       const error = new Error();
       mockRepository.getByDerivationPath.mockResolvedValue(null);
       mockRepository.insert.mockRejectedValue(error);

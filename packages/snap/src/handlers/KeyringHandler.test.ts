@@ -57,7 +57,7 @@ describe('KeyringHandler', () => {
       (emitSnapKeyringEvent as jest.Mock).mockResolvedValue(undefined);
     });
 
-    it('should create a new account with default config when no options are passed', async () => {
+    it('creates a new account with default config when no options are passed', async () => {
       mockAccounts.createAccount.mockResolvedValue(mockAccount);
       const expectedKeyringAccount = {
         id: 'some-id',
@@ -84,7 +84,7 @@ describe('KeyringHandler', () => {
       expect(result).toStrictEqual(expectedKeyringAccount);
     });
 
-    it('should respect provided scope and addressType', async () => {
+    it('respects provided scope and addressType', async () => {
       mockAccounts.createAccount.mockResolvedValue(mockAccount);
 
       const options = {
@@ -100,7 +100,7 @@ describe('KeyringHandler', () => {
       );
     });
 
-    it('should propagate errors from createAccount', async () => {
+    it('propagates errors from createAccount', async () => {
       const error = new Error();
       mockAccounts.createAccount.mockRejectedValue(error);
 
@@ -109,7 +109,7 @@ describe('KeyringHandler', () => {
       expect(emitSnapKeyringEvent).not.toHaveBeenCalled();
     });
 
-    it('should propagate errors from emitSnapKeyringEvent', async () => {
+    it('propagates errors from emitSnapKeyringEvent', async () => {
       const error = new Error();
       mockAccounts.createAccount.mockResolvedValue(mockAccount);
       (emitSnapKeyringEvent as jest.Mock).mockRejectedValue(error);
