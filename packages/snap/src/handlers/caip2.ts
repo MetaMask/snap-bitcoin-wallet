@@ -1,4 +1,5 @@
 import type { AddressType, Network } from 'bitcoindevkit';
+import { reverseMapping } from './mapping';
 
 export enum Caip2ChainId {
   Bitcoin = 'bip122:000000000019d6689c085ae165831e93',
@@ -34,10 +35,4 @@ export const caip2ToAddressType: Record<Caip2AddressType, AddressType> = {
   [Caip2AddressType.P2tr]: 'p2tr',
 };
 
-export const addressTypeToCaip2: Record<AddressType, Caip2AddressType> =
-  Object.fromEntries(
-    Object.entries(caip2ToAddressType).map(([caip2, addrType]) => [
-      addrType,
-      caip2,
-    ]),
-  ) as Record<AddressType, Caip2AddressType>;
+export const addressTypeToCaip2 = reverseMapping(caip2ToAddressType);
