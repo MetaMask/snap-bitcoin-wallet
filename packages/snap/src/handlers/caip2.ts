@@ -1,4 +1,5 @@
 import type { AddressType, Network } from 'bitcoindevkit';
+
 import { reverseMapping } from './mapping';
 
 export enum Caip2ChainId {
