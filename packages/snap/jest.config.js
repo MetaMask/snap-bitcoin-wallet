@@ -36,5 +36,4 @@ module.exports = {
   moduleNameMapper: {
     '^.+.(svg)$': 'jest-transform-stub',
   },
-  transformIgnorePatterns: ['/node_modules/(?!(bitcoindevkit)/)'],
 };
