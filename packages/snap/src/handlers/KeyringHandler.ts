@@ -116,11 +116,11 @@ export class KeyringHandler implements Keyring {
 
   #toKeyringAccount(account: BitcoinAccount): KeyringAccount {
     return {
-      type: addressTypeToCaip2[account.addressType],
+      type: addressTypeToCaip2[account.addressType] as KeyringAccount['type'],
       id: account.id,
       address: account.nextUnusedAddress().address,
       options: {},
       methods: [BtcMethod.SendBitcoin],
-    } as KeyringAccount;
+    };
   }
 }
