@@ -6,7 +6,7 @@ import type {
 } from 'bitcoindevkit';
 
 /**
- * BitcoinAccount represents a Bitcoin account.
+ * A Bitcoin account.
  */
 export type BitcoinAccount = {
   /**
