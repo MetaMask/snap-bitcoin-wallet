@@ -38,12 +38,7 @@ export class SnapAccountRepository implements AccountRepository {
       return null;
     }
 
-    const walletData = state.accounts.wallets[id];
-    if (!walletData) {
-      return null;
-    }
-
-    return BdkAccountAdapter.load(id, walletData);
+    return this.get(id);
   }
 
   async insert(
