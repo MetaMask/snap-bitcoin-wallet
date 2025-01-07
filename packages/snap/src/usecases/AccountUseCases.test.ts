@@ -27,8 +27,8 @@ describe('AccountUseCases', () => {
 
     it.each([
       { tAddressType: 'p2pkh', purpose: "44'" },
-      { tAddressType: 'p2sh', purpose: "45'" },
-      { tAddressType: 'p2wsh', purpose: "49'" },
+      { tAddressType: 'p2sh', purpose: "49'" },
+      { tAddressType: 'p2wsh', purpose: "45'" },
       { tAddressType: 'p2wpkh', purpose: "84'" },
       { tAddressType: 'p2tr', purpose: "86'" },
     ] as { tAddressType: AddressType; purpose: string }[])(
