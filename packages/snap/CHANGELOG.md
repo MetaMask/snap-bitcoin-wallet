@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add localized messages ([#348](https://github.com/MetaMask/snap-bitcoin-wallet/pull/348))
 - Add basic Sats protection support ([#337](https://github.com/MetaMask/snap-bitcoin-wallet/pull/337)), ([#284](https://github.com/MetaMask/snap-bitcoin-wallet/pull/284)), ([#349](https://github.com/MetaMask/snap-bitcoin-wallet/pull/349))
-  - Using `SimpleHash` service.
+  - Using SimpleHash service.
 
 ### Changed
 
@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for fee rate caching ([#358](https://github.com/MetaMask/snap-bitcoin-wallet/pull/358))
 - Use Snap UI update context instead of persisting request ([#345](https://github.com/MetaMask/snap-bitcoin-wallet/pull/345))
   - Making the Snap UI slighty more responsive and faster.
-- Remove support of `BlockChair` ([#298](https://github.com/MetaMask/snap-bitcoin-wallet/pull/298))
+- Remove support of Blockchair service ([#298](https://github.com/MetaMask/snap-bitcoin-wallet/pull/298))
 
 ### Fixed
 
