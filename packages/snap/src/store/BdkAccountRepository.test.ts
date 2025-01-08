@@ -2,9 +2,9 @@ import type { SLIP10Node } from '@metamask/key-tree';
 import { mock } from 'jest-mock-extended';
 
 import type { BitcoinAccount } from '../entities';
-import type { SnapStore } from '../infra';
+import type { SnapClient } from '../entities/snap';
 import { BdkAccountAdapter } from '../infra';
-import { SnapAccountRepository } from './SnapAccountRepository';
+import { BdkAccountRepository } from './BdkAccountRepository';
 
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
 /* eslint-disable @typescript-eslint/naming-convention */
@@ -28,17 +28,17 @@ jest.mock('../infra/BdkAccountAdapter', () => ({
 
 jest.mock('uuid', () => ({ v4: () => 'mock-uuid' }));
 
-describe('SnapAccountRepository', () => {
-  let repo: SnapAccountRepository;
-  const mockStore = mock<SnapStore>();
+describe('BdkAccountRepository', () => {
+  let repo: BdkAccountRepository;
+  const mockSnapClient = mock<SnapClient>();
 
   beforeEach(() => {
-    repo = new SnapAccountRepository(mockStore);
+    repo = new BdkAccountRepository(mockSnapClient);
   });
 
   describe('get', () => {
     it('returns null if account not found', async () => {
-      mockStore.get.mockResolvedValue({
+      mockSnapClient.get.mockResolvedValue({
         accounts: { derivationPaths: {}, wallets: {} },
       });
 
@@ -48,7 +48,7 @@ describe('SnapAccountRepository', () => {
     });
 
     it('returns loaded account if found', async () => {
-      mockStore.get.mockResolvedValue({
+      mockSnapClient.get.mockResolvedValue({
         accounts: {
           derivationPaths: {},
           wallets: { 'some-id': '{}' },
@@ -66,7 +66,7 @@ describe('SnapAccountRepository', () => {
 
   describe('getByDerivationPath', () => {
     it('returns null if derivation path not mapped', async () => {
-      mockStore.get.mockResolvedValue({
+      mockSnapClient.get.mockResolvedValue({
         accounts: { derivationPaths: {}, wallets: {} },
       });
 
@@ -76,7 +76,7 @@ describe('SnapAccountRepository', () => {
 
     it('returns account if derivation path exists', async () => {
       const derivationPath = ['m', "84'", "0'", "0'"];
-      mockStore.get.mockResolvedValue({
+      mockSnapClient.get.mockResolvedValue({
         accounts: {
           derivationPaths: { [derivationPath.join('/')]: 'some-id' },
           wallets: { 'some-id': '{}' },
@@ -94,10 +94,10 @@ describe('SnapAccountRepository', () => {
   describe('insert', () => {
     it('inserts a new account with xpub', async () => {
       const derivationPath = ['m', "84'", "0'", "0'"];
-      mockStore.get.mockResolvedValue({
+      mockSnapClient.get.mockResolvedValue({
         accounts: { derivationPaths: {}, wallets: {} },
       });
-      mockStore.getPublicEntropy.mockResolvedValue({
+      mockSnapClient.getPublicEntropy.mockResolvedValue({
         masterFingerprint: 0xdeadbeef,
       } as unknown as SLIP10Node);
 
@@ -108,7 +108,7 @@ describe('SnapAccountRepository', () => {
 
       await repo.insert(derivationPath, 'bitcoin', 'p2wpkh');
 
-      expect(mockStore.set).toHaveBeenCalledWith({
+      expect(mockSnapClient.set).toHaveBeenCalledWith({
         accounts: {
           derivationPaths: { [derivationPath.join('/')]: 'mock-uuid' },
           wallets: { 'mock-uuid': '{}' },

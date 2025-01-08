@@ -5,15 +5,14 @@ import type { AddressType, Network } from 'bitcoindevkit';
 import { slip10_to_extended, xpub_to_descriptor } from 'bitcoindevkit';
 import { v4 } from 'uuid';
 
-import type { AccountRepository } from '.';
-import type { BitcoinAccount } from '../entities';
-import type { SnapStore } from '../infra';
+import type { BitcoinAccountRepository, BitcoinAccount } from '../entities';
+import type { SnapClient } from '../entities/snap';
 import { BdkAccountAdapter } from '../infra';
 
-export class SnapAccountRepository implements AccountRepository {
-  protected readonly _store: SnapStore;
+export class BdkAccountRepository implements BitcoinAccountRepository {
+  protected readonly _store: SnapClient;
 
-  constructor(store: SnapStore) {
+  constructor(store: SnapClient) {
     this._store = store;
   }
 

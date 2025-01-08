@@ -1,15 +1,14 @@
 import type { AddressType, Network } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 
-import type { BitcoinAccount } from '../entities';
-import type { AccountRepository } from '../repositories';
+import type { BitcoinAccount, BitcoinAccountRepository } from '../entities';
 import { AccountUseCases } from './AccountUseCases';
 
 jest.mock('../utils/logger');
 
 describe('AccountUseCases', () => {
   let useCases: AccountUseCases;
-  const mockRepository = mock<AccountRepository>();
+  const mockRepository = mock<BitcoinAccountRepository>();
   const accountIndex = 0;
 
   beforeEach(() => {

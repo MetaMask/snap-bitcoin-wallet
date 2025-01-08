@@ -1,29 +1,16 @@
 import type { JsonSLIP10Node } from '@metamask/key-tree';
 import { SLIP10Node } from '@metamask/key-tree';
 
-export type State = {
-  accounts: {
-    derivationPaths: Record<string, string>;
-    wallets: Record<string, string>;
-  };
-};
+import type { SnapClient, SnapState } from '../entities/snap';
 
-/**
- * The SnapStore represents the MetaMask Snap state and manages the BIP-32 entropy from the Wallet SRP.
- * It supports encryption of the state.
- */
-export class SnapStore {
+export class SnapClientAdapter implements SnapClient {
   readonly #encrypt: boolean;
 
   constructor(encrypt = false) {
     this.#encrypt = encrypt;
   }
 
-  /**
-   * Get the Snap state.
-   * @returns The Snap state.
-   */
-  async get(): Promise<State> {
+  async get(): Promise<SnapState> {
     const state = await snap.request({
       method: 'snap_manageState',
       params: {
@@ -33,15 +20,11 @@ export class SnapStore {
     });
 
     return (
-      (state as State) ?? { accounts: { derivationPaths: {}, wallets: {} } }
+      (state as SnapState) ?? { accounts: { derivationPaths: {}, wallets: {} } }
     );
   }
 
-  /**
-   * Set the Snap state.
-   * @param newState - The new state.
-   */
-  async set(newState: State): Promise<void> {
+  async set(newState: SnapState): Promise<void> {
     await snap.request({
       method: 'snap_manageState',
       params: {
@@ -52,11 +35,6 @@ export class SnapStore {
     });
   }
 
-  /**
-   * Get the private SLIP10 for a given derivation path from the Snap SRP.
-   * @param derivationPath - The derivation path.
-   * @returns The private SLIP10 node.
-   */
   async getPrivateEntropy(derivationPath: string[]): Promise<JsonSLIP10Node> {
     return await snap.request({
       method: 'snap_getBip32Entropy',
@@ -67,13 +45,7 @@ export class SnapStore {
     });
   }
 
-  /**
-   * Get the public SLIP10 for a given derivation path from the Snap SRP.
-   * @param derivationPath - The derivation path.
-   * @returns The public SLIP10 node.
-   */
   async getPublicEntropy(derivationPath: string[]): Promise<SLIP10Node> {
-    // TODO: Use the public entropy endpoint when available
     const slip10 = await this.getPrivateEntropy(derivationPath);
     return (await SLIP10Node.fromJSON(slip10)).neuter();
   }
