@@ -1,4 +1,5 @@
 import * as keyringApi from '@metamask/keyring-api';
+import * as keyringSnapSdk from '@metamask/keyring-snap-sdk';
 import {
   type JsonRpcRequest,
   SnapError,
@@ -119,7 +120,7 @@ describe('onRpcRequest', () => {
 describe('onKeyringRequest', () => {
   const createMockHandleKeyringRequest = () => {
     const handleKeyringRequestSpy = jest.spyOn(
-      keyringApi,
+      keyringSnapSdk,
       'handleKeyringRequest',
     );
     return { handler: handleKeyringRequestSpy };
