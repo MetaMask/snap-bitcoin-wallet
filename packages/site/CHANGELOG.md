@@ -9,9 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.9.0]
 
-### Uncategorized
+### Changed
 
-- feat!: add `scopes` field to `KeyringAccount` ([#364](https://github.com/MetaMask/snap-bitcoin-wallet/pull/364))
+- Bump `@metamask/keyring-api` from `^9.0.0` to `^13.0.0` ([#364](https://github.com/MetaMask/snap-bitcoin-wallet/pull/364))
+  - This version provides a new modules layout and adds support for the new mandatory `scopes` field for `KeyringAccount`.
 
 ## [0.8.2]
 

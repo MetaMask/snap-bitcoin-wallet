@@ -9,27 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.9.0]
 
-### Uncategorized
+### Added
 
-- feat!: add `scopes` field to `KeyringAccount` ([#364](https://github.com/MetaMask/snap-bitcoin-wallet/pull/364))
-- feat: fee rate caching ([#358](https://github.com/MetaMask/snap-bitcoin-wallet/pull/358))
-- feat: add locale ([#348](https://github.com/MetaMask/snap-bitcoin-wallet/pull/348))
-- fix: move dust error into amount ([#356](https://github.com/MetaMask/snap-bitcoin-wallet/pull/356))
-- fix: check for initial value before validating ([#357](https://github.com/MetaMask/snap-bitcoin-wallet/pull/357))
-- fix: allow send to happen even when rates are not available ([#350](https://github.com/MetaMask/snap-bitcoin-wallet/pull/350))
-- chore: add sats protection tooltip UI ([#349](https://github.com/MetaMask/snap-bitcoin-wallet/pull/349))
-- refactor: use update context instead of persisting request ([#345](https://github.com/MetaMask/snap-bitcoin-wallet/pull/345))
-- feat(Sats-Protection): integrate sats protection with `SimpleHash` ([#337](https://github.com/MetaMask/snap-bitcoin-wallet/pull/337))
-- feat(SimpleHash): add `SimpleHash` dataclient ([#284](https://github.com/MetaMask/snap-bitcoin-wallet/pull/284))
-- refactor(getBalances): simplify the logic in RPC `getBalances` ([#336](https://github.com/MetaMask/snap-bitcoin-wallet/pull/336))
-- refactor(QuickNode): support multiple addresses for method `getUtxos` ([#299](https://github.com/MetaMask/snap-bitcoin-wallet/pull/299))
-- fix: update incorrect CAIP number for BTC asset ([#325](https://github.com/MetaMask/snap-bitcoin-wallet/pull/325))
-- fix: update transaction time to 30 min ([#346](https://github.com/MetaMask/snap-bitcoin-wallet/pull/346))
-- chore: add comment explaining empty space for header text alignment ([#344](https://github.com/MetaMask/snap-bitcoin-wallet/pull/344))
-- fix: ui paper cuts ([#343](https://github.com/MetaMask/snap-bitcoin-wallet/pull/343))
-- Merge branch 'release/0.8.2'
-- chore: resolve conflicts
-- chore: remove `BlockChair` DataClient ([#298](https://github.com/MetaMask/snap-bitcoin-wallet/pull/298))
+- Add localized messages ([#348](https://github.com/MetaMask/snap-bitcoin-wallet/pull/348))
+- Add basic Sats protection support ([#337](https://github.com/MetaMask/snap-bitcoin-wallet/pull/337)), ([#284](https://github.com/MetaMask/snap-bitcoin-wallet/pull/284)), ([#349](https://github.com/MetaMask/snap-bitcoin-wallet/pull/349))
+  - Using `SimpleHash` service.
+
+### Changed
+
+- **BREAKING:** Provide scopes field to `KeyringAccount` during account creation ([#364](https://github.com/MetaMask/snap-bitcoin-wallet/pull/364))
+  - Bump `@metamask/keyring-api` from `^8.1.3` to `^13.0.0`.
+  - Compatible with `@metamask/eth-snap-keyring@^7.1.0`.
+- Support for fee rate caching ([#358](https://github.com/MetaMask/snap-bitcoin-wallet/pull/358))
+- Use Snap UI update context instead of persisting request ([#345](https://github.com/MetaMask/snap-bitcoin-wallet/pull/345))
+  - Making the Snap UI slighty more responsive and faster.
+- Remove support of `BlockChair` ([#298](https://github.com/MetaMask/snap-bitcoin-wallet/pull/298))
+
+### Fixed
+
+- Various UI fixes ([#356](https://github.com/MetaMask/snap-bitcoin-wallet/pull/356)), ([#357](https://github.com/MetaMask/snap-bitcoin-wallet/pull/357)), ([#346](https://github.com/MetaMask/snap-bitcoin-wallet/pull/346)), ([#344](https://github.com/MetaMask/snap-bitcoin-wallet/pull/344)), ([#343](https://github.com/MetaMask/snap-bitcoin-wallet/pull/343))
+- Allow send to happen even when rates are not available ([#350](https://github.com/MetaMask/snap-bitcoin-wallet/pull/350))
 
 ## [0.8.2]
 
