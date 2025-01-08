@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0]
+
+### Uncategorized
+
+- feat!: add `scopes` field to `KeyringAccount` ([#364](https://github.com/MetaMask/snap-bitcoin-wallet/pull/364))
+- feat: fee rate caching ([#358](https://github.com/MetaMask/snap-bitcoin-wallet/pull/358))
+- feat: add locale ([#348](https://github.com/MetaMask/snap-bitcoin-wallet/pull/348))
+- fix: move dust error into amount ([#356](https://github.com/MetaMask/snap-bitcoin-wallet/pull/356))
+- fix: check for initial value before validating ([#357](https://github.com/MetaMask/snap-bitcoin-wallet/pull/357))
+- fix: allow send to happen even when rates are not available ([#350](https://github.com/MetaMask/snap-bitcoin-wallet/pull/350))
+- chore: add sats protection tooltip UI ([#349](https://github.com/MetaMask/snap-bitcoin-wallet/pull/349))
+- refactor: use update context instead of persisting request ([#345](https://github.com/MetaMask/snap-bitcoin-wallet/pull/345))
+- feat(Sats-Protection): integrate sats protection with `SimpleHash` ([#337](https://github.com/MetaMask/snap-bitcoin-wallet/pull/337))
+- feat(SimpleHash): add `SimpleHash` dataclient ([#284](https://github.com/MetaMask/snap-bitcoin-wallet/pull/284))
+- refactor(getBalances): simplify the logic in RPC `getBalances` ([#336](https://github.com/MetaMask/snap-bitcoin-wallet/pull/336))
+- refactor(QuickNode): support multiple addresses for method `getUtxos` ([#299](https://github.com/MetaMask/snap-bitcoin-wallet/pull/299))
+- fix: update incorrect CAIP number for BTC asset ([#325](https://github.com/MetaMask/snap-bitcoin-wallet/pull/325))
+- fix: update transaction time to 30 min ([#346](https://github.com/MetaMask/snap-bitcoin-wallet/pull/346))
+- chore: add comment explaining empty space for header text alignment ([#344](https://github.com/MetaMask/snap-bitcoin-wallet/pull/344))
+- fix: ui paper cuts ([#343](https://github.com/MetaMask/snap-bitcoin-wallet/pull/343))
+- Merge branch 'release/0.8.2'
+- chore: resolve conflicts
+- chore: remove `BlockChair` DataClient ([#298](https://github.com/MetaMask/snap-bitcoin-wallet/pull/298))
+
 ## [0.8.2]
 
 ### Fixed
@@ -232,7 +256,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add CI for lint and test ([#2](https://github.com/MetaMask/bitcoin/pull/2))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.8.2...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.8.2...v0.9.0
 [0.8.2]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.8.1...v0.8.2
 [0.8.1]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.7.0...v0.8.0
