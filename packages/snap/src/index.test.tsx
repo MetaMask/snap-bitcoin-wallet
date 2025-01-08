@@ -1,4 +1,5 @@
 import * as keyringApi from '@metamask/keyring-api';
+import * as keyringSnapSdk from '@metamask/keyring-snap-sdk';
 import {
   type JsonRpcRequest,
   SnapError,
@@ -15,8 +16,8 @@ import * as getTxStatusRpc from './rpcs/get-transaction-status';
 
 jest.mock('./utils/logger');
 
-jest.mock('@metamask/keyring-api', () => ({
-  ...jest.requireActual('@metamask/keyring-api'),
+jest.mock('@metamask/keyring-snap-sdk', () => ({
+  ...jest.requireActual('@metamask/keyring-snap-sdk'),
   handleKeyringRequest: jest.fn(),
 }));
 
@@ -119,7 +120,7 @@ describe('onRpcRequest', () => {
 describe('onKeyringRequest', () => {
   const createMockHandleKeyringRequest = () => {
     const handleKeyringRequestSpy = jest.spyOn(
-      keyringApi,
+      keyringSnapSdk,
       'handleKeyringRequest',
     );
     return { handler: handleKeyringRequestSpy };
