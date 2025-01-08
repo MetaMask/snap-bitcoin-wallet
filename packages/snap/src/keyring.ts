@@ -7,7 +7,6 @@ import {
   type KeyringResponse,
   type Balance,
   type CaipAssetType,
-  BtcScopes,
 } from '@metamask/keyring-api';
 import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
 import {
