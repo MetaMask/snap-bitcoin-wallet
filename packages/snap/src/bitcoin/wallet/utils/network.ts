@@ -10,7 +10,7 @@ import { Caip2ChainId } from '../../../constants';
  * @throws An error if an invalid network is provided.
  */
 export function assertScopeIsSupported(scope: string) {
-  const scopes = Object.keys(Caip2ChainId);
+  const scopes = Object.values(Caip2ChainId) as string[];
 
   if (!scopes.includes(scope)) {
     throw new Error(`Invalid scope, must be one of: ${scopes.join(', ')}`);
