@@ -2687,6 +2687,7 @@ __metadata:
     bignumber.js: 9.1.2
     bip32: 4.0.0
     bitcoin-address-validation: ^2.2.3
+    bitcoindevkit: ^0.1.1
     bitcoinjs-lib: 6.1.5
     coinselect: 3.1.13
     concurrently: ^9.1.0
@@ -2701,13 +2702,14 @@ __metadata:
     eslint-plugin-prettier: ^4.2.1
     eslint-plugin-promise: ^6.1.1
     jest: ^29.5.0
+    jest-mock-extended: ^3.0.7
     jest-transform-stub: 2.0.0
     prettier: ^2.7.1
     rimraf: ^3.0.2
     superstruct: ^1.0.3
     ts-jest: ^29.1.0
     typescript: ^4.7.4
-    uuid: ^9.0.1
+    uuid: ^11.0.3
   languageName: unknown
   linkType: soft
 
@@ -6890,6 +6892,13 @@ __metadata:
     typescript: ^4.7.4
   languageName: unknown
   linkType: soft
+
+"bitcoindevkit@npm:^0.1.1":
+  version: 0.1.1
+  resolution: "bitcoindevkit@npm:0.1.1"
+  checksum: 9045f05099a437cf908849a4b89ffd642dc02f59d6a608be6b3e2f422f173d1bb57ffc9b55f4d1dadfdeb80a4513d0912d4af2cb57d0a61c497cb61759235755
+  languageName: node
+  linkType: hard
 
 "bitcoinjs-lib@npm:6.1.5":
   version: 6.1.5
@@ -13347,6 +13356,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jest-mock-extended@npm:^3.0.7":
+  version: 3.0.7
+  resolution: "jest-mock-extended@npm:3.0.7"
+  dependencies:
+    ts-essentials: ^10.0.0
+  peerDependencies:
+    jest: ^24.0.0 || ^25.0.0 || ^26.0.0 || ^27.0.0 || ^28.0.0 || ^29.0.0
+    typescript: ^3.0.0 || ^4.0.0 || ^5.0.0
+  checksum: 59ab510934b0b66e0752c170b6e069f8c93a5b9de40ea2bd3e734f773a70be4b0c251451f8770e60c1c3754d5ddbd25dd1f55568a6379f396d109694d6d3ab79
+  languageName: node
+  linkType: hard
+
 "jest-mock@npm:^29.5.0":
   version: 29.5.0
   resolution: "jest-mock@npm:29.5.0"
@@ -18909,6 +18930,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ts-essentials@npm:^10.0.0":
+  version: 10.0.4
+  resolution: "ts-essentials@npm:10.0.4"
+  peerDependencies:
+    typescript: ">=4.5.0"
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  checksum: 623bed6950d07b2ca2366e12bc6c0542431a398f052da7b5c78d626267c752312c7fc1c2bc969bd66f157dd68dcb8d9864e7fd59bccd0132c6a29a3a22e9327e
+  languageName: node
+  linkType: hard
+
 "ts-jest@npm:^29.1.0":
   version: 29.1.0
   resolution: "ts-jest@npm:29.1.0"
@@ -19461,6 +19494,15 @@ __metadata:
   version: 1.0.1
   resolution: "utils-merge@npm:1.0.1"
   checksum: c81095493225ecfc28add49c106ca4f09cdf56bc66731aa8dabc2edbbccb1e1bfe2de6a115e5c6a380d3ea166d1636410b62ef216bb07b3feb1cfde1d95d5080
+  languageName: node
+  linkType: hard
+
+"uuid@npm:^11.0.3":
+  version: 11.0.4
+  resolution: "uuid@npm:11.0.4"
+  bin:
+    uuid: dist/esm/bin/uuid
+  checksum: 88860d20dafa648642581b2e7bb364588149df50d41c812100839aec095593fcc8548fde6929605efd42f556455cf5683e3bad9e9e311f4b62d7efbb68598d3e
   languageName: node
   linkType: hard
 
