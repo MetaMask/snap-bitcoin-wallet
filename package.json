@@ -1,6 +1,6 @@
 {
   "name": "bitcoin-wallet-snap-monorepo",
-  "version": "0.8.2",
+  "version": "0.9.0",
   "private": true,
   "description": "",
   "homepage": "https://github.com/MetaMask/snap-bitcoin-wallet#readme",
@@ -27,6 +27,9 @@
     "lint:types": "yarn workspaces foreach --parallel --verbose run lint:types",
     "start": "yarn workspaces foreach --parallel --verbose --interlaced run start",
     "test": "yarn workspaces foreach --parallel --verbose run test"
+  },
+  "resolutions": {
+    "@metamask/snaps-sdk@^6.7.0": "^6.9.0"
   },
   "devDependencies": {
     "@lavamoat/allow-scripts": "^3.1.0",

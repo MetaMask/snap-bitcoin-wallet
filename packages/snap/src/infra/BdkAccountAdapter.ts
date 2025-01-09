@@ -63,6 +63,10 @@ export class BdkAccountAdapter implements BitcoinAccount {
     return addressType;
   }
 
+  get network(): Network {
+    return this.#wallet.network();
+  }
+
   peekAddress(index: number): AddressInfo {
     return this.#wallet.peek_address('external', index);
   }

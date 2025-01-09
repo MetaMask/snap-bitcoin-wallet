@@ -18,8 +18,8 @@ import { KeyringStateManager } from './stateManagement';
 jest.mock('./utils/logger');
 jest.mock('./utils/snap');
 
-jest.mock('@metamask/keyring-api', () => ({
-  ...jest.requireActual('@metamask/keyring-api'),
+jest.mock('@metamask/keyring-snap-sdk', () => ({
+  ...jest.requireActual('@metamask/keyring-snap-sdk'),
   emitSnapKeyringEvent: jest.fn(),
 }));
 
@@ -157,6 +157,7 @@ describe('BtcKeyring', () => {
           address: keyringAccount.address,
           options: keyringAccount.options,
           methods: keyringAccount.methods,
+          scopes: [caip2ChainId],
         },
         hdPath: sender.hdPath,
         index: sender.index,

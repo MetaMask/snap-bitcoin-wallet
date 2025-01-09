@@ -1,8 +1,4 @@
-import {
-  emitSnapKeyringEvent,
-  KeyringEvent,
-  BtcMethod,
-} from '@metamask/keyring-api';
+import { KeyringEvent, BtcMethod } from '@metamask/keyring-api';
 import type {
   KeyringAccountData,
   Keyring,
@@ -24,7 +20,9 @@ import {
   Caip2ChainId,
   caip2ToAddressType,
   caip2ToNetwork,
+  networkToCaip2,
 } from './caip2';
+import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
 
 export const CreateAccountRequest = object({
   scope: optional(enums(Object.values(Caip2ChainId))),
@@ -117,6 +115,7 @@ export class KeyringHandler implements Keyring {
   #toKeyringAccount(account: BitcoinAccount): KeyringAccount {
     return {
       type: addressTypeToCaip2[account.addressType] as KeyringAccount['type'],
+      scopes: [networkToCaip2[account.network]],
       id: account.id,
       address: account.nextUnusedAddress().address,
       options: {},

@@ -36,4 +36,5 @@ export const caip2ToAddressType: Record<Caip2AddressType, AddressType> = {
   [Caip2AddressType.P2tr]: 'p2tr',
 };
 
+export const networkToCaip2 = reverseMapping(caip2ToNetwork);
 export const addressTypeToCaip2 = reverseMapping(caip2ToAddressType);

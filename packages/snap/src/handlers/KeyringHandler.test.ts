@@ -1,8 +1,4 @@
-import {
-  BtcMethod,
-  KeyringEvent,
-  emitSnapKeyringEvent,
-} from '@metamask/keyring-api';
+import { BtcMethod, KeyringEvent } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
@@ -16,13 +12,14 @@ import {
   Caip2AddressType,
 } from './caip2';
 import { KeyringHandler, CreateAccountRequest } from './KeyringHandler';
+import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
 
 jest.mock('../utils', () => ({
   getProvider: jest.fn(),
 }));
 
-jest.mock('@metamask/keyring-api', () => ({
-  ...jest.requireActual('@metamask/keyring-api'),
+jest.mock('@metamask/keyring-snap-sdk', () => ({
+  ...jest.requireActual('@metamask/keyring-snap-sdk'),
   emitSnapKeyringEvent: jest.fn(),
 }));
 
@@ -42,6 +39,7 @@ describe('KeyringHandler', () => {
     id: 'some-id',
     addressType: caip2ToAddressType[mockConfig.defaultAddressType],
     suggestedName: 'My Bitcoin Account',
+    network: 'bitcoin',
     nextUnusedAddress: () => ({ address: 'bc1qaddress...' }),
   } as unknown as BitcoinAccount;
 
@@ -62,6 +60,7 @@ describe('KeyringHandler', () => {
       const expectedKeyringAccount = {
         id: 'some-id',
         type: mockConfig.defaultAddressType,
+        scopes: [Caip2ChainId.Bitcoin],
         address: 'bc1qaddress...',
         options: {},
         methods: [BtcMethod.SendBitcoin],

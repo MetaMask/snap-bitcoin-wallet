@@ -31,6 +31,11 @@ export type BitcoinAccount = {
   addressType: AddressType;
 
   /**
+   * The network of the account.
+   */
+  network: Network;
+
+  /**
    * Get an address at a given index.
    * @param index
    * @returns the address

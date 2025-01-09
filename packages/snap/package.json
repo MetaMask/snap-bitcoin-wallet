@@ -1,6 +1,6 @@
 {
   "name": "@metamask/bitcoin-wallet-snap",
-  "version": "0.8.2",
+  "version": "0.9.0",
   "description": "A Bitcoin wallet Snap.",
   "repository": {
     "type": "git",
@@ -43,8 +43,9 @@
     "@metamask/eslint-config-nodejs": "^12.1.0",
     "@metamask/eslint-config-typescript": "^12.1.0",
     "@metamask/key-tree": "^9.1.2",
-    "@metamask/keyring-api": "^9.0.0",
-    "@metamask/snaps-cli": "^6.5.4",
+    "@metamask/keyring-api": "^13.0.0",
+    "@metamask/keyring-snap-sdk": "^1.1.0",
+    "@metamask/snaps-cli": "^6.5.0",
     "@metamask/snaps-jest": "^8.6.0",
     "@metamask/snaps-sdk": "^6.9.0",
     "@metamask/utils": "^9.1.0",
