@@ -1,4 +1,5 @@
 import { BtcMethod, KeyringEvent } from '@metamask/keyring-api';
+import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
@@ -12,7 +13,6 @@ import {
   Caip2AddressType,
 } from './caip2';
 import { KeyringHandler, CreateAccountRequest } from './KeyringHandler';
-import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
 
 jest.mock('../utils', () => ({
   getProvider: jest.fn(),

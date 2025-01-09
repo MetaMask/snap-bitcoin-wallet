@@ -3,6 +3,7 @@
 import type { SnapConfig } from './entities';
 import { Caip2AddressType, Caip2ChainId } from './handlers';
 
+// ConfigV2 exists temporarily to avoid modifying the old config object before it is removed.
 export const ConfigV2: SnapConfig = {
   encrypt: false,
   // Defaults to v1 to use the "original" keyring.

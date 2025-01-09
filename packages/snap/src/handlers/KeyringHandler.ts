@@ -8,6 +8,7 @@ import type {
   Balance,
   CaipAssetType,
 } from '@metamask/keyring-api';
+import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
 import type { Json } from '@metamask/utils';
 import { assert, enums, object, optional } from 'superstruct';
 
@@ -22,7 +23,6 @@ import {
   caip2ToNetwork,
   networkToCaip2,
 } from './caip2';
-import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
 
 export const CreateAccountRequest = object({
   scope: optional(enums(Object.values(Caip2ChainId))),
