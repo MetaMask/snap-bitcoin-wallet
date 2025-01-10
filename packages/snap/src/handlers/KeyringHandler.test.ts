@@ -1,4 +1,4 @@
-import { BtcMethod } from '@metamask/keyring-api';
+import { BtcMethod, BtcScopes } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
@@ -6,12 +6,7 @@ import type { BitcoinAccount, AccountsConfig } from '../entities';
 import type { SnapClient } from '../entities/snap';
 import type { AccountUseCases } from '../usecases/AccountUseCases';
 import { Caip19Asset } from './caip19';
-import {
-  caip2ToNetwork,
-  caip2ToAddressType,
-  Caip2ChainId,
-  Caip2AddressType,
-} from './caip2';
+import { caip2ToNetwork, caip2ToAddressType, Caip2AddressType } from './caip2';
 import { KeyringHandler, CreateAccountRequest } from './KeyringHandler';
 
 jest.mock('superstruct', () => ({
@@ -24,7 +19,7 @@ describe('KeyringHandler', () => {
   const mockSnapClient = mock<SnapClient>();
   const mockConfig: AccountsConfig = {
     index: 0,
-    defaultNetwork: Caip2ChainId.Bitcoin,
+    defaultNetwork: BtcScopes.Mainnet,
     defaultAddressType: Caip2AddressType.P2wpkh,
   };
 
@@ -51,7 +46,7 @@ describe('KeyringHandler', () => {
       const expectedKeyringAccount = {
         id: 'some-id',
         type: mockConfig.defaultAddressType,
-        scopes: [Caip2ChainId.Bitcoin],
+        scopes: [BtcScopes.Mainnet],
         address: 'bc1qaddress...',
         options: {},
         methods: [BtcMethod.SendBitcoin],
@@ -74,14 +69,14 @@ describe('KeyringHandler', () => {
       mockAccounts.create.mockResolvedValue(mockAccount);
 
       const options = {
-        scope: Caip2ChainId.Signet,
+        scope: BtcScopes.Signet,
         addressType: Caip2AddressType.P2pkh,
       };
       await handler.createAccount(options);
 
       expect(assert).toHaveBeenCalledWith(options, CreateAccountRequest);
       expect(mockAccounts.create).toHaveBeenCalledWith(
-        caip2ToNetwork[Caip2ChainId.Signet],
+        caip2ToNetwork[BtcScopes.Signet],
         caip2ToAddressType[Caip2AddressType.P2pkh],
       );
     });
@@ -154,7 +149,7 @@ describe('KeyringHandler', () => {
       const expectedKeyringAccount = {
         id: 'some-id',
         type: mockConfig.defaultAddressType,
-        scopes: [Caip2ChainId.Bitcoin],
+        scopes: [BtcScopes.Mainnet],
         address: 'bc1qaddress...',
         options: {},
         methods: [BtcMethod.SendBitcoin],

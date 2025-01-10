@@ -1,4 +1,4 @@
-import { BtcMethod } from '@metamask/keyring-api';
+import { BtcMethod, BtcScopes } from '@metamask/keyring-api';
 import type {
   KeyringAccountData,
   Keyring,
@@ -18,14 +18,13 @@ import { networkToCaip19 } from './caip19';
 import {
   addressTypeToCaip2,
   Caip2AddressType,
-  Caip2ChainId,
   caip2ToAddressType,
   caip2ToNetwork,
   networkToCaip2,
 } from './caip2';
 
 export const CreateAccountRequest = object({
-  scope: optional(enums(Object.values(Caip2ChainId))),
+  scope: optional(enums(Object.values(BtcScopes))),
   addressType: optional(enums(Object.values(Caip2AddressType))),
 });
 
