@@ -33,7 +33,9 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'yarn'
       - run: yarn --immutable --immutable-cache
-      - run: yarn build
+      - run: |
+          export NODE_OPTIONS="--max_old_space_size=4096"
+          yarn build
       - name: Require clean working directory
         shell: bash
         run: |
@@ -89,7 +91,9 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'yarn'
       - run: yarn --immutable --immutable-cache
-      - run: yarn build
+      - run: |
+          export NODE_OPTIONS="--max_old_space_size=4096"
+          yarn build
       - run: yarn test
       - name: Require clean working directory
         shell: bash

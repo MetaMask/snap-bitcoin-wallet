@@ -2660,23 +2660,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/base-controller@npm:^7.0.1":
-  version: 7.0.1
-  resolution: "@metamask/base-controller@npm:7.0.1"
-  dependencies:
-    "@metamask/utils": ^9.1.0
-    immer: ^9.0.6
-  checksum: 351d46f53410732b02cef4ca08227a26e05a03447fddb3f3d298536ad212c38143717cbe65a30a86e93824048d599deb345e475690b5bf5f1e21dfd0721afd15
-  languageName: node
-  linkType: hard
-
 "@metamask/base-controller@npm:^7.0.2":
-  version: 7.0.2
-  resolution: "@metamask/base-controller@npm:7.0.2"
+  version: 7.1.0
+  resolution: "@metamask/base-controller@npm:7.1.0"
   dependencies:
     "@metamask/utils": ^10.0.0
     immer: ^9.0.6
-  checksum: c9c706077af613e704d166a1795c94e2b92e6da304514994bbc6903c4796f9a752028b86a08cf4ece43ab069d5232af468e5d7b571a85d18b80a5072619ba5cb
+  checksum: e507e686f79c6bcf3648bd9a023e016388bf6cc4a8c2a1f9f4afbb11939de785f0d0375ff18e09aff7968b3941da4614cf7ef354f3017ecca6d0268dce5d1ebd
   languageName: node
   linkType: hard
 
@@ -2693,7 +2683,8 @@ __metadata:
     "@metamask/eslint-config-nodejs": ^12.1.0
     "@metamask/eslint-config-typescript": ^12.1.0
     "@metamask/key-tree": ^9.1.2
-    "@metamask/keyring-api": ^9.0.0
+    "@metamask/keyring-api": ^13.0.0
+    "@metamask/keyring-snap-sdk": ^1.1.0
     "@metamask/snaps-cli": ^6.5.0
     "@metamask/snaps-jest": ^8.6.0
     "@metamask/snaps-sdk": ^6.9.0
@@ -2704,6 +2695,7 @@ __metadata:
     bignumber.js: 9.1.2
     bip32: 4.0.0
     bitcoin-address-validation: ^2.2.3
+    bitcoindevkit: ^0.1.1
     bitcoinjs-lib: 6.1.5
     coinselect: 3.1.13
     concurrently: ^9.1.0
@@ -2718,13 +2710,14 @@ __metadata:
     eslint-plugin-prettier: ^4.2.1
     eslint-plugin-promise: ^6.1.1
     jest: ^29.5.0
+    jest-mock-extended: ^3.0.7
     jest-transform-stub: 2.0.0
     prettier: ^2.7.1
     rimraf: ^3.0.2
     superstruct: ^1.0.3
     ts-jest: ^29.1.0
     typescript: ^4.7.4
-    uuid: ^9.0.1
+    uuid: ^11.0.3
   languageName: unknown
   linkType: soft
 
@@ -2738,7 +2731,7 @@ __metadata:
     "@metamask/eslint-config-jest": ^12.1.0
     "@metamask/eslint-config-nodejs": ^12.1.0
     "@metamask/eslint-config-typescript": ^12.1.0
-    "@metamask/keyring-api": ^9.0.0
+    "@metamask/keyring-api": ^13.0.0
     "@metamask/providers": ^17.1.1
     "@svgr/webpack": ^6.4.0
     "@testing-library/dom": ^8.17.1
@@ -2749,6 +2742,7 @@ __metadata:
     "@types/react": ^18.0.15
     "@types/react-dom": ^18.0.6
     "@types/styled-components": ^5.1.25
+    "@types/uuid": ^9.0.1
     "@typescript-eslint/eslint-plugin": ^5.42.1
     "@typescript-eslint/parser": ^5.42.1
     eslint: ^8.45.0
@@ -2773,23 +2767,6 @@ __metadata:
     uuid: ^9.0.1
   languageName: unknown
   linkType: soft
-
-"@metamask/controller-utils@npm:^11.3.0":
-  version: 11.3.0
-  resolution: "@metamask/controller-utils@npm:11.3.0"
-  dependencies:
-    "@ethereumjs/util": ^8.1.0
-    "@metamask/eth-query": ^4.0.0
-    "@metamask/ethjs-unit": ^0.3.0
-    "@metamask/utils": ^9.1.0
-    "@spruceid/siwe-parser": 2.1.0
-    "@types/bn.js": ^5.1.5
-    bn.js: ^5.2.1
-    eth-ens-namehash: ^2.0.8
-    fast-deep-equal: ^3.1.3
-  checksum: 5b6d0a57bf89c56bb374b4a3e6b035860a61285a4502184197627cc01512e5645621b8a22455f94c58a82eb2d44ed8a9d6c310b881262af439d9ebd9133e2ef4
-  languageName: node
-  linkType: hard
 
 "@metamask/controller-utils@npm:^11.4.4":
   version: 11.4.4
@@ -3035,20 +3012,40 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/keyring-api@npm:^9.0.0":
-  version: 9.0.0
-  resolution: "@metamask/keyring-api@npm:9.0.0"
+"@metamask/keyring-api@npm:^13.0.0":
+  version: 13.0.0
+  resolution: "@metamask/keyring-api@npm:13.0.0"
   dependencies:
+    "@metamask/keyring-utils": ^1.0.0
+    "@metamask/superstruct": ^3.1.0
+    "@metamask/utils": ^11.0.1
+    bech32: ^2.0.0
+  checksum: 07ba621e7db7e1b4ec8705baa3fb5a5a354c01642bd0d7621e2cbcc889182c92ef826f3d1a95cc71c0e685d24df0178e752a860a515e2f3151a75445a90c6228
+  languageName: node
+  linkType: hard
+
+"@metamask/keyring-snap-sdk@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "@metamask/keyring-snap-sdk@npm:1.1.0"
+  dependencies:
+    "@metamask/keyring-utils": ^1.0.0
     "@metamask/snaps-sdk": ^6.7.0
     "@metamask/superstruct": ^3.1.0
-    "@metamask/utils": ^9.2.1
-    "@types/uuid": ^9.0.8
-    bech32: ^2.0.0
-    uuid: ^9.0.1
+    "@metamask/utils": ^11.0.1
     webextension-polyfill: ^0.12.0
   peerDependencies:
-    "@metamask/providers": ^17.2.0
-  checksum: 205cbe876ac034b8f1dd94c9795360cd33b6f0df4ec5a1ce32127c2aa6a19cb878429c1977c9dbb46b5b8388011e4a13d9cb8a62724b38b1bf2202a745b152a3
+    "@metamask/providers": ^18.3.1
+  checksum: 277c020e4064746eb0eec865de2377c20a5aa581430118eeeac28a9efdc9c862fe205ed2d3c2d401eed9de40052fb39e86a69901e6f1baeab8a62ce3933e2209
+  languageName: node
+  linkType: hard
+
+"@metamask/keyring-utils@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@metamask/keyring-utils@npm:1.0.0"
+  dependencies:
+    "@metamask/superstruct": ^3.1.0
+    "@metamask/utils": ^9.3.0
+  checksum: 9b1c9a0805ac1f62c0ec1a6381cf1a892ac367b86de77a83f56617a9391ca5fca4803d84a95d15266b31f2c22e7711da166dfb05f10ef528146c256ce4eb8c92
   languageName: node
   linkType: hard
 
@@ -3092,18 +3089,17 @@ __metadata:
   linkType: hard
 
 "@metamask/phishing-controller@npm:^12.0.2":
-  version: 12.0.3
-  resolution: "@metamask/phishing-controller@npm:12.0.3"
+  version: 12.3.1
+  resolution: "@metamask/phishing-controller@npm:12.3.1"
   dependencies:
-    "@metamask/base-controller": ^7.0.1
-    "@metamask/controller-utils": ^11.3.0
+    "@metamask/base-controller": ^7.0.2
+    "@metamask/controller-utils": ^11.4.4
     "@noble/hashes": ^1.4.0
     "@types/punycode": ^2.1.0
-    eth-phishing-detect: ^1.2.0
     ethereum-cryptography: ^2.1.2
     fastest-levenshtein: ^1.0.16
     punycode: ^2.1.1
-  checksum: f8509781f70ac66e5f8fbd0d61508ecc146f8850f175e44f17cb8d402f3902f4bfdbca79be3598e350b3563d09f65219686ab9e591d824d9abf9f6a07463ef5c
+  checksum: b537fc2dfc8fdf7dbbbaaeba967d76476a17f1808aa77462817ce58a2154cc75ac0a0ee93f1559ef50ad38e7e9a9d80cde1354a628b091b01b285cc74f382509
   languageName: node
   linkType: hard
 
@@ -3379,7 +3375,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/snaps-sdk@npm:^6.14.0, @metamask/snaps-sdk@npm:^6.7.0, @metamask/snaps-sdk@npm:^6.9.0":
+"@metamask/snaps-sdk@npm:^6.14.0, @metamask/snaps-sdk@npm:^6.9.0":
   version: 6.14.0
   resolution: "@metamask/snaps-sdk@npm:6.14.0"
   dependencies:
@@ -3504,7 +3500,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/utils@npm:^9.0.0, @metamask/utils@npm:^9.1.0, @metamask/utils@npm:^9.2.1":
+"@metamask/utils@npm:^9.0.0, @metamask/utils@npm:^9.1.0":
   version: 9.2.1
   resolution: "@metamask/utils@npm:9.2.1"
   dependencies:
@@ -3518,6 +3514,23 @@ __metadata:
     semver: ^7.5.4
     uuid: ^9.0.1
   checksum: 1a0c842d6fe490bb068c74c6c0684a3e5fabdadcf653b1c83bc69832e9e515fbae5809be20ddfc5c31715cd3d90cf18b73088d9c81f99028ff7b2c7160358c4e
+  languageName: node
+  linkType: hard
+
+"@metamask/utils@npm:^9.3.0":
+  version: 9.3.0
+  resolution: "@metamask/utils@npm:9.3.0"
+  dependencies:
+    "@ethereumjs/tx": ^4.2.0
+    "@metamask/superstruct": ^3.1.0
+    "@noble/hashes": ^1.3.1
+    "@scure/base": ^1.1.3
+    "@types/debug": ^4.1.7
+    debug: ^4.3.4
+    pony-cause: ^2.1.10
+    semver: ^7.5.4
+    uuid: ^9.0.1
+  checksum: f720b0f7bdd46054aa88d15a9702e1de6d7200a1ca1d4f6bc48761b039f1bbffb46ac88bc87fe79e66128c196d424f3b9ef071b3cb4b40139223786d56da35e0
   languageName: node
   linkType: hard
 
@@ -5423,7 +5436,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/uuid@npm:^9.0.8":
+"@types/uuid@npm:^9.0.1":
   version: 9.0.8
   resolution: "@types/uuid@npm:9.0.8"
   checksum: b8c60b7ba8250356b5088302583d1704a4e1a13558d143c549c408bf8920535602ffc12394ede77f8a8083511b023704bc66d1345792714002bfa261b17c5275
@@ -6978,6 +6991,13 @@ __metadata:
     typescript: ^4.7.4
   languageName: unknown
   linkType: soft
+
+"bitcoindevkit@npm:^0.1.1":
+  version: 0.1.1
+  resolution: "bitcoindevkit@npm:0.1.1"
+  checksum: 9045f05099a437cf908849a4b89ffd642dc02f59d6a608be6b3e2f422f173d1bb57ffc9b55f4d1dadfdeb80a4513d0912d4af2cb57d0a61c497cb61759235755
+  languageName: node
+  linkType: hard
 
 "bitcoinjs-lib@npm:6.1.5":
   version: 6.1.5
@@ -10297,15 +10317,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eth-phishing-detect@npm:^1.2.0":
-  version: 1.2.0
-  resolution: "eth-phishing-detect@npm:1.2.0"
-  dependencies:
-    fast-levenshtein: ^2.0.6
-  checksum: 66a6a7c249ec8494e0360663596ce980ca75747cd202c47732eca0bfc7a97c6debbae359842e4f3e4ac7e6c44ab1f7f091c3aa7baa330449d3c1b7cc58608b71
-  languageName: node
-  linkType: hard
-
 "ethereum-cryptography@npm:^2.0.0, ethereum-cryptography@npm:^2.1.2":
   version: 2.1.2
   resolution: "ethereum-cryptography@npm:2.1.2"
@@ -13483,6 +13494,18 @@ __metadata:
     slash: ^3.0.0
     stack-utils: ^2.0.3
   checksum: daddece6bbf846eb6a2ab9be9f2446e54085bef4e5cecd13d2a538fa9c01cb89d38e564c6b74fd8e12d37ed9eface8a362240ae9f21d68b214590631e7a0d8bf
+  languageName: node
+  linkType: hard
+
+"jest-mock-extended@npm:^3.0.7":
+  version: 3.0.7
+  resolution: "jest-mock-extended@npm:3.0.7"
+  dependencies:
+    ts-essentials: ^10.0.0
+  peerDependencies:
+    jest: ^24.0.0 || ^25.0.0 || ^26.0.0 || ^27.0.0 || ^28.0.0 || ^29.0.0
+    typescript: ^3.0.0 || ^4.0.0 || ^5.0.0
+  checksum: 59ab510934b0b66e0752c170b6e069f8c93a5b9de40ea2bd3e734f773a70be4b0c251451f8770e60c1c3754d5ddbd25dd1f55568a6379f396d109694d6d3ab79
   languageName: node
   linkType: hard
 
@@ -19055,6 +19078,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ts-essentials@npm:^10.0.0":
+  version: 10.0.4
+  resolution: "ts-essentials@npm:10.0.4"
+  peerDependencies:
+    typescript: ">=4.5.0"
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  checksum: 623bed6950d07b2ca2366e12bc6c0542431a398f052da7b5c78d626267c752312c7fc1c2bc969bd66f157dd68dcb8d9864e7fd59bccd0132c6a29a3a22e9327e
+  languageName: node
+  linkType: hard
+
 "ts-jest@npm:^29.1.0":
   version: 29.1.0
   resolution: "ts-jest@npm:29.1.0"
@@ -19607,6 +19642,15 @@ __metadata:
   version: 1.0.1
   resolution: "utils-merge@npm:1.0.1"
   checksum: c81095493225ecfc28add49c106ca4f09cdf56bc66731aa8dabc2edbbccb1e1bfe2de6a115e5c6a380d3ea166d1636410b62ef216bb07b3feb1cfde1d95d5080
+  languageName: node
+  linkType: hard
+
+"uuid@npm:^11.0.3":
+  version: 11.0.4
+  resolution: "uuid@npm:11.0.4"
+  bin:
+    uuid: dist/esm/bin/uuid
+  checksum: 88860d20dafa648642581b2e7bb364588149df50d41c812100839aec095593fcc8548fde6929605efd42f556455cf5683e3bad9e9e311f4b62d7efbb68598d3e
   languageName: node
   linkType: hard
 
