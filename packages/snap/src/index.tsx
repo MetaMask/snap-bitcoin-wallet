@@ -13,8 +13,7 @@ import {
 import { Config } from './config';
 import { ConfigV2 } from './configv2';
 import { KeyringHandler } from './handlers/KeyringHandler';
-import { SnapClientAdapter } from './infra';
-import { EsploraClientAdapter } from './infra/EsploraClientAdapter';
+import { SnapClientAdapter, EsploraClientAdapter } from './infra';
 import { BtcKeyring } from './keyring';
 import { InternalRpcMethod, originPermissions } from './permissions';
 import type {
@@ -45,10 +44,10 @@ logger.logLevel = parseInt(Config.logLevel, 10);
 let keyring: Keyring;
 if (ConfigV2.keyringVersion === 'v2') {
   // Infra layer
-  const store = new SnapClientAdapter(ConfigV2.encrypt);
+  const snapClient = new SnapClientAdapter(ConfigV2.encrypt);
   const chainClient = new EsploraClientAdapter(ConfigV2.chain);
   // Data layer
-  const repository = new BdkAccountRepository(store);
+  const repository = new BdkAccountRepository(snapClient);
   // Business layer
   const useCases = new AccountUseCases(
     repository,

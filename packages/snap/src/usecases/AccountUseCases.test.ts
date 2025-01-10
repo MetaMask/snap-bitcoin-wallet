@@ -21,7 +21,7 @@ describe('AccountUseCases', () => {
   });
 
   describe('get', () => {
-    it('should return account', async () => {
+    it('returns account', async () => {
       const mockAccount = mock<BitcoinAccount>();
       mockAccount.id = 'some-id';
 
@@ -33,7 +33,7 @@ describe('AccountUseCases', () => {
       expect(result).toBe(mockAccount);
     });
 
-    it('should throw Error if account is not found', async () => {
+    it('throws Error if account is not found', async () => {
       mockRepository.get.mockResolvedValue(null);
 
       await expect(useCases.get('some-id')).rejects.toThrow(
@@ -43,7 +43,7 @@ describe('AccountUseCases', () => {
       expect(mockRepository.get).toHaveBeenCalledWith('some-id');
     });
 
-    it('should propagate an error if the repository get fails', async () => {
+    it('propagates an error if the repository get fails', async () => {
       const mockAccount = mock<BitcoinAccount>();
       mockAccount.id = 'some-id';
 
@@ -163,7 +163,7 @@ describe('AccountUseCases', () => {
   });
 
   describe('synchronize', () => {
-    it('should throw Error if account is not found', async () => {
+    it('throws Error if account is not found', async () => {
       mockRepository.get.mockResolvedValue(null);
 
       await expect(useCases.synchronize('some-id')).rejects.toThrow(
@@ -176,7 +176,7 @@ describe('AccountUseCases', () => {
       expect(mockRepository.update).not.toHaveBeenCalled();
     });
 
-    it('should perform a regular sync if the account is already scanned', async () => {
+    it('performs a regular sync if the account is already scanned', async () => {
       const mockAccount = mock<BitcoinAccount>();
       mockAccount.id = 'some-id';
       mockAccount.isScanned = true;
@@ -192,7 +192,7 @@ describe('AccountUseCases', () => {
       expect(result).toBe(mockAccount);
     });
 
-    it('should perform a full scan if the account is not scanned', async () => {
+    it('performs a full scan if the account is not scanned', async () => {
       const mockAccount = mock<BitcoinAccount>();
       mockAccount.id = 'some-id';
       mockAccount.isScanned = false;
@@ -208,7 +208,7 @@ describe('AccountUseCases', () => {
       expect(result).toBe(mockAccount);
     });
 
-    it('should propagate an error if the chain sync fails', async () => {
+    it('propagates an error if the chain sync fails', async () => {
       const mockAccount = mock<BitcoinAccount>();
       mockAccount.id = 'some-id';
       mockAccount.isScanned = true;
@@ -224,7 +224,7 @@ describe('AccountUseCases', () => {
       expect(mockRepository.update).not.toHaveBeenCalled();
     });
 
-    it('should propagate an error if the chain full scan fails', async () => {
+    it('propagates an error if the chain full scan fails', async () => {
       const mockAccount = mock<BitcoinAccount>();
       mockAccount.id = 'some-id';
       mockAccount.isScanned = false;
@@ -240,7 +240,7 @@ describe('AccountUseCases', () => {
       expect(mockRepository.update).not.toHaveBeenCalled();
     });
 
-    it('should propagate an error if the repository update fails', async () => {
+    it('propagates an error if the repository update fails', async () => {
       const mockAccount = mock<BitcoinAccount>();
       mockAccount.id = 'some-id';
       mockAccount.isScanned = true;

@@ -88,7 +88,7 @@ describe('KeyringHandler', () => {
       expect(result).toStrictEqual(expectedKeyringAccount);
     });
 
-    it('should respect provided scope and addressType', async () => {
+    it('respects provided provided scope and addressType', async () => {
       mockAccounts.create.mockResolvedValue(mockAccount);
 
       const options = {
@@ -104,7 +104,7 @@ describe('KeyringHandler', () => {
       );
     });
 
-    it('should propagate errors from createAccount', async () => {
+    it('propagates errors from createAccount', async () => {
       const error = new Error();
       mockAccounts.create.mockRejectedValue(error);
 
@@ -113,7 +113,7 @@ describe('KeyringHandler', () => {
       expect(emitSnapKeyringEvent).not.toHaveBeenCalled();
     });
 
-    it('should propagate errors from emitSnapKeyringEvent', async () => {
+    it('propagates errors from emitSnapKeyringEvent', async () => {
       const error = new Error();
       mockAccounts.create.mockResolvedValue(mockAccount);
       (emitSnapKeyringEvent as jest.Mock).mockRejectedValue(error);
@@ -125,7 +125,7 @@ describe('KeyringHandler', () => {
   });
 
   describe('getAccountBalances', () => {
-    it('should synchronize the account before getting the balance', async () => {
+    it('synchronizes the account before getting the balance', async () => {
       mockAccounts.synchronize.mockResolvedValue(mockAccount);
       const expectedResponse = {
         [Caip19Asset.Bitcoin]: {
@@ -139,7 +139,7 @@ describe('KeyringHandler', () => {
       expect(result).toStrictEqual(expectedResponse);
     });
 
-    it('should ignore the assets list', async () => {
+    it('ignores the assets list', async () => {
       mockAccounts.synchronize.mockResolvedValue(mockAccount);
       const expectedResponse = {
         [Caip19Asset.Bitcoin]: {
@@ -155,7 +155,7 @@ describe('KeyringHandler', () => {
       expect(result).toStrictEqual(expectedResponse);
     });
 
-    it('should propagate errors from synchronize', async () => {
+    it('propagates errors from synchronize', async () => {
       const error = new Error();
       mockAccounts.synchronize.mockRejectedValue(error);
 
@@ -167,7 +167,7 @@ describe('KeyringHandler', () => {
   });
 
   describe('getAccount', () => {
-    it('should get account', async () => {
+    it('gets account', async () => {
       mockAccounts.get.mockResolvedValue(mockAccount);
       const expectedKeyringAccount = {
         id: 'some-id',
@@ -183,7 +183,7 @@ describe('KeyringHandler', () => {
       expect(result).toStrictEqual(expectedKeyringAccount);
     });
 
-    it('should propagate errors from get', async () => {
+    it('propagates errors from get', async () => {
       const error = new Error();
       mockAccounts.get.mockRejectedValue(error);
 

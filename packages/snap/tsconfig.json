@@ -8,8 +8,7 @@
     "resolveJsonModule": true /*  lets us import JSON modules from within TypeScript modules. */,
     "strictNullChecks": true /* Enable strict null checks. */,
     "jsx": "react-jsx",
-    "jsxImportSource": "@metamask/snaps-sdk",
-    "allowJs": true /* Allow JavaScript files to be imported in TypeScript files. Needed to directly import the BDK assets without loading the WASM */
+    "jsxImportSource": "@metamask/snaps-sdk"
   },
   "include": [
     "**/*.ts",
