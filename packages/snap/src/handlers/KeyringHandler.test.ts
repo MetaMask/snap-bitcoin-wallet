@@ -1,11 +1,10 @@
-import { BtcMethod, KeyringEvent } from '@metamask/keyring-api';
-import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
+import { BtcMethod } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
 import type { BitcoinAccount, AccountsConfig } from '../entities';
+import type { SnapClient } from '../entities/snap';
 import type { AccountUseCases } from '../usecases/AccountUseCases';
-import { getProvider } from '../utils';
 import { Caip19Asset } from './caip19';
 import {
   caip2ToNetwork,
@@ -15,15 +14,6 @@ import {
 } from './caip2';
 import { KeyringHandler, CreateAccountRequest } from './KeyringHandler';
 
-jest.mock('../utils', () => ({
-  getProvider: jest.fn(),
-}));
-
-jest.mock('@metamask/keyring-snap-sdk', () => ({
-  ...jest.requireActual('@metamask/keyring-snap-sdk'),
-  emitSnapKeyringEvent: jest.fn(),
-}));
-
 jest.mock('superstruct', () => ({
   ...jest.requireActual('superstruct'),
   assert: jest.fn(),
@@ -31,6 +21,7 @@ jest.mock('superstruct', () => ({
 
 describe('KeyringHandler', () => {
   const mockAccounts = mock<AccountUseCases>();
+  const mockSnapClient = mock<SnapClient>();
   const mockConfig: AccountsConfig = {
     index: 0,
     defaultNetwork: Caip2ChainId.Bitcoin,
@@ -51,15 +42,10 @@ describe('KeyringHandler', () => {
   let handler: KeyringHandler;
 
   beforeEach(() => {
-    handler = new KeyringHandler(mockAccounts, mockConfig);
+    handler = new KeyringHandler(mockAccounts, mockSnapClient, mockConfig);
   });
 
   describe('createAccount', () => {
-    beforeEach(() => {
-      (getProvider as jest.Mock).mockReturnValue({});
-      (emitSnapKeyringEvent as jest.Mock).mockResolvedValue(undefined);
-    });
-
     it('creates a new account with default config when no options are passed', async () => {
       mockAccounts.create.mockResolvedValue(mockAccount);
       const expectedKeyringAccount = {
@@ -77,13 +63,9 @@ describe('KeyringHandler', () => {
         caip2ToNetwork[mockConfig.defaultNetwork],
         caip2ToAddressType[mockConfig.defaultAddressType],
       );
-      expect(emitSnapKeyringEvent).toHaveBeenCalledWith(
-        {},
-        KeyringEvent.AccountCreated,
-        {
-          account: expectedKeyringAccount,
-          accountNameSuggestion: mockAccount.suggestedName,
-        },
+      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalledWith(
+        expectedKeyringAccount,
+        mockAccount.suggestedName,
       );
       expect(result).toStrictEqual(expectedKeyringAccount);
     });
@@ -110,17 +92,17 @@ describe('KeyringHandler', () => {
 
       await expect(handler.createAccount()).rejects.toThrow(error);
       expect(mockAccounts.create).toHaveBeenCalled();
-      expect(emitSnapKeyringEvent).not.toHaveBeenCalled();
+      expect(mockSnapClient.emitAccountCreatedEvent).not.toHaveBeenCalled();
     });
 
     it('propagates errors from emitSnapKeyringEvent', async () => {
       const error = new Error();
       mockAccounts.create.mockResolvedValue(mockAccount);
-      (emitSnapKeyringEvent as jest.Mock).mockRejectedValue(error);
+      mockSnapClient.emitAccountCreatedEvent.mockRejectedValue(error);
 
       await expect(handler.createAccount()).rejects.toThrow(error);
       expect(mockAccounts.create).toHaveBeenCalled();
-      expect(emitSnapKeyringEvent).toHaveBeenCalled();
+      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalled();
     });
   });
 

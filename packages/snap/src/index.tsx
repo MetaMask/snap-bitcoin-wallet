@@ -55,7 +55,7 @@ if (ConfigV2.keyringVersion === 'v2') {
     ConfigV2.accounts.index,
   );
   // Application layer
-  keyring = new KeyringHandler(useCases, ConfigV2.accounts);
+  keyring = new KeyringHandler(useCases, snapClient, ConfigV2.accounts);
 }
 
 export const validateOrigin = (origin: string, method: string): void => {

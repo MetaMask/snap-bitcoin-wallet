@@ -1,4 +1,4 @@
-import { KeyringEvent, BtcMethod } from '@metamask/keyring-api';
+import { BtcMethod } from '@metamask/keyring-api';
 import type {
   KeyringAccountData,
   Keyring,
@@ -8,13 +8,12 @@ import type {
   Balance,
   CaipAssetType,
 } from '@metamask/keyring-api';
-import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
 import type { Json } from '@metamask/utils';
 import { assert, enums, object, optional } from 'superstruct';
 
 import type { BitcoinAccount, AccountsConfig } from '../entities';
+import type { SnapClient } from '../entities/snap';
 import type { AccountUseCases } from '../usecases/AccountUseCases';
-import { getProvider } from '../utils';
 import { networkToCaip19 } from './caip19';
 import {
   addressTypeToCaip2,
@@ -36,11 +35,18 @@ export const CreateAccountRequest = object({
 export class KeyringHandler implements Keyring {
   readonly #accounts: AccountUseCases;
 
+  readonly #snapClient: SnapClient;
+
   readonly #config: AccountsConfig;
 
-  constructor(accounts: AccountUseCases, config: AccountsConfig) {
+  constructor(
+    accounts: AccountUseCases,
+    snapClient: SnapClient,
+    config: AccountsConfig,
+  ) {
     this.#accounts = accounts;
     this.#config = config;
+    this.#snapClient = snapClient;
   }
 
   async listAccounts(): Promise<KeyringAccount[]> {
@@ -63,10 +69,10 @@ export class KeyringHandler implements Keyring {
     );
 
     const keyringAccount = this.#toKeyringAccount(account);
-    await emitSnapKeyringEvent(getProvider(), KeyringEvent.AccountCreated, {
-      account: keyringAccount,
-      accountNameSuggestion: account.suggestedName,
-    });
+    await this.#snapClient.emitAccountCreatedEvent(
+      keyringAccount,
+      account.suggestedName,
+    );
 
     return keyringAccount;
   }
