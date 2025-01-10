@@ -3266,9 +3266,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/snaps-cli@npm:^6.5.4":
-  version: 6.5.4
-  resolution: "@metamask/snaps-cli@npm:6.5.4"
+"@metamask/snaps-cli@npm:^6.5.0":
+  version: 6.6.0
+  resolution: "@metamask/snaps-cli@npm:6.6.0"
   dependencies:
     "@babel/core": ^7.23.2
     "@babel/plugin-transform-class-properties": ^7.22.5
@@ -3278,9 +3278,9 @@ __metadata:
     "@babel/plugin-transform-runtime": ^7.13.2
     "@babel/preset-env": ^7.23.2
     "@babel/preset-typescript": ^7.23.2
-    "@metamask/snaps-sdk": ^6.13.0
-    "@metamask/snaps-utils": ^8.6.1
-    "@metamask/snaps-webpack-plugin": ^4.1.2
+    "@metamask/snaps-sdk": ^6.14.0
+    "@metamask/snaps-utils": ^8.7.0
+    "@metamask/snaps-webpack-plugin": ^4.2.0
     "@metamask/superstruct": ^3.1.0
     "@metamask/utils": ^10.0.0
     "@swc/core": 1.3.78
@@ -3322,7 +3322,7 @@ __metadata:
     yargs: ^17.7.1
   bin:
     mm-snap: ./dist/main.cjs
-  checksum: 25ae3c5512492d1e1bf072d76ac37af5837af3981b4835cecab97d8e8ad0fd5cfee792291613602ea4db95a1d215514f66d00c732f4b3c3824568a7c8935e39d
+  checksum: b384deebbe85aeba7bb45f298ec5aff6fff6f459a8191e8e9b616ce240d0927922e3981c4fa11b9d9f787f9ec40c769c9a8cebdc5b55641a6bd16990c23a94dc
   languageName: node
   linkType: hard
 
@@ -3442,7 +3442,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/snaps-sdk@npm:^6.5.0, @metamask/snaps-sdk@npm:^6.8.0, @metamask/snaps-sdk@npm:^6.9.0":
+"@metamask/snaps-sdk@npm:^6.14.0":
+  version: 6.14.0
+  resolution: "@metamask/snaps-sdk@npm:6.14.0"
+  dependencies:
+    "@metamask/key-tree": ^10.0.1
+    "@metamask/providers": ^18.1.1
+    "@metamask/rpc-errors": ^7.0.1
+    "@metamask/superstruct": ^3.1.0
+    "@metamask/utils": ^10.0.0
+  checksum: b3249976538664f9bf40b5bedc307c42940fb105e2e292f38668853d581ebcedf274978dbe4af331383f743ed87ee587c0e3e5eac834765aefa199920d86b898
+  languageName: node
+  linkType: hard
+
+"@metamask/snaps-sdk@npm:^6.8.0, @metamask/snaps-sdk@npm:^6.9.0":
   version: 6.9.0
   resolution: "@metamask/snaps-sdk@npm:6.9.0"
   dependencies:
@@ -3481,7 +3494,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/snaps-utils@npm:^8.1.1, @metamask/snaps-utils@npm:^8.4.0, @metamask/snaps-utils@npm:^8.4.1":
+"@metamask/snaps-utils@npm:^8.4.0, @metamask/snaps-utils@npm:^8.4.1":
   version: 8.4.1
   resolution: "@metamask/snaps-utils@npm:8.4.1"
   dependencies:
@@ -3512,9 +3525,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/snaps-utils@npm:^8.6.1":
-  version: 8.6.1
-  resolution: "@metamask/snaps-utils@npm:8.6.1"
+"@metamask/snaps-utils@npm:^8.7.0":
+  version: 8.7.0
+  resolution: "@metamask/snaps-utils@npm:8.7.0"
   dependencies:
     "@babel/core": ^7.23.2
     "@babel/types": ^7.23.0
@@ -3524,7 +3537,7 @@ __metadata:
     "@metamask/rpc-errors": ^7.0.1
     "@metamask/slip44": ^4.0.0
     "@metamask/snaps-registry": ^3.2.2
-    "@metamask/snaps-sdk": ^6.13.0
+    "@metamask/snaps-sdk": ^6.14.0
     "@metamask/superstruct": ^3.1.0
     "@metamask/utils": ^10.0.0
     "@noble/hashes": ^1.3.1
@@ -3539,19 +3552,20 @@ __metadata:
     semver: ^7.5.4
     ses: ^1.1.0
     validate-npm-package-name: ^5.0.0
-  checksum: 762ccfd5ebf51fa18041dd83cfcc65ed1b7b5ea299accddde86a870ec6b888ee9ff446861590f85331c9e535c2b189aabd95d7ecca6ed48deada1a4b83063b42
+  checksum: 3f8a8ffd923a80da0056fd97b4ae60dffeae096ce35f855a1e2dea2cd447027325a763f8350c9110a2eca3c3ebe030be9c1789da5b2a58e14a6f85a298b54bb0
   languageName: node
   linkType: hard
 
-"@metamask/snaps-webpack-plugin@npm:^4.1.2":
-  version: 4.1.2
-  resolution: "@metamask/snaps-webpack-plugin@npm:4.1.2"
+"@metamask/snaps-webpack-plugin@npm:^4.2.0":
+  version: 4.2.0
+  resolution: "@metamask/snaps-webpack-plugin@npm:4.2.0"
   dependencies:
-    "@metamask/snaps-sdk": ^6.5.0
-    "@metamask/snaps-utils": ^8.1.1
-    "@metamask/utils": ^9.2.1
+    "@metamask/snaps-sdk": ^6.14.0
+    "@metamask/snaps-utils": ^8.7.0
+    "@metamask/utils": ^10.0.0
+    prettier: ^2.8.8
     webpack-sources: ^3.2.3
-  checksum: ab3772ed9bce9ad7a3599c01f57b899e9c840fc31528293277985fb08872eb22c2317d30d16555b712920189de4585aeed39fa6eb00580226d9583a4bb7d1797
+  checksum: 27604ed49b6ba4d642106cd2bc6511d9733e88e83f21eb3f3a181e503630991ba2dc84c607870c82043dcbe66c2c3fedfbc5557f2ad8bbd65becf57f3addac8f
   languageName: node
   linkType: hard
 
@@ -3559,6 +3573,23 @@ __metadata:
   version: 3.1.0
   resolution: "@metamask/superstruct@npm:3.1.0"
   checksum: 00e4d0c0aae8b25ccc1885c1db0bb4ed1590010570140c255e4deee3bf8a10c859c8fce5e475b4ae09c8a56316207af87585b91f7f5a5c028d668ccd111f19e3
+  languageName: node
+  linkType: hard
+
+"@metamask/utils@npm:^10.0.0, @metamask/utils@npm:^10.0.1":
+  version: 10.0.1
+  resolution: "@metamask/utils@npm:10.0.1"
+  dependencies:
+    "@ethereumjs/tx": ^4.2.0
+    "@metamask/superstruct": ^3.1.0
+    "@noble/hashes": ^1.3.1
+    "@scure/base": ^1.1.3
+    "@types/debug": ^4.1.7
+    debug: ^4.3.4
+    pony-cause: ^2.1.10
+    semver: ^7.5.4
+    uuid: ^9.0.1
+  checksum: 4c350c7a1c881c6af446319942392e6eb62411bff9c512166d816d39702c7b4926a982ebfd56ada317f9332a5416b3211c09e022674cee8272228658977ba851
   languageName: node
   linkType: hard
 

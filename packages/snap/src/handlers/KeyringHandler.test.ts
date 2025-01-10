@@ -172,6 +172,7 @@ describe('KeyringHandler', () => {
       const expectedKeyringAccount = {
         id: 'some-id',
         type: mockConfig.defaultAddressType,
+        scopes: [Caip2ChainId.Bitcoin],
         address: 'bc1qaddress...',
         options: {},
         methods: [BtcMethod.SendBitcoin],

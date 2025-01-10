@@ -13,8 +13,8 @@ import {
 import { Config } from './config';
 import { ConfigV2 } from './configv2';
 import { KeyringHandler } from './handlers/KeyringHandler';
-import { EsploraClientAdapter } from './infra/EsploraClientAdapter';
 import { SnapClientAdapter } from './infra';
+import { EsploraClientAdapter } from './infra/EsploraClientAdapter';
 import { BtcKeyring } from './keyring';
 import { InternalRpcMethod, originPermissions } from './permissions';
 import type {
@@ -51,7 +51,7 @@ if (ConfigV2.keyringVersion === 'v2') {
   const repository = new BdkAccountRepository(store);
   // Business layer
   const useCases = new AccountUseCases(
-    store,
+    repository,
     chainClient,
     ConfigV2.accounts.index,
   );

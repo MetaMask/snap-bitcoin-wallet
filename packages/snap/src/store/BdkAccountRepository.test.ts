@@ -1,16 +1,19 @@
 import type { SLIP10Node } from '@metamask/key-tree';
+import { ChangeSet } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 
 import type { BitcoinAccount } from '../entities';
 import type { SnapClient } from '../entities/snap';
 import { BdkAccountAdapter } from '../infra';
 import { BdkAccountRepository } from './BdkAccountRepository';
-import { ChangeSet } from 'bitcoindevkit';
 
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
 /* eslint-disable @typescript-eslint/naming-convention */
 jest.mock('bitcoindevkit', () => {
   return {
+    ChangeSet: {
+      from_json: jest.fn(),
+    },
     slip10_to_extended: jest.fn().mockReturnValue('mock-extended'),
     xpub_to_descriptor: jest
       .fn()
@@ -52,16 +55,20 @@ describe('BdkAccountRepository', () => {
       mockSnapClient.get.mockResolvedValue({
         accounts: {
           derivationPaths: {},
-          wallets: { 'some-id': '{}' },
+          wallets: { 'some-id': '{"mywallet": "data"}' },
         },
       });
 
       const mockAccount = {} as BitcoinAccount;
       (BdkAccountAdapter.load as jest.Mock).mockReturnValue(mockAccount);
+      (ChangeSet.from_json as jest.Mock).mockReturnValue({ mywallet: 'data' });
 
       const result = await repo.get('some-id');
       expect(result).toBe(mockAccount);
-      expect(BdkAccountAdapter.load).toHaveBeenCalledWith('some-id', '{}');
+      expect(ChangeSet.from_json).toHaveBeenCalledWith('{"mywallet": "data"}');
+      expect(BdkAccountAdapter.load).toHaveBeenCalledWith('some-id', {
+        mywallet: 'data',
+      });
     });
   });
 
