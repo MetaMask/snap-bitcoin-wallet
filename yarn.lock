@@ -2662,6 +2662,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@metamask/base-controller@npm:^7.0.2":
+  version: 7.1.0
+  resolution: "@metamask/base-controller@npm:7.1.0"
+  dependencies:
+    "@metamask/utils": ^10.0.0
+    immer: ^9.0.6
+  checksum: e507e686f79c6bcf3648bd9a023e016388bf6cc4a8c2a1f9f4afbb11939de785f0d0375ff18e09aff7968b3941da4614cf7ef354f3017ecca6d0268dce5d1ebd
+  languageName: node
+  linkType: hard
+
 "@metamask/bitcoin-wallet-snap@workspace:packages/snap":
   version: 0.0.0-use.local
   resolution: "@metamask/bitcoin-wallet-snap@workspace:packages/snap"
@@ -2774,6 +2784,26 @@ __metadata:
     eth-ens-namehash: ^2.0.8
     fast-deep-equal: ^3.1.3
   checksum: 5b6d0a57bf89c56bb374b4a3e6b035860a61285a4502184197627cc01512e5645621b8a22455f94c58a82eb2d44ed8a9d6c310b881262af439d9ebd9133e2ef4
+  languageName: node
+  linkType: hard
+
+"@metamask/controller-utils@npm:^11.4.4":
+  version: 11.4.4
+  resolution: "@metamask/controller-utils@npm:11.4.4"
+  dependencies:
+    "@ethereumjs/util": ^8.1.0
+    "@metamask/eth-query": ^4.0.0
+    "@metamask/ethjs-unit": ^0.3.0
+    "@metamask/utils": ^10.0.0
+    "@spruceid/siwe-parser": 2.1.0
+    "@types/bn.js": ^5.1.5
+    bignumber.js: ^9.1.2
+    bn.js: ^5.2.1
+    eth-ens-namehash: ^2.0.8
+    fast-deep-equal: ^3.1.3
+  peerDependencies:
+    "@babel/runtime": ^7.0.0
+  checksum: 1f25521a31b0fad7567a2186ee37acb95d7ef2560c1244cf1cb7ed4b61868ffe35719dba0ac7194f47d787b46fe345bd2fb577b178e4683fa252222f0ee09e7b
   languageName: node
   linkType: hard
 
@@ -3042,18 +3072,17 @@ __metadata:
   linkType: hard
 
 "@metamask/phishing-controller@npm:^12.0.2":
-  version: 12.0.3
-  resolution: "@metamask/phishing-controller@npm:12.0.3"
+  version: 12.3.1
+  resolution: "@metamask/phishing-controller@npm:12.3.1"
   dependencies:
-    "@metamask/base-controller": ^7.0.1
-    "@metamask/controller-utils": ^11.3.0
+    "@metamask/base-controller": ^7.0.2
+    "@metamask/controller-utils": ^11.4.4
     "@noble/hashes": ^1.4.0
     "@types/punycode": ^2.1.0
-    eth-phishing-detect: ^1.2.0
     ethereum-cryptography: ^2.1.2
     fastest-levenshtein: ^1.0.16
     punycode: ^2.1.1
-  checksum: f8509781f70ac66e5f8fbd0d61508ecc146f8850f175e44f17cb8d402f3902f4bfdbca79be3598e350b3563d09f65219686ab9e591d824d9abf9f6a07463ef5c
+  checksum: b537fc2dfc8fdf7dbbbaaeba967d76476a17f1808aa77462817ce58a2154cc75ac0a0ee93f1559ef50ad38e7e9a9d80cde1354a628b091b01b285cc74f382509
   languageName: node
   linkType: hard
 
@@ -3381,6 +3410,23 @@ __metadata:
   version: 3.1.0
   resolution: "@metamask/superstruct@npm:3.1.0"
   checksum: 00e4d0c0aae8b25ccc1885c1db0bb4ed1590010570140c255e4deee3bf8a10c859c8fce5e475b4ae09c8a56316207af87585b91f7f5a5c028d668ccd111f19e3
+  languageName: node
+  linkType: hard
+
+"@metamask/utils@npm:^10.0.0":
+  version: 10.0.1
+  resolution: "@metamask/utils@npm:10.0.1"
+  dependencies:
+    "@ethereumjs/tx": ^4.2.0
+    "@metamask/superstruct": ^3.1.0
+    "@noble/hashes": ^1.3.1
+    "@scure/base": ^1.1.3
+    "@types/debug": ^4.1.7
+    debug: ^4.3.4
+    pony-cause: ^2.1.10
+    semver: ^7.5.4
+    uuid: ^9.0.1
+  checksum: 4c350c7a1c881c6af446319942392e6eb62411bff9c512166d816d39702c7b4926a982ebfd56ada317f9332a5416b3211c09e022674cee8272228658977ba851
   languageName: node
   linkType: hard
 
@@ -6808,7 +6854,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bignumber.js@npm:9.1.2":
+"bignumber.js@npm:9.1.2, bignumber.js@npm:^9.1.2":
   version: 9.1.2
   resolution: "bignumber.js@npm:9.1.2"
   checksum: 582c03af77ec9cb0ebd682a373ee6c66475db94a4325f92299621d544aa4bd45cb45fd60001610e94aef8ae98a0905fa538241d9638d4422d57abbeeac6fadaf
@@ -10198,15 +10244,6 @@ __metadata:
     idna-uts46-hx: ^2.3.1
     js-sha3: ^0.5.7
   checksum: 40ce4aeedaa4e7eb4485c8d8857457ecc46a4652396981d21b7e3a5f922d5beff63c71cb4b283c935293e530eba50b329d9248be3c433949c6bc40c850c202a3
-  languageName: node
-  linkType: hard
-
-"eth-phishing-detect@npm:^1.2.0":
-  version: 1.2.0
-  resolution: "eth-phishing-detect@npm:1.2.0"
-  dependencies:
-    fast-levenshtein: ^2.0.6
-  checksum: 66a6a7c249ec8494e0360663596ce980ca75747cd202c47732eca0bfc7a97c6debbae359842e4f3e4ac7e6c44ab1f7f091c3aa7baa330449d3c1b7cc58608b71
   languageName: node
   linkType: hard
 
