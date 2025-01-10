@@ -14,13 +14,13 @@ import { Wallet } from 'bitcoindevkit';
 import type { BitcoinAccount } from '../entities';
 
 export class BdkAccountAdapter implements BitcoinAccount {
-  protected readonly _id: string;
+  readonly #id: string;
 
-  protected readonly _wallet: Wallet;
+  readonly #wallet: Wallet;
 
   constructor(id: string, wallet: Wallet) {
-    this._id = id;
-    this._wallet = wallet;
+    this.#id = id;
+    this.#wallet = wallet;
   }
 
   static create(
@@ -36,11 +36,11 @@ export class BdkAccountAdapter implements BitcoinAccount {
   }
 
   get id(): string {
-    return this._id;
+    return this.#id;
   }
 
   get suggestedName(): string {
-    switch (this._wallet.network()) {
+    switch (this.#wallet.network()) {
       case 'bitcoin':
         return 'Bitcoin Account';
       case 'testnet':
@@ -52,7 +52,7 @@ export class BdkAccountAdapter implements BitcoinAccount {
   }
 
   get balance(): Balance {
-    return this._wallet.balance();
+    return this.#wallet.balance();
   }
 
   get addressType(): AddressType {
@@ -67,38 +67,38 @@ export class BdkAccountAdapter implements BitcoinAccount {
   }
 
   get network(): Network {
-    return this._wallet.network();
+    return this.#wallet.network();
   }
 
   get isScanned(): boolean {
-    return this._wallet.latest_checkpoint().height > 0;
+    return this.#wallet.latest_checkpoint().height > 0;
   }
 
   peekAddress(index: number): AddressInfo {
-    return this._wallet.peek_address('external', index);
+    return this.#wallet.peek_address('external', index);
   }
 
   nextUnusedAddress(): AddressInfo {
-    return this._wallet.next_unused_address('external');
+    return this.#wallet.next_unused_address('external');
   }
 
   revealNextAddress(): AddressInfo {
-    return this._wallet.reveal_next_address('external');
+    return this.#wallet.reveal_next_address('external');
   }
 
   startFullScan(): FullScanRequest {
-    return this._wallet.start_full_scan();
+    return this.#wallet.start_full_scan();
   }
 
   startSync(): SyncRequest {
-    return this._wallet.start_sync_with_revealed_spks();
+    return this.#wallet.start_sync_with_revealed_spks();
   }
 
   applyUpdate(update: Update) {
-    return this._wallet.apply_update(update);
+    return this.#wallet.apply_update(update);
   }
 
   takeStaged(): ChangeSet | undefined {
-    return this._wallet.take_staged();
+    return this.#wallet.take_staged();
   }
 }

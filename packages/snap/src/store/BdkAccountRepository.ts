@@ -2,22 +2,17 @@
 /* eslint-disable camelcase */
 
 import type { AddressType, Network } from 'bitcoindevkit';
-import {
-  ChangeSet,
-  slip10_to_extended,
-  xpub_to_descriptor,
-} from 'bitcoindevkit';
+import { slip10_to_extended, xpub_to_descriptor } from 'bitcoindevkit';
 import { v4 } from 'uuid';
 
-import type { AccountRepository } from '.';
-import type { BitcoinAccount } from '../entities';
-import type { SnapStore } from '../infra';
+import type { BitcoinAccountRepository, BitcoinAccount } from '../entities';
+import type { SnapClient } from '../entities/snap';
 import { BdkAccountAdapter } from '../infra';
 
-export class SnapAccountRepository implements AccountRepository {
-  protected readonly _store: SnapStore;
+export class BdkAccountRepository implements BitcoinAccountRepository {
+  protected readonly _store: SnapClient;
 
-  constructor(store: SnapStore) {
+  constructor(store: SnapClient) {
     this._store = store;
   }
 
@@ -28,7 +23,7 @@ export class SnapAccountRepository implements AccountRepository {
       return null;
     }
 
-    return BdkAccountAdapter.load(id, ChangeSet.from_json(walletData));
+    return BdkAccountAdapter.load(id, walletData);
   }
 
   async getByDerivationPath(
@@ -42,12 +37,7 @@ export class SnapAccountRepository implements AccountRepository {
       return null;
     }
 
-    const walletData = state.accounts.wallets[id];
-    if (!walletData) {
-      return null;
-    }
-
-    return BdkAccountAdapter.load(id, ChangeSet.from_json(walletData));
+    return this.get(id);
   }
 
   async insert(

@@ -2703,8 +2703,9 @@ __metadata:
     "@metamask/eslint-config-nodejs": ^12.1.0
     "@metamask/eslint-config-typescript": ^12.1.0
     "@metamask/key-tree": ^9.1.2
-    "@metamask/keyring-api": ^9.0.0
-    "@metamask/snaps-cli": ^6.5.4
+    "@metamask/keyring-api": ^13.0.0
+    "@metamask/keyring-snap-sdk": ^1.1.0
+    "@metamask/snaps-cli": ^6.5.0
     "@metamask/snaps-jest": ^8.6.0
     "@metamask/snaps-sdk": ^6.9.0
     "@metamask/utils": ^9.1.0
@@ -2729,7 +2730,7 @@ __metadata:
     eslint-plugin-prettier: ^4.2.1
     eslint-plugin-promise: ^6.1.1
     jest: ^29.5.0
-    jest-mock-extended: ^4.0.0-beta1
+    jest-mock-extended: ^3.0.7
     jest-transform-stub: 2.0.0
     prettier: ^2.7.1
     rimraf: ^3.0.2
@@ -2750,7 +2751,7 @@ __metadata:
     "@metamask/eslint-config-jest": ^12.1.0
     "@metamask/eslint-config-nodejs": ^12.1.0
     "@metamask/eslint-config-typescript": ^12.1.0
-    "@metamask/keyring-api": ^9.0.0
+    "@metamask/keyring-api": ^13.0.0
     "@metamask/providers": ^17.1.1
     "@svgr/webpack": ^6.4.0
     "@testing-library/dom": ^8.17.1
@@ -2761,6 +2762,7 @@ __metadata:
     "@types/react": ^18.0.15
     "@types/react-dom": ^18.0.6
     "@types/styled-components": ^5.1.25
+    "@types/uuid": ^9.0.1
     "@typescript-eslint/eslint-plugin": ^5.42.1
     "@typescript-eslint/parser": ^5.42.1
     eslint: ^8.45.0
@@ -3047,20 +3049,40 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/keyring-api@npm:^9.0.0":
-  version: 9.0.0
-  resolution: "@metamask/keyring-api@npm:9.0.0"
+"@metamask/keyring-api@npm:^13.0.0":
+  version: 13.0.0
+  resolution: "@metamask/keyring-api@npm:13.0.0"
   dependencies:
+    "@metamask/keyring-utils": ^1.0.0
+    "@metamask/superstruct": ^3.1.0
+    "@metamask/utils": ^11.0.1
+    bech32: ^2.0.0
+  checksum: 07ba621e7db7e1b4ec8705baa3fb5a5a354c01642bd0d7621e2cbcc889182c92ef826f3d1a95cc71c0e685d24df0178e752a860a515e2f3151a75445a90c6228
+  languageName: node
+  linkType: hard
+
+"@metamask/keyring-snap-sdk@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "@metamask/keyring-snap-sdk@npm:1.1.0"
+  dependencies:
+    "@metamask/keyring-utils": ^1.0.0
     "@metamask/snaps-sdk": ^6.7.0
     "@metamask/superstruct": ^3.1.0
-    "@metamask/utils": ^9.2.1
-    "@types/uuid": ^9.0.8
-    bech32: ^2.0.0
-    uuid: ^9.0.1
+    "@metamask/utils": ^11.0.1
     webextension-polyfill: ^0.12.0
   peerDependencies:
-    "@metamask/providers": ^17.2.0
-  checksum: 205cbe876ac034b8f1dd94c9795360cd33b6f0df4ec5a1ce32127c2aa6a19cb878429c1977c9dbb46b5b8388011e4a13d9cb8a62724b38b1bf2202a745b152a3
+    "@metamask/providers": ^18.3.1
+  checksum: 277c020e4064746eb0eec865de2377c20a5aa581430118eeeac28a9efdc9c862fe205ed2d3c2d401eed9de40052fb39e86a69901e6f1baeab8a62ce3933e2209
+  languageName: node
+  linkType: hard
+
+"@metamask/keyring-utils@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@metamask/keyring-utils@npm:1.0.0"
+  dependencies:
+    "@metamask/superstruct": ^3.1.0
+    "@metamask/utils": ^9.3.0
+  checksum: 9b1c9a0805ac1f62c0ec1a6381cf1a892ac367b86de77a83f56617a9391ca5fca4803d84a95d15266b31f2c22e7711da166dfb05f10ef528146c256ce4eb8c92
   languageName: node
   linkType: hard
 
@@ -3420,20 +3442,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/snaps-sdk@npm:^6.13.0":
-  version: 6.13.0
-  resolution: "@metamask/snaps-sdk@npm:6.13.0"
-  dependencies:
-    "@metamask/key-tree": ^10.0.1
-    "@metamask/providers": ^18.1.1
-    "@metamask/rpc-errors": ^7.0.1
-    "@metamask/superstruct": ^3.1.0
-    "@metamask/utils": ^10.0.0
-  checksum: 1b9022ac2109f3295b758f8a015e4fe19afb274b5404080979ce83f6c8058243bd69423ce4f0d6b3deb05e1437c65ac1a3eda3e37d54cc6332bb6ab27a20fcf8
-  languageName: node
-  linkType: hard
-
-"@metamask/snaps-sdk@npm:^6.5.0, @metamask/snaps-sdk@npm:^6.7.0, @metamask/snaps-sdk@npm:^6.8.0, @metamask/snaps-sdk@npm:^6.9.0":
+"@metamask/snaps-sdk@npm:^6.5.0, @metamask/snaps-sdk@npm:^6.8.0, @metamask/snaps-sdk@npm:^6.9.0":
   version: 6.9.0
   resolution: "@metamask/snaps-sdk@npm:6.9.0"
   dependencies:
@@ -3553,9 +3562,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/utils@npm:^10.0.0, @metamask/utils@npm:^10.0.1":
-  version: 10.0.1
-  resolution: "@metamask/utils@npm:10.0.1"
+"@metamask/utils@npm:^11.0.1":
+  version: 11.0.1
+  resolution: "@metamask/utils@npm:11.0.1"
   dependencies:
     "@ethereumjs/tx": ^4.2.0
     "@metamask/superstruct": ^3.1.0
@@ -3566,7 +3575,7 @@ __metadata:
     pony-cause: ^2.1.10
     semver: ^7.5.4
     uuid: ^9.0.1
-  checksum: 4c350c7a1c881c6af446319942392e6eb62411bff9c512166d816d39702c7b4926a982ebfd56ada317f9332a5416b3211c09e022674cee8272228658977ba851
+  checksum: a5072f87157f6763328767bf1ddc01deb94e13f32af58d0993e0450e7e211fb29882280a1013cbdc7752b152a662be3d9beef8129a9097dba7d465389c398b3c
   languageName: node
   linkType: hard
 
@@ -3584,6 +3593,23 @@ __metadata:
     semver: ^7.5.4
     uuid: ^9.0.1
   checksum: 1a0c842d6fe490bb068c74c6c0684a3e5fabdadcf653b1c83bc69832e9e515fbae5809be20ddfc5c31715cd3d90cf18b73088d9c81f99028ff7b2c7160358c4e
+  languageName: node
+  linkType: hard
+
+"@metamask/utils@npm:^9.3.0":
+  version: 9.3.0
+  resolution: "@metamask/utils@npm:9.3.0"
+  dependencies:
+    "@ethereumjs/tx": ^4.2.0
+    "@metamask/superstruct": ^3.1.0
+    "@noble/hashes": ^1.3.1
+    "@scure/base": ^1.1.3
+    "@types/debug": ^4.1.7
+    debug: ^4.3.4
+    pony-cause: ^2.1.10
+    semver: ^7.5.4
+    uuid: ^9.0.1
+  checksum: f720b0f7bdd46054aa88d15a9702e1de6d7200a1ca1d4f6bc48761b039f1bbffb46ac88bc87fe79e66128c196d424f3b9ef071b3cb4b40139223786d56da35e0
   languageName: node
   linkType: hard
 
@@ -5489,7 +5515,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/uuid@npm:^9.0.8":
+"@types/uuid@npm:^9.0.1":
   version: 9.0.8
   resolution: "@types/uuid@npm:9.0.8"
   checksum: b8c60b7ba8250356b5088302583d1704a4e1a13558d143c549c408bf8920535602ffc12394ede77f8a8083511b023704bc66d1345792714002bfa261b17c5275
@@ -13559,16 +13585,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jest-mock-extended@npm:^4.0.0-beta1":
-  version: 4.0.0-beta1
-  resolution: "jest-mock-extended@npm:4.0.0-beta1"
+"jest-mock-extended@npm:^3.0.7":
+  version: 3.0.7
+  resolution: "jest-mock-extended@npm:3.0.7"
   dependencies:
-    ts-essentials: ^10.0.2
+    ts-essentials: ^10.0.0
   peerDependencies:
-    "@jest/globals": ^28.0.0 || ^29.0.0
     jest: ^24.0.0 || ^25.0.0 || ^26.0.0 || ^27.0.0 || ^28.0.0 || ^29.0.0
     typescript: ^3.0.0 || ^4.0.0 || ^5.0.0
-  checksum: de84487f07a4a812fcfdcfde5234dedb35676103a8542bd30b4dd8b7ee4fdaa4f5d5c60b6c076539d10a8d303af36cbee24a9a16a20aa4f43413a69427a4e99b
+  checksum: 59ab510934b0b66e0752c170b6e069f8c93a5b9de40ea2bd3e734f773a70be4b0c251451f8770e60c1c3754d5ddbd25dd1f55568a6379f396d109694d6d3ab79
   languageName: node
   linkType: hard
 
@@ -19141,15 +19166,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ts-essentials@npm:^10.0.2":
-  version: 10.0.3
-  resolution: "ts-essentials@npm:10.0.3"
+"ts-essentials@npm:^10.0.0":
+  version: 10.0.4
+  resolution: "ts-essentials@npm:10.0.4"
   peerDependencies:
     typescript: ">=4.5.0"
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 7919df8b46be0dcfaade3ddbc98c0fd5236585ea0b8a46c898eda1a7229c17673e0286179c6bece41c26e16e62037f0fda38f4f5246a61026698022427806354
+  checksum: 623bed6950d07b2ca2366e12bc6c0542431a398f052da7b5c78d626267c752312c7fc1c2bc969bd66f157dd68dcb8d9864e7fd59bccd0132c6a29a3a22e9327e
   languageName: node
   linkType: hard
 
@@ -19709,11 +19734,11 @@ __metadata:
   linkType: hard
 
 "uuid@npm:^11.0.3":
-  version: 11.0.3
-  resolution: "uuid@npm:11.0.3"
+  version: 11.0.4
+  resolution: "uuid@npm:11.0.4"
   bin:
     uuid: dist/esm/bin/uuid
-  checksum: 646181c77e8b8df9bd07254faa703943e1c4d5ccde7d080312edf12f443f6c5750801fd9b27bf2e628594182165e6b1b880c0382538f7eca00b26622203741dc
+  checksum: 88860d20dafa648642581b2e7bb364588149df50d41c812100839aec095593fcc8548fde6929605efd42f556455cf5683e3bad9e9e311f4b62d7efbb68598d3e
   languageName: node
   linkType: hard
 
