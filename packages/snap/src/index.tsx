@@ -13,7 +13,7 @@ import {
 import { Config } from './config';
 import { ConfigV2 } from './configv2';
 import { KeyringHandler } from './handlers/KeyringHandler';
-import { SnapClientAdapter } from './infra';
+import { SnapClientAdapter, EsploraClientAdapter } from './infra';
 import { BtcKeyring } from './keyring';
 import { InternalRpcMethod, originPermissions } from './permissions';
 import type {
@@ -35,7 +35,7 @@ import {
   SendBitcoinController,
 } from './ui/controller/send-bitcoin-controller';
 import type { SendFlowContext, SendFormState } from './ui/types';
-import { AccountUseCases } from './usecases';
+import { AccountUseCases } from './use-cases';
 import { isSnapRpcError, logger } from './utils';
 import { loadLocale } from './utils/locale';
 
@@ -44,13 +44,18 @@ logger.logLevel = parseInt(Config.logLevel, 10);
 let keyring: Keyring;
 if (ConfigV2.keyringVersion === 'v2') {
   // Infra layer
-  const store = new SnapClientAdapter(ConfigV2.encrypt);
+  const snapClient = new SnapClientAdapter(ConfigV2.encrypt);
+  const chainClient = new EsploraClientAdapter(ConfigV2.chain);
   // Data layer
-  const repository = new BdkAccountRepository(store);
+  const repository = new BdkAccountRepository(snapClient);
   // Business layer
-  const useCases = new AccountUseCases(repository, ConfigV2.accounts.index);
+  const useCases = new AccountUseCases(
+    repository,
+    chainClient,
+    ConfigV2.accounts.index,
+  );
   // Application layer
-  keyring = new KeyringHandler(useCases, ConfigV2.accounts);
+  keyring = new KeyringHandler(useCases, snapClient, ConfigV2.accounts);
 }
 
 export const validateOrigin = (origin: string, method: string): void => {
