@@ -1,9 +1,12 @@
 import type {
+  FullScanRequest,
+  SyncRequest,
   AddressInfo,
   AddressType,
   Balance,
-  ChangeSet,
   Network,
+  Update,
+  ChangeSet,
 } from 'bitcoindevkit';
 
 /**
@@ -31,9 +34,14 @@ export type BitcoinAccount = {
   addressType: AddressType;
 
   /**
-   * The network of the account.
+   * The network in which the account operates.
    */
   network: Network;
+
+  /**
+   * Whether the account has already performed a full scan.
+   */
+  isScanned: boolean;
 
   /**
    * Get an address at a given index.
@@ -55,6 +63,23 @@ export type BitcoinAccount = {
    * @returns the address
    */
   revealNextAddress(): AddressInfo;
+
+  /**
+   * Start a full scan.
+   * @returns the full scan request
+   */
+  startFullScan(): FullScanRequest;
+
+  /**
+   * Start a sync with revealed scripts.
+   * @returns the sync request
+   */
+  startSync(): SyncRequest;
+
+  /**
+   * Apply an update to the account.
+   */
+  applyUpdate(update: Update): void;
 
   /**
    * Get the change set.
@@ -93,4 +118,10 @@ export type BitcoinAccountRepository = {
     network: Network,
     addressType: AddressType,
   ): Promise<BitcoinAccount>;
+
+  /**
+   * Update an account.
+   * @param account
+   */
+  update(account: BitcoinAccount): Promise<void>;
 };

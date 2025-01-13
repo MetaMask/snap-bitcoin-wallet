@@ -1,4 +1,6 @@
 import type { JsonSLIP10Node, SLIP10Node } from '@metamask/key-tree';
+import type { KeyringAccount } from '@metamask/keyring-api';
+import type { SnapsProvider } from '@metamask/snaps-sdk';
 
 export type SnapState = {
   accounts: {
@@ -11,6 +13,11 @@ export type SnapState = {
  * The SnapClient represents the MetaMask Snap state and manages the BIP-32 entropy from the Wallet SRP.
  */
 export type SnapClient = {
+  /**
+   * The snap global provider instance
+   */
+  provider: SnapsProvider;
+
   /**
    * Get the Snap state.
    * @returns The Snap state.
@@ -36,4 +43,14 @@ export type SnapClient = {
    * @returns The public SLIP10 node.
    */
   getPublicEntropy(derivationPath: string[]): Promise<SLIP10Node>;
+
+  /**
+   * Emits an event notifying the extension of a newly created account
+   * @param keyringAccount - The new Keyring account.
+   * @param name - The account suggested name.
+   */
+  emitAccountCreatedEvent(
+    keyringAccount: KeyringAccount,
+    name: string,
+  ): Promise<void>;
 };
