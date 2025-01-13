@@ -28,6 +28,9 @@
     "start": "yarn workspaces foreach --all --parallel --verbose --interlaced run start",
     "test": "yarn workspaces foreach --all --parallel --verbose run test"
   },
+  "resolutions": {
+    "@metamask/snaps-sdk@^6.7.0": "^6.9.0"
+  },
   "devDependencies": {
     "@lavamoat/allow-scripts": "^3.1.0",
     "@lavamoat/preinstall-always-fail": "^2.1.0",
