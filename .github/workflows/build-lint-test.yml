@@ -69,10 +69,10 @@ jobs:
       - run: yarn lint
       - name: Validate RC changelog
         if: ${{ startsWith(github.head_ref, 'release/') }}
-        run: yarn workspaces foreach --parallel --topological --verbose run auto-changelog validate --prettier --rc
+        run: yarn workspaces foreach --all --parallel --topological --verbose run auto-changelog validate --prettier --rc
       - name: Validate changelog
         if: ${{ !startsWith(github.head_ref, 'release/') }}
-        run: yarn workspaces foreach --parallel --topological --verbose run auto-changelog validate --prettier
+        run: yarn workspaces foreach --all --parallel --topological --verbose run auto-changelog validate --prettier
       - name: Require clean working directory
         shell: bash
         run: |
