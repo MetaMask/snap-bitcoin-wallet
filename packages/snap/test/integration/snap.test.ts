@@ -1,9 +1,9 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
-import { BtcMethod } from '@metamask/keyring-api';
+import { BtcMethod, BtcScopes } from '@metamask/keyring-api';
 import type { Snap } from '@metamask/snaps-jest';
 import { installSnap } from '@metamask/snaps-jest';
 
-import { Caip2AddressType, Caip2ChainId } from '../../src/handlers';
+import { Caip2AddressType } from '../../src/handlers';
 
 describe('Bitcoin Snap', () => {
   let snap: Snap;
@@ -42,43 +42,43 @@ describe('Bitcoin Snap', () => {
   it.each([
     {
       addressType: Caip2AddressType.P2wpkh,
-      scope: Caip2ChainId.Bitcoin,
+      scope: BtcScopes.Mainnet,
       expectedAddress: 'bc1q832zlt4tgnqy88vd20mazw77dlt0j0wf2naw8q',
     },
     {
       addressType: Caip2AddressType.P2wpkh,
-      scope: Caip2ChainId.Testnet,
+      scope: BtcScopes.Testnet,
       expectedAddress: 'tb1qjtgffm20l9vu6a7gacxvpu2ej4kdcsgc26xfdz',
     },
     {
       addressType: Caip2AddressType.P2pkh,
-      scope: Caip2ChainId.Bitcoin,
+      scope: BtcScopes.Mainnet,
       expectedAddress: '15feVv7kK3z7jxA4RZZzY7Fwdu3yqFwzcT',
     },
     {
       addressType: Caip2AddressType.P2pkh,
-      scope: Caip2ChainId.Testnet,
+      scope: BtcScopes.Testnet,
       expectedAddress: 'mjPQaLkhZN3MxsYN8Nebzwevuz8vdTaRCq',
     },
     {
       addressType: Caip2AddressType.P2sh,
-      scope: Caip2ChainId.Bitcoin,
+      scope: BtcScopes.Mainnet,
       expectedAddress: '3QVSaDYjxEh4L3K24eorrQjfVxPAKJMys2',
     },
     {
       addressType: Caip2AddressType.P2sh,
-      scope: Caip2ChainId.Testnet,
+      scope: BtcScopes.Testnet,
       expectedAddress: '2NBG623WvXp1zxKB6gK2mnMe2mSDCur5qRU',
     },
     {
       addressType: Caip2AddressType.P2tr,
-      scope: Caip2ChainId.Bitcoin,
+      scope: BtcScopes.Mainnet,
       expectedAddress:
         'bc1p4rue37y0v9snd4z3fvw43d29u97qxf9j3fva72xy2t7hekg24dzsaz40mz',
     },
     {
       addressType: Caip2AddressType.P2tr,
-      scope: Caip2ChainId.Testnet,
+      scope: BtcScopes.Testnet,
       expectedAddress:
         'tb1pwwjax3vpq6h69965hcr22vkpm4qdvyu2pz67wyj8eagp9vxkcz0q0ya20h',
     },
@@ -118,14 +118,14 @@ describe('Bitcoin Snap', () => {
       method: 'keyring_createAccount',
       params: {
         options: {
-          scope: Caip2ChainId.Bitcoin,
+          scope: BtcScopes.Mainnet,
           addressType: Caip2AddressType.P2wpkh,
         },
       },
     });
 
     expect(response).toRespondWith(
-      accounts[`${Caip2AddressType.P2wpkh}:${Caip2ChainId.Bitcoin}`],
+      accounts[`${Caip2AddressType.P2wpkh}:${BtcScopes.Mainnet}`],
     );
   });
 });
