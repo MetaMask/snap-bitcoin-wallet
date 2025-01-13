@@ -4,7 +4,7 @@ import { assert } from 'superstruct';
 
 import type { BitcoinAccount, AccountsConfig } from '../entities';
 import type { SnapClient } from '../entities/snap';
-import type { AccountUseCases } from '../usecases/AccountUseCases';
+import type { AccountUseCases } from '../use-cases/AccountUseCases';
 import { Caip19Asset } from './caip19';
 import { caip2ToNetwork, caip2ToAddressType, Caip2AddressType } from './caip2';
 import { KeyringHandler, CreateAccountRequest } from './KeyringHandler';
@@ -111,23 +111,7 @@ describe('KeyringHandler', () => {
         },
       };
 
-      const result = await handler.getAccountBalances(mockAccount.id, []);
-      expect(mockAccounts.synchronize).toHaveBeenCalledWith(mockAccount.id);
-      expect(result).toStrictEqual(expectedResponse);
-    });
-
-    it('ignores the assets list', async () => {
-      mockAccounts.synchronize.mockResolvedValue(mockAccount);
-      const expectedResponse = {
-        [Caip19Asset.Bitcoin]: {
-          amount: '1',
-          unit: 'BTC',
-        },
-      };
-
-      const result = await handler.getAccountBalances(mockAccount.id, [
-        'ignored-asset',
-      ]);
+      const result = await handler.getAccountBalances(mockAccount.id);
       expect(mockAccounts.synchronize).toHaveBeenCalledWith(mockAccount.id);
       expect(result).toStrictEqual(expectedResponse);
     });
@@ -136,9 +120,9 @@ describe('KeyringHandler', () => {
       const error = new Error();
       mockAccounts.synchronize.mockRejectedValue(error);
 
-      await expect(
-        handler.getAccountBalances(mockAccount.id, []),
-      ).rejects.toThrow(error);
+      await expect(handler.getAccountBalances(mockAccount.id)).rejects.toThrow(
+        error,
+      );
       expect(mockAccounts.synchronize).toHaveBeenCalled();
     });
   });

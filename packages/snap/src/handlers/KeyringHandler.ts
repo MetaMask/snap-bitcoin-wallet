@@ -13,7 +13,7 @@ import { assert, enums, object, optional } from 'superstruct';
 
 import type { BitcoinAccount, AccountsConfig } from '../entities';
 import type { SnapClient } from '../entities/snap';
-import type { AccountUseCases } from '../usecases/AccountUseCases';
+import type { AccountUseCases } from '../use-cases/AccountUseCases';
 import { networkToCaip19 } from './caip19';
 import {
   addressTypeToCaip2,
@@ -78,7 +78,6 @@ export class KeyringHandler implements Keyring {
 
   async getAccountBalances(
     id: string,
-    _: CaipAssetType[],
   ): Promise<Record<CaipAssetType, Balance>> {
     const account = await this.#accounts.synchronize(id);
     const balance = account.balance.trusted_spendable.to_btc().toString();
