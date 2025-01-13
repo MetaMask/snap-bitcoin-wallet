@@ -118,7 +118,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'yarn'
-      - run: yarn --immutable --immutable-cache
+      - run: yarn --immutable
       - run: |
           export NODE_OPTIONS="--max_old_space_size=4096"
           yarn build

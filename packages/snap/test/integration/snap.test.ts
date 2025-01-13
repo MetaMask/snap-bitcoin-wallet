@@ -103,8 +103,10 @@ describe('Bitcoin Snap', () => {
         methods: [BtcMethod.SendBitcoin],
       });
 
-      accounts[`${addressType}:${scope}`] = response.response
-        .result as KeyringAccount;
+      if ('result' in response.response) {
+        accounts[`${addressType}:${scope}`] = response.response
+          .result as KeyringAccount;
+      }
     },
   );
 
