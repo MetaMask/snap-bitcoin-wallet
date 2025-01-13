@@ -35,6 +35,7 @@ describe('Bitcoin Snap', () => {
       id: expect.anything(),
       address: 'bc1q832zlt4tgnqy88vd20mazw77dlt0j0wf2naw8q',
       options: {},
+      scopes: [BtcScopes.Mainnet],
       methods: [BtcMethod.SendBitcoin],
     });
   });
@@ -100,6 +101,7 @@ describe('Bitcoin Snap', () => {
         id: expect.anything(),
         address: expectedAddress,
         options: {},
+        scopes: [scope],
         methods: [BtcMethod.SendBitcoin],
       });
 
