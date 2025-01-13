@@ -108,6 +108,8 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - prepare
+    env:
+      KEYRING_VERSION: v2
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js

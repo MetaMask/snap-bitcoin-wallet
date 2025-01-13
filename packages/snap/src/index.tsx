@@ -5,8 +5,8 @@ import {
   type OnKeyringRequestHandler,
   type OnUserInputHandler,
   type Json,
-  SnapError,
   UnauthorizedError,
+  SnapError,
   MethodNotFoundError,
 } from '@metamask/snaps-sdk';
 
@@ -63,16 +63,9 @@ export const validateOrigin = (origin: string, method: string): void => {
     // eslint-disable-next-line @typescript-eslint/no-throw-literal
     throw new UnauthorizedError('Origin not found');
   }
-
-  const permissions = originPermissions.get(origin);
-  if (!permissions) {
+  if (!originPermissions.get(origin)?.has(method)) {
     // eslint-disable-next-line @typescript-eslint/no-throw-literal
-    throw new UnauthorizedError('Permission denied');
-  }
-
-  if (!permissions.has(method)) {
-    // eslint-disable-next-line @typescript-eslint/no-throw-literal
-    throw new UnauthorizedError('Permission denied');
+    throw new UnauthorizedError(`Permission denied`);
   }
 };
 
