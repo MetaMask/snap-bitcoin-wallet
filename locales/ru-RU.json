@@ -1,0 +1,92 @@
+{
+  "locale": "ru",
+  "messages": {
+    "snapDescription": {
+      "message": "Управляйте биткойнами с помощью MetaMask"
+    },
+    "snapProposedName": {
+      "message": "Биткойн"
+    },
+    "reviewTransactionWarning": {
+      "message": "Проверьте транзакцию, прежде чем продолжить"
+    },
+    "loading": {
+      "message": "Загрузка..."
+    },
+    "from": {
+      "message": "От"
+    },
+    "toAccount": {
+      "message": "На счет"
+    },
+    "fromAccount": {
+      "message": "Со счета"
+    },
+    "review": {
+      "message": "Просмотр"
+    },
+    "cancel": {
+      "message": "Отмена"
+    },
+    "amount": {
+      "message": "Сумма"
+    },
+    "balance": {
+      "message": "Баланс"
+    },
+    "recipient": {
+      "message": "Получатель"
+    },
+    "network": {
+      "message": "Сеть"
+    },
+    "estimatedTransactionSpeed": {
+      "message": "30 мин."
+    },
+    "transactionSpeed": {
+      "message": "Скорость транзакции"
+    },
+    "transactionSpeedTooltip": {
+      "message": "Примерное время транзакции"
+    },
+    "networkFee": {
+      "message": "Комиссия сети"
+    },
+    "networkFeeToolTip": {
+      "message": "Примерная комиссия сети"
+    },
+    "total": {
+      "message": "Итого"
+    },
+    "send": {
+      "message": "Отправить"
+    },
+    "sending": {
+      "message": "Отправка..."
+    },
+    "sendAmount": {
+      "message": "Отправляемая сумма"
+    },
+    "amountToSendPlaceholder": {
+      "message": "Введите сумму для отправки"
+    },
+    "max": {
+      "message": "Макс."
+    },
+    "receivingAddressPlaceholder": {
+      "message": "Введите адрес получения"
+    },
+    "validAddress": {
+      "message": "Действительный адрес биткойна"
+    },
+    "preparingTransaction": {
+      "message": "Подготовка транзакции..."
+    },
+    "error": {
+      "message": "Ошибка"
+    },
+    "satProtectionTooltip": {
+      "message": "MetaMask защищает ваши ординалы, редкие сатоши и руны, которые планируется отправить в рамках транзакций с биткойнами."
+    }
+  }
+}

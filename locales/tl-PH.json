@@ -1,0 +1,92 @@
+{
+  "locale": "tl",
+  "messages": {
+    "snapDescription": {
+      "message": "Pamahalaan ang Bitcoin gamit ang MetaMask"
+    },
+    "snapProposedName": {
+      "message": "Bitcoin"
+    },
+    "reviewTransactionWarning": {
+      "message": "Suriin ang transaksyon bago magpatuloy"
+    },
+    "loading": {
+      "message": "Naglo-load"
+    },
+    "from": {
+      "message": "Mula sa"
+    },
+    "toAccount": {
+      "message": "Patungo sa Account"
+    },
+    "fromAccount": {
+      "message": "Mula sa Account"
+    },
+    "review": {
+      "message": "Suriin"
+    },
+    "cancel": {
+      "message": "Kanselahin"
+    },
+    "amount": {
+      "message": "Halaga"
+    },
+    "balance": {
+      "message": "Balanse"
+    },
+    "recipient": {
+      "message": "Tatanggap"
+    },
+    "network": {
+      "message": "Network"
+    },
+    "estimatedTransactionSpeed": {
+      "message": "30 min"
+    },
+    "transactionSpeed": {
+      "message": "Bilis ng Transaksyon"
+    },
+    "transactionSpeedTooltip": {
+      "message": "Ang tinatayang tagal ng transaksyon"
+    },
+    "networkFee": {
+      "message": "Bayad sa Network"
+    },
+    "networkFeeToolTip": {
+      "message": "Ang tinatayang bayad sa network"
+    },
+    "total": {
+      "message": "Kabuuan"
+    },
+    "send": {
+      "message": "Ipadala"
+    },
+    "sending": {
+      "message": "Ipinapadala"
+    },
+    "sendAmount": {
+      "message": "Ipadala ang Halaga"
+    },
+    "amountToSendPlaceholder": {
+      "message": "Ilagay ang halagang ipapadala"
+    },
+    "max": {
+      "message": "Max"
+    },
+    "receivingAddressPlaceholder": {
+      "message": "Ilagay ang address ng tatanggap"
+    },
+    "validAddress": {
+      "message": "Valid na address ng bitcoin"
+    },
+    "preparingTransaction": {
+      "message": "Inihahanda ang transaksyon"
+    },
+    "error": {
+      "message": "Error"
+    },
+    "satProtectionTooltip": {
+      "message": "Pinoprotektahan ng MetaMask ang iyong mga Ordinial, Rare SAT, at mga Rune para maipadala ang mga Transaksyon sa Bitcoin."
+    }
+  }
+}

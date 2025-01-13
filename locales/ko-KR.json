@@ -1,0 +1,92 @@
+{
+  "locale": "ko",
+  "messages": {
+    "snapDescription": {
+      "message": "MetaMask로 비트코인 관리"
+    },
+    "snapProposedName": {
+      "message": "비트코인"
+    },
+    "reviewTransactionWarning": {
+      "message": "계속하기 전에 트랜잭션을 검토하세요"
+    },
+    "loading": {
+      "message": "불러오는 중"
+    },
+    "from": {
+      "message": "보내는 사람"
+    },
+    "toAccount": {
+      "message": "받는 계정"
+    },
+    "fromAccount": {
+      "message": "보내는 계정"
+    },
+    "review": {
+      "message": "검토"
+    },
+    "cancel": {
+      "message": "취소"
+    },
+    "amount": {
+      "message": "금액"
+    },
+    "balance": {
+      "message": "잔액"
+    },
+    "recipient": {
+      "message": "받는 사람"
+    },
+    "network": {
+      "message": "네트워크"
+    },
+    "estimatedTransactionSpeed": {
+      "message": "30분"
+    },
+    "transactionSpeed": {
+      "message": "트랜잭션 속도"
+    },
+    "transactionSpeedTooltip": {
+      "message": "예상 트랜잭션 시간"
+    },
+    "networkFee": {
+      "message": "네트워크 수수료"
+    },
+    "networkFeeToolTip": {
+      "message": "예상 네트워크 수수료"
+    },
+    "total": {
+      "message": "총액"
+    },
+    "send": {
+      "message": "보내기"
+    },
+    "sending": {
+      "message": "보내는 중"
+    },
+    "sendAmount": {
+      "message": "보낼 금액"
+    },
+    "amountToSendPlaceholder": {
+      "message": "보낼 금액 입력"
+    },
+    "max": {
+      "message": "최대"
+    },
+    "receivingAddressPlaceholder": {
+      "message": "받는 주소 입력"
+    },
+    "validAddress": {
+      "message": "유효한 비트코인 주소"
+    },
+    "preparingTransaction": {
+      "message": "트랜잭션 준비 중"
+    },
+    "error": {
+      "message": "오류"
+    },
+    "satProtectionTooltip": {
+      "message": "MetaMask는 비트코인 트랜잭션에서 전송되는 Ordinals, Rare SATs, Runes를 보호하고 있습니다."
+    }
+  }
+}

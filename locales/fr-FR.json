@@ -1,0 +1,92 @@
+{
+  "locale": "fr",
+  "messages": {
+    "snapDescription": {
+      "message": "Gérer les bitcoins avec MetaMask"
+    },
+    "snapProposedName": {
+      "message": "Bitcoin"
+    },
+    "reviewTransactionWarning": {
+      "message": "Vérifiez la transaction avant de continuer"
+    },
+    "loading": {
+      "message": "Chargement"
+    },
+    "from": {
+      "message": "De"
+    },
+    "toAccount": {
+      "message": "Au compte"
+    },
+    "fromAccount": {
+      "message": "Depuis le compte"
+    },
+    "review": {
+      "message": "Vérifier"
+    },
+    "cancel": {
+      "message": "Annuler"
+    },
+    "amount": {
+      "message": "Montant"
+    },
+    "balance": {
+      "message": "Solde"
+    },
+    "recipient": {
+      "message": "Destinataire"
+    },
+    "network": {
+      "message": "Réseau"
+    },
+    "estimatedTransactionSpeed": {
+      "message": "30 min"
+    },
+    "transactionSpeed": {
+      "message": "Vitesse de transaction"
+    },
+    "transactionSpeedTooltip": {
+      "message": "Heure estimée de la transaction"
+    },
+    "networkFee": {
+      "message": "Frais de réseau"
+    },
+    "networkFeeToolTip": {
+      "message": "Frais de réseau estimés"
+    },
+    "total": {
+      "message": "Total"
+    },
+    "send": {
+      "message": "Envoyer"
+    },
+    "sending": {
+      "message": "Envoi"
+    },
+    "sendAmount": {
+      "message": "Montant à envoyer"
+    },
+    "amountToSendPlaceholder": {
+      "message": "Saisir le montant à envoyer"
+    },
+    "max": {
+      "message": "Max."
+    },
+    "receivingAddressPlaceholder": {
+      "message": "Saisir l’adresse de réception"
+    },
+    "validAddress": {
+      "message": "Adresse bitcoin valide"
+    },
+    "preparingTransaction": {
+      "message": "Préparation de la transaction"
+    },
+    "error": {
+      "message": "Erreur"
+    },
+    "satProtectionTooltip": {
+      "message": "MetaMask protège vos Ordinals, Rare SATs et Runes pour qu’ils soient envoyés dans des transactions Bitcoin."
+    }
+  }
+}

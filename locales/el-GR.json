@@ -1,0 +1,92 @@
+{
+  "locale": "el",
+  "messages": {
+    "snapDescription": {
+      "message": "Διαχειριστείτε τα Bitcoins χρησιμοποιώντας το MetaMask"
+    },
+    "snapProposedName": {
+      "message": "Bitcoin"
+    },
+    "reviewTransactionWarning": {
+      "message": "Ελέγξτε τη συναλλαγή πριν προχωρήσετε"
+    },
+    "loading": {
+      "message": "Φόρτωση"
+    },
+    "from": {
+      "message": "Από"
+    },
+    "toAccount": {
+      "message": "Προς λογαριασμό"
+    },
+    "fromAccount": {
+      "message": "Από λογαριασμό"
+    },
+    "review": {
+      "message": "Έλεγχος"
+    },
+    "cancel": {
+      "message": "Άκυρο"
+    },
+    "amount": {
+      "message": "Ποσό"
+    },
+    "balance": {
+      "message": "Υπόλοιπο"
+    },
+    "recipient": {
+      "message": "Παραλήπτης"
+    },
+    "network": {
+      "message": "Δίκτυο"
+    },
+    "estimatedTransactionSpeed": {
+      "message": "30 λεπτά"
+    },
+    "transactionSpeed": {
+      "message": "Ταχύτητα συναλλαγής"
+    },
+    "transactionSpeedTooltip": {
+      "message": "Ο εκτιμώμενος χρόνος της συναλλαγής"
+    },
+    "networkFee": {
+      "message": "Τέλη δικτύου"
+    },
+    "networkFeeToolTip": {
+      "message": "Τα εκτιμώμενα τέλη δικτύου"
+    },
+    "total": {
+      "message": "Σύνολο"
+    },
+    "send": {
+      "message": "Εστάλη"
+    },
+    "sending": {
+      "message": "Αποστολή"
+    },
+    "sendAmount": {
+      "message": "Ποσό προς αποστολή"
+    },
+    "amountToSendPlaceholder": {
+      "message": "Εισάγετε το ποσό προς αποστολή"
+    },
+    "max": {
+      "message": "Μεγ"
+    },
+    "receivingAddressPlaceholder": {
+      "message": "Εισάγετε τη διεύθυνση του παραλήπτη"
+    },
+    "validAddress": {
+      "message": "Έγκυρη διεύθυνση των bitcoins"
+    },
+    "preparingTransaction": {
+      "message": "Προετοιμασία συναλλαγής"
+    },
+    "error": {
+      "message": "Σφάλμα"
+    },
+    "satProtectionTooltip": {
+      "message": "Το MetaMask προστατεύει τα Ordinials, τα Rare SAT και τα Runes που θα σταλούν σε συναλλαγές με Bitcoins."
+    }
+  }
+}

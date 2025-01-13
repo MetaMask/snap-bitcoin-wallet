@@ -1,0 +1,92 @@
+{
+  "locale": "中文",
+  "messages": {
+    "snapDescription": {
+      "message": "使用 MetaMask 管理比特币"
+    },
+    "snapProposedName": {
+      "message": "比特币"
+    },
+    "reviewTransactionWarning": {
+      "message": "继续之前，请先审查交易"
+    },
+    "loading": {
+      "message": "加载中"
+    },
+    "from": {
+      "message": "从"
+    },
+    "toAccount": {
+      "message": "到账户"
+    },
+    "fromAccount": {
+      "message": "从账户"
+    },
+    "review": {
+      "message": "审查"
+    },
+    "cancel": {
+      "message": "取消"
+    },
+    "amount": {
+      "message": "金额"
+    },
+    "balance": {
+      "message": "余额"
+    },
+    "recipient": {
+      "message": "收款人"
+    },
+    "network": {
+      "message": "网络"
+    },
+    "estimatedTransactionSpeed": {
+      "message": "30 分钟"
+    },
+    "transactionSpeed": {
+      "message": "交易速度"
+    },
+    "transactionSpeedTooltip": {
+      "message": "交易预计时间"
+    },
+    "networkFee": {
+      "message": "网络费用"
+    },
+    "networkFeeToolTip": {
+      "message": "预计网络费用"
+    },
+    "total": {
+      "message": "总额"
+    },
+    "send": {
+      "message": "发送"
+    },
+    "sending": {
+      "message": "发送中"
+    },
+    "sendAmount": {
+      "message": "发送金额"
+    },
+    "amountToSendPlaceholder": {
+      "message": "输入发送金额"
+    },
+    "max": {
+      "message": "最多"
+    },
+    "receivingAddressPlaceholder": {
+      "message": "输入接收地址"
+    },
+    "validAddress": {
+      "message": "有效的比特币地址"
+    },
+    "preparingTransaction": {
+      "message": "准备交易"
+    },
+    "error": {
+      "message": "错误"
+    },
+    "satProtectionTooltip": {
+      "message": "MetaMask 正在为您在比特币交易中发送的 Ordinials、Rare SAT 和 Runes 提供保护。"
+    }
+  }
+}

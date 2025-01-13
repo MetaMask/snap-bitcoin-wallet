@@ -1,0 +1,92 @@
+{
+  "locale": "en",
+  "messages": {
+    "snapDescription": {
+      "message": "MetaMaskでビットコインを管理"
+    },
+    "snapProposedName": {
+      "message": "ビットコイン"
+    },
+    "reviewTransactionWarning": {
+      "message": "進める前にトランザクションを確認してください"
+    },
+    "loading": {
+      "message": "読み込み中"
+    },
+    "from": {
+      "message": "送金元"
+    },
+    "toAccount": {
+      "message": "送金先アカウント"
+    },
+    "fromAccount": {
+      "message": "送金元アカウント"
+    },
+    "review": {
+      "message": "確認"
+    },
+    "cancel": {
+      "message": "キャンセル"
+    },
+    "amount": {
+      "message": "金額"
+    },
+    "balance": {
+      "message": "残額"
+    },
+    "recipient": {
+      "message": "受取人"
+    },
+    "network": {
+      "message": "ネットワーク"
+    },
+    "estimatedTransactionSpeed": {
+      "message": "30分"
+    },
+    "transactionSpeed": {
+      "message": "トランザクションの速度"
+    },
+    "transactionSpeedTooltip": {
+      "message": "トランザクションの予想時間"
+    },
+    "networkFee": {
+      "message": "ネットワーク手数料"
+    },
+    "networkFeeToolTip": {
+      "message": "予想ネットワーク手数料"
+    },
+    "total": {
+      "message": "合計"
+    },
+    "send": {
+      "message": "送金"
+    },
+    "sending": {
+      "message": "送金中"
+    },
+    "sendAmount": {
+      "message": "送金額"
+    },
+    "amountToSendPlaceholder": {
+      "message": "送る金額を入力してください"
+    },
+    "max": {
+      "message": "最大"
+    },
+    "receivingAddressPlaceholder": {
+      "message": "受取人のアドレスを入力してください"
+    },
+    "validAddress": {
+      "message": "有効なビットコインアドレス"
+    },
+    "preparingTransaction": {
+      "message": "トランザクションを準備中"
+    },
+    "error": {
+      "message": "エラー"
+    },
+    "satProtectionTooltip": {
+      "message": "MetaMaskはビットコイントランザクションで送金されるOrdinal、Rare SAT、Runeを保護しています。"
+    }
+  }
+}

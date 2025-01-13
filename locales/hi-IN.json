@@ -1,0 +1,92 @@
+{
+  "locale": "hi",
+  "messages": {
+    "snapDescription": {
+      "message": "MetaMask का उपयोग करके बिटकॉइन को मैनेज करें"
+    },
+    "snapProposedName": {
+      "message": "बिटकॉइन"
+    },
+    "reviewTransactionWarning": {
+      "message": "आगे बढ़ने से पहले ट्रांसेक्शन की समीक्षा करें"
+    },
+    "loading": {
+      "message": "लोड हो रहा है"
+    },
+    "from": {
+      "message": "इनके द्वारा"
+    },
+    "toAccount": {
+      "message": "अकाउंट में"
+    },
+    "fromAccount": {
+      "message": "अकाउंट से"
+    },
+    "review": {
+      "message": "समीक्षा करें"
+    },
+    "cancel": {
+      "message": "कैंसिल करें"
+    },
+    "amount": {
+      "message": "अमाउंट"
+    },
+    "balance": {
+      "message": "बैलेंस"
+    },
+    "recipient": {
+      "message": "प्राप्तकर्ता"
+    },
+    "network": {
+      "message": "नेटवर्क"
+    },
+    "estimatedTransactionSpeed": {
+      "message": "30 मिनट"
+    },
+    "transactionSpeed": {
+      "message": "ट्रांसेक्शन की गति"
+    },
+    "transactionSpeedTooltip": {
+      "message": "ट्रांसेक्शन का अनुमानित समय"
+    },
+    "networkFee": {
+      "message": "नेटवर्क फ़ीस"
+    },
+    "networkFeeToolTip": {
+      "message": "नेटवर्क की अनुमानित फ़ीस"
+    },
+    "total": {
+      "message": "कुल"
+    },
+    "send": {
+      "message": "भेजें"
+    },
+    "sending": {
+      "message": "भेजा जा रहा है"
+    },
+    "sendAmount": {
+      "message": "अमाउंट भेजें"
+    },
+    "amountToSendPlaceholder": {
+      "message": "भेजने के लिए अमाउंट डालें"
+    },
+    "max": {
+      "message": "अधिकतम"
+    },
+    "receivingAddressPlaceholder": {
+      "message": "प्राप्तकर्ता का एड्रेस डालें"
+    },
+    "validAddress": {
+      "message": "वैध बिटकॉइन एड्रेस"
+    },
+    "preparingTransaction": {
+      "message": "ट्रांसेक्शन तैयार किया जा रहा है"
+    },
+    "error": {
+      "message": "एरर"
+    },
+    "satProtectionTooltip": {
+      "message": "MetaMask, बिटकॉइन ट्रांसेक्शन में भेजे जाने वाले आपके Ordinials, Rare SATs और Runes की सुरक्षा कर रहा है।"
+    }
+  }
+}

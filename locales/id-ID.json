@@ -1,0 +1,92 @@
+{
+  "locale": "id",
+  "messages": {
+    "snapDescription": {
+      "message": "Kelola Bitcoin menggunakan MetaMask"
+    },
+    "snapProposedName": {
+      "message": "Bitcoin"
+    },
+    "reviewTransactionWarning": {
+      "message": "Tinjau transaksi sebelum melanjutkan"
+    },
+    "loading": {
+      "message": "Memuat"
+    },
+    "from": {
+      "message": "Dari"
+    },
+    "toAccount": {
+      "message": "Ke Akun"
+    },
+    "fromAccount": {
+      "message": "Dari Akun"
+    },
+    "review": {
+      "message": "Tinjau"
+    },
+    "cancel": {
+      "message": "Batal"
+    },
+    "amount": {
+      "message": "Jumlah"
+    },
+    "balance": {
+      "message": "Saldo"
+    },
+    "recipient": {
+      "message": "Penerima"
+    },
+    "network": {
+      "message": "Jaringan"
+    },
+    "estimatedTransactionSpeed": {
+      "message": "30 mnt"
+    },
+    "transactionSpeed": {
+      "message": "Kecepatan Transaksi"
+    },
+    "transactionSpeedTooltip": {
+      "message": "Estimasi waktu transaksi"
+    },
+    "networkFee": {
+      "message": "Biaya Jaringan"
+    },
+    "networkFeeToolTip": {
+      "message": "Estimasi biaya jaringan"
+    },
+    "total": {
+      "message": "Total"
+    },
+    "send": {
+      "message": "Kirim"
+    },
+    "sending": {
+      "message": "Mengirim"
+    },
+    "sendAmount": {
+      "message": "Kirim Jumlah"
+    },
+    "amountToSendPlaceholder": {
+      "message": "Masukkan jumlah yang akan dikirim"
+    },
+    "max": {
+      "message": "Maks"
+    },
+    "receivingAddressPlaceholder": {
+      "message": "Masukkan alamat penerima"
+    },
+    "validAddress": {
+      "message": "Alamat bitcoin yang valid"
+    },
+    "preparingTransaction": {
+      "message": "Mempersiapkan transaksi"
+    },
+    "error": {
+      "message": "Kesalahan"
+    },
+    "satProtectionTooltip": {
+      "message": "MetaMask melindungi Ordinial, Rare SAT, dan Rune Anda untuk dikirim dalam Transaksi Bitcoin."
+    }
+  }
+}

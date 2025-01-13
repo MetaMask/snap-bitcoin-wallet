@@ -1,0 +1,92 @@
+{
+  "locale": "de",
+  "messages": {
+    "snapDescription": {
+      "message": "Verwaltung von Bitcoin mit MetaMask"
+    },
+    "snapProposedName": {
+      "message": "Bitcoin"
+    },
+    "reviewTransactionWarning": {
+      "message": "Überprüfen Sie die Transaktion, bevor Sie fortfahren"
+    },
+    "loading": {
+      "message": "Wird geladen"
+    },
+    "from": {
+      "message": "Von"
+    },
+    "toAccount": {
+      "message": "Zu Konto"
+    },
+    "fromAccount": {
+      "message": "Von Konto"
+    },
+    "review": {
+      "message": "Überprüfung"
+    },
+    "cancel": {
+      "message": "Abbrechen"
+    },
+    "amount": {
+      "message": "Betrag"
+    },
+    "balance": {
+      "message": "Guthaben"
+    },
+    "recipient": {
+      "message": "Empfänger"
+    },
+    "network": {
+      "message": "Netzwerk"
+    },
+    "estimatedTransactionSpeed": {
+      "message": "30 Min."
+    },
+    "transactionSpeed": {
+      "message": "Transaktionsgeschwindigkeit"
+    },
+    "transactionSpeedTooltip": {
+      "message": "Die geschätzte Transaktionsdauer"
+    },
+    "networkFee": {
+      "message": "Netzwerkgebühr"
+    },
+    "networkFeeToolTip": {
+      "message": "Die geschätzte Netzwerkgebühr"
+    },
+    "total": {
+      "message": "Insgesamt"
+    },
+    "send": {
+      "message": "Senden"
+    },
+    "sending": {
+      "message": "Wird gesendet"
+    },
+    "sendAmount": {
+      "message": "Betrag senden"
+    },
+    "amountToSendPlaceholder": {
+      "message": "Zu sendenden Betrag eingeben"
+    },
+    "max": {
+      "message": "Max."
+    },
+    "receivingAddressPlaceholder": {
+      "message": "Empfängeradresse eingeben"
+    },
+    "validAddress": {
+      "message": "Gültige Bitcoin-Adresse"
+    },
+    "preparingTransaction": {
+      "message": "Transaktion wird vorbereitet"
+    },
+    "error": {
+      "message": "Fehler"
+    },
+    "satProtectionTooltip": {
+      "message": "MetaMask schützt Ihre Ordinials, seltenen SATs und Runen, um diese in Bitcoin-Transaktionen zu versenden."
+    }
+  }
+}

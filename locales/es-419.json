@@ -1,0 +1,92 @@
+{
+  "locale": "es",
+  "messages": {
+    "snapDescription": {
+      "message": "Gestione Bitcoin con MetaMask"
+    },
+    "snapProposedName": {
+      "message": "Bitcoin"
+    },
+    "reviewTransactionWarning": {
+      "message": "Revise la transacción antes de continuar"
+    },
+    "loading": {
+      "message": "Cargando"
+    },
+    "from": {
+      "message": "De"
+    },
+    "toAccount": {
+      "message": "A la cuenta"
+    },
+    "fromAccount": {
+      "message": "Desde la cuenta"
+    },
+    "review": {
+      "message": "Revisar"
+    },
+    "cancel": {
+      "message": "Cancelar"
+    },
+    "amount": {
+      "message": "Monto"
+    },
+    "balance": {
+      "message": "Saldo"
+    },
+    "recipient": {
+      "message": "Destinatario"
+    },
+    "network": {
+      "message": "Red"
+    },
+    "estimatedTransactionSpeed": {
+      "message": "30 min"
+    },
+    "transactionSpeed": {
+      "message": "Velocidad de la transacción"
+    },
+    "transactionSpeedTooltip": {
+      "message": "El tiempo estimado de la transacción"
+    },
+    "networkFee": {
+      "message": "Tarifa de red"
+    },
+    "networkFeeToolTip": {
+      "message": "La tarifa de red estimada"
+    },
+    "total": {
+      "message": "Total"
+    },
+    "send": {
+      "message": "Enviar"
+    },
+    "sending": {
+      "message": "Enviando"
+    },
+    "sendAmount": {
+      "message": "Enviar monto"
+    },
+    "amountToSendPlaceholder": {
+      "message": "Ingrese el monto a enviar"
+    },
+    "max": {
+      "message": "Máx."
+    },
+    "receivingAddressPlaceholder": {
+      "message": "Ingrese la dirección de recepción"
+    },
+    "validAddress": {
+      "message": "Dirección de bitcoin válida"
+    },
+    "preparingTransaction": {
+      "message": "Preparando la transacción"
+    },
+    "error": {
+      "message": "Error"
+    },
+    "satProtectionTooltip": {
+      "message": "MetaMask protege sus Ordinals, SAT raros y Runes para ser enviados en transacciones de Bitcoin."
+    }
+  }
+}

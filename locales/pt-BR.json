@@ -1,0 +1,92 @@
+{
+  "locale": "pt-BR",
+  "messages": {
+    "snapDescription": {
+      "message": "Gerencie Bitcoins usando MetaMask"
+    },
+    "snapProposedName": {
+      "message": "Bitcoin"
+    },
+    "reviewTransactionWarning": {
+      "message": "Revise a transação antes de prosseguir"
+    },
+    "loading": {
+      "message": "Carregando"
+    },
+    "from": {
+      "message": "De"
+    },
+    "toAccount": {
+      "message": "Para a conta"
+    },
+    "fromAccount": {
+      "message": "Da conta"
+    },
+    "review": {
+      "message": "Revisar"
+    },
+    "cancel": {
+      "message": "Cancelar"
+    },
+    "amount": {
+      "message": "Valor"
+    },
+    "balance": {
+      "message": "Saldo"
+    },
+    "recipient": {
+      "message": "Destinatário"
+    },
+    "network": {
+      "message": "Rede"
+    },
+    "estimatedTransactionSpeed": {
+      "message": "30 min"
+    },
+    "transactionSpeed": {
+      "message": "Velocidade da transação"
+    },
+    "transactionSpeedTooltip": {
+      "message": "O tempo estimado da transação"
+    },
+    "networkFee": {
+      "message": "Taxa de rede"
+    },
+    "networkFeeToolTip": {
+      "message": "A taxa de rede estimada"
+    },
+    "total": {
+      "message": "Total"
+    },
+    "send": {
+      "message": "Enviar"
+    },
+    "sending": {
+      "message": "Enviando"
+    },
+    "sendAmount": {
+      "message": "Enviar valor"
+    },
+    "amountToSendPlaceholder": {
+      "message": "Insira o valor a ser enviado"
+    },
+    "max": {
+      "message": "Máx."
+    },
+    "receivingAddressPlaceholder": {
+      "message": "Insira o endereço de recebimento"
+    },
+    "validAddress": {
+      "message": "Endereço de bitcoin válido"
+    },
+    "preparingTransaction": {
+      "message": "Preparando transação"
+    },
+    "error": {
+      "message": "Erro"
+    },
+    "satProtectionTooltip": {
+      "message": "A MetaMask está protegendo seus Ordinais, SATs Raros e Runas para serem enviados em Transações Bitcoin."
+    }
+  }
+}

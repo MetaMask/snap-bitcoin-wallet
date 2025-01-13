@@ -1,0 +1,92 @@
+{
+  "locale": "tr",
+  "messages": {
+    "snapDescription": {
+      "message": "MetaMask'i kullanarak Bitcoin'i yönetin"
+    },
+    "snapProposedName": {
+      "message": "Bitcoin"
+    },
+    "reviewTransactionWarning": {
+      "message": "Devam etmeden önce işlemi inceleyin"
+    },
+    "loading": {
+      "message": "Yükleniyor"
+    },
+    "from": {
+      "message": "Gönderen"
+    },
+    "toAccount": {
+      "message": "Alıcı Hesap"
+    },
+    "fromAccount": {
+      "message": "Gönderen Hesap"
+    },
+    "review": {
+      "message": "İncele"
+    },
+    "cancel": {
+      "message": "İptal"
+    },
+    "amount": {
+      "message": "Miktar"
+    },
+    "balance": {
+      "message": "Bakiye"
+    },
+    "recipient": {
+      "message": "Alıcı"
+    },
+    "network": {
+      "message": "Ağ"
+    },
+    "estimatedTransactionSpeed": {
+      "message": "30 dk."
+    },
+    "transactionSpeed": {
+      "message": "İşlem Hızı"
+    },
+    "transactionSpeedTooltip": {
+      "message": "Tahmini işlem süresi"
+    },
+    "networkFee": {
+      "message": "Ağ Ücreti"
+    },
+    "networkFeeToolTip": {
+      "message": "Tahmini ağ ücreti"
+    },
+    "total": {
+      "message": "Toplam"
+    },
+    "send": {
+      "message": "Gönder"
+    },
+    "sending": {
+      "message": "Gönderiliyor"
+    },
+    "sendAmount": {
+      "message": "Gönderilecek Miktar"
+    },
+    "amountToSendPlaceholder": {
+      "message": "Gönderilecek miktarı girin"
+    },
+    "max": {
+      "message": "Maksimum"
+    },
+    "receivingAddressPlaceholder": {
+      "message": "Alıcı adresini girin"
+    },
+    "validAddress": {
+      "message": "Geçerli bitcoin adresi"
+    },
+    "preparingTransaction": {
+      "message": "İşlem hazırlanıyor"
+    },
+    "error": {
+      "message": "Hata"
+    },
+    "satProtectionTooltip": {
+      "message": "MetaMask, Bitcoin İşlemlerinde gönderilecek Ordinals, Rare SATs ve Runes ürünlerinizi koruyor."
+    }
+  }
+}
