@@ -3361,7 +3361,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/snaps-sdk@npm:^6.14.0, @metamask/snaps-sdk@npm:^6.7.0, @metamask/snaps-sdk@npm:^6.9.0":
+"@metamask/snaps-sdk@npm:^6.14.0, @metamask/snaps-sdk@npm:^6.9.0":
   version: 6.14.0
   resolution: "@metamask/snaps-sdk@npm:6.14.0"
   dependencies:
