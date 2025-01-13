@@ -55,16 +55,19 @@ if (ConfigV2.keyringVersion === 'v2') {
 
 export const validateOrigin = (origin: string, method: string): void => {
   if (!origin) {
-    throw new UnauthorizedError('Missing origin');
+    // eslint-disable-next-line @typescript-eslint/no-throw-literal
+    throw new UnauthorizedError('Origin not found');
   }
 
   const permissions = originPermissions.get(origin);
   if (!permissions) {
-    throw new UnauthorizedError(`Origin ${origin} not allowed`);
+    // eslint-disable-next-line @typescript-eslint/no-throw-literal
+    throw new UnauthorizedError('Permission denied');
   }
 
   if (!permissions.has(method)) {
-    throw new UnauthorizedError(`Permission denied for method: ${method}`);
+    // eslint-disable-next-line @typescript-eslint/no-throw-literal
+    throw new UnauthorizedError('Permission denied');
   }
 };
 
@@ -97,7 +100,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       }
 
       default:
-        throw new MethodNotFoundError('Method not found');
+        throw new MethodNotFoundError() as unknown as Error;
     }
   } catch (error) {
     let snapError = error;
