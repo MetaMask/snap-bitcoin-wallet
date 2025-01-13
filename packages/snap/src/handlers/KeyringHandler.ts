@@ -1,15 +1,14 @@
-import type { KeyringAccountData } from '@metamask/keyring-api';
-import {
-  type Keyring,
-  type KeyringAccount,
-  type KeyringRequest,
-  type KeyringResponse,
-  type Balance,
-  type CaipAssetType,
-  emitSnapKeyringEvent,
-  KeyringEvent,
-  BtcMethod,
+import { KeyringEvent, BtcMethod } from '@metamask/keyring-api';
+import type {
+  KeyringAccountData,
+  Keyring,
+  KeyringAccount,
+  KeyringRequest,
+  KeyringResponse,
+  Balance,
+  CaipAssetType,
 } from '@metamask/keyring-api';
+import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
 import type { Json } from '@metamask/utils';
 import { assert, enums, object, optional } from 'superstruct';
 
@@ -22,6 +21,7 @@ import {
   Caip2ChainId,
   caip2ToAddressType,
   caip2ToNetwork,
+  networkToCaip2,
 } from './caip2';
 
 export const CreateAccountRequest = object({
@@ -33,13 +33,13 @@ export const CreateAccountRequest = object({
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 export class KeyringHandler implements Keyring {
-  protected readonly _accounts: AccountUseCases;
+  readonly #accounts: AccountUseCases;
 
-  protected readonly _config: AccountsConfig;
+  readonly #config: AccountsConfig;
 
   constructor(accounts: AccountUseCases, config: AccountsConfig) {
-    this._accounts = accounts;
-    this._config = config;
+    this.#accounts = accounts;
+    this.#config = config;
   }
 
   async listAccounts(): Promise<KeyringAccount[]> {
@@ -50,13 +50,14 @@ export class KeyringHandler implements Keyring {
     throw new Error('Method not implemented.');
   }
 
-  async createAccount(options?: Record<string, Json>): Promise<KeyringAccount> {
-    const opts = options ?? {};
+  async createAccount(
+    opts: Record<string, Json> = {},
+  ): Promise<KeyringAccount> {
     assert(opts, CreateAccountRequest);
 
-    const account = await this._accounts.createAccount(
-      caip2ToNetwork[opts.scope ?? this._config.defaultNetwork],
-      caip2ToAddressType[opts.addressType ?? this._config.defaultAddressType],
+    const account = await this.#accounts.createAccount(
+      caip2ToNetwork[opts.scope ?? this.#config.defaultNetwork],
+      caip2ToAddressType[opts.addressType ?? this.#config.defaultAddressType],
     );
 
     const keyringAccount = this.#toKeyringAccount(account);
@@ -113,11 +114,12 @@ export class KeyringHandler implements Keyring {
 
   #toKeyringAccount(account: BitcoinAccount): KeyringAccount {
     return {
-      type: addressTypeToCaip2[account.addressType],
+      type: addressTypeToCaip2[account.addressType] as KeyringAccount['type'],
+      scopes: [networkToCaip2[account.network]],
       id: account.id,
       address: account.nextUnusedAddress().address,
       options: {},
       methods: [BtcMethod.SendBitcoin],
-    } as KeyringAccount;
+    };
   }
 }

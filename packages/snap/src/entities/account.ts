@@ -3,10 +3,11 @@ import type {
   AddressType,
   Balance,
   ChangeSet,
+  Network,
 } from 'bitcoindevkit';
 
 /**
- * BitcoinAccount represents a Bitcoin account.
+ * A Bitcoin account.
  */
 export type BitcoinAccount = {
   /**
@@ -28,6 +29,11 @@ export type BitcoinAccount = {
    * The address type of the account.
    */
   addressType: AddressType;
+
+  /**
+   * The network of the account.
+   */
+  network: Network;
 
   /**
    * Get an address at a given index.
@@ -55,4 +61,36 @@ export type BitcoinAccount = {
    * @returns the change set
    */
   takeStaged(): ChangeSet | undefined;
+};
+
+/**
+ * BitcoinAccountRepository is a repository that manages Bitcoin accounts.
+ */
+export type BitcoinAccountRepository = {
+  /**
+   * Get an account by its id.
+   * @param id
+   * @returns the account or null if it does not exist
+   */
+  get(id: string): Promise<BitcoinAccount | null>;
+
+  /**
+   * Get an account by its derivation path.
+   * @param derivationPath
+   * @returns the account or null if it does not exist
+   */
+  getByDerivationPath(derivationPath: string[]): Promise<BitcoinAccount | null>;
+
+  /**
+   * Insert a new account.
+   * @param derivationPath
+   * @param network
+   * @param addressType
+   * @returns the new account
+   */
+  insert(
+    derivationPath: string[],
+    network: Network,
+    addressType: AddressType,
+  ): Promise<BitcoinAccount>;
 };

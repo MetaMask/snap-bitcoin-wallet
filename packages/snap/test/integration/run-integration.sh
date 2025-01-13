@@ -20,7 +20,7 @@ echo "Waiting for Bitcoin regtest network to be ready..."
 sleep 10
 
 echo "Checking Docker logs..."
-docker-compose -f test/integration/docker-compose.yml  logs --tail=20
+docker-compose -f test/integration/docker-compose.yml logs --tail=20
 
 echo "Running integration tests..."
 jest --config jest.integration.config.js
@@ -33,7 +33,7 @@ else
 fi
 
 echo "Stopping Docker services..."
-docker-compose -f test/integration/docker-compose.yml  down
+docker-compose -f test/integration/docker-compose.yml down
 
 if [ $? -ne 0 ]; then
   echo "Error: Failed to stop Docker services."

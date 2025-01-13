@@ -1,8 +1,5 @@
-import {
-  BtcMethod,
-  KeyringEvent,
-  emitSnapKeyringEvent,
-} from '@metamask/keyring-api';
+import { BtcMethod, KeyringEvent } from '@metamask/keyring-api';
+import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
@@ -21,8 +18,8 @@ jest.mock('../utils', () => ({
   getProvider: jest.fn(),
 }));
 
-jest.mock('@metamask/keyring-api', () => ({
-  ...jest.requireActual('@metamask/keyring-api'),
+jest.mock('@metamask/keyring-snap-sdk', () => ({
+  ...jest.requireActual('@metamask/keyring-snap-sdk'),
   emitSnapKeyringEvent: jest.fn(),
 }));
 
@@ -42,6 +39,7 @@ describe('KeyringHandler', () => {
     id: 'some-id',
     addressType: caip2ToAddressType[mockConfig.defaultAddressType],
     suggestedName: 'My Bitcoin Account',
+    network: 'bitcoin',
     nextUnusedAddress: () => ({ address: 'bc1qaddress...' }),
   } as unknown as BitcoinAccount;
 
@@ -57,11 +55,12 @@ describe('KeyringHandler', () => {
       (emitSnapKeyringEvent as jest.Mock).mockResolvedValue(undefined);
     });
 
-    it('should create a new account with default config when no options are passed', async () => {
+    it('creates a new account with default config when no options are passed', async () => {
       mockAccounts.createAccount.mockResolvedValue(mockAccount);
       const expectedKeyringAccount = {
         id: 'some-id',
         type: mockConfig.defaultAddressType,
+        scopes: [Caip2ChainId.Bitcoin],
         address: 'bc1qaddress...',
         options: {},
         methods: [BtcMethod.SendBitcoin],
@@ -84,7 +83,7 @@ describe('KeyringHandler', () => {
       expect(result).toStrictEqual(expectedKeyringAccount);
     });
 
-    it('should respect provided scope and addressType', async () => {
+    it('respects provided scope and addressType', async () => {
       mockAccounts.createAccount.mockResolvedValue(mockAccount);
 
       const options = {
@@ -100,7 +99,7 @@ describe('KeyringHandler', () => {
       );
     });
 
-    it('should propagate errors from createAccount', async () => {
+    it('propagates errors from createAccount', async () => {
       const error = new Error();
       mockAccounts.createAccount.mockRejectedValue(error);
 
@@ -109,7 +108,7 @@ describe('KeyringHandler', () => {
       expect(emitSnapKeyringEvent).not.toHaveBeenCalled();
     });
 
-    it('should propagate errors from emitSnapKeyringEvent', async () => {
+    it('propagates errors from emitSnapKeyringEvent', async () => {
       const error = new Error();
       mockAccounts.createAccount.mockResolvedValue(mockAccount);
       (emitSnapKeyringEvent as jest.Mock).mockRejectedValue(error);

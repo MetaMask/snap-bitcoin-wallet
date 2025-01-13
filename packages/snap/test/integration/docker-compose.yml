@@ -1,7 +1,6 @@
 services:
   bitcoin-regtest:
     image: lncm/bitcoind:v27.0
-    container_name: bitcoin-regtest
     ports:
       - "18443:18443"
       - "18444:18444"
@@ -16,4 +15,17 @@ services:
       "-txindex=1",
       "-fallbackfee=0.0002"
     ]
-    
+
+  esplora:
+    image: blockstream/esplora
+    ports:
+      - "50001:50001" 
+      - "8094:80"     
+    volumes:
+      - ./data_bitcoin_regtest:/data
+    depends_on:
+      - bitcoin-regtest
+    entrypoint:
+      - bash
+      - -c
+      - "/srv/explorer/run.sh bitcoin-regtest explorer"

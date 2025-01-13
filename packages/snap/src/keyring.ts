@@ -1,7 +1,6 @@
 import {
   BtcMethod,
   KeyringEvent,
-  emitSnapKeyringEvent,
   type Keyring,
   type KeyringAccount,
   type KeyringRequest,
@@ -9,6 +8,7 @@ import {
   type Balance,
   type CaipAssetType,
 } from '@metamask/keyring-api';
+import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
 import {
   MethodNotFoundError,
   UnauthorizedError,
@@ -19,7 +19,11 @@ import type { Infer } from 'superstruct';
 import { assert, object, StructError } from 'superstruct';
 import { v4 as uuidv4 } from 'uuid';
 
-import { type BtcAccount, type BtcWallet } from './bitcoin/wallet';
+import {
+  assertScopeIsSupported,
+  type BtcAccount,
+  type BtcWallet,
+} from './bitcoin/wallet';
 import { Config } from './config';
 import { Caip2ChainId } from './constants';
 import { AccountNotFoundError, MethodNotImplementedError } from './exceptions';
@@ -85,7 +89,10 @@ export class BtcKeyring implements Keyring {
     try {
       assert(options, CreateAccountOptionsStruct);
 
-      const wallet = this.getBtcWallet(options.scope);
+      const { scope } = options;
+      assertScopeIsSupported(scope);
+
+      const wallet = this.getBtcWallet(scope);
 
       // TODO: Create account with index 0 for now for phase 1 scope, update to use increment index later
       const index = this._options.defaultIndex;
@@ -99,7 +106,7 @@ export class BtcKeyring implements Keyring {
       );
 
       const keyringAccount = this.newKeyringAccount(account, {
-        scope: options.scope,
+        scope,
         index,
       });
 
@@ -114,7 +121,7 @@ export class BtcKeyring implements Keyring {
           account: keyringAccount,
           hdPath: account.hdPath,
           index: account.index,
-          scope: options.scope,
+          scope,
         });
 
         await this.#emitEvent(KeyringEvent.AccountCreated, {
@@ -268,17 +275,21 @@ export class BtcKeyring implements Keyring {
 
   protected newKeyringAccount(
     account: BtcAccount,
-    options?: CreateAccountOptions,
+    options: CreateAccountOptions,
   ): KeyringAccount {
+    const { scope } = options;
+    // This should be done by the caller already, but to future-proof this we double-check it here too.
+    assertScopeIsSupported(scope);
+
     return {
-      type: account.type,
+      // Assuming that `account.type` is aligned with `KeyringAccount['type']`.
+      type: account.type as KeyringAccount['type'],
       id: uuidv4(),
       address: account.address,
-      options: {
-        ...options,
-      },
+      options,
+      scopes: [scope],
       methods: this._methods,
-    } as unknown as KeyringAccount;
+    };
   }
 
   protected getKeyringAccountNameSuggestion(

@@ -1,7 +1,6 @@
 import type { AddressType, Network } from 'bitcoindevkit';
 
-import type { BitcoinAccount } from '../entities';
-import type { AccountRepository } from '../repositories';
+import type { BitcoinAccount, BitcoinAccountRepository } from '../entities';
 import { logger } from '../utils';
 
 const addressTypeToPurpose: Record<AddressType, string> = {
@@ -21,11 +20,11 @@ const networkToCoinType: Record<Network, string> = {
 };
 
 export class AccountUseCases {
-  protected readonly _repository: AccountRepository;
+  protected readonly _repository: BitcoinAccountRepository;
 
   protected readonly _accountIndex: number;
 
-  constructor(repository: AccountRepository, accountIndex: number) {
+  constructor(repository: BitcoinAccountRepository, accountIndex: number) {
     this._repository = repository;
     this._accountIndex = accountIndex;
   }

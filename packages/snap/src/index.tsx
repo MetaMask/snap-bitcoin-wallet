@@ -1,5 +1,5 @@
 import type { Keyring } from '@metamask/keyring-api';
-import { handleKeyringRequest } from '@metamask/keyring-api';
+import { handleKeyringRequest } from '@metamask/keyring-snap-sdk';
 import {
   type OnRpcRequestHandler,
   type OnKeyringRequestHandler,
@@ -11,7 +11,7 @@ import {
 import { Config } from './config';
 import { ConfigV2 } from './configv2';
 import { KeyringHandler } from './handlers/KeyringHandler';
-import { SnapStore } from './infra';
+import { SnapClientAdapter } from './infra';
 import { BtcKeyring } from './keyring';
 import { InternalRpcMethod, originPermissions } from './permissions';
 import { SnapAccountRepository } from './repositories/SnapAccountRepository';
@@ -28,6 +28,7 @@ import {
 import type { StartSendTransactionFlowParams } from './rpcs/start-send-transaction-flow';
 import { startSendTransactionFlow } from './rpcs/start-send-transaction-flow';
 import { KeyringStateManager } from './stateManagement';
+import { BdkAccountRepository } from './store/BdkAccountRepository';
 import {
   isSendFormEvent,
   SendBitcoinController,
@@ -42,9 +43,9 @@ logger.logLevel = parseInt(Config.logLevel, 10);
 let keyring: Keyring;
 if (ConfigV2.keyringVersion === 'v2') {
   // Infra layer
-  const store = new SnapStore(ConfigV2.encrypt);
+  const store = new SnapClientAdapter(ConfigV2.encrypt);
   // Data layer
-  const repository = new SnapAccountRepository(store);
+  const repository = new BdkAccountRepository(store);
   // Business layer
   const useCases = new AccountUseCases(repository, ConfigV2.accounts.index);
   // Application layer

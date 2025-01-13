@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0]
+
+### Added
+
+- Add localized messages ([#348](https://github.com/MetaMask/snap-bitcoin-wallet/pull/348))
+- Add basic Sats protection support ([#337](https://github.com/MetaMask/snap-bitcoin-wallet/pull/337)), ([#284](https://github.com/MetaMask/snap-bitcoin-wallet/pull/284)), ([#349](https://github.com/MetaMask/snap-bitcoin-wallet/pull/349))
+  - Using SimpleHash service.
+
+### Changed
+
+- **BREAKING:** Provide scopes field to `KeyringAccount` during account creation ([#364](https://github.com/MetaMask/snap-bitcoin-wallet/pull/364))
+  - Bump `@metamask/keyring-api` from `^8.1.3` to `^13.0.0`.
+  - Compatible with `@metamask/eth-snap-keyring@^7.1.0`.
+- Support for fee rate caching ([#358](https://github.com/MetaMask/snap-bitcoin-wallet/pull/358))
+- Use Snap UI update context instead of persisting request ([#345](https://github.com/MetaMask/snap-bitcoin-wallet/pull/345))
+  - Making the Snap UI slighty more responsive and faster.
+- Remove support of Blockchair service ([#298](https://github.com/MetaMask/snap-bitcoin-wallet/pull/298))
+
+### Fixed
+
+- Various UI fixes ([#356](https://github.com/MetaMask/snap-bitcoin-wallet/pull/356)), ([#357](https://github.com/MetaMask/snap-bitcoin-wallet/pull/357)), ([#346](https://github.com/MetaMask/snap-bitcoin-wallet/pull/346)), ([#344](https://github.com/MetaMask/snap-bitcoin-wallet/pull/344)), ([#343](https://github.com/MetaMask/snap-bitcoin-wallet/pull/343))
+- Allow send to happen even when rates are not available ([#350](https://github.com/MetaMask/snap-bitcoin-wallet/pull/350))
+
 ## [0.8.2]
 
 ### Fixed
@@ -232,7 +255,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add CI for lint and test ([#2](https://github.com/MetaMask/bitcoin/pull/2))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.8.2...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.8.2...v0.9.0
 [0.8.2]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.8.1...v0.8.2
 [0.8.1]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.7.0...v0.8.0

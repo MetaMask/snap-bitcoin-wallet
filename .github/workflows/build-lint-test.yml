@@ -33,7 +33,9 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'yarn'
       - run: yarn --immutable --immutable-cache
-      - run: yarn build
+      - run: |
+          export NODE_OPTIONS="--max_old_space_size=4096"
+          yarn build
       - name: Require clean working directory
         shell: bash
         run: |
@@ -89,7 +91,9 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'yarn'
       - run: yarn --immutable --immutable-cache
-      - run: yarn build
+      - run: |
+          export NODE_OPTIONS="--max_old_space_size=4096"
+          yarn build
       - run: yarn test
       - name: Require clean working directory
         shell: bash
@@ -98,3 +102,24 @@ jobs:
             echo "Working tree dirty at end of job"
             exit 1
           fi
+
+  integration-test:
+    name: Integration Test
+    runs-on: ubuntu-latest
+    needs:
+      - prepare
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'yarn'
+      - run: yarn --immutable --immutable-cache
+      - run: |
+          export NODE_OPTIONS="--max_old_space_size=4096"
+          yarn build
+      - run: yarn test:integration
