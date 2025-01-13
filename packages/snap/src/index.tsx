@@ -14,7 +14,6 @@ import { KeyringHandler } from './handlers/KeyringHandler';
 import { SnapClientAdapter } from './infra';
 import { BtcKeyring } from './keyring';
 import { InternalRpcMethod, originPermissions } from './permissions';
-import { SnapAccountRepository } from './repositories/SnapAccountRepository';
 import type {
   GetTransactionStatusParams,
   EstimateFeeParams,
