@@ -1,0 +1,13 @@
+services:
+  esplora:
+    image: blockstream/esplora
+    container_name: esplora
+    ports:
+      - "50001:50001" 
+      - "8094:80"   
+    volumes:
+      - ./init-esplora.sh:/init-esplora.sh
+    entrypoint:
+      - bash
+      - -c
+      - "/srv/explorer/run.sh bitcoin-regtest explorer"
