@@ -2,7 +2,11 @@
 /* eslint-disable camelcase */
 
 import type { AddressType, Network } from 'bitcoindevkit';
-import { slip10_to_extended, xpub_to_descriptor } from 'bitcoindevkit';
+import {
+  ChangeSet,
+  slip10_to_extended,
+  xpub_to_descriptor,
+} from 'bitcoindevkit';
 import { v4 } from 'uuid';
 
 import type { BitcoinAccountRepository, BitcoinAccount } from '../entities';
@@ -10,27 +14,27 @@ import type { SnapClient } from '../entities/snap';
 import { BdkAccountAdapter } from '../infra';
 
 export class BdkAccountRepository implements BitcoinAccountRepository {
-  protected readonly _store: SnapClient;
+  readonly #snapClient: SnapClient;
 
-  constructor(store: SnapClient) {
-    this._store = store;
+  constructor(snapClient: SnapClient) {
+    this.#snapClient = snapClient;
   }
 
   async get(id: string): Promise<BitcoinAccount | null> {
-    const state = await this._store.get();
+    const state = await this.#snapClient.get();
     const walletData = state.accounts.wallets[id];
     if (!walletData) {
       return null;
     }
 
-    return BdkAccountAdapter.load(id, walletData);
+    return BdkAccountAdapter.load(id, ChangeSet.from_json(walletData));
   }
 
   async getByDerivationPath(
     derivationPath: string[],
   ): Promise<BitcoinAccount | null> {
     const derivationPathId = derivationPath.join('/');
-    const state = await this._store.get();
+    const state = await this.#snapClient.get();
 
     const id = state.accounts.derivationPaths[derivationPathId];
     if (!id) {
@@ -45,7 +49,7 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     network: Network,
     addressType: AddressType,
   ): Promise<BitcoinAccount> {
-    const slip10 = await this._store.getPublicEntropy(derivationPath);
+    const slip10 = await this.#snapClient.getPublicEntropy(derivationPath);
     const id = v4();
     const fingerprint = (
       slip10.masterFingerprint ?? slip10.parentFingerprint
@@ -61,11 +65,29 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
 
     const account = BdkAccountAdapter.create(id, descriptors, network);
 
-    const state = await this._store.get();
+    const state = await this.#snapClient.get();
     state.accounts.derivationPaths[derivationPath.join('/')] = id;
     state.accounts.wallets[id] = account.takeStaged()?.to_json() ?? '';
-    await this._store.set(state);
+    await this.#snapClient.set(state);
 
     return account;
+  }
+
+  async update(account: BitcoinAccount): Promise<void> {
+    const state = await this.#snapClient.get();
+    const walletData = state.accounts.wallets[account.id];
+    if (!walletData) {
+      throw new Error('Inconsistent state: account not found for update');
+    }
+
+    const newWalletData = account.takeStaged();
+    if (!newWalletData) {
+      // Nothing to update
+      return;
+    }
+
+    newWalletData.merge(ChangeSet.from_json(walletData));
+    state.accounts.wallets[account.id] = newWalletData.to_json();
+    await this.#snapClient.set(state);
   }
 }

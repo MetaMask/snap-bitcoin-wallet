@@ -3,9 +3,13 @@ import type {
   AddressType,
   Balance,
   DescriptorPair,
+  FullScanRequest,
   Network,
+  SyncRequest,
+  Update,
+  ChangeSet,
 } from 'bitcoindevkit';
-import { Wallet, ChangeSet } from 'bitcoindevkit';
+import { Wallet } from 'bitcoindevkit';
 
 import type { BitcoinAccount } from '../entities';
 
@@ -27,9 +31,8 @@ export class BdkAccountAdapter implements BitcoinAccount {
     return new BdkAccountAdapter(id, Wallet.create(network, descriptors));
   }
 
-  static load(id: string, walletData: string): BdkAccountAdapter {
-    const changeSet = ChangeSet.from_json(walletData);
-    return new BdkAccountAdapter(id, Wallet.load(changeSet));
+  static load(id: string, walletData: ChangeSet): BdkAccountAdapter {
+    return new BdkAccountAdapter(id, Wallet.load(walletData));
   }
 
   get id(): string {
@@ -67,6 +70,10 @@ export class BdkAccountAdapter implements BitcoinAccount {
     return this.#wallet.network();
   }
 
+  get isScanned(): boolean {
+    return this.#wallet.latest_checkpoint().height > 0;
+  }
+
   peekAddress(index: number): AddressInfo {
     return this.#wallet.peek_address('external', index);
   }
@@ -77,6 +84,18 @@ export class BdkAccountAdapter implements BitcoinAccount {
 
   revealNextAddress(): AddressInfo {
     return this.#wallet.reveal_next_address('external');
+  }
+
+  startFullScan(): FullScanRequest {
+    return this.#wallet.start_full_scan();
+  }
+
+  startSync(): SyncRequest {
+    return this.#wallet.start_sync_with_revealed_spks();
+  }
+
+  applyUpdate(update: Update) {
+    return this.#wallet.apply_update(update);
   }
 
   takeStaged(): ChangeSet | undefined {

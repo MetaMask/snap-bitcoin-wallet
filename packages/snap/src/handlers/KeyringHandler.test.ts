@@ -1,27 +1,13 @@
-import { BtcMethod, KeyringEvent } from '@metamask/keyring-api';
-import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
+import { BtcMethod, BtcScopes } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
 import type { BitcoinAccount, AccountsConfig } from '../entities';
-import type { AccountUseCases } from '../usecases/AccountUseCases';
-import { getProvider } from '../utils';
-import {
-  caip2ToNetwork,
-  caip2ToAddressType,
-  Caip2ChainId,
-  Caip2AddressType,
-} from './caip2';
+import type { SnapClient } from '../entities/snap';
+import type { AccountUseCases } from '../use-cases/AccountUseCases';
+import { Caip19Asset } from './caip19';
+import { caip2ToNetwork, caip2ToAddressType, Caip2AddressType } from './caip2';
 import { KeyringHandler, CreateAccountRequest } from './KeyringHandler';
-
-jest.mock('../utils', () => ({
-  getProvider: jest.fn(),
-}));
-
-jest.mock('@metamask/keyring-snap-sdk', () => ({
-  ...jest.requireActual('@metamask/keyring-snap-sdk'),
-  emitSnapKeyringEvent: jest.fn(),
-}));
 
 jest.mock('superstruct', () => ({
   ...jest.requireActual('superstruct'),
@@ -30,15 +16,20 @@ jest.mock('superstruct', () => ({
 
 describe('KeyringHandler', () => {
   const mockAccounts = mock<AccountUseCases>();
+  const mockSnapClient = mock<SnapClient>();
   const mockConfig: AccountsConfig = {
     index: 0,
-    defaultNetwork: Caip2ChainId.Bitcoin,
+    defaultNetwork: BtcScopes.Mainnet,
     defaultAddressType: Caip2AddressType.P2wpkh,
   };
+
+  // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
+  /* eslint-disable @typescript-eslint/naming-convention */
   const mockAccount = {
     id: 'some-id',
     addressType: caip2ToAddressType[mockConfig.defaultAddressType],
     suggestedName: 'My Bitcoin Account',
+    balance: { trusted_spendable: { to_btc: () => 1 } },
     network: 'bitcoin',
     nextUnusedAddress: () => ({ address: 'bc1qaddress...' }),
   } as unknown as BitcoinAccount;
@@ -46,21 +37,16 @@ describe('KeyringHandler', () => {
   let handler: KeyringHandler;
 
   beforeEach(() => {
-    handler = new KeyringHandler(mockAccounts, mockConfig);
+    handler = new KeyringHandler(mockAccounts, mockSnapClient, mockConfig);
   });
 
   describe('createAccount', () => {
-    beforeEach(() => {
-      (getProvider as jest.Mock).mockReturnValue({});
-      (emitSnapKeyringEvent as jest.Mock).mockResolvedValue(undefined);
-    });
-
     it('creates a new account with default config when no options are passed', async () => {
-      mockAccounts.createAccount.mockResolvedValue(mockAccount);
+      mockAccounts.create.mockResolvedValue(mockAccount);
       const expectedKeyringAccount = {
         id: 'some-id',
         type: mockConfig.defaultAddressType,
-        scopes: [Caip2ChainId.Bitcoin],
+        scopes: [BtcScopes.Mainnet],
         address: 'bc1qaddress...',
         options: {},
         methods: [BtcMethod.SendBitcoin],
@@ -68,54 +54,102 @@ describe('KeyringHandler', () => {
 
       const result = await handler.createAccount();
       expect(assert).toHaveBeenCalledWith({}, CreateAccountRequest);
-      expect(mockAccounts.createAccount).toHaveBeenCalledWith(
+      expect(mockAccounts.create).toHaveBeenCalledWith(
         caip2ToNetwork[mockConfig.defaultNetwork],
         caip2ToAddressType[mockConfig.defaultAddressType],
       );
-      expect(emitSnapKeyringEvent).toHaveBeenCalledWith(
-        {},
-        KeyringEvent.AccountCreated,
-        {
-          account: expectedKeyringAccount,
-          accountNameSuggestion: mockAccount.suggestedName,
-        },
+      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalledWith(
+        expectedKeyringAccount,
+        mockAccount.suggestedName,
       );
       expect(result).toStrictEqual(expectedKeyringAccount);
     });
 
-    it('respects provided scope and addressType', async () => {
-      mockAccounts.createAccount.mockResolvedValue(mockAccount);
+    it('respects provided provided scope and addressType', async () => {
+      mockAccounts.create.mockResolvedValue(mockAccount);
 
       const options = {
-        scope: Caip2ChainId.Signet,
+        scope: BtcScopes.Signet,
         addressType: Caip2AddressType.P2pkh,
       };
       await handler.createAccount(options);
 
       expect(assert).toHaveBeenCalledWith(options, CreateAccountRequest);
-      expect(mockAccounts.createAccount).toHaveBeenCalledWith(
-        caip2ToNetwork[Caip2ChainId.Signet],
+      expect(mockAccounts.create).toHaveBeenCalledWith(
+        caip2ToNetwork[BtcScopes.Signet],
         caip2ToAddressType[Caip2AddressType.P2pkh],
       );
     });
 
     it('propagates errors from createAccount', async () => {
       const error = new Error();
-      mockAccounts.createAccount.mockRejectedValue(error);
+      mockAccounts.create.mockRejectedValue(error);
 
       await expect(handler.createAccount()).rejects.toThrow(error);
-      expect(mockAccounts.createAccount).toHaveBeenCalled();
-      expect(emitSnapKeyringEvent).not.toHaveBeenCalled();
+      expect(mockAccounts.create).toHaveBeenCalled();
+      expect(mockSnapClient.emitAccountCreatedEvent).not.toHaveBeenCalled();
     });
 
     it('propagates errors from emitSnapKeyringEvent', async () => {
       const error = new Error();
-      mockAccounts.createAccount.mockResolvedValue(mockAccount);
-      (emitSnapKeyringEvent as jest.Mock).mockRejectedValue(error);
+      mockAccounts.create.mockResolvedValue(mockAccount);
+      mockSnapClient.emitAccountCreatedEvent.mockRejectedValue(error);
 
       await expect(handler.createAccount()).rejects.toThrow(error);
-      expect(mockAccounts.createAccount).toHaveBeenCalled();
-      expect(emitSnapKeyringEvent).toHaveBeenCalled();
+      expect(mockAccounts.create).toHaveBeenCalled();
+      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalled();
+    });
+  });
+
+  describe('getAccountBalances', () => {
+    it('synchronizes the account before getting the balance', async () => {
+      mockAccounts.synchronize.mockResolvedValue(mockAccount);
+      const expectedResponse = {
+        [Caip19Asset.Bitcoin]: {
+          amount: '1',
+          unit: 'BTC',
+        },
+      };
+
+      const result = await handler.getAccountBalances(mockAccount.id);
+      expect(mockAccounts.synchronize).toHaveBeenCalledWith(mockAccount.id);
+      expect(result).toStrictEqual(expectedResponse);
+    });
+
+    it('propagates errors from synchronize', async () => {
+      const error = new Error();
+      mockAccounts.synchronize.mockRejectedValue(error);
+
+      await expect(handler.getAccountBalances(mockAccount.id)).rejects.toThrow(
+        error,
+      );
+      expect(mockAccounts.synchronize).toHaveBeenCalled();
+    });
+  });
+
+  describe('getAccount', () => {
+    it('gets account', async () => {
+      mockAccounts.get.mockResolvedValue(mockAccount);
+      const expectedKeyringAccount = {
+        id: 'some-id',
+        type: mockConfig.defaultAddressType,
+        scopes: [BtcScopes.Mainnet],
+        address: 'bc1qaddress...',
+        options: {},
+        methods: [BtcMethod.SendBitcoin],
+      };
+
+      const result = await handler.getAccount('some-id');
+      expect(mockAccounts.get).toHaveBeenCalledWith('some-id');
+      expect(result).toStrictEqual(expectedKeyringAccount);
+    });
+
+    it('propagates errors from get', async () => {
+      const error = new Error();
+      mockAccounts.get.mockRejectedValue(error);
+
+      await expect(handler.getAccount('some-id')).rejects.toThrow(error);
+      expect(mockAccounts.get).toHaveBeenCalled();
     });
   });
 
@@ -124,16 +158,6 @@ describe('KeyringHandler', () => {
 
     it('listAccounts should throw', async () => {
       await expect(handler.listAccounts()).rejects.toThrow(errMsg);
-    });
-
-    it('getAccount should throw', async () => {
-      await expect(handler.getAccount('some-id')).rejects.toThrow(errMsg);
-    });
-
-    it('getAccountBalances should throw', async () => {
-      await expect(handler.getAccountBalances('some-id', [])).rejects.toThrow(
-        errMsg,
-      );
     });
 
     it('filterAccountChains should throw', async () => {
