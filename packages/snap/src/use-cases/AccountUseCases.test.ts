@@ -6,22 +6,30 @@ import type {
   BitcoinAccountRepository,
   BlockchainClient,
 } from '../entities';
-import { AccountUseCases } from '../use-cases/AccountUseCases';
+import type { SnapClient } from '../entities/snap';
+import { AccountUseCases } from './AccountUseCases';
 
 jest.mock('../utils/logger');
 
 describe('AccountUseCases', () => {
   let useCases: AccountUseCases;
+
+  const mockSnapClient = mock<SnapClient>();
   const mockRepository = mock<BitcoinAccountRepository>();
   const mockChain = mock<BlockchainClient>();
   const accountIndex = 0;
 
   beforeEach(() => {
-    useCases = new AccountUseCases(mockRepository, mockChain, accountIndex);
+    useCases = new AccountUseCases(
+      mockSnapClient,
+      mockRepository,
+      mockChain,
+      accountIndex,
+    );
   });
 
   describe('get', () => {
-    it('should return account', async () => {
+    it('returns account', async () => {
       const mockAccount = mock<BitcoinAccount>();
       mockAccount.id = 'some-id';
 
@@ -33,7 +41,7 @@ describe('AccountUseCases', () => {
       expect(result).toBe(mockAccount);
     });
 
-    it('should throw Error if account is not found', async () => {
+    it('throws Error if account is not found', async () => {
       mockRepository.get.mockResolvedValue(null);
 
       await expect(useCases.get('some-id')).rejects.toThrow(
@@ -43,7 +51,7 @@ describe('AccountUseCases', () => {
       expect(mockRepository.get).toHaveBeenCalledWith('some-id');
     });
 
-    it('should propagate an error if the repository get fails', async () => {
+    it('propagates an error if the repository get fails', async () => {
       const mockAccount = mock<BitcoinAccount>();
       mockAccount.id = 'some-id';
 
@@ -67,12 +75,12 @@ describe('AccountUseCases', () => {
 
     it.each([
       { tAddressType: 'p2pkh', purpose: "44'" },
-      { tAddressType: 'p2sh', purpose: "45'" },
-      { tAddressType: 'p2wsh', purpose: "49'" },
+      { tAddressType: 'p2sh', purpose: "49'" },
+      { tAddressType: 'p2wsh', purpose: "45'" },
       { tAddressType: 'p2wpkh', purpose: "84'" },
       { tAddressType: 'p2tr', purpose: "86'" },
     ] as { tAddressType: AddressType; purpose: string }[])(
-      'should create an account of type: %s',
+      'creates an account of type: %s',
       async ({ tAddressType, purpose }) => {
         const derivationPath = ['m', purpose, "0'", `${accountIndex}'`];
 
@@ -85,6 +93,9 @@ describe('AccountUseCases', () => {
           derivationPath,
           network,
           tAddressType,
+        );
+        expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalledWith(
+          mockAccount,
         );
       },
     );
@@ -115,10 +126,13 @@ describe('AccountUseCases', () => {
           tNetwork,
           addressType,
         );
+        expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalledWith(
+          mockAccount,
+        );
       },
     );
 
-    it('should return an existing account if one already exists', async () => {
+    it('returns an existing account if one already exists', async () => {
       const mockExistingAccount = mock<BitcoinAccount>();
       mockRepository.getByDerivationPath.mockResolvedValue(mockExistingAccount);
 
@@ -126,21 +140,24 @@ describe('AccountUseCases', () => {
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).not.toHaveBeenCalled();
+      expect(mockSnapClient.emitAccountCreatedEvent).not.toHaveBeenCalled();
+
       expect(result).toBe(mockExistingAccount);
     });
 
-    it('should create a new account if one does not exist', async () => {
+    it('creates a new account if one does not exist', async () => {
       mockRepository.getByDerivationPath.mockResolvedValue(null);
 
       const result = await useCases.create(network, addressType);
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).toHaveBeenCalled();
+      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalled();
 
       expect(result).toBe(mockAccount);
     });
 
-    it('should propagate an error if getByDerivationPath throws', async () => {
+    it('propagates an error if getByDerivationPath throws', async () => {
       const error = new Error();
       mockRepository.getByDerivationPath.mockRejectedValue(error);
 
@@ -148,9 +165,10 @@ describe('AccountUseCases', () => {
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).not.toHaveBeenCalled();
+      expect(mockSnapClient.emitAccountCreatedEvent).not.toHaveBeenCalled();
     });
 
-    it('should propagate an error if insert throws', async () => {
+    it('propagates an error if insert throws', async () => {
       const error = new Error();
       mockRepository.getByDerivationPath.mockResolvedValue(null);
       mockRepository.insert.mockRejectedValue(error);
@@ -159,11 +177,24 @@ describe('AccountUseCases', () => {
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).toHaveBeenCalled();
+      expect(mockSnapClient.emitAccountCreatedEvent).not.toHaveBeenCalled();
+    });
+
+    it('propagates an error if emitAccountCreatedEvent throws', async () => {
+      const error = new Error();
+      mockRepository.getByDerivationPath.mockResolvedValue(null);
+      mockSnapClient.emitAccountCreatedEvent.mockRejectedValue(error);
+
+      await expect(useCases.create(network, addressType)).rejects.toBe(error);
+
+      expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
+      expect(mockRepository.insert).toHaveBeenCalled();
+      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalled();
     });
   });
 
   describe('synchronize', () => {
-    it('should throw Error if account is not found', async () => {
+    it('throws Error if account is not found', async () => {
       mockRepository.get.mockResolvedValue(null);
 
       await expect(useCases.synchronize('some-id')).rejects.toThrow(
@@ -176,7 +207,7 @@ describe('AccountUseCases', () => {
       expect(mockRepository.update).not.toHaveBeenCalled();
     });
 
-    it('should perform a regular sync if the account is already scanned', async () => {
+    it('performs a regular sync if the account is already scanned', async () => {
       const mockAccount = mock<BitcoinAccount>();
       mockAccount.id = 'some-id';
       mockAccount.isScanned = true;
@@ -192,7 +223,7 @@ describe('AccountUseCases', () => {
       expect(result).toBe(mockAccount);
     });
 
-    it('should perform a full scan if the account is not scanned', async () => {
+    it('performs a full scan if the account is not scanned', async () => {
       const mockAccount = mock<BitcoinAccount>();
       mockAccount.id = 'some-id';
       mockAccount.isScanned = false;
@@ -208,7 +239,7 @@ describe('AccountUseCases', () => {
       expect(result).toBe(mockAccount);
     });
 
-    it('should propagate an error if the chain sync fails', async () => {
+    it('propagates an error if the chain sync fails', async () => {
       const mockAccount = mock<BitcoinAccount>();
       mockAccount.id = 'some-id';
       mockAccount.isScanned = true;
@@ -224,7 +255,7 @@ describe('AccountUseCases', () => {
       expect(mockRepository.update).not.toHaveBeenCalled();
     });
 
-    it('should propagate an error if the chain full scan fails', async () => {
+    it('propagates an error if the chain full scan fails', async () => {
       const mockAccount = mock<BitcoinAccount>();
       mockAccount.id = 'some-id';
       mockAccount.isScanned = false;
@@ -240,7 +271,7 @@ describe('AccountUseCases', () => {
       expect(mockRepository.update).not.toHaveBeenCalled();
     });
 
-    it('should propagate an error if the repository update fails', async () => {
+    it('propagates an error if the repository update fails', async () => {
       const mockAccount = mock<BitcoinAccount>();
       mockAccount.id = 'some-id';
       mockAccount.isScanned = true;

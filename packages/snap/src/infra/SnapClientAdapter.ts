@@ -6,7 +6,7 @@ import type { SnapsProvider } from '@metamask/snaps-sdk';
 
 import type { BitcoinAccount } from '../entities';
 import type { SnapClient, SnapState } from '../entities/snap';
-import { bitcoinAccountToKeyring } from '../handlers/keyring-account';
+import { snapToKeyringAccount } from '../handlers/account';
 
 export class SnapClientAdapter implements SnapClient {
   readonly #encrypt: boolean;
@@ -60,9 +60,21 @@ export class SnapClientAdapter implements SnapClient {
   }
 
   async emitAccountCreatedEvent(account: BitcoinAccount): Promise<void> {
+    const suggestedName = () => {
+      switch (account.network) {
+        case 'bitcoin':
+          return 'Bitcoin Account';
+        case 'testnet':
+          return 'Bitcoin Testnet Account';
+        default:
+          // Leave it blank to fallback to auto-suggested name on the extension side
+          return '';
+      }
+    };
+
     return emitSnapKeyringEvent(snap, KeyringEvent.AccountCreated, {
-      account: bitcoinAccountToKeyring(account),
-      accountNameSuggestion: account.suggestedName,
+      account: snapToKeyringAccount(account),
+      accountNameSuggestion: suggestedName(),
     });
   }
 }

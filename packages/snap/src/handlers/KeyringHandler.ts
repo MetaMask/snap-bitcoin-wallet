@@ -13,9 +13,9 @@ import { assert, enums, object, optional } from 'superstruct';
 
 import type { AccountsConfig } from '../entities';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
+import { snapToKeyringAccount } from './account';
 import { networkToCaip19 } from './caip19';
 import { Caip2AddressType, caip2ToAddressType, caip2ToNetwork } from './caip2';
-import { bitcoinAccountToKeyring } from './keyring-account';
 
 export const CreateAccountRequest = object({
   scope: optional(enums(Object.values(BtcScopes))),
@@ -41,7 +41,7 @@ export class KeyringHandler implements Keyring {
 
   async getAccount(id: string): Promise<KeyringAccount | undefined> {
     const account = await this.#accounts.get(id);
-    return bitcoinAccountToKeyring(account);
+    return snapToKeyringAccount(account);
   }
 
   async createAccount(
@@ -54,7 +54,7 @@ export class KeyringHandler implements Keyring {
       caip2ToAddressType[opts.addressType ?? this.#config.defaultAddressType],
     );
 
-    return bitcoinAccountToKeyring(account);
+    return snapToKeyringAccount(account);
   }
 
   async getAccountBalances(

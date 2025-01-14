@@ -19,11 +19,6 @@ export type BitcoinAccount = {
   id: string;
 
   /**
-   * The suggested name of the account.
-   */
-  suggestedName: string;
-
-  /**
    * The balance of the account.
    */
   balance: Balance;

@@ -9,9 +9,7 @@ import { addressTypeToCaip2, networkToCaip2 } from './caip2';
  * @param account - The Bitcoin account.
  * @returns The Keyring account.
  */
-export function bitcoinAccountToKeyring(
-  account: BitcoinAccount,
-): KeyringAccount {
+export function snapToKeyringAccount(account: BitcoinAccount): KeyringAccount {
   return {
     type: addressTypeToCaip2[account.addressType] as KeyringAccount['type'],
     scopes: [networkToCaip2[account.network]],
