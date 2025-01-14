@@ -6,12 +6,12 @@ import type { BlockchainClient } from '../entities/chain';
 
 export class EsploraClientAdapter implements BlockchainClient {
   // Should be a Repository but we don't support custom networks so we can save in memory from config values
-  protected readonly _clients: Record<Network, EsploraClient>;
+  readonly #clients: Record<Network, EsploraClient>;
 
-  protected readonly _config: ChainConfig;
+  readonly #config: ChainConfig;
 
   constructor(config: ChainConfig) {
-    this._clients = {
+    this.#clients = {
       bitcoin: new EsploraClient(config.url.bitcoin),
       testnet: new EsploraClient(config.url.testnet),
       testnet4: new EsploraClient(config.url.testnet4),
@@ -19,24 +19,24 @@ export class EsploraClientAdapter implements BlockchainClient {
       regtest: new EsploraClient(config.url.regtest),
     };
 
-    this._config = config;
+    this.#config = config;
   }
 
   async fullScan(account: BitcoinAccount) {
     const request = account.startFullScan();
-    const update = await this._clients[account.network].full_scan(
+    const update = await this.#clients[account.network].full_scan(
       request,
-      this._config.stopGap,
-      this._config.parallelRequests,
+      this.#config.stopGap,
+      this.#config.parallelRequests,
     );
     account.applyUpdate(update);
   }
 
   async sync(account: BitcoinAccount) {
     const request = account.startSync();
-    const update = await this._clients[account.network].sync(
+    const update = await this.#clients[account.network].sync(
       request,
-      this._config.parallelRequests,
+      this.#config.parallelRequests,
     );
     account.applyUpdate(update);
   }

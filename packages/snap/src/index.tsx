@@ -1,5 +1,5 @@
 import type { Keyring } from '@metamask/keyring-api';
-import { handleKeyringRequest } from '@metamask/keyring-api';
+import { handleKeyringRequest } from '@metamask/keyring-snap-sdk';
 import type { OnInstallHandler } from '@metamask/snaps-sdk';
 import {
   type OnRpcRequestHandler,
@@ -13,12 +13,11 @@ import {
 
 import { Config } from './config';
 import { ConfigV2 } from './configv2';
+import { caip2ToAddressType, caip2ToNetwork } from './handlers/caip2';
 import { KeyringHandler } from './handlers/KeyringHandler';
-import { SnapStore } from './infra';
-import { EsploraClientAdapter } from './infra/EsploraClientAdapter';
+import { SnapClientAdapter, EsploraClientAdapter } from './infra';
 import { BtcKeyring } from './keyring';
 import { InternalRpcMethod, originPermissions } from './permissions';
-import { SnapAccountRepository } from './repositories/SnapAccountRepository';
 import type {
   GetTransactionStatusParams,
   EstimateFeeParams,
@@ -32,34 +31,35 @@ import {
 import type { StartSendTransactionFlowParams } from './rpcs/start-send-transaction-flow';
 import { startSendTransactionFlow } from './rpcs/start-send-transaction-flow';
 import { KeyringStateManager } from './stateManagement';
+import { BdkAccountRepository } from './store/BdkAccountRepository';
 import {
   isSendFormEvent,
   SendBitcoinController,
 } from './ui/controller/send-bitcoin-controller';
 import type { SendFlowContext, SendFormState } from './ui/types';
-import { AccountUseCases } from './usecases';
+import { AccountUseCases } from './use-cases';
 import { isSnapRpcError, logger } from './utils';
 import { loadLocale } from './utils/locale';
 
 logger.logLevel = parseInt(Config.logLevel, 10);
 
 let keyring: Keyring;
-let store: SnapStore;
-let useCases: AccountUseCases;
+let accounts: AccountUseCases;
 if (ConfigV2.keyringVersion === 'v2') {
   // Infra layer
-  store = new SnapStore(ConfigV2.encrypt);
+  const snapClient = new SnapClientAdapter(ConfigV2.encrypt);
   const chainClient = new EsploraClientAdapter(ConfigV2.chain);
   // Data layer
-  const repository = new SnapAccountRepository(store);
+  const repository = new BdkAccountRepository(snapClient);
   // Business layer
-  useCases = new AccountUseCases(
+  accounts = new AccountUseCases(
+    snapClient,
     repository,
     chainClient,
     ConfigV2.accounts.index,
   );
   // Application layer
-  keyring = new KeyringHandler(useCases, ConfigV2.accounts);
+  keyring = new KeyringHandler(accounts, ConfigV2.accounts);
 }
 
 export const validateOrigin = (origin: string, method: string): void => {
@@ -76,11 +76,10 @@ export const validateOrigin = (origin: string, method: string): void => {
 export const onInstall: OnInstallHandler = async () => {
   try {
     // No need for a handler given the lack of request
-    if (store && useCases) {
-      await store.initialize();
-      await useCases.create(
-        ConfigV2.accounts.defaultNetwork,
-        ConfigV2.accounts.defaultAddressType,
+    if (accounts) {
+      await accounts.create(
+        caip2ToNetwork[ConfigV2.accounts.defaultNetwork],
+        caip2ToAddressType[ConfigV2.accounts.defaultAddressType],
       );
     }
   } catch (error) {

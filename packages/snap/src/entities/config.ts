@@ -1,4 +1,4 @@
-import type { AddressType, Network } from 'bitcoindevkit';
+import type { Network } from 'bitcoindevkit';
 
 export type SnapConfig = {
   encrypt: boolean;
@@ -9,8 +9,8 @@ export type SnapConfig = {
 
 export type AccountsConfig = {
   index: number;
-  defaultNetwork: Network;
-  defaultAddressType: AddressType;
+  defaultNetwork: string;
+  defaultAddressType: string;
 };
 
 export type ChainConfig = {

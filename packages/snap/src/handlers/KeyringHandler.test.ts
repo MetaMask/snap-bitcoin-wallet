@@ -1,31 +1,12 @@
-import {
-  BtcMethod,
-  KeyringEvent,
-  emitSnapKeyringEvent,
-} from '@metamask/keyring-api';
+import { BtcMethod, BtcScopes } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
 import type { BitcoinAccount, AccountsConfig } from '../entities';
-import type { AccountUseCases } from '../usecases/AccountUseCases';
-import { getProvider } from '../utils';
+import type { AccountUseCases } from '../use-cases/AccountUseCases';
 import { Caip19Asset } from './caip19';
-import {
-  caip2ToNetwork,
-  caip2ToAddressType,
-  Caip2ChainId,
-  Caip2AddressType,
-} from './caip2';
+import { caip2ToNetwork, caip2ToAddressType, Caip2AddressType } from './caip2';
 import { KeyringHandler, CreateAccountRequest } from './KeyringHandler';
-
-jest.mock('../utils', () => ({
-  getProvider: jest.fn(),
-}));
-
-jest.mock('@metamask/keyring-api', () => ({
-  ...jest.requireActual('@metamask/keyring-api'),
-  emitSnapKeyringEvent: jest.fn(),
-}));
 
 jest.mock('superstruct', () => ({
   ...jest.requireActual('superstruct'),
@@ -36,7 +17,7 @@ describe('KeyringHandler', () => {
   const mockAccounts = mock<AccountUseCases>();
   const mockConfig: AccountsConfig = {
     index: 0,
-    defaultNetwork: Caip2ChainId.Bitcoin,
+    defaultNetwork: BtcScopes.Mainnet,
     defaultAddressType: Caip2AddressType.P2wpkh,
   };
 
@@ -58,16 +39,12 @@ describe('KeyringHandler', () => {
   });
 
   describe('createAccount', () => {
-    beforeEach(() => {
-      (getProvider as jest.Mock).mockReturnValue({});
-      (emitSnapKeyringEvent as jest.Mock).mockResolvedValue(undefined);
-    });
-
-    it('should create a new account with default config when no options are passed', async () => {
+    it('creates a new account with default config when no options are passed', async () => {
       mockAccounts.create.mockResolvedValue(mockAccount);
       const expectedKeyringAccount = {
         id: 'some-id',
         type: mockConfig.defaultAddressType,
+        scopes: [BtcScopes.Mainnet],
         address: 'bc1qaddress...',
         options: {},
         methods: [BtcMethod.SendBitcoin],
@@ -79,55 +56,36 @@ describe('KeyringHandler', () => {
         caip2ToNetwork[mockConfig.defaultNetwork],
         caip2ToAddressType[mockConfig.defaultAddressType],
       );
-      expect(emitSnapKeyringEvent).toHaveBeenCalledWith(
-        {},
-        KeyringEvent.AccountCreated,
-        {
-          account: expectedKeyringAccount,
-          accountNameSuggestion: mockAccount.suggestedName,
-        },
-      );
       expect(result).toStrictEqual(expectedKeyringAccount);
     });
 
-    it('should respect provided scope and addressType', async () => {
+    it('respects provided provided scope and addressType', async () => {
       mockAccounts.create.mockResolvedValue(mockAccount);
 
       const options = {
-        scope: Caip2ChainId.Signet,
+        scope: BtcScopes.Signet,
         addressType: Caip2AddressType.P2pkh,
       };
       await handler.createAccount(options);
 
       expect(assert).toHaveBeenCalledWith(options, CreateAccountRequest);
       expect(mockAccounts.create).toHaveBeenCalledWith(
-        caip2ToNetwork[Caip2ChainId.Signet],
+        caip2ToNetwork[BtcScopes.Signet],
         caip2ToAddressType[Caip2AddressType.P2pkh],
       );
     });
 
-    it('should propagate errors from createAccount', async () => {
+    it('propagates errors from createAccount', async () => {
       const error = new Error();
       mockAccounts.create.mockRejectedValue(error);
 
       await expect(handler.createAccount()).rejects.toThrow(error);
       expect(mockAccounts.create).toHaveBeenCalled();
-      expect(emitSnapKeyringEvent).not.toHaveBeenCalled();
-    });
-
-    it('should propagate errors from emitSnapKeyringEvent', async () => {
-      const error = new Error();
-      mockAccounts.create.mockResolvedValue(mockAccount);
-      (emitSnapKeyringEvent as jest.Mock).mockRejectedValue(error);
-
-      await expect(handler.createAccount()).rejects.toThrow(error);
-      expect(mockAccounts.create).toHaveBeenCalled();
-      expect(emitSnapKeyringEvent).toHaveBeenCalled();
     });
   });
 
   describe('getAccountBalances', () => {
-    it('should synchronize the account before getting the balance', async () => {
+    it('synchronizes the account before getting the balance', async () => {
       mockAccounts.synchronize.mockResolvedValue(mockAccount);
       const expectedResponse = {
         [Caip19Asset.Bitcoin]: {
@@ -136,44 +94,29 @@ describe('KeyringHandler', () => {
         },
       };
 
-      const result = await handler.getAccountBalances(mockAccount.id, []);
+      const result = await handler.getAccountBalances(mockAccount.id);
       expect(mockAccounts.synchronize).toHaveBeenCalledWith(mockAccount.id);
       expect(result).toStrictEqual(expectedResponse);
     });
 
-    it('should ignore the assets list', async () => {
-      mockAccounts.synchronize.mockResolvedValue(mockAccount);
-      const expectedResponse = {
-        [Caip19Asset.Bitcoin]: {
-          amount: '1',
-          unit: 'BTC',
-        },
-      };
-
-      const result = await handler.getAccountBalances(mockAccount.id, [
-        'ignored-asset',
-      ]);
-      expect(mockAccounts.synchronize).toHaveBeenCalledWith(mockAccount.id);
-      expect(result).toStrictEqual(expectedResponse);
-    });
-
-    it('should propagate errors from synchronize', async () => {
+    it('propagates errors from synchronize', async () => {
       const error = new Error();
       mockAccounts.synchronize.mockRejectedValue(error);
 
-      await expect(
-        handler.getAccountBalances(mockAccount.id, []),
-      ).rejects.toThrow(error);
+      await expect(handler.getAccountBalances(mockAccount.id)).rejects.toThrow(
+        error,
+      );
       expect(mockAccounts.synchronize).toHaveBeenCalled();
     });
   });
 
   describe('getAccount', () => {
-    it('should get account', async () => {
+    it('gets account', async () => {
       mockAccounts.get.mockResolvedValue(mockAccount);
       const expectedKeyringAccount = {
         id: 'some-id',
         type: mockConfig.defaultAddressType,
+        scopes: [BtcScopes.Mainnet],
         address: 'bc1qaddress...',
         options: {},
         methods: [BtcMethod.SendBitcoin],
@@ -184,7 +127,7 @@ describe('KeyringHandler', () => {
       expect(result).toStrictEqual(expectedKeyringAccount);
     });
 
-    it('should propagate errors from get', async () => {
+    it('propagates errors from get', async () => {
       const error = new Error();
       mockAccounts.get.mockRejectedValue(error);
 

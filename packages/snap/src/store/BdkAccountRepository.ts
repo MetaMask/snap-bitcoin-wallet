@@ -9,20 +9,19 @@ import {
 } from 'bitcoindevkit';
 import { v4 } from 'uuid';
 
-import type { AccountRepository } from '.';
-import type { BitcoinAccount } from '../entities';
-import type { SnapStore } from '../infra';
+import type { BitcoinAccountRepository, BitcoinAccount } from '../entities';
+import type { SnapClient } from '../entities/snap';
 import { BdkAccountAdapter } from '../infra';
 
-export class SnapAccountRepository implements AccountRepository {
-  protected readonly _store: SnapStore;
+export class BdkAccountRepository implements BitcoinAccountRepository {
+  readonly #snapClient: SnapClient;
 
-  constructor(store: SnapStore) {
-    this._store = store;
+  constructor(snapClient: SnapClient) {
+    this.#snapClient = snapClient;
   }
 
   async get(id: string): Promise<BitcoinAccount | null> {
-    const state = await this._store.get();
+    const state = await this.#snapClient.get();
     const walletData = state.accounts.wallets[id];
     if (!walletData) {
       return null;
@@ -35,19 +34,14 @@ export class SnapAccountRepository implements AccountRepository {
     derivationPath: string[],
   ): Promise<BitcoinAccount | null> {
     const derivationPathId = derivationPath.join('/');
-    const state = await this._store.get();
+    const state = await this.#snapClient.get();
 
     const id = state.accounts.derivationPaths[derivationPathId];
     if (!id) {
       return null;
     }
 
-    const walletData = state.accounts.wallets[id];
-    if (!walletData) {
-      return null;
-    }
-
-    return BdkAccountAdapter.load(id, ChangeSet.from_json(walletData));
+    return this.get(id);
   }
 
   async insert(
@@ -55,7 +49,7 @@ export class SnapAccountRepository implements AccountRepository {
     network: Network,
     addressType: AddressType,
   ): Promise<BitcoinAccount> {
-    const slip10 = await this._store.getPublicEntropy(derivationPath);
+    const slip10 = await this.#snapClient.getPublicEntropy(derivationPath);
     const id = v4();
     const fingerprint = (
       slip10.masterFingerprint ?? slip10.parentFingerprint
@@ -71,16 +65,16 @@ export class SnapAccountRepository implements AccountRepository {
 
     const account = BdkAccountAdapter.create(id, descriptors, network);
 
-    const state = await this._store.get();
+    const state = await this.#snapClient.get();
     state.accounts.derivationPaths[derivationPath.join('/')] = id;
     state.accounts.wallets[id] = account.takeStaged()?.to_json() ?? '';
-    await this._store.set(state);
+    await this.#snapClient.set(state);
 
     return account;
   }
 
   async update(account: BitcoinAccount): Promise<void> {
-    const state = await this._store.get();
+    const state = await this.#snapClient.get();
     const walletData = state.accounts.wallets[account.id];
     if (!walletData) {
       throw new Error('Inconsistent state: account not found for update');
@@ -94,6 +88,6 @@ export class SnapAccountRepository implements AccountRepository {
 
     newWalletData.merge(ChangeSet.from_json(walletData));
     state.accounts.wallets[account.id] = newWalletData.to_json();
-    await this._store.set(state);
+    await this.#snapClient.set(state);
   }
 }
