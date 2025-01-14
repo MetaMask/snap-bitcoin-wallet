@@ -11,7 +11,7 @@ describe('Bitcoin Snap', () => {
   const accounts: Record<string, KeyringAccount> = {};
   const origin = 'metamask';
 
-  it.only('installs the Snap and creates a default account', async () => {
+  it('installs the Snap and creates a default account', async () => {
     snap = await installSnap({
       options: {
         secretRecoveryPhrase:
