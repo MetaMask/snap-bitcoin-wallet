@@ -1,13 +1,6 @@
 #!/bin/bash
 set -e
 
-echo "Waiting for Esplora to start..."
-while ! cli -regtest getblockchaininfo &>/dev/null; do
-  sleep 2
-done
-
-echo "Esplora started. Proceeding with wallet setup..."
-
 cli -regtest loadwallet default || true
 MINER_ADDRESS=$(cli -regtest getnewaddress)
 cli -regtest generatetoaddress 100 "$MINER_ADDRESS"
