@@ -1,30 +1,12 @@
 services:
-  bitcoin-regtest:
-    image: lncm/bitcoind:v27.0
-    ports:
-      - "18443:18443"
-      - "18444:18444"
-    command: [
-      "bitcoind",
-      "-regtest",
-      "-server",
-      "-rpcuser=user",
-      "-rpcpassword=pass",
-      "-rpcallowip=::/0",
-      "-rpcbind=0.0.0.0",
-      "-txindex=1",
-      "-fallbackfee=0.0002"
-    ]
-
   esplora:
     image: blockstream/esplora
+    container_name: esplora
     ports:
       - "50001:50001" 
-      - "8094:80"     
+      - "8094:80"   
     volumes:
-      - ./data_bitcoin_regtest:/data
-    depends_on:
-      - bitcoin-regtest
+      - ./init-esplora.sh:/init-esplora.sh
     entrypoint:
       - bash
       - -c

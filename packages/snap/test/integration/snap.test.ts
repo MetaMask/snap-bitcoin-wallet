@@ -4,13 +4,14 @@ import type { Snap } from '@metamask/snaps-jest';
 import { installSnap } from '@metamask/snaps-jest';
 
 import { Caip2AddressType } from '../../src/handlers';
+import { Caip19Asset } from '../../src/handlers/caip19';
 
 describe('Bitcoin Snap', () => {
   let snap: Snap;
   const accounts: Record<string, KeyringAccount> = {};
   const origin = 'metamask';
 
-  it('should install the Snap successfully', async () => {
+  it('installs the Snap', async () => {
     snap = await installSnap({
       options: {
         secretRecoveryPhrase:
@@ -19,7 +20,7 @@ describe('Bitcoin Snap', () => {
     });
   });
 
-  it('should create a default account', async () => {
+  it('creates a default account', async () => {
     snap.mockJsonRpc({ method: 'snap_manageAccounts', result: {} });
 
     const response = await snap.onKeyringRequest({
@@ -48,8 +49,8 @@ describe('Bitcoin Snap', () => {
     },
     {
       addressType: Caip2AddressType.P2wpkh,
-      scope: BtcScopes.Testnet,
-      expectedAddress: 'tb1qjtgffm20l9vu6a7gacxvpu2ej4kdcsgc26xfdz',
+      scope: BtcScopes.Regtest, // Use Regtest instead of Testnet for our tests
+      expectedAddress: 'bcrt1qjtgffm20l9vu6a7gacxvpu2ej4kdcsgcgnly6t',
     },
     {
       addressType: Caip2AddressType.P2pkh,
@@ -84,7 +85,7 @@ describe('Bitcoin Snap', () => {
         'tb1pwwjax3vpq6h69965hcr22vkpm4qdvyu2pz67wyj8eagp9vxkcz0q0ya20h',
     },
   ])(
-    'should create an account: %s',
+    'creates an account: %s',
     async ({ addressType, scope, expectedAddress }) => {
       snap.mockJsonRpc({ method: 'snap_manageAccounts', result: {} });
 
@@ -112,7 +113,7 @@ describe('Bitcoin Snap', () => {
     },
   );
 
-  it('should return the same account if already exists', async () => {
+  it('returns the same account if already exists', async () => {
     snap.mockJsonRpc({ method: 'snap_manageAccounts', result: {} });
 
     const response = await snap.onKeyringRequest({
@@ -129,5 +130,37 @@ describe('Bitcoin Snap', () => {
     expect(response).toRespondWith(
       accounts[`${Caip2AddressType.P2wpkh}:${BtcScopes.Mainnet}`],
     );
+  });
+
+  it('gets a Bitcoin account', async () => {
+    const response = await snap.onKeyringRequest({
+      origin,
+      method: 'keyring_getAccount',
+      params: {
+        id: accounts[`${Caip2AddressType.P2wpkh}:${BtcScopes.Regtest}`].id,
+      },
+    });
+
+    expect(response).toRespondWith(
+      accounts[`${Caip2AddressType.P2wpkh}:${BtcScopes.Regtest}`],
+    );
+  });
+
+  it('gets the balance of an account', async () => {
+    const response = await snap.onKeyringRequest({
+      origin,
+      method: 'keyring_getAccountBalances',
+      params: {
+        id: accounts[`${Caip2AddressType.P2wpkh}:${BtcScopes.Regtest}`].id,
+        assets: [Caip19Asset.Regtest],
+      },
+    });
+
+    expect(response).toRespondWith({
+      [Caip19Asset.Regtest]: {
+        amount: '500',
+        unit: 'BTC',
+      },
+    });
   });
 });

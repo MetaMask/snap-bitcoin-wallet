@@ -14,13 +14,10 @@ fi
 echo "Docker services started successfully."
 
 # Show Docker service status
-docker-compose -f test/integration/docker-compose.yml  ps
+docker-compose -f test/integration/docker-compose.yml ps
 
-echo "Waiting for Bitcoin regtest network to be ready..."
-sleep 10
-
-echo "Checking Docker logs..."
-docker-compose -f test/integration/docker-compose.yml logs --tail=20
+# Transfer funds to test address
+docker exec esplora bash /init-esplora.sh
 
 echo "Running integration tests..."
 jest --config jest.integration.config.js
