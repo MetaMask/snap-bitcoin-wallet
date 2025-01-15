@@ -308,9 +308,8 @@ describe('AccountUseCases', () => {
     it('throws error if account is the default account', async () => {
       const defaultAccount = mock<BitcoinAccount>();
       defaultAccount.id = 'default-id';
-      defaultAccount.addressType =
-        accountsConfig.defaultAddressType as AddressType;
-      defaultAccount.network = accountsConfig.defaultNetwork as Network;
+      defaultAccount.addressType = accountsConfig.defaultAddressType;
+      defaultAccount.network = accountsConfig.defaultNetwork;
 
       mockRepository.get.mockResolvedValue(defaultAccount);
 

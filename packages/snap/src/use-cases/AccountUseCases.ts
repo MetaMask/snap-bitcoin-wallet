@@ -60,7 +60,7 @@ export class AccountUseCases {
 
   async create(
     network: Network,
-    addressType: AddressType,
+    addressType: AddressType = this.#accountConfig.defaultAddressType,
   ): Promise<BitcoinAccount> {
     logger.debug(
       'Creating new Bitcoin account. Network: %o. addressType: %o,',

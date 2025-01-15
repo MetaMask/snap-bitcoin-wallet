@@ -11,14 +11,13 @@ import type {
 import type { Json } from '@metamask/utils';
 import { assert, enums, object, optional } from 'superstruct';
 
-import type { AccountsConfig } from '../entities';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 import { snapToKeyringAccount } from './account';
 import { networkToCaip19 } from './caip19';
 import { Caip2AddressType, caip2ToAddressType, caip2ToNetwork } from './caip2';
 
 export const CreateAccountRequest = object({
-  scope: optional(enums(Object.values(BtcScopes))),
+  scope: enums(Object.values(BtcScopes)),
   addressType: optional(enums(Object.values(Caip2AddressType))),
 });
 
@@ -28,11 +27,8 @@ export const CreateAccountRequest = object({
 export class KeyringHandler implements Keyring {
   readonly #accounts: AccountUseCases;
 
-  readonly #config: AccountsConfig;
-
-  constructor(accounts: AccountUseCases, config: AccountsConfig) {
+  constructor(accounts: AccountUseCases) {
     this.#accounts = accounts;
-    this.#config = config;
   }
 
   async listAccounts(): Promise<KeyringAccount[]> {
@@ -44,14 +40,12 @@ export class KeyringHandler implements Keyring {
     return snapToKeyringAccount(account);
   }
 
-  async createAccount(
-    opts: Record<string, Json> = {},
-  ): Promise<KeyringAccount> {
+  async createAccount(opts: Record<string, Json>): Promise<KeyringAccount> {
     assert(opts, CreateAccountRequest);
 
     const account = await this.#accounts.create(
-      caip2ToNetwork[opts.scope ?? this.#config.defaultNetwork],
-      caip2ToAddressType[opts.addressType ?? this.#config.defaultAddressType],
+      caip2ToNetwork[opts.scope],
+      opts.addressType ? caip2ToAddressType[opts.addressType] : undefined,
     );
 
     return snapToKeyringAccount(account);
