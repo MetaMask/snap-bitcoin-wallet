@@ -140,6 +140,7 @@ export class AccountUseCases {
       throw new Error('Default Bitcoin account cannot be removed');
     }
 
+    await this.#snapClient.emitAccountDeletedEvent(id);
     await this.#repository.delete(id);
 
     logger.info('Account deleted successfully: %s', account.id);

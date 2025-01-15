@@ -2,6 +2,7 @@ import type { AddressType, Network } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 
 import type {
+  AccountsConfig,
   BitcoinAccount,
   BitcoinAccountRepository,
   BlockchainClient,
@@ -17,14 +18,18 @@ describe('AccountUseCases', () => {
   const mockSnapClient = mock<SnapClient>();
   const mockRepository = mock<BitcoinAccountRepository>();
   const mockChain = mock<BlockchainClient>();
-  const accountIndex = 0;
+  const accountsConfig: AccountsConfig = {
+    index: 0,
+    defaultAddressType: 'p2wpkh',
+    defaultNetwork: 'bitcoin',
+  };
 
   beforeEach(() => {
     useCases = new AccountUseCases(
       mockSnapClient,
       mockRepository,
       mockChain,
-      accountIndex,
+      accountsConfig,
     );
   });
 
@@ -82,7 +87,7 @@ describe('AccountUseCases', () => {
     ] as { tAddressType: AddressType; purpose: string }[])(
       'creates an account of type: %s',
       async ({ tAddressType, purpose }) => {
-        const derivationPath = ['m', purpose, "0'", `${accountIndex}'`];
+        const derivationPath = ['m', purpose, "0'", `${accountsConfig.index}'`];
 
         await useCases.create(network, tAddressType);
 
@@ -113,7 +118,7 @@ describe('AccountUseCases', () => {
           'm',
           "84'",
           coinType,
-          `${accountIndex}'`,
+          `${accountsConfig.index}'`,
         ];
 
         await useCases.create(tNetwork, addressType);
@@ -286,6 +291,87 @@ describe('AccountUseCases', () => {
       expect(mockRepository.get).toHaveBeenCalledWith('some-id');
       expect(mockChain.sync).toHaveBeenCalledWith(mockAccount);
       expect(mockRepository.update).toHaveBeenCalledWith(mockAccount);
+    });
+  });
+
+  describe('delete', () => {
+    it('does nothing if account is not found', async () => {
+      mockRepository.get.mockResolvedValue(null);
+
+      await useCases.delete('non-existent-id');
+
+      expect(mockRepository.get).toHaveBeenCalledWith('non-existent-id');
+      expect(mockSnapClient.emitAccountDeletedEvent).not.toHaveBeenCalled();
+      expect(mockRepository.delete).not.toHaveBeenCalled();
+    });
+
+    it('throws error if account is the default account', async () => {
+      const defaultAccount = mock<BitcoinAccount>();
+      defaultAccount.id = 'default-id';
+      defaultAccount.addressType =
+        accountsConfig.defaultAddressType as AddressType;
+      defaultAccount.network = accountsConfig.defaultNetwork as Network;
+
+      mockRepository.get.mockResolvedValue(defaultAccount);
+
+      await expect(useCases.delete('default-id')).rejects.toThrow(
+        'Default Bitcoin account cannot be removed',
+      );
+
+      expect(mockRepository.get).toHaveBeenCalledWith('default-id');
+      expect(mockSnapClient.emitAccountDeletedEvent).not.toHaveBeenCalled();
+      expect(mockRepository.delete).not.toHaveBeenCalled();
+    });
+
+    it('removes account if not default', async () => {
+      const mockAccount = mock<BitcoinAccount>();
+      mockAccount.id = 'some-id';
+      mockAccount.addressType = 'p2wpkh';
+      mockAccount.network = 'testnet';
+
+      mockRepository.get.mockResolvedValue(mockAccount);
+
+      await useCases.delete(mockAccount.id);
+
+      expect(mockRepository.get).toHaveBeenCalledWith(mockAccount.id);
+      expect(mockSnapClient.emitAccountDeletedEvent).toHaveBeenCalledWith(
+        mockAccount.id,
+      );
+      expect(mockRepository.delete).toHaveBeenCalledWith(mockAccount.id);
+    });
+
+    it('propagates an error if the event emitting fails', async () => {
+      const mockAccount = mock<BitcoinAccount>();
+      mockAccount.id = 'some-id';
+      mockAccount.addressType = 'p2wpkh';
+      mockAccount.network = 'testnet';
+      const error = new Error('Event emit failed');
+
+      mockRepository.get.mockResolvedValue(mockAccount);
+      mockSnapClient.emitAccountDeletedEvent.mockRejectedValue(error);
+
+      await expect(useCases.delete(mockAccount.id)).rejects.toBe(error);
+
+      expect(mockRepository.get).toHaveBeenCalled();
+      expect(mockSnapClient.emitAccountDeletedEvent).toHaveBeenCalled();
+      expect(mockRepository.delete).not.toHaveBeenCalled();
+    });
+
+    it('propagates an error if the repository fails', async () => {
+      const mockAccount = mock<BitcoinAccount>();
+      mockAccount.id = 'some-id';
+      mockAccount.addressType = 'p2wpkh';
+      mockAccount.network = 'testnet';
+      const error = new Error('Delete failed');
+
+      mockRepository.get.mockResolvedValue(mockAccount);
+      mockRepository.delete.mockRejectedValue(error);
+
+      await expect(useCases.delete(mockAccount.id)).rejects.toBe(error);
+
+      expect(mockRepository.get).toHaveBeenCalled();
+      expect(mockSnapClient.emitAccountDeletedEvent).toHaveBeenCalled();
+      expect(mockRepository.delete).toHaveBeenCalled();
     });
   });
 });

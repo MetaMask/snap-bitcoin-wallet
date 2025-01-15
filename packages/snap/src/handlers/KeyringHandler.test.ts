@@ -136,6 +136,21 @@ describe('KeyringHandler', () => {
     });
   });
 
+  describe('deleteAccount', () => {
+    it('deletes account', async () => {
+      await handler.deleteAccount('some-id');
+      expect(mockAccounts.delete).toHaveBeenCalledWith('some-id');
+    });
+
+    it('propagates errors from delete', async () => {
+      const error = new Error();
+      mockAccounts.delete.mockRejectedValue(error);
+
+      await expect(handler.deleteAccount('some-id')).rejects.toThrow(error);
+      expect(mockAccounts.delete).toHaveBeenCalled();
+    });
+  });
+
   describe('unimplemented methods', () => {
     const errMsg = 'Method not implemented.';
 
@@ -151,10 +166,6 @@ describe('KeyringHandler', () => {
 
     it('updateAccount should throw', async () => {
       await expect(handler.updateAccount({} as any)).rejects.toThrow(errMsg);
-    });
-
-    it('deleteAccount should throw', async () => {
-      await expect(handler.deleteAccount('some-id')).rejects.toThrow(errMsg);
     });
 
     it('exportAccount should throw', async () => {
