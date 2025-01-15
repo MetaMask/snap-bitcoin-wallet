@@ -1,11 +1,12 @@
 import type { JsonSLIP10Node } from '@metamask/key-tree';
 import { SLIP10Node } from '@metamask/key-tree';
-import type { KeyringAccount } from '@metamask/keyring-api';
 import { KeyringEvent } from '@metamask/keyring-api';
 import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
 import type { SnapsProvider } from '@metamask/snaps-sdk';
 
+import type { BitcoinAccount } from '../entities';
 import type { SnapClient, SnapState } from '../entities/snap';
+import { snapToKeyringAccount } from '../handlers/account';
 
 export class SnapClientAdapter implements SnapClient {
   readonly #encrypt: boolean;
@@ -58,13 +59,22 @@ export class SnapClientAdapter implements SnapClient {
     return (await SLIP10Node.fromJSON(slip10)).neuter();
   }
 
-  async emitAccountCreatedEvent(
-    keyringAccount: KeyringAccount,
-    name: string,
-  ): Promise<void> {
+  async emitAccountCreatedEvent(account: BitcoinAccount): Promise<void> {
+    const suggestedName = () => {
+      switch (account.network) {
+        case 'bitcoin':
+          return 'Bitcoin Account';
+        case 'testnet':
+          return 'Bitcoin Testnet Account';
+        default:
+          // Leave it blank to fallback to auto-suggested name on the extension side
+          return '';
+      }
+    };
+
     return emitSnapKeyringEvent(snap, KeyringEvent.AccountCreated, {
-      account: keyringAccount,
-      accountNameSuggestion: name,
+      account: snapToKeyringAccount(account),
+      accountNameSuggestion: suggestedName(),
     });
   }
 

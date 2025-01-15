@@ -6,6 +6,7 @@ import type {
   BitcoinAccountRepository,
   BlockchainClient,
 } from '../entities';
+import type { SnapClient } from '../entities/snap';
 import { logger } from '../utils';
 
 const addressTypeToPurpose: Record<AddressType, string> = {
@@ -25,6 +26,8 @@ const networkToCoinType: Record<Network, string> = {
 };
 
 export class AccountUseCases {
+  readonly #snapClient: SnapClient;
+
   readonly #repository: BitcoinAccountRepository;
 
   readonly #chain: BlockchainClient;
@@ -32,10 +35,12 @@ export class AccountUseCases {
   readonly #accountConfig: AccountsConfig;
 
   constructor(
+    snapClient: SnapClient,
     repository: BitcoinAccountRepository,
     chain: BlockchainClient,
     accountConfig: AccountsConfig,
   ) {
+    this.#snapClient = snapClient;
     this.#repository = repository;
     this.#chain = chain;
     this.#accountConfig = accountConfig;
@@ -82,6 +87,8 @@ export class AccountUseCases {
       network,
       addressType,
     );
+
+    await this.#snapClient.emitAccountCreatedEvent(newAccount);
 
     logger.info(
       'Bitcoin account created successfully: %s. derivationPath: %s',

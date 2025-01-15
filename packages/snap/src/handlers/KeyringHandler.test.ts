@@ -3,7 +3,6 @@ import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
 import type { BitcoinAccount, AccountsConfig } from '../entities';
-import type { SnapClient } from '../entities/snap';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 import { Caip19Asset } from './caip19';
 import { caip2ToNetwork, caip2ToAddressType, Caip2AddressType } from './caip2';
@@ -16,7 +15,6 @@ jest.mock('superstruct', () => ({
 
 describe('KeyringHandler', () => {
   const mockAccounts = mock<AccountUseCases>();
-  const mockSnapClient = mock<SnapClient>();
   const mockConfig: AccountsConfig = {
     index: 0,
     defaultNetwork: BtcScopes.Mainnet,
@@ -37,7 +35,7 @@ describe('KeyringHandler', () => {
   let handler: KeyringHandler;
 
   beforeEach(() => {
-    handler = new KeyringHandler(mockAccounts, mockSnapClient, mockConfig);
+    handler = new KeyringHandler(mockAccounts, mockConfig);
   });
 
   describe('createAccount', () => {
@@ -57,10 +55,6 @@ describe('KeyringHandler', () => {
       expect(mockAccounts.create).toHaveBeenCalledWith(
         caip2ToNetwork[mockConfig.defaultNetwork],
         caip2ToAddressType[mockConfig.defaultAddressType],
-      );
-      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalledWith(
-        expectedKeyringAccount,
-        mockAccount.suggestedName,
       );
       expect(result).toStrictEqual(expectedKeyringAccount);
     });
@@ -87,17 +81,6 @@ describe('KeyringHandler', () => {
 
       await expect(handler.createAccount()).rejects.toThrow(error);
       expect(mockAccounts.create).toHaveBeenCalled();
-      expect(mockSnapClient.emitAccountCreatedEvent).not.toHaveBeenCalled();
-    });
-
-    it('propagates errors from emitSnapKeyringEvent', async () => {
-      const error = new Error();
-      mockAccounts.create.mockResolvedValue(mockAccount);
-      mockSnapClient.emitAccountCreatedEvent.mockRejectedValue(error);
-
-      await expect(handler.createAccount()).rejects.toThrow(error);
-      expect(mockAccounts.create).toHaveBeenCalled();
-      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalled();
     });
   });
 

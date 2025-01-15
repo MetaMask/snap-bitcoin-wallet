@@ -6,18 +6,26 @@ import type {
   BitcoinAccountRepository,
   BlockchainClient,
 } from '../entities';
+import type { SnapClient } from '../entities/snap';
 import { AccountUseCases } from './AccountUseCases';
 
 jest.mock('../utils/logger');
 
 describe('AccountUseCases', () => {
   let useCases: AccountUseCases;
+
+  const mockSnapClient = mock<SnapClient>();
   const mockRepository = mock<BitcoinAccountRepository>();
   const mockChain = mock<BlockchainClient>();
   const accountIndex = 0;
 
   beforeEach(() => {
-    useCases = new AccountUseCases(mockRepository, mockChain, accountIndex);
+    useCases = new AccountUseCases(
+      mockSnapClient,
+      mockRepository,
+      mockChain,
+      accountIndex,
+    );
   });
 
   describe('get', () => {
@@ -86,6 +94,9 @@ describe('AccountUseCases', () => {
           network,
           tAddressType,
         );
+        expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalledWith(
+          mockAccount,
+        );
       },
     );
 
@@ -115,6 +126,9 @@ describe('AccountUseCases', () => {
           tNetwork,
           addressType,
         );
+        expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalledWith(
+          mockAccount,
+        );
       },
     );
 
@@ -126,6 +140,8 @@ describe('AccountUseCases', () => {
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).not.toHaveBeenCalled();
+      expect(mockSnapClient.emitAccountCreatedEvent).not.toHaveBeenCalled();
+
       expect(result).toBe(mockExistingAccount);
     });
 
@@ -136,6 +152,7 @@ describe('AccountUseCases', () => {
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).toHaveBeenCalled();
+      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalled();
 
       expect(result).toBe(mockAccount);
     });
@@ -148,6 +165,7 @@ describe('AccountUseCases', () => {
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).not.toHaveBeenCalled();
+      expect(mockSnapClient.emitAccountCreatedEvent).not.toHaveBeenCalled();
     });
 
     it('propagates an error if insert throws', async () => {
@@ -159,6 +177,19 @@ describe('AccountUseCases', () => {
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).toHaveBeenCalled();
+      expect(mockSnapClient.emitAccountCreatedEvent).not.toHaveBeenCalled();
+    });
+
+    it('propagates an error if emitAccountCreatedEvent throws', async () => {
+      const error = new Error();
+      mockRepository.getByDerivationPath.mockResolvedValue(null);
+      mockSnapClient.emitAccountCreatedEvent.mockRejectedValue(error);
+
+      await expect(useCases.create(network, addressType)).rejects.toBe(error);
+
+      expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
+      expect(mockRepository.insert).toHaveBeenCalled();
+      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalled();
     });
   });
 

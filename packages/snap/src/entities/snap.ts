@@ -1,6 +1,7 @@
 import type { JsonSLIP10Node, SLIP10Node } from '@metamask/key-tree';
-import type { KeyringAccount } from '@metamask/keyring-api';
 import type { SnapsProvider } from '@metamask/snaps-sdk';
+
+import type { BitcoinAccount } from './account';
 
 export type SnapState = {
   accounts: {
@@ -45,12 +46,8 @@ export type SnapClient = {
   getPublicEntropy(derivationPath: string[]): Promise<SLIP10Node>;
 
   /**
-   * Emits an event notifying the extension of a newly created account
-   * @param keyringAccount - The new Keyring account.
-   * @param name - The account suggested name.
+   * Emits an event notifying the extension of a newly created Bitcoin account
+   * @param account - The Bitcoin account.
    */
-  emitAccountCreatedEvent(
-    keyringAccount: KeyringAccount,
-    name: string,
-  ): Promise<void>;
+  emitAccountCreatedEvent(account: BitcoinAccount): Promise<void>;
 };
