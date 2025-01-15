@@ -2,6 +2,7 @@ import type { AddressType, Network } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 
 import type {
+  AccountsConfig,
   BitcoinAccount,
   BitcoinAccountRepository,
   BlockchainClient,
@@ -17,14 +18,18 @@ describe('AccountUseCases', () => {
   const mockSnapClient = mock<SnapClient>();
   const mockRepository = mock<BitcoinAccountRepository>();
   const mockChain = mock<BlockchainClient>();
-  const accountIndex = 0;
+  const accountsConfig: AccountsConfig = {
+    index: 0,
+    defaultAddressType: 'p2wpkh',
+    defaultNetwork: 'bitcoin',
+  };
 
   beforeEach(() => {
     useCases = new AccountUseCases(
       mockSnapClient,
       mockRepository,
       mockChain,
-      accountIndex,
+      accountsConfig,
     );
   });
 
@@ -82,7 +87,7 @@ describe('AccountUseCases', () => {
     ] as { tAddressType: AddressType; purpose: string }[])(
       'creates an account of type: %s',
       async ({ tAddressType, purpose }) => {
-        const derivationPath = ['m', purpose, "0'", `${accountIndex}'`];
+        const derivationPath = ['m', purpose, "0'", `${accountsConfig.index}'`];
 
         await useCases.create(network, tAddressType);
 
@@ -113,7 +118,7 @@ describe('AccountUseCases', () => {
           'm',
           "84'",
           coinType,
-          `${accountIndex}'`,
+          `${accountsConfig.index}'`,
         ];
 
         await useCases.create(tNetwork, addressType);

@@ -56,10 +56,10 @@ if (ConfigV2.keyringVersion === 'v2') {
     snapClient,
     repository,
     chainClient,
-    ConfigV2.accounts.index,
+    ConfigV2.accounts,
   );
   // Application layer
-  keyring = new KeyringHandler(accounts, ConfigV2.accounts);
+  keyring = new KeyringHandler(accounts);
 }
 
 export const validateOrigin = (origin: string, method: string): void => {
@@ -78,8 +78,8 @@ export const onInstall: OnInstallHandler = async () => {
     // No need for a handler given the lack of request
     if (accounts) {
       await accounts.create(
-        caip2ToNetwork[ConfigV2.accounts.defaultNetwork],
-        caip2ToAddressType[ConfigV2.accounts.defaultAddressType],
+        ConfigV2.accounts.defaultNetwork,
+        ConfigV2.accounts.defaultAddressType,
       );
     }
   } catch (error) {

@@ -1,9 +1,8 @@
 /* eslint-disable no-restricted-globals */
 
-import { BtcScopes } from '@metamask/keyring-api';
+import type { AddressType, Network } from 'bitcoindevkit';
 
 import type { SnapConfig } from './entities';
-import { Caip2AddressType } from './handlers';
 
 // ConfigV2 exists temporarily to avoid modifying the old config object before it is removed.
 export const ConfigV2: SnapConfig = {
@@ -12,9 +11,9 @@ export const ConfigV2: SnapConfig = {
   keyringVersion: process.env.KEYRING_VERSION ?? 'v1',
   accounts: {
     index: 0,
-    defaultNetwork: process.env.DEFAULT_NETWORK ?? BtcScopes.Mainnet,
-    defaultAddressType:
-      process.env.DEFAULT_ADDRESS_TYPE ?? Caip2AddressType.P2wpkh,
+    defaultNetwork: (process.env.DEFAULT_NETWORK ?? 'bitcoin') as Network,
+    defaultAddressType: (process.env.DEFAULT_ADDRESS_TYPE ??
+      'p2wpkh') as AddressType,
   },
   chain: {
     parallelRequests: 1,

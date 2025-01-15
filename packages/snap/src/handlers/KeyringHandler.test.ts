@@ -2,7 +2,7 @@ import { BtcMethod, BtcScopes } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
-import type { BitcoinAccount, AccountsConfig } from '../entities';
+import type { BitcoinAccount } from '../entities';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 import { Caip19Asset } from './caip19';
 import { caip2ToNetwork, caip2ToAddressType, Caip2AddressType } from './caip2';
@@ -15,17 +15,12 @@ jest.mock('superstruct', () => ({
 
 describe('KeyringHandler', () => {
   const mockAccounts = mock<AccountUseCases>();
-  const mockConfig: AccountsConfig = {
-    index: 0,
-    defaultNetwork: BtcScopes.Mainnet,
-    defaultAddressType: Caip2AddressType.P2wpkh,
-  };
 
   // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
   /* eslint-disable @typescript-eslint/naming-convention */
   const mockAccount = {
     id: 'some-id',
-    addressType: caip2ToAddressType[mockConfig.defaultAddressType],
+    addressType: 'p2wpkh',
     suggestedName: 'My Bitcoin Account',
     balance: { trusted_spendable: { to_btc: () => 1 } },
     network: 'bitcoin',
@@ -35,30 +30,10 @@ describe('KeyringHandler', () => {
   let handler: KeyringHandler;
 
   beforeEach(() => {
-    handler = new KeyringHandler(mockAccounts, mockConfig);
+    handler = new KeyringHandler(mockAccounts);
   });
 
   describe('createAccount', () => {
-    it('creates a new account with default config when no options are passed', async () => {
-      mockAccounts.create.mockResolvedValue(mockAccount);
-      const expectedKeyringAccount = {
-        id: 'some-id',
-        type: mockConfig.defaultAddressType,
-        scopes: [BtcScopes.Mainnet],
-        address: 'bc1qaddress...',
-        options: {},
-        methods: [BtcMethod.SendBitcoin],
-      };
-
-      const result = await handler.createAccount();
-      expect(assert).toHaveBeenCalledWith({}, CreateAccountRequest);
-      expect(mockAccounts.create).toHaveBeenCalledWith(
-        caip2ToNetwork[mockConfig.defaultNetwork],
-        caip2ToAddressType[mockConfig.defaultAddressType],
-      );
-      expect(result).toStrictEqual(expectedKeyringAccount);
-    });
-
     it('respects provided provided scope and addressType', async () => {
       mockAccounts.create.mockResolvedValue(mockAccount);
 
@@ -79,7 +54,9 @@ describe('KeyringHandler', () => {
       const error = new Error();
       mockAccounts.create.mockRejectedValue(error);
 
-      await expect(handler.createAccount()).rejects.toThrow(error);
+      await expect(
+        handler.createAccount({ options: { scopes: [BtcScopes.Mainnet] } }),
+      ).rejects.toThrow(error);
       expect(mockAccounts.create).toHaveBeenCalled();
     });
   });
@@ -115,7 +92,7 @@ describe('KeyringHandler', () => {
       mockAccounts.get.mockResolvedValue(mockAccount);
       const expectedKeyringAccount = {
         id: 'some-id',
-        type: mockConfig.defaultAddressType,
+        type: Caip2AddressType.P2wpkh,
         scopes: [BtcScopes.Mainnet],
         address: 'bc1qaddress...',
         options: {},
@@ -151,10 +128,6 @@ describe('KeyringHandler', () => {
 
     it('updateAccount should throw', async () => {
       await expect(handler.updateAccount({} as any)).rejects.toThrow(errMsg);
-    });
-
-    it('deleteAccount should throw', async () => {
-      await expect(handler.deleteAccount('some-id')).rejects.toThrow(errMsg);
     });
 
     it('exportAccount should throw', async () => {

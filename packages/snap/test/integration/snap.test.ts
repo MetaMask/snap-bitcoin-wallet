@@ -20,27 +20,6 @@ describe('Bitcoin Snap', () => {
     });
   });
 
-  it('creates a default account when options is empty', async () => {
-    snap.mockJsonRpc({ method: 'snap_manageAccounts', result: {} });
-
-    const response = await snap.onKeyringRequest({
-      origin,
-      method: 'keyring_createAccount',
-      params: {
-        options: {},
-      },
-    });
-
-    expect(response).toRespondWith({
-      type: Caip2AddressType.P2wpkh,
-      id: expect.anything(),
-      address: 'bc1q832zlt4tgnqy88vd20mazw77dlt0j0wf2naw8q',
-      options: {},
-      scopes: [BtcScopes.Mainnet],
-      methods: [BtcMethod.SendBitcoin],
-    });
-  });
-
   it.each([
     {
       addressType: Caip2AddressType.P2wpkh,

@@ -1,6 +1,7 @@
 import type { AddressType, Network } from 'bitcoindevkit';
 
 import type {
+  AccountsConfig,
   BitcoinAccount,
   BitcoinAccountRepository,
   BlockchainClient,
@@ -31,18 +32,18 @@ export class AccountUseCases {
 
   readonly #chain: BlockchainClient;
 
-  readonly #accountIndex: number;
+  readonly #accountConfig: AccountsConfig;
 
   constructor(
     snapClient: SnapClient,
     repository: BitcoinAccountRepository,
     chain: BlockchainClient,
-    accountIndex: number,
+    accountConfig: AccountsConfig,
   ) {
     this.#snapClient = snapClient;
     this.#repository = repository;
     this.#chain = chain;
-    this.#accountIndex = accountIndex;
+    this.#accountConfig = accountConfig;
   }
 
   async get(id: string): Promise<BitcoinAccount> {
@@ -59,7 +60,7 @@ export class AccountUseCases {
 
   async create(
     network: Network,
-    addressType: AddressType,
+    addressType: AddressType = this.#accountConfig.defaultAddressType,
   ): Promise<BitcoinAccount> {
     logger.debug(
       'Creating new Bitcoin account. Network: %o. addressType: %o,',
@@ -71,7 +72,7 @@ export class AccountUseCases {
       'm',
       addressTypeToPurpose[addressType],
       networkToCoinType[network],
-      `${this.#accountIndex}'`,
+      `${this.#accountConfig.index}'`,
     ];
 
     // Idempotent account creation + ensures only one account per derivation path
