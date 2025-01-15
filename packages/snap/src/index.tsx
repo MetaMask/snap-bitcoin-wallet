@@ -13,7 +13,6 @@ import {
 
 import { Config } from './config';
 import { ConfigV2 } from './configv2';
-import { caip2ToAddressType, caip2ToNetwork } from './handlers/caip2';
 import { KeyringHandler } from './handlers/KeyringHandler';
 import { SnapClientAdapter, EsploraClientAdapter } from './infra';
 import { BtcKeyring } from './keyring';
