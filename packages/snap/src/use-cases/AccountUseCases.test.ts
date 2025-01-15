@@ -167,7 +167,7 @@ describe('AccountUseCases', () => {
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).not.toHaveBeenCalled();
-      expect(mockSnapClient.emitAccountCreatedEvent).not.toHaveBeenCalled();
+      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalled();
 
       expect(result).toBe(mockExistingAccount);
     });

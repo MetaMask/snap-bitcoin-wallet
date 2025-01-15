@@ -14,7 +14,12 @@ import { assert, enums, object, optional } from 'superstruct';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 import { snapToKeyringAccount } from './account';
 import { networkToCaip19 } from './caip19';
-import { Caip2AddressType, caip2ToAddressType, caip2ToNetwork } from './caip2';
+import {
+  Caip2AddressType,
+  caip2ToAddressType,
+  caip2ToNetwork,
+  networkToCaip2,
+} from './caip2';
 
 export const CreateAccountRequest = object({
   scope: enums(Object.values(BtcScopes)),
@@ -67,7 +72,9 @@ export class KeyringHandler implements Keyring {
   }
 
   async filterAccountChains(id: string, chains: string[]): Promise<string[]> {
-    throw new Error('Method not implemented.');
+    const account = await this.#accounts.get(id);
+    const accountChain = networkToCaip2[account.network];
+    return chains.includes(accountChain) ? [accountChain] : [];
   }
 
   async updateAccount(account: KeyringAccount): Promise<void> {
