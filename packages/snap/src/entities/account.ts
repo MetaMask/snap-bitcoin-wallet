@@ -124,4 +124,11 @@ export type BitcoinAccountRepository = {
    * @param account
    */
   update(account: BitcoinAccount): Promise<void>;
+
+  /**
+   * Delete an account.
+   * @param id
+   * @returns true if the account has been deleted.
+   */
+  delete(id: string): Promise<void>;
 };

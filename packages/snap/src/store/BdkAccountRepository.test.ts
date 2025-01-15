@@ -188,4 +188,31 @@ describe('BdkAccountRepository', () => {
       );
     });
   });
+
+  describe('delete', () => {
+    it('does nothing if account not found', async () => {
+      mockSnapClient.get.mockResolvedValue({
+        accounts: { derivationPaths: {}, wallets: {} },
+      });
+
+      await repo.delete('non-existent-id');
+
+      expect(mockSnapClient.set).not.toHaveBeenCalled();
+    });
+
+    it('removes wallet data and derivation path from store if present', async () => {
+      mockSnapClient.get.mockResolvedValue({
+        accounts: {
+          derivationPaths: { "m/84'/0'/0'": 'some-id' },
+          wallets: { 'some-id': '{"wallet":"data"}' },
+        },
+      });
+
+      await repo.delete('some-id');
+
+      expect(mockSnapClient.set).toHaveBeenCalledWith({
+        accounts: { derivationPaths: {}, wallets: {} },
+      });
+    });
+  });
 });

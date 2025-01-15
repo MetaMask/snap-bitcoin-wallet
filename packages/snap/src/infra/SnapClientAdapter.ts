@@ -67,4 +67,10 @@ export class SnapClientAdapter implements SnapClient {
       accountNameSuggestion: name,
     });
   }
+
+  async emitAccountDeletedEvent(id: string): Promise<void> {
+    return emitSnapKeyringEvent(snap, KeyringEvent.AccountDeleted, {
+      id,
+    });
+  }
 }

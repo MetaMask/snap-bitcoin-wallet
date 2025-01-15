@@ -90,4 +90,26 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     state.accounts.wallets[account.id] = newWalletData.to_json();
     await this.#snapClient.set(state);
   }
+
+  async delete(id: string): Promise<void> {
+    const state = await this.#snapClient.get();
+    const walletData = state.accounts.wallets[id];
+    if (!walletData) {
+      return;
+    }
+
+    delete state.accounts.wallets[id];
+
+    // Find the path in derivationPaths that points to this id and remove it
+    for (const [path, existingId] of Object.entries(
+      state.accounts.derivationPaths,
+    )) {
+      if (existingId === id) {
+        delete state.accounts.derivationPaths[path];
+        break;
+      }
+    }
+
+    await this.#snapClient.set(state);
+  }
 }

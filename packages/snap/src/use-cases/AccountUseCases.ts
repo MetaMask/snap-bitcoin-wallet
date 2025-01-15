@@ -1,6 +1,7 @@
 import type { AddressType, Network } from 'bitcoindevkit';
 
 import type {
+  AccountsConfig,
   BitcoinAccount,
   BitcoinAccountRepository,
   BlockchainClient,
@@ -28,16 +29,16 @@ export class AccountUseCases {
 
   readonly #chain: BlockchainClient;
 
-  readonly #accountIndex: number;
+  readonly #accountConfig: AccountsConfig;
 
   constructor(
     repository: BitcoinAccountRepository,
     chain: BlockchainClient,
-    accountIndex: number,
+    accountConfig: AccountsConfig,
   ) {
     this.#repository = repository;
     this.#chain = chain;
-    this.#accountIndex = accountIndex;
+    this.#accountConfig = accountConfig;
   }
 
   async get(id: string): Promise<BitcoinAccount> {
@@ -66,7 +67,7 @@ export class AccountUseCases {
       'm',
       addressTypeToPurpose[addressType],
       networkToCoinType[network],
-      `${this.#accountIndex}'`,
+      `${this.#accountConfig.index}'`,
     ];
 
     // Idempotent account creation + ensures only one account per derivation path
@@ -115,5 +116,25 @@ export class AccountUseCases {
 
     logger.info('Account synchronized successfully: %s', account.id);
     return account;
+  }
+
+  async delete(id: string): Promise<void> {
+    logger.debug('Deleting account. ID: %s', id);
+
+    const account = await this.#repository.get(id);
+    if (!account) {
+      return;
+    }
+
+    if (
+      account.addressType === this.#accountConfig.defaultAddressType &&
+      account.network === this.#accountConfig.defaultNetwork
+    ) {
+      throw new Error('Default Bitcoin account cannot be removed');
+    }
+
+    await this.#repository.delete(id);
+
+    logger.info('Account deleted successfully: %s', account.id);
   }
 }
