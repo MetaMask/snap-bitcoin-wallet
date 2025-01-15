@@ -113,12 +113,36 @@ describe('KeyringHandler', () => {
     });
   });
 
+  describe('listAccounts', () => {
+    it('list accounts', async () => {
+      mockAccounts.list.mockResolvedValue([mockAccount]);
+      const expectedKeyringAccounts = [
+        {
+          id: 'some-id',
+          type: Caip2AddressType.P2wpkh,
+          scopes: [BtcScopes.Mainnet],
+          address: 'bc1qaddress...',
+          options: {},
+          methods: [BtcMethod.SendBitcoin],
+        },
+      ];
+
+      const result = await handler.listAccounts();
+      expect(mockAccounts.list).toHaveBeenCalled();
+      expect(result).toStrictEqual(expectedKeyringAccounts);
+    });
+
+    it('propagates errors from list', async () => {
+      const error = new Error();
+      mockAccounts.list.mockRejectedValue(error);
+
+      await expect(handler.listAccounts()).rejects.toThrow(error);
+      expect(mockAccounts.list).toHaveBeenCalled();
+    });
+  });
+
   describe('unimplemented methods', () => {
     const errMsg = 'Method not implemented.';
-
-    it('listAccounts should throw', async () => {
-      await expect(handler.listAccounts()).rejects.toThrow(errMsg);
-    });
 
     it('filterAccountChains should throw', async () => {
       await expect(handler.filterAccountChains('some-id', [])).rejects.toThrow(

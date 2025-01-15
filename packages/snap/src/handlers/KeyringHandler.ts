@@ -32,7 +32,8 @@ export class KeyringHandler implements Keyring {
   }
 
   async listAccounts(): Promise<KeyringAccount[]> {
-    throw new Error('Method not implemented.');
+    const accounts = await this.#accounts.list();
+    return accounts.map(snapToKeyringAccount);
   }
 
   async getAccount(id: string): Promise<KeyringAccount | undefined> {

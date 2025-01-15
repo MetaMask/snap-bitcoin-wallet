@@ -20,6 +20,22 @@ describe('Bitcoin Snap', () => {
     });
 
     expect(snap).toBeDefined();
+
+    const response = await snap.onKeyringRequest({
+      origin,
+      method: 'keyring_listAccounts',
+    });
+
+    expect(response).toRespondWith([
+      {
+        type: Caip2AddressType.P2wpkh,
+        id: expect.anything(),
+        address: 'bc1q832zlt4tgnqy88vd20mazw77dlt0j0wf2naw8q',
+        options: {},
+        scopes: [BtcScopes.Mainnet],
+        methods: [BtcMethod.SendBitcoin],
+      },
+    ]);
   });
 
   it.each([
