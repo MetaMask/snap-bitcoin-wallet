@@ -148,7 +148,7 @@ describe('Bitcoin Snap', () => {
       method: 'keyring_listAccounts',
     });
 
-    expect(response.response.result).toHaveLength(Object.keys(accounts).length);
+    expect(response).toRespondWith(Object.values(accounts));
   });
 
   it('gets the balance of an account', async () => {
