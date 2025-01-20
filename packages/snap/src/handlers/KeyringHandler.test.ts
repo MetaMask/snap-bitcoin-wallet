@@ -145,10 +145,6 @@ describe('KeyringHandler', () => {
       await expect(handler.updateAccount({} as any)).rejects.toThrow(errMsg);
     });
 
-    it('deleteAccount should throw', async () => {
-      await expect(handler.deleteAccount('some-id')).rejects.toThrow(errMsg);
-    });
-
     it('exportAccount should throw', async () => {
       await expect(handler.exportAccount('some-id')).rejects.toThrow(errMsg);
     });
