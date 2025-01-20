@@ -114,7 +114,7 @@ describe('KeyringHandler', () => {
   });
 
   describe('listAccounts', () => {
-    it('list accounts', async () => {
+    it('lists accounts', async () => {
       mockAccounts.list.mockResolvedValue([mockAccount]);
       const expectedKeyringAccounts = [
         {
