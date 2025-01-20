@@ -12,7 +12,7 @@ import type { Json } from '@metamask/utils';
 import { assert, enums, object, optional } from 'superstruct';
 
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
-import { snapToKeyringAccount } from './account';
+import { snapToKeyringAccount } from './keyring-account';
 import { networkToCaip19 } from './caip19';
 import { Caip2AddressType, caip2ToAddressType, caip2ToNetwork } from './caip2';
 
@@ -25,10 +25,10 @@ export const CreateAccountRequest = object({
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 export class KeyringHandler implements Keyring {
-  readonly #accounts: AccountUseCases;
+  readonly #accountsUseCases: AccountUseCases;
 
   constructor(accounts: AccountUseCases) {
-    this.#accounts = accounts;
+    this.#accountsUseCases = accounts;
   }
 
   async listAccounts(): Promise<KeyringAccount[]> {
@@ -36,14 +36,14 @@ export class KeyringHandler implements Keyring {
   }
 
   async getAccount(id: string): Promise<KeyringAccount | undefined> {
-    const account = await this.#accounts.get(id);
+    const account = await this.#accountsUseCases.get(id);
     return snapToKeyringAccount(account);
   }
 
   async createAccount(opts: Record<string, Json>): Promise<KeyringAccount> {
     assert(opts, CreateAccountRequest);
 
-    const account = await this.#accounts.create(
+    const account = await this.#accountsUseCases.create(
       caip2ToNetwork[opts.scope],
       opts.addressType ? caip2ToAddressType[opts.addressType] : undefined,
     );
@@ -54,7 +54,7 @@ export class KeyringHandler implements Keyring {
   async getAccountBalances(
     id: string,
   ): Promise<Record<CaipAssetType, Balance>> {
-    const account = await this.#accounts.synchronize(id);
+    const account = await this.#accountsUseCases.synchronize(id);
     const balance = account.balance.trusted_spendable.to_btc().toString();
 
     return {
@@ -74,7 +74,7 @@ export class KeyringHandler implements Keyring {
   }
 
   async deleteAccount(id: string): Promise<void> {
-    await this.#accounts.delete(id);
+    await this.#accountsUseCases.delete(id);
   }
 
   async exportAccount(id: string): Promise<KeyringAccountData> {

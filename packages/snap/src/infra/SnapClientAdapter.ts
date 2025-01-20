@@ -6,7 +6,7 @@ import type { SnapsProvider } from '@metamask/snaps-sdk';
 
 import type { BitcoinAccount } from '../entities';
 import type { SnapClient, SnapState } from '../entities/snap';
-import { snapToKeyringAccount } from '../handlers/account';
+import { snapToKeyringAccount } from '../handlers/keyring-account';
 
 export class SnapClientAdapter implements SnapClient {
   readonly #encrypt: boolean;
