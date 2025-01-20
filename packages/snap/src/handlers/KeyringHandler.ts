@@ -12,9 +12,9 @@ import type { Json } from '@metamask/utils';
 import { assert, enums, object, optional } from 'superstruct';
 
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
-import { snapToKeyringAccount } from './keyring-account';
 import { networkToCaip19 } from './caip19';
 import { Caip2AddressType, caip2ToAddressType, caip2ToNetwork } from './caip2';
+import { snapToKeyringAccount } from './keyring-account';
 
 export const CreateAccountRequest = object({
   scope: enums(Object.values(BtcScopes)),
