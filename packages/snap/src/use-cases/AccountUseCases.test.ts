@@ -295,10 +295,12 @@ describe('AccountUseCases', () => {
   });
 
   describe('delete', () => {
-    it('does nothing if account is not found', async () => {
+    it('throws error if account is not found', async () => {
       mockRepository.get.mockResolvedValue(null);
 
-      await useCases.delete('non-existent-id');
+      await expect(useCases.delete('non-existent-id')).rejects.toThrow(
+        'Account not found: non-existent-id',
+      );
 
       expect(mockRepository.get).toHaveBeenCalledWith('non-existent-id');
       expect(mockSnapClient.emitAccountDeletedEvent).not.toHaveBeenCalled();

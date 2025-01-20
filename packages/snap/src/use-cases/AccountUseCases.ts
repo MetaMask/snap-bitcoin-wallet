@@ -130,7 +130,7 @@ export class AccountUseCases {
 
     const account = await this.#repository.get(id);
     if (!account) {
-      return;
+      throw new Error(`Account not found: ${id}`);
     }
 
     if (
