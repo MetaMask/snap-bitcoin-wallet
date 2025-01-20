@@ -12,7 +12,7 @@ import type { Json } from '@metamask/utils';
 import { assert, enums, object, optional } from 'superstruct';
 
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
-import { snapToKeyringAccount } from './account';
+import { snapToKeyringAccount } from './keyring-account';
 import { networkToCaip19 } from './caip19';
 import { Caip2AddressType, caip2ToAddressType, caip2ToNetwork } from './caip2';
 
