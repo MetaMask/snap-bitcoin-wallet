@@ -142,6 +142,15 @@ describe('Bitcoin Snap', () => {
     );
   });
 
+  it('lists all Bitcoin accounts', async () => {
+    const response = await snap.onKeyringRequest({
+      origin,
+      method: 'keyring_listAccounts',
+    });
+
+    expect(response.response.result).toHaveLength(Object.keys(accounts).length);
+  });
+
   it('gets the balance of an account', async () => {
     const response = await snap.onKeyringRequest({
       origin,

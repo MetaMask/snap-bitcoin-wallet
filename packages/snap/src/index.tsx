@@ -43,7 +43,7 @@ import { loadLocale } from './utils/locale';
 logger.logLevel = parseInt(Config.logLevel, 10);
 
 let keyring: Keyring;
-let accounts: AccountUseCases;
+let accountsUseCases: AccountUseCases;
 if (ConfigV2.keyringVersion === 'v2') {
   // Infra layer
   const snapClient = new SnapClientAdapter(ConfigV2.encrypt);
@@ -51,14 +51,14 @@ if (ConfigV2.keyringVersion === 'v2') {
   // Data layer
   const repository = new BdkAccountRepository(snapClient);
   // Business layer
-  accounts = new AccountUseCases(
+  accountsUseCases = new AccountUseCases(
     snapClient,
     repository,
     chainClient,
     ConfigV2.accounts,
   );
   // Application layer
-  keyring = new KeyringHandler(accounts);
+  keyring = new KeyringHandler(accountsUseCases);
 }
 
 export const validateOrigin = (origin: string, method: string): void => {
@@ -75,8 +75,8 @@ export const validateOrigin = (origin: string, method: string): void => {
 export const onInstall: OnInstallHandler = async () => {
   try {
     // No need for a handler given the lack of request
-    if (accounts) {
-      await accounts.create(
+    if (accountsUseCases) {
+      await accountsUseCases.create(
         ConfigV2.accounts.defaultNetwork,
         ConfigV2.accounts.defaultAddressType,
       );
