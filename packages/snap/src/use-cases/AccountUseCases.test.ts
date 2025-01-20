@@ -70,7 +70,7 @@ describe('AccountUseCases', () => {
   });
 
   describe('list', () => {
-    it('return accounts', async () => {
+    it('returns accounts', async () => {
       const mockAccount = mock<BitcoinAccount>();
 
       mockRepository.getAll.mockResolvedValue([mockAccount]);
