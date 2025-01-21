@@ -39,18 +39,6 @@ export class BdkAccountAdapter implements BitcoinAccount {
     return this.#id;
   }
 
-  get suggestedName(): string {
-    switch (this.#wallet.network()) {
-      case 'bitcoin':
-        return 'Bitcoin Account';
-      case 'testnet':
-        return 'Bitcoin Testnet Account';
-      default:
-        // Leave it blank to fallback to auto-suggested name on the extension side
-        return '';
-    }
-  }
-
   get balance(): Balance {
     return this.#wallet.balance();
   }

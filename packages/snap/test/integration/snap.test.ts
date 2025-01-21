@@ -11,34 +11,14 @@ describe('Bitcoin Snap', () => {
   const accounts: Record<string, KeyringAccount> = {};
   const origin = 'metamask';
 
-  it('installs the Snap', async () => {
+  it('installs the Snap and creates a default account', async () => {
     snap = await installSnap({
       options: {
         secretRecoveryPhrase:
           'journey embrace permit coil indoor stereo welcome maid movie easy clock spider tent slush bright luxury awake waste legal modify awkward answer acid goose',
       },
     });
-  });
-
-  it('creates a default account', async () => {
-    snap.mockJsonRpc({ method: 'snap_manageAccounts', result: {} });
-
-    const response = await snap.onKeyringRequest({
-      origin,
-      method: 'keyring_createAccount',
-      params: {
-        options: {},
-      },
-    });
-
-    expect(response).toRespondWith({
-      type: Caip2AddressType.P2wpkh,
-      id: expect.anything(),
-      address: 'bc1q832zlt4tgnqy88vd20mazw77dlt0j0wf2naw8q',
-      options: {},
-      scopes: [BtcScopes.Mainnet],
-      methods: [BtcMethod.SendBitcoin],
-    });
+    await snap.onInstall();
   });
 
   it.each([

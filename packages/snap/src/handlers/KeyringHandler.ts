@@ -1,4 +1,4 @@
-import { BtcMethod, BtcScopes } from '@metamask/keyring-api';
+import { BtcScopes } from '@metamask/keyring-api';
 import type {
   KeyringAccountData,
   Keyring,
@@ -11,20 +11,13 @@ import type {
 import type { Json } from '@metamask/utils';
 import { assert, enums, object, optional } from 'superstruct';
 
-import type { BitcoinAccount, AccountsConfig } from '../entities';
-import type { SnapClient } from '../entities/snap';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 import { networkToCaip19 } from './caip19';
-import {
-  addressTypeToCaip2,
-  Caip2AddressType,
-  caip2ToAddressType,
-  caip2ToNetwork,
-  networkToCaip2,
-} from './caip2';
+import { Caip2AddressType, caip2ToAddressType, caip2ToNetwork } from './caip2';
+import { snapToKeyringAccount } from './keyring-account';
 
 export const CreateAccountRequest = object({
-  scope: optional(enums(Object.values(BtcScopes))),
+  scope: enums(Object.values(BtcScopes)),
   addressType: optional(enums(Object.values(Caip2AddressType))),
 });
 
@@ -32,20 +25,10 @@ export const CreateAccountRequest = object({
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 export class KeyringHandler implements Keyring {
-  readonly #accounts: AccountUseCases;
+  readonly #accountsUseCases: AccountUseCases;
 
-  readonly #snapClient: SnapClient;
-
-  readonly #config: AccountsConfig;
-
-  constructor(
-    accounts: AccountUseCases,
-    snapClient: SnapClient,
-    config: AccountsConfig,
-  ) {
-    this.#accounts = accounts;
-    this.#config = config;
-    this.#snapClient = snapClient;
+  constructor(accounts: AccountUseCases) {
+    this.#accountsUseCases = accounts;
   }
 
   async listAccounts(): Promise<KeyringAccount[]> {
@@ -53,33 +36,25 @@ export class KeyringHandler implements Keyring {
   }
 
   async getAccount(id: string): Promise<KeyringAccount | undefined> {
-    const account = await this.#accounts.get(id);
-    return this.#toKeyringAccount(account);
+    const account = await this.#accountsUseCases.get(id);
+    return snapToKeyringAccount(account);
   }
 
-  async createAccount(
-    opts: Record<string, Json> = {},
-  ): Promise<KeyringAccount> {
+  async createAccount(opts: Record<string, Json>): Promise<KeyringAccount> {
     assert(opts, CreateAccountRequest);
 
-    const account = await this.#accounts.create(
-      caip2ToNetwork[opts.scope ?? this.#config.defaultNetwork],
-      caip2ToAddressType[opts.addressType ?? this.#config.defaultAddressType],
+    const account = await this.#accountsUseCases.create(
+      caip2ToNetwork[opts.scope],
+      opts.addressType ? caip2ToAddressType[opts.addressType] : undefined,
     );
 
-    const keyringAccount = this.#toKeyringAccount(account);
-    await this.#snapClient.emitAccountCreatedEvent(
-      keyringAccount,
-      account.suggestedName,
-    );
-
-    return keyringAccount;
+    return snapToKeyringAccount(account);
   }
 
   async getAccountBalances(
     id: string,
   ): Promise<Record<CaipAssetType, Balance>> {
-    const account = await this.#accounts.synchronize(id);
+    const account = await this.#accountsUseCases.synchronize(id);
     const balance = account.balance.trusted_spendable.to_btc().toString();
 
     return {
@@ -124,16 +99,5 @@ export class KeyringHandler implements Keyring {
 
   async rejectRequest(id: string): Promise<void> {
     throw new Error('Method not implemented.');
-  }
-
-  #toKeyringAccount(account: BitcoinAccount): KeyringAccount {
-    return {
-      type: addressTypeToCaip2[account.addressType] as KeyringAccount['type'],
-      scopes: [networkToCaip2[account.network]],
-      id: account.id,
-      address: account.nextUnusedAddress().address,
-      options: {},
-      methods: [BtcMethod.SendBitcoin],
-    };
   }
 }

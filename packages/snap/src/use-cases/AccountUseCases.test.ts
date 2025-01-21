@@ -2,22 +2,35 @@ import type { AddressType, Network } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 
 import type {
+  AccountsConfig,
   BitcoinAccount,
   BitcoinAccountRepository,
   BlockchainClient,
 } from '../entities';
+import type { SnapClient } from '../entities/snap';
 import { AccountUseCases } from './AccountUseCases';
 
 jest.mock('../utils/logger');
 
 describe('AccountUseCases', () => {
   let useCases: AccountUseCases;
+
+  const mockSnapClient = mock<SnapClient>();
   const mockRepository = mock<BitcoinAccountRepository>();
   const mockChain = mock<BlockchainClient>();
-  const accountIndex = 0;
+  const accountsConfig: AccountsConfig = {
+    index: 0,
+    defaultAddressType: 'p2wpkh',
+    defaultNetwork: 'bitcoin',
+  };
 
   beforeEach(() => {
-    useCases = new AccountUseCases(mockRepository, mockChain, accountIndex);
+    useCases = new AccountUseCases(
+      mockSnapClient,
+      mockRepository,
+      mockChain,
+      accountsConfig,
+    );
   });
 
   describe('get', () => {
@@ -74,7 +87,7 @@ describe('AccountUseCases', () => {
     ] as { tAddressType: AddressType; purpose: string }[])(
       'creates an account of type: %s',
       async ({ tAddressType, purpose }) => {
-        const derivationPath = ['m', purpose, "0'", `${accountIndex}'`];
+        const derivationPath = ['m', purpose, "0'", `${accountsConfig.index}'`];
 
         await useCases.create(network, tAddressType);
 
@@ -85,6 +98,9 @@ describe('AccountUseCases', () => {
           derivationPath,
           network,
           tAddressType,
+        );
+        expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalledWith(
+          mockAccount,
         );
       },
     );
@@ -102,7 +118,7 @@ describe('AccountUseCases', () => {
           'm',
           "84'",
           coinType,
-          `${accountIndex}'`,
+          `${accountsConfig.index}'`,
         ];
 
         await useCases.create(tNetwork, addressType);
@@ -115,6 +131,9 @@ describe('AccountUseCases', () => {
           tNetwork,
           addressType,
         );
+        expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalledWith(
+          mockAccount,
+        );
       },
     );
 
@@ -126,6 +145,8 @@ describe('AccountUseCases', () => {
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).not.toHaveBeenCalled();
+      expect(mockSnapClient.emitAccountCreatedEvent).not.toHaveBeenCalled();
+
       expect(result).toBe(mockExistingAccount);
     });
 
@@ -136,6 +157,7 @@ describe('AccountUseCases', () => {
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).toHaveBeenCalled();
+      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalled();
 
       expect(result).toBe(mockAccount);
     });
@@ -148,6 +170,7 @@ describe('AccountUseCases', () => {
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).not.toHaveBeenCalled();
+      expect(mockSnapClient.emitAccountCreatedEvent).not.toHaveBeenCalled();
     });
 
     it('propagates an error if insert throws', async () => {
@@ -159,6 +182,19 @@ describe('AccountUseCases', () => {
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).toHaveBeenCalled();
+      expect(mockSnapClient.emitAccountCreatedEvent).not.toHaveBeenCalled();
+    });
+
+    it('propagates an error if emitAccountCreatedEvent throws', async () => {
+      const error = new Error();
+      mockRepository.getByDerivationPath.mockResolvedValue(null);
+      mockSnapClient.emitAccountCreatedEvent.mockRejectedValue(error);
+
+      await expect(useCases.create(network, addressType)).rejects.toBe(error);
+
+      expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
+      expect(mockRepository.insert).toHaveBeenCalled();
+      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalled();
     });
   });
 
