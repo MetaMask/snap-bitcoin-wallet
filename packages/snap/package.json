@@ -45,7 +45,7 @@
     "@metamask/eslint-config-typescript": "^12.1.0",
     "@metamask/key-tree": "^10.0.2",
     "@metamask/keyring-api": "^13.0.0",
-    "@metamask/keyring-snap-sdk": "^1.1.0",
+    "@metamask/keyring-snap-sdk": "^2.0.0",
     "@metamask/snaps-cli": "^6.5.0",
     "@metamask/snaps-jest": "^8.11.0",
     "@metamask/snaps-sdk": "^6.9.0",
