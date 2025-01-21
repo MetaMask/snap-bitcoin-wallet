@@ -113,18 +113,68 @@ describe('KeyringHandler', () => {
     });
   });
 
+  describe('listAccounts', () => {
+    it('lists accounts', async () => {
+      mockAccounts.list.mockResolvedValue([mockAccount]);
+      const expectedKeyringAccounts = [
+        {
+          id: 'some-id',
+          type: Caip2AddressType.P2wpkh,
+          scopes: [BtcScopes.Mainnet],
+          address: 'bc1qaddress...',
+          options: {},
+          methods: [BtcMethod.SendBitcoin],
+        },
+      ];
+
+      const result = await handler.listAccounts();
+      expect(mockAccounts.list).toHaveBeenCalled();
+      expect(result).toStrictEqual(expectedKeyringAccounts);
+    });
+
+    it('propagates errors from list', async () => {
+      const error = new Error();
+      mockAccounts.list.mockRejectedValue(error);
+
+      await expect(handler.listAccounts()).rejects.toThrow(error);
+      expect(mockAccounts.list).toHaveBeenCalled();
+    });
+  });
+
+  describe('filterAccountChains', () => {
+    it('includes chain if account network corresponds', async () => {
+      mockAccounts.get.mockResolvedValue(mockAccount);
+
+      const result = await handler.filterAccountChains('some-id', [
+        BtcScopes.Mainnet,
+      ]);
+      expect(mockAccounts.get).toHaveBeenCalledWith('some-id');
+      expect(result).toStrictEqual([BtcScopes.Mainnet]);
+    });
+
+    it('does not include chain if account network does not correspond', async () => {
+      mockAccounts.get.mockResolvedValue(mockAccount);
+
+      const result = await handler.filterAccountChains('some-id', [
+        BtcScopes.Testnet,
+      ]);
+      expect(mockAccounts.get).toHaveBeenCalledWith('some-id');
+      expect(result).toStrictEqual([]);
+    });
+
+    it('propagates errors from get', async () => {
+      const error = new Error();
+      mockAccounts.get.mockRejectedValue(error);
+
+      await expect(
+        handler.filterAccountChains('some-id', [BtcScopes.Mainnet]),
+      ).rejects.toThrow(error);
+      expect(mockAccounts.get).toHaveBeenCalled();
+    });
+  });
+
   describe('unimplemented methods', () => {
     const errMsg = 'Method not implemented.';
-
-    it('listAccounts should throw', async () => {
-      await expect(handler.listAccounts()).rejects.toThrow(errMsg);
-    });
-
-    it('filterAccountChains should throw', async () => {
-      await expect(handler.filterAccountChains('some-id', [])).rejects.toThrow(
-        errMsg,
-      );
-    });
 
     it('updateAccount should throw', async () => {
       await expect(handler.updateAccount({} as any)).rejects.toThrow(errMsg);

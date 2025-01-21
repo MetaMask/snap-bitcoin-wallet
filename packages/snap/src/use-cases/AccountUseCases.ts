@@ -46,6 +46,15 @@ export class AccountUseCases {
     this.#accountConfig = accountConfig;
   }
 
+  async list(): Promise<BitcoinAccount[]> {
+    logger.trace('Listing accounts');
+
+    const accounts = await this.#repository.getAll();
+
+    logger.debug('Accounts listed successfully');
+    return accounts;
+  }
+
   async get(id: string): Promise<BitcoinAccount> {
     logger.trace('Fetching account. ID: %s', id);
 
@@ -78,7 +87,7 @@ export class AccountUseCases {
     // Idempotent account creation + ensures only one account per derivation path
     const account = await this.#repository.getByDerivationPath(derivationPath);
     if (account) {
-      logger.warn('Bitcoin account already exists: %s', account.id);
+      await this.#snapClient.emitAccountCreatedEvent(account);
       return account;
     }
 

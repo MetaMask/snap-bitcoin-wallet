@@ -30,6 +30,15 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     return BdkAccountAdapter.load(id, ChangeSet.from_json(walletData));
   }
 
+  async getAll(): Promise<BitcoinAccount[]> {
+    const state = await this.#snapClient.get();
+    const walletsData = state.accounts.wallets;
+
+    return Object.entries(walletsData).map(([id, walletData]) =>
+      BdkAccountAdapter.load(id, ChangeSet.from_json(walletData)),
+    );
+  }
+
   async getByDerivationPath(
     derivationPath: string[],
   ): Promise<BitcoinAccount | null> {
