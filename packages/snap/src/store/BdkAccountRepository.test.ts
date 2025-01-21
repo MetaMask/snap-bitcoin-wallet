@@ -72,6 +72,32 @@ describe('BdkAccountRepository', () => {
     });
   });
 
+  describe('getAll', () => {
+    it('returns all accounts', async () => {
+      mockSnapClient.get.mockResolvedValue({
+        accounts: {
+          derivationPaths: {},
+          wallets: {
+            'some-id': '{"foo":"bar"}',
+            'another-id': '{"hello":"world"}',
+          },
+        },
+      });
+
+      const mockAccount1 = {} as BitcoinAccount;
+      const mockAccount2 = {} as BitcoinAccount;
+
+      (ChangeSet.from_json as jest.Mock).mockImplementation((json) => json);
+      (BdkAccountAdapter.load as jest.Mock)
+        .mockReturnValueOnce(mockAccount1)
+        .mockReturnValueOnce(mockAccount2);
+
+      const result = await repo.getAll();
+      expect(result).toStrictEqual([mockAccount1, mockAccount2]);
+      expect(BdkAccountAdapter.load).toHaveBeenCalledTimes(2);
+    });
+  });
+
   describe('getByDerivationPath', () => {
     it('returns null if derivation path not mapped', async () => {
       mockSnapClient.get.mockResolvedValue({

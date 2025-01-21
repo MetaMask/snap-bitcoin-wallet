@@ -63,9 +63,31 @@ describe('AccountUseCases', () => {
       const error = new Error('Get failed');
       mockRepository.get.mockRejectedValue(error);
 
-      await expect(useCases.synchronize('some-id')).rejects.toBe(error);
+      await expect(useCases.get('some-id')).rejects.toBe(error);
 
       expect(mockRepository.get).toHaveBeenCalledWith('some-id');
+    });
+  });
+
+  describe('list', () => {
+    it('returns accounts', async () => {
+      const mockAccount = mock<BitcoinAccount>();
+
+      mockRepository.getAll.mockResolvedValue([mockAccount]);
+
+      const result = await useCases.list();
+
+      expect(mockRepository.getAll).toHaveBeenCalled();
+      expect(result).toStrictEqual([mockAccount]);
+    });
+
+    it('propagates an error if the repository getAll fails', async () => {
+      const error = new Error('Get failed');
+      mockRepository.getAll.mockRejectedValue(error);
+
+      await expect(useCases.list()).rejects.toBe(error);
+
+      expect(mockRepository.getAll).toHaveBeenCalled();
     });
   });
 
@@ -145,7 +167,7 @@ describe('AccountUseCases', () => {
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).not.toHaveBeenCalled();
-      expect(mockSnapClient.emitAccountCreatedEvent).not.toHaveBeenCalled();
+      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalled();
 
       expect(result).toBe(mockExistingAccount);
     });

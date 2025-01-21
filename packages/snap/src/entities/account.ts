@@ -95,6 +95,12 @@ export type BitcoinAccountRepository = {
   get(id: string): Promise<BitcoinAccount | null>;
 
   /**
+   * Get all accounts.
+   * @returns the list of accounts
+   */
+  getAll(): Promise<BitcoinAccount[]>;
+
+  /**
    * Get an account by its derivation path.
    * @param derivationPath
    * @returns the account or null if it does not exist

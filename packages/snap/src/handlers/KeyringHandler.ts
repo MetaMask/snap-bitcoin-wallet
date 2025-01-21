@@ -13,7 +13,12 @@ import { assert, enums, object, optional } from 'superstruct';
 
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 import { networkToCaip19 } from './caip19';
-import { Caip2AddressType, caip2ToAddressType, caip2ToNetwork } from './caip2';
+import {
+  Caip2AddressType,
+  caip2ToAddressType,
+  caip2ToNetwork,
+  networkToCaip2,
+} from './caip2';
 import { snapToKeyringAccount } from './keyring-account';
 
 export const CreateAccountRequest = object({
@@ -32,7 +37,8 @@ export class KeyringHandler implements Keyring {
   }
 
   async listAccounts(): Promise<KeyringAccount[]> {
-    throw new Error('Method not implemented.');
+    const accounts = await this.#accountsUseCases.list();
+    return accounts.map(snapToKeyringAccount);
   }
 
   async getAccount(id: string): Promise<KeyringAccount | undefined> {
@@ -66,7 +72,9 @@ export class KeyringHandler implements Keyring {
   }
 
   async filterAccountChains(id: string, chains: string[]): Promise<string[]> {
-    throw new Error('Method not implemented.');
+    const account = await this.#accountsUseCases.get(id);
+    const accountChain = networkToCaip2[account.network];
+    return chains.includes(accountChain) ? [accountChain] : [];
   }
 
   async updateAccount(account: KeyringAccount): Promise<void> {
