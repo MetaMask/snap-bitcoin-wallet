@@ -168,4 +168,48 @@ describe('Bitcoin Snap', () => {
       },
     });
   });
+
+  it('removes an account', async () => {
+    const { id } = accounts[`${Caip2AddressType.P2pkh}:${BtcScopes.Mainnet}`];
+
+    let response = await snap.onKeyringRequest({
+      origin,
+      method: 'keyring_deleteAccount',
+      params: {
+        id,
+      },
+    });
+
+    expect(response).toRespondWith(null);
+
+    response = await snap.onKeyringRequest({
+      origin,
+      method: 'keyring_getAccount',
+      params: {
+        id,
+      },
+    });
+
+    expect(response).toRespondWithError({
+      code: -32603,
+      message: `Account not found: ${id}`,
+      stack: expect.anything(),
+    });
+  });
+
+  it('fails to remove the default account', async () => {
+    const response = await snap.onKeyringRequest({
+      origin,
+      method: 'keyring_deleteAccount',
+      params: {
+        id: accounts[`${Caip2AddressType.P2wpkh}:${BtcScopes.Mainnet}`].id,
+      },
+    });
+
+    expect(response).toRespondWithError({
+      code: -32603,
+      message: 'Default Bitcoin account cannot be removed',
+      stack: expect.anything(),
+    });
+  });
 });

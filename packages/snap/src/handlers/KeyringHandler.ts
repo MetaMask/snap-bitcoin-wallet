@@ -82,7 +82,7 @@ export class KeyringHandler implements Keyring {
   }
 
   async deleteAccount(id: string): Promise<void> {
-    throw new Error('Method not implemented.');
+    await this.#accountsUseCases.delete(id);
   }
 
   async exportAccount(id: string): Promise<KeyringAccountData> {

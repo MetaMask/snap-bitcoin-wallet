@@ -133,4 +133,25 @@ export class AccountUseCases {
     logger.info('Account synchronized successfully: %s', account.id);
     return account;
   }
+
+  async delete(id: string): Promise<void> {
+    logger.debug('Deleting account. ID: %s', id);
+
+    const account = await this.#repository.get(id);
+    if (!account) {
+      throw new Error(`Account not found: ${id}`);
+    }
+
+    if (
+      account.addressType === this.#accountConfig.defaultAddressType &&
+      account.network === this.#accountConfig.defaultNetwork
+    ) {
+      throw new Error('Default Bitcoin account cannot be removed');
+    }
+
+    await this.#snapClient.emitAccountDeletedEvent(id);
+    await this.#repository.delete(id);
+
+    logger.info('Account deleted successfully: %s', account.id);
+  }
 }

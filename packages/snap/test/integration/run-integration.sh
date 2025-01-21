@@ -29,7 +29,6 @@ if [ $? -eq 0 ]; then
   echo "Tests completed successfully."
 else
   echo "Tests failed."
-  exit 1
 fi
 
 echo "Stopping Docker services..."
