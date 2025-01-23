@@ -1,6 +1,5 @@
 import { BtcScopes } from '@metamask/keyring-api';
 import type {
-  KeyringAccountData,
   Keyring,
   KeyringAccount,
   KeyringRequest,
@@ -77,35 +76,15 @@ export class KeyringHandler implements Keyring {
     return chains.includes(accountChain) ? [accountChain] : [];
   }
 
-  async updateAccount(account: KeyringAccount): Promise<void> {
-    throw new Error('Method not implemented.');
+  async updateAccount(_: KeyringAccount): Promise<void> {
+    throw new Error('Method not supported.');
   }
 
   async deleteAccount(id: string): Promise<void> {
     await this.#accountsUseCases.delete(id);
   }
 
-  async exportAccount(id: string): Promise<KeyringAccountData> {
-    throw new Error('Method not implemented.');
-  }
-
-  async listRequests(): Promise<KeyringRequest[]> {
-    throw new Error('Method not implemented.');
-  }
-
-  async getRequest(id: string): Promise<KeyringRequest | undefined> {
-    throw new Error('Method not implemented.');
-  }
-
   async submitRequest(request: KeyringRequest): Promise<KeyringResponse> {
-    throw new Error('Method not implemented.');
-  }
-
-  async approveRequest(id: string, data?: Record<string, Json>): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
-
-  async rejectRequest(id: string): Promise<void> {
     throw new Error('Method not implemented.');
   }
 }

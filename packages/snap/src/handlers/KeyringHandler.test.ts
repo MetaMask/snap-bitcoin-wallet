@@ -188,35 +188,11 @@ describe('KeyringHandler', () => {
     });
   });
 
-  describe('unimplemented methods', () => {
-    const errMsg = 'Method not implemented.';
-
-    it('updateAccount should throw', async () => {
-      await expect(handler.updateAccount({} as any)).rejects.toThrow(errMsg);
-    });
-
-    it('exportAccount should throw', async () => {
-      await expect(handler.exportAccount('some-id')).rejects.toThrow(errMsg);
-    });
-
-    it('listRequests should throw', async () => {
-      await expect(handler.listRequests()).rejects.toThrow(errMsg);
-    });
-
-    it('getRequest should throw', async () => {
-      await expect(handler.getRequest('some-id')).rejects.toThrow(errMsg);
-    });
-
-    it('submitRequest should throw', async () => {
-      await expect(handler.submitRequest({} as any)).rejects.toThrow(errMsg);
-    });
-
-    it('approveRequest should throw', async () => {
-      await expect(handler.approveRequest({} as any)).rejects.toThrow(errMsg);
-    });
-
-    it('rejectRequest should throw', async () => {
-      await expect(handler.rejectRequest({} as any)).rejects.toThrow(errMsg);
+  describe('updateAccount', () => {
+    it('throws not supported', async () => {
+      await expect(handler.updateAccount({} as any)).rejects.toThrow(
+        'Method not supported.',
+      );
     });
   });
 });
