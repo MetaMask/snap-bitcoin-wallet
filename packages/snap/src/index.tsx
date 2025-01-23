@@ -14,7 +14,6 @@ import {
 import { Config } from './config';
 import { ConfigV2 } from './configv2';
 import { KeyringHandler } from './handlers/KeyringHandler';
-import { RpcHandler } from './handlers/RpcHandler';
 import { SnapClientAdapter, EsploraClientAdapter } from './infra';
 import { BtcKeyring } from './keyring';
 import { InternalRpcMethod, originPermissions } from './permissions';
@@ -43,9 +42,8 @@ import { loadLocale } from './utils/locale';
 
 logger.logLevel = parseInt(Config.logLevel, 10);
 
-let keyringHandler: Keyring;
+let keyring: Keyring;
 let accountsUseCases: AccountUseCases;
-let rpcHandler: RpcHandler;
 if (ConfigV2.keyringVersion === 'v2') {
   // Infra layer
   const snapClient = new SnapClientAdapter(ConfigV2.encrypt);
@@ -60,8 +58,7 @@ if (ConfigV2.keyringVersion === 'v2') {
     ConfigV2.accounts,
   );
   // Application layer
-  keyringHandler = new KeyringHandler(accountsUseCases);
-  rpcHandler = new RpcHandler(accountsUseCases);
+  keyring = new KeyringHandler(accountsUseCases);
 }
 
 export const validateOrigin = (origin: string, method: string): void => {
@@ -104,13 +101,9 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   await loadLocale();
 
   try {
-    const { method, params } = request;
+    const { method } = request;
 
     validateOrigin(origin, method);
-
-    if (rpcHandler) {
-      return await rpcHandler.route(method, params);
-    }
 
     switch (method) {
       case InternalRpcMethod.GetTransactionStatus:
@@ -154,15 +147,15 @@ export const onKeyringRequest: OnKeyringRequestHandler = async ({
   try {
     validateOrigin(origin, request.method);
 
-    if (!keyringHandler) {
-      keyringHandler = new BtcKeyring(new KeyringStateManager(), {
+    if (!keyring) {
+      keyring = new BtcKeyring(new KeyringStateManager(), {
         defaultIndex: Config.wallet.defaultAccountIndex,
         origin,
       });
     }
 
     return (await handleKeyringRequest(
-      keyringHandler,
+      keyring,
       request,
     )) as unknown as Promise<Json>;
   } catch (error) {
