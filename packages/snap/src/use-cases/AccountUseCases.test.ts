@@ -1,3 +1,4 @@
+import type { SLIP10Node } from '@metamask/key-tree';
 import type { AddressType, Network } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 
@@ -6,7 +7,10 @@ import type {
   BitcoinAccount,
   BitcoinAccountRepository,
   BlockchainClient,
-  SnapClient,
+  EntropyClient,
+  EventEmitter,
+  StorageClient,
+  UIClient,
 } from '../entities';
 import { AccountUseCases } from './AccountUseCases';
 
@@ -15,7 +19,12 @@ jest.mock('../utils/logger');
 describe('AccountUseCases', () => {
   let useCases: AccountUseCases;
 
-  const mockSnapClient = mock<SnapClient>();
+  const mockSnapClient = mock({
+    events: mock<EventEmitter>(),
+    entropy: mock<EntropyClient>(),
+    ui: mock<UIClient>(),
+    state: mock<StorageClient>(),
+  });
   const mockRepository = mock<BitcoinAccountRepository>();
   const mockChain = mock<BlockchainClient>();
   const accountsConfig: AccountsConfig = {
@@ -95,9 +104,11 @@ describe('AccountUseCases', () => {
     const network: Network = 'bitcoin';
     const addressType: AddressType = 'p2wpkh';
     const mockAccount = mock<BitcoinAccount>();
+    const mockSLIP10 = mock<SLIP10Node>();
 
     beforeEach(() => {
       mockRepository.insert.mockResolvedValue(mockAccount);
+      mockSnapClient.entropy.getPublicEntropy.mockResolvedValue(mockSLIP10);
     });
 
     it.each([
@@ -116,12 +127,14 @@ describe('AccountUseCases', () => {
         expect(mockRepository.getByDerivationPath).toHaveBeenCalledWith(
           derivationPath,
         );
+        expect(mockSnapClient.entropy.getPublicEntropy).toHaveBeenCalled();
         expect(mockRepository.insert).toHaveBeenCalledWith(
+          mockSLIP10,
           derivationPath,
           network,
           tAddressType,
         );
-        expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalledWith(
+        expect(mockSnapClient.events.accountCreated).toHaveBeenCalledWith(
           mockAccount,
         );
       },
@@ -148,12 +161,14 @@ describe('AccountUseCases', () => {
         expect(mockRepository.getByDerivationPath).toHaveBeenCalledWith(
           expectedDerivationPath,
         );
+        expect(mockSnapClient.entropy.getPublicEntropy).toHaveBeenCalled();
         expect(mockRepository.insert).toHaveBeenCalledWith(
+          mockSLIP10,
           expectedDerivationPath,
           tNetwork,
           addressType,
         );
-        expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalledWith(
+        expect(mockSnapClient.events.accountCreated).toHaveBeenCalledWith(
           mockAccount,
         );
       },
@@ -166,8 +181,9 @@ describe('AccountUseCases', () => {
       const result = await useCases.create(network, addressType);
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
+      expect(mockSnapClient.entropy.getPublicEntropy).not.toHaveBeenCalled();
       expect(mockRepository.insert).not.toHaveBeenCalled();
-      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalled();
+      expect(mockSnapClient.events.accountCreated).toHaveBeenCalled();
 
       expect(result).toBe(mockExistingAccount);
     });
@@ -178,8 +194,9 @@ describe('AccountUseCases', () => {
       const result = await useCases.create(network, addressType);
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
+      expect(mockSnapClient.entropy.getPublicEntropy).toHaveBeenCalled();
       expect(mockRepository.insert).toHaveBeenCalled();
-      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalled();
+      expect(mockSnapClient.events.accountCreated).toHaveBeenCalled();
 
       expect(result).toBe(mockAccount);
     });
@@ -191,8 +208,22 @@ describe('AccountUseCases', () => {
       await expect(useCases.create(network, addressType)).rejects.toBe(error);
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
+      expect(mockSnapClient.entropy.getPublicEntropy).not.toHaveBeenCalled();
       expect(mockRepository.insert).not.toHaveBeenCalled();
-      expect(mockSnapClient.emitAccountCreatedEvent).not.toHaveBeenCalled();
+      expect(mockSnapClient.events.accountCreated).not.toHaveBeenCalled();
+    });
+
+    it('propagates an error if getPublicEntropy throws', async () => {
+      const error = new Error();
+      mockRepository.getByDerivationPath.mockResolvedValue(null);
+      mockSnapClient.entropy.getPublicEntropy.mockRejectedValue(error);
+
+      await expect(useCases.create(network, addressType)).rejects.toBe(error);
+
+      expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
+      expect(mockSnapClient.entropy.getPublicEntropy).toHaveBeenCalled();
+      expect(mockRepository.insert).not.toHaveBeenCalled();
+      expect(mockSnapClient.events.accountCreated).not.toHaveBeenCalled();
     });
 
     it('propagates an error if insert throws', async () => {
@@ -203,20 +234,21 @@ describe('AccountUseCases', () => {
       await expect(useCases.create(network, addressType)).rejects.toBe(error);
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
+      expect(mockSnapClient.entropy.getPublicEntropy).toHaveBeenCalled();
       expect(mockRepository.insert).toHaveBeenCalled();
-      expect(mockSnapClient.emitAccountCreatedEvent).not.toHaveBeenCalled();
+      expect(mockSnapClient.events.accountCreated).not.toHaveBeenCalled();
     });
 
     it('propagates an error if emitAccountCreatedEvent throws', async () => {
       const error = new Error();
       mockRepository.getByDerivationPath.mockResolvedValue(null);
-      mockSnapClient.emitAccountCreatedEvent.mockRejectedValue(error);
+      mockSnapClient.events.accountCreated.mockRejectedValue(error);
 
       await expect(useCases.create(network, addressType)).rejects.toBe(error);
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).toHaveBeenCalled();
-      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalled();
+      expect(mockSnapClient.events.accountCreated).toHaveBeenCalled();
     });
   });
 
@@ -325,7 +357,7 @@ describe('AccountUseCases', () => {
       );
 
       expect(mockRepository.get).toHaveBeenCalledWith('non-existent-id');
-      expect(mockSnapClient.emitAccountDeletedEvent).not.toHaveBeenCalled();
+      expect(mockSnapClient.events.accountDeleted).not.toHaveBeenCalled();
       expect(mockRepository.delete).not.toHaveBeenCalled();
     });
 
@@ -342,7 +374,7 @@ describe('AccountUseCases', () => {
       );
 
       expect(mockRepository.get).toHaveBeenCalledWith('default-id');
-      expect(mockSnapClient.emitAccountDeletedEvent).not.toHaveBeenCalled();
+      expect(mockSnapClient.events.accountDeleted).not.toHaveBeenCalled();
       expect(mockRepository.delete).not.toHaveBeenCalled();
     });
 
@@ -357,7 +389,7 @@ describe('AccountUseCases', () => {
       await useCases.delete(mockAccount.id);
 
       expect(mockRepository.get).toHaveBeenCalledWith(mockAccount.id);
-      expect(mockSnapClient.emitAccountDeletedEvent).toHaveBeenCalledWith(
+      expect(mockSnapClient.events.accountDeleted).toHaveBeenCalledWith(
         mockAccount.id,
       );
       expect(mockRepository.delete).toHaveBeenCalledWith(mockAccount.id);
@@ -371,12 +403,12 @@ describe('AccountUseCases', () => {
       const error = new Error('Event emit failed');
 
       mockRepository.get.mockResolvedValue(mockAccount);
-      mockSnapClient.emitAccountDeletedEvent.mockRejectedValue(error);
+      mockSnapClient.events.accountDeleted.mockRejectedValue(error);
 
       await expect(useCases.delete(mockAccount.id)).rejects.toBe(error);
 
       expect(mockRepository.get).toHaveBeenCalled();
-      expect(mockSnapClient.emitAccountDeletedEvent).toHaveBeenCalled();
+      expect(mockSnapClient.events.accountDeleted).toHaveBeenCalled();
       expect(mockRepository.delete).not.toHaveBeenCalled();
     });
 
@@ -393,7 +425,7 @@ describe('AccountUseCases', () => {
       await expect(useCases.delete(mockAccount.id)).rejects.toBe(error);
 
       expect(mockRepository.get).toHaveBeenCalled();
-      expect(mockSnapClient.emitAccountDeletedEvent).toHaveBeenCalled();
+      expect(mockSnapClient.events.accountDeleted).toHaveBeenCalled();
       expect(mockRepository.delete).toHaveBeenCalled();
     });
   });

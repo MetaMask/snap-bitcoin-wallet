@@ -126,20 +126,18 @@ describe('BdkAccountRepository', () => {
 
   describe('insert', () => {
     it('inserts a new account with xpub', async () => {
-      const slip10 = {
-        masterFingerprint: 0xdeadbeef,
-      } as SLIP10Node;
       const derivationPath = ['m', "84'", "0'", "0'"];
       mockStorageClient.get.mockResolvedValue({
         accounts: { derivationPaths: {}, wallets: {} },
       });
 
+      const mockSLIP10 = mock<SLIP10Node>({ masterFingerprint: 0xdeadbeef });
       const mockAccount = {
         takeStaged: () => ({ to_json: () => '{}' }),
       } as unknown as BitcoinAccount;
       (BdkAccountAdapter.create as jest.Mock).mockReturnValue(mockAccount);
 
-      await repo.insert(slip10, derivationPath, 'bitcoin', 'p2wpkh');
+      await repo.insert(mockSLIP10, derivationPath, 'bitcoin', 'p2wpkh');
 
       expect(mockStorageClient.update).toHaveBeenCalledWith({
         accounts: {
