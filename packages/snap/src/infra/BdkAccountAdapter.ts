@@ -28,7 +28,10 @@ export class BdkAccountAdapter implements BitcoinAccount {
     descriptors: DescriptorPair,
     network: Network,
   ): BdkAccountAdapter {
-    return new BdkAccountAdapter(id, Wallet.create(network, descriptors));
+    return new BdkAccountAdapter(
+      id,
+      Wallet.create(network, descriptors.external, descriptors.internal),
+    );
   }
 
   static load(id: string, walletData: ChangeSet): BdkAccountAdapter {
