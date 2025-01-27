@@ -1,12 +1,14 @@
 import { BtcScopes } from '@metamask/keyring-api';
 import type {
-  KeyringAccountData,
   Keyring,
   KeyringAccount,
   KeyringRequest,
   KeyringResponse,
   Balance,
   CaipAssetType,
+  CaipAssetTypeOrId,
+  Paginated,
+  Transaction,
 } from '@metamask/keyring-api';
 import type { Json } from '@metamask/utils';
 import { assert, enums, object, optional } from 'superstruct';
@@ -77,35 +79,27 @@ export class KeyringHandler implements Keyring {
     return chains.includes(accountChain) ? [accountChain] : [];
   }
 
-  async updateAccount(account: KeyringAccount): Promise<void> {
-    throw new Error('Method not implemented.');
+  async updateAccount(_: KeyringAccount): Promise<void> {
+    throw new Error('Method not supported.');
   }
 
   async deleteAccount(id: string): Promise<void> {
     await this.#accountsUseCases.delete(id);
   }
 
-  async exportAccount(id: string): Promise<KeyringAccountData> {
-    throw new Error('Method not implemented.');
+  async listAccountAssets(id: string): Promise<CaipAssetTypeOrId[]> {
+    const account = await this.#accountsUseCases.get(id);
+    return [networkToCaip19[account.network]];
   }
 
-  async listRequests(): Promise<KeyringRequest[]> {
-    throw new Error('Method not implemented.');
-  }
-
-  async getRequest(id: string): Promise<KeyringRequest | undefined> {
-    throw new Error('Method not implemented.');
+  async listAccountTransactions(): Promise<Paginated<Transaction>> {
+    return {
+      data: [],
+      next: null,
+    };
   }
 
   async submitRequest(request: KeyringRequest): Promise<KeyringResponse> {
-    throw new Error('Method not implemented.');
-  }
-
-  async approveRequest(id: string, data?: Record<string, Json>): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
-
-  async rejectRequest(id: string): Promise<void> {
     throw new Error('Method not implemented.');
   }
 }
