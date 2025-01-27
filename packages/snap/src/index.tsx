@@ -145,8 +145,6 @@ export const onKeyringRequest: OnKeyringRequestHandler = async ({
   await loadLocale();
 
   try {
-    console.log('onKeyringRequest', origin, request);
-
     validateOrigin(origin, request.method);
 
     if (!keyring) {
