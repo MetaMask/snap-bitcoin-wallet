@@ -1,6 +1,7 @@
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
 /* eslint-disable camelcase */
 
+import type { SLIP10Node } from '@metamask/key-tree';
 import type { AddressType, Network } from 'bitcoindevkit';
 import {
   ChangeSet,
@@ -9,19 +10,22 @@ import {
 } from 'bitcoindevkit';
 import { v4 } from 'uuid';
 
-import type { BitcoinAccountRepository, BitcoinAccount } from '../entities';
-import type { SnapClient } from '../entities/snap';
+import type {
+  BitcoinAccountRepository,
+  BitcoinAccount,
+  StorageClient,
+} from '../entities';
 import { BdkAccountAdapter } from '../infra';
 
 export class BdkAccountRepository implements BitcoinAccountRepository {
-  readonly #snapClient: SnapClient;
+  readonly #storage: StorageClient;
 
-  constructor(snapClient: SnapClient) {
-    this.#snapClient = snapClient;
+  constructor(storage: StorageClient) {
+    this.#storage = storage;
   }
 
   async get(id: string): Promise<BitcoinAccount | null> {
-    const state = await this.#snapClient.get();
+    const state = await this.#storage.get();
     const walletData = state.accounts.wallets[id];
     if (!walletData) {
       return null;
@@ -31,7 +35,7 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
   }
 
   async getAll(): Promise<BitcoinAccount[]> {
-    const state = await this.#snapClient.get();
+    const state = await this.#storage.get();
     const walletsData = state.accounts.wallets;
 
     return Object.entries(walletsData).map(([id, walletData]) =>
@@ -43,7 +47,7 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     derivationPath: string[],
   ): Promise<BitcoinAccount | null> {
     const derivationPathId = derivationPath.join('/');
-    const state = await this.#snapClient.get();
+    const state = await this.#storage.get();
 
     const id = state.accounts.derivationPaths[derivationPathId];
     if (!id) {
@@ -54,11 +58,11 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
   }
 
   async insert(
+    slip10: SLIP10Node,
     derivationPath: string[],
     network: Network,
     addressType: AddressType,
   ): Promise<BitcoinAccount> {
-    const slip10 = await this.#snapClient.getPublicEntropy(derivationPath);
     const id = v4();
     const fingerprint = (
       slip10.masterFingerprint ?? slip10.parentFingerprint
@@ -74,16 +78,16 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
 
     const account = BdkAccountAdapter.create(id, descriptors, network);
 
-    const state = await this.#snapClient.get();
+    const state = await this.#storage.get();
     state.accounts.derivationPaths[derivationPath.join('/')] = id;
     state.accounts.wallets[id] = account.takeStaged()?.to_json() ?? '';
-    await this.#snapClient.set(state);
+    await this.#storage.update(state);
 
     return account;
   }
 
   async update(account: BitcoinAccount): Promise<void> {
-    const state = await this.#snapClient.get();
+    const state = await this.#storage.get();
     const walletData = state.accounts.wallets[account.id];
     if (!walletData) {
       throw new Error('Inconsistent state: account not found for update');
@@ -97,11 +101,11 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
 
     newWalletData.merge(ChangeSet.from_json(walletData));
     state.accounts.wallets[account.id] = newWalletData.to_json();
-    await this.#snapClient.set(state);
+    await this.#storage.update(state);
   }
 
   async delete(id: string): Promise<void> {
-    const state = await this.#snapClient.get();
+    const state = await this.#storage.get();
     const walletData = state.accounts.wallets[id];
     if (!walletData) {
       return;
@@ -119,6 +123,6 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
       }
     }
 
-    await this.#snapClient.set(state);
+    await this.#storage.update(state);
   }
 }

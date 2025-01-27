@@ -2,8 +2,7 @@ import type { SLIP10Node } from '@metamask/key-tree';
 import { ChangeSet } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 
-import type { BitcoinAccount } from '../entities';
-import type { SnapClient } from '../entities/snap';
+import type { BitcoinAccount, StorageClient } from '../entities';
 import { BdkAccountAdapter } from '../infra';
 import { BdkAccountRepository } from './BdkAccountRepository';
 
@@ -34,15 +33,15 @@ jest.mock('uuid', () => ({ v4: () => 'mock-uuid' }));
 
 describe('BdkAccountRepository', () => {
   let repo: BdkAccountRepository;
-  const mockSnapClient = mock<SnapClient>();
+  const mockStorageClient = mock<StorageClient>();
 
   beforeEach(() => {
-    repo = new BdkAccountRepository(mockSnapClient);
+    repo = new BdkAccountRepository(mockStorageClient);
   });
 
   describe('get', () => {
     it('returns null if account not found', async () => {
-      mockSnapClient.get.mockResolvedValue({
+      mockStorageClient.get.mockResolvedValue({
         accounts: { derivationPaths: {}, wallets: {} },
       });
 
@@ -52,7 +51,7 @@ describe('BdkAccountRepository', () => {
     });
 
     it('returns loaded account if found', async () => {
-      mockSnapClient.get.mockResolvedValue({
+      mockStorageClient.get.mockResolvedValue({
         accounts: {
           derivationPaths: {},
           wallets: { 'some-id': '{"mywallet": "data"}' },
@@ -74,7 +73,7 @@ describe('BdkAccountRepository', () => {
 
   describe('getAll', () => {
     it('returns all accounts', async () => {
-      mockSnapClient.get.mockResolvedValue({
+      mockStorageClient.get.mockResolvedValue({
         accounts: {
           derivationPaths: {},
           wallets: {
@@ -100,7 +99,7 @@ describe('BdkAccountRepository', () => {
 
   describe('getByDerivationPath', () => {
     it('returns null if derivation path not mapped', async () => {
-      mockSnapClient.get.mockResolvedValue({
+      mockStorageClient.get.mockResolvedValue({
         accounts: { derivationPaths: {}, wallets: {} },
       });
 
@@ -110,7 +109,7 @@ describe('BdkAccountRepository', () => {
 
     it('returns account if derivation path exists', async () => {
       const derivationPath = ['m', "84'", "0'", "0'"];
-      mockSnapClient.get.mockResolvedValue({
+      mockStorageClient.get.mockResolvedValue({
         accounts: {
           derivationPaths: { [derivationPath.join('/')]: 'some-id' },
           wallets: { 'some-id': '{}' },
@@ -128,21 +127,19 @@ describe('BdkAccountRepository', () => {
   describe('insert', () => {
     it('inserts a new account with xpub', async () => {
       const derivationPath = ['m', "84'", "0'", "0'"];
-      mockSnapClient.get.mockResolvedValue({
+      mockStorageClient.get.mockResolvedValue({
         accounts: { derivationPaths: {}, wallets: {} },
       });
-      mockSnapClient.getPublicEntropy.mockResolvedValue({
-        masterFingerprint: 0xdeadbeef,
-      } as unknown as SLIP10Node);
 
+      const mockSLIP10 = mock<SLIP10Node>({ masterFingerprint: 0xdeadbeef });
       const mockAccount = {
         takeStaged: () => ({ to_json: () => '{}' }),
       } as unknown as BitcoinAccount;
       (BdkAccountAdapter.create as jest.Mock).mockReturnValue(mockAccount);
 
-      await repo.insert(derivationPath, 'bitcoin', 'p2wpkh');
+      await repo.insert(mockSLIP10, derivationPath, 'bitcoin', 'p2wpkh');
 
-      expect(mockSnapClient.set).toHaveBeenCalledWith({
+      expect(mockStorageClient.update).toHaveBeenCalledWith({
         accounts: {
           derivationPaths: { [derivationPath.join('/')]: 'mock-uuid' },
           wallets: { 'mock-uuid': '{}' },
@@ -154,7 +151,7 @@ describe('BdkAccountRepository', () => {
   describe('update', () => {
     it('updates the account when staged changes exist', async () => {
       // Initial store state with existing account
-      mockSnapClient.get.mockResolvedValue({
+      mockStorageClient.get.mockResolvedValue({
         accounts: {
           derivationPaths: { "m/84'/0'/0'": 'some-id' },
           wallets: { 'some-id': '{"original":"data"}' },
@@ -173,7 +170,7 @@ describe('BdkAccountRepository', () => {
       await repo.update(mockAccount);
 
       expect(staged.merge).toHaveBeenCalled();
-      expect(mockSnapClient.set).toHaveBeenCalledWith({
+      expect(mockStorageClient.update).toHaveBeenCalledWith({
         accounts: {
           derivationPaths: { "m/84'/0'/0'": 'some-id' },
           wallets: { 'some-id': '{"merged":"data"}' },
@@ -182,7 +179,7 @@ describe('BdkAccountRepository', () => {
     });
 
     it('does nothing if account has no staged changes', async () => {
-      mockSnapClient.get.mockResolvedValue({
+      mockStorageClient.get.mockResolvedValue({
         accounts: {
           derivationPaths: { "m/84'/0'/0'": 'some-id' },
           wallets: { 'some-id': '{"original":"data"}' },
@@ -195,11 +192,11 @@ describe('BdkAccountRepository', () => {
 
       await repo.update(mockAccount);
 
-      expect(mockSnapClient.set).not.toHaveBeenCalled();
+      expect(mockStorageClient.update).not.toHaveBeenCalled();
     });
 
     it('throws an error if account does not exist in store', async () => {
-      mockSnapClient.get.mockResolvedValue({
+      mockStorageClient.get.mockResolvedValue({
         accounts: {
           derivationPaths: {},
           wallets: {},
@@ -217,17 +214,17 @@ describe('BdkAccountRepository', () => {
 
   describe('delete', () => {
     it('does nothing if account not found', async () => {
-      mockSnapClient.get.mockResolvedValue({
+      mockStorageClient.get.mockResolvedValue({
         accounts: { derivationPaths: {}, wallets: {} },
       });
 
       await repo.delete('non-existent-id');
 
-      expect(mockSnapClient.set).not.toHaveBeenCalled();
+      expect(mockStorageClient.update).not.toHaveBeenCalled();
     });
 
     it('removes wallet data and derivation path from store if present', async () => {
-      mockSnapClient.get.mockResolvedValue({
+      mockStorageClient.get.mockResolvedValue({
         accounts: {
           derivationPaths: { "m/84'/0'/0'": 'some-id' },
           wallets: { 'some-id': '{"wallet":"data"}' },
@@ -236,7 +233,7 @@ describe('BdkAccountRepository', () => {
 
       await repo.delete('some-id');
 
-      expect(mockSnapClient.set).toHaveBeenCalledWith({
+      expect(mockStorageClient.update).toHaveBeenCalledWith({
         accounts: { derivationPaths: {}, wallets: {} },
       });
     });

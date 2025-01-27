@@ -1,3 +1,4 @@
+import type { SLIP10Node } from '@metamask/key-tree';
 import type {
   FullScanRequest,
   SyncRequest,
@@ -109,12 +110,14 @@ export type BitcoinAccountRepository = {
 
   /**
    * Insert a new account.
+   * @param slip10 - The SLIP10 node.
    * @param derivationPath
    * @param network
    * @param addressType
    * @returns the new account
    */
   insert(
+    slip10: SLIP10Node,
     derivationPath: string[],
     network: Network,
     addressType: AddressType,

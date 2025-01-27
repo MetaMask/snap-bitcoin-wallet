@@ -5,8 +5,8 @@ import type {
   BitcoinAccount,
   BitcoinAccountRepository,
   BlockchainClient,
+  SnapClient,
 } from '../entities';
-import type { SnapClient } from '../entities/snap';
 import { logger } from '../utils';
 
 const addressTypeToPurpose: Record<AddressType, string> = {
@@ -87,17 +87,21 @@ export class AccountUseCases {
     // Idempotent account creation + ensures only one account per derivation path
     const account = await this.#repository.getByDerivationPath(derivationPath);
     if (account) {
-      await this.#snapClient.emitAccountCreatedEvent(account);
+      await this.#snapClient.events.accountCreated(account);
       return account;
     }
 
+    const slip10 = await this.#snapClient.entropy.getPublicEntropy(
+      derivationPath,
+    );
     const newAccount = await this.#repository.insert(
+      slip10,
       derivationPath,
       network,
       addressType,
     );
 
-    await this.#snapClient.emitAccountCreatedEvent(newAccount);
+    await this.#snapClient.events.accountCreated(newAccount);
 
     logger.info(
       'Bitcoin account created successfully: %s. derivationPath: %s',
@@ -149,7 +153,7 @@ export class AccountUseCases {
       throw new Error('Default Bitcoin account cannot be removed');
     }
 
-    await this.#snapClient.emitAccountDeletedEvent(id);
+    await this.#snapClient.events.accountDeleted(id);
     await this.#repository.delete(id);
 
     logger.info('Account deleted successfully: %s', account.id);

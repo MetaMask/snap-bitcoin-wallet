@@ -49,7 +49,7 @@ if (ConfigV2.keyringVersion === 'v2') {
   const snapClient = new SnapClientAdapter(ConfigV2.encrypt);
   const chainClient = new EsploraClientAdapter(ConfigV2.chain);
   // Data layer
-  const repository = new BdkAccountRepository(snapClient);
+  const repository = new BdkAccountRepository(snapClient.state);
   // Business layer
   accountsUseCases = new AccountUseCases(
     snapClient,
