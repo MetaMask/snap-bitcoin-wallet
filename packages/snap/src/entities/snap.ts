@@ -1,8 +1,6 @@
 import type { JsonSLIP10Node, SLIP10Node } from '@metamask/key-tree';
-import type { DialogResult } from '@metamask/snaps-sdk';
 
 import type { BitcoinAccount } from './account';
-import type { TransactionRequest } from './transaction';
 
 export type SnapState = {
   accounts: {
@@ -15,16 +13,15 @@ export type SnapState = {
  * The SnapClient represents the interface to MetaMask.
  */
 export type SnapClient = {
-  state: StorageClient;
+  state: StateClient;
   entropy: EntropyClient;
   events: EventEmitter;
-  ui: UIClient;
 };
 
 /**
- * The SnapClient represents the MetaMask Snap storage.
+ * The StateClient represents the MetaMask Snap state.
  */
-export type StorageClient = {
+export type StateClient = {
   /**
    * Get the Snap state.
    * @returns The Snap state.
@@ -72,29 +69,4 @@ export type EventEmitter = {
    * @param account - The Bitcoin account id.
    */
   accountDeleted(id: string): Promise<void>;
-};
-
-/**
- * The UIClient creates the MetaMask UI interfaces.
- */
-export type UIClient = {
-  /**
-   * Creates and sends a UI dialog with the specified interface ID.
-   *
-   * @param id - The ID of the interface to create the dialog for.
-   * @returns A Promise that resolves to the result of the dialog request.
-   */
-  dialog(id: string): Promise<DialogResult>;
-
-  /**
-   * Creates the send flow interface.
-   *
-   * @param account - The Bitcoin account.
-   * @param request - The Bitcoin transaction request.
-   * @returns The interface ID.
-   */
-  createTransactionRequest(
-    account: BitcoinAccount,
-    request: TransactionRequest,
-  ): Promise<string>;
 };

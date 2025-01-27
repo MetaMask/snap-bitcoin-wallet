@@ -1,6 +1,6 @@
-import type { SnapState, StorageClient } from '../../entities/snap';
+import type { SnapState, StateClient } from '../../entities/snap';
 
-export class SnapStorageClientAdapter implements StorageClient {
+export class SnapStorageClientAdapter implements StateClient {
   readonly #encrypt: boolean;
 
   constructor(encrypt = false) {

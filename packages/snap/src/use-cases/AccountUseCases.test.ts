@@ -9,8 +9,7 @@ import type {
   BlockchainClient,
   EntropyClient,
   EventEmitter,
-  StorageClient,
-  UIClient,
+  StateClient,
 } from '../entities';
 import { AccountUseCases } from './AccountUseCases';
 
@@ -22,8 +21,7 @@ describe('AccountUseCases', () => {
   const mockSnapClient = mock({
     events: mock<EventEmitter>(),
     entropy: mock<EntropyClient>(),
-    ui: mock<UIClient>(),
-    state: mock<StorageClient>(),
+    state: mock<StateClient>(),
   });
   const mockRepository = mock<BitcoinAccountRepository>();
   const mockChain = mock<BlockchainClient>();

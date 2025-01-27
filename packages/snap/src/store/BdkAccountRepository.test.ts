@@ -2,7 +2,7 @@ import type { SLIP10Node } from '@metamask/key-tree';
 import { ChangeSet } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 
-import type { BitcoinAccount, StorageClient } from '../entities';
+import type { BitcoinAccount, StateClient } from '../entities';
 import { BdkAccountAdapter } from '../infra';
 import { BdkAccountRepository } from './BdkAccountRepository';
 
@@ -33,7 +33,7 @@ jest.mock('uuid', () => ({ v4: () => 'mock-uuid' }));
 
 describe('BdkAccountRepository', () => {
   let repo: BdkAccountRepository;
-  const mockStorageClient = mock<StorageClient>();
+  const mockStorageClient = mock<StateClient>();
 
   beforeEach(() => {
     repo = new BdkAccountRepository(mockStorageClient);

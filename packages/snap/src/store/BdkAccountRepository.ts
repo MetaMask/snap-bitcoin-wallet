@@ -13,14 +13,14 @@ import { v4 } from 'uuid';
 import type {
   BitcoinAccountRepository,
   BitcoinAccount,
-  StorageClient,
+  StateClient,
 } from '../entities';
 import { BdkAccountAdapter } from '../infra';
 
 export class BdkAccountRepository implements BitcoinAccountRepository {
-  readonly #storage: StorageClient;
+  readonly #storage: StateClient;
 
-  constructor(storage: StorageClient) {
+  constructor(storage: StateClient) {
     this.#storage = storage;
   }
 
