@@ -28,6 +28,7 @@ const metamaskPermissions = new Set([
   KeyringRpcMethod.DeleteAccount,
   KeyringRpcMethod.GetAccountBalances,
   KeyringRpcMethod.SubmitRequest,
+  KeyringRpcMethod.ListAccountTransactions,
   // Internal methods
   InternalRpcMethod.GetTransactionStatus,
   InternalRpcMethod.EstimateFee,

@@ -7,6 +7,9 @@ import type {
   KeyringResponse,
   Balance,
   CaipAssetType,
+  Pagination,
+  Paginated,
+  Transaction,
 } from '@metamask/keyring-api';
 import type { Json } from '@metamask/utils';
 import { assert, enums, object, optional } from 'superstruct';
@@ -83,6 +86,10 @@ export class KeyringHandler implements Keyring {
 
   async deleteAccount(id: string): Promise<void> {
     await this.#accountsUseCases.delete(id);
+  }
+
+  async listAccountTransactions(): Promise<Paginated<Transaction>> {
+    return { data: [], next: null };
   }
 
   async exportAccount(id: string): Promise<KeyringAccountData> {
