@@ -1,4 +1,5 @@
 import { BtcMethod, BtcScopes } from '@metamask/keyring-api';
+import type { Network } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
@@ -188,35 +189,48 @@ describe('KeyringHandler', () => {
     });
   });
 
-  describe('unimplemented methods', () => {
-    const errMsg = 'Method not implemented.';
+  describe('listAccountAssets', () => {
+    it.each([
+      { tNetwork: 'bitcoin', caip19: Caip19Asset.Bitcoin },
+      { tNetwork: 'testnet', caip19: Caip19Asset.Testnet },
+      { tNetwork: 'testnet4', caip19: Caip19Asset.Testnet4 },
+      { tNetwork: 'signet', caip19: Caip19Asset.Signet },
+      { tNetwork: 'regtest', caip19: Caip19Asset.Regtest },
+    ] as { tNetwork: Network; caip19: Caip19Asset }[])(
+      'list assets for account: %s',
+      async ({ tNetwork, caip19 }) => {
+        mockAccounts.get.mockResolvedValue({
+          network: tNetwork,
+        } as unknown as BitcoinAccount);
 
-    it('updateAccount should throw', async () => {
-      await expect(handler.updateAccount({} as any)).rejects.toThrow(errMsg);
+        const result = await handler.listAccountAssets('some-id');
+
+        expect(mockAccounts.get).toHaveBeenCalledWith('some-id');
+        expect(result).toStrictEqual([caip19]);
+      },
+    );
+
+    it('propagates errors from get', async () => {
+      const error = new Error();
+      mockAccounts.get.mockRejectedValue(error);
+
+      await expect(handler.listAccountAssets('some-id')).rejects.toThrow(error);
+      expect(mockAccounts.get).toHaveBeenCalled();
     });
+  });
 
-    it('exportAccount should throw', async () => {
-      await expect(handler.exportAccount('some-id')).rejects.toThrow(errMsg);
+  describe('listAccountTransactions', () => {
+    it('returns empty list', async () => {
+      const result = await handler.listAccountTransactions();
+      expect(result).toStrictEqual({ data: [], next: null });
     });
+  });
 
-    it('listRequests should throw', async () => {
-      await expect(handler.listRequests()).rejects.toThrow(errMsg);
-    });
-
-    it('getRequest should throw', async () => {
-      await expect(handler.getRequest('some-id')).rejects.toThrow(errMsg);
-    });
-
-    it('submitRequest should throw', async () => {
-      await expect(handler.submitRequest({} as any)).rejects.toThrow(errMsg);
-    });
-
-    it('approveRequest should throw', async () => {
-      await expect(handler.approveRequest({} as any)).rejects.toThrow(errMsg);
-    });
-
-    it('rejectRequest should throw', async () => {
-      await expect(handler.rejectRequest({} as any)).rejects.toThrow(errMsg);
+  describe('updateAccount', () => {
+    it('throws not supported', async () => {
+      await expect(handler.updateAccount({} as any)).rejects.toThrow(
+        'Method not supported.',
+      );
     });
   });
 });
