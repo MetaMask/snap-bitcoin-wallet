@@ -22,6 +22,8 @@ const dappPermissions = new Set([
 const metamaskPermissions = new Set([
   // Keyring methods
   KeyringRpcMethod.ListAccounts,
+  KeyringRpcMethod.ListAccountTransactions,
+  KeyringRpcMethod.ListAccountAssets,
   KeyringRpcMethod.GetAccount,
   KeyringRpcMethod.CreateAccount,
   KeyringRpcMethod.FilterAccountChains,
