@@ -1,6 +1,6 @@
 import type { Keyring } from '@metamask/keyring-api';
 import { handleKeyringRequest } from '@metamask/keyring-snap-sdk';
-import type { OnInstallHandler } from '@metamask/snaps-sdk';
+import type { OnCronjobHandler, OnInstallHandler } from '@metamask/snaps-sdk';
 import {
   type OnRpcRequestHandler,
   type OnKeyringRequestHandler,
@@ -13,7 +13,7 @@ import {
 
 import { Config } from './config';
 import { ConfigV2 } from './configv2';
-import { KeyringHandler } from './handlers/KeyringHandler';
+import { KeyringHandler, CronHandler } from './handlers';
 import { SnapClientAdapter, EsploraClientAdapter } from './infra';
 import { BtcKeyring } from './keyring';
 import { InternalRpcMethod, originPermissions } from './permissions';
@@ -42,7 +42,8 @@ import { loadLocale } from './utils/locale';
 
 logger.logLevel = parseInt(Config.logLevel, 10);
 
-let keyring: Keyring;
+let keyringHandler: Keyring;
+let cronHandler: CronHandler;
 let accountsUseCases: AccountUseCases;
 if (ConfigV2.keyringVersion === 'v2') {
   // Infra layer
@@ -58,7 +59,8 @@ if (ConfigV2.keyringVersion === 'v2') {
     ConfigV2.accounts,
   );
   // Application layer
-  keyring = new KeyringHandler(accountsUseCases);
+  keyringHandler = new KeyringHandler(accountsUseCases);
+  cronHandler = new CronHandler(accountsUseCases);
 }
 
 export const validateOrigin = (origin: string, method: string): void => {
@@ -89,6 +91,24 @@ export const onInstall: OnInstallHandler = async () => {
     }
     logger.error(
       `onInstall error: ${JSON.stringify(snapError.toJSON(), null, 2)}`,
+    );
+    throw snapError;
+  }
+};
+
+export const onCronjob: OnCronjobHandler = async ({ request }) => {
+  try {
+    if (cronHandler) {
+      await cronHandler.route(request.method);
+    }
+  } catch (error) {
+    let snapError = error;
+
+    if (!isSnapRpcError(error)) {
+      snapError = new SnapError(error);
+    }
+    logger.error(
+      `onCronjob error: ${JSON.stringify(snapError.toJSON(), null, 2)}`,
     );
     throw snapError;
   }
@@ -147,15 +167,15 @@ export const onKeyringRequest: OnKeyringRequestHandler = async ({
   try {
     validateOrigin(origin, request.method);
 
-    if (!keyring) {
-      keyring = new BtcKeyring(new KeyringStateManager(), {
+    if (!keyringHandler) {
+      keyringHandler = new BtcKeyring(new KeyringStateManager(), {
         defaultIndex: Config.wallet.defaultAccountIndex,
         origin,
       });
     }
 
     return (await handleKeyringRequest(
-      keyring,
+      keyringHandler,
       request,
     )) as unknown as Promise<Json>;
   } catch (error) {

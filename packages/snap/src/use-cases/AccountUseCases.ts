@@ -87,6 +87,7 @@ export class AccountUseCases {
     // Idempotent account creation + ensures only one account per derivation path
     const account = await this.#repository.getByDerivationPath(derivationPath);
     if (account) {
+      logger.debug('Account already exists. ID: %s,', account.id);
       await this.#snapClient.emitAccountCreatedEvent(account);
       return account;
     }

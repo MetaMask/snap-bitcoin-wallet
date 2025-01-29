@@ -118,6 +118,7 @@ jobs:
       - prepare
     env:
       KEYRING_VERSION: v2
+      DEFAULT_NETWORK: regtest
     steps:
       - uses: actions/checkout@v4
       - name: Enable Corepack

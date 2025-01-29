@@ -25,7 +25,7 @@ describe('KeyringHandler', () => {
     suggestedName: 'My Bitcoin Account',
     balance: { trusted_spendable: { to_btc: () => 1 } },
     network: 'bitcoin',
-    nextUnusedAddress: () => ({ address: 'bc1qaddress...' }),
+    peekAddress: () => ({ address: 'bc1qaddress...' }),
   } as unknown as BitcoinAccount;
 
   let handler: KeyringHandler;
@@ -63,8 +63,8 @@ describe('KeyringHandler', () => {
   });
 
   describe('getAccountBalances', () => {
-    it('synchronizes the account before getting the balance', async () => {
-      mockAccounts.synchronize.mockResolvedValue(mockAccount);
+    it('gets the account balance', async () => {
+      mockAccounts.get.mockResolvedValue(mockAccount);
       const expectedResponse = {
         [Caip19Asset.Bitcoin]: {
           amount: '1',
@@ -73,18 +73,18 @@ describe('KeyringHandler', () => {
       };
 
       const result = await handler.getAccountBalances(mockAccount.id);
-      expect(mockAccounts.synchronize).toHaveBeenCalledWith(mockAccount.id);
+      expect(mockAccounts.get).toHaveBeenCalledWith(mockAccount.id);
       expect(result).toStrictEqual(expectedResponse);
     });
 
-    it('propagates errors from synchronize', async () => {
+    it('propagates errors from get', async () => {
       const error = new Error();
-      mockAccounts.synchronize.mockRejectedValue(error);
+      mockAccounts.get.mockRejectedValue(error);
 
       await expect(handler.getAccountBalances(mockAccount.id)).rejects.toThrow(
         error,
       );
-      expect(mockAccounts.synchronize).toHaveBeenCalled();
+      expect(mockAccounts.get).toHaveBeenCalled();
     });
   });
 
