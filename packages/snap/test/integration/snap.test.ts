@@ -219,6 +219,7 @@ describe('Bitcoin Snap', () => {
       method: 'keyring_listAccountTransactions',
       params: {
         id: accounts[`${Caip2AddressType.P2wpkh}:${BtcScopes.Regtest}`].id,
+        pagination: { limit: 10, next: null },
       },
     });
 
@@ -245,7 +246,7 @@ describe('Bitcoin Snap', () => {
       expectedAssets: [Caip19Asset.Testnet],
     },
   ])(
-    'list account assets: %s',
+    'lists account assets: %s',
     async ({ addressType, scope, expectedAssets }) => {
       const response = await snap.onKeyringRequest({
         origin,
