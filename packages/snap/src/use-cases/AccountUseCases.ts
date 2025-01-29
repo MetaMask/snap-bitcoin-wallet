@@ -113,7 +113,7 @@ export class AccountUseCases {
    * @returns The updated account.
    */
   async synchronize(id: string): Promise<BitcoinAccount> {
-    logger.debug('Synchronizing account. ID: %s', id);
+    logger.trace('Synchronizing account. ID: %s', id);
 
     const account = await this.#repository.get(id);
     if (!account) {
@@ -130,7 +130,7 @@ export class AccountUseCases {
 
     await this.#repository.update(account);
 
-    logger.info('Account synchronized successfully: %s', account.id);
+    logger.debug('Account synchronized successfully: %s', account.id);
     return account;
   }
 
