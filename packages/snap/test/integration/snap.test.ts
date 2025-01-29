@@ -221,4 +221,51 @@ describe('Bitcoin Snap', () => {
       stack: expect.anything(),
     });
   });
+
+  it('returns empty list for account transactions', async () => {
+    const response = await snap.onKeyringRequest({
+      origin,
+      method: 'keyring_listAccountTransactions',
+      params: {
+        id: accounts[`${Caip2AddressType.P2wpkh}:${BtcScopes.Regtest}`].id,
+        pagination: { limit: 10, next: null },
+      },
+    });
+
+    expect(response).toRespondWith({
+      data: [],
+      next: null,
+    });
+  });
+
+  it.each([
+    {
+      addressType: Caip2AddressType.P2wpkh,
+      scope: BtcScopes.Mainnet,
+      expectedAssets: [Caip19Asset.Bitcoin],
+    },
+    {
+      addressType: Caip2AddressType.P2wpkh,
+      scope: BtcScopes.Regtest,
+      expectedAssets: [Caip19Asset.Regtest],
+    },
+    {
+      addressType: Caip2AddressType.P2tr,
+      scope: BtcScopes.Testnet,
+      expectedAssets: [Caip19Asset.Testnet],
+    },
+  ])(
+    'lists account assets: %s',
+    async ({ addressType, scope, expectedAssets }) => {
+      const response = await snap.onKeyringRequest({
+        origin,
+        method: 'keyring_listAccountAssets',
+        params: {
+          id: accounts[`${addressType}:${scope}`].id,
+        },
+      });
+
+      expect(response).toRespondWith(expectedAssets);
+    },
+  );
 });
