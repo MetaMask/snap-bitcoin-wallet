@@ -5,6 +5,7 @@ import type {
   SendFormRepository,
 } from '../entities';
 import type { SnapClient } from '../entities/snap';
+import { SendFlowRequest } from '../stateManagement';
 import { logger } from '../utils';
 
 export class SendFormUseCases {
@@ -37,12 +38,20 @@ export class SendFormUseCases {
     }
 
     const sendForm = await this.#sendFormrepository.insert(account);
-    const interfaceId = await this.#snapClient.createInterface(sendForm);
-    const result = await this.#snapClient.displayInterface(interfaceId);
-
-    console.log(result);
 
     logger.info('Bitcoin Send form created successfully: %s', sendForm.id);
     return sendForm;
+  }
+
+  async display(sendForm: SendForm): Promise<SendFlowRequest> {
+    logger.trace('Displaying Send form. ID: %s', sendForm.id);
+
+    const interfaceId = await this.#snapClient.createInterface(sendForm);
+    const request = await this.#snapClient.displayInterface<SendFlowRequest>(
+      interfaceId,
+    ); // This blocks until the user has acted
+
+    logger.debug('Send form resolved successfully: %s', sendForm.id);
+    return request;
   }
 }

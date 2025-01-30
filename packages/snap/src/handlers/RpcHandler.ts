@@ -25,7 +25,7 @@ export class RpcHandler {
       case InternalRpcMethod.StartSendTransactionFlow: {
         if (!params) throw new Error('Missing params');
         assert(params, CreateSendFormRequest);
-        return await this.start(params.account);
+        return await this.execute(params.account);
       }
 
       default:
@@ -33,7 +33,7 @@ export class RpcHandler {
     }
   }
 
-  async start(account: string): Promise<CreateSendFormResponse> {
+  async execute(account: string): Promise<CreateSendFormResponse> {
     const sendForm = await this.#sendFormUseCases.create(account);
     const request = await this.#sendFormUseCases.display(sendForm);
 

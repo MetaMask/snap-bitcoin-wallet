@@ -13,7 +13,7 @@ import {
 
 import { Config } from './config';
 import { ConfigV2 } from './configv2';
-import { KeyringHandler, CronHandler, UserInputHandler } from './handlers';
+import { KeyringHandler, CronHandler } from './handlers';
 import { SnapClientAdapter, EsploraClientAdapter } from './infra';
 import { BtcKeyring } from './keyring';
 import { InternalRpcMethod, originPermissions } from './permissions';
@@ -47,7 +47,6 @@ logger.logLevel = parseInt(Config.logLevel, 10);
 let keyringHandler: Keyring;
 let cronHandler: CronHandler;
 let rpcHandler: RpcHandler;
-let userInputHandler: UserInputHandler;
 let accountsUseCases: AccountUseCases;
 if (ConfigV2.keyringVersion === 'v2') {
   // Infra layer
@@ -74,7 +73,6 @@ if (ConfigV2.keyringVersion === 'v2') {
   keyringHandler = new KeyringHandler(accountsUseCases);
   cronHandler = new CronHandler(accountsUseCases);
   rpcHandler = new RpcHandler(sendFormUseCases);
-  userInputHandler = new UserInputHandler(sendFormUseCases);
 }
 
 export const validateOrigin = (origin: string, method: string): void => {
@@ -216,24 +214,20 @@ export const onUserInput: OnUserInputHandler = async ({
 }) => {
   await loadLocale();
 
-  if (!userInputHandler) {
-    const state = await snap.request({
-      method: 'snap_getInterfaceState',
-      params: { id },
+  const state = await snap.request({
+    method: 'snap_getInterfaceState',
+    params: { id },
+  });
+
+  if (isSendFormEvent(event)) {
+    const sendBitcoinController = new SendBitcoinController({
+      context: context as SendFlowContext,
+      interfaceId: id,
     });
-
-    if (isSendFormEvent(event)) {
-      const sendBitcoinController = new SendBitcoinController({
-        context: context as SendFlowContext,
-        interfaceId: id,
-      });
-      await sendBitcoinController.handleEvent(
-        event,
-        context as SendFlowContext,
-        state.sendForm as SendFormState,
-      );
-    }
+    await sendBitcoinController.handleEvent(
+      event,
+      context as SendFlowContext,
+      state.sendForm as SendFormState,
+    );
   }
-
-  await userInputHandler.route(id, event, context);
 };
