@@ -48,7 +48,7 @@
     "@metamask/keyring-snap-sdk": "^2.1.0",
     "@metamask/snaps-cli": "^6.6.1",
     "@metamask/snaps-jest": "^8.11.0",
-    "@metamask/snaps-sdk": "^6.16.0",
+    "@metamask/snaps-sdk": "^6.15.0",
     "@metamask/utils": "^11.0.1",
     "@typescript-eslint/eslint-plugin": "^5.42.1",
     "@typescript-eslint/parser": "^5.42.1",

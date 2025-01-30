@@ -4,7 +4,7 @@ import { KeyringEvent } from '@metamask/keyring-api';
 import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
 import type { SnapsProvider } from '@metamask/snaps-sdk';
 
-import type { BitcoinAccount } from '../entities';
+import type { BitcoinAccount, UserInterface } from '../entities';
 import type { SnapClient, SnapState } from '../entities/snap';
 import { snapToKeyringAccount } from '../handlers/keyring-account';
 
@@ -29,7 +29,10 @@ export class SnapClientAdapter implements SnapClient {
     });
 
     return (
-      (state as SnapState) ?? { accounts: { derivationPaths: {}, wallets: {} } }
+      (state as SnapState) ?? {
+        accounts: { derivationPaths: {}, wallets: {} },
+        interfaces: { sendForms: {} },
+      }
     );
   }
 
@@ -82,5 +85,24 @@ export class SnapClientAdapter implements SnapClient {
     return emitSnapKeyringEvent(snap, KeyringEvent.AccountDeleted, {
       id,
     });
+  }
+
+  async createInterface(ui: UserInterface): Promise<string> {
+    return await snap.request({
+      method: 'snap_createInterface',
+      params: {
+        ui: ui.component(),
+        context: ui.context(),
+      },
+    });
+  }
+
+  async displayInterface<T>(id: string): Promise<T> {
+    return (await snap.request({
+      method: 'snap_dialog',
+      params: {
+        id,
+      },
+    })) as T;
   }
 }

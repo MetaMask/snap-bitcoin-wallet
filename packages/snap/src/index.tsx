@@ -13,7 +13,7 @@ import {
 
 import { Config } from './config';
 import { ConfigV2 } from './configv2';
-import { KeyringHandler, CronHandler } from './handlers';
+import { KeyringHandler, CronHandler, UserInputHandler } from './handlers';
 import { SnapClientAdapter, EsploraClientAdapter } from './infra';
 import { BtcKeyring } from './keyring';
 import { InternalRpcMethod, originPermissions } from './permissions';
@@ -36,31 +36,45 @@ import {
   SendBitcoinController,
 } from './ui/controller/send-bitcoin-controller';
 import type { SendFlowContext, SendFormState } from './ui/types';
-import { AccountUseCases } from './use-cases';
+import { AccountUseCases, SendFormUseCases } from './use-cases';
 import { isSnapRpcError, logger } from './utils';
 import { loadLocale } from './utils/locale';
+import { RpcHandler } from './handlers/RpcHandler';
+import { JSXSendFormRepository } from './store/JSXSendFormRepository';
 
 logger.logLevel = parseInt(Config.logLevel, 10);
 
 let keyringHandler: Keyring;
 let cronHandler: CronHandler;
+let rpcHandler: RpcHandler;
+let userInputHandler: UserInputHandler;
 let accountsUseCases: AccountUseCases;
 if (ConfigV2.keyringVersion === 'v2') {
   // Infra layer
   const snapClient = new SnapClientAdapter(ConfigV2.encrypt);
   const chainClient = new EsploraClientAdapter(ConfigV2.chain);
   // Data layer
-  const repository = new BdkAccountRepository(snapClient);
+  const accountRepository = new BdkAccountRepository(snapClient);
+  const sendFormRepository = new JSXSendFormRepository(snapClient);
+
   // Business layer
   accountsUseCases = new AccountUseCases(
     snapClient,
-    repository,
+    accountRepository,
     chainClient,
     ConfigV2.accounts,
+  );
+  const sendFormUseCases = new SendFormUseCases(
+    snapClient,
+    accountRepository,
+    sendFormRepository,
+    chainClient,
   );
   // Application layer
   keyringHandler = new KeyringHandler(accountsUseCases);
   cronHandler = new CronHandler(accountsUseCases);
+  rpcHandler = new RpcHandler(sendFormUseCases);
+  userInputHandler = new UserInputHandler(sendFormUseCases);
 }
 
 export const validateOrigin = (origin: string, method: string): void => {
@@ -125,26 +139,30 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
 
     validateOrigin(origin, method);
 
-    switch (method) {
-      case InternalRpcMethod.GetTransactionStatus:
-        return await getTransactionStatus(
-          request.params as GetTransactionStatusParams,
-        );
-      case InternalRpcMethod.EstimateFee:
-        return await estimateFee(request.params as EstimateFeeParams);
-      case InternalRpcMethod.GetMaxSpendableBalance:
-        return await getMaxSpendableBalance(
-          request.params as GetMaxSpendableBalanceParams,
-        );
-      case InternalRpcMethod.StartSendTransactionFlow: {
-        return await startSendTransactionFlow(
-          request.params as StartSendTransactionFlowParams,
-        );
-      }
+    if (!rpcHandler) {
+      switch (method) {
+        case InternalRpcMethod.GetTransactionStatus:
+          return await getTransactionStatus(
+            request.params as GetTransactionStatusParams,
+          );
+        case InternalRpcMethod.EstimateFee:
+          return await estimateFee(request.params as EstimateFeeParams);
+        case InternalRpcMethod.GetMaxSpendableBalance:
+          return await getMaxSpendableBalance(
+            request.params as GetMaxSpendableBalanceParams,
+          );
+        case InternalRpcMethod.StartSendTransactionFlow: {
+          return await startSendTransactionFlow(
+            request.params as StartSendTransactionFlowParams,
+          );
+        }
 
-      default:
-        throw new MethodNotFoundError() as unknown as Error;
+        default:
+          throw new MethodNotFoundError() as unknown as Error;
+      }
     }
+
+    return await rpcHandler.route(method, request.params);
   } catch (error) {
     let snapError = error;
 
@@ -198,20 +216,24 @@ export const onUserInput: OnUserInputHandler = async ({
 }) => {
   await loadLocale();
 
-  const state = await snap.request({
-    method: 'snap_getInterfaceState',
-    params: { id },
-  });
-
-  if (isSendFormEvent(event)) {
-    const sendBitcoinController = new SendBitcoinController({
-      context: context as SendFlowContext,
-      interfaceId: id,
+  if (!userInputHandler) {
+    const state = await snap.request({
+      method: 'snap_getInterfaceState',
+      params: { id },
     });
-    await sendBitcoinController.handleEvent(
-      event,
-      context as SendFlowContext,
-      state.sendForm as SendFormState,
-    );
+
+    if (isSendFormEvent(event)) {
+      const sendBitcoinController = new SendBitcoinController({
+        context: context as SendFlowContext,
+        interfaceId: id,
+      });
+      await sendBitcoinController.handleEvent(
+        event,
+        context as SendFlowContext,
+        state.sendForm as SendFormState,
+      );
+    }
   }
+
+  await userInputHandler.route(id, event, context);
 };

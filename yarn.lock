@@ -2697,7 +2697,7 @@ __metadata:
     "@metamask/keyring-snap-sdk": "npm:^2.1.0"
     "@metamask/snaps-cli": "npm:^6.6.1"
     "@metamask/snaps-jest": "npm:^8.11.0"
-    "@metamask/snaps-sdk": "npm:^6.16.0"
+    "@metamask/snaps-sdk": "npm:^6.15.0"
     "@metamask/utils": "npm:^11.0.1"
     "@typescript-eslint/eslint-plugin": "npm:^5.42.1"
     "@typescript-eslint/parser": "npm:^5.42.1"
@@ -3355,7 +3355,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/snaps-sdk@npm:^6.16.0, @metamask/snaps-sdk@npm:^6.7.0":
+"@metamask/snaps-sdk@npm:^6.7.0":
   version: 6.16.0
   resolution: "@metamask/snaps-sdk@npm:6.16.0"
   dependencies:

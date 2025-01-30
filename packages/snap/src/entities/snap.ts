@@ -1,9 +1,13 @@
 import type { JsonSLIP10Node, SLIP10Node } from '@metamask/key-tree';
-import type { SnapsProvider } from '@metamask/snaps-sdk';
+import type { Json, SnapsProvider } from '@metamask/snaps-sdk';
 
 import type { BitcoinAccount } from './account';
+import { UserInterface } from './ui';
 
 export type SnapState = {
+  interfaces: {
+    sendForms: Record<string, Json>;
+  };
   accounts: {
     derivationPaths: Record<string, string>;
     wallets: Record<string, string>;
@@ -56,4 +60,16 @@ export type SnapClient = {
    * @param account - The Bitcoin account id.
    */
   emitAccountDeletedEvent(id: string): Promise<void>;
+
+  /**
+   * Creates a User Interface.
+   * @param params - The interface parameters.
+   */
+  createInterface(params: UserInterface): Promise<string>;
+
+  /**
+   * Displays a User Interface.
+   * @param params - The interface id.
+   */
+  displayInterface<T>(id: string): Promise<T>;
 };
