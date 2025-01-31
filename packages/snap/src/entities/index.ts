@@ -4,3 +4,4 @@ export * from './chain';
 export * from './currency';
 export * from './ui';
 export * from './send-form';
+export * from './transaction';

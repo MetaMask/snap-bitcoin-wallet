@@ -1,3 +1,4 @@
+import type { KeyringAccount } from '@metamask/keyring-api';
 import {
   Box,
   Button,
@@ -7,124 +8,71 @@ import {
   Image,
   JSXElement,
 } from '@metamask/snaps-sdk/jsx';
-import { BitcoinAccount, SendFormEvents, type SendForm } from '../entities';
-import { Json } from '@metamask/utils';
-import { getTranslator, Translator } from '../utils/locale';
-import emptySpace from '../ui/images/empty-space.svg';
-import { TransactionSummary } from '../ui/components/TransactionSummary';
-import { SendForm as JSXSendForm } from '../ui/components/SendForm';
-import { SendFlowParams } from '../stateManagement';
-import { SendFlow } from '../ui/components';
-import { generateDefaultSendFlowParams } from '../utils/transaction';
+import type { Json } from '@metamask/utils';
+
+import type { BitcoinAccount, SendFormContext, UIContext } from '../entities';
+import { SendFormEvents, type SendForm } from '../entities';
 import { networkToCaip2 } from '../handlers/caip2';
 import { snapToKeyringAccount } from '../handlers/keyring-account';
-import { KeyringAccount } from '@metamask/keyring-api';
+import type { SendFlowParams } from '../stateManagement';
+import { SendFlow } from '../ui/components';
+import { SendForm as JSXSendForm } from '../ui/components/SendForm';
+import { TransactionSummary } from '../ui/components/TransactionSummary';
+import emptySpace from '../ui/images/empty-space.svg';
+import type { Translator } from '../utils/locale';
+import { getTranslator } from '../utils/locale';
+import { generateDefaultSendFlowParams } from '../utils/transaction';
+import { Amount } from 'bitcoindevkit';
+import { btcToFiat } from '../ui/utils';
+import { SendFlowContext } from '../ui/types';
 
 export class JSXSendFormAdapter implements SendForm {
-  readonly #id: string;
+  #id: string;
 
-  readonly #t: Translator;
+  readonly #context: SendFormContext;
 
-  readonly #params: SendFlowParams;
+  readonly #account: BitcoinAccount;
 
-  readonly #account: KeyringAccount;
-
-  constructor(id: string, params: SendFlowParams, account: KeyringAccount) {
-    this.#id = id;
-    this.#t = getTranslator();
-    this.#params = params;
+  constructor(account: BitcoinAccount, context: SendFormContext) {
+    this.#context = context;
     this.#account = account;
   }
 
-  static create(id: string, account: BitcoinAccount): JSXSendFormAdapter {
-    const params = generateDefaultSendFlowParams(
-      networkToCaip2[account.network],
-    );
-    return new JSXSendFormAdapter(id, params, snapToKeyringAccount(account));
+  static create(
+    account: BitcoinAccount,
+    context: SendFormContext,
+  ): JSXSendFormAdapter {
+    return new JSXSendFormAdapter(account, context);
   }
 
   get id(): string {
     return this.#id;
   }
 
+  set id(id: string) {
+    this.#id = id;
+  }
+
   component() {
-    return <SendFlow account={this.#account} sendFlowParams={this.#params} />;
+    const params = generateDefaultSendFlowParams(
+      networkToCaip2[this.#account.network],
+    );
+    params.rates = this.#context.fiatRate?.toString() ?? '';
+    params.balance.amount = this.#account.balance.trusted_spendable
+      .to_btc()
+      .toString();
+    // TODO: No need to have this value since it is computed from the balance and rate
+    params.balance.fiat = btcToFiat(params.balance.amount, params.rates);
 
-    // return () => {
-    //   const showSummary =
-    //     Boolean(!amount.error && amount.amount) || fees.loading;
-
-    //   return (
-    //     <Container>
-    //       <Box>
-    //         {this.#header()}
-    //         {this.#form()}
-    //         {showSummary && this.#summary()}
-    //       </Box>
-    //       {this.#footer()}
-    //     </Container>
-    //   );
-    // };
+    return (
+      <SendFlow
+        account={snapToKeyringAccount(this.#account)}
+        sendFlowParams={params}
+      />
+    );
   }
 
-  context(): Record<string, Json> {
-    return {};
+  get context(): SendFormContext {
+    return this.#context;
   }
-
-  // #header() {
-  //   return (
-  //     <Box direction="horizontal" alignment="space-between" center>
-  //       <Button name={SendFormEvents.HeaderBack}>
-  //         <Icon name="arrow-left" color="primary" size="md" />
-  //       </Button>
-  //       <Heading size="sm">{this.#t('send')}</Heading>
-  //       {/* FIXME: This empty space is needed to center-align the header text.
-  //        * The Snap UI centers the text within its container, but the container
-  //        * itself is misaligned in the header due to the back arrow.
-  //        */}
-  //       <Image src={emptySpace} />
-  //     </Box>
-  //   );
-  // }
-
-  // #form() {
-  //   return (
-  //     <JSXSendForm
-  //       selectedAccount={account.address}
-  //       accounts={[account]}
-  //       flushToAddress={this.#props.flushToAddress}
-  //       currencySwitched={currencySwitched}
-  //       backEventTriggered={backEventTriggered}
-  //       {...sendFlowParams}
-  //     />
-  //   );
-  // }
-
-  // #summary() {
-  //   return (
-  //     <TransactionSummary
-  //       fees={sendFlowParams.fees}
-  //       total={sendFlowParams.total}
-  //     />
-  //   );
-  // }
-
-  // #footer() {
-  //   const disabledReview = Boolean(
-  //     !amount.valid ||
-  //       !recipient.valid ||
-  //       !total.valid ||
-  //       fees.loading ||
-  //       fees.error,
-  //   );
-
-  //   return (
-  //     <Footer>
-  //       <Button name={SendFormEvents.Cancel}>{this.#t('cancel')}</Button>
-  //       <Button name={SendFormEvents.Review} disabled={disabledReview}>
-  //         {this.#t('review')}
-  //       </Button>
-  //     </Footer>
-  //   );
-  // }
 }

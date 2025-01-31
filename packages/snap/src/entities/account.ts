@@ -7,6 +7,10 @@ import type {
   Network,
   Update,
   ChangeSet,
+  Psbt,
+  FeeRate,
+  Recipient,
+  Transaction,
 } from 'bitcoindevkit';
 
 /**
@@ -81,6 +85,21 @@ export type BitcoinAccount = {
    * @returns the change set
    */
   takeStaged(): ChangeSet | undefined;
+
+  /**
+   * Creates a new PSB.
+   * @param feeRate. The fee rate in sats/vb
+   * @param recipients. The list of recipients
+   * @returns the PSBT
+   */
+  buildTx(feeRate: FeeRate, recipients: Recipient[]): Psbt;
+
+  /**
+   * Signs a PSBT with all the registered signers
+   * @param psbt
+   * @returns the signed transaction
+   */
+  sign(psbt: Psbt): Transaction;
 };
 
 /**

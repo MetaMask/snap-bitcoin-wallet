@@ -63,7 +63,8 @@ export class KeyringHandler implements Keyring {
   async getAccountBalances(
     id: string,
   ): Promise<Record<CaipAssetType, Balance>> {
-    const account = await this.#accountsUseCases.get(id);
+    // TODO: Fetch the account without synchronizing when the "synchronize" function is exposed
+    const account = await this.#accountsUseCases.synchronize(id);
     const balance = account.balance.trusted_spendable.to_btc().toString();
 
     return {

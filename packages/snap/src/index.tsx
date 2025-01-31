@@ -14,6 +14,7 @@ import {
 import { Config } from './config';
 import { ConfigV2 } from './configv2';
 import { KeyringHandler, CronHandler } from './handlers';
+import { RpcHandler } from './handlers/RpcHandler';
 import { SnapClientAdapter, EsploraClientAdapter } from './infra';
 import { BtcKeyring } from './keyring';
 import { InternalRpcMethod, originPermissions } from './permissions';
@@ -31,6 +32,7 @@ import type { StartSendTransactionFlowParams } from './rpcs/start-send-transacti
 import { startSendTransactionFlow } from './rpcs/start-send-transaction-flow';
 import { KeyringStateManager } from './stateManagement';
 import { BdkAccountRepository } from './store/BdkAccountRepository';
+import { JSXSendFormRepository } from './store/JSXSendFormRepository';
 import {
   isSendFormEvent,
   SendBitcoinController,
@@ -39,8 +41,6 @@ import type { SendFlowContext, SendFormState } from './ui/types';
 import { AccountUseCases, SendFormUseCases } from './use-cases';
 import { isSnapRpcError, logger } from './utils';
 import { loadLocale } from './utils/locale';
-import { RpcHandler } from './handlers/RpcHandler';
-import { JSXSendFormRepository } from './store/JSXSendFormRepository';
 
 logger.logLevel = parseInt(Config.logLevel, 10);
 

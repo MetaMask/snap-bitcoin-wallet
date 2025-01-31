@@ -1,12 +1,12 @@
 import type { JsonSLIP10Node, SLIP10Node } from '@metamask/key-tree';
-import type { Json, SnapsProvider } from '@metamask/snaps-sdk';
 
 import type { BitcoinAccount } from './account';
-import { UserInterface } from './ui';
+import type { UserInterface } from './ui';
+import { SendFormContext } from './send-form';
 
 export type SnapState = {
   interfaces: {
-    sendForms: Record<string, Json>;
+    sendForms: Record<string, SendFormContext>;
   };
   accounts: {
     derivationPaths: Record<string, string>;
@@ -18,11 +18,6 @@ export type SnapState = {
  * The SnapClient represents the MetaMask Snap state and manages the BIP-32 entropy from the Wallet SRP.
  */
 export type SnapClient = {
-  /**
-   * The snap global provider instance
-   */
-  provider: SnapsProvider;
-
   /**
    * Get the Snap state.
    * @returns The Snap state.
@@ -71,5 +66,11 @@ export type SnapClient = {
    * Displays a User Interface.
    * @param params - The interface id.
    */
-  displayInterface<T>(id: string): Promise<T>;
+  displayInterface<ResolveType>(id: string): Promise<ResolveType | null>;
+
+  /**
+   * Retrieves the BTC currency rate.
+   * @returns A Promise that resolves to the BTC rate.
+   */
+  getBtcRate(): Promise<number | undefined>;
 };

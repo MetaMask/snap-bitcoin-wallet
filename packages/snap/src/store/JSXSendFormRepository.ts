@@ -1,6 +1,10 @@
-import type { BitcoinAccount, SendForm, SendFormRepository } from '../entities';
+import type {
+  BitcoinAccount,
+  SendForm,
+  SendFormContext,
+  SendFormRepository,
+} from '../entities';
 import type { SnapClient } from '../entities/snap';
-import { v4 } from 'uuid';
 import { JSXSendFormAdapter } from '../infra/JSXSendFormAdapter';
 
 export class JSXSendFormRepository implements SendFormRepository {
@@ -10,14 +14,12 @@ export class JSXSendFormRepository implements SendFormRepository {
     this.#snapClient = snapClient;
   }
 
-  async insert(account: BitcoinAccount): Promise<SendForm> {
-    const id = v4();
-    const form = JSXSendFormAdapter.create(id, account);
-
-    const state = await this.#snapClient.get();
-    state.interfaces.sendForms[id] = { id };
-    await this.#snapClient.set(state);
-
+  async insert(
+    account: BitcoinAccount,
+    context: SendFormContext,
+  ): Promise<SendForm> {
+    const form = JSXSendFormAdapter.create(account, context);
+    form.id = await this.#snapClient.createInterface(form);
     return form;
   }
 }

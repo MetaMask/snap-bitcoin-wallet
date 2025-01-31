@@ -1,8 +1,9 @@
-import { Json, JsonRpcParams } from '@metamask/utils';
-import { InternalRpcMethod } from '../permissions';
-import { SendFormUseCases } from '../use-cases';
-import { assert, enums, object, optional, string } from 'superstruct';
 import { BtcScopes } from '@metamask/keyring-api';
+import type { Json, JsonRpcParams } from '@metamask/utils';
+import { assert, enums, object, optional, string } from 'superstruct';
+
+import { InternalRpcMethod } from '../permissions';
+import type { AccountUseCases, SendFormUseCases } from '../use-cases';
 
 const CreateSendFormRequest = object({
   account: string(),
@@ -15,17 +16,17 @@ type CreateSendFormResponse = {
 
 export class RpcHandler {
   readonly #sendFormUseCases: SendFormUseCases;
+  readonly #accountUseCases: AccountUseCases;
 
-  constructor(sendForm: SendFormUseCases) {
+  constructor(sendForm: SendFormUseCases, accounts: AccountUseCases) {
     this.#sendFormUseCases = sendForm;
+    this.#accountUseCases = accounts;
   }
 
   async route(method: string, params?: JsonRpcParams): Promise<Json> {
     switch (method) {
       case InternalRpcMethod.StartSendTransactionFlow: {
-        if (!params) throw new Error('Missing params');
-        assert(params, CreateSendFormRequest);
-        return await this.execute(params.account);
+        return await this.executeSendFlow(params);
       }
 
       default:
@@ -33,10 +34,17 @@ export class RpcHandler {
     }
   }
 
-  async execute(account: string): Promise<CreateSendFormResponse> {
-    const sendForm = await this.#sendFormUseCases.create(account);
-    const request = await this.#sendFormUseCases.display(sendForm);
+  async executeSendFlow(
+    params?: JsonRpcParams,
+  ): Promise<CreateSendFormResponse> {
+    if (!params) {
+      throw new Error('Missing params');
+    }
 
-    return { txId: request.id };
+    assert(params, CreateSendFormRequest);
+    const txRequest = await this.#sendFormUseCases.execute(params.account);
+    const txId = await this.#accountUseCases.send(params.account, txRequest);
+
+    return { txId };
   }
 }

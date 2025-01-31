@@ -1,4 +1,4 @@
-import type { Network } from 'bitcoindevkit';
+import type { Network, Transaction } from 'bitcoindevkit';
 import { EsploraClient } from 'bitcoindevkit';
 
 import type { BitcoinAccount, ChainConfig } from '../entities';
@@ -39,5 +39,9 @@ export class EsploraClientAdapter implements BlockchainClient {
       this.#config.parallelRequests,
     );
     account.applyUpdate(update);
+  }
+
+  async broadcast(network: Network, transaction: Transaction): Promise<void> {
+    await this.#clients[network].broadcast(transaction);
   }
 }

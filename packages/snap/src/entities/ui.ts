@@ -1,5 +1,5 @@
-import { ComponentOrElement } from '@metamask/snaps-sdk';
-import { Json } from '@metamask/utils';
+import type { ComponentOrElement } from '@metamask/snaps-sdk';
+import type { Json } from '@metamask/utils';
 
 export type UserInterface = {
   /**
@@ -17,7 +17,7 @@ export type UserInterface = {
    * Gets the UI context.
    * @returns the UI context
    */
-  context(): Record<string, Json>;
+  context: UIContext;
 };
 
-export type UIComponent = {};
+export type UIContext = Record<string, Json>;

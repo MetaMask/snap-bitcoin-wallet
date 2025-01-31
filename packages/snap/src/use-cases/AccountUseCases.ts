@@ -5,6 +5,7 @@ import type {
   BitcoinAccount,
   BitcoinAccountRepository,
   BlockchainClient,
+  TransactionRequest,
 } from '../entities';
 import type { SnapClient } from '../entities/snap';
 import { logger } from '../utils';
@@ -154,5 +155,26 @@ export class AccountUseCases {
     await this.#repository.delete(id);
 
     logger.info('Account deleted successfully: %s', account.id);
+  }
+
+  async send(id: string, request: TransactionRequest): Promise<string> {
+    logger.debug('Sending transaction. ID: %s. Request: %o', id, request);
+
+    const account = await this.#repository.get(id);
+    if (!account) {
+      throw new Error(`Account not found: ${id}`);
+    }
+
+    const psbt = account.buildTx(request.feeRate, request.recipients);
+    const tx = account.sign(psbt);
+    await this.#chain.broadcast(account.network, tx);
+    await this.#repository.update(account);
+
+    logger.info(
+      'Transaction sent successfully: %s. Network: %s',
+      account.id,
+      account.network,
+    );
+    return tx.compute_txid();
   }
 }

@@ -4,7 +4,7 @@ import { KeyringEvent } from '@metamask/keyring-api';
 import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
 import type { SnapsProvider } from '@metamask/snaps-sdk';
 
-import type { BitcoinAccount, UserInterface } from '../entities';
+import type { BitcoinAccount, UIContext, UserInterface } from '../entities';
 import type { SnapClient, SnapState } from '../entities/snap';
 import { snapToKeyringAccount } from '../handlers/keyring-account';
 
@@ -92,17 +92,28 @@ export class SnapClientAdapter implements SnapClient {
       method: 'snap_createInterface',
       params: {
         ui: ui.component(),
-        context: ui.context(),
+        context: ui.context,
       },
     });
   }
 
-  async displayInterface<T>(id: string): Promise<T> {
+  async displayInterface<ResolveType>(id: string): Promise<ResolveType | null> {
     return (await snap.request({
       method: 'snap_dialog',
       params: {
         id,
       },
-    })) as T;
+    })) as ResolveType;
+  }
+
+  async getBtcRate(): Promise<number | undefined> {
+    const result = await snap.request({
+      method: 'snap_getCurrencyRate',
+      params: {
+        currency: 'BTC',
+      },
+    });
+
+    return result?.conversionRate;
   }
 }

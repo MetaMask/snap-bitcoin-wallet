@@ -8,6 +8,10 @@ import type {
   SyncRequest,
   Update,
   ChangeSet,
+  FeeRate,
+  Recipient,
+  Psbt,
+  Transaction,
 } from 'bitcoindevkit';
 import { Wallet } from 'bitcoindevkit';
 
@@ -28,7 +32,10 @@ export class BdkAccountAdapter implements BitcoinAccount {
     descriptors: DescriptorPair,
     network: Network,
   ): BdkAccountAdapter {
-    return new BdkAccountAdapter(id, Wallet.create(network, descriptors));
+    return new BdkAccountAdapter(
+      id,
+      Wallet.create(network, descriptors.external, descriptors.internal),
+    );
   }
 
   static load(id: string, walletData: ChangeSet): BdkAccountAdapter {
@@ -88,5 +95,18 @@ export class BdkAccountAdapter implements BitcoinAccount {
 
   takeStaged(): ChangeSet | undefined {
     return this.#wallet.take_staged();
+  }
+
+  buildTx(feeRate: FeeRate, recipients: Recipient[]): Psbt {
+    return this.#wallet.build_tx(feeRate, recipients);
+  }
+
+  sign(psbt: Psbt): Transaction {
+    const success = this.#wallet.sign(psbt);
+    if (!success) {
+      throw new Error('failed to sign PSBT');
+    }
+
+    return psbt.extract_tx();
   }
 }

@@ -2705,7 +2705,7 @@ __metadata:
     bignumber.js: "npm:9.1.2"
     bip32: "npm:4.0.0"
     bitcoin-address-validation: "npm:^2.2.3"
-    bitcoindevkit: "npm:^0.1.1"
+    bitcoindevkit: "npm:^0.1.2"
     bitcoinjs-lib: "npm:6.1.5"
     coinselect: "npm:3.1.13"
     concurrently: "npm:^9.1.0"
@@ -6954,10 +6954,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"bitcoindevkit@npm:^0.1.1":
-  version: 0.1.1
-  resolution: "bitcoindevkit@npm:0.1.1"
-  checksum: 10/8b900c2e3fba6f4877a673f594f593a55e250d4cfbec72e7ceb05f523c146bbceb80c57151d190d4c08520770f7458c64a3aa4c4a12975ba4367ca294d404a52
+"bitcoindevkit@npm:^0.1.2":
+  version: 0.1.2
+  resolution: "bitcoindevkit@npm:0.1.2"
+  checksum: 10/fac45f6da8b20e01e3f5e52238170bb307ed83e452436c073ab1533c5ef12b7c0653ab547c66fbec1837968cc277d5d1168b4dd6da938fc377a88f58e05cab80
   languageName: node
   linkType: hard
 

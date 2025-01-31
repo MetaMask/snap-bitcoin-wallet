@@ -1,11 +1,14 @@
-import type {
-  BitcoinAccountRepository,
-  BlockchainClient,
-  SendForm,
-  SendFormRepository,
+import { UserRejectedRequestError } from '@metamask/snaps-sdk';
+import {
+  CurrencyUnit,
+  networkToCurrencyUnit,
+  SendFormContext,
+  TransactionRequest,
+  type BitcoinAccountRepository,
+  type BlockchainClient,
+  type SendFormRepository,
 } from '../entities';
 import type { SnapClient } from '../entities/snap';
-import { SendFlowRequest } from '../stateManagement';
 import { logger } from '../utils';
 
 export class SendFormUseCases {
@@ -29,29 +32,38 @@ export class SendFormUseCases {
     this.#chain = chain;
   }
 
-  async create(accountId: string): Promise<SendForm> {
-    logger.debug('Creating new Send form. Account: %s', accountId);
+  async execute(accountId: string): Promise<TransactionRequest> {
+    logger.debug('Executing Send flow. Account: %s', accountId);
 
     const account = await this.#accountRepository.get(accountId);
     if (!account) {
       throw new Error('Account not found');
     }
 
-    const sendForm = await this.#sendFormrepository.insert(account);
+    const formContext: SendFormContext = {
+      account: account.id,
+    };
+    // Only get the rate when on mainnet as other currencies have no exchange value
+    if (networkToCurrencyUnit[account.network] === CurrencyUnit.Bitcoin) {
+      formContext.fiatRate = await this.#snapClient.getBtcRate();
+    }
 
-    logger.info('Bitcoin Send form created successfully: %s', sendForm.id);
-    return sendForm;
-  }
+    const sendForm = await this.#sendFormrepository.insert(
+      account,
+      formContext,
+    );
 
-  async display(sendForm: SendForm): Promise<SendFlowRequest> {
-    logger.trace('Displaying Send form. ID: %s', sendForm.id);
+    // Blocks and waits for user actions
+    const request = await this.#snapClient.displayInterface<TransactionRequest>(
+      sendForm.id,
+    );
+    console.log('request', request);
 
-    const interfaceId = await this.#snapClient.createInterface(sendForm);
-    const request = await this.#snapClient.displayInterface<SendFlowRequest>(
-      interfaceId,
-    ); // This blocks until the user has acted
+    if (!request) {
+      throw new UserRejectedRequestError() as unknown as Error;
+    }
 
-    logger.debug('Send form resolved successfully: %s', sendForm.id);
+    logger.info('Bitcoin Send flow executed successfully: %s', sendForm.id);
     return request;
   }
 }
