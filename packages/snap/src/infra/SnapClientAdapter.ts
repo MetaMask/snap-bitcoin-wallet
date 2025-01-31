@@ -68,7 +68,12 @@ export class SnapClientAdapter implements SnapClient {
         case 'bitcoin':
           return 'Bitcoin Account';
         case 'testnet':
+        case 'testnet4':
           return 'Bitcoin Testnet Account';
+        case 'signet':
+          return 'Bitcoin Signet Account';
+        case 'regtest':
+          return 'Bitcoin Regtest Account';
         default:
           // Leave it blank to fallback to auto-suggested name on the extension side
           return '';

@@ -32,7 +32,7 @@ export class SendFormUseCases {
     this.#chain = chain;
   }
 
-  async execute(accountId: string): Promise<TransactionRequest> {
+  async display(accountId: string): Promise<TransactionRequest> {
     logger.debug('Executing Send flow. Account: %s', accountId);
 
     const account = await this.#accountRepository.get(accountId);
@@ -57,7 +57,6 @@ export class SendFormUseCases {
     const request = await this.#snapClient.displayInterface<TransactionRequest>(
       sendForm.id,
     );
-    console.log('request', request);
 
     if (!request) {
       throw new UserRejectedRequestError() as unknown as Error;
