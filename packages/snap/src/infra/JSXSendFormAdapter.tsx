@@ -11,7 +11,7 @@ import {
 import type { Json } from '@metamask/utils';
 
 import type { BitcoinAccount, SendFormContext, UIContext } from '../entities';
-import { SendFormEvents, type SendForm } from '../entities';
+import { SendFormEvent, type SendForm } from '../entities';
 import { networkToCaip2 } from '../handlers/caip2';
 import { snapToKeyringAccount } from '../handlers/keyring-account';
 import type { SendFlowParams } from '../stateManagement';
@@ -27,8 +27,6 @@ import { btcToFiat } from '../ui/utils';
 import { SendFlowContext } from '../ui/types';
 
 export class JSXSendFormAdapter implements SendForm {
-  #id: string;
-
   readonly #context: SendFormContext;
 
   readonly #account: BitcoinAccount;
@@ -43,14 +41,6 @@ export class JSXSendFormAdapter implements SendForm {
     context: SendFormContext,
   ): JSXSendFormAdapter {
     return new JSXSendFormAdapter(account, context);
-  }
-
-  get id(): string {
-    return this.#id;
-  }
-
-  set id(id: string) {
-    this.#id = id;
   }
 
   component() {

@@ -3,11 +3,6 @@ import type { Json } from '@metamask/utils';
 
 export type UserInterface = {
   /**
-   * The id of the UI.
-   */
-  id: string;
-
-  /**
    * Gets the UI component.
    * @returns the UI component
    */

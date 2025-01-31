@@ -2,7 +2,7 @@ import type { JsonSLIP10Node } from '@metamask/key-tree';
 import { SLIP10Node } from '@metamask/key-tree';
 import { KeyringEvent } from '@metamask/keyring-api';
 import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
-import type { SnapsProvider } from '@metamask/snaps-sdk';
+import type { Json, SnapsProvider } from '@metamask/snaps-sdk';
 
 import type { BitcoinAccount, UIContext, UserInterface } from '../entities';
 import type { SnapClient, SnapState } from '../entities/snap';
@@ -102,6 +102,17 @@ export class SnapClientAdapter implements SnapClient {
     });
   }
 
+  async updateInterface(id: string, ui: UserInterface): Promise<void> {
+    await snap.request({
+      method: 'snap_updateInterface',
+      params: {
+        id,
+        ui: ui.component(),
+        context: ui.context,
+      },
+    });
+  }
+
   async displayInterface<ResolveType>(id: string): Promise<ResolveType | null> {
     return (await snap.request({
       method: 'snap_dialog',
@@ -109,6 +120,16 @@ export class SnapClientAdapter implements SnapClient {
         id,
       },
     })) as ResolveType;
+  }
+
+  async resolveInterface(id: string, value: Json): Promise<void> {
+    await snap.request({
+      method: 'snap_resolveInterface',
+      params: {
+        id,
+        value,
+      },
+    });
   }
 
   async getBtcRate(): Promise<number | undefined> {

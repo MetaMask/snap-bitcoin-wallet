@@ -17,9 +17,17 @@ export class JSXSendFormRepository implements SendFormRepository {
   async insert(
     account: BitcoinAccount,
     context: SendFormContext,
-  ): Promise<SendForm> {
+  ): Promise<string> {
     const form = JSXSendFormAdapter.create(account, context);
-    form.id = await this.#snapClient.createInterface(form);
-    return form;
+    return await this.#snapClient.createInterface(form);
+  }
+
+  async update(
+    id: string,
+    account: BitcoinAccount,
+    context: SendFormContext,
+  ): Promise<void> {
+    const form = JSXSendFormAdapter.create(account, context);
+    await this.#snapClient.updateInterface(id, form);
   }
 }

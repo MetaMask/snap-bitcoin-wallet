@@ -1,4 +1,5 @@
 import type { BitcoinAccount } from './account';
+import { CurrencyUnit } from './currency';
 import type { UserInterface } from './ui';
 
 export type SendForm = UserInterface & {
@@ -8,12 +9,15 @@ export type SendForm = UserInterface & {
 export type SendFormContext = {
   account: string;
   fiatRate?: number;
-  recipient?: string;
-  amount?: number;
-  feeRate?: number;
+  currency: CurrencyUnit;
+  request: {
+    recipient?: string;
+    amount?: number;
+    feeRate?: number;
+  };
 };
 
-export enum SendFormEvents {
+export enum SendFormEvent {
   Amount = 'amount',
   To = 'to',
   SwapCurrencyDisplay = 'swap',
@@ -22,7 +26,6 @@ export enum SendFormEvents {
   Close = 'close',
   Review = 'review',
   Cancel = 'cancel',
-  Send = 'send',
   HeaderBack = 'headerBack',
   SetMax = 'max',
 }
@@ -32,10 +35,22 @@ export enum SendFormEvents {
  */
 export type SendFormRepository = {
   /**
-   * Insert a new form.
+   * Insert a new form interface.
    * @param account - the Bitcoin account tied to the form
    * @param context - the form context
-   * @returns the new Send form
+   * @returns the form ID
    */
-  insert(account: BitcoinAccount, context: SendFormContext): Promise<SendForm>;
+  insert(account: BitcoinAccount, context: SendFormContext): Promise<string>;
+
+  /**
+   * Updates a form interface with an account and context
+   * @param id - the form ID
+   * @param account - the Bitcoin account tied to the form
+   * @param context - the form context
+   */
+  update(
+    id: string,
+    account: BitcoinAccount,
+    context: SendFormContext,
+  ): Promise<void>;
 };

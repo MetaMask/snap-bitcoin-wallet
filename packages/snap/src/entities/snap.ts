@@ -3,6 +3,7 @@ import type { JsonSLIP10Node, SLIP10Node } from '@metamask/key-tree';
 import type { BitcoinAccount } from './account';
 import type { UserInterface } from './ui';
 import { SendFormContext } from './send-form';
+import { Json } from '@metamask/utils';
 
 export type SnapState = {
   interfaces: {
@@ -58,15 +59,27 @@ export type SnapClient = {
 
   /**
    * Creates a User Interface.
-   * @param params - The interface parameters.
+   * @param ui - The interface parameters.
    */
-  createInterface(params: UserInterface): Promise<string>;
+  createInterface(ui: UserInterface): Promise<string>;
+
+  /**
+   * Updates a User Interface.
+   * @param ui - The user interface.
+   */
+  updateInterface(id: string, ui: UserInterface): Promise<void>;
 
   /**
    * Displays a User Interface.
    * @param params - The interface id.
    */
   displayInterface<ResolveType>(id: string): Promise<ResolveType | null>;
+
+  /**
+   * Displays a User Interface.
+   * @param params - The interface id.
+   */
+  resolveInterface(id: string, value: Json): Promise<void>;
 
   /**
    * Retrieves the BTC currency rate.
