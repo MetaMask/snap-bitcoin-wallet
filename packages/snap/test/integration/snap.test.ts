@@ -39,11 +39,11 @@ describe('Bitcoin Snap', () => {
       },
     ]);
 
-    if ('result' in response.response) {
-      accounts[`${Caip2AddressType.P2wpkh}:${BtcScopes.Regtest}`] = (
-        response.response.result as KeyringAccount[]
-      )[0];
-    }
+    // Keep track of the default account.
+    // NOTE: This type cast is safe, we check the response with `toRespondWith` above.
+    const [defaultAccount] = response.response.result as KeyringAccount[]; 
+    accounts[`${Caip2AddressType.P2wpkh}:${BtcScopes.Regtest}`] =
+      defaultAccount;
   });
 
   it('synchronize accounts via cronjob', async () => {
