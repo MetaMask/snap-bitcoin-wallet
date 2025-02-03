@@ -121,7 +121,7 @@ export class AccountUseCases {
       throw new Error(`Account not found: ${id}`);
     }
 
-    await this.#syncAccount(account);
+    await this.#synchronize(account);
 
     logger.debug('Account synchronized successfully: %s', account.id);
   }
@@ -132,7 +132,7 @@ export class AccountUseCases {
     // accounts cannot be empty by assertion.
     const accounts = await this.#repository.getAll();
     const results = await Promise.allSettled(
-      accounts.map(async (account) => this.#syncAccount(account)),
+      accounts.map(async (account) => this.#synchronize(account)),
     );
 
     results.forEach((result, index) => {
@@ -148,7 +148,7 @@ export class AccountUseCases {
     logger.debug('Accounts synchronized successfully');
   }
 
-  async #syncAccount(account: BitcoinAccount): Promise<void> {
+  async #synchronize(account: BitcoinAccount): Promise<void> {
     // If the account is already scanned, we just sync it, otherwise we do a full scan.
     if (account.isScanned) {
       await this.#chain.sync(account);
