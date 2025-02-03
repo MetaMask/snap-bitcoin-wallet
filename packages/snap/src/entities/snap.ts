@@ -60,6 +60,7 @@ export type SnapClient = {
   /**
    * Creates a User Interface.
    * @param ui - The interface parameters.
+   * @returns the interface ID
    */
   createInterface(ui: UserInterface): Promise<string>;
 
