@@ -13,6 +13,7 @@ import type {
 import type { Json } from '@metamask/utils';
 import { assert, enums, object, optional } from 'superstruct';
 
+import { networkToCurrencyUnit } from '../entities';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 import { networkToCaip19 } from './caip19';
 import {
@@ -62,13 +63,13 @@ export class KeyringHandler implements Keyring {
   async getAccountBalances(
     id: string,
   ): Promise<Record<CaipAssetType, Balance>> {
-    const account = await this.#accountsUseCases.synchronize(id);
+    const account = await this.#accountsUseCases.get(id);
     const balance = account.balance.trusted_spendable.to_btc().toString();
 
     return {
       [networkToCaip19[account.network]]: {
         amount: balance,
-        unit: 'BTC',
+        unit: networkToCurrencyUnit[account.network],
       },
     };
   }

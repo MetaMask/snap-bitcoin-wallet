@@ -14,7 +14,7 @@ export function snapToKeyringAccount(account: BitcoinAccount): KeyringAccount {
     type: addressTypeToCaip2[account.addressType] as KeyringAccount['type'],
     scopes: [networkToCaip2[account.network]],
     id: account.id,
-    address: account.nextUnusedAddress().address,
+    address: account.peekAddress(0).address,
     options: {},
     methods: [BtcMethod.SendBitcoin],
   };

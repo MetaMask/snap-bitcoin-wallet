@@ -87,6 +87,7 @@ export class AccountUseCases {
     // Idempotent account creation + ensures only one account per derivation path
     const account = await this.#repository.getByDerivationPath(derivationPath);
     if (account) {
+      logger.debug('Account already exists. ID: %s,', account.id);
       await this.#snapClient.emitAccountCreatedEvent(account);
       return account;
     }
@@ -112,14 +113,42 @@ export class AccountUseCases {
    * @param id - The account id.
    * @returns The updated account.
    */
-  async synchronize(id: string): Promise<BitcoinAccount> {
-    logger.debug('Synchronizing account. ID: %s', id);
+  async synchronize(id: string): Promise<void> {
+    logger.trace('Synchronizing account. ID: %s', id);
 
     const account = await this.#repository.get(id);
     if (!account) {
       throw new Error(`Account not found: ${id}`);
     }
 
+    await this.#synchronize(account);
+
+    logger.debug('Account synchronized successfully: %s', account.id);
+  }
+
+  async synchronizeAll(): Promise<void> {
+    logger.trace('Synchronizing all accounts');
+
+    // accounts cannot be empty by assertion.
+    const accounts = await this.#repository.getAll();
+    const results = await Promise.allSettled(
+      accounts.map(async (account) => this.#synchronize(account)),
+    );
+
+    results.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        logger.error(
+          `Account failed to sync. ID: %s. Error: %o`,
+          accounts[index].id,
+          result.reason,
+        );
+      }
+    });
+
+    logger.debug('Accounts synchronized successfully');
+  }
+
+  async #synchronize(account: BitcoinAccount): Promise<void> {
     // If the account is already scanned, we just sync it, otherwise we do a full scan.
     if (account.isScanned) {
       await this.#chain.sync(account);
@@ -129,9 +158,6 @@ export class AccountUseCases {
     }
 
     await this.#repository.update(account);
-
-    logger.info('Account synchronized successfully: %s', account.id);
-    return account;
   }
 
   async delete(id: string): Promise<void> {
