@@ -36,13 +36,15 @@ export class SendFormUseCases {
       throw new Error('Account not found');
     }
 
+    const currency = networkToCurrencyUnit[account.network];
     const formContext: SendFormContext = {
-      currency: CurrencyUnit.Bitcoin,
+      currency,
       account: account.id,
     };
+
     // TODO: Move rate fetching to cron job
     // Only get the rate when on mainnet as other currencies have no exchange value
-    if (networkToCurrencyUnit[account.network] === CurrencyUnit.Bitcoin) {
+    if (currency === CurrencyUnit.Bitcoin) {
       formContext.fiatRate = await this.#snapClient.getBtcRate();
     }
 
@@ -75,23 +77,19 @@ export class SendFormUseCases {
     }
 
     switch (event) {
-      case SendFormEvent.HeaderBack: {
+      case SendFormEvent.HeaderBack:
+      case SendFormEvent.Cancel: {
         return await this.#snapClient.resolveInterface(id, null);
       }
       case SendFormEvent.Clear: {
-        const updatedContext = { ...context };
-        updatedContext.recipient = '';
+        const updatedContext = { ...context, recipient: '' };
         return await this.#sendFormRepository.update(
           id,
           account,
           updatedContext,
         );
       }
-      case SendFormEvent.Cancel:
-      case SendFormEvent.Close: {
-        return await this.#snapClient.resolveInterface(id, null);
-      }
-      case SendFormEvent.SwapCurrencyDisplay: {
+      case SendFormEvent.SwapCurrency: {
         context.currency =
           context.currency === CurrencyUnit.Bitcoin
             ? CurrencyUnit.Fiat
@@ -105,10 +103,10 @@ export class SendFormUseCases {
         return Promise.resolve();
       }
       case SendFormEvent.SetMax: {
-        const updatedContext = { ...context };
-        updatedContext.amount = account.balance.trusted_spendable
-          .to_sat()
-          .toString();
+        const updatedContext = {
+          ...context,
+          amount: account.balance.trusted_spendable.to_sat().toString(),
+        };
         return await this.#sendFormRepository.update(
           id,
           account,
@@ -118,7 +116,5 @@ export class SendFormUseCases {
       default:
         return Promise.resolve();
     }
-
-    logger.debug('Send form updated successfully: %s', id);
   }
 }

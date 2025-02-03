@@ -14,7 +14,7 @@
     "**/*.ts",
     "**/*.tsx",
     "src/**/*.tsx",
-    "src/index.tsx",
+    "src/index.ts",
     "locales/*.json"
   ]
 }

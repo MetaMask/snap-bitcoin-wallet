@@ -30,8 +30,8 @@ const displayAmount = (amountSats?: string): string => {
 
 export const SendForm: SnapComponent<SendFormProps> = ({
   currency,
-  balanceSats,
-  amountSats,
+  balance,
+  amount,
   recipient,
   fiatRate,
 }) => {
@@ -39,7 +39,7 @@ export const SendForm: SnapComponent<SendFormProps> = ({
 
   return (
     <Form name="sendForm">
-      <Field label={t('sendAmount')} error={''}>
+      <Field label={t('sendAmount')}>
         <Box direction="horizontal" center>
           <Image src={btcIcon} />
         </Box>
@@ -48,13 +48,13 @@ export const SendForm: SnapComponent<SendFormProps> = ({
           type="number"
           min={0}
           step={0.00000001}
-          placeholder={t('amountToSendPlaceholder')}
-          value={displayAmount(amountSats)}
+          placeholder={t('amountPlaceholder')}
+          value={displayAmount(amount)}
         />
         {Boolean(fiatRate) && (
           <Box direction="horizontal" center>
             <Text color="alternative">{currency}</Text>
-            <Button name={SendFormEvent.SwapCurrencyDisplay}>
+            <Button name={SendFormEvent.SwapCurrency}>
               <Icon name="swap-vertical" color="primary" size="md" />
             </Button>
           </Box>
@@ -62,26 +62,26 @@ export const SendForm: SnapComponent<SendFormProps> = ({
       </Field>
       <Box
         direction="horizontal"
-        alignment={displayAmount(balanceSats) ? 'space-between' : 'end'}
+        alignment={displayAmount(balance) ? 'space-between' : 'end'}
       >
         <Box direction="horizontal">
           <Text color="muted">
-            {`${t('balance')}: ${displayAmount(amountSats)} ${currency}`}
+            {`${t('balance')}: ${displayAmount(balance)} ${currency}`}
           </Text>
         </Box>
 
         <Button name={SendFormEvent.SetMax}>{t('max')}</Button>
       </Box>
-      <Field label={t('toAccount')} error={''}>
+      <Field label={t('toAddress')}>
         <Input
           name={SendFormEvent.To}
-          placeholder={t('receivingAddressPlaceholder')}
+          placeholder={t('recipientPlaceholder')}
           value={recipient ?? ''}
         />
         {Boolean(recipient) && (
           <Box>
             <Button name={SendFormEvent.Clear}>
-              <Icon name={SendFormEvent.Close} color="primary" />
+              <Icon name={'close'} color="primary" />
             </Button>
           </Box>
         )}

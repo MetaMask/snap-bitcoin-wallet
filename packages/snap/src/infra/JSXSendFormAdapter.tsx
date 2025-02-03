@@ -25,9 +25,7 @@ export class JSXSendFormAdapter implements UserInterface {
   component() {
     return (
       <SendFormView
-        balanceSats={this.#account.balance.trusted_spendable
-          .to_sat()
-          .toString()}
+        balance={this.#account.balance.trusted_spendable.to_sat().toString()}
         {...this.#context}
       />
     );

@@ -9,23 +9,18 @@ import {
   Image,
 } from '@metamask/snaps-sdk/jsx';
 
-import type { CurrencyUnit } from '../../entities';
+import type { SendFormContext } from '../../entities';
 import { SendFormEvent } from '../../entities';
 import emptySpace from '../../images/empty-space.svg';
 import { getTranslator } from '../../utils/locale';
 import { SendForm } from './SendForm';
 import { TransactionSummary } from './TransactionSummary';
 
-export type SendFormViewProps = {
-  balanceSats: string;
-  currency: CurrencyUnit;
+export type SendFormViewProps = SendFormContext & {
+  balance: string;
   flushToAddress?: boolean;
   currencySwitched?: boolean;
   backEventTriggered?: boolean;
-  fiatRate?: number;
-  recipient?: string;
-  amountSats?: string;
-  feeSats?: string;
 };
 
 export const SendFormView: SnapComponent<SendFormViewProps> = ({
@@ -37,7 +32,7 @@ export const SendFormView: SnapComponent<SendFormViewProps> = ({
   const t = getTranslator();
 
   const disabledReview = true;
-  const showTransactionSummary = Boolean(props.amountSats && props.feeSats);
+  const showTransactionSummary = Boolean(props.amount && props.fee);
 
   return (
     <Container>
@@ -62,8 +57,8 @@ export const SendFormView: SnapComponent<SendFormViewProps> = ({
         />
         {showTransactionSummary && (
           <TransactionSummary
-            amountSats={props.amountSats!}
-            feeSats={props.feeSats!}
+            amountSats={props.amount!}
+            feeSats={props.fee!}
             currency={props.currency}
             fiatRate={props.fiatRate}
           />

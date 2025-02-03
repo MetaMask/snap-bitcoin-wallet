@@ -13,9 +13,12 @@ import {
 
 import { Config } from './config';
 import { ConfigV2 } from './configv2';
-import { KeyringHandler, CronHandler } from './handlers';
-import { RpcHandler } from './handlers/RpcHandler';
-import { UserInputHandler } from './handlers/UserInputHandler';
+import {
+  KeyringHandler,
+  CronHandler,
+  UserInputHandler,
+  RpcHandler,
+} from './handlers';
 import { SnapClientAdapter, EsploraClientAdapter } from './infra';
 import { BtcKeyring } from './keyring';
 import { InternalRpcMethod, originPermissions } from './permissions';
@@ -32,8 +35,7 @@ import {
 import type { StartSendTransactionFlowParams } from './rpcs/start-send-transaction-flow';
 import { startSendTransactionFlow } from './rpcs/start-send-transaction-flow';
 import { KeyringStateManager } from './stateManagement';
-import { BdkAccountRepository } from './store/BdkAccountRepository';
-import { JSXSendFormRepository } from './store/JSXSendFormRepository';
+import { BdkAccountRepository, JSXSendFormRepository } from './store';
 import {
   isSendFormEvent,
   SendBitcoinController,

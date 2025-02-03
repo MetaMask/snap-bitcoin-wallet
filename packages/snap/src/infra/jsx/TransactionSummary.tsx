@@ -17,7 +17,7 @@ export type TransactionSummaryProps = {
   fiatRate?: SendFormViewProps['fiatRate'];
 };
 
-const fiatAmount = (amount: Amount, rate?: number): string => {
+const displayFiatAmount = (amount: Amount, rate?: number): string => {
   return rate ? (amount.to_sat() * BigInt(rate)).toString(2) : '';
 };
 
@@ -38,7 +38,7 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
       <Row label={t('networkFee')} tooltip={t('networkFeeTooltip')}>
         <Value
           value={`${fee.to_btc()} ${currency}`}
-          extra={fiatAmount(fee, fiatRate)}
+          extra={displayFiatAmount(fee, fiatRate)}
         />
       </Row>
       <Row label={t('transactionSpeed')} tooltip={t('transactionSpeedTooltip')}>
@@ -47,7 +47,7 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
       <Row label={t('total')}>
         <Value
           value={`${totalAmount.to_btc()} ${currency}`}
-          extra={fiatAmount(totalAmount, fiatRate)}
+          extra={displayFiatAmount(totalAmount, fiatRate)}
         />
       </Row>
     </Section>

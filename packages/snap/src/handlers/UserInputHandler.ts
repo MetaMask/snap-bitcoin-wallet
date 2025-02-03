@@ -26,12 +26,11 @@ export class UserInputHandler {
           throw new Error('Missing context');
         }
 
-        await this.#sendFormUseCases.update(
+        return await this.#sendFormUseCases.update(
           interfaceId,
           event.name,
           context as SendFormContext,
         );
-        break;
       }
       default:
         throw new Error('Unsupported event type');

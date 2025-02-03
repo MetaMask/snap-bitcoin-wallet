@@ -17,7 +17,7 @@
       "message": "From"
     },
     "toAccount": {
-      "message": "To Account"
+      "message": "To Address"
     },
     "fromAccount": {
       "message": "From Account"
@@ -67,14 +67,14 @@
     "sendAmount": {
       "message": "Send Amount"
     },
-    "amountToSendPlaceholder": {
+    "amountPlaceholder": {
       "message": "Enter amount to send"
     },
     "max": {
       "message": "Max"
     },
-    "receivingAddressPlaceholder": {
-      "message": "Enter receiving address"
+    "recipientPlaceholder": {
+      "message": "Enter recipient address"
     },
     "validAddress": {
       "message": "Valid bitcoin address"

@@ -13,10 +13,10 @@ export type SendFormContext = {
 export enum SendFormEvent {
   Amount = 'amount',
   To = 'to',
-  SwapCurrencyDisplay = 'swap',
+  SwapCurrency = 'swap',
   AccountSelector = 'accountSelector',
   Clear = 'clear',
-  Close = 'close',
+  ClearIcon = 'clearIcon',
   Review = 'review',
   Cancel = 'cancel',
   HeaderBack = 'headerBack',
