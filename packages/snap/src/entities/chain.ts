@@ -1,4 +1,5 @@
-import { Network, Transaction } from 'bitcoindevkit';
+import type { Network, Transaction } from 'bitcoindevkit';
+
 import type { BitcoinAccount } from './account';
 
 export type BlockchainClient = {

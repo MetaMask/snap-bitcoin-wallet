@@ -4,7 +4,7 @@ import { KeyringEvent } from '@metamask/keyring-api';
 import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
 import type { Json, SnapsProvider } from '@metamask/snaps-sdk';
 
-import type { BitcoinAccount, UIContext, UserInterface } from '../entities';
+import type { BitcoinAccount, UserInterface } from '../entities';
 import type { SnapClient, SnapState } from '../entities/snap';
 import { snapToKeyringAccount } from '../handlers/keyring-account';
 

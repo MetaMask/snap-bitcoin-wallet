@@ -1,6 +1,5 @@
 import type {
   BitcoinAccount,
-  SendForm,
   SendFormContext,
   SendFormRepository,
 } from '../entities';

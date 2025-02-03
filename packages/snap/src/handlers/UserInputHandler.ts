@@ -1,8 +1,10 @@
-import { assert, enums, object } from 'superstruct';
+import type { UserInputEvent } from '@metamask/snaps-sdk';
+import { UserInputEventType } from '@metamask/snaps-sdk';
+import { assert, enums } from 'superstruct';
 
+import type { SendFormContext, UIContext } from '../entities';
+import { SendFormEvent } from '../entities';
 import type { SendFormUseCases } from '../use-cases';
-import { UserInputEvent, UserInputEventType } from '@metamask/snaps-sdk';
-import { SendFormContext, SendFormEvent, UIContext } from '../entities';
 
 export class UserInputHandler {
   readonly #sendFormUseCases: SendFormUseCases;

@@ -88,8 +88,8 @@ export type BitcoinAccount = {
 
   /**
    * Creates a new PSB.
-   * @param feeRate. The fee rate in sats/vb
-   * @param recipients. The list of recipients
+   * @param feeRate. - The fee rate in sats/vb
+   * @param recipients. - The list of recipients
    * @returns the PSBT
    */
   buildTx(feeRate: FeeRate, recipients: Recipient[]): Psbt;

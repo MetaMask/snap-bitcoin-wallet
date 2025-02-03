@@ -1,69 +1,44 @@
 import {
-  Box,
   Row,
   Section,
-  Spinner,
   Text,
   Value,
   type SnapComponent,
 } from '@metamask/snaps-sdk/jsx';
+import { Amount } from 'bitcoindevkit';
 
-import type { SendFlowRequest } from '../../stateManagement';
 import { getTranslator } from '../../utils/locale';
-import { displayEmptyStringIfAmountNotAvailableOrEmptyAmount } from '../../ui/utils';
+import type { SendFormViewProps } from './SendFormView';
 
-/**
- * The props for the {@link TransactionSummary} component.
- *
- * @property fees - The fees for the transaction.
- * @property total - The total cost of the transaction.
- */
 export type TransactionSummaryProps = {
-  fees: SendFlowRequest['fees'];
-  total: SendFlowRequest['total'];
+  currency: SendFormViewProps['currency'];
+  amountSats: string;
+  feeSats: string;
+  fiatRate?: SendFormViewProps['fiatRate'];
 };
 
-/**
- * A component that shows the transaction summary.
- *
- * @param props - The component props.
- * @param props.fees - The fees for the transaction.
- * @param props.total - The total cost of the transaction.
- * @returns The TransactionSummary component.
- */
+const fiatAmount = (amount: Amount, rate?: number): string => {
+  return rate ? (amount.to_sat() * BigInt(rate)).toString(2) : '';
+};
+
 export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
-  fees,
-  total,
+  feeSats,
+  amountSats,
+  currency,
+  fiatRate,
 }) => {
   const t = getTranslator();
 
-  if (fees.loading) {
-    return (
-      <Section>
-        <Box direction="vertical" alignment="center" center>
-          <Spinner />
-          <Text>{t('preparingTransaction')}</Text>
-        </Box>
-      </Section>
-    );
-  }
-
-  if (fees.error) {
-    return (
-      <Section>
-        <Row label={t('error')}>
-          <Text>{fees.error}</Text>
-        </Row>
-      </Section>
-    );
-  }
+  const totalSats = BigInt(amountSats) + BigInt(feeSats);
+  const totalAmount = Amount.from_sat(totalSats);
+  const fee = Amount.from_sat(BigInt(feeSats));
 
   return (
     <Section>
       <Row label={t('networkFee')} tooltip={t('networkFeeTooltip')}>
         <Value
-          value={`${fees.amount.toString()} BTC`}
-          extra={displayEmptyStringIfAmountNotAvailableOrEmptyAmount(fees.fiat)}
+          value={`${fee.to_btc()} ${currency}`}
+          extra={fiatAmount(fee, fiatRate)}
         />
       </Row>
       <Row label={t('transactionSpeed')} tooltip={t('transactionSpeedTooltip')}>
@@ -71,10 +46,8 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
       </Row>
       <Row label={t('total')}>
         <Value
-          value={`${total.amount.toString()} BTC`}
-          extra={displayEmptyStringIfAmountNotAvailableOrEmptyAmount(
-            total.fiat,
-          )}
+          value={`${totalAmount.to_btc()} ${currency}`}
+          extra={fiatAmount(totalAmount, fiatRate)}
         />
       </Row>
     </Section>

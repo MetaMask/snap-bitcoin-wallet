@@ -1,20 +1,13 @@
 import type { BitcoinAccount } from './account';
-import { CurrencyUnit } from './currency';
-import type { UserInterface } from './ui';
-
-export type SendForm = UserInterface & {
-  context: SendFormContext;
-};
+import type { CurrencyUnit } from './currency';
 
 export type SendFormContext = {
   account: string;
   fiatRate?: number;
   currency: CurrencyUnit;
-  request: {
-    recipient?: string;
-    amount?: number;
-    feeRate?: number;
-  };
+  recipient?: string;
+  amount?: string;
+  fee?: string;
 };
 
 export enum SendFormEvent {

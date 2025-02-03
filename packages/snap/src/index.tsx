@@ -15,6 +15,7 @@ import { Config } from './config';
 import { ConfigV2 } from './configv2';
 import { KeyringHandler, CronHandler } from './handlers';
 import { RpcHandler } from './handlers/RpcHandler';
+import { UserInputHandler } from './handlers/UserInputHandler';
 import { SnapClientAdapter, EsploraClientAdapter } from './infra';
 import { BtcKeyring } from './keyring';
 import { InternalRpcMethod, originPermissions } from './permissions';
@@ -41,7 +42,6 @@ import type { SendFlowContext, SendFormState } from './ui/types';
 import { AccountUseCases, SendFormUseCases } from './use-cases';
 import { isSnapRpcError, logger } from './utils';
 import { loadLocale } from './utils/locale';
-import { UserInputHandler } from './handlers/UserInputHandler';
 
 logger.logLevel = parseInt(Config.logLevel, 10);
 
@@ -69,7 +69,6 @@ if (ConfigV2.keyringVersion === 'v2') {
     snapClient,
     accountRepository,
     sendFormRepository,
-    chainClient,
   );
   // Application layer
   keyringHandler = new KeyringHandler(accountsUseCases);

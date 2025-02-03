@@ -1,12 +1,11 @@
 import { UserRejectedRequestError } from '@metamask/snaps-sdk';
+
+import type { SendFormContext, TransactionRequest } from '../entities';
 import {
   CurrencyUnit,
   networkToCurrencyUnit,
-  SendFormContext,
   SendFormEvent,
-  TransactionRequest,
   type BitcoinAccountRepository,
-  type BlockchainClient,
   type SendFormRepository,
 } from '../entities';
 import type { SnapClient } from '../entities/snap';
@@ -19,18 +18,14 @@ export class SendFormUseCases {
 
   readonly #sendFormRepository: SendFormRepository;
 
-  readonly #chain: BlockchainClient;
-
   constructor(
     snapClient: SnapClient,
     accountRepository: BitcoinAccountRepository,
     sendFormrepository: SendFormRepository,
-    chain: BlockchainClient,
   ) {
     this.#snapClient = snapClient;
     this.#accountRepository = accountRepository;
     this.#sendFormRepository = sendFormrepository;
-    this.#chain = chain;
   }
 
   async display(accountId: string): Promise<TransactionRequest> {
@@ -44,7 +39,6 @@ export class SendFormUseCases {
     const formContext: SendFormContext = {
       currency: CurrencyUnit.Bitcoin,
       account: account.id,
-      request: {},
     };
     // TODO: Move rate fetching to cron job
     // Only get the rate when on mainnet as other currencies have no exchange value
@@ -82,39 +76,47 @@ export class SendFormUseCases {
 
     switch (event) {
       case SendFormEvent.HeaderBack: {
-        await this.#snapClient.resolveInterface(id, null);
-        break;
+        return await this.#snapClient.resolveInterface(id, null);
       }
-      case SendFormEvent.Clear:
-        context.request.recipient = '';
-        await this.#sendFormRepository.update(id, account, context);
-        break;
+      case SendFormEvent.Clear: {
+        const updatedContext = { ...context };
+        updatedContext.recipient = '';
+        return await this.#sendFormRepository.update(
+          id,
+          account,
+          updatedContext,
+        );
+      }
       case SendFormEvent.Cancel:
       case SendFormEvent.Close: {
-        await this.#snapClient.resolveInterface(id, null);
-        break;
+        return await this.#snapClient.resolveInterface(id, null);
       }
       case SendFormEvent.SwapCurrencyDisplay: {
         context.currency =
           context.currency === CurrencyUnit.Bitcoin
             ? CurrencyUnit.Fiat
             : CurrencyUnit.Bitcoin;
-        await this.#sendFormRepository.update(id, account, context);
-        break;
+        return await this.#sendFormRepository.update(id, account, context);
       }
       case SendFormEvent.Review: {
         // TODO: Implement confirmation screen
         console.log('display confirmation form');
-        //await displayConfirmationReview({ request: context.request });
-        break;
+        // await displayConfirmationReview({ request: context.request });
+        return Promise.resolve();
       }
       case SendFormEvent.SetMax: {
-        context.request.amount = account.balance.trusted_spendable.to_btc();
-        await this.#sendFormRepository.update(id, account, context);
-        break;
+        const updatedContext = { ...context };
+        updatedContext.amount = account.balance.trusted_spendable
+          .to_sat()
+          .toString();
+        return await this.#sendFormRepository.update(
+          id,
+          account,
+          updatedContext,
+        );
       }
       default:
-        break;
+        return Promise.resolve();
     }
 
     logger.debug('Send form updated successfully: %s', id);

@@ -16,6 +16,7 @@ type CreateSendFormResponse = {
 
 export class RpcHandler {
   readonly #sendFormUseCases: SendFormUseCases;
+
   readonly #accountUseCases: AccountUseCases;
 
   constructor(sendForm: SendFormUseCases, accounts: AccountUseCases) {

@@ -1,4 +1,4 @@
-import { Amount, FeeRate, Recipient } from 'bitcoindevkit';
+import type { Amount, FeeRate, Recipient } from 'bitcoindevkit';
 
 export type TransactionRequest = {
   recipients: Recipient[];

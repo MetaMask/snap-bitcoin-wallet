@@ -1,9 +1,9 @@
 import type { JsonSLIP10Node, SLIP10Node } from '@metamask/key-tree';
+import type { Json } from '@metamask/utils';
 
 import type { BitcoinAccount } from './account';
+import type { SendFormContext } from './send-form';
 import type { UserInterface } from './ui';
-import { SendFormContext } from './send-form';
-import { Json } from '@metamask/utils';
 
 export type SnapState = {
   interfaces: {
