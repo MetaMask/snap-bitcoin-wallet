@@ -110,6 +110,7 @@ export class SendFormUseCases {
       }
       case SendFormEvent.SetMax: {
         context.request.amount = account.balance.trusted_spendable.to_btc();
+        await this.#sendFormRepository.update(id, account, context);
         break;
       }
       default:
