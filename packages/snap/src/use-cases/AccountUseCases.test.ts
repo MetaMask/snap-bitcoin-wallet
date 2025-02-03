@@ -241,13 +241,12 @@ describe('AccountUseCases', () => {
 
       mockRepository.get.mockResolvedValue(mockAccount);
 
-      const result = await useCases.synchronize('some-id');
+      await useCases.synchronize('some-id');
 
       expect(mockRepository.get).toHaveBeenCalledWith('some-id');
       expect(mockChain.sync).toHaveBeenCalledWith(mockAccount);
       expect(mockChain.fullScan).not.toHaveBeenCalled();
       expect(mockRepository.update).toHaveBeenCalledWith(mockAccount);
-      expect(result).toBe(mockAccount);
     });
 
     it('performs a full scan if the account is not scanned', async () => {
@@ -257,13 +256,12 @@ describe('AccountUseCases', () => {
 
       mockRepository.get.mockResolvedValue(mockAccount);
 
-      const result = await useCases.synchronize('some-id');
+      await useCases.synchronize('some-id');
 
       expect(mockRepository.get).toHaveBeenCalledWith('some-id');
       expect(mockChain.fullScan).toHaveBeenCalledWith(mockAccount);
       expect(mockChain.sync).not.toHaveBeenCalled();
       expect(mockRepository.update).toHaveBeenCalledWith(mockAccount);
-      expect(result).toBe(mockAccount);
     });
 
     it('propagates an error if the chain sync fails', async () => {
@@ -313,6 +311,47 @@ describe('AccountUseCases', () => {
       expect(mockRepository.get).toHaveBeenCalledWith('some-id');
       expect(mockChain.sync).toHaveBeenCalledWith(mockAccount);
       expect(mockRepository.update).toHaveBeenCalledWith(mockAccount);
+    });
+  });
+
+  describe('synchronizeAll', () => {
+    const mockAccounts = [
+      {
+        id: 'id-1',
+        isScanned: true,
+      },
+      {
+        id: 'id-2',
+      },
+    ] as BitcoinAccount[];
+
+    it('synchronizes all accounts', async () => {
+      mockRepository.getAll.mockResolvedValue(mockAccounts);
+
+      await useCases.synchronizeAll();
+
+      expect(mockRepository.getAll).toHaveBeenCalled();
+      expect(mockChain.sync).toHaveBeenCalledWith(mockAccounts[0]);
+      expect(mockChain.fullScan).toHaveBeenCalledWith(mockAccounts[1]);
+    });
+
+    it('propagates errors from getAll', async () => {
+      const error = new Error();
+      mockRepository.getAll.mockRejectedValue(error);
+
+      await expect(useCases.synchronizeAll()).rejects.toThrow(error);
+      expect(mockRepository.getAll).toHaveBeenCalled();
+    });
+
+    it('do not propagate errors when synchonize fails', async () => {
+      const error = new Error();
+      mockRepository.getAll.mockResolvedValue(mockAccounts);
+      mockChain.sync.mockRejectedValue(error);
+
+      await useCases.synchronizeAll();
+
+      expect(mockRepository.getAll).toHaveBeenCalled();
+      expect(mockChain.sync).toHaveBeenCalled();
     });
   });
 

@@ -113,7 +113,7 @@ export class AccountUseCases {
    * @param id - The account id.
    * @returns The updated account.
    */
-  async synchronize(id: string): Promise<BitcoinAccount> {
+  async synchronize(id: string): Promise<void> {
     logger.trace('Synchronizing account. ID: %s', id);
 
     const account = await this.#repository.get(id);
@@ -121,6 +121,34 @@ export class AccountUseCases {
       throw new Error(`Account not found: ${id}`);
     }
 
+    await this.#syncAccount(account);
+
+    logger.debug('Account synchronized successfully: %s', account.id);
+  }
+
+  async synchronizeAll(): Promise<void> {
+    logger.trace('Synchronizing all accounts');
+
+    // accounts cannot be empty by assertion.
+    const accounts = await this.#repository.getAll();
+    const results = await Promise.allSettled(
+      accounts.map(async (account) => this.#syncAccount(account)),
+    );
+
+    results.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        logger.error(
+          `Account failed to sync. ID: %s. Error: %o`,
+          accounts[index].id,
+          result.reason,
+        );
+      }
+    });
+
+    logger.debug('Accounts synchronized successfully');
+  }
+
+  async #syncAccount(account: BitcoinAccount): Promise<void> {
     // If the account is already scanned, we just sync it, otherwise we do a full scan.
     if (account.isScanned) {
       await this.#chain.sync(account);
@@ -130,9 +158,6 @@ export class AccountUseCases {
     }
 
     await this.#repository.update(account);
-
-    logger.debug('Account synchronized successfully: %s', account.id);
-    return account;
   }
 
   async delete(id: string): Promise<void> {
