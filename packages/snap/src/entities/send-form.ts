@@ -1,49 +1,66 @@
-import type { BitcoinAccount } from './account';
+import type { Network } from 'bitcoindevkit';
+
 import type { CurrencyUnit } from './currency';
+
+export const SENDFORM_NAME = 'sendForm';
 
 export type SendFormContext = {
   account: string;
-  fiatRate?: number;
+  network: Network;
+  balance: string;
+  feeRate: number;
   currency: CurrencyUnit;
+  fiatRate?: number;
   recipient?: string;
   amount?: string;
   fee?: string;
+  drain?: boolean;
+  errors: {
+    tx?: string;
+    recipient?: string;
+    amount?: string;
+  };
 };
 
 export enum SendFormEvent {
   Amount = 'amount',
-  To = 'to',
+  Recipient = 'recipient',
   SwapCurrency = 'swap',
   AccountSelector = 'accountSelector',
-  Clear = 'clear',
-  ClearIcon = 'clearIcon',
+  ClearRecipient = 'clearRecipient',
   Review = 'review',
   Cancel = 'cancel',
   HeaderBack = 'headerBack',
   SetMax = 'max',
 }
 
+export type SendFormState = {
+  recipient: string;
+  amount: string;
+};
+
 /**
  * SendFormRepository is a repository that manages Bitcoin Send forms.
  */
 export type SendFormRepository = {
   /**
+   * Get the form state.
+   * @param id - the form ID
+   * @returns the form state
+   */
+  getState(id: string): Promise<SendFormState>;
+
+  /**
    * Insert a new form interface.
-   * @param account - the Bitcoin account tied to the form
    * @param context - the form context
    * @returns the form ID
    */
-  insert(account: BitcoinAccount, context: SendFormContext): Promise<string>;
+  insert(context: SendFormContext): Promise<string>;
 
   /**
    * Updates a form interface with an account and context
    * @param id - the form ID
-   * @param account - the Bitcoin account tied to the form
    * @param context - the form context
    */
-  update(
-    id: string,
-    account: BitcoinAccount,
-    context: SendFormContext,
-  ): Promise<void>;
+  update(id: string, context: SendFormContext): Promise<void>;
 };

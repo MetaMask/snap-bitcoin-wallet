@@ -81,6 +81,10 @@ export class BdkAccountAdapter implements BitcoinAccount {
     return this.#wallet.reveal_next_address('external');
   }
 
+  listUnusedAddreses(): AddressInfo[] {
+    return this.#wallet.list_unused_addresses('external');
+  }
+
   startFullScan(): FullScanRequest {
     return this.#wallet.start_full_scan();
   }

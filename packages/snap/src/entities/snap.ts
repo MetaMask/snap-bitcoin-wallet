@@ -1,14 +1,10 @@
 import type { JsonSLIP10Node, SLIP10Node } from '@metamask/key-tree';
+import type { ComponentOrElement } from '@metamask/snaps-sdk';
 import type { Json } from '@metamask/utils';
 
 import type { BitcoinAccount } from './account';
-import type { SendFormContext } from './send-form';
-import type { UserInterface } from './ui';
 
 export type SnapState = {
-  interfaces: {
-    sendForms: Record<string, SendFormContext>;
-  };
   accounts: {
     derivationPaths: Record<string, string>;
     wallets: Record<string, string>;
@@ -46,44 +42,67 @@ export type SnapClient = {
   getPublicEntropy(derivationPath: string[]): Promise<SLIP10Node>;
 
   /**
-   * Emits an event notifying the extension of a newly created Bitcoin account
+   * Emit an event notifying the extension of a newly created Bitcoin account
    * @param account - The Bitcoin account.
    */
   emitAccountCreatedEvent(account: BitcoinAccount): Promise<void>;
 
   /**
-   * Emits an event notifying the extension of a deleted Bitcoin account
+   * Emit an event notifying the extension of a deleted Bitcoin account
    * @param account - The Bitcoin account id.
    */
   emitAccountDeletedEvent(id: string): Promise<void>;
 
   /**
-   * Creates a User Interface.
-   * @param ui - The interface parameters.
+   * Create a User Interface.
+   * @param ui - The UI Component.
+   * @param context - The Interface context.
    * @returns the interface ID
    */
-  createInterface(ui: UserInterface): Promise<string>;
+  createInterface(
+    ui: ComponentOrElement,
+    context: Record<string, Json>,
+  ): Promise<string>;
 
   /**
-   * Updates a User Interface.
+   * Update a User Interface.
+   * @param id - The interface id.
    * @param ui - The user interface.
+   * @param context - The Interface context.
    */
-  updateInterface(id: string, ui: UserInterface): Promise<void>;
+  updateInterface(
+    id: string,
+    ui: ComponentOrElement,
+    context: Record<string, Json>,
+  ): Promise<void>;
 
   /**
-   * Displays a User Interface.
-   * @param params - The interface id.
+   * Display a User Interface.
+   * @param id - The interface id.
+   * @returns the resolved value or null.
    */
   displayInterface<ResolveType>(id: string): Promise<ResolveType | null>;
 
   /**
-   * Displays a User Interface.
-   * @param params - The interface id.
+   * Display a User Interface.
+   * @param id - The interface id.
+   * @param value - The resolved value.
    */
   resolveInterface(id: string, value: Json): Promise<void>;
 
   /**
-   * Retrieves the BTC currency rate.
+   * Get the state of an interface.
+   * @param id - The interface id.
+   * @param field - The field to return from the state.
+   * @returns the interface state value or undefined.
+   */
+  getInterfaceState<InterfaceStateType>(
+    id: string,
+    field: string,
+  ): Promise<InterfaceStateType | undefined>;
+
+  /**
+   * Retrieve the BTC currency rate.
    * @returns A Promise that resolves to the BTC rate.
    */
   getBtcRate(): Promise<number | undefined>;

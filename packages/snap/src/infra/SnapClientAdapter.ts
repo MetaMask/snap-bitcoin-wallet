@@ -2,9 +2,13 @@ import type { JsonSLIP10Node } from '@metamask/key-tree';
 import { SLIP10Node } from '@metamask/key-tree';
 import { KeyringEvent } from '@metamask/keyring-api';
 import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
-import type { Json, SnapsProvider } from '@metamask/snaps-sdk';
+import type {
+  ComponentOrElement,
+  Json,
+  SnapsProvider,
+} from '@metamask/snaps-sdk';
 
-import type { BitcoinAccount, UserInterface } from '../entities';
+import type { BitcoinAccount } from '../entities';
 import type { SnapClient, SnapState } from '../entities/snap';
 import { snapToKeyringAccount } from '../handlers/keyring-account';
 
@@ -31,7 +35,6 @@ export class SnapClientAdapter implements SnapClient {
     return (
       (state as SnapState) ?? {
         accounts: { derivationPaths: {}, wallets: {} },
-        interfaces: { sendForms: {} },
       }
     );
   }
@@ -66,14 +69,14 @@ export class SnapClientAdapter implements SnapClient {
     const suggestedName = () => {
       switch (account.network) {
         case 'bitcoin':
-          return 'Bitcoin Account';
+          return 'Bitcoin';
         case 'testnet':
         case 'testnet4':
-          return 'Bitcoin Testnet Account';
+          return 'Bitcoin Testnet';
         case 'signet':
-          return 'Bitcoin Signet Account';
+          return 'Bitcoin Signet';
         case 'regtest':
-          return 'Bitcoin Regtest Account';
+          return 'Bitcoin Regtest';
         default:
           // Leave it blank to fallback to auto-suggested name on the extension side
           return '';
@@ -92,23 +95,30 @@ export class SnapClientAdapter implements SnapClient {
     });
   }
 
-  async createInterface(ui: UserInterface): Promise<string> {
+  async createInterface(
+    ui: ComponentOrElement,
+    context: Record<string, Json>,
+  ): Promise<string> {
     return await snap.request({
       method: 'snap_createInterface',
       params: {
-        ui: ui.component(),
-        context: ui.context,
+        ui,
+        context,
       },
     });
   }
 
-  async updateInterface(id: string, ui: UserInterface): Promise<void> {
+  async updateInterface(
+    id: string,
+    ui: ComponentOrElement,
+    context: Record<string, Json>,
+  ): Promise<void> {
     await snap.request({
       method: 'snap_updateInterface',
       params: {
         id,
-        ui: ui.component(),
-        context: ui.context,
+        ui,
+        context,
       },
     });
   }
@@ -120,6 +130,18 @@ export class SnapClientAdapter implements SnapClient {
         id,
       },
     })) as ResolveType;
+  }
+
+  async getInterfaceState<InterfaceStateType>(
+    id: string,
+    field: string,
+  ): Promise<InterfaceStateType> {
+    const result = await snap.request({
+      method: 'snap_getInterfaceState',
+      params: { id },
+    });
+
+    return result[field] as InterfaceStateType;
   }
 
   async resolveInterface(id: string, value: Json): Promise<void> {

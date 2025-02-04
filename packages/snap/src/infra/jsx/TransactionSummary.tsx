@@ -7,18 +7,21 @@ import {
 } from '@metamask/snaps-sdk/jsx';
 import { Amount } from 'bitcoindevkit';
 
+import type { SendFormContext } from '../../entities';
+import { CurrencyUnit } from '../../entities';
 import { getTranslator } from '../../utils/locale';
-import type { SendFormViewProps } from './SendFormView';
 
 export type TransactionSummaryProps = {
-  currency: SendFormViewProps['currency'];
+  currency: SendFormContext['currency'];
   amountSats: string;
   feeSats: string;
-  fiatRate?: SendFormViewProps['fiatRate'];
+  fiatRate?: SendFormContext['fiatRate'];
 };
 
-const displayFiatAmount = (amount: Amount, rate?: number): string => {
-  return rate ? (amount.to_sat() * BigInt(rate)).toString(2) : '';
+const displayFiatAmount = (amount: Amount, fiatRate?: number): string => {
+  return fiatRate
+    ? ((Number(amount.to_sat()) * fiatRate) / 1e8).toFixed(2)
+    : '';
 };
 
 export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
@@ -38,7 +41,7 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
       <Row label={t('networkFee')} tooltip={t('networkFeeTooltip')}>
         <Value
           value={`${fee.to_btc()} ${currency}`}
-          extra={displayFiatAmount(fee, fiatRate)}
+          extra={`${displayFiatAmount(fee, fiatRate)} ${CurrencyUnit.Fiat}`}
         />
       </Row>
       <Row label={t('transactionSpeed')} tooltip={t('transactionSpeedTooltip')}>
@@ -47,7 +50,9 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
       <Row label={t('total')}>
         <Value
           value={`${totalAmount.to_btc()} ${currency}`}
-          extra={displayFiatAmount(totalAmount, fiatRate)}
+          extra={`${displayFiatAmount(totalAmount, fiatRate)} ${
+            CurrencyUnit.Fiat
+          }`}
         />
       </Row>
     </Section>

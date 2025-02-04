@@ -1,4 +1,5 @@
 import { UserRejectedRequestError } from '@metamask/snaps-sdk';
+import { FeeRate, Recipient, Address, Amount } from 'bitcoindevkit';
 
 import type { SendFormContext, TransactionRequest } from '../entities';
 import {
@@ -29,7 +30,7 @@ export class SendFormUseCases {
   }
 
   async display(accountId: string): Promise<TransactionRequest> {
-    logger.debug('Executing Send flow. Account: %s', accountId);
+    logger.debug('Displaying Send form. Account: %s', accountId);
 
     const account = await this.#accountRepository.get(accountId);
     if (!account) {
@@ -37,18 +38,24 @@ export class SendFormUseCases {
     }
 
     const currency = networkToCurrencyUnit[account.network];
+
     const formContext: SendFormContext = {
+      balance: account.balance.trusted_spendable.to_sat().toString(),
       currency,
       account: account.id,
+      network: account.network,
+      feeRate: 5, // TODO: Fetch fee rates from state
+      errors: {},
     };
 
-    // TODO: Move rate fetching to cron job
+    // TODO: Move fiat rate fetching to cron job
     // Only get the rate when on mainnet as other currencies have no exchange value
-    if (currency === CurrencyUnit.Bitcoin) {
-      formContext.fiatRate = await this.#snapClient.getBtcRate();
-    }
+    // if (currency === CurrencyUnit.Bitcoin) {
+    // formContext.fiatRate = await this.#snapClient.getBtcRate();
+    // }
+    formContext.fiatRate = await this.#snapClient.getBtcRate();
 
-    const formId = await this.#sendFormRepository.insert(account, formContext);
+    const formId = await this.#sendFormRepository.insert(formContext);
 
     // Blocks and waits for user actions
     const request = await this.#snapClient.displayInterface<TransactionRequest>(
@@ -59,7 +66,7 @@ export class SendFormUseCases {
       throw new UserRejectedRequestError() as unknown as Error;
     }
 
-    logger.info('Bitcoin Send flow executed successfully: %s', formId);
+    logger.info('Send form resolved successfully: %s', formId);
     return request;
   }
 
@@ -70,51 +77,136 @@ export class SendFormUseCases {
   ): Promise<void> {
     logger.trace('Updating Send form. ID: %s. Event: %s', id, event);
 
-    const account = await this.#accountRepository.get(context.account);
-    if (!account) {
-      logger.warn('Missing account in Send form. ID: %s', context.account);
-      return await this.#snapClient.resolveInterface(id, null);
-    }
-
     switch (event) {
       case SendFormEvent.HeaderBack:
       case SendFormEvent.Cancel: {
         return await this.#snapClient.resolveInterface(id, null);
       }
-      case SendFormEvent.Clear: {
-        const updatedContext = { ...context, recipient: '' };
-        return await this.#sendFormRepository.update(
-          id,
-          account,
-          updatedContext,
-        );
+      case SendFormEvent.ClearRecipient: {
+        const updatedContext = { ...context };
+        delete updatedContext.recipient;
+        delete updatedContext.errors.recipient;
+        delete updatedContext.errors.tx;
+        delete updatedContext.fee;
+
+        return await this.#sendFormRepository.update(id, updatedContext);
       }
       case SendFormEvent.SwapCurrency: {
         context.currency =
-          context.currency === CurrencyUnit.Bitcoin
-            ? CurrencyUnit.Fiat
-            : CurrencyUnit.Bitcoin;
-        return await this.#sendFormRepository.update(id, account, context);
+          context.currency === CurrencyUnit.Fiat
+            ? networkToCurrencyUnit[context.network]
+            : CurrencyUnit.Fiat;
+        return await this.#sendFormRepository.update(id, context);
       }
       case SendFormEvent.Review: {
         // TODO: Implement confirmation screen
-        console.log('display confirmation form');
-        // await displayConfirmationReview({ request: context.request });
         return Promise.resolve();
       }
       case SendFormEvent.SetMax: {
-        const updatedContext = {
-          ...context,
-          amount: account.balance.trusted_spendable.to_sat().toString(),
-        };
-        return await this.#sendFormRepository.update(
-          id,
-          account,
-          updatedContext,
-        );
+        return this.#handleSetMax(id, context);
+      }
+      case SendFormEvent.Recipient: {
+        return this.#handleSetRecipient(id, context);
+      }
+      case SendFormEvent.Amount: {
+        return this.#handleSetAmount(id, context);
       }
       default:
         return Promise.resolve();
     }
+  }
+
+  async #handleSetMax(id: string, context: SendFormContext): Promise<void> {
+    let updatedContext: SendFormContext = {
+      ...context,
+      amount: context.balance,
+      drain: true,
+    };
+    delete updatedContext.errors.amount;
+    delete updatedContext.errors.tx;
+    delete updatedContext.fee;
+
+    updatedContext = await this.#computeFee(updatedContext);
+    return await this.#sendFormRepository.update(id, updatedContext);
+  }
+
+  async #handleSetRecipient(
+    id: string,
+    context: SendFormContext,
+  ): Promise<void> {
+    const formState = await this.#sendFormRepository.getState(id);
+
+    let updatedContext = { ...context };
+    delete updatedContext.errors.recipient;
+    delete updatedContext.errors.tx;
+
+    try {
+      Address.new(formState.recipient, context.network);
+      // TODO: Use address from Address
+      updatedContext.recipient = formState.recipient;
+      updatedContext = await this.#computeFee(updatedContext);
+    } catch (error) {
+      updatedContext.errors = {
+        ...updatedContext.errors,
+        recipient: error instanceof Error ? error.message : String(error),
+      };
+    }
+
+    return await this.#sendFormRepository.update(id, updatedContext);
+  }
+
+  async #handleSetAmount(id: string, context: SendFormContext): Promise<void> {
+    const formState = await this.#sendFormRepository.getState(id);
+
+    let updatedContext = { ...context };
+    delete updatedContext.errors.amount;
+    delete updatedContext.errors.tx;
+    delete updatedContext.fee;
+
+    try {
+      // We expect amounts to be entered in Bitcoin
+      const amount = Amount.from_btc(Number(formState.amount));
+      updatedContext.amount = amount.to_sat().toString();
+      updatedContext = await this.#computeFee(updatedContext);
+    } catch (error) {
+      updatedContext.errors = {
+        ...updatedContext.errors,
+        amount: error instanceof Error ? error.message : String(error),
+      };
+    }
+
+    return await this.#sendFormRepository.update(id, updatedContext);
+  }
+
+  async #computeFee(context: SendFormContext): Promise<SendFormContext> {
+    const { amount, recipient } = context;
+    if (amount && recipient) {
+      const account = await this.#accountRepository.get(context.account);
+      if (!account) {
+        throw new Error('Account removed while sending');
+      }
+
+      try {
+        // TODO: conditionally compute if drain is true
+        const recipients = [
+          new Recipient(
+            Address.new(recipient, account.network),
+            Amount.from_sat(BigInt(amount)),
+          ),
+        ];
+        account.buildTx(new FeeRate(BigInt(context.feeRate)), recipients);
+        return { ...context, fee: '1450' }; // TODO: Replace this with `psbt.fee()` if available
+      } catch (error) {
+        return {
+          ...context,
+          errors: {
+            ...context.errors,
+            tx: error instanceof Error ? error.message : String(error),
+          },
+        };
+      }
+    }
+
+    return context;
   }
 }

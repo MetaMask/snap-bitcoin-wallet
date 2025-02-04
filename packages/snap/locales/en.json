@@ -16,7 +16,7 @@
     "from": {
       "message": "From"
     },
-    "toAccount": {
+    "toAddress": {
       "message": "To Address"
     },
     "fromAccount": {
@@ -52,7 +52,7 @@
     "networkFee": {
       "message": "Network Fee"
     },
-    "networkFeeToolTip": {
+    "networkFeeTooltip": {
       "message": "The estimated network fee"
     },
     "total": {
@@ -74,7 +74,7 @@
       "message": "Max"
     },
     "recipientPlaceholder": {
-      "message": "Enter recipient address"
+      "message": "Enter receiving address"
     },
     "validAddress": {
       "message": "Valid bitcoin address"

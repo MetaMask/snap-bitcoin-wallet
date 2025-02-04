@@ -64,6 +64,12 @@ export type BitcoinAccount = {
   revealNextAddress(): AddressInfo;
 
   /**
+   * List addresses that are revealed but unused.
+   * @returns the list of unused addresses
+   */
+  listUnusedAddreses(): AddressInfo[];
+
+  /**
    * Start a full scan.
    * @returns the full scan request
    */
@@ -95,7 +101,7 @@ export type BitcoinAccount = {
   buildTx(feeRate: FeeRate, recipients: Recipient[]): Psbt;
 
   /**
-   * Signs a PSBT with all the registered signers
+   * Sign a PSBT with all the registered signers
    * @param psbt
    * @returns the signed transaction
    */

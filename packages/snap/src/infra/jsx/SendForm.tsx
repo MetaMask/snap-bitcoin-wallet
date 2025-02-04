@@ -11,16 +11,10 @@ import {
 } from '@metamask/snaps-sdk/jsx';
 import { Amount } from 'bitcoindevkit';
 
-import { SendFormEvent } from '../../entities';
+import type { SendFormContext } from '../../entities';
+import { SENDFORM_NAME, SendFormEvent } from '../../entities';
 import btcIcon from '../../images/bitcoin.svg';
 import { getTranslator } from '../../utils/locale';
-import type { SendFormViewProps } from './SendFormView';
-
-export type SendFormProps = SendFormViewProps & {
-  flushToAddress?: boolean;
-  currencySwitched: boolean;
-  backEventTriggered: boolean;
-};
 
 const displayAmount = (amountSats?: string): string => {
   return amountSats
@@ -28,18 +22,20 @@ const displayAmount = (amountSats?: string): string => {
     : '';
 };
 
-export const SendForm: SnapComponent<SendFormProps> = ({
+export const SendForm: SnapComponent<SendFormContext> = ({
   currency,
   balance,
   amount,
   recipient,
-  fiatRate,
+  errors,
 }) => {
   const t = getTranslator();
 
+  const validAddress = Boolean(recipient && !errors.recipient);
+
   return (
-    <Form name="sendForm">
-      <Field label={t('sendAmount')}>
+    <Form name={SENDFORM_NAME}>
+      <Field label={t('sendAmount')} error={errors.amount}>
         <Box direction="horizontal" center>
           <Image src={btcIcon} />
         </Box>
@@ -51,41 +47,31 @@ export const SendForm: SnapComponent<SendFormProps> = ({
           placeholder={t('amountPlaceholder')}
           value={displayAmount(amount)}
         />
-        {Boolean(fiatRate) && (
-          <Box direction="horizontal" center>
-            <Text color="alternative">{currency}</Text>
-            <Button name={SendFormEvent.SwapCurrency}>
-              <Icon name="swap-vertical" color="primary" size="md" />
-            </Button>
-          </Box>
-        )}
       </Field>
-      <Box
-        direction="horizontal"
-        alignment={displayAmount(balance) ? 'space-between' : 'end'}
-      >
+      <Box direction="horizontal" alignment={'space-between'}>
         <Box direction="horizontal">
-          <Text color="muted">
+          <Text color="alternative">
             {`${t('balance')}: ${displayAmount(balance)} ${currency}`}
           </Text>
         </Box>
 
         <Button name={SendFormEvent.SetMax}>{t('max')}</Button>
       </Box>
-      <Field label={t('toAddress')}>
+      <Field label={t('toAddress')} error={errors.recipient}>
         <Input
-          name={SendFormEvent.To}
+          name={SendFormEvent.Recipient}
           placeholder={t('recipientPlaceholder')}
           value={recipient ?? ''}
         />
         {Boolean(recipient) && (
           <Box>
-            <Button name={SendFormEvent.Clear}>
-              <Icon name={'close'} color="primary" />
+            <Button name={SendFormEvent.ClearRecipient}>
+              <Icon name="close" color="primary" />
             </Button>
           </Box>
         )}
       </Field>
+      {validAddress && <Icon name="check" color="primary" />}
     </Form>
   );
 };

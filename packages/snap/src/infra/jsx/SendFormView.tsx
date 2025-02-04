@@ -7,6 +7,8 @@ import {
   Heading,
   Icon,
   Image,
+  Row,
+  Text,
 } from '@metamask/snaps-sdk/jsx';
 
 import type { SendFormContext } from '../../entities';
@@ -16,23 +18,10 @@ import { getTranslator } from '../../utils/locale';
 import { SendForm } from './SendForm';
 import { TransactionSummary } from './TransactionSummary';
 
-export type SendFormViewProps = SendFormContext & {
-  balance: string;
-  flushToAddress?: boolean;
-  currencySwitched?: boolean;
-  backEventTriggered?: boolean;
-};
-
-export const SendFormView: SnapComponent<SendFormViewProps> = ({
-  flushToAddress = false,
-  currencySwitched = false,
-  backEventTriggered = false,
-  ...props
-}) => {
+export const SendFormView: SnapComponent<SendFormContext> = (props) => {
   const t = getTranslator();
 
-  const disabledReview = true;
-  const showTransactionSummary = Boolean(props.amount && props.fee);
+  console.log('props', props);
 
   return (
     <Container>
@@ -49,16 +38,18 @@ export const SendFormView: SnapComponent<SendFormViewProps> = ({
           <Image src={emptySpace} />
         </Box>
 
-        <SendForm
-          flushToAddress={flushToAddress}
-          currencySwitched={currencySwitched}
-          backEventTriggered={backEventTriggered}
-          {...props}
-        />
-        {showTransactionSummary && (
+        <SendForm {...props} />
+
+        {props.errors.tx !== undefined && (
+          <Row label={t('error')} variant="warning">
+            <Text>{props.errors.tx}</Text>
+          </Row>
+        )}
+
+        {props.fee !== undefined && props.amount !== undefined && (
           <TransactionSummary
-            amountSats={props.amount!}
-            feeSats={props.fee!}
+            amountSats={props.amount}
+            feeSats={props.fee}
             currency={props.currency}
             fiatRate={props.fiatRate}
           />
@@ -67,7 +58,7 @@ export const SendFormView: SnapComponent<SendFormViewProps> = ({
 
       <Footer>
         <Button name={SendFormEvent.Cancel}>{t('cancel')}</Button>
-        <Button name={SendFormEvent.Review} disabled={disabledReview}>
+        <Button name={SendFormEvent.Review} disabled={props.fee === undefined}>
           {t('review')}
         </Button>
       </Footer>
