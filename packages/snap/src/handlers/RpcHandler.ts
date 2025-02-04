@@ -45,7 +45,6 @@ export class RpcHandler {
     assert(params, CreateSendFormRequest);
     const txRequest = await this.#sendFormUseCases.display(params.account);
     const txId = await this.#accountUseCases.send(params.account, txRequest);
-
     return { txId };
   }
 }

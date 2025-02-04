@@ -1,5 +1,5 @@
 import { UserRejectedRequestError } from '@metamask/snaps-sdk';
-import { FeeRate, Recipient, Address, Amount } from 'bitcoindevkit';
+import { Address, Amount } from 'bitcoindevkit';
 
 import type { SendFormContext, TransactionRequest } from '../entities';
 import {
@@ -50,10 +50,9 @@ export class SendFormUseCases {
 
     // TODO: Move fiat rate fetching to cron job
     // Only get the rate when on mainnet as other currencies have no exchange value
-    // if (currency === CurrencyUnit.Bitcoin) {
-    // formContext.fiatRate = await this.#snapClient.getBtcRate();
-    // }
-    formContext.fiatRate = await this.#snapClient.getBtcRate();
+    if (currency === CurrencyUnit.Bitcoin) {
+      formContext.fiatRate = await this.#snapClient.getBtcRate();
+    }
 
     const formId = await this.#sendFormRepository.insert(formContext);
 
@@ -61,7 +60,6 @@ export class SendFormUseCases {
     const request = await this.#snapClient.displayInterface<TransactionRequest>(
       formId,
     );
-
     if (!request) {
       throw new UserRejectedRequestError() as unknown as Error;
     }
@@ -99,8 +97,16 @@ export class SendFormUseCases {
         return await this.#sendFormRepository.update(id, context);
       }
       case SendFormEvent.Review: {
-        // TODO: Implement confirmation screen
-        return Promise.resolve();
+        const { amount, feeRate, recipient } = context;
+        if (amount && recipient) {
+          const txRequest: TransactionRequest = {
+            amount,
+            recipient,
+            feeRate,
+          };
+          return await this.#snapClient.resolveInterface(id, txRequest);
+        }
+        throw new Error('Inconsistent Send form context');
       }
       case SendFormEvent.SetMax: {
         return this.#handleSetMax(id, context);
@@ -179,7 +185,7 @@ export class SendFormUseCases {
   }
 
   async #computeFee(context: SendFormContext): Promise<SendFormContext> {
-    const { amount, recipient } = context;
+    const { amount, recipient, drain } = context;
     if (amount && recipient) {
       const account = await this.#accountRepository.get(context.account);
       if (!account) {
@@ -187,14 +193,13 @@ export class SendFormUseCases {
       }
 
       try {
-        // TODO: conditionally compute if drain is true
-        const recipients = [
-          new Recipient(
-            Address.new(recipient, account.network),
-            Amount.from_sat(BigInt(amount)),
-          ),
-        ];
-        account.buildTx(new FeeRate(BigInt(context.feeRate)), recipients);
+        if (drain) {
+          const psbt = account.drainTo(context.feeRate, recipient);
+          const realAmount = BigInt(amount) - BigInt('1450');
+          return { ...context, fee: '1450', amount: realAmount.toString() }; // TODO: Replace this with `psbt.fee()` if available
+        }
+
+        const psbt = account.buildTx(context.feeRate, recipient, amount);
         return { ...context, fee: '1450' }; // TODO: Replace this with `psbt.fee()` if available
       } catch (error) {
         return {

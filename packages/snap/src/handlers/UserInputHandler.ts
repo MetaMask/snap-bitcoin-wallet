@@ -1,8 +1,8 @@
-import type { UserInputEvent } from '@metamask/snaps-sdk';
+import type { Json, UserInputEvent } from '@metamask/snaps-sdk';
 import { UserInputEventType } from '@metamask/snaps-sdk';
 import { assert, enums } from 'superstruct';
 
-import type { SendFormContext, UIContext } from '../entities';
+import type { SendFormContext } from '../entities';
 import { SendFormEvent } from '../entities';
 import type { SendFormUseCases } from '../use-cases';
 
@@ -16,7 +16,7 @@ export class UserInputHandler {
   async route(
     interfaceId: string,
     event: UserInputEvent,
-    context: UIContext | null,
+    context: Record<string, Json> | null,
   ): Promise<void> {
     switch (event.type) {
       case UserInputEventType.InputChangeEvent:

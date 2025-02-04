@@ -8,12 +8,10 @@ import type {
   SyncRequest,
   Update,
   ChangeSet,
-  FeeRate,
-  Recipient,
   Psbt,
   Transaction,
 } from 'bitcoindevkit';
-import { Wallet } from 'bitcoindevkit';
+import { FeeRate, Recipient, Address, Amount, Wallet } from 'bitcoindevkit';
 
 import type { BitcoinAccount } from '../entities';
 
@@ -101,8 +99,20 @@ export class BdkAccountAdapter implements BitcoinAccount {
     return this.#wallet.take_staged();
   }
 
-  buildTx(feeRate: FeeRate, recipients: Recipient[]): Psbt {
-    return this.#wallet.build_tx(feeRate, recipients);
+  buildTx(feeRate: number, recipient: string, amount: string): Psbt {
+    const fee = new FeeRate(BigInt(feeRate));
+    const to = new Recipient(
+      Address.new(recipient, this.network),
+      Amount.from_sat(BigInt(amount)),
+    );
+    return this.#wallet.build_tx(fee, [to]);
+  }
+
+  drainTo(feeRate: number, recipient: string): Psbt {
+    const fee = new FeeRate(BigInt(feeRate));
+    const to = Address.new(recipient, this.network);
+    // return this.#wallet.drain_to(fee, to);
+    throw new Error();
   }
 
   sign(psbt: Psbt): Transaction {

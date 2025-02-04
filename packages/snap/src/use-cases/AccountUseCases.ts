@@ -1,4 +1,4 @@
-import type { AddressType, Network } from 'bitcoindevkit';
+import type { AddressType, Network, Psbt } from 'bitcoindevkit';
 
 import type {
   AccountsConfig,
@@ -165,7 +165,18 @@ export class AccountUseCases {
       throw new Error(`Account not found: ${id}`);
     }
 
-    const psbt = account.buildTx(request.feeRate, request.recipients);
+    let psbt: Psbt;
+    // If no amount is specified at this point, it is a drain transaction
+    if (request.amount) {
+      psbt = account.buildTx(
+        request.feeRate,
+        request.recipient,
+        request.amount,
+      );
+    } else {
+      psbt = account.drainTo(request.feeRate, request.recipient);
+    }
+
     const tx = account.sign(psbt);
     await this.#chain.broadcast(account.network, tx);
     await this.#repository.update(account);
