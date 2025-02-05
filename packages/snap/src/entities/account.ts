@@ -127,6 +127,13 @@ export type BitcoinAccountRepository = {
   get(id: string): Promise<BitcoinAccount | null>;
 
   /**
+   * Get an account by its id with signing capabilities
+   * @param id
+   * @returns the account or null if it does not exist
+   */
+  getWithSigner(id: string): Promise<BitcoinAccount | null>;
+
+  /**
    * Get all accounts.
    * @returns the list of accounts
    */

@@ -160,7 +160,7 @@ export class AccountUseCases {
   async send(id: string, request: TransactionRequest): Promise<string> {
     logger.debug('Sending transaction. ID: %s. Request: %o', id, request);
 
-    const account = await this.#repository.get(id);
+    const account = await this.#repository.getWithSigner(id);
     if (!account) {
       throw new Error(`Account not found: ${id}`);
     }
@@ -181,11 +181,13 @@ export class AccountUseCases {
     await this.#chain.broadcast(account.network, tx);
     await this.#repository.update(account);
 
+    const txId = tx.compute_txid();
     logger.info(
-      'Transaction sent successfully: %s. Network: %s',
+      'Transaction sent successfully: %s. Account: %s, Network: %s',
+      txId,
       account.id,
       account.network,
     );
-    return tx.compute_txid();
+    return txId;
   }
 }

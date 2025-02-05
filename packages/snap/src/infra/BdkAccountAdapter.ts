@@ -36,7 +36,19 @@ export class BdkAccountAdapter implements BitcoinAccount {
     );
   }
 
-  static load(id: string, walletData: ChangeSet): BdkAccountAdapter {
+  static load(
+    id: string,
+    walletData: ChangeSet,
+    descriptors?: DescriptorPair,
+  ): BdkAccountAdapter {
+    // Load with signer
+    if (descriptors) {
+      return new BdkAccountAdapter(
+        id,
+        Wallet.load(walletData, descriptors.external, descriptors.internal),
+      );
+    }
+
     return new BdkAccountAdapter(id, Wallet.load(walletData));
   }
 

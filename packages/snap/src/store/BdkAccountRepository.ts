@@ -5,6 +5,7 @@ import type { AddressType, Network } from 'bitcoindevkit';
 import {
   ChangeSet,
   slip10_to_extended,
+  xpriv_to_descriptor,
   xpub_to_descriptor,
 } from 'bitcoindevkit';
 import { v4 } from 'uuid';
@@ -28,6 +29,44 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     }
 
     return BdkAccountAdapter.load(id, ChangeSet.from_json(walletData));
+  }
+
+  async getWithSigner(id: string): Promise<BitcoinAccount | null> {
+    const state = await this.#snapClient.get();
+    const walletData = state.accounts.wallets[id];
+    if (!walletData) {
+      return null;
+    }
+    const account = BdkAccountAdapter.load(id, ChangeSet.from_json(walletData));
+
+    const derivationPathEntry = Object.entries(
+      state.accounts.derivationPaths,
+    ).find(([, walletId]) => walletId === id);
+
+    if (!derivationPathEntry) {
+      throw new Error(
+        `Inconsistent state. No derivation path found for account ${id}`,
+      );
+    }
+
+    const derivationPath = derivationPathEntry[0].split('/');
+    const slip10 = await this.#snapClient.getPrivateEntropy(derivationPath);
+    const fingerprint = (
+      slip10.masterFingerprint ?? slip10.parentFingerprint
+    ).toString(16);
+    const xpriv = slip10_to_extended(slip10, account.network);
+    const descriptors = xpriv_to_descriptor(
+      xpriv,
+      fingerprint,
+      account.network,
+      account.addressType,
+    );
+
+    return BdkAccountAdapter.load(
+      id,
+      ChangeSet.from_json(walletData),
+      descriptors,
+    );
   }
 
   async getAll(): Promise<BitcoinAccount[]> {

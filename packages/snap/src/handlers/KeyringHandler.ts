@@ -80,7 +80,7 @@ export class KeyringHandler implements Keyring {
     return chains.includes(accountChain) ? [accountChain] : [];
   }
 
-  async updateAccount(_: KeyringAccount): Promise<void> {
+  async updateAccount(): Promise<void> {
     throw new Error('Method not supported.');
   }
 
