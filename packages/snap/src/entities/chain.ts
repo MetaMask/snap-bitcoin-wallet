@@ -1,4 +1,4 @@
-import type { Network, Transaction } from 'bitcoindevkit';
+import type { FeeEstimates, Network, Transaction } from 'bitcoindevkit';
 
 import type { BitcoinAccount } from './account';
 
@@ -18,8 +18,14 @@ export type BlockchainClient = {
   sync(account: BitcoinAccount): Promise<void>;
 
   /**
-   * Broadcasts the PSBT to the network.
+   * Broadcast the PSBT to the network.
    * @param psbt - the signed PSBT to broadcast.
    */
   broadcast(network: Network, transaction: Transaction): Promise<void>;
+
+  /**
+   * Fetch fee estimates from the chain indexer.
+   * @returns the map of fee estimates
+   */
+  getFeeEstimates(network: Network): Promise<FeeEstimates>;
 };

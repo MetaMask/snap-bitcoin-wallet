@@ -1,4 +1,7 @@
 import {
+  BitcoinAccount,
+  CurrencyUnit,
+  networkToCurrencyUnit,
   SENDFORM_NAME,
   type SendFormContext,
   type SendFormRepository,
@@ -28,7 +31,23 @@ export class JSXSendFormRepository implements SendFormRepository {
     return state;
   }
 
-  async insert(context: SendFormContext): Promise<string> {
+  async insert(account: BitcoinAccount, feeRate: number): Promise<string> {
+    const currency = networkToCurrencyUnit[account.network];
+    const context: SendFormContext = {
+      balance: account.balance.trusted_spendable.to_sat().toString(),
+      currency,
+      account: account.id,
+      network: account.network,
+      feeRate,
+      errors: {},
+    };
+
+    // TODO: Fetch fiat rates from state so it can be refreshed on each update
+    // Only get the rate when on mainnet as other currencies have no exchange value
+    if (currency === CurrencyUnit.Bitcoin) {
+      context.fiatRate = await this.#snapClient.getBtcRate();
+    }
+
     return this.#snapClient.createInterface(
       <SendFormView {...context} />,
       context,

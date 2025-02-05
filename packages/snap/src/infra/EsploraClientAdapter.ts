@@ -1,4 +1,4 @@
-import type { Network, Transaction } from 'bitcoindevkit';
+import type { FeeEstimates, Network, Transaction } from 'bitcoindevkit';
 import { EsploraClient } from 'bitcoindevkit';
 
 import type { BitcoinAccount, ChainConfig } from '../entities';
@@ -43,5 +43,9 @@ export class EsploraClientAdapter implements BlockchainClient {
 
   async broadcast(network: Network, transaction: Transaction): Promise<void> {
     await this.#clients[network].broadcast(transaction);
+  }
+
+  async getFeeEstimates(network: Network): Promise<FeeEstimates> {
+    return this.#clients[network].get_fee_estimates();
   }
 }

@@ -2705,7 +2705,7 @@ __metadata:
     bignumber.js: "npm:9.1.2"
     bip32: "npm:4.0.0"
     bitcoin-address-validation: "npm:^2.2.3"
-    bitcoindevkit: "npm:^0.1.2"
+    bitcoindevkit: ../../../bdk-wasm/pkg
     bitcoinjs-lib: "npm:6.1.5"
     coinselect: "npm:3.1.13"
     concurrently: "npm:^9.1.0"
@@ -6967,10 +6967,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"bitcoindevkit@npm:^0.1.2":
+"bitcoindevkit@file:../../../bdk-wasm/pkg::locator=%40metamask%2Fbitcoin-wallet-snap%40workspace%3Apackages%2Fsnap":
   version: 0.1.2
-  resolution: "bitcoindevkit@npm:0.1.2"
-  checksum: 10/fac45f6da8b20e01e3f5e52238170bb307ed83e452436c073ab1533c5ef12b7c0653ab547c66fbec1837968cc277d5d1168b4dd6da938fc377a88f58e05cab80
+  resolution: "bitcoindevkit@file:../../../bdk-wasm/pkg#../../../bdk-wasm/pkg::hash=08e31e&locator=%40metamask%2Fbitcoin-wallet-snap%40workspace%3Apackages%2Fsnap"
+  checksum: 10/c1818eb53378188c3bcd656fc6118ed6ce9f80edb61cc415415fe62a639f74ed45b533b12a5f25081430afa54a08d4e560487bda1d8536d4319df5222e835636
   languageName: node
   linkType: hard
 

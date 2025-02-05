@@ -111,8 +111,7 @@ export class BdkAccountAdapter implements BitcoinAccount {
   drainTo(feeRate: number, recipient: string): Psbt {
     const fee = new FeeRate(BigInt(feeRate));
     const to = Address.new(recipient, this.network);
-    // return this.#wallet.drain_to(fee, to);
-    throw new Error();
+    return this.#wallet.drain_to(fee, to);
   }
 
   sign(psbt: Psbt): Transaction {

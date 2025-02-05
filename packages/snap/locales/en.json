@@ -40,8 +40,8 @@
     "network": {
       "message": "Network"
     },
-    "estimatedTransactionSpeed": {
-      "message": "30 min"
+    "minutes": {
+      "message": "min"
     },
     "transactionSpeed": {
       "message": "Transaction Speed"

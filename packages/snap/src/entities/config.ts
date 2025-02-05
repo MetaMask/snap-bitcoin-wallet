@@ -19,4 +19,6 @@ export type ChainConfig = {
   url: {
     [network in Network]: string;
   };
+  targetBlockConfirmation: number;
+  defaultFeeRate: number;
 };

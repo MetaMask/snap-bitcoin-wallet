@@ -71,6 +71,9 @@ if (ConfigV2.keyringVersion === 'v2') {
     snapClient,
     accountRepository,
     sendFormRepository,
+    chainClient,
+    ConfigV2.chain.targetBlockConfirmation,
+    ConfigV2.chain.defaultFeeRate,
   );
   // Application layer
   keyringHandler = new KeyringHandler(accountsUseCases);

@@ -1,7 +1,11 @@
 import { UserRejectedRequestError } from '@metamask/snaps-sdk';
 import { Address, Amount } from 'bitcoindevkit';
 
-import type { SendFormContext, TransactionRequest } from '../entities';
+import type {
+  BlockchainClient,
+  SendFormContext,
+  TransactionRequest,
+} from '../entities';
 import {
   CurrencyUnit,
   networkToCurrencyUnit,
@@ -19,14 +23,26 @@ export class SendFormUseCases {
 
   readonly #sendFormRepository: SendFormRepository;
 
+  readonly #chainClient: BlockchainClient;
+
+  readonly #targetBlockConfirmation: number;
+
+  readonly #defaultFeeRate: number;
+
   constructor(
     snapClient: SnapClient,
     accountRepository: BitcoinAccountRepository,
     sendFormrepository: SendFormRepository,
+    chainClient: BlockchainClient,
+    targetBlockConfirmation: number,
+    defaultFeeRate: number,
   ) {
     this.#snapClient = snapClient;
     this.#accountRepository = accountRepository;
     this.#sendFormRepository = sendFormrepository;
+    this.#chainClient = chainClient;
+    this.#targetBlockConfirmation = targetBlockConfirmation;
+    this.#defaultFeeRate = defaultFeeRate;
   }
 
   async display(accountId: string): Promise<TransactionRequest> {
@@ -37,24 +53,14 @@ export class SendFormUseCases {
       throw new Error('Account not found');
     }
 
-    const currency = networkToCurrencyUnit[account.network];
+    // TODO: Fetch fee rates from state in repository so it can be refreshed on each update
+    const feeEstimates = await this.#chainClient.getFeeEstimates(
+      account.network,
+    );
+    const feeRate =
+      feeEstimates.get(this.#targetBlockConfirmation) ?? this.#defaultFeeRate;
 
-    const formContext: SendFormContext = {
-      balance: account.balance.trusted_spendable.to_sat().toString(),
-      currency,
-      account: account.id,
-      network: account.network,
-      feeRate: 5, // TODO: Fetch fee rates from state
-      errors: {},
-    };
-
-    // TODO: Move fiat rate fetching to cron job
-    // Only get the rate when on mainnet as other currencies have no exchange value
-    if (currency === CurrencyUnit.Bitcoin) {
-      formContext.fiatRate = await this.#snapClient.getBtcRate();
-    }
-
-    const formId = await this.#sendFormRepository.insert(formContext);
+    const formId = await this.#sendFormRepository.insert(account, feeRate);
 
     // Blocks and waits for user actions
     const request = await this.#snapClient.displayInterface<TransactionRequest>(
@@ -147,9 +153,10 @@ export class SendFormUseCases {
     delete updatedContext.errors.tx;
 
     try {
-      Address.new(formState.recipient, context.network);
-      // TODO: Use address from Address
-      updatedContext.recipient = formState.recipient;
+      updatedContext.recipient = Address.new(
+        formState.recipient,
+        context.network,
+      ).toString();
       updatedContext = await this.#computeFee(updatedContext);
     } catch (error) {
       updatedContext.errors = {
@@ -168,6 +175,7 @@ export class SendFormUseCases {
     delete updatedContext.errors.amount;
     delete updatedContext.errors.tx;
     delete updatedContext.fee;
+    delete updatedContext.drain;
 
     try {
       // We expect amounts to be entered in Bitcoin
@@ -195,12 +203,17 @@ export class SendFormUseCases {
       try {
         if (drain) {
           const psbt = account.drainTo(context.feeRate, recipient);
-          const realAmount = BigInt(amount) - BigInt('1450');
-          return { ...context, fee: '1450', amount: realAmount.toString() }; // TODO: Replace this with `psbt.fee()` if available
+          const fee = psbt.fee().to_sat();
+          const realAmount = BigInt(amount) - psbt.fee().to_sat();
+          return {
+            ...context,
+            fee: fee.toString(),
+            amount: realAmount.toString(),
+          };
         }
 
         const psbt = account.buildTx(context.feeRate, recipient, amount);
-        return { ...context, fee: '1450' }; // TODO: Replace this with `psbt.fee()` if available
+        return { ...context, fee: psbt.fee().to_sat().toString() };
       } catch (error) {
         return {
           ...context,

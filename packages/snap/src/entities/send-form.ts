@@ -1,6 +1,7 @@
 import type { Network } from 'bitcoindevkit';
 
 import type { CurrencyUnit } from './currency';
+import { BitcoinAccount } from './account';
 
 export const SENDFORM_NAME = 'sendForm';
 
@@ -55,7 +56,7 @@ export type SendFormRepository = {
    * @param context - the form context
    * @returns the form ID
    */
-  insert(context: SendFormContext): Promise<string>;
+  insert(account: BitcoinAccount, feeRate: number): Promise<string>;
 
   /**
    * Updates a form interface with an account and context
