@@ -1,7 +1,7 @@
 import type { Network } from 'bitcoindevkit';
 
+import type { BitcoinAccount } from './account';
 import type { CurrencyUnit } from './currency';
-import { BitcoinAccount } from './account';
 
 export const SENDFORM_NAME = 'sendForm';
 

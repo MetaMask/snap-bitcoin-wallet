@@ -1,5 +1,5 @@
+import type { BitcoinAccount } from '../entities';
 import {
-  BitcoinAccount,
   CurrencyUnit,
   networkToCurrencyUnit,
   SENDFORM_NAME,

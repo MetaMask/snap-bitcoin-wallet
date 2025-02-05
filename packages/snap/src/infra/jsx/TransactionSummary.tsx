@@ -7,10 +7,10 @@ import {
 } from '@metamask/snaps-sdk/jsx';
 import { Amount } from 'bitcoindevkit';
 
+import { ConfigV2 } from '../../configv2';
 import type { SendFormContext } from '../../entities';
 import { CurrencyUnit } from '../../entities';
 import { getTranslator } from '../../utils/locale';
-import { ConfigV2 } from '../../configv2';
 
 export type TransactionSummaryProps = {
   currency: SendFormContext['currency'];

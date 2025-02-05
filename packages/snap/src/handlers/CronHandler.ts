@@ -10,14 +10,7 @@ export class CronHandler {
   async route(method: string): Promise<void> {
     switch (method) {
       case 'synchronize': {
-        // accounts cannot be empty by assertion.
-        const accounts = await this.#accountsUseCases.list();
-        await Promise.all(
-          accounts.map(async (account) =>
-            this.#accountsUseCases.synchronize(account.id),
-          ),
-        );
-        return;
+        return await this.#accountsUseCases.synchronizeAll();
       }
       default:
         throw new Error('Method not found.');
