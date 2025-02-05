@@ -18,8 +18,7 @@ export const ConfigV2: SnapConfig = {
   chain: {
     parallelRequests: 1,
     stopGap: 10,
-    targetBlockConfirmation: 3, // Temporary config to set the expected confirmation target, should be chosen by the user
-    defaultFeeRate: 5,
+    targetBlocksConfirmation: 3,
     url: {
       bitcoin:
         process.env.ESPLORA_PROVIDER_BITCOIN ?? 'https://blockstream.info/api',

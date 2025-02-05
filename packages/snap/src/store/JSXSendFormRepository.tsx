@@ -42,7 +42,7 @@ export class JSXSendFormRepository implements SendFormRepository {
       errors: {},
     };
 
-    // TODO: Fetch fiat rates from state so it can be refreshed on each update
+    // TODO: Fetch fiat rates from state and refresh on updates
     // Only get the rate when on mainnet as other currencies have no exchange value
     if (currency === CurrencyUnit.Bitcoin) {
       context.fiatRate = await this.#snapClient.getBtcRate();

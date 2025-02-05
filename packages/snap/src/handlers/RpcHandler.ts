@@ -10,7 +10,7 @@ const CreateSendFormRequest = object({
   scope: optional(enums(Object.values(BtcScopes))), // We don't use the scope but need to define it for validation
 });
 
-type CreateSendFormResponse = {
+type SendTransactionResponse = {
   txId: string;
 };
 
@@ -27,6 +27,10 @@ export class RpcHandler {
   async route(method: string, params?: JsonRpcParams): Promise<Json> {
     switch (method) {
       case InternalRpcMethod.StartSendTransactionFlow: {
+        if (!params) {
+          throw new Error('Missing params');
+        }
+
         return await this.executeSendFlow(params);
       }
 
@@ -36,13 +40,10 @@ export class RpcHandler {
   }
 
   async executeSendFlow(
-    params?: JsonRpcParams,
-  ): Promise<CreateSendFormResponse> {
-    if (!params) {
-      throw new Error('Missing params');
-    }
-
+    params: JsonRpcParams,
+  ): Promise<SendTransactionResponse> {
     assert(params, CreateSendFormRequest);
+
     const txRequest = await this.#sendFormUseCases.display(params.account);
     const txId = await this.#accountUseCases.send(params.account, txRequest);
     return { txId };

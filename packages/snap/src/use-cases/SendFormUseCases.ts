@@ -25,24 +25,20 @@ export class SendFormUseCases {
 
   readonly #chainClient: BlockchainClient;
 
-  readonly #targetBlockConfirmation: number;
-
-  readonly #defaultFeeRate: number;
+  readonly #targetBlocksConfirmation: number;
 
   constructor(
     snapClient: SnapClient,
     accountRepository: BitcoinAccountRepository,
     sendFormrepository: SendFormRepository,
     chainClient: BlockchainClient,
-    targetBlockConfirmation: number,
-    defaultFeeRate: number,
+    targetBlocksConfirmation: number,
   ) {
     this.#snapClient = snapClient;
     this.#accountRepository = accountRepository;
     this.#sendFormRepository = sendFormrepository;
     this.#chainClient = chainClient;
-    this.#targetBlockConfirmation = targetBlockConfirmation;
-    this.#defaultFeeRate = defaultFeeRate;
+    this.#targetBlocksConfirmation = targetBlocksConfirmation;
   }
 
   async display(accountId: string): Promise<TransactionRequest> {
@@ -53,12 +49,14 @@ export class SendFormUseCases {
       throw new Error('Account not found');
     }
 
-    // TODO: Fetch fee rates from state in repository so it can be refreshed on each update
+    // TODO: Fetch fee rates from state and refresh on updates
     const feeEstimates = await this.#chainClient.getFeeEstimates(
       account.network,
     );
-    const feeRate =
-      feeEstimates.get(this.#targetBlockConfirmation) ?? this.#defaultFeeRate;
+    const feeRate = feeEstimates.get(this.#targetBlocksConfirmation);
+    if (!feeRate) {
+      throw new Error('Failed to fetch fee rates');
+    }
 
     const formId = await this.#sendFormRepository.insert(account, feeRate);
 

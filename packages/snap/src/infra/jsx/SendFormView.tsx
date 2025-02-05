@@ -21,8 +21,6 @@ import { TransactionSummary } from './TransactionSummary';
 export const SendFormView: SnapComponent<SendFormContext> = (props) => {
   const t = getTranslator();
 
-  console.log('props', props);
-
   return (
     <Container>
       <Box>

@@ -59,7 +59,7 @@ export type SendFormRepository = {
   insert(account: BitcoinAccount, feeRate: number): Promise<string>;
 
   /**
-   * Updates a form interface with an account and context
+   * Update a form interface.
    * @param id - the form ID
    * @param context - the form context
    */

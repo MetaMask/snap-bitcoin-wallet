@@ -35,8 +35,7 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
 }) => {
   const t = getTranslator();
 
-  const totalSats = BigInt(amountSats) + BigInt(feeSats);
-  const totalAmount = Amount.from_sat(totalSats);
+  const total = Amount.from_sat(BigInt(amountSats) + BigInt(feeSats));
   const fee = Amount.from_sat(BigInt(feeSats));
 
   return (
@@ -49,13 +48,13 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
       </Row>
       <Row label={t('transactionSpeed')} tooltip={t('transactionSpeedTooltip')}>
         <Text>
-          {`${ConfigV2.chain.targetBlockConfirmation * 10}`} {t('minutes')}
+          {`${ConfigV2.chain.targetBlocksConfirmation * 10}`} {t('minutes')}
         </Text>
       </Row>
       <Row label={t('total')}>
         <Value
-          value={`${totalAmount.to_btc()} ${currency}`}
-          extra={displayFiatAmount(totalAmount, fiatRate)}
+          value={`${total.to_btc()} ${currency}`}
+          extra={displayFiatAmount(total, fiatRate)}
         />
       </Row>
     </Section>
