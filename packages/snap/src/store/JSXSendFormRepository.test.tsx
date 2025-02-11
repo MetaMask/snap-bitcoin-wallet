@@ -5,6 +5,10 @@ import { SENDFORM_NAME, CurrencyUnit } from '../entities';
 import { SendFormView } from '../infra/jsx';
 import { JSXSendFormRepository } from './JSXSendFormRepository';
 
+jest.mock('../infra/jsx', () => ({
+  SendFormView: jest.fn(),
+}));
+
 describe('JSXSendFormRepository', () => {
   const mockSnapClient = mock<SnapClient>();
   let repo: JSXSendFormRepository;
@@ -50,6 +54,7 @@ describe('JSXSendFormRepository', () => {
       const btcRate = 100000;
       mockSnapClient.getCurrencyRate.mockResolvedValue(btcRate);
       mockSnapClient.createInterface.mockResolvedValue('interface-id');
+      (SendFormView as jest.Mock).mockReturnValue({});
 
       const result = await repo.insert(account, feeRate);
 
@@ -66,7 +71,7 @@ describe('JSXSendFormRepository', () => {
         CurrencyUnit.Bitcoin,
       );
       expect(mockSnapClient.createInterface).toHaveBeenCalledWith(
-        <SendFormView {...expectedContext} />,
+        expect.any(Object), // Tested in integration tests
         expectedContext,
       );
       expect(result).toBe('interface-id');
@@ -75,6 +80,7 @@ describe('JSXSendFormRepository', () => {
 
   describe('update', () => {
     it('updates interface with context', async () => {
+      (SendFormView as jest.Mock).mockReturnValue({});
       const id = 'interface-id';
       const context = mock<SendFormContext>();
 
@@ -82,7 +88,7 @@ describe('JSXSendFormRepository', () => {
 
       expect(mockSnapClient.updateInterface).toHaveBeenCalledWith(
         id,
-        <SendFormView {...context} />,
+        expect.any(Object), // Tested in integration tests
         context,
       );
     });

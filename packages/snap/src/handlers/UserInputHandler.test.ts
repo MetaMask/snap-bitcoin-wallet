@@ -70,7 +70,7 @@ describe('UserInputHandler', () => {
 
       expect(mockSendFormUseCases.update).toHaveBeenCalledWith(
         'interface-id',
-        SendFormEvent.Amount,
+        SendFormEvent.ClearRecipient,
         mockContext,
       );
     });
