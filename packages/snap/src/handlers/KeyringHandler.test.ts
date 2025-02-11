@@ -228,7 +228,7 @@ describe('KeyringHandler', () => {
 
   describe('updateAccount', () => {
     it('throws not supported', async () => {
-      await expect(handler.updateAccount({} as any)).rejects.toThrow(
+      await expect(handler.updateAccount()).rejects.toThrow(
         'Method not supported.',
       );
     });

@@ -3,6 +3,7 @@ import type { ComponentOrElement } from '@metamask/snaps-sdk';
 import type { Json } from '@metamask/utils';
 
 import type { BitcoinAccount } from './account';
+import { CurrencyUnit } from './currency';
 
 export type SnapState = {
   accounts: {
@@ -102,8 +103,9 @@ export type SnapClient = {
   ): Promise<InterfaceStateType | undefined>;
 
   /**
-   * Retrieve the BTC currency rate.
-   * @returns A Promise that resolves to the BTC rate.
+   * Retrieve the currency rate.
+   * @param currency - The currency unit.
+   * @returns A Promise that resolves to the currency rate.
    */
-  getBtcRate(): Promise<number | undefined>;
+  getCurrencyRate(currency: CurrencyUnit): Promise<number | undefined>;
 };

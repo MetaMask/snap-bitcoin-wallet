@@ -5,7 +5,7 @@ import { assert, enums, object, optional, string } from 'superstruct';
 import { InternalRpcMethod } from '../permissions';
 import type { AccountUseCases, SendFormUseCases } from '../use-cases';
 
-const CreateSendFormRequest = object({
+export const CreateSendFormRequest = object({
   account: string(),
   scope: optional(enums(Object.values(BtcScopes))), // We don't use the scope but need to define it for validation
 });
@@ -25,13 +25,13 @@ export class RpcHandler {
   }
 
   async route(method: string, params?: JsonRpcParams): Promise<Json> {
+    if (!params) {
+      throw new Error('Missing params');
+    }
+
     switch (method) {
       case InternalRpcMethod.StartSendTransactionFlow: {
-        if (!params) {
-          throw new Error('Missing params');
-        }
-
-        return this.executeSendFlow(params);
+        return this.#executeSendFlow(params);
       }
 
       default:
@@ -39,7 +39,7 @@ export class RpcHandler {
     }
   }
 
-  async executeSendFlow(
+  async #executeSendFlow(
     params: JsonRpcParams,
   ): Promise<SendTransactionResponse> {
     assert(params, CreateSendFormRequest);

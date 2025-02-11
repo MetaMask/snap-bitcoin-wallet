@@ -3,12 +3,13 @@ import { SLIP10Node } from '@metamask/key-tree';
 import { KeyringEvent } from '@metamask/keyring-api';
 import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
 import type {
+  AvailableCurrency,
   ComponentOrElement,
   Json,
   SnapsProvider,
 } from '@metamask/snaps-sdk';
 
-import type { BitcoinAccount } from '../entities';
+import type { BitcoinAccount, CurrencyUnit } from '../entities';
 import type { SnapClient, SnapState } from '../entities/snap';
 import { snapToKeyringAccount } from '../handlers/keyring-account';
 
@@ -127,7 +128,7 @@ export class SnapClientAdapter implements SnapClient {
       params: {
         id,
       },
-    })) as ResolveType;
+    })) as unknown as ResolveType;
   }
 
   async getInterfaceState<InterfaceStateType>(
@@ -139,7 +140,7 @@ export class SnapClientAdapter implements SnapClient {
       params: { id },
     });
 
-    return result[field] as InterfaceStateType;
+    return result[field] as unknown as InterfaceStateType;
   }
 
   async resolveInterface(id: string, value: Json): Promise<void> {
@@ -152,11 +153,11 @@ export class SnapClientAdapter implements SnapClient {
     });
   }
 
-  async getBtcRate(): Promise<number | undefined> {
+  async getCurrencyRate(currency: CurrencyUnit): Promise<number | undefined> {
     const result = await snap.request({
       method: 'snap_getCurrencyRate',
       params: {
-        currency: 'BTC',
+        currency: currency as unknown as AvailableCurrency,
       },
     });
 
