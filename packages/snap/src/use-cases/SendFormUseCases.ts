@@ -8,7 +8,6 @@ import {
   type TransactionRequest,
   type SendFormContext,
   SendFormEvent,
-  CurrencyUnit,
 } from '../entities';
 import { logger } from '../utils';
 import { Address, Amount } from 'bitcoindevkit';
@@ -112,7 +111,7 @@ export class SendFormUseCases {
         return this.#handleSetAmount(id, context);
       }
       default:
-        return Promise.resolve();
+        throw new Error('Unrecognized event');
     }
   }
 
@@ -192,7 +191,7 @@ export class SendFormUseCases {
         if (drain) {
           const psbt = account.drainTo(context.feeRate, recipient);
           const fee = psbt.fee().to_sat();
-          const realAmount = BigInt(amount) - psbt.fee().to_sat();
+          const realAmount = BigInt(amount) - fee;
           return {
             ...context,
             fee: fee.toString(),

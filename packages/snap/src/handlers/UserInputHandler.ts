@@ -1,6 +1,5 @@
 import type { Json, UserInputEvent } from '@metamask/snaps-sdk';
 import { UserInputEventType } from '@metamask/snaps-sdk';
-import { assert, enums } from 'superstruct';
 
 import type { SendFormContext } from '../entities';
 import { SendFormEvent } from '../entities';
@@ -18,17 +17,16 @@ export class UserInputHandler {
     event: UserInputEvent,
     context: Record<string, Json> | null,
   ): Promise<void> {
+    if (!context) {
+      throw new Error('Missing context');
+    }
+
     switch (event.type) {
       case UserInputEventType.InputChangeEvent:
       case UserInputEventType.ButtonClickEvent: {
-        assert(event.name, enums(Object.values(SendFormEvent)));
-        if (!context) {
-          throw new Error('Missing context');
-        }
-
-        return await this.#sendFormUseCases.update(
+        return this.#sendFormUseCases.update(
           interfaceId,
-          event.name,
+          event.name as SendFormEvent,
           context as SendFormContext,
         );
       }
