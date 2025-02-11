@@ -6,8 +6,8 @@ import {
   type SendFormContext,
   type SendFormRepository,
   type SendFormState,
+  type SnapClient,
 } from '../entities';
-import type { SnapClient } from '../entities/snap';
 import { SendFormView } from '../infra/jsx';
 
 export class JSXSendFormRepository implements SendFormRepository {
@@ -22,8 +22,7 @@ export class JSXSendFormRepository implements SendFormRepository {
       id,
       SENDFORM_NAME,
     );
-    // This should never fail by assertion so returning an error here should not be necessary.
-    // We are adding this check to avoid developer mistakes but this should be tested in integration tests.
+    // Should never occur by assertion. It is a critical inconsistent state error that should be caught in integration tests
     if (!state) {
       throw new Error('Missing state from Send Form');
     }
@@ -42,7 +41,7 @@ export class JSXSendFormRepository implements SendFormRepository {
       errors: {},
     };
 
-    // TODO: Fetch fiat rates from state and refresh on updates
+    // TODO: Fetch fiat/fee rates from state and refresh on updates
     // Only get the rate when on mainnet as other currencies have no exchange value
     if (currency === CurrencyUnit.Bitcoin) {
       context.fiatRate = await this.#snapClient.getBtcRate();

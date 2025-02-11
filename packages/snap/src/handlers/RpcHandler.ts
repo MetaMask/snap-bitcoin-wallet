@@ -31,7 +31,7 @@ export class RpcHandler {
           throw new Error('Missing params');
         }
 
-        return await this.executeSendFlow(params);
+        return this.executeSendFlow(params);
       }
 
       default:

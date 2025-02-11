@@ -26,8 +26,6 @@ export type SendFormContext = {
 export enum SendFormEvent {
   Amount = 'amount',
   Recipient = 'recipient',
-  SwapCurrency = 'swap',
-  AccountSelector = 'accountSelector',
   ClearRecipient = 'clearRecipient',
   Review = 'review',
   Cancel = 'cancel',

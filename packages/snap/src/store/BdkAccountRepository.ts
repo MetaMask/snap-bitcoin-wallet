@@ -10,8 +10,11 @@ import {
 } from 'bitcoindevkit';
 import { v4 } from 'uuid';
 
-import type { BitcoinAccountRepository, BitcoinAccount } from '../entities';
-import type { SnapClient } from '../entities/snap';
+import type {
+  BitcoinAccountRepository,
+  BitcoinAccount,
+  SnapClient,
+} from '../entities';
 import { BdkAccountAdapter } from '../infra';
 
 export class BdkAccountRepository implements BitcoinAccountRepository {
@@ -39,18 +42,20 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     }
     const account = BdkAccountAdapter.load(id, ChangeSet.from_json(walletData));
 
-    const derivationPathEntry = Object.entries(
-      state.accounts.derivationPaths,
-    ).find(([, walletId]) => walletId === id);
+    const derivationPath = Object.entries(state.accounts.derivationPaths).find(
+      ([, walletId]) => walletId === id,
+    );
 
-    if (!derivationPathEntry) {
+    // Should never occur by assertion. It is a critical inconsistent state error that should be caught in integration tests
+    if (!derivationPath) {
       throw new Error(
         `Inconsistent state. No derivation path found for account ${id}`,
       );
     }
 
-    const derivationPath = derivationPathEntry[0].split('/');
-    const slip10 = await this.#snapClient.getPrivateEntropy(derivationPath);
+    const slip10 = await this.#snapClient.getPrivateEntropy(
+      derivationPath[0].split('/'),
+    );
     const fingerprint = (
       slip10.masterFingerprint ?? slip10.parentFingerprint
     ).toString(16);

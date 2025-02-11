@@ -84,7 +84,7 @@ export type SnapClient = {
   displayInterface<ResolveType>(id: string): Promise<ResolveType | null>;
 
   /**
-   * Display a User Interface.
+   * Resolve a User Interface.
    * @param id - The interface id.
    * @param value - The resolved value.
    */

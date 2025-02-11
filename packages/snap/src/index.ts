@@ -213,32 +213,20 @@ export const onUserInput: OnUserInputHandler = async ({
 }) => {
   await loadLocale();
 
-  try {
-    const state = await snap.request({
-      method: 'snap_getInterfaceState',
-      params: { id },
+  const state = await snap.request({
+    method: 'snap_getInterfaceState',
+    params: { id },
+  });
+
+  if (isSendFormEvent(event)) {
+    const sendBitcoinController = new SendBitcoinController({
+      context: context as SendFlowContext,
+      interfaceId: id,
     });
-
-    if (isSendFormEvent(event)) {
-      const sendBitcoinController = new SendBitcoinController({
-        context: context as SendFlowContext,
-        interfaceId: id,
-      });
-      await sendBitcoinController.handleEvent(
-        event,
-        context as SendFlowContext,
-        state.sendForm as SendFormState,
-      );
-    }
-  } catch (error) {
-    let snapError = error;
-
-    if (!isSnapRpcError(error)) {
-      snapError = new SnapError(error);
-    }
-    logger.error(
-      `onUserInput error: ${JSON.stringify(snapError.toJSON(), null, 2)}`,
+    await sendBitcoinController.handleEvent(
+      event,
+      context as SendFlowContext,
+      state.sendForm as SendFormState,
     );
-    throw snapError;
   }
 };

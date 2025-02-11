@@ -85,7 +85,7 @@ export type BitcoinAccount = {
   takeStaged(): ChangeSet | undefined;
 
   /**
-   * Creates a new PSBT.
+   * Create a new PSBT.
    * @param feeRate. - The fee rate in sats/vb
    * @param recipient. - The recipient address
    * @param amount. - The amount to send in sats
@@ -94,7 +94,7 @@ export type BitcoinAccount = {
   buildTx(feeRate: number, recipient: string, amount: string): Psbt;
 
   /**
-   * Creates a new PSBT by draining the wallet inputs.
+   * Create a new PSBT by draining the wallet inputs.
    * @param feeRate. - The fee rate in sats/vb
    * @param recipient. - The recipient address
    * @returns the PSBT

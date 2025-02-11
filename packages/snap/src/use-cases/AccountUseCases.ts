@@ -6,8 +6,8 @@ import type {
   BitcoinAccountRepository,
   BlockchainClient,
   TransactionRequest,
+  SnapClient,
 } from '../entities';
-import type { SnapClient } from '../entities/snap';
 import { logger } from '../utils';
 
 const addressTypeToPurpose: Record<AddressType, string> = {

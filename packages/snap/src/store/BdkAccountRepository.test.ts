@@ -2,8 +2,7 @@ import type { SLIP10Node } from '@metamask/key-tree';
 import { ChangeSet } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 
-import type { BitcoinAccount } from '../entities';
-import type { SnapClient } from '../entities/snap';
+import type { BitcoinAccount, SnapClient } from '../entities';
 import { BdkAccountAdapter } from '../infra';
 import { BdkAccountRepository } from './BdkAccountRepository';
 

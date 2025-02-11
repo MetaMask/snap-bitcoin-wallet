@@ -18,8 +18,8 @@ export type BlockchainClient = {
   sync(account: BitcoinAccount): Promise<void>;
 
   /**
-   * Broadcast the PSBT to the network.
-   * @param psbt - the signed PSBT to broadcast.
+   * Broadcast the signed transaction to the network.
+   * @param psbt - the signed transaction to broadcast.
    */
   broadcast(network: Network, transaction: Transaction): Promise<void>;
 

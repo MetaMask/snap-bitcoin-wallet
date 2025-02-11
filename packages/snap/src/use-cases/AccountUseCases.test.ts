@@ -6,8 +6,8 @@ import type {
   BitcoinAccount,
   BitcoinAccountRepository,
   BlockchainClient,
+  SnapClient,
 } from '../entities';
-import type { SnapClient } from '../entities/snap';
 import { AccountUseCases } from './AccountUseCases';
 
 jest.mock('../utils/logger');
