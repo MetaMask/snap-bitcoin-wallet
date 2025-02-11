@@ -73,7 +73,7 @@ describe('SendFormUseCases', () => {
       mockSendFormRepository.insert.mockResolvedValue('form-id');
       mockSnapClient.displayInterface.mockResolvedValue(mockTxRequest);
 
-      const result = await useCases.display('account-1');
+      const result = await useCases.display('account-id');
 
       expect(mockAccountRepository.get).toHaveBeenCalledWith('account-id');
       expect(mockChain.getFeeEstimates).toHaveBeenCalledWith(
