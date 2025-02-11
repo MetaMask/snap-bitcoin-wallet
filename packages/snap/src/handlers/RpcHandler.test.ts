@@ -1,11 +1,11 @@
 import { mock } from 'jest-mock-extended';
+import { assert } from 'superstruct';
 
 import type { TransactionRequest } from '../entities';
+import { InternalRpcMethod } from '../permissions';
+import type { SendFormUseCases } from '../use-cases';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 import { CreateSendFormRequest, RpcHandler } from './RpcHandler';
-import { SendFormUseCases } from '../use-cases';
-import { InternalRpcMethod } from '../permissions';
-import { assert } from 'superstruct';
 
 jest.mock('superstruct', () => ({
   ...jest.requireActual('superstruct'),
@@ -55,7 +55,7 @@ describe('RpcHandler', () => {
         'account-id',
         mockTxRequest,
       );
-      expect(result).toEqual({ txId: 'txId' });
+      expect(result).toStrictEqual({ txId: 'txId' });
     });
 
     it('propagates errors from display', async () => {

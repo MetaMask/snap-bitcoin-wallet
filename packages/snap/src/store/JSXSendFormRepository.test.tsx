@@ -1,13 +1,9 @@
-import { JSXSendFormRepository } from './JSXSendFormRepository';
-import {
-  SENDFORM_NAME,
-  CurrencyUnit,
-  SnapClient,
-  BitcoinAccount,
-  SendFormContext,
-} from '../entities';
 import { mock } from 'jest-mock-extended';
+
+import type { SnapClient, BitcoinAccount, SendFormContext } from '../entities';
+import { SENDFORM_NAME, CurrencyUnit } from '../entities';
 import { SendFormView } from '../infra/jsx';
+import { JSXSendFormRepository } from './JSXSendFormRepository';
 
 describe('JSXSendFormRepository', () => {
   const mockSnapClient = mock<SnapClient>();
@@ -45,6 +41,8 @@ describe('JSXSendFormRepository', () => {
     const account = mock<BitcoinAccount>({
       id: 'acc-id',
       network: 'bitcoin',
+      // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
+      /* eslint-disable @typescript-eslint/naming-convention */
       balance: { trusted_spendable: { to_sat: () => BigInt(1234) } },
     });
 

@@ -2697,7 +2697,7 @@ __metadata:
     "@metamask/keyring-snap-sdk": "npm:^2.1.0"
     "@metamask/snaps-cli": "npm:^6.6.1"
     "@metamask/snaps-jest": "npm:^8.11.0"
-    "@metamask/snaps-sdk": "npm:^6.16.0"
+    "@metamask/snaps-sdk": "npm:^6.17.1"
     "@metamask/utils": "npm:^11.0.1"
     "@typescript-eslint/eslint-plugin": "npm:^5.42.1"
     "@typescript-eslint/parser": "npm:^5.42.1"
@@ -3365,6 +3365,19 @@ __metadata:
     "@metamask/superstruct": "npm:^3.1.0"
     "@metamask/utils": "npm:^11.0.1"
   checksum: 10/96dd2555d354234ce6a5fbe00912e75fe86af482bb9df4c225927d125ca1e0e1880c0d806ce6ad097c6778d00d35d290204db17797685a8dd0bc63fc8f4a0991
+  languageName: node
+  linkType: hard
+
+"@metamask/snaps-sdk@npm:^6.17.1":
+  version: 6.17.1
+  resolution: "@metamask/snaps-sdk@npm:6.17.1"
+  dependencies:
+    "@metamask/key-tree": "npm:^10.0.2"
+    "@metamask/providers": "npm:^18.3.1"
+    "@metamask/rpc-errors": "npm:^7.0.2"
+    "@metamask/superstruct": "npm:^3.1.0"
+    "@metamask/utils": "npm:^11.0.1"
+  checksum: 10/05c5170c6250115535bc6d06a417157bb55005dd6fe86e768d70fabfba610ec8114cf45a8a5aad1219b1cfb0bcf5e080974735a0ac9a8c8bd0ac102f5c3cf42f
   languageName: node
   linkType: hard
 

@@ -3,7 +3,7 @@ import type { ComponentOrElement } from '@metamask/snaps-sdk';
 import type { Json } from '@metamask/utils';
 
 import type { BitcoinAccount } from './account';
-import { CurrencyUnit } from './currency';
+import type { CurrencyUnit } from './currency';
 
 export type SnapState = {
   accounts: {

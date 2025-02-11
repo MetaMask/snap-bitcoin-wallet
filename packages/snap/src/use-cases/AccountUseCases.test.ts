@@ -1,9 +1,5 @@
-import {
-  Transaction,
-  type AddressType,
-  type Network,
-  type Psbt,
-} from 'bitcoindevkit';
+import type { Transaction } from 'bitcoindevkit';
+import { type AddressType, type Network, type Psbt } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 
 import type {
@@ -455,6 +451,8 @@ describe('AccountUseCases', () => {
 
     const mockPsbt = mock<Psbt>();
     const mockTransaction = mock<Transaction>({
+      // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
+      /* eslint-disable @typescript-eslint/naming-convention */
       compute_txid: jest.fn(),
     });
     const mockAccount = mock<BitcoinAccount>({
