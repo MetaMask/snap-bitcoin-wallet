@@ -1,8 +1,7 @@
 import type { Json, UserInputEvent } from '@metamask/snaps-sdk';
 import { UserInputEventType } from '@metamask/snaps-sdk';
 
-import type { SendFormContext } from '../entities';
-import { SendFormEvent } from '../entities';
+import type { SendFormContext, SendFormEvent } from '../entities';
 import type { SendFormUseCases } from '../use-cases';
 
 export class UserInputHandler {

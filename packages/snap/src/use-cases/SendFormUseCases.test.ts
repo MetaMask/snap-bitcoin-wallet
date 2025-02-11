@@ -1,10 +1,11 @@
 import { UserRejectedRequestError } from '@metamask/snaps-sdk';
-import { Address, Amount, Psbt, type FeeEstimates } from 'bitcoindevkit';
+import type { Psbt } from 'bitcoindevkit';
+import { Address, Amount, type FeeEstimates } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 
+import type { SendFormContext } from '../entities';
 import {
   CurrencyUnit,
-  SendFormContext,
   SendFormEvent,
   type BitcoinAccount,
   type BitcoinAccountRepository,

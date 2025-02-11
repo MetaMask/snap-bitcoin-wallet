@@ -1,4 +1,5 @@
 import { UserRejectedRequestError } from '@metamask/snaps-sdk';
+import { Address, Amount } from 'bitcoindevkit';
 
 import {
   type BitcoinAccountRepository,
@@ -10,7 +11,6 @@ import {
   SendFormEvent,
 } from '../entities';
 import { logger } from '../utils';
-import { Address, Amount } from 'bitcoindevkit';
 
 export class SendFormUseCases {
   readonly #snapClient: SnapClient;

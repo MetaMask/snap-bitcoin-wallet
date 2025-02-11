@@ -1,9 +1,11 @@
+import type { UserInputEvent } from '@metamask/snaps-sdk';
+import { UserInputEventType } from '@metamask/snaps-sdk';
 import { mock } from 'jest-mock-extended';
 
-import { SendFormContext, SendFormEvent } from '../entities';
+import type { SendFormContext } from '../entities';
+import { SendFormEvent } from '../entities';
 import type { SendFormUseCases } from '../use-cases';
 import { UserInputHandler } from './UserInputHandler';
-import { UserInputEvent, UserInputEventType } from '@metamask/snaps-sdk';
 
 describe('UserInputHandler', () => {
   const mockSendFormUseCases = mock<SendFormUseCases>();

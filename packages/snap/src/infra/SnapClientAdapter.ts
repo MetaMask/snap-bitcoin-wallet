@@ -9,7 +9,8 @@ import type {
   SnapsProvider,
 } from '@metamask/snaps-sdk';
 
-import { BitcoinAccount, CurrencyUnit } from '../entities';
+import type { BitcoinAccount } from '../entities';
+import { CurrencyUnit } from '../entities';
 import type { SnapClient, SnapState } from '../entities/snap';
 import { snapToKeyringAccount } from '../handlers/keyring-account';
 
@@ -155,8 +156,8 @@ export class SnapClientAdapter implements SnapClient {
 
   async getCurrencyRate(currency: CurrencyUnit): Promise<number | undefined> {
     // TODO: Remove when fix implemented: https://github.com/MetaMask/accounts-planning/issues/832
-    if (currency != CurrencyUnit.Bitcoin) {
-      return;
+    if (currency !== CurrencyUnit.Bitcoin) {
+      return undefined;
     }
 
     const result = await snap.request({
