@@ -16,8 +16,8 @@
   "from": {
     "message": "From"
   },
-  "toAccount": {
-    "message": "To Account"
+  "toAddress": {
+    "message": "To Address"
   },
   "fromAccount": {
     "message": "From Account"
@@ -40,8 +40,8 @@
   "network": {
     "message": "Network"
   },
-  "estimatedTransactionSpeed": {
-    "message": "30 min"
+  "minutes": {
+    "message": "min"
   },
   "transactionSpeed": {
     "message": "Transaction Speed"
@@ -52,7 +52,7 @@
   "networkFee": {
     "message": "Network Fee"
   },
-  "networkFeeToolTip": {
+  "networkFeeTooltip": {
     "message": "The estimated network fee"
   },
   "total": {
@@ -67,13 +67,13 @@
   "sendAmount": {
     "message": "Send Amount"
   },
-  "amountToSendPlaceholder": {
+  "amountPlaceholder": {
     "message": "Enter amount to send"
   },
   "max": {
     "message": "Max"
   },
-  "receivingAddressPlaceholder": {
+  "recipientPlaceholder": {
     "message": "Enter receiving address"
   },
   "validAddress": {
