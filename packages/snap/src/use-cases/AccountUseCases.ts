@@ -201,6 +201,7 @@ export class AccountUseCases {
     } else {
       psbt = account.drainTo(request.feeRate, request.recipient);
     }
+    console.log(psbt);
 
     const tx = account.sign(psbt);
     await this.#chain.broadcast(account.network, tx);
@@ -210,7 +211,7 @@ export class AccountUseCases {
     logger.info(
       'Transaction sent successfully: %s. Account: %s, Network: %s',
       txId,
-      account.id,
+      id,
       account.network,
     );
     return txId;
