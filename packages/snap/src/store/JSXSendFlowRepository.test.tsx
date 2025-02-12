@@ -9,7 +9,7 @@ jest.mock('../infra/jsx', () => ({
   SendFormView: jest.fn(),
 }));
 
-describe('JSXSendFormRepository', () => {
+describe('JSXSendFlowRepository', () => {
   const mockSnapClient = mock<SnapClient>();
   let repo: JSXSendFlowRepository;
 

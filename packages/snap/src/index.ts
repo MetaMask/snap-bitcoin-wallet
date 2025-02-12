@@ -41,7 +41,7 @@ import {
   SendBitcoinController,
 } from './ui/controller/send-bitcoin-controller';
 import type { SendFlowContext, SendFormState } from './ui/types';
-import { AccountUseCases, SendFormUseCases } from './use-cases';
+import { AccountUseCases, SendFlowUseCases } from './use-cases';
 import { isSnapRpcError, logger } from './utils';
 import { loadLocale } from './utils/locale';
 
@@ -58,7 +58,7 @@ if (ConfigV2.keyringVersion === 'v2') {
   const chainClient = new EsploraClientAdapter(ConfigV2.chain);
   // Data layer
   const accountRepository = new BdkAccountRepository(snapClient);
-  const sendFormRepository = new JSXSendFlowRepository(snapClient);
+  const sendFlowRepository = new JSXSendFlowRepository(snapClient);
 
   // Business layer
   accountsUseCases = new AccountUseCases(
@@ -67,10 +67,10 @@ if (ConfigV2.keyringVersion === 'v2') {
     chainClient,
     ConfigV2.accounts,
   );
-  const sendFormUseCases = new SendFormUseCases(
+  const sendFormUseCases = new SendFlowUseCases(
     snapClient,
     accountRepository,
-    sendFormRepository,
+    sendFlowRepository,
     chainClient,
     ConfigV2.targetBlocksConfirmation,
     ConfigV2.fallbackFeeRate,
