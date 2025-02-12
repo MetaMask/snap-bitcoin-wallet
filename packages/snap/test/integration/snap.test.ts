@@ -283,7 +283,7 @@ describe('Bitcoin Snap', () => {
       SendFormEvent.Recipient,
       'bcrt1qyvhf2epk9s659206lq3rdvtf07uq3t9e7xtjje',
     );
-    await ui.clickElement(SendFormEvent.Review);
+    await ui.clickElement(SendFormEvent.Confirm);
 
     const result = await response;
     expect(result).toRespondWith({ txId: expect.any(String) });

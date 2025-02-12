@@ -35,7 +35,7 @@ import {
 import type { StartSendTransactionFlowParams } from './rpcs/start-send-transaction-flow';
 import { startSendTransactionFlow } from './rpcs/start-send-transaction-flow';
 import { KeyringStateManager } from './stateManagement';
-import { BdkAccountRepository, JSXSendFormRepository } from './store';
+import { BdkAccountRepository, JSXSendFlowRepository } from './store';
 import {
   isSendFormEvent,
   SendBitcoinController,
@@ -58,7 +58,7 @@ if (ConfigV2.keyringVersion === 'v2') {
   const chainClient = new EsploraClientAdapter(ConfigV2.chain);
   // Data layer
   const accountRepository = new BdkAccountRepository(snapClient);
-  const sendFormRepository = new JSXSendFormRepository(snapClient);
+  const sendFormRepository = new JSXSendFlowRepository(snapClient);
 
   // Business layer
   accountsUseCases = new AccountUseCases(

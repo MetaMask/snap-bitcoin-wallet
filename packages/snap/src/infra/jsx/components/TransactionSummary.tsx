@@ -6,23 +6,17 @@ import {
   Value,
   type SnapComponent,
 } from '@metamask/snaps-sdk/jsx';
-import { Amount } from 'bitcoindevkit';
 
 import { ConfigV2 } from '../../../configv2';
-import type { SendFormContext } from '../../../entities';
+import type { CurrencyUnit } from '../../../entities';
 import { getTranslator } from '../../../utils/locale';
+import { displayAmount, displayFiatAmount } from '../format';
 
-export type TransactionSummaryProps = SendFormContext & {
+type TransactionSummaryProps = {
+  currency: CurrencyUnit;
+  fiatRate?: CurrencyRate;
   amount: string;
   fee: string;
-};
-
-const displayFiatAmount = (amount: bigint, fiatRate?: CurrencyRate): string => {
-  return fiatRate
-    ? `${((Number(amount) * fiatRate.conversionRate) / 1e8).toFixed(2)} ${
-        fiatRate.currency
-      }`
-    : '';
 };
 
 export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
@@ -33,15 +27,14 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
 }) => {
   const t = getTranslator();
 
-  const txFee = Amount.from_sat(BigInt(fee));
-  const total = Amount.from_sat(BigInt(amount) + BigInt(fee));
+  const total = BigInt(amount) + BigInt(fee);
 
   return (
     <Section>
       <Row label={t('transactionFee')} tooltip={t('transactionFeeTooltip')}>
         <Value
-          value={`${txFee.to_btc()} ${currency}`}
-          extra={displayFiatAmount(txFee.to_sat(), fiatRate)}
+          value={displayAmount(BigInt(fee), currency)}
+          extra={displayFiatAmount(BigInt(fee), fiatRate)}
         />
       </Row>
       <Row label={t('transactionSpeed')} tooltip={t('transactionSpeedTooltip')}>
@@ -51,8 +44,8 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
       </Row>
       <Row label={t('total')}>
         <Value
-          value={`${total.to_btc()} ${currency}`}
-          extra={displayFiatAmount(total.to_sat(), fiatRate)}
+          value={displayAmount(total, currency)}
+          extra={displayFiatAmount(total, fiatRate)}
         />
       </Row>
     </Section>

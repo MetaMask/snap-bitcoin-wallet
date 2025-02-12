@@ -97,7 +97,7 @@ export class SnapClientAdapter implements SnapClient {
 
   async createInterface(
     ui: ComponentOrElement,
-    context: Record<string, Json>,
+    context?: Record<string, Json>,
   ): Promise<string> {
     return await snap.request({
       method: 'snap_createInterface',
@@ -111,7 +111,7 @@ export class SnapClientAdapter implements SnapClient {
   async updateInterface(
     id: string,
     ui: ComponentOrElement,
-    context: Record<string, Json>,
+    context?: Record<string, Json>,
   ): Promise<void> {
     await snap.request({
       method: 'snap_updateInterface',
@@ -154,17 +154,21 @@ export class SnapClientAdapter implements SnapClient {
     });
   }
 
-  async getCurrencyRate(currency: CurrencyUnit): Promise<CurrencyRate | null> {
+  async getCurrencyRate(
+    currency: CurrencyUnit,
+  ): Promise<CurrencyRate | undefined> {
     // TODO: Remove when fix implemented: https://github.com/MetaMask/accounts-planning/issues/832
     if (currency !== CurrencyUnit.Bitcoin) {
-      return null;
+      return undefined;
     }
 
-    return snap.request({
+    const rate = await snap.request({
       method: 'snap_getCurrencyRate',
       params: {
         currency: currency as unknown as AvailableCurrency,
       },
     });
+
+    return rate ?? undefined;
   }
 }

@@ -3,21 +3,26 @@ import { Address, Amount } from 'bitcoindevkit';
 
 import type {
   BitcoinAccountRepository,
-  SendFormRepository,
+  SendFlowRepository,
   SnapClient,
   BlockchainClient,
   TransactionRequest,
   SendFormContext,
+  ReviewTransactionContext,
 } from '../entities';
-import { SendFormEvent } from '../entities';
+import {
+  SendFormEvent,
+  ReviewTransactionEvent,
+  networkToCurrencyUnit,
+} from '../entities';
 import { logger } from '../utils';
 
-export class SendFormUseCases {
+export class SendFlowUseCases {
   readonly #snapClient: SnapClient;
 
   readonly #accountRepository: BitcoinAccountRepository;
 
-  readonly #sendFormRepository: SendFormRepository;
+  readonly #sendFlowRepository: SendFlowRepository;
 
   readonly #chainClient: BlockchainClient;
 
@@ -28,21 +33,21 @@ export class SendFormUseCases {
   constructor(
     snapClient: SnapClient,
     accountRepository: BitcoinAccountRepository,
-    sendFormrepository: SendFormRepository,
+    sendFormrepository: SendFlowRepository,
     chainClient: BlockchainClient,
     targetBlocksConfirmation: number,
     fallbackFeeRate: number,
   ) {
     this.#snapClient = snapClient;
     this.#accountRepository = accountRepository;
-    this.#sendFormRepository = sendFormrepository;
+    this.#sendFlowRepository = sendFormrepository;
     this.#chainClient = chainClient;
     this.#targetBlocksConfirmation = targetBlocksConfirmation;
     this.#fallbackFeeRate = fallbackFeeRate;
   }
 
-  async display(accountId: string): Promise<TransactionRequest> {
-    logger.debug('Displaying Send form. Account: %s', accountId);
+  async displayForm(accountId: string): Promise<TransactionRequest> {
+    logger.trace('Displaying Send form view. Account: %s', accountId);
 
     const account = await this.#accountRepository.get(accountId);
     if (!account) {
@@ -56,21 +61,36 @@ export class SendFormUseCases {
     const feeRate =
       feeEstimates.get(this.#targetBlocksConfirmation) ?? this.#fallbackFeeRate;
 
-    const formId = await this.#sendFormRepository.insert(account, feeRate);
+    // TODO: Fetch fiat/fee rates from state and refresh on updates
+    const fiatRate = await this.#snapClient.getCurrencyRate(
+      networkToCurrencyUnit[account.network],
+    );
+
+    const formContext: SendFormContext = {
+      balance: account.balance.trusted_spendable.to_sat().toString(),
+      currency: networkToCurrencyUnit[account.network],
+      account: account.id,
+      network: account.network,
+      feeRate,
+      fiatRate,
+      errors: {},
+    };
+
+    const interfaceId = await this.#sendFlowRepository.insertForm(formContext);
 
     // Blocks and waits for user actions
     const request = await this.#snapClient.displayInterface<TransactionRequest>(
-      formId,
+      interfaceId,
     );
     if (!request) {
       throw new UserRejectedRequestError() as unknown as Error;
     }
 
-    logger.info('Send form resolved successfully: %s', formId);
+    logger.debug('Transaction request generated successfully: %o', request);
     return request;
   }
 
-  async update(
+  async updateForm(
     id: string,
     event: SendFormEvent,
     context: SendFormContext,
@@ -78,7 +98,6 @@ export class SendFormUseCases {
     logger.trace('Updating Send form. ID: %s. Event: %s', id, event);
 
     switch (event) {
-      case SendFormEvent.HeaderBack:
       case SendFormEvent.Cancel: {
         return await this.#snapClient.resolveInterface(id, null);
       }
@@ -89,17 +108,20 @@ export class SendFormUseCases {
         delete updatedContext.errors.tx;
         delete updatedContext.fee;
 
-        return await this.#sendFormRepository.update(id, updatedContext);
+        return await this.#sendFlowRepository.updateForm(id, updatedContext);
       }
-      case SendFormEvent.Review: {
-        const { amount, feeRate, recipient } = context;
-        if (amount && recipient) {
-          const txRequest: TransactionRequest = {
-            amount,
-            recipient,
-            feeRate,
+      case SendFormEvent.Confirm: {
+        if (context.amount && context.recipient && context.fee) {
+          const reviewContext: ReviewTransactionContext = {
+            amount: context.amount,
+            recipient: context.recipient,
+            feeRate: context.feeRate,
+            fiatRate: context.fiatRate,
+            currency: context.currency,
+            fee: context.fee,
+            sendForm: context,
           };
-          return await this.#snapClient.resolveInterface(id, txRequest);
+          return await this.#sendFlowRepository.updateReview(id, reviewContext);
         }
         throw new Error('Inconsistent Send form context');
       }
@@ -117,6 +139,36 @@ export class SendFormUseCases {
     }
   }
 
+  async updateReview(
+    id: string,
+    event: ReviewTransactionEvent,
+    context: ReviewTransactionContext,
+  ): Promise<void> {
+    logger.trace('Updating transaction review. ID: %s. Event: %s', id, event);
+
+    switch (event) {
+      case ReviewTransactionEvent.HeaderBack: {
+        // If we come from a send form, we display it again, otherwise we resolve the interface (reject)
+        if (context.sendForm) {
+          await this.#sendFlowRepository.updateForm(id, context.sendForm);
+        }
+
+        return this.#snapClient.resolveInterface(id, null);
+      }
+      case ReviewTransactionEvent.Send: {
+        const { amount, feeRate, recipient } = context;
+        const txRequest: TransactionRequest = {
+          feeRate,
+          amount,
+          recipient,
+        };
+        return this.#snapClient.resolveInterface(id, txRequest);
+      }
+      default:
+        throw new Error('Unrecognized event');
+    }
+  }
+
   async #handleSetMax(id: string, context: SendFormContext): Promise<void> {
     let updatedContext: SendFormContext = {
       ...context,
@@ -128,14 +180,14 @@ export class SendFormUseCases {
     delete updatedContext.fee;
 
     updatedContext = await this.#computeFee(updatedContext);
-    return await this.#sendFormRepository.update(id, updatedContext);
+    return await this.#sendFlowRepository.updateForm(id, updatedContext);
   }
 
   async #handleSetRecipient(
     id: string,
     context: SendFormContext,
   ): Promise<void> {
-    const formState = await this.#sendFormRepository.getState(id);
+    const formState = await this.#sendFlowRepository.getState(id);
 
     let updatedContext = { ...context };
     delete updatedContext.errors.recipient;
@@ -154,11 +206,11 @@ export class SendFormUseCases {
       };
     }
 
-    return await this.#sendFormRepository.update(id, updatedContext);
+    return await this.#sendFlowRepository.updateForm(id, updatedContext);
   }
 
   async #handleSetAmount(id: string, context: SendFormContext): Promise<void> {
-    const formState = await this.#sendFormRepository.getState(id);
+    const formState = await this.#sendFlowRepository.getState(id);
 
     let updatedContext = { ...context };
     delete updatedContext.errors.amount;
@@ -178,7 +230,7 @@ export class SendFormUseCases {
       };
     }
 
-    return await this.#sendFormRepository.update(id, updatedContext);
+    return await this.#sendFlowRepository.updateForm(id, updatedContext);
   }
 
   async #computeFee(context: SendFormContext): Promise<SendFormContext> {

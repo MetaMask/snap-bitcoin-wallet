@@ -3,7 +3,7 @@ import { mock } from 'jest-mock-extended';
 import type { SnapClient, BitcoinAccount, SendFormContext } from '../entities';
 import { SENDFORM_NAME, CurrencyUnit } from '../entities';
 import { SendFormView } from '../infra/jsx';
-import { JSXSendFormRepository } from './JSXSendFormRepository';
+import { JSXSendFlowRepository } from './JSXSendFlowRepository';
 
 jest.mock('../infra/jsx', () => ({
   SendFormView: jest.fn(),
@@ -11,10 +11,10 @@ jest.mock('../infra/jsx', () => ({
 
 describe('JSXSendFormRepository', () => {
   const mockSnapClient = mock<SnapClient>();
-  let repo: JSXSendFormRepository;
+  let repo: JSXSendFlowRepository;
 
   beforeEach(() => {
-    repo = new JSXSendFormRepository(mockSnapClient);
+    repo = new JSXSendFlowRepository(mockSnapClient);
   });
 
   describe('getState', () => {
@@ -60,7 +60,7 @@ describe('JSXSendFormRepository', () => {
       mockSnapClient.createInterface.mockResolvedValue('interface-id');
       (SendFormView as jest.Mock).mockReturnValue({});
 
-      const result = await repo.insert(account, feeRate);
+      const result = await repo.insertForm(account, feeRate);
 
       const expectedContext: SendFormContext = {
         balance: '1234',

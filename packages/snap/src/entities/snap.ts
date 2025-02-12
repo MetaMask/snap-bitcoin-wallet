@@ -62,7 +62,7 @@ export type SnapClient = {
    */
   createInterface(
     ui: ComponentOrElement,
-    context: Record<string, Json>,
+    context?: Record<string, Json>,
   ): Promise<string>;
 
   /**
@@ -74,7 +74,7 @@ export type SnapClient = {
   updateInterface(
     id: string,
     ui: ComponentOrElement,
-    context: Record<string, Json>,
+    context?: Record<string, Json>,
   ): Promise<void>;
 
   /**
@@ -107,5 +107,5 @@ export type SnapClient = {
    * @param currency - The currency unit.
    * @returns A Promise that resolves to the currency rate.
    */
-  getCurrencyRate(currency: CurrencyUnit): Promise<CurrencyRate | null>;
+  getCurrencyRate(currency: CurrencyUnit): Promise<CurrencyRate | undefined>;
 };
