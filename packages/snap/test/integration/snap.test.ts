@@ -3,7 +3,7 @@ import { BtcMethod, BtcScopes } from '@metamask/keyring-api';
 import type { Snap } from '@metamask/snaps-jest';
 import { installSnap } from '@metamask/snaps-jest';
 
-import { CurrencyUnit } from '../../src/entities';
+import { CurrencyUnit, SendFormEvent } from '../../src/entities';
 import { Caip2AddressType } from '../../src/handlers';
 import { Caip19Asset } from '../../src/handlers/caip19';
 
@@ -268,4 +268,63 @@ describe('Bitcoin Snap', () => {
       expect(response).toRespondWith(expectedAssets);
     },
   );
+
+  it('executes Send flow: happy path', async () => {
+    const response = snap.request({
+      origin,
+      method: 'startSendTransactionFlow',
+      params: {
+        account: accounts[`${Caip2AddressType.P2wpkh}:${BtcScopes.Regtest}`].id,
+      },
+    });
+
+    const ui = await response.getInterface();
+    await ui.typeInField(SendFormEvent.Amount, '0.1');
+    await ui.typeInField(
+      SendFormEvent.Recipient,
+      'bcrt1qyvhf2epk9s659206lq3rdvtf07uq3t9e7xtjje',
+    );
+    await ui.clickElement(SendFormEvent.Review);
+
+    const result = await response;
+    expect(result).toRespondWith({ txId: expect.any(String) });
+  });
+
+  it('executes Send flow: reject request', async () => {
+    let response = snap.request({
+      origin,
+      method: 'startSendTransactionFlow',
+      params: {
+        account: accounts[`${Caip2AddressType.P2wpkh}:${BtcScopes.Regtest}`].id,
+      },
+    });
+
+    let ui = await response.getInterface();
+    await ui.clickElement(SendFormEvent.Cancel);
+
+    let result = await response;
+    expect(result).toRespondWithError({
+      code: 4001,
+      message: 'User rejected the request.',
+      stack: expect.anything(),
+    });
+
+    response = snap.request({
+      origin,
+      method: 'startSendTransactionFlow',
+      params: {
+        account: accounts[`${Caip2AddressType.P2wpkh}:${BtcScopes.Regtest}`].id,
+      },
+    });
+
+    ui = await response.getInterface();
+    await ui.clickElement(SendFormEvent.HeaderBack);
+
+    result = await response;
+    expect(result).toRespondWithError({
+      code: 4001,
+      message: 'User rejected the request.',
+      stack: expect.anything(),
+    });
+  });
 });

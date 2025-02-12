@@ -5,6 +5,9 @@ export type SnapConfig = {
   accounts: AccountsConfig;
   chain: ChainConfig;
   keyringVersion: string;
+  // Temporary config to set the expected confirmation target, should eventually be chosen by the user
+  targetBlocksConfirmation: number;
+  fallbackFeeRate: number;
 };
 
 export type AccountsConfig = {
@@ -19,6 +22,4 @@ export type ChainConfig = {
   url: {
     [network in Network]: string;
   };
-  // Temporary config to set the expected confirmation target, should eventually be chosen by the user
-  targetBlocksConfirmation: number;
 };

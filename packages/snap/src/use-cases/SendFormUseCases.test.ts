@@ -39,6 +39,7 @@ describe('SendFormUseCases', () => {
   const mockSendFormRepository = mock<SendFormRepository>();
   const mockChain = mock<BlockchainClient>();
   const targetBlocksConfirmation = 3;
+  const fallbackFeeRate = 5.0;
   const mockAccount = mock<BitcoinAccount>({
     network: 'bitcoin',
     drainTo: jest.fn(),
@@ -54,6 +55,7 @@ describe('SendFormUseCases', () => {
       mockSendFormRepository,
       mockChain,
       targetBlocksConfirmation,
+      fallbackFeeRate,
     );
   });
 
@@ -62,16 +64,6 @@ describe('SendFormUseCases', () => {
       mockAccountRepository.get.mockResolvedValue(null);
       await expect(useCases.display('non-existent-account')).rejects.toThrow(
         'Account not found',
-      );
-    });
-
-    it('throws error if fee rate is missing', async () => {
-      mockAccountRepository.get.mockResolvedValue(mockAccount);
-      mockChain.getFeeEstimates.mockResolvedValue(mockFeeEstimates);
-      mockFeeEstimates.get.mockReturnValue(undefined);
-
-      await expect(useCases.display('account-id')).rejects.toThrow(
-        'Failed to fetch fee rates',
       );
     });
 

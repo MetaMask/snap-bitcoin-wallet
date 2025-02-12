@@ -46,10 +46,9 @@ export const SendFormView: SnapComponent<SendFormContext> = (props) => {
 
         {props.fee !== undefined && props.amount !== undefined && (
           <TransactionSummary
-            amountSats={props.amount}
-            feeSats={props.fee}
-            currency={props.currency}
-            fiatRate={props.fiatRate}
+            {...props}
+            fee={props.fee}
+            amount={props.amount}
           />
         )}
       </Box>

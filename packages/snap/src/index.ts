@@ -72,7 +72,8 @@ if (ConfigV2.keyringVersion === 'v2') {
     accountRepository,
     sendFormRepository,
     chainClient,
-    ConfigV2.chain.targetBlocksConfirmation,
+    ConfigV2.targetBlocksConfirmation,
+    ConfigV2.fallbackFeeRate,
   );
   // Application layer
   keyringHandler = new KeyringHandler(accountsUseCases);

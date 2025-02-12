@@ -12,49 +12,47 @@ import { ConfigV2 } from '../../configv2';
 import type { SendFormContext } from '../../entities';
 import { getTranslator } from '../../utils/locale';
 
-export type TransactionSummaryProps = {
-  currency: SendFormContext['currency'];
-  amountSats: string;
-  feeSats: string;
-  fiatRate?: SendFormContext['fiatRate'];
+export type TransactionSummaryProps = SendFormContext & {
+  amount: string;
+  fee: string;
 };
 
-const displayFiatAmount = (amount: Amount, fiatRate?: CurrencyRate): string => {
+const displayFiatAmount = (amount: bigint, fiatRate?: CurrencyRate): string => {
   return fiatRate
-    ? `${((Number(amount.to_sat()) * fiatRate.conversionRate) / 1e8).toFixed(
-        2,
-      )} ${fiatRate.currency}`
+    ? `${((Number(amount) * fiatRate.conversionRate) / 1e8).toFixed(2)} ${
+        fiatRate.currency
+      }`
     : '';
 };
 
 export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
-  feeSats,
-  amountSats,
+  fee,
+  amount,
   currency,
   fiatRate,
 }) => {
   const t = getTranslator();
 
-  const total = Amount.from_sat(BigInt(amountSats) + BigInt(feeSats));
-  const fee = Amount.from_sat(BigInt(feeSats));
+  const txFee = Amount.from_sat(BigInt(fee));
+  const total = Amount.from_sat(BigInt(amount) + BigInt(fee));
 
   return (
     <Section>
-      <Row label={t('networkFee')} tooltip={t('networkFeeTooltip')}>
+      <Row label={t('transactionFee')} tooltip={t('transactionFeeTooltip')}>
         <Value
-          value={`${fee.to_btc()} ${currency}`}
-          extra={displayFiatAmount(fee, fiatRate)}
+          value={`${txFee.to_btc()} ${currency}`}
+          extra={displayFiatAmount(txFee.to_sat(), fiatRate)}
         />
       </Row>
       <Row label={t('transactionSpeed')} tooltip={t('transactionSpeedTooltip')}>
         <Text>
-          {`${ConfigV2.chain.targetBlocksConfirmation * 10}`} {t('minutes')}
+          {`${ConfigV2.targetBlocksConfirmation * 10} ${t('minutes')}`}
         </Text>
       </Row>
       <Row label={t('total')}>
         <Value
           value={`${total.to_btc()} ${currency}`}
-          extra={displayFiatAmount(total, fiatRate)}
+          extra={displayFiatAmount(total.to_sat(), fiatRate)}
         />
       </Row>
     </Section>

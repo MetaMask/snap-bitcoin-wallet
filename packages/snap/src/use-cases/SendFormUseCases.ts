@@ -23,18 +23,22 @@ export class SendFormUseCases {
 
   readonly #targetBlocksConfirmation: number;
 
+  readonly #fallbackFeeRate: number;
+
   constructor(
     snapClient: SnapClient,
     accountRepository: BitcoinAccountRepository,
     sendFormrepository: SendFormRepository,
     chainClient: BlockchainClient,
     targetBlocksConfirmation: number,
+    fallbackFeeRate: number,
   ) {
     this.#snapClient = snapClient;
     this.#accountRepository = accountRepository;
     this.#sendFormRepository = sendFormrepository;
     this.#chainClient = chainClient;
     this.#targetBlocksConfirmation = targetBlocksConfirmation;
+    this.#fallbackFeeRate = fallbackFeeRate;
   }
 
   async display(accountId: string): Promise<TransactionRequest> {
@@ -49,10 +53,8 @@ export class SendFormUseCases {
     const feeEstimates = await this.#chainClient.getFeeEstimates(
       account.network,
     );
-    const feeRate = feeEstimates.get(this.#targetBlocksConfirmation);
-    if (!feeRate) {
-      throw new Error('Failed to fetch fee rates');
-    }
+    const feeRate =
+      feeEstimates.get(this.#targetBlocksConfirmation) ?? this.#fallbackFeeRate;
 
     const formId = await this.#sendFormRepository.insert(account, feeRate);
 
