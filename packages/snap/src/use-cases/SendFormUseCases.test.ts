@@ -1,19 +1,18 @@
 import { UserRejectedRequestError } from '@metamask/snaps-sdk';
-import type { Psbt } from 'bitcoindevkit';
-import { Address, Amount, type FeeEstimates } from 'bitcoindevkit';
+import type { Psbt, FeeEstimates } from 'bitcoindevkit';
+import { Address, Amount } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 
-import type { SendFormContext } from '../entities';
-import {
-  CurrencyUnit,
-  SendFormEvent,
-  type BitcoinAccount,
-  type BitcoinAccountRepository,
-  type BlockchainClient,
-  type SendFormRepository,
-  type SnapClient,
-  type TransactionRequest,
+import type {
+  SendFormContext,
+  BitcoinAccount,
+  BitcoinAccountRepository,
+  BlockchainClient,
+  SendFormRepository,
+  SnapClient,
+  TransactionRequest,
 } from '../entities';
+import { CurrencyUnit, SendFormEvent } from '../entities';
 import { SendFormUseCases } from './SendFormUseCases';
 
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818

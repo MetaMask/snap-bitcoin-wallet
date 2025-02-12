@@ -15,8 +15,7 @@ import type { SendFormContext } from '../../entities';
 import { SendFormEvent } from '../../entities';
 import emptySpace from '../../images/empty-space.svg';
 import { getTranslator } from '../../utils/locale';
-import { SendForm } from './SendForm';
-import { TransactionSummary } from './TransactionSummary';
+import { SendForm, TransactionSummary } from './components';
 
 export const SendFormView: SnapComponent<SendFormContext> = (props) => {
   const t = getTranslator();

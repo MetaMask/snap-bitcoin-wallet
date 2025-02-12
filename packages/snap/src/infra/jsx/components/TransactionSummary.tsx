@@ -8,9 +8,9 @@ import {
 } from '@metamask/snaps-sdk/jsx';
 import { Amount } from 'bitcoindevkit';
 
-import { ConfigV2 } from '../../configv2';
-import type { SendFormContext } from '../../entities';
-import { getTranslator } from '../../utils/locale';
+import { ConfigV2 } from '../../../configv2';
+import type { SendFormContext } from '../../../entities';
+import { getTranslator } from '../../../utils/locale';
 
 export type TransactionSummaryProps = SendFormContext & {
   amount: string;
