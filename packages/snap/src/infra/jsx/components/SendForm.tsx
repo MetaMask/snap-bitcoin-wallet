@@ -13,7 +13,7 @@ import { Amount } from 'bitcoindevkit';
 
 import type { SendFormContext } from '../../../entities';
 import { SENDFORM_NAME, SendFormEvent } from '../../../entities';
-import btcIcon from '../../images/bitcoin.svg';
+import btcIcon from '../../../images/bitcoin.svg';
 import { getTranslator } from '../../../utils/locale';
 
 const displayAmount = (amountSats?: string): string => {
