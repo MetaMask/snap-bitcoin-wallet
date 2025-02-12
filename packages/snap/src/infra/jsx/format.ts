@@ -5,9 +5,14 @@ import type { CurrencyUnit } from '../../entities';
 
 export const displayAmount = (
   amountSats: bigint,
-  currency: CurrencyUnit,
+  currency?: CurrencyUnit,
 ): string => {
-  return `${Amount.from_sat(amountSats).to_btc()} ${currency}`;
+  const amount = Amount.from_sat(amountSats).to_btc();
+  if (currency) {
+    return `${amount} ${currency}`;
+  }
+
+  return amount.toString();
 };
 
 export const displayFiatAmount = (

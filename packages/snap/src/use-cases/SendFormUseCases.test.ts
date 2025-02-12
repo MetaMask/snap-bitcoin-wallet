@@ -1,9 +1,10 @@
-import { CurrencyRate, UserRejectedRequestError } from '@metamask/snaps-sdk';
+import type { CurrencyRate } from '@metamask/snaps-sdk';
+import { UserRejectedRequestError } from '@metamask/snaps-sdk';
 import type { Psbt, FeeEstimates } from 'bitcoindevkit';
 import { Address, Amount } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 
-import {
+import type {
   SendFormContext,
   BitcoinAccount,
   BitcoinAccountRepository,
@@ -12,9 +13,12 @@ import {
   SnapClient,
   TransactionRequest,
   ReviewTransactionContext,
-  ReviewTransactionEvent,
 } from '../entities';
-import { CurrencyUnit, SendFormEvent } from '../entities';
+import {
+  ReviewTransactionEvent,
+  CurrencyUnit,
+  SendFormEvent,
+} from '../entities';
 import { SendFlowUseCases } from './SendFormUseCases';
 
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
@@ -115,7 +119,7 @@ describe('SendFlowUseCases', () => {
 
   describe('updateForm', () => {
     const mockContext: SendFormContext = {
-      account: 'account-id',
+      account: { id: 'account-id', address: 'myAddress' },
       amount: '1000',
       balance: '20000',
       currency: CurrencyUnit.Bitcoin,
@@ -206,12 +210,14 @@ describe('SendFlowUseCases', () => {
 
     it('updates interface to the transaction review on Confirm', async () => {
       const expectedReviewContext: ReviewTransactionContext = {
-        amount: mockContext.amount!,
-        recipient: mockContext.recipient!,
+        from: mockContext.account.address,
+        network: mockContext.network,
+        amount: '1000',
+        recipient: 'recipientAddress',
         feeRate: mockContext.feeRate,
         fiatRate: mockContext.fiatRate,
         currency: mockContext.currency,
-        fee: mockContext.fee!,
+        fee: '10',
         sendForm: mockContext,
       };
 
@@ -368,6 +374,8 @@ describe('SendFlowUseCases', () => {
 
   describe('updateReview', () => {
     const mockContext: ReviewTransactionContext = {
+      from: 'myAddress',
+      network: 'bitcoin',
       amount: '10000',
       currency: CurrencyUnit.Bitcoin,
       recipient: 'recipientAddress',

@@ -1,4 +1,5 @@
-import { CurrencyRate } from '@metamask/snaps-sdk';
+import type { CurrencyRate } from '@metamask/snaps-sdk';
+
 import type {
   SendFormContext,
   SendFlowRepository,
@@ -38,7 +39,7 @@ export class JSXSendFlowRepository implements SendFlowRepository {
     const context: SendFormContext = {
       balance: account.balance.trusted_spendable.to_sat().toString(),
       currency: networkToCurrencyUnit[account.network],
-      account: account.id,
+      account: { id: account.id, address: account.peekAddress(0).address }, // FIXME: Address should not be needed here
       network: account.network,
       feeRate,
       fiatRate,

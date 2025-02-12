@@ -1,9 +1,13 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
 import { BtcMethod, BtcScopes } from '@metamask/keyring-api';
 import type { Snap } from '@metamask/snaps-jest';
-import { installSnap } from '@metamask/snaps-jest';
+import { assertIsCustomDialog, installSnap } from '@metamask/snaps-jest';
 
-import { CurrencyUnit, SendFormEvent } from '../../src/entities';
+import {
+  CurrencyUnit,
+  ReviewTransactionEvent,
+  SendFormEvent,
+} from '../../src/entities';
 import { Caip2AddressType, Caip19Asset } from '../../src/handlers';
 
 describe('Bitcoin Snap', () => {
@@ -277,7 +281,9 @@ describe('Bitcoin Snap', () => {
       },
     });
 
-    const ui = await response.getInterface();
+    let ui = await response.getInterface();
+    assertIsCustomDialog(ui);
+
     await ui.typeInField(SendFormEvent.Amount, '0.1');
     await ui.typeInField(
       SendFormEvent.Recipient,
@@ -285,12 +291,15 @@ describe('Bitcoin Snap', () => {
     );
     await ui.clickElement(SendFormEvent.Confirm);
 
+    ui = await response.getInterface();
+    await ui.clickElement(ReviewTransactionEvent.Send);
+
     const result = await response;
     expect(result).toRespondWith({ txId: expect.any(String) });
   });
 
-  it('executes Send flow: reject request', async () => {
-    let response = snap.request({
+  it('executes Send flow: happy path drain account', async () => {
+    const response = snap.request({
       origin,
       method: 'startSendTransactionFlow',
       params: {
@@ -299,16 +308,31 @@ describe('Bitcoin Snap', () => {
     });
 
     let ui = await response.getInterface();
+    assertIsCustomDialog(ui);
+
+    await ui.clickElement(SendFormEvent.SetMax);
+    await ui.typeInField(
+      SendFormEvent.Recipient,
+      'bcrt1qyvhf2epk9s659206lq3rdvtf07uq3t9e7xtjje',
+    );
+    await ui.clickElement(SendFormEvent.Confirm);
+
+    ui = await response.getInterface();
+    await ui.clickElement(ReviewTransactionEvent.HeaderBack);
+
+    ui = await response.getInterface();
     await ui.clickElement(SendFormEvent.Cancel);
 
-    let result = await response;
+    const result = await response;
     expect(result).toRespondWithError({
       code: 4001,
       message: 'User rejected the request.',
       stack: expect.anything(),
     });
+  });
 
-    response = snap.request({
+  it('executes Send flow: cancel', async () => {
+    const response = snap.request({
       origin,
       method: 'startSendTransactionFlow',
       params: {
@@ -316,10 +340,43 @@ describe('Bitcoin Snap', () => {
       },
     });
 
-    ui = await response.getInterface();
-    await ui.clickElement(SendFormEvent.HeaderBack);
+    const ui = await response.getInterface();
+    await ui.clickElement(SendFormEvent.Cancel);
 
-    result = await response;
+    const result = await response;
+    expect(result).toRespondWithError({
+      code: 4001,
+      message: 'User rejected the request.',
+      stack: expect.anything(),
+    });
+  });
+
+  it('executes Send flow: revert back to send form', async () => {
+    const response = snap.request({
+      origin,
+      method: 'startSendTransactionFlow',
+      params: {
+        account: accounts[`${Caip2AddressType.P2wpkh}:${BtcScopes.Regtest}`].id,
+      },
+    });
+
+    let ui = await response.getInterface();
+    assertIsCustomDialog(ui);
+
+    await ui.typeInField(SendFormEvent.Amount, '0.1');
+    await ui.typeInField(
+      SendFormEvent.Recipient,
+      'bcrt1qyvhf2epk9s659206lq3rdvtf07uq3t9e7xtjje',
+    );
+    await ui.clickElement(SendFormEvent.Confirm);
+
+    ui = await response.getInterface();
+    await ui.clickElement(ReviewTransactionEvent.HeaderBack);
+
+    ui = await response.getInterface();
+    await ui.clickElement(SendFormEvent.Cancel);
+
+    const result = await response;
     expect(result).toRespondWithError({
       code: 4001,
       message: 'User rejected the request.',

@@ -107,6 +107,8 @@ export class SendFlowUseCases {
       case SendFormEvent.Confirm: {
         if (context.amount && context.recipient && context.fee) {
           const reviewContext: ReviewTransactionContext = {
+            from: context.account.address,
+            network: context.network,
             amount: context.amount,
             recipient: context.recipient,
             feeRate: context.feeRate,
@@ -230,7 +232,7 @@ export class SendFlowUseCases {
   async #computeFee(context: SendFormContext): Promise<SendFormContext> {
     const { amount, recipient, drain } = context;
     if (amount && recipient) {
-      const account = await this.#accountRepository.get(context.account);
+      const account = await this.#accountRepository.get(context.account.id);
       if (!account) {
         throw new Error('Account removed while sending');
       }

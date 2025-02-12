@@ -27,6 +27,9 @@ export const SendForm: SnapComponent<SendFormContext> = ({
 
   const validAddress = Boolean(recipient && !errors.recipient);
 
+  const dd = amount ? displayAmount(BigInt(amount)).trimEnd() : undefined;
+  console.log(dd);
+
   return (
     <Form name={SENDFORM_NAME}>
       <Field label={t('sendAmount')} error={errors.amount}>
@@ -39,7 +42,7 @@ export const SendForm: SnapComponent<SendFormContext> = ({
           min={0}
           step={0.00000001}
           placeholder={t('amountPlaceholder')}
-          value={amount}
+          value={dd}
         />
       </Field>
       <Box direction="horizontal" alignment={'space-between'}>

@@ -1,13 +1,16 @@
 import type { CurrencyRate } from '@metamask/snaps-sdk';
 import type { Network } from 'bitcoindevkit';
 
+import type { BitcoinAccount } from './account';
 import type { CurrencyUnit } from './currency';
-import { BitcoinAccount } from './account';
 
 export const SENDFORM_NAME = 'sendForm';
 
 export type SendFormContext = {
-  account: string;
+  account: {
+    id: string;
+    address: string; // FIXME: Address should not be needed to identify an account
+  };
   network: Network;
   balance: string;
   feeRate: number;
@@ -39,6 +42,8 @@ export type SendFormState = {
 };
 
 export type ReviewTransactionContext = {
+  from: string;
+  network: Network;
   feeRate: number;
   currency: CurrencyUnit;
   fiatRate?: CurrencyRate;

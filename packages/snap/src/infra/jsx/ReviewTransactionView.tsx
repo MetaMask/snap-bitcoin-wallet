@@ -10,11 +10,14 @@ import {
   Text,
   Value,
   Image,
+  Address,
 } from '@metamask/snaps-sdk/jsx';
+import type { CaipAccountId } from '@metamask/utils';
 
 import { ConfigV2 } from '../../configv2';
 import type { ReviewTransactionContext } from '../../entities';
 import { ReviewTransactionEvent } from '../../entities';
+import { networkToCaip2 } from '../../handlers/caip2';
 import btcIcon from '../../images/btc-halo.svg';
 import { getTranslator } from '../../utils/locale';
 import { HeadingWithReturn } from './components';
@@ -24,7 +27,8 @@ export const ReviewTransactionView: SnapComponent<ReviewTransactionContext> = (
   props,
 ) => {
   const t = getTranslator();
-  const { amount, fee, currency, fiatRate, feeRate, recipient } = props;
+  const { amount, fee, currency, fiatRate, feeRate, recipient, network } =
+    props;
 
   const total = BigInt(amount) + BigInt(fee);
 
@@ -48,6 +52,14 @@ export const ReviewTransactionView: SnapComponent<ReviewTransactionContext> = (
         </Box>
 
         <Section>
+          <Row label={t('from')}>
+            <Address
+              address={
+                `${networkToCaip2[network]}:tb1qqecaw32rvyjgez706t5chpr8gan49wfuk94t3g` as CaipAccountId
+              }
+              displayName
+            />
+          </Row>
           <Row label={t('amount')}>
             <Value
               value={displayAmount(BigInt(amount), currency)}
@@ -55,7 +67,12 @@ export const ReviewTransactionView: SnapComponent<ReviewTransactionContext> = (
             />
           </Row>
           <Row label={t('recipient')}>
-            <Text>{recipient}</Text>
+            <Address
+              address={
+                `${networkToCaip2[network]}:${recipient}` as CaipAccountId
+              }
+              avatar={false}
+            />
           </Row>
         </Section>
 
@@ -75,7 +92,7 @@ export const ReviewTransactionView: SnapComponent<ReviewTransactionContext> = (
             />
           </Row>
           <Row label={t('feeRate')}>
-            <Text>value={`${feeRate} sat/vb`}</Text>
+            <Text>{`${feeRate} sat/vb`}</Text>
           </Row>
           <Row label={t('total')}>
             <Value
