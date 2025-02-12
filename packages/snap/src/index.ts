@@ -136,30 +136,30 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
 
     validateOrigin(origin, method);
 
-    if (!rpcHandler) {
-      switch (method) {
-        case InternalRpcMethod.GetTransactionStatus:
-          return await getTransactionStatus(
-            request.params as GetTransactionStatusParams,
-          );
-        case InternalRpcMethod.EstimateFee:
-          return await estimateFee(request.params as EstimateFeeParams);
-        case InternalRpcMethod.GetMaxSpendableBalance:
-          return await getMaxSpendableBalance(
-            request.params as GetMaxSpendableBalanceParams,
-          );
-        case InternalRpcMethod.StartSendTransactionFlow: {
-          return await startSendTransactionFlow(
-            request.params as StartSendTransactionFlowParams,
-          );
-        }
-
-        default:
-          throw new MethodNotFoundError() as unknown as Error;
-      }
+    if (rpcHandler) {
+      return await rpcHandler.route(method, request.params);
     }
 
-    return await rpcHandler.route(method, request.params);
+    switch (method) {
+      case InternalRpcMethod.GetTransactionStatus:
+        return await getTransactionStatus(
+          request.params as GetTransactionStatusParams,
+        );
+      case InternalRpcMethod.EstimateFee:
+        return await estimateFee(request.params as EstimateFeeParams);
+      case InternalRpcMethod.GetMaxSpendableBalance:
+        return await getMaxSpendableBalance(
+          request.params as GetMaxSpendableBalanceParams,
+        );
+      case InternalRpcMethod.StartSendTransactionFlow: {
+        return await startSendTransactionFlow(
+          request.params as StartSendTransactionFlowParams,
+        );
+      }
+
+      default:
+        throw new MethodNotFoundError() as unknown as Error;
+    }
   } catch (error) {
     let snapError = error;
 
