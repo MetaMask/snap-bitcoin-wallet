@@ -3,7 +3,7 @@ import { mock } from 'jest-mock-extended';
 import type { SnapClient, BitcoinAccount, SendFormContext } from '../entities';
 import { SENDFORM_NAME, CurrencyUnit } from '../entities';
 import { SendFormView } from '../infra/jsx';
-import { JSXSendFlowRepository } from './JSXSendFlowRepository';
+import { JSXSendFlowRepository } from './JSXSendFormRepository';
 
 jest.mock('../infra/jsx', () => ({
   SendFormView: jest.fn(),
