@@ -86,7 +86,7 @@ export type BitcoinAccount = {
 
   /**
    * Create a new PSBT.
-   * @param feeRate. - The fee rate in sats/vb
+   * @param feeRate - The fee rate in sats/vb
    * @param recipient. - The recipient address
    * @param amount. - The amount to send in sats
    * @returns the PSBT
