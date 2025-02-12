@@ -86,7 +86,7 @@ export type BitcoinAccount = {
 
   /**
    * Create a new PSBT.
-   * @param feeRate. - The fee rate in sats/vb
+   * @param feeRate - The fee rate in sats/vb
    * @param recipient. - The recipient address
    * @param amount. - The amount to send in sats
    * @returns the PSBT
@@ -103,7 +103,7 @@ export type BitcoinAccount = {
 
   /**
    * Sign a PSBT with all the registered signers
-   * @param psbt
+   * @param psbt - The PSBT to be signed.
    * @returns the signed transaction
    */
   sign(psbt: Psbt): Transaction;
@@ -122,7 +122,7 @@ export type BitcoinAccountRepository = {
 
   /**
    * Get an account by its id with signing capabilities
-   * @param id
+   * @param id - Account's id.
    * @returns the account or null if it does not exist
    */
   getWithSigner(id: string): Promise<BitcoinAccount | null>;

@@ -19,12 +19,14 @@ export type BlockchainClient = {
 
   /**
    * Broadcast the signed transaction to the network.
-   * @param psbt - the signed transaction to broadcast.
+   * @param network - Network where the signed transaction will be broadcasted.
+   * @param transaction - Transaction to broadcast.
    */
   broadcast(network: Network, transaction: Transaction): Promise<void>;
 
   /**
    * Fetch fee estimates from the chain indexer.
+   * @param network - Network to fetch the fees from.
    * @returns the map of fee estimates
    */
   getFeeEstimates(network: Network): Promise<FeeEstimates>;

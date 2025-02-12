@@ -201,7 +201,6 @@ export class AccountUseCases {
     } else {
       psbt = account.drainTo(request.feeRate, request.recipient);
     }
-    console.log(psbt);
 
     const tx = account.sign(psbt);
     await this.#chain.broadcast(account.network, tx);
