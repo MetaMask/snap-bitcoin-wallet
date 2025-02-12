@@ -1,14 +1,18 @@
 import type { Json, UserInputEvent } from '@metamask/snaps-sdk';
-import { UserInputEventType } from '@metamask/snaps-sdk';
 
-import type { SendFormContext, SendFormEvent } from '../entities';
-import type { SendFormUseCases } from '../use-cases';
+import type { ReviewTransactionContext } from '../entities';
+import {
+  ReviewTransactionEvent,
+  type SendFormContext,
+  SendFormEvent,
+} from '../entities';
+import type { SendFlowUseCases } from '../use-cases';
 
 export class UserInputHandler {
-  readonly #sendFormUseCases: SendFormUseCases;
+  readonly #sendFlowUseCases: SendFlowUseCases;
 
-  constructor(sendForm: SendFormUseCases) {
-    this.#sendFormUseCases = sendForm;
+  constructor(sendForm: SendFlowUseCases) {
+    this.#sendFlowUseCases = sendForm;
   }
 
   async route(
@@ -20,17 +24,36 @@ export class UserInputHandler {
       throw new Error('Missing context');
     }
 
-    switch (event.type) {
-      case UserInputEventType.InputChangeEvent:
-      case UserInputEventType.ButtonClickEvent: {
-        return this.#sendFormUseCases.update(
-          interfaceId,
-          event.name as SendFormEvent,
-          context as SendFormContext,
-        );
-      }
-      default:
-        throw new Error('Unsupported event type');
+    if (!event.name) {
+      throw new Error('Missing event name');
     }
+
+    if (this.#isSendFormEvent(event.name)) {
+      // Cast context to SendFormContext
+      return this.#sendFlowUseCases.updateForm(
+        interfaceId,
+        event.name,
+        context as SendFormContext,
+      );
+    } else if (this.#isReviewTransactionEvent(event.name)) {
+      // Cast context to the appropriate type for review
+      return this.#sendFlowUseCases.updateReview(
+        interfaceId,
+        event.name,
+        context as ReviewTransactionContext,
+      );
+    }
+
+    throw new Error(`Unsupported event: ${event.name}`);
+  }
+
+  #isSendFormEvent(name: string): name is SendFormEvent {
+    return Object.values(SendFormEvent).includes(name as SendFormEvent);
+  }
+
+  #isReviewTransactionEvent(name: string): name is ReviewTransactionEvent {
+    return Object.values(ReviewTransactionEvent).includes(
+      name as ReviewTransactionEvent,
+    );
   }
 }

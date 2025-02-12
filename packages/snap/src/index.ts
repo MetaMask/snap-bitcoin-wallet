@@ -233,7 +233,7 @@ export const onUserInput: OnUserInputHandler = async ({
           context: context as SendFlowContext,
           interfaceId: id,
         });
-        await sendBitcoinController.handleEvent(
+        return await sendBitcoinController.handleEvent(
           event,
           context as SendFlowContext,
           state.sendForm as SendFormState,
@@ -241,7 +241,7 @@ export const onUserInput: OnUserInputHandler = async ({
       }
     }
 
-    return await userInputHandler.route(id, event, context);
+    return userInputHandler.route(id, event, context);
   } catch (error) {
     let snapError = error;
 
