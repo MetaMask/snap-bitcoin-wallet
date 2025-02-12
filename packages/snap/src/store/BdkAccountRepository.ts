@@ -5,12 +5,16 @@ import type { AddressType, Network } from 'bitcoindevkit';
 import {
   ChangeSet,
   slip10_to_extended,
+  xpriv_to_descriptor,
   xpub_to_descriptor,
 } from 'bitcoindevkit';
 import { v4 } from 'uuid';
 
-import type { BitcoinAccountRepository, BitcoinAccount } from '../entities';
-import type { SnapClient } from '../entities/snap';
+import type {
+  BitcoinAccountRepository,
+  BitcoinAccount,
+  SnapClient,
+} from '../entities';
 import { BdkAccountAdapter } from '../infra';
 
 export class BdkAccountRepository implements BitcoinAccountRepository {
@@ -28,6 +32,46 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     }
 
     return BdkAccountAdapter.load(id, ChangeSet.from_json(walletData));
+  }
+
+  async getWithSigner(id: string): Promise<BitcoinAccount | null> {
+    const state = await this.#snapClient.get();
+    const walletData = state.accounts.wallets[id];
+    if (!walletData) {
+      return null;
+    }
+    const account = BdkAccountAdapter.load(id, ChangeSet.from_json(walletData));
+
+    const derivationPath = Object.entries(state.accounts.derivationPaths).find(
+      ([, walletId]) => walletId === id,
+    );
+
+    // Should never occur by assertion. It is a critical inconsistent state error that should be caught in integration tests
+    if (!derivationPath) {
+      throw new Error(
+        `Inconsistent state. No derivation path found for account ${id}`,
+      );
+    }
+
+    const slip10 = await this.#snapClient.getPrivateEntropy(
+      derivationPath[0].split('/'),
+    );
+    const fingerprint = (
+      slip10.masterFingerprint ?? slip10.parentFingerprint
+    ).toString(16);
+    const xpriv = slip10_to_extended(slip10, account.network);
+    const descriptors = xpriv_to_descriptor(
+      xpriv,
+      fingerprint,
+      account.network,
+      account.addressType,
+    );
+
+    return BdkAccountAdapter.load(
+      id,
+      ChangeSet.from_json(walletData),
+      descriptors,
+    );
   }
 
   async getAll(): Promise<BitcoinAccount[]> {

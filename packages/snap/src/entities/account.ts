@@ -7,6 +7,8 @@ import type {
   Network,
   Update,
   ChangeSet,
+  Psbt,
+  Transaction,
 } from 'bitcoindevkit';
 
 /**
@@ -81,6 +83,30 @@ export type BitcoinAccount = {
    * @returns the change set
    */
   takeStaged(): ChangeSet | undefined;
+
+  /**
+   * Create a new PSBT.
+   * @param feeRate - The fee rate in sats/vb
+   * @param recipient. - The recipient address
+   * @param amount. - The amount to send in sats
+   * @returns the PSBT
+   */
+  buildTx(feeRate: number, recipient: string, amount: string): Psbt;
+
+  /**
+   * Create a new PSBT by draining the wallet inputs.
+   * @param feeRate. - The fee rate in sats/vb
+   * @param recipient. - The recipient address
+   * @returns the PSBT
+   */
+  drainTo(feeRate: number, recipient: string): Psbt;
+
+  /**
+   * Sign a PSBT with all the registered signers
+   * @param psbt - The PSBT to be signed.
+   * @returns the signed transaction
+   */
+  sign(psbt: Psbt): Transaction;
 };
 
 /**
@@ -93,6 +119,13 @@ export type BitcoinAccountRepository = {
    * @returns the account or null if it does not exist
    */
   get(id: string): Promise<BitcoinAccount | null>;
+
+  /**
+   * Get an account by its id with signing capabilities
+   * @param id - Account's id.
+   * @returns the account or null if it does not exist
+   */
+  getWithSigner(id: string): Promise<BitcoinAccount | null>;
 
   /**
    * Get all accounts.

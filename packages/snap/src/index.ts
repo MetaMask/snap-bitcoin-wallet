@@ -13,7 +13,7 @@ import {
 
 import { Config } from './config';
 import { ConfigV2 } from './configv2';
-import { KeyringHandler, CronHandler } from './handlers';
+import { KeyringHandler, CronHandler, RpcHandler } from './handlers';
 import { SnapClientAdapter, EsploraClientAdapter } from './infra';
 import { BtcKeyring } from './keyring';
 import { InternalRpcMethod, originPermissions } from './permissions';
@@ -30,13 +30,13 @@ import {
 import type { StartSendTransactionFlowParams } from './rpcs/start-send-transaction-flow';
 import { startSendTransactionFlow } from './rpcs/start-send-transaction-flow';
 import { KeyringStateManager } from './stateManagement';
-import { BdkAccountRepository } from './store/BdkAccountRepository';
+import { BdkAccountRepository, JSXSendFormRepository } from './store';
 import {
   isSendFormEvent,
   SendBitcoinController,
 } from './ui/controller/send-bitcoin-controller';
 import type { SendFlowContext, SendFormState } from './ui/types';
-import { AccountUseCases } from './use-cases';
+import { AccountUseCases, SendFormUseCases } from './use-cases';
 import { isSnapRpcError, logger } from './utils';
 import { loadLocale } from './utils/locale';
 
@@ -44,23 +44,34 @@ logger.logLevel = parseInt(Config.logLevel, 10);
 
 let keyringHandler: Keyring;
 let cronHandler: CronHandler;
+let rpcHandler: RpcHandler;
 let accountsUseCases: AccountUseCases;
 if (ConfigV2.keyringVersion === 'v2') {
   // Infra layer
   const snapClient = new SnapClientAdapter(ConfigV2.encrypt);
   const chainClient = new EsploraClientAdapter(ConfigV2.chain);
   // Data layer
-  const repository = new BdkAccountRepository(snapClient);
+  const accountRepository = new BdkAccountRepository(snapClient);
+  const sendFormRepository = new JSXSendFormRepository(snapClient);
+
   // Business layer
   accountsUseCases = new AccountUseCases(
     snapClient,
-    repository,
+    accountRepository,
     chainClient,
     ConfigV2.accounts,
+  );
+  const sendFormUseCases = new SendFormUseCases(
+    snapClient,
+    accountRepository,
+    sendFormRepository,
+    chainClient,
+    ConfigV2.chain.targetBlocksConfirmation,
   );
   // Application layer
   keyringHandler = new KeyringHandler(accountsUseCases);
   cronHandler = new CronHandler(accountsUseCases);
+  rpcHandler = new RpcHandler(sendFormUseCases, accountsUseCases);
 }
 
 export const validateOrigin = (origin: string, method: string): void => {
@@ -124,6 +135,10 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
     const { method } = request;
 
     validateOrigin(origin, method);
+
+    if (rpcHandler) {
+      return await rpcHandler.route(method, request.params);
+    }
 
     switch (method) {
       case InternalRpcMethod.GetTransactionStatus:

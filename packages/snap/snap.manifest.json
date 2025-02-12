@@ -7,7 +7,7 @@
     "url": "https://github.com/MetaMask/snap-bitcoin-wallet.git"
   },
   "source": {
-    "shasum": "w0SWCvX3NDkdvwN/r7hyiUp692lKrm8HhmIRaVN3uJ8=",
+    "shasum": "XCykz9Nq//wnpC26QQYS7efJEZ5dIzZxNku7FqCoG7s=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
@@ -89,6 +89,6 @@
       ]
     }
   },
-  "platformVersion": "6.16.0",
+  "platformVersion": "6.17.1",
   "manifestVersion": "0.1"
 }

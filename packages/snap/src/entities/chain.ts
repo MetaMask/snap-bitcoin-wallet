@@ -1,3 +1,5 @@
+import type { FeeEstimates, Network, Transaction } from 'bitcoindevkit';
+
 import type { BitcoinAccount } from './account';
 
 export type BlockchainClient = {
@@ -14,4 +16,18 @@ export type BlockchainClient = {
    * @param account - the account to sync.
    */
   sync(account: BitcoinAccount): Promise<void>;
+
+  /**
+   * Broadcast the signed transaction to the network.
+   * @param network - Network where the signed transaction will be broadcasted.
+   * @param transaction - Transaction to broadcast.
+   */
+  broadcast(network: Network, transaction: Transaction): Promise<void>;
+
+  /**
+   * Fetch fee estimates from the chain indexer.
+   * @param network - Network to fetch the fees from.
+   * @returns the map of fee estimates
+   */
+  getFeeEstimates(network: Network): Promise<FeeEstimates>;
 };

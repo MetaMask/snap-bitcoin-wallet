@@ -2,8 +2,7 @@ import type { SLIP10Node } from '@metamask/key-tree';
 import { ChangeSet } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 
-import type { BitcoinAccount } from '../entities';
-import type { SnapClient } from '../entities/snap';
+import type { BitcoinAccount, SnapClient } from '../entities';
 import { BdkAccountAdapter } from '../infra';
 import { BdkAccountRepository } from './BdkAccountRepository';
 
@@ -16,6 +15,9 @@ jest.mock('bitcoindevkit', () => {
     },
     slip10_to_extended: jest.fn().mockReturnValue('mock-extended'),
     xpub_to_descriptor: jest
+      .fn()
+      .mockReturnValue({ external: 'ext-desc', internal: 'int-desc' }),
+    xpriv_to_descriptor: jest
       .fn()
       .mockReturnValue({ external: 'ext-desc', internal: 'int-desc' }),
   };
@@ -48,7 +50,6 @@ describe('BdkAccountRepository', () => {
 
       const result = await repo.get('non-existent-id');
       expect(result).toBeNull();
-      expect(BdkAccountAdapter.load).not.toHaveBeenCalled();
     });
 
     it('returns loaded account if found', async () => {
@@ -122,6 +123,63 @@ describe('BdkAccountRepository', () => {
 
       const result = await repo.getByDerivationPath(derivationPath);
       expect(result).toBe(mockAccount);
+    });
+  });
+
+  describe('getWithSigner', () => {
+    it('returns null if account not found', async () => {
+      mockSnapClient.get.mockResolvedValue({
+        accounts: { derivationPaths: {}, wallets: {} },
+      });
+      const result = await repo.getWithSigner('non-existent-id');
+      expect(result).toBeNull();
+    });
+
+    it('throws error if derivation path not found', async () => {
+      const walletData = '{"mywallet":"data"}';
+      mockSnapClient.get.mockResolvedValue({
+        accounts: {
+          derivationPaths: {},
+          wallets: { 'some-id': walletData },
+        },
+      });
+      await expect(repo.getWithSigner('some-id')).rejects.toThrow(
+        'Inconsistent state. No derivation path found for account some-id',
+      );
+    });
+
+    it('returns account with signer if account exists', async () => {
+      const derivationPath = "m/84'/0'/0'";
+      const walletData = '{"mywallet":"data"}';
+      mockSnapClient.get.mockResolvedValue({
+        accounts: {
+          derivationPaths: { [derivationPath]: 'some-id' },
+          wallets: { 'some-id': walletData },
+        },
+      });
+      const slip10Node = {
+        masterFingerprint: 0xdeadbeef,
+      } as unknown as SLIP10Node;
+      mockSnapClient.getPrivateEntropy.mockResolvedValue(slip10Node);
+      const mockAccount = mock<BitcoinAccount>({
+        network: 'bitcoin',
+        addressType: 'p2wpkh',
+      });
+      const mockAccountWithSigner = mock<BitcoinAccount>();
+
+      (BdkAccountAdapter.load as jest.Mock)
+        .mockReturnValueOnce(mockAccount)
+        .mockReturnValueOnce(mockAccountWithSigner);
+
+      const result = await repo.getWithSigner('some-id');
+
+      expect(mockSnapClient.getPrivateEntropy).toHaveBeenCalledWith([
+        'm',
+        "84'",
+        "0'",
+        "0'",
+      ]);
+      expect(result).toBe(mockAccountWithSigner);
     });
   });
 

@@ -1,4 +1,5 @@
-import type { AddressType, Network } from 'bitcoindevkit';
+import type { Transaction } from 'bitcoindevkit';
+import { type AddressType, type Network, type Psbt } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 
 import type {
@@ -6,8 +7,8 @@ import type {
   BitcoinAccount,
   BitcoinAccountRepository,
   BlockchainClient,
+  SnapClient,
 } from '../entities';
-import type { SnapClient } from '../entities/snap';
 import { AccountUseCases } from './AccountUseCases';
 
 jest.mock('../utils/logger');
@@ -434,6 +435,141 @@ describe('AccountUseCases', () => {
       expect(mockRepository.get).toHaveBeenCalled();
       expect(mockSnapClient.emitAccountDeletedEvent).toHaveBeenCalled();
       expect(mockRepository.delete).toHaveBeenCalled();
+    });
+  });
+
+  describe('send', () => {
+    const requestWithAmount = {
+      amount: '1000',
+      feeRate: 10,
+      recipient: 'recipient-address',
+    };
+    const requestDrain = {
+      feeRate: 10,
+      recipient: 'recipient-address',
+    };
+
+    const mockPsbt = mock<Psbt>();
+    const mockTransaction = mock<Transaction>({
+      // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
+      /* eslint-disable @typescript-eslint/naming-convention */
+      compute_txid: jest.fn(),
+    });
+    const mockAccount = mock<BitcoinAccount>({
+      network: 'bitcoin',
+      buildTx: jest.fn(),
+      drainTo: jest.fn(),
+      sign: jest.fn(),
+    });
+
+    it('throws error if account is not found', async () => {
+      mockRepository.getWithSigner.mockResolvedValue(null);
+
+      await expect(
+        useCases.send('non-existent-id', requestWithAmount),
+      ).rejects.toThrow('Account not found: non-existent-id');
+    });
+
+    it('sends transaction', async () => {
+      mockRepository.getWithSigner.mockResolvedValue(mockAccount);
+      mockAccount.buildTx.mockReturnValue(mockPsbt);
+      mockAccount.sign.mockReturnValue(mockTransaction);
+      mockTransaction.compute_txid.mockReturnValue('txid-123');
+
+      const txId = await useCases.send('account-id', requestWithAmount);
+
+      expect(mockRepository.getWithSigner).toHaveBeenCalledWith('account-id');
+      expect(mockAccount.buildTx).toHaveBeenCalledWith(
+        requestWithAmount.feeRate,
+        requestWithAmount.recipient,
+        requestWithAmount.amount,
+      );
+      expect(mockAccount.sign).toHaveBeenCalledWith(mockPsbt);
+      expect(mockChain.broadcast).toHaveBeenCalledWith(
+        mockAccount.network,
+        mockTransaction,
+      );
+      expect(mockRepository.update).toHaveBeenCalledWith(mockAccount);
+      expect(mockTransaction.compute_txid).toHaveBeenCalled();
+      expect(txId).toBe('txid-123');
+    });
+
+    it('sends a drain transaction when amount is not provided', async () => {
+      mockRepository.getWithSigner.mockResolvedValue(mockAccount);
+      mockAccount.drainTo.mockReturnValue(mockPsbt);
+      mockAccount.sign.mockReturnValue(mockTransaction);
+      mockTransaction.compute_txid.mockReturnValue('txid-123');
+
+      const txId = await useCases.send('account-id', requestDrain);
+
+      expect(mockRepository.getWithSigner).toHaveBeenCalledWith('account-id');
+      expect(mockAccount.drainTo).toHaveBeenCalledWith(
+        requestDrain.feeRate,
+        requestDrain.recipient,
+      );
+      expect(mockAccount.sign).toHaveBeenCalledWith(mockPsbt);
+      expect(mockChain.broadcast).toHaveBeenCalledWith(
+        mockAccount.network,
+        mockTransaction,
+      );
+      expect(mockRepository.update).toHaveBeenCalledWith(mockAccount);
+      expect(mockTransaction.compute_txid).toHaveBeenCalled();
+      expect(txId).toBe('txid-123');
+    });
+
+    it('propagates an error if getWithSigner fails', async () => {
+      const error = new Error('getWithSigner failed');
+      mockRepository.getWithSigner.mockRejectedValueOnce(error);
+
+      await expect(useCases.send('account-id', requestWithAmount)).rejects.toBe(
+        error,
+      );
+    });
+
+    it('propagates an error if buildTx fails', async () => {
+      const error = new Error('buildTx failed');
+      mockRepository.getWithSigner.mockResolvedValue(mockAccount);
+      mockAccount.buildTx.mockImplementation(() => {
+        throw error;
+      });
+
+      await expect(useCases.send('account-id', requestWithAmount)).rejects.toBe(
+        error,
+      );
+    });
+
+    it('propagates an error if drainTo fails', async () => {
+      const error = new Error('drainTo failed');
+      mockRepository.getWithSigner.mockResolvedValue(mockAccount);
+      mockAccount.drainTo.mockImplementation(() => {
+        throw error;
+      });
+
+      await expect(useCases.send('account-id', requestDrain)).rejects.toBe(
+        error,
+      );
+    });
+
+    it('propagates an error if broadcast fails', async () => {
+      mockRepository.getWithSigner.mockResolvedValue(mockAccount);
+
+      const error = new Error('broadcast failed');
+      mockChain.broadcast.mockRejectedValueOnce(error);
+
+      await expect(useCases.send('account-id', requestWithAmount)).rejects.toBe(
+        error,
+      );
+    });
+
+    it('propagates an error if update fails', async () => {
+      mockRepository.getWithSigner.mockResolvedValue(mockAccount);
+
+      const error = new Error('update failed');
+      mockRepository.update.mockRejectedValue(error);
+
+      await expect(useCases.send('account-id', requestWithAmount)).rejects.toBe(
+        error,
+      );
     });
   });
 });

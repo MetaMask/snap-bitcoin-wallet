@@ -1,12 +1,13 @@
-import type { AddressType, Network } from 'bitcoindevkit';
+import type { AddressType, Network, Psbt } from 'bitcoindevkit';
 
 import type {
   AccountsConfig,
   BitcoinAccount,
   BitcoinAccountRepository,
   BlockchainClient,
+  TransactionRequest,
+  SnapClient,
 } from '../entities';
-import type { SnapClient } from '../entities/snap';
 import { logger } from '../utils';
 
 const addressTypeToPurpose: Record<AddressType, string> = {
@@ -179,5 +180,39 @@ export class AccountUseCases {
     await this.#repository.delete(id);
 
     logger.info('Account deleted successfully: %s', account.id);
+  }
+
+  async send(id: string, request: TransactionRequest): Promise<string> {
+    logger.debug('Sending transaction. ID: %s. Request: %o', id, request);
+
+    const account = await this.#repository.getWithSigner(id);
+    if (!account) {
+      throw new Error(`Account not found: ${id}`);
+    }
+
+    let psbt: Psbt;
+    // If no amount is specified at this point, it is a drain transaction
+    if (request.amount) {
+      psbt = account.buildTx(
+        request.feeRate,
+        request.recipient,
+        request.amount,
+      );
+    } else {
+      psbt = account.drainTo(request.feeRate, request.recipient);
+    }
+
+    const tx = account.sign(psbt);
+    await this.#chain.broadcast(account.network, tx);
+    await this.#repository.update(account);
+
+    const txId = tx.compute_txid();
+    logger.info(
+      'Transaction sent successfully: %s. Account: %s, Network: %s',
+      txId,
+      id,
+      account.network,
+    );
+    return txId;
   }
 }

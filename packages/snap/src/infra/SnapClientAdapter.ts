@@ -2,9 +2,14 @@ import type { JsonSLIP10Node } from '@metamask/key-tree';
 import { SLIP10Node } from '@metamask/key-tree';
 import { KeyringEvent } from '@metamask/keyring-api';
 import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
-import type { SnapsProvider } from '@metamask/snaps-sdk';
+import type {
+  AvailableCurrency,
+  ComponentOrElement,
+  Json,
+  SnapsProvider,
+} from '@metamask/snaps-sdk';
 
-import type { BitcoinAccount } from '../entities';
+import type { BitcoinAccount, CurrencyUnit } from '../entities';
 import type { SnapClient, SnapState } from '../entities/snap';
 import { snapToKeyringAccount } from '../handlers/keyring-account';
 
@@ -63,9 +68,14 @@ export class SnapClientAdapter implements SnapClient {
     const suggestedName = () => {
       switch (account.network) {
         case 'bitcoin':
-          return 'Bitcoin Account';
+          return 'Bitcoin';
         case 'testnet':
-          return 'Bitcoin Testnet Account';
+        case 'testnet4':
+          return 'Bitcoin Testnet';
+        case 'signet':
+          return 'Bitcoin Signet';
+        case 'regtest':
+          return 'Bitcoin Regtest';
         default:
           // Leave it blank to fallback to auto-suggested name on the extension side
           return '';
@@ -82,5 +92,75 @@ export class SnapClientAdapter implements SnapClient {
     return emitSnapKeyringEvent(snap, KeyringEvent.AccountDeleted, {
       id,
     });
+  }
+
+  async createInterface(
+    ui: ComponentOrElement,
+    context: Record<string, Json>,
+  ): Promise<string> {
+    return await snap.request({
+      method: 'snap_createInterface',
+      params: {
+        ui,
+        context,
+      },
+    });
+  }
+
+  async updateInterface(
+    id: string,
+    ui: ComponentOrElement,
+    context: Record<string, Json>,
+  ): Promise<void> {
+    await snap.request({
+      method: 'snap_updateInterface',
+      params: {
+        id,
+        ui,
+        context,
+      },
+    });
+  }
+
+  async displayInterface<ResolveType>(id: string): Promise<ResolveType | null> {
+    return (await snap.request({
+      method: 'snap_dialog',
+      params: {
+        id,
+      },
+    })) as unknown as ResolveType;
+  }
+
+  async getInterfaceState<InterfaceStateType>(
+    id: string,
+    field: string,
+  ): Promise<InterfaceStateType> {
+    const result = await snap.request({
+      method: 'snap_getInterfaceState',
+      params: { id },
+    });
+
+    return result[field] as unknown as InterfaceStateType;
+  }
+
+  async resolveInterface(id: string, value: Json): Promise<void> {
+    await snap.request({
+      method: 'snap_resolveInterface',
+      params: {
+        id,
+        value,
+      },
+    });
+  }
+
+  async getCurrencyRate(currency: CurrencyUnit): Promise<number | undefined> {
+    const result = await snap.request({
+      method: 'snap_getCurrencyRate',
+      params: {
+        currency: currency as unknown as AvailableCurrency,
+      },
+    });
+
+    return result?.conversionRate;
   }
 }
