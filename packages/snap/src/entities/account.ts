@@ -103,7 +103,7 @@ export type BitcoinAccount = {
 
   /**
    * Sign a PSBT with all the registered signers
-   * @param psbt
+   * @param psbt - The PSBT to be signed.
    * @returns the signed transaction
    */
   sign(psbt: Psbt): Transaction;
