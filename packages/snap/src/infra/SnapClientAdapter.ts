@@ -5,6 +5,7 @@ import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
 import type {
   AvailableCurrency,
   ComponentOrElement,
+  CurrencyRate,
   Json,
   SnapsProvider,
 } from '@metamask/snaps-sdk';
@@ -12,6 +13,7 @@ import type {
 import type { BitcoinAccount } from '../entities';
 import { CurrencyUnit } from '../entities';
 import type { SnapClient, SnapState } from '../entities/snap';
+import { CurrencyRatesNotAvailableError } from '../exceptions';
 import { snapToKeyringAccount } from '../handlers/keyring-account';
 
 export class SnapClientAdapter implements SnapClient {
@@ -154,19 +156,24 @@ export class SnapClientAdapter implements SnapClient {
     });
   }
 
-  async getCurrencyRate(currency: CurrencyUnit): Promise<number | undefined> {
+  async getCurrencyRate(currency: CurrencyUnit): Promise<CurrencyRate | null> {
     // TODO: Remove when fix implemented: https://github.com/MetaMask/accounts-planning/issues/832
     if (currency !== CurrencyUnit.Bitcoin) {
-      return undefined;
+      return null;
     }
 
-    const result = await snap.request({
-      method: 'snap_getCurrencyRate',
-      params: {
-        currency: currency as unknown as AvailableCurrency,
-      },
-    });
-
-    return result?.conversionRate;
+    try {
+      return snap.request({
+        method: 'snap_getCurrencyRate',
+        params: {
+          currency: currency as unknown as AvailableCurrency,
+        },
+      });
+    } catch (error) {
+      if (error instanceof CurrencyRatesNotAvailableError) {
+        return null;
+      }
+      throw error;
+    }
   }
 }

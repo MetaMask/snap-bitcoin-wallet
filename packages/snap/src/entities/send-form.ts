@@ -1,3 +1,4 @@
+import type { CurrencyRate } from '@metamask/snaps-sdk';
 import type { Network } from 'bitcoindevkit';
 
 import type { BitcoinAccount } from './account';
@@ -11,7 +12,7 @@ export type SendFormContext = {
   balance: string;
   feeRate: number;
   currency: CurrencyUnit;
-  fiatRate?: number;
+  fiatRate?: CurrencyRate;
   recipient?: string;
   amount?: string;
   fee?: string;

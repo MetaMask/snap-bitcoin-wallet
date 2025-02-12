@@ -1,5 +1,5 @@
 import type { JsonSLIP10Node, SLIP10Node } from '@metamask/key-tree';
-import type { ComponentOrElement } from '@metamask/snaps-sdk';
+import type { ComponentOrElement, CurrencyRate } from '@metamask/snaps-sdk';
 import type { Json } from '@metamask/utils';
 
 import type { BitcoinAccount } from './account';
@@ -107,5 +107,5 @@ export type SnapClient = {
    * @param currency - The currency unit.
    * @returns A Promise that resolves to the currency rate.
    */
-  getCurrencyRate(currency: CurrencyUnit): Promise<number | undefined>;
+  getCurrencyRate(currency: CurrencyUnit): Promise<CurrencyRate | null>;
 };

@@ -1,3 +1,4 @@
+import type { CurrencyRate } from '@metamask/snaps-sdk';
 import {
   Row,
   Section,
@@ -9,7 +10,6 @@ import { Amount } from 'bitcoindevkit';
 
 import { ConfigV2 } from '../../configv2';
 import type { SendFormContext } from '../../entities';
-import { CurrencyUnit } from '../../entities';
 import { getTranslator } from '../../utils/locale';
 
 export type TransactionSummaryProps = {
@@ -19,11 +19,11 @@ export type TransactionSummaryProps = {
   fiatRate?: SendFormContext['fiatRate'];
 };
 
-const displayFiatAmount = (amount: Amount, fiatRate?: number): string => {
+const displayFiatAmount = (amount: Amount, fiatRate?: CurrencyRate): string => {
   return fiatRate
-    ? `${((Number(amount.to_sat()) * fiatRate) / 1e8).toFixed(2)} ${
-        CurrencyUnit.Fiat
-      }`
+    ? `${((Number(amount.to_sat()) * fiatRate.conversionRate) / 1e8).toFixed(
+        2,
+      )} ${fiatRate.currency}`
     : '';
 };
 

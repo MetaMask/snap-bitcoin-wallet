@@ -51,7 +51,11 @@ describe('JSXSendFormRepository', () => {
     });
 
     it('creates interface with correct context', async () => {
-      const btcRate = 100000;
+      const btcRate = {
+        currency: 'USD',
+        conversionRate: 100000,
+        conversionDate: 2025,
+      };
       mockSnapClient.getCurrencyRate.mockResolvedValue(btcRate);
       mockSnapClient.createInterface.mockResolvedValue('interface-id');
       (SendFormView as jest.Mock).mockReturnValue({});

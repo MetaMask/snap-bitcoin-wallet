@@ -40,8 +40,11 @@ export class JSXSendFormRepository implements SendFormRepository {
       errors: {},
     };
 
-    // TODO: Fetch fiat/fee rates from state and refresh on updates
-    context.fiatRate = await this.#snapClient.getCurrencyRate(currency);
+    // TODO: Fetch fiat/fee rates from state
+    const fiatRate = await this.#snapClient.getCurrencyRate(currency);
+    if (fiatRate) {
+      context.fiatRate = fiatRate;
+    }
 
     return this.#snapClient.createInterface(
       <SendFormView {...context} />,

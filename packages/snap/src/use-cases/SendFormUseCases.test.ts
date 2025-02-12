@@ -127,7 +127,11 @@ describe('SendFormUseCases', () => {
       },
       feeRate: 2.4,
       network: 'bitcoin',
-      fiatRate: 100000,
+      fiatRate: {
+        currency: 'USD',
+        conversionRate: 100000,
+        conversionDate: 2025,
+      },
     };
 
     it('throws error unrecognized event', async () => {
