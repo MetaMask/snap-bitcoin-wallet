@@ -62,7 +62,7 @@ export type SnapClient = {
    */
   createInterface(
     ui: ComponentOrElement,
-    context?: Record<string, Json>,
+    context: Record<string, Json>,
   ): Promise<string>;
 
   /**
@@ -74,7 +74,7 @@ export type SnapClient = {
   updateInterface(
     id: string,
     ui: ComponentOrElement,
-    context?: Record<string, Json>,
+    context: Record<string, Json>,
   ): Promise<void>;
 
   /**

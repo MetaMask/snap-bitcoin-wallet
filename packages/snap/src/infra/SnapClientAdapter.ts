@@ -97,7 +97,7 @@ export class SnapClientAdapter implements SnapClient {
 
   async createInterface(
     ui: ComponentOrElement,
-    context?: Record<string, Json>,
+    context: Record<string, Json>,
   ): Promise<string> {
     return await snap.request({
       method: 'snap_createInterface',
@@ -111,7 +111,7 @@ export class SnapClientAdapter implements SnapClient {
   async updateInterface(
     id: string,
     ui: ComponentOrElement,
-    context?: Record<string, Json>,
+    context: Record<string, Json>,
   ): Promise<void> {
     await snap.request({
       method: 'snap_updateInterface',
