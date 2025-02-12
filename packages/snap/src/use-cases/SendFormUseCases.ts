@@ -46,7 +46,7 @@ export class SendFlowUseCases {
     this.#fallbackFeeRate = fallbackFeeRate;
   }
 
-  async displayForm(accountId: string): Promise<TransactionRequest> {
+  async display(accountId: string): Promise<TransactionRequest> {
     logger.trace('Displaying Send form view. Account: %s', accountId);
 
     const account = await this.#accountRepository.get(accountId);
@@ -66,17 +66,11 @@ export class SendFlowUseCases {
       networkToCurrencyUnit[account.network],
     );
 
-    const formContext: SendFormContext = {
-      balance: account.balance.trusted_spendable.to_sat().toString(),
-      currency: networkToCurrencyUnit[account.network],
-      account: account.id,
-      network: account.network,
+    const interfaceId = await this.#sendFlowRepository.insertForm(
+      account,
       feeRate,
       fiatRate,
-      errors: {},
-    };
-
-    const interfaceId = await this.#sendFlowRepository.insertForm(formContext);
+    );
 
     // Blocks and waits for user actions
     const request = await this.#snapClient.displayInterface<TransactionRequest>(
@@ -150,7 +144,7 @@ export class SendFlowUseCases {
       case ReviewTransactionEvent.HeaderBack: {
         // If we come from a send form, we display it again, otherwise we resolve the interface (reject)
         if (context.sendForm) {
-          await this.#sendFlowRepository.updateForm(id, context.sendForm);
+          return this.#sendFlowRepository.updateForm(id, context.sendForm);
         }
 
         return this.#snapClient.resolveInterface(id, null);

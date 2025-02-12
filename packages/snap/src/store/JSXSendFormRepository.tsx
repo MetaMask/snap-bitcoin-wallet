@@ -1,11 +1,13 @@
+import { CurrencyRate } from '@metamask/snaps-sdk';
 import type {
   SendFormContext,
   SendFlowRepository,
   SendFormState,
   SnapClient,
   ReviewTransactionContext,
+  BitcoinAccount,
 } from '../entities';
-import { SENDFORM_NAME } from '../entities';
+import { networkToCurrencyUnit, SENDFORM_NAME } from '../entities';
 import { ReviewTransactionView, SendFormView } from '../infra/jsx';
 
 export class JSXSendFlowRepository implements SendFlowRepository {
@@ -28,7 +30,21 @@ export class JSXSendFlowRepository implements SendFlowRepository {
     return state;
   }
 
-  async insertForm(context: SendFormContext): Promise<string> {
+  async insertForm(
+    account: BitcoinAccount,
+    feeRate: number,
+    fiatRate?: CurrencyRate,
+  ): Promise<string> {
+    const context: SendFormContext = {
+      balance: account.balance.trusted_spendable.to_sat().toString(),
+      currency: networkToCurrencyUnit[account.network],
+      account: account.id,
+      network: account.network,
+      feeRate,
+      fiatRate,
+      errors: {},
+    };
+
     return this.#snapClient.createInterface(
       <SendFormView {...context} />,
       context,
@@ -39,13 +55,6 @@ export class JSXSendFlowRepository implements SendFlowRepository {
     return this.#snapClient.updateInterface(
       id,
       <SendFormView {...context} />,
-      context,
-    );
-  }
-
-  async insertReview(context: ReviewTransactionContext): Promise<string> {
-    return this.#snapClient.createInterface(
-      <ReviewTransactionView {...context} />,
       context,
     );
   }

@@ -1,12 +1,18 @@
 import { mock } from 'jest-mock-extended';
 
-import type { SnapClient, BitcoinAccount, SendFormContext } from '../entities';
-import { SENDFORM_NAME, CurrencyUnit } from '../entities';
-import { SendFormView } from '../infra/jsx';
+import type {
+  SnapClient,
+  SendFormContext,
+  ReviewTransactionContext,
+  BitcoinAccount,
+} from '../entities';
+import { CurrencyUnit, SENDFORM_NAME } from '../entities';
+import { ReviewTransactionView, SendFormView } from '../infra/jsx';
 import { JSXSendFlowRepository } from './JSXSendFormRepository';
 
 jest.mock('../infra/jsx', () => ({
   SendFormView: jest.fn(),
+  ReviewTransactionView: jest.fn(),
 }));
 
 describe('JSXSendFlowRepository', () => {
@@ -40,28 +46,23 @@ describe('JSXSendFlowRepository', () => {
     });
   });
 
-  describe('insert', () => {
+  describe('insertForm', () => {
     const feeRate = 10;
-    const account = mock<BitcoinAccount>({
+    const mockAccount = mock<BitcoinAccount>({
       id: 'acc-id',
       network: 'bitcoin',
       // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
       /* eslint-disable @typescript-eslint/naming-convention */
       balance: { trusted_spendable: { to_sat: () => BigInt(1234) } },
     });
+    const fiatRate = {
+      currency: 'USD',
+      conversionRate: 100000,
+      conversionDate: 2025,
+    };
 
     it('creates interface with correct context', async () => {
-      const btcRate = {
-        currency: 'USD',
-        conversionRate: 100000,
-        conversionDate: 2025,
-      };
-      mockSnapClient.getCurrencyRate.mockResolvedValue(btcRate);
       mockSnapClient.createInterface.mockResolvedValue('interface-id');
-      (SendFormView as jest.Mock).mockReturnValue({});
-
-      const result = await repo.insertForm(account, feeRate);
-
       const expectedContext: SendFormContext = {
         balance: '1234',
         currency: CurrencyUnit.Bitcoin,
@@ -69,31 +70,45 @@ describe('JSXSendFlowRepository', () => {
         network: 'bitcoin',
         feeRate,
         errors: {},
-        fiatRate: btcRate,
+        fiatRate,
       };
-      expect(mockSnapClient.getCurrencyRate).toHaveBeenCalledWith(
-        CurrencyUnit.Bitcoin,
-      );
+
+      const result = await repo.insertForm(mockAccount, feeRate, fiatRate);
+
       expect(mockSnapClient.createInterface).toHaveBeenCalledWith(
-        expect.any(Object), // Tested in integration tests
+        <SendFormView {...expectedContext} />,
         expectedContext,
       );
       expect(result).toBe('interface-id');
     });
   });
 
-  describe('update', () => {
+  describe('updateForm', () => {
     it('updates interface with context', async () => {
-      (SendFormView as jest.Mock).mockReturnValue({});
       const id = 'interface-id';
-      const context = mock<SendFormContext>();
+      const mockContext = mock<SendFormContext>({});
 
-      await repo.update(id, context);
+      await repo.updateForm(id, mockContext);
 
       expect(mockSnapClient.updateInterface).toHaveBeenCalledWith(
         id,
-        expect.any(Object), // Tested in integration tests
-        context,
+        <SendFormView {...mockContext} />,
+        mockContext,
+      );
+    });
+  });
+
+  describe('updateReview', () => {
+    it('updates interface with context', async () => {
+      const id = 'interface-id';
+      const mockContext = mock<ReviewTransactionContext>({});
+
+      await repo.updateReview(id, mockContext);
+
+      expect(mockSnapClient.updateInterface).toHaveBeenCalledWith(
+        id,
+        <ReviewTransactionView {...mockContext} />,
+        mockContext,
       );
     });
   });

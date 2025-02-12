@@ -9,18 +9,12 @@ import {
   Text,
   type SnapComponent,
 } from '@metamask/snaps-sdk/jsx';
-import { Amount } from 'bitcoindevkit';
 
 import type { SendFormContext } from '../../../entities';
 import { SENDFORM_NAME, SendFormEvent } from '../../../entities';
 import btcIcon from '../../../images/bitcoin.svg';
 import { getTranslator } from '../../../utils/locale';
-
-const displayAmount = (amountSats?: string): string => {
-  return amountSats
-    ? Amount.from_sat(BigInt(amountSats)).to_btc().toString()
-    : '';
-};
+import { displayAmount } from '../format';
 
 export const SendForm: SnapComponent<SendFormContext> = ({
   currency,
@@ -45,13 +39,13 @@ export const SendForm: SnapComponent<SendFormContext> = ({
           min={0}
           step={0.00000001}
           placeholder={t('amountPlaceholder')}
-          value={displayAmount(amount)}
+          value={amount}
         />
       </Field>
       <Box direction="horizontal" alignment={'space-between'}>
         <Box direction="horizontal">
           <Text color="alternative">
-            {`${t('balance')}: ${displayAmount(balance)} ${currency}`}
+            {`${t('balance')}: ${displayAmount(BigInt(balance), currency)}`}
           </Text>
         </Box>
 

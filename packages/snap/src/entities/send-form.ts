@@ -2,6 +2,7 @@ import type { CurrencyRate } from '@metamask/snaps-sdk';
 import type { Network } from 'bitcoindevkit';
 
 import type { CurrencyUnit } from './currency';
+import { BitcoinAccount } from './account';
 
 export const SENDFORM_NAME = 'sendForm';
 
@@ -73,7 +74,11 @@ export type SendFlowRepository = {
    * @param context - the form context
    * @returns the interface ID
    */
-  insertForm(context: SendFormContext): Promise<string>;
+  insertForm(
+    account: BitcoinAccount,
+    feeRate: number,
+    fiatRate?: CurrencyRate,
+  ): Promise<string>;
 
   /**
    * Update an interface to the send form view.
@@ -81,13 +86,6 @@ export type SendFlowRepository = {
    * @param context - the form context
    */
   updateForm(id: string, context: SendFormContext): Promise<void>;
-
-  /**
-   * Insert a new review transaction interface.
-   * @param id - the interface ID
-   * @param context - the review transaction context
-   */
-  insertReview(context: ReviewTransactionContext): Promise<string>;
 
   /**
    * Update an interface to the review transaction view.

@@ -3,18 +3,18 @@ import { UserInputEventType } from '@metamask/snaps-sdk';
 import { mock } from 'jest-mock-extended';
 
 import type { SendFormContext } from '../entities';
-import { SendFormEvent } from '../entities';
-import type { SendFormUseCases } from '../use-cases';
+import { ReviewTransactionEvent, SendFormEvent } from '../entities';
+import type { SendFlowUseCases } from '../use-cases';
 import { UserInputHandler } from './UserInputHandler';
 
 describe('UserInputHandler', () => {
-  const mockSendFormUseCases = mock<SendFormUseCases>();
+  const mockSendFlowUseCases = mock<SendFlowUseCases>();
   const mockContext = mock<SendFormContext>();
 
   let handler: UserInputHandler;
 
   beforeEach(() => {
-    handler = new UserInputHandler(mockSendFormUseCases);
+    handler = new UserInputHandler(mockSendFlowUseCases);
   });
 
   describe('route', () => {
@@ -28,37 +28,32 @@ describe('UserInputHandler', () => {
       ).rejects.toThrow('Missing context');
     });
 
-    it('throws error if unrecognized event type', async () => {
+    it('throws error if missing event name', async () => {
       await expect(
         handler.route(
           'interface-id',
-          { type: UserInputEventType.FileUploadEvent } as UserInputEvent,
-          {},
+          { type: UserInputEventType.ButtonClickEvent } as UserInputEvent,
+          mockContext,
         ),
-      ).rejects.toThrow('Unsupported event type');
+      ).rejects.toThrow('Missing event name');
+    });
+
+    it('throws on unsupported event', async () => {
+      await expect(
+        handler.route(
+          'interface-id',
+          {
+            type: UserInputEventType.ButtonClickEvent,
+            name: 'randomEvent',
+          },
+          mockContext,
+        ),
+      ).rejects.toThrow('Unsupported event: randomEvent');
     });
   });
 
   describe('update send form', () => {
-    it('executes on InputChangeEvent', async () => {
-      await handler.route(
-        'interface-id',
-        {
-          type: UserInputEventType.InputChangeEvent,
-          name: SendFormEvent.Amount,
-          value: '1000',
-        },
-        mockContext,
-      );
-
-      expect(mockSendFormUseCases.update).toHaveBeenCalledWith(
-        'interface-id',
-        SendFormEvent.Amount,
-        mockContext,
-      );
-    });
-
-    it('executes on ButtonClickEvent', async () => {
+    it('executes on supported event', async () => {
       await handler.route(
         'interface-id',
         {
@@ -68,16 +63,16 @@ describe('UserInputHandler', () => {
         mockContext,
       );
 
-      expect(mockSendFormUseCases.update).toHaveBeenCalledWith(
+      expect(mockSendFlowUseCases.updateForm).toHaveBeenCalledWith(
         'interface-id',
         SendFormEvent.ClearRecipient,
         mockContext,
       );
     });
 
-    it('propagates errors from update', async () => {
+    it('propagates errors from updateForm', async () => {
       const error = new Error();
-      mockSendFormUseCases.update.mockRejectedValue(error);
+      mockSendFlowUseCases.updateForm.mockRejectedValue(error);
 
       await expect(
         handler.route(
@@ -85,6 +80,41 @@ describe('UserInputHandler', () => {
           {
             type: UserInputEventType.ButtonClickEvent,
             name: SendFormEvent.ClearRecipient,
+          },
+          mockContext,
+        ),
+      ).rejects.toThrow(error);
+    });
+  });
+
+  describe('update transaction review', () => {
+    it('executes on supported event', async () => {
+      await handler.route(
+        'interface-id',
+        {
+          type: UserInputEventType.ButtonClickEvent,
+          name: ReviewTransactionEvent.Send,
+        },
+        mockContext,
+      );
+
+      expect(mockSendFlowUseCases.updateReview).toHaveBeenCalledWith(
+        'interface-id',
+        ReviewTransactionEvent.Send,
+        mockContext,
+      );
+    });
+
+    it('propagates errors from updateReview', async () => {
+      const error = new Error();
+      mockSendFlowUseCases.updateReview.mockRejectedValue(error);
+
+      await expect(
+        handler.route(
+          'interface-id',
+          {
+            type: UserInputEventType.ButtonClickEvent,
+            name: ReviewTransactionEvent.Send,
           },
           mockContext,
         ),
