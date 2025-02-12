@@ -1,12 +1,11 @@
-import type { BitcoinAccount } from '../entities';
-import {
-  networkToCurrencyUnit,
-  SENDFORM_NAME,
-  type SendFormContext,
-  type SendFormRepository,
-  type SendFormState,
-  type SnapClient,
+import type {
+  BitcoinAccount,
+  SendFormContext,
+  SendFormRepository,
+  SendFormState,
+  SnapClient,
 } from '../entities';
+import { networkToCurrencyUnit, SENDFORM_NAME } from '../entities';
 import { SendFormView } from '../infra/jsx';
 
 export class JSXSendFormRepository implements SendFormRepository {

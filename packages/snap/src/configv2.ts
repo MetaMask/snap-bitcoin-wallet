@@ -18,6 +18,7 @@ export const ConfigV2: SnapConfig = {
   chain: {
     parallelRequests: 1,
     stopGap: 10,
+    targetBlocksConfirmation: 3,
     url: {
       bitcoin:
         process.env.ESPLORA_PROVIDER_BITCOIN ?? 'https://blockstream.info/api',

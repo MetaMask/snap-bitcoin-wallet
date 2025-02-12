@@ -4,8 +4,7 @@ import type { Snap } from '@metamask/snaps-jest';
 import { installSnap } from '@metamask/snaps-jest';
 
 import { CurrencyUnit, SendFormEvent } from '../../src/entities';
-import { Caip2AddressType } from '../../src/handlers';
-import { Caip19Asset } from '../../src/handlers/caip19';
+import { Caip2AddressType, Caip19Asset } from '../../src/handlers';
 
 describe('Bitcoin Snap', () => {
   const accounts: Record<string, KeyringAccount> = {};
