@@ -26,6 +26,7 @@ export type BlockchainClient = {
 
   /**
    * Fetch fee estimates from the chain indexer.
+   * @param network - Network to fetch the fees from.
    * @returns the map of fee estimates
    */
   getFeeEstimates(network: Network): Promise<FeeEstimates>;
