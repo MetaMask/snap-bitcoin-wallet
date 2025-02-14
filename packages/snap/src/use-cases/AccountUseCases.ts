@@ -1,4 +1,4 @@
-import type { AddressType, Network, Psbt } from 'bitcoindevkit';
+import type { AddressType, Network, Txid } from 'bitcoindevkit';
 
 import type {
   AccountsConfig,
@@ -182,7 +182,7 @@ export class AccountUseCases {
     logger.info('Account deleted successfully: %s', account.id);
   }
 
-  async send(id: string, request: TransactionRequest): Promise<string> {
+  async send(id: string, request: TransactionRequest): Promise<Txid> {
     logger.debug('Sending transaction. ID: %s. Request: %o', id, request);
 
     const account = await this.#repository.getWithSigner(id);
@@ -190,18 +190,16 @@ export class AccountUseCases {
       throw new Error(`Account not found: ${id}`);
     }
 
-    let psbt: Psbt;
+    const builder = account.buildTx().feeRate(request.feeRate);
+
     // If no amount is specified at this point, it is a drain transaction
     if (request.amount) {
-      psbt = account.buildTx(
-        request.feeRate,
-        request.recipient,
-        request.amount,
-      );
+      builder.addRecipient(request.amount, request.recipient);
     } else {
-      psbt = account.drainTo(request.feeRate, request.recipient);
+      builder.drainWallet().drainTo(request.recipient);
     }
 
+    const psbt = builder.finish();
     const tx = account.sign(psbt);
     await this.#chain.broadcast(account.network, tx);
     await this.#repository.update(account);
@@ -213,6 +211,7 @@ export class AccountUseCases {
       id,
       account.network,
     );
+
     return txId;
   }
 }

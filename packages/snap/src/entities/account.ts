@@ -11,6 +11,8 @@ import type {
   Transaction,
 } from 'bitcoindevkit';
 
+import type { TransactionBuilder } from './transaction';
+
 /**
  * A Bitcoin account.
  */
@@ -85,21 +87,10 @@ export type BitcoinAccount = {
   takeStaged(): ChangeSet | undefined;
 
   /**
-   * Create a new PSBT.
-   * @param feeRate - The fee rate in sats/vb
-   * @param recipient. - The recipient address
-   * @param amount. - The amount to send in sats
-   * @returns the PSBT
+   * Returns a Transaction Builder.
+   * @returns the TxBuilder
    */
-  buildTx(feeRate: number, recipient: string, amount: string): Psbt;
-
-  /**
-   * Create a new PSBT by draining the wallet inputs.
-   * @param feeRate. - The fee rate in sats/vb
-   * @param recipient. - The recipient address
-   * @returns the PSBT
-   */
-  drainTo(feeRate: number, recipient: string): Psbt;
+  buildTx(): TransactionBuilder;
 
   /**
    * Sign a PSBT with all the registered signers
