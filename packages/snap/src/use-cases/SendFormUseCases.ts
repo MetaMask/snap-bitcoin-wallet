@@ -40,7 +40,7 @@ export class SendFlowUseCases {
   ) {
     this.#snapClient = snapClient;
     this.#accountRepository = accountRepository;
-    this.#sendFlowRepository = sendFormrepository;
+    this.#sendFlowRepository = sendFlowRepository;
     this.#chainClient = chainClient;
     this.#targetBlocksConfirmation = targetBlocksConfirmation;
     this.#fallbackFeeRate = fallbackFeeRate;
