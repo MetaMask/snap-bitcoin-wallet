@@ -19,7 +19,7 @@ export class RpcHandler {
 
   readonly #accountUseCases: AccountUseCases;
 
-  constructor(sendForm: SendFlowUseCases, accounts: AccountUseCases) {
+  constructor(sendFlow: SendFlowUseCases, accounts: AccountUseCases) {
     this.#sendFormUseCases = sendForm;
     this.#accountUseCases = accounts;
   }
