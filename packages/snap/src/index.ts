@@ -67,7 +67,7 @@ if (ConfigV2.keyringVersion === 'v2') {
     chainClient,
     ConfigV2.accounts,
   );
-  const sendFormUseCases = new SendFlowUseCases(
+  const sendFlowUseCases = new SendFlowUseCases(
     snapClient,
     accountRepository,
     sendFlowRepository,
