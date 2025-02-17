@@ -12,8 +12,8 @@ import type {
   LocalOutput,
 } from 'bitcoindevkit';
 
-import type { TransactionBuilder } from './transaction';
 import type { Inscription } from './meta-protocols';
+import type { TransactionBuilder } from './transaction';
 
 /**
  * A Bitcoin account.
@@ -88,7 +88,13 @@ export type BitcoinAccount = {
   applyUpdate(update: Update): void;
 
   /**
-   * Get the change set.
+   * Get the current change set.
+   * @returns the change set
+   */
+  staged(): ChangeSet | undefined;
+
+  /**
+   * Extract the change set if it exists.
    * @returns the change set
    */
   takeStaged(): ChangeSet | undefined;

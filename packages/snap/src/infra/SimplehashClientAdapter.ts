@@ -1,13 +1,17 @@
-import { Address, Network } from 'bitcoindevkit';
+import type { Json } from '@metamask/utils';
+import type { Network } from 'bitcoindevkit';
+import qs from 'qs';
+
 import type {
+  BitcoinAccount,
   Inscription,
   MetaProtocolsClient,
   SimplehashConfig,
 } from '../entities';
-import qs from 'qs';
-import { Json } from '@metamask/utils';
 
+/* eslint-disable @typescript-eslint/naming-convention */
 type NFTResponse = {
+  next_cursor: string;
   nfts: {
     extra_metadata: {
       ordinal_details: {
@@ -23,7 +27,7 @@ type NFTResponse = {
         location: string;
         charms: string[] | null;
       };
-      image_original_url: string;
+      image_original_url: string | null;
     };
   }[];
 };
@@ -36,58 +40,71 @@ export class SimplehashClientAdapter implements MetaProtocolsClient {
   constructor(config: SimplehashConfig) {
     this.#endpoints = {
       bitcoin: config.url.bitcoin,
-      testnet: config.url.bitcoin,
-      testnet4: config.url.bitcoin,
-      signet: config.url.bitcoin,
-      regtest: config.url.bitcoin,
+      testnet: config.url.testnet,
+      testnet4: config.url.testnet4,
+      signet: config.url.signet,
+      regtest: config.url.regtest,
     };
     this.#apiKey = config.apiKey;
   }
 
-  async fetchInscriptions(
-    network: Network,
-    addresses: Set<Address>,
-  ): Promise<Inscription[]> {
-    const endpoint = this.#endpoints[network];
-    if (!endpoint) return [];
-
-    const params = {
-      chains: 'bitcoin',
-      wallet_addresses: addresses,
-      limit: 50,
-    };
-    const url = `${endpoint}/nfts/owners_v2?${qs.stringify(params, {
-      arrayFormat: 'comma',
-    })}`;
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'X-API-KEY': this.#apiKey,
-      },
-    });
-    if (!response.ok) {
-      throw new Error(`Failed to fetch inscriptions: ${response.statusText}`);
+  async fetchInscriptions(account: BitcoinAccount): Promise<Inscription[]> {
+    const endpoint = this.#endpoints[account.network];
+    if (!endpoint) {
+      return [];
     }
 
-    const data: NFTResponse = await response.json();
+    const usedAddresses = new Set(
+      account
+        .listUnspent()
+        .map((utxo) => account.peekAddress(utxo.derivation_index)),
+    );
 
-    return data.nfts.map((nft) => {
-      const details = nft.extra_metadata.ordinal_details;
-      return {
-        id: details.inscription_id,
-        number: details.inscription_number,
-        contentLength: details.content_length,
-        contentType: details.content_type,
-        satNumber: details.sat_number,
-        satName: details.sat_name,
-        satRarity: details.sat_rarity,
-        protocolName: details.protocol_name ?? undefined,
-        protocolContent: details.protocol_content ?? undefined,
-        location: details.location,
-        charms: details.charms ?? undefined,
-        imageOriginalUrl: nft.extra_metadata.image_original_url,
+    let cursor: string | undefined;
+    const inscriptions: Inscription[] = [];
+
+    do {
+      const params = {
+        chains: 'bitcoin',
+        wallet_addresses: Array.from(usedAddresses),
+        limit: 50,
+        cursor,
       };
-    });
+
+      const url = `${endpoint}/nfts/owners_v2?${qs.stringify(params, {
+        arrayFormat: 'comma',
+      })}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: { 'X-API-KEY': this.#apiKey },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch inscriptions: ${response.statusText}`);
+      }
+
+      const data: NFTResponse = await response.json();
+
+      inscriptions.push(
+        ...data.nfts.map((nft) => {
+          const details = nft.extra_metadata.ordinal_details;
+          return {
+            id: details.inscription_id,
+            number: details.inscription_number,
+            contentLength: details.content_length,
+            contentType: details.content_type,
+            satNumber: details.sat_number,
+            satRarity: details.sat_rarity,
+            location: details.location,
+            imageUrl: nft.extra_metadata.image_original_url ?? undefined,
+          };
+        }),
+      );
+
+      cursor = data.next_cursor;
+    } while (cursor);
+
+    return inscriptions;
   }
 }

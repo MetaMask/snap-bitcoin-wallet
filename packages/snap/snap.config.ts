@@ -24,6 +24,7 @@ const config: SnapConfig = {
     ESPLORA_PROVIDER_SIGNET: process.env.ESPLORA_PROVIDER_SIGNET,
     ESPLORA_PROVIDER_REGTEST: process.env.ESPLORA_PROVIDER_REGTEST,
     KEYRING_VERSION: process.env.KEYRING_VERSION,
+    METAPROTOCOLS_PROVIDER_BITCOIN: process.env.METAPROTOCOLS_PROVIDER_BITCOIN,
     /* eslint-disable */
   },
   polyfills: true,

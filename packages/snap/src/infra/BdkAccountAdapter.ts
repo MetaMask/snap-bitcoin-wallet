@@ -112,6 +112,10 @@ export class BdkAccountAdapter implements BitcoinAccount {
     return this.#wallet.apply_update(update);
   }
 
+  staged(): ChangeSet | undefined {
+    return this.#wallet.staged();
+  }
+
   takeStaged(): ChangeSet | undefined {
     return this.#wallet.take_staged();
   }

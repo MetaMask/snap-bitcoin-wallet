@@ -1,10 +1,4 @@
-import type {
-  AddressType,
-  LocalOutput,
-  Network,
-  Outpoint,
-  Txid,
-} from 'bitcoindevkit';
+import type { AddressType, Network, Txid } from 'bitcoindevkit';
 
 import type {
   AccountsConfig,
@@ -152,6 +146,13 @@ export class AccountUseCases {
     logger.trace('Synchronizing account. ID: %s', account.id);
 
     await this.#chain.sync(account);
+
+    // Sync assets only if a change occured.
+    if (account.staged()) {
+      const inscriptions = await this.#metaProtocols.fetchInscriptions(account);
+      account.inscriptions = inscriptions;
+    }
+
     await this.#repository.update(account);
 
     logger.debug('Account synchronized successfully: %s', account.id);
@@ -159,32 +160,15 @@ export class AccountUseCases {
 
   async #fullScan(account: BitcoinAccount): Promise<void> {
     logger.debug('Performing initial full scan: %s', account.id);
+
     await this.#chain.fullScan(account);
 
-    const utxos = account.listUnspent();
-    if (utxos.length > 0) {
-      await this.#synchronizeAssets(account, utxos);
-    }
+    const inscriptions = await this.#metaProtocols.fetchInscriptions(account);
+    account.inscriptions = inscriptions;
 
     await this.#repository.update(account);
 
     logger.debug('initial full scan performed successfully: %s', account.id);
-  }
-
-  async #synchronizeAssets(
-    account: BitcoinAccount,
-    utxos: LocalOutput[],
-  ): Promise<void> {
-    logger.trace('Synchronizing assets: %s', account.id);
-
-    const usedAddresses = new Set(
-      utxos.map((utxo) => account.peekAddress(utxo.derivation_index)),
-    );
-
-    account.inscriptions = await this.#metaProtocols.fetchInscriptions(
-      account.network,
-      usedAddresses,
-    );
   }
 
   async delete(id: string): Promise<void> {

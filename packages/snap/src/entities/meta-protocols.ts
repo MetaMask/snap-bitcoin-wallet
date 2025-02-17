@@ -1,5 +1,4 @@
-import { Json } from '@metamask/utils';
-import type { Address, Network } from 'bitcoindevkit';
+import type { BitcoinAccount } from './account';
 
 export type Inscription = {
   id: string;
@@ -7,24 +6,16 @@ export type Inscription = {
   contentLength: number;
   contentType: string;
   satNumber: number;
-  satName: string;
   satRarity: string;
-  protocolName?: string;
-  protocolContent?: Json[];
   location: string;
-  charms?: string[];
-  imageOriginalUrl: string;
+  imageUrl?: string;
 };
 
 export type MetaProtocolsClient = {
   /**
-   * Fetch the inscriptions of a list of addresses.
-   * @param network - the network on which to fetch the assets.
-   * @param addresses - the list of addresses to scan.
-   * @returns the list of UTXOs containing inscriptions
+   * Fetch the inscriptions of an account.
+   * @param account - the account to fetch assets from.
+   * @returns the list of inscriptions
    */
-  fetchInscriptions(
-    network: Network,
-    addresses: Set<Address>,
-  ): Promise<Inscription[]>;
+  fetchInscriptions(account: BitcoinAccount): Promise<Inscription[]>;
 };

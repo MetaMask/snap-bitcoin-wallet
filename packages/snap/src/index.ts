@@ -15,6 +15,7 @@ import { Config } from './config';
 import { ConfigV2 } from './configv2';
 import { KeyringHandler, CronHandler, RpcHandler } from './handlers';
 import { SnapClientAdapter, EsploraClientAdapter } from './infra';
+import { SimplehashClientAdapter } from './infra/SimplehashClientAdapter';
 import { BtcKeyring } from './keyring';
 import { InternalRpcMethod, originPermissions } from './permissions';
 import type {
@@ -39,7 +40,6 @@ import type { SendFlowContext, SendFormState } from './ui/types';
 import { AccountUseCases, SendFormUseCases } from './use-cases';
 import { isSnapRpcError, logger } from './utils';
 import { loadLocale } from './utils/locale';
-import { SimplehashClientAdapter } from './infra/SimplehashClientAdapter';
 
 logger.logLevel = parseInt(Config.logLevel, 10);
 
