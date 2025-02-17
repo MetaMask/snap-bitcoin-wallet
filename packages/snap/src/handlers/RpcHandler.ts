@@ -20,7 +20,7 @@ export class RpcHandler {
   readonly #accountUseCases: AccountUseCases;
 
   constructor(sendFlow: SendFlowUseCases, accounts: AccountUseCases) {
-    this.#sendFormUseCases = sendForm;
+    this.#sendFlowUseCases = sendFlow;
     this.#accountUseCases = accounts;
   }
 
@@ -44,7 +44,7 @@ export class RpcHandler {
   ): Promise<SendTransactionResponse> {
     assert(params, CreateSendFormRequest);
 
-    const txRequest = await this.#sendFormUseCases.display(params.account);
+    const txRequest = await this.#sendFlowUseCases.display(params.account);
     const txId = await this.#accountUseCases.send(params.account, txRequest);
     return { txId };
   }
