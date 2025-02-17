@@ -15,7 +15,7 @@ type SendTransactionResponse = {
 };
 
 export class RpcHandler {
-  readonly #sendFormUseCases: SendFlowUseCases;
+  readonly #sendFlowUseCases: SendFlowUseCases;
 
   readonly #accountUseCases: AccountUseCases;
 
