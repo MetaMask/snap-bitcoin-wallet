@@ -33,7 +33,7 @@ export class SendFlowUseCases {
   constructor(
     snapClient: SnapClient,
     accountRepository: BitcoinAccountRepository,
-    sendFormrepository: SendFlowRepository,
+    sendFlowRepository: SendFlowRepository,
     chainClient: BlockchainClient,
     targetBlocksConfirmation: number,
     fallbackFeeRate: number,
