@@ -78,8 +78,8 @@ if (ConfigV2.keyringVersion === 'v2') {
   // Application layer
   keyringHandler = new KeyringHandler(accountsUseCases);
   cronHandler = new CronHandler(accountsUseCases);
-  rpcHandler = new RpcHandler(sendFormUseCases, accountsUseCases);
-  userInputHandler = new UserInputHandler(sendFormUseCases);
+  rpcHandler = new RpcHandler(sendFlowUseCases, accountsUseCases);
+  userInputHandler = new UserInputHandler(sendFlowUseCases);
 }
 
 export const validateOrigin = (origin: string, method: string): void => {
