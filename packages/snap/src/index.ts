@@ -39,6 +39,7 @@ import type { SendFlowContext, SendFormState } from './ui/types';
 import { AccountUseCases, SendFormUseCases } from './use-cases';
 import { isSnapRpcError, logger } from './utils';
 import { loadLocale } from './utils/locale';
+import { SimplehashClientAdapter } from './infra/SimplehashClientAdapter';
 
 logger.logLevel = parseInt(Config.logLevel, 10);
 
@@ -50,6 +51,7 @@ if (ConfigV2.keyringVersion === 'v2') {
   // Infra layer
   const snapClient = new SnapClientAdapter(ConfigV2.encrypt);
   const chainClient = new EsploraClientAdapter(ConfigV2.chain);
+  const metaProtocolsClient = new SimplehashClientAdapter(ConfigV2.simplehash);
   // Data layer
   const accountRepository = new BdkAccountRepository(snapClient);
   const sendFormRepository = new JSXSendFormRepository(snapClient);
@@ -59,6 +61,7 @@ if (ConfigV2.keyringVersion === 'v2') {
     snapClient,
     accountRepository,
     chainClient,
+    metaProtocolsClient,
     ConfigV2.accounts,
   );
   const sendFormUseCases = new SendFormUseCases(

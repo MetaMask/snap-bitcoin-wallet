@@ -9,9 +9,11 @@ import type {
   ChangeSet,
   Psbt,
   Transaction,
+  LocalOutput,
 } from 'bitcoindevkit';
 
 import type { TransactionBuilder } from './transaction';
+import type { Inscription } from './meta-protocols';
 
 /**
  * A Bitcoin account.
@@ -36,6 +38,11 @@ export type BitcoinAccount = {
    * The network in which the account operates.
    */
   network: Network;
+
+  /**
+   * The list of inscriptions of the account.
+   */
+  inscriptions: Inscription[];
 
   /**
    * Whether the account has already performed a full scan.
@@ -98,6 +105,12 @@ export type BitcoinAccount = {
    * @returns the signed transaction
    */
   sign(psbt: Psbt): Transaction;
+
+  /**
+   * Get the list of UTXOs
+   * @returns the list of UTXOs
+   */
+  listUnspent(): LocalOutput[];
 };
 
 /**

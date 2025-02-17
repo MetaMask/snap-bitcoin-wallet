@@ -14,6 +14,7 @@ import type {
   BitcoinAccountRepository,
   BitcoinAccount,
   SnapClient,
+  Inscription,
 } from '../entities';
 import { BdkAccountAdapter } from '../infra';
 
@@ -32,6 +33,16 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     }
 
     return BdkAccountAdapter.load(id, ChangeSet.from_json(walletData));
+  }
+
+  async fetchInscriptions(id: string): Promise<Inscription[] | null> {
+    const state = await this.#snapClient.get();
+    const inscriptions = state.accounts.inscriptions[id];
+    if (!inscriptions) {
+      return null;
+    }
+
+    return inscriptions;
   }
 
   async getWithSigner(id: string): Promise<BitcoinAccount | null> {
@@ -121,26 +132,28 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     const state = await this.#snapClient.get();
     state.accounts.derivationPaths[derivationPath.join('/')] = id;
     state.accounts.wallets[id] = account.takeStaged()?.to_json() ?? '';
+    state.accounts.inscriptions[id] = [];
     await this.#snapClient.set(state);
 
     return account;
   }
 
   async update(account: BitcoinAccount): Promise<void> {
-    const state = await this.#snapClient.get();
-    const walletData = state.accounts.wallets[account.id];
-    if (!walletData) {
-      throw new Error('Inconsistent state: account not found for update');
-    }
-
     const newWalletData = account.takeStaged();
     if (!newWalletData) {
       // Nothing to update
       return;
     }
 
+    const state = await this.#snapClient.get();
+    const walletData = state.accounts.wallets[account.id];
+    if (!walletData) {
+      throw new Error('Inconsistent state: account not found for update');
+    }
+
     newWalletData.merge(ChangeSet.from_json(walletData));
     state.accounts.wallets[account.id] = newWalletData.to_json();
+    state.accounts.inscriptions[account.id] = account.inscriptions;
     await this.#snapClient.set(state);
   }
 
@@ -152,6 +165,7 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     }
 
     delete state.accounts.wallets[id];
+    delete state.accounts.inscriptions[id];
 
     // Find the path in derivationPaths that points to this id and remove it
     for (const [path, existingId] of Object.entries(

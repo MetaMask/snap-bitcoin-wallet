@@ -1,4 +1,10 @@
-import type { AddressType, Network, Txid } from 'bitcoindevkit';
+import type {
+  AddressType,
+  LocalOutput,
+  Network,
+  Outpoint,
+  Txid,
+} from 'bitcoindevkit';
 
 import type {
   AccountsConfig,
@@ -7,6 +13,7 @@ import type {
   BlockchainClient,
   TransactionRequest,
   SnapClient,
+  MetaProtocolsClient,
 } from '../entities';
 import { logger } from '../utils';
 
@@ -33,17 +40,21 @@ export class AccountUseCases {
 
   readonly #chain: BlockchainClient;
 
+  readonly #metaProtocols: MetaProtocolsClient;
+
   readonly #accountConfig: AccountsConfig;
 
   constructor(
     snapClient: SnapClient,
     repository: BitcoinAccountRepository,
     chain: BlockchainClient,
+    metaProtocols: MetaProtocolsClient,
     accountConfig: AccountsConfig,
   ) {
     this.#snapClient = snapClient;
     this.#repository = repository;
     this.#chain = chain;
+    this.#metaProtocols = metaProtocols;
     this.#accountConfig = accountConfig;
   }
 
@@ -109,31 +120,19 @@ export class AccountUseCases {
     return newAccount;
   }
 
-  /**
-   * Synchronize an account with the blockchain and update its state.
-   * @param id - The account id.
-   * @returns The updated account.
-   */
-  async synchronize(id: string): Promise<void> {
-    logger.trace('Synchronizing account. ID: %s', id);
-
-    const account = await this.#repository.get(id);
-    if (!account) {
-      throw new Error(`Account not found: ${id}`);
-    }
-
-    await this.#synchronize(account);
-
-    logger.debug('Account synchronized successfully: %s', account.id);
-  }
-
   async synchronizeAll(): Promise<void> {
     logger.trace('Synchronizing all accounts');
 
     // accounts cannot be empty by assertion.
     const accounts = await this.#repository.getAll();
     const results = await Promise.allSettled(
-      accounts.map(async (account) => this.#synchronize(account)),
+      accounts.map(async (account) => {
+        if (account.isScanned) {
+          await this.#synchronize(account);
+        } else {
+          await this.#fullScan(account);
+        }
+      }),
     );
 
     results.forEach((result, index) => {
@@ -150,15 +149,42 @@ export class AccountUseCases {
   }
 
   async #synchronize(account: BitcoinAccount): Promise<void> {
-    // If the account is already scanned, we just sync it, otherwise we do a full scan.
-    if (account.isScanned) {
-      await this.#chain.sync(account);
-    } else {
-      logger.info('Performing initial full scan: %s', account.id);
-      await this.#chain.fullScan(account);
+    logger.trace('Synchronizing account. ID: %s', account.id);
+
+    await this.#chain.sync(account);
+    await this.#repository.update(account);
+
+    logger.debug('Account synchronized successfully: %s', account.id);
+  }
+
+  async #fullScan(account: BitcoinAccount): Promise<void> {
+    logger.debug('Performing initial full scan: %s', account.id);
+    await this.#chain.fullScan(account);
+
+    const utxos = account.listUnspent();
+    if (utxos.length > 0) {
+      await this.#synchronizeAssets(account, utxos);
     }
 
     await this.#repository.update(account);
+
+    logger.debug('initial full scan performed successfully: %s', account.id);
+  }
+
+  async #synchronizeAssets(
+    account: BitcoinAccount,
+    utxos: LocalOutput[],
+  ): Promise<void> {
+    logger.trace('Synchronizing assets: %s', account.id);
+
+    const usedAddresses = new Set(
+      utxos.map((utxo) => account.peekAddress(utxo.derivation_index)),
+    );
+
+    account.inscriptions = await this.#metaProtocols.fetchInscriptions(
+      account.network,
+      usedAddresses,
+    );
   }
 
   async delete(id: string): Promise<void> {

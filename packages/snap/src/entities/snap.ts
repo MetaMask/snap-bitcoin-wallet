@@ -4,11 +4,13 @@ import type { Json } from '@metamask/utils';
 
 import type { BitcoinAccount } from './account';
 import type { CurrencyUnit } from './currency';
+import type { Inscription } from './meta-protocols';
 
 export type SnapState = {
   accounts: {
     derivationPaths: Record<string, string>;
     wallets: Record<string, string>;
+    inscriptions: Record<string, Inscription[]>;
   };
 };
 

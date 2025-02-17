@@ -10,10 +10,15 @@ import type {
   ChangeSet,
   Psbt,
   Transaction,
+  LocalOutput,
 } from 'bitcoindevkit';
 import { Wallet } from 'bitcoindevkit';
 
-import type { BitcoinAccount, TransactionBuilder } from '../entities';
+import type {
+  BitcoinAccount,
+  Inscription,
+  TransactionBuilder,
+} from '../entities';
 import { BdkTxBuilderAdapter } from './BdkTxBuilderAdapter';
 
 export class BdkAccountAdapter implements BitcoinAccount {
@@ -21,9 +26,12 @@ export class BdkAccountAdapter implements BitcoinAccount {
 
   readonly #wallet: Wallet;
 
+  inscriptions: Inscription[];
+
   constructor(id: string, wallet: Wallet) {
     this.#id = id;
     this.#wallet = wallet;
+    this.inscriptions = [];
   }
 
   static create(
@@ -119,5 +127,9 @@ export class BdkAccountAdapter implements BitcoinAccount {
     }
 
     return psbt.extract_tx();
+  }
+
+  listUnspent(): LocalOutput[] {
+    return this.#wallet.list_unspent();
   }
 }

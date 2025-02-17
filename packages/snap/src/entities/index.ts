@@ -5,3 +5,4 @@ export * from './currency';
 export * from './send-form';
 export * from './transaction';
 export * from './snap';
+export * from './meta-protocols';

@@ -35,4 +35,12 @@ export const ConfigV2: SnapConfig = {
         'http://localhost:8094/regtest/api',
     },
   },
+  simplehash: {
+    apiKey: process.env.SIMPLEHASH_API_KEY ?? 'sh_sk1_Z4jhWXXBE09em', // Public test API key
+    url: {
+      bitcoin:
+        process.env.METAPROTOCOLS_PROVIDER_BITCOIN ??
+        `https://api.simplehash.com/api/v0`,
+    },
+  },
 };
