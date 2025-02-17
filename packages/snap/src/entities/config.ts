@@ -25,7 +25,7 @@ export type ChainConfig = {
 };
 
 export type SimplehashConfig = {
-  apiKey: string;
+  apiKey?: string;
   url: {
     [network in Network]?: string;
   };

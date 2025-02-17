@@ -145,15 +145,15 @@ export class AccountUseCases {
   async #synchronize(account: BitcoinAccount): Promise<void> {
     logger.trace('Synchronizing account. ID: %s', account.id);
 
+    const nOutputsBefore = account.listOutput().length;
     await this.#chain.sync(account);
+    const nOutputsAfter = account.listOutput().length;
 
-    // Sync assets only if a change occured.
-    if (account.staged()) {
+    // Sync assets only if new outputs exist.
+    if (nOutputsAfter > nOutputsBefore) {
       const inscriptions = await this.#metaProtocols.fetchInscriptions(account);
-      account.inscriptions = inscriptions;
+      await this.#repository.update(account, inscriptions);
     }
-
-    await this.#repository.update(account);
 
     logger.debug('Account synchronized successfully: %s', account.id);
   }
@@ -164,9 +164,7 @@ export class AccountUseCases {
     await this.#chain.fullScan(account);
 
     const inscriptions = await this.#metaProtocols.fetchInscriptions(account);
-    account.inscriptions = inscriptions;
-
-    await this.#repository.update(account);
+    await this.#repository.update(account, inscriptions);
 
     logger.debug('initial full scan performed successfully: %s', account.id);
   }
@@ -208,6 +206,10 @@ export class AccountUseCases {
     } else {
       builder.drainWallet().drainTo(request.recipient);
     }
+
+    // Make sure frozen UTXOs are not spent
+    const frozenUTXOs = await this.#repository.getFrozenUTXOs(id);
+    builder.unspendable(frozenUTXOs);
 
     const psbt = builder.finish();
     const tx = account.sign(psbt);

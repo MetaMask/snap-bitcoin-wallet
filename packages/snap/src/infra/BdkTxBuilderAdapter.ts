@@ -1,12 +1,5 @@
-import type { Network, Psbt, TxBuilder } from 'bitcoindevkit';
-import {
-  Address,
-  Amount,
-  FeeRate,
-  Outpoint,
-  Recipient,
-  Txid,
-} from 'bitcoindevkit';
+import type { Network, Psbt, TxBuilder, Outpoint } from 'bitcoindevkit';
+import { Address, Amount, FeeRate, Recipient } from 'bitcoindevkit';
 
 import type { TransactionBuilder } from '../entities';
 
@@ -22,7 +15,7 @@ export class BdkTxBuilderAdapter implements TransactionBuilder {
 
   addRecipient(amount: string, recipientAddress: string): TransactionBuilder {
     const recipient = new Recipient(
-      Address.new(recipientAddress, this.#network),
+      Address.from_str(recipientAddress, this.#network),
       Amount.from_sat(BigInt(amount)),
     );
     this.#builder.add_recipient(recipient);
@@ -40,18 +33,13 @@ export class BdkTxBuilderAdapter implements TransactionBuilder {
   }
 
   drainTo(address: string): BdkTxBuilderAdapter {
-    const to = Address.new(address, this.#network);
+    const to = Address.from_str(address, this.#network);
     this.#builder.drain_to(to);
     return this;
   }
 
-  unspendable(unspendable: string[]): BdkTxBuilderAdapter {
-    const outpoints = unspendable.map((outpoint) => {
-      const [txid, vout] = outpoint.split(':');
-      return new Outpoint(Txid.new(txid), Number(vout));
-    });
-
-    this.#builder.unspendable(outpoints);
+  unspendable(unspendable: Outpoint[]): BdkTxBuilderAdapter {
+    this.#builder.unspendable(unspendable);
     return this;
   }
 

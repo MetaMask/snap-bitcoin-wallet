@@ -35,7 +35,7 @@ type NFTResponse = {
 export class SimplehashClientAdapter implements MetaProtocolsClient {
   readonly #endpoints: Record<Network, string | undefined>;
 
-  readonly #apiKey: string;
+  readonly #apiKey: string | undefined;
 
   constructor(config: SimplehashConfig) {
     this.#endpoints = {
@@ -57,8 +57,13 @@ export class SimplehashClientAdapter implements MetaProtocolsClient {
     const usedAddresses = new Set(
       account
         .listUnspent()
-        .map((utxo) => account.peekAddress(utxo.derivation_index)),
+        .map((utxo) => account.peekAddress(utxo.derivation_index))
+        .toString(),
     );
+
+    if (usedAddresses.size === 0) {
+      return [];
+    }
 
     let cursor: string | undefined;
     const inscriptions: Inscription[] = [];
@@ -70,14 +75,16 @@ export class SimplehashClientAdapter implements MetaProtocolsClient {
         limit: 50,
         cursor,
       };
+      console.log('params', params);
 
       const url = `${endpoint}/nfts/owners_v2?${qs.stringify(params, {
         arrayFormat: 'comma',
       })}`;
 
+      const headers = this.#apiKey ? { 'X-API-KEY': this.#apiKey } : undefined;
       const response = await fetch(url, {
         method: 'GET',
-        headers: { 'X-API-KEY': this.#apiKey },
+        headers,
       });
 
       if (!response.ok) {

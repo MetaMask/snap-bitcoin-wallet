@@ -10,6 +10,7 @@ import type {
   Psbt,
   Transaction,
   LocalOutput,
+  Outpoint,
 } from 'bitcoindevkit';
 
 import type { Inscription } from './meta-protocols';
@@ -38,11 +39,6 @@ export type BitcoinAccount = {
    * The network in which the account operates.
    */
   network: Network;
-
-  /**
-   * The list of inscriptions of the account.
-   */
-  inscriptions: Inscription[];
 
   /**
    * Whether the account has already performed a full scan.
@@ -88,12 +84,6 @@ export type BitcoinAccount = {
   applyUpdate(update: Update): void;
 
   /**
-   * Get the current change set.
-   * @returns the change set
-   */
-  staged(): ChangeSet | undefined;
-
-  /**
    * Extract the change set if it exists.
    * @returns the change set
    */
@@ -117,6 +107,12 @@ export type BitcoinAccount = {
    * @returns the list of UTXOs
    */
   listUnspent(): LocalOutput[];
+
+  /**
+   * List all relevant outputs (includes both spent and unspent, confirmed and unconfirmed).
+   * @returns the list of outputs
+   */
+  listOutput(): LocalOutput[];
 };
 
 /**
@@ -166,8 +162,9 @@ export type BitcoinAccountRepository = {
   /**
    * Update an account.
    * @param account
+   * @param inscriptions
    */
-  update(account: BitcoinAccount): Promise<void>;
+  update(account: BitcoinAccount, inscriptions?: Inscription[]): Promise<void>;
 
   /**
    * Delete an account.
@@ -175,4 +172,11 @@ export type BitcoinAccountRepository = {
    * @returns true if the account has been deleted.
    */
   delete(id: string): Promise<void>;
+
+  /**
+   * Get the list of frozen UTXOs of an account.
+   * @param id
+   * @returns the frozen UTXOs.
+   */
+  getFrozenUTXOs(id: string): Promise<Outpoint[]>;
 };

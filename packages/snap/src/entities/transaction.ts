@@ -1,4 +1,4 @@
-import type { Psbt } from 'bitcoindevkit';
+import type { Outpoint, Psbt } from 'bitcoindevkit';
 
 export type TransactionRequest = {
   recipient: string;
@@ -40,9 +40,9 @@ export type TransactionBuilder = {
 
   /**
    * Set the list of unspendable UTXOs. These outpoints won't be selected by the coin selection algorithm.
-   * @param unspendable - The list of recipients
+   * @param unspendable - The list of unspendable UTXOs
    */
-  unspendable(unspendable: string[]): TransactionBuilder;
+  unspendable(unspendable: Outpoint[]): TransactionBuilder;
 
   /**
    * Creates the PSBT.

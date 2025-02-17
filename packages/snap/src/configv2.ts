@@ -36,7 +36,7 @@ export const ConfigV2: SnapConfig = {
     },
   },
   simplehash: {
-    apiKey: process.env.SIMPLEHASH_API_KEY ?? 'sh_sk1_Z4jhWXXBE09em', // Public test API key
+    apiKey: process.env.SIMPLEHASH_API_KEY, // Public test API key
     url: {
       bitcoin:
         process.env.METAPROTOCOLS_PROVIDER_BITCOIN ??
