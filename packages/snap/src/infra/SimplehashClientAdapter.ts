@@ -75,7 +75,6 @@ export class SimplehashClientAdapter implements MetaProtocolsClient {
         limit: 50,
         cursor,
       };
-      console.log('params', params);
 
       const url = `${endpoint}/nfts/owners_v2?${qs.stringify(params, {
         arrayFormat: 'comma',
