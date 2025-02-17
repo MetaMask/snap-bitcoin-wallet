@@ -11,8 +11,8 @@ import type { SendFlowUseCases } from '../use-cases';
 export class UserInputHandler {
   readonly #sendFlowUseCases: SendFlowUseCases;
 
-  constructor(sendForm: SendFlowUseCases) {
-    this.#sendFlowUseCases = sendForm;
+  constructor(sendFlow: SendFlowUseCases) {
+    this.#sendFlowUseCases = sendFlow;
   }
 
   async route(
