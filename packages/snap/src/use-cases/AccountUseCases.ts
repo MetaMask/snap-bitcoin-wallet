@@ -147,12 +147,12 @@ export class AccountUseCases {
     const nOutputsBefore = account.listOutput().length;
     await this.#chain.sync(account);
     const nOutputsAfter = account.listOutput().length;
-    console.log(nOutputsBefore, nOutputsAfter);
 
     // Sync assets only if new outputs exist.
     if (nOutputsAfter > nOutputsBefore) {
       const inscriptions = await this.#metaProtocols.fetchInscriptions(account);
       await this.#repository.update(account, inscriptions);
+      await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
     } else {
       await this.#repository.update(account);
     }
@@ -167,6 +167,7 @@ export class AccountUseCases {
 
     const inscriptions = await this.#metaProtocols.fetchInscriptions(account);
     await this.#repository.update(account, inscriptions);
+    await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
 
     logger.debug('initial full scan performed successfully: %s', account.id);
   }
@@ -209,7 +210,6 @@ export class AccountUseCases {
       builder.drainWallet().drainTo(request.recipient);
     }
 
-    // Make sure frozen UTXOs are not spent
     const frozenUTXOs = await this.#repository.getFrozenUTXOs(id);
     builder.unspendable(frozenUTXOs);
 
@@ -219,6 +219,9 @@ export class AccountUseCases {
     await this.#repository.update(account);
 
     const txId = tx.compute_txid();
+
+    await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
+
     logger.info(
       'Transaction sent successfully: %s. Account: %s, Network: %s',
       txId,

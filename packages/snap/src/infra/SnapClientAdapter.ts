@@ -7,11 +7,11 @@ import type {
   ComponentOrElement,
   CurrencyRate,
   Json,
-  SnapsProvider,
 } from '@metamask/snaps-sdk';
 
 import type { BitcoinAccount, SnapClient, SnapState } from '../entities';
-import { CurrencyUnit } from '../entities';
+import { CurrencyUnit, networkToCurrencyUnit } from '../entities';
+import { networkToCaip19 } from '../handlers/caip19';
 import { snapToKeyringAccount } from '../handlers/keyring-account';
 
 export class SnapClientAdapter implements SnapClient {
@@ -19,10 +19,6 @@ export class SnapClientAdapter implements SnapClient {
 
   constructor(encrypt = false) {
     this.#encrypt = encrypt;
-  }
-
-  get provider(): SnapsProvider {
-    return snap;
   }
 
   async get(): Promise<SnapState> {
@@ -94,6 +90,21 @@ export class SnapClientAdapter implements SnapClient {
   async emitAccountDeletedEvent(id: string): Promise<void> {
     return emitSnapKeyringEvent(snap, KeyringEvent.AccountDeleted, {
       id,
+    });
+  }
+
+  async emitAccountBalancesUpdatedEvent(
+    account: BitcoinAccount,
+  ): Promise<void> {
+    return emitSnapKeyringEvent(snap, KeyringEvent.AccountBalancesUpdated, {
+      balances: {
+        accountId: {
+          [networkToCaip19[account.network]]: {
+            amount: account.balance.trusted_spendable.to_btc().toString(),
+            unit: networkToCurrencyUnit[account.network],
+          },
+        },
+      },
     });
   }
 
