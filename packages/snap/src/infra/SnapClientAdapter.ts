@@ -5,12 +5,13 @@ import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
 import type {
   AvailableCurrency,
   ComponentOrElement,
+  CurrencyRate,
   Json,
   SnapsProvider,
 } from '@metamask/snaps-sdk';
 
-import type { BitcoinAccount, CurrencyUnit } from '../entities';
-import type { SnapClient, SnapState } from '../entities/snap';
+import type { BitcoinAccount, SnapClient, SnapState } from '../entities';
+import { CurrencyUnit } from '../entities';
 import { snapToKeyringAccount } from '../handlers/keyring-account';
 
 export class SnapClientAdapter implements SnapClient {
@@ -153,14 +154,21 @@ export class SnapClientAdapter implements SnapClient {
     });
   }
 
-  async getCurrencyRate(currency: CurrencyUnit): Promise<number | undefined> {
-    const result = await snap.request({
+  async getCurrencyRate(
+    currency: CurrencyUnit,
+  ): Promise<CurrencyRate | undefined> {
+    // TODO: Remove when fix implemented: https://github.com/MetaMask/accounts-planning/issues/832
+    if (currency !== CurrencyUnit.Bitcoin) {
+      return undefined;
+    }
+
+    const rate = await snap.request({
       method: 'snap_getCurrencyRate',
       params: {
         currency: currency as unknown as AvailableCurrency,
       },
     });
 
-    return result?.conversionRate;
+    return rate ?? undefined;
   }
 }

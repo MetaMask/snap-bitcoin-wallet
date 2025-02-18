@@ -13,7 +13,12 @@ import {
 
 import { Config } from './config';
 import { ConfigV2 } from './configv2';
-import { KeyringHandler, CronHandler, RpcHandler } from './handlers';
+import {
+  KeyringHandler,
+  CronHandler,
+  UserInputHandler,
+  RpcHandler,
+} from './handlers';
 import { SnapClientAdapter, EsploraClientAdapter } from './infra';
 import { BtcKeyring } from './keyring';
 import { InternalRpcMethod, originPermissions } from './permissions';
@@ -30,13 +35,13 @@ import {
 import type { StartSendTransactionFlowParams } from './rpcs/start-send-transaction-flow';
 import { startSendTransactionFlow } from './rpcs/start-send-transaction-flow';
 import { KeyringStateManager } from './stateManagement';
-import { BdkAccountRepository, JSXSendFormRepository } from './store';
+import { BdkAccountRepository, JSXSendFlowRepository } from './store';
 import {
   isSendFormEvent,
   SendBitcoinController,
 } from './ui/controller/send-bitcoin-controller';
 import type { SendFlowContext, SendFormState } from './ui/types';
-import { AccountUseCases, SendFormUseCases } from './use-cases';
+import { AccountUseCases, SendFlowUseCases } from './use-cases';
 import { isSnapRpcError, logger } from './utils';
 import { loadLocale } from './utils/locale';
 
@@ -45,6 +50,7 @@ logger.logLevel = parseInt(Config.logLevel, 10);
 let keyringHandler: Keyring;
 let cronHandler: CronHandler;
 let rpcHandler: RpcHandler;
+let userInputHandler: UserInputHandler;
 let accountsUseCases: AccountUseCases;
 if (ConfigV2.keyringVersion === 'v2') {
   // Infra layer
@@ -52,7 +58,7 @@ if (ConfigV2.keyringVersion === 'v2') {
   const chainClient = new EsploraClientAdapter(ConfigV2.chain);
   // Data layer
   const accountRepository = new BdkAccountRepository(snapClient);
-  const sendFormRepository = new JSXSendFormRepository(snapClient);
+  const sendFlowRepository = new JSXSendFlowRepository(snapClient);
 
   // Business layer
   accountsUseCases = new AccountUseCases(
@@ -61,17 +67,19 @@ if (ConfigV2.keyringVersion === 'v2') {
     chainClient,
     ConfigV2.accounts,
   );
-  const sendFormUseCases = new SendFormUseCases(
+  const sendFlowUseCases = new SendFlowUseCases(
     snapClient,
     accountRepository,
-    sendFormRepository,
+    sendFlowRepository,
     chainClient,
-    ConfigV2.chain.targetBlocksConfirmation,
+    ConfigV2.targetBlocksConfirmation,
+    ConfigV2.fallbackFeeRate,
   );
   // Application layer
   keyringHandler = new KeyringHandler(accountsUseCases);
   cronHandler = new CronHandler(accountsUseCases);
-  rpcHandler = new RpcHandler(sendFormUseCases, accountsUseCases);
+  rpcHandler = new RpcHandler(sendFlowUseCases, accountsUseCases);
+  userInputHandler = new UserInputHandler(sendFlowUseCases);
 }
 
 export const validateOrigin = (origin: string, method: string): void => {
@@ -213,20 +221,36 @@ export const onUserInput: OnUserInputHandler = async ({
 }) => {
   await loadLocale();
 
-  const state = await snap.request({
-    method: 'snap_getInterfaceState',
-    params: { id },
-  });
+  try {
+    if (!userInputHandler) {
+      const state = await snap.request({
+        method: 'snap_getInterfaceState',
+        params: { id },
+      });
 
-  if (isSendFormEvent(event)) {
-    const sendBitcoinController = new SendBitcoinController({
-      context: context as SendFlowContext,
-      interfaceId: id,
-    });
-    await sendBitcoinController.handleEvent(
-      event,
-      context as SendFlowContext,
-      state.sendForm as SendFormState,
+      if (isSendFormEvent(event)) {
+        const sendBitcoinController = new SendBitcoinController({
+          context: context as SendFlowContext,
+          interfaceId: id,
+        });
+        return await sendBitcoinController.handleEvent(
+          event,
+          context as SendFlowContext,
+          state.sendForm as SendFormState,
+        );
+      }
+    }
+
+    return userInputHandler.route(id, event, context);
+  } catch (error) {
+    let snapError = error;
+
+    if (!isSnapRpcError(error)) {
+      snapError = new SnapError(error);
+    }
+    logger.error(
+      `onUserInput error: ${JSON.stringify(snapError.toJSON(), null, 2)}`,
     );
+    throw snapError;
   }
 };

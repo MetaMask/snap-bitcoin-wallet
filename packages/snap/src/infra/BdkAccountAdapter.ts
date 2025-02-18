@@ -108,7 +108,7 @@ export class BdkAccountAdapter implements BitcoinAccount {
   }
 
   buildTx(feeRate: number, recipient: string, amount: string): Psbt {
-    const fee = new FeeRate(BigInt(feeRate));
+    const fee = new FeeRate(BigInt(Math.floor(feeRate)));
     const to = new Recipient(
       Address.new(recipient, this.network),
       Amount.from_sat(BigInt(amount)),
@@ -117,7 +117,7 @@ export class BdkAccountAdapter implements BitcoinAccount {
   }
 
   drainTo(feeRate: number, recipient: string): Psbt {
-    const fee = new FeeRate(BigInt(feeRate));
+    const fee = new FeeRate(BigInt(Math.floor(feeRate)));
     const to = Address.new(recipient, this.network);
     return this.#wallet.drain_to(fee, to);
   }

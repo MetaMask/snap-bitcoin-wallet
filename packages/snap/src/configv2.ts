@@ -35,4 +35,6 @@ export const ConfigV2: SnapConfig = {
         'http://localhost:8094/regtest/api',
     },
   },
+  targetBlocksConfirmation: 3,
+  fallbackFeeRate: 5.0,
 };

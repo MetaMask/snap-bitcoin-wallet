@@ -3,7 +3,7 @@ import type { Json, JsonRpcParams } from '@metamask/utils';
 import { assert, enums, object, optional, string } from 'superstruct';
 
 import { InternalRpcMethod } from '../permissions';
-import type { AccountUseCases, SendFormUseCases } from '../use-cases';
+import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
 
 export const CreateSendFormRequest = object({
   account: string(),
@@ -15,12 +15,12 @@ type SendTransactionResponse = {
 };
 
 export class RpcHandler {
-  readonly #sendFormUseCases: SendFormUseCases;
+  readonly #sendFlowUseCases: SendFlowUseCases;
 
   readonly #accountUseCases: AccountUseCases;
 
-  constructor(sendForm: SendFormUseCases, accounts: AccountUseCases) {
-    this.#sendFormUseCases = sendForm;
+  constructor(sendFlow: SendFlowUseCases, accounts: AccountUseCases) {
+    this.#sendFlowUseCases = sendFlow;
     this.#accountUseCases = accounts;
   }
 
@@ -44,7 +44,7 @@ export class RpcHandler {
   ): Promise<SendTransactionResponse> {
     assert(params, CreateSendFormRequest);
 
-    const txRequest = await this.#sendFormUseCases.display(params.account);
+    const txRequest = await this.#sendFlowUseCases.display(params.account);
     const txId = await this.#accountUseCases.send(params.account, txRequest);
     return { txId };
   }

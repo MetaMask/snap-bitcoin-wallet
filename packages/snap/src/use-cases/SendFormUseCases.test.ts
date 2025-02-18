@@ -1,42 +1,71 @@
+import type { CurrencyRate } from '@metamask/snaps-sdk';
 import { UserRejectedRequestError } from '@metamask/snaps-sdk';
-import type { FeeEstimates } from 'bitcoindevkit';
+import type { Psbt, FeeEstimates } from 'bitcoindevkit';
+import { Address, Amount } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 
 import type {
+  SendFormContext,
   BitcoinAccount,
   BitcoinAccountRepository,
   BlockchainClient,
-  SendFormRepository,
+  SendFlowRepository,
   SnapClient,
   TransactionRequest,
+  ReviewTransactionContext,
 } from '../entities';
-import { SendFormUseCases } from './SendFormUseCases';
+import {
+  ReviewTransactionEvent,
+  CurrencyUnit,
+  SendFormEvent,
+} from '../entities';
+import { SendFlowUseCases } from './SendFormUseCases';
+
+// TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
+/* eslint-disable @typescript-eslint/naming-convention */
+jest.mock('bitcoindevkit', () => {
+  return {
+    Address: {
+      new: jest.fn(),
+    },
+    Amount: {
+      from_btc: jest.fn(),
+    },
+  };
+});
 
 jest.mock('../utils/logger');
 
-describe('SendFormUseCases', () => {
-  let useCases: SendFormUseCases;
+describe('SendFlowUseCases', () => {
+  let useCases: SendFlowUseCases;
 
   const mockSnapClient = mock<SnapClient>();
   const mockAccountRepository = mock<BitcoinAccountRepository>();
-  const mockSendFormRepository = mock<SendFormRepository>();
+  const mockSendFlowRepository = mock<SendFlowRepository>();
   const mockChain = mock<BlockchainClient>();
   const targetBlocksConfirmation = 3;
-  const mockAccount = mock<BitcoinAccount>({ network: 'bitcoin' });
+  const fallbackFeeRate = 5.0;
+  const mockAccount = mock<BitcoinAccount>({
+    network: 'bitcoin',
+    drainTo: jest.fn(),
+    buildTx: jest.fn(),
+  });
   const mockFeeEstimates = mock<FeeEstimates>({ get: jest.fn() });
   const mockTxRequest = mock<TransactionRequest>();
+  const mockCurrencyRate = mock<CurrencyRate>();
 
   beforeEach(() => {
-    useCases = new SendFormUseCases(
+    useCases = new SendFlowUseCases(
       mockSnapClient,
       mockAccountRepository,
-      mockSendFormRepository,
+      mockSendFlowRepository,
       mockChain,
       targetBlocksConfirmation,
+      fallbackFeeRate,
     );
   });
 
-  describe('display', () => {
+  describe('displayForm', () => {
     it('throws error if account not found', async () => {
       mockAccountRepository.get.mockResolvedValue(null);
       await expect(useCases.display('non-existent-account')).rejects.toThrow(
@@ -44,21 +73,11 @@ describe('SendFormUseCases', () => {
       );
     });
 
-    it('throws error if fee rate is missing', async () => {
-      mockAccountRepository.get.mockResolvedValue(mockAccount);
-      mockChain.getFeeEstimates.mockResolvedValue(mockFeeEstimates);
-      mockFeeEstimates.get.mockReturnValue(undefined);
-
-      await expect(useCases.display('account-id')).rejects.toThrow(
-        'Failed to fetch fee rates',
-      );
-    });
-
     it('throws UserRejectedRequestError if displayInterface returns null', async () => {
       mockAccountRepository.get.mockResolvedValue(mockAccount);
       mockChain.getFeeEstimates.mockResolvedValue(mockFeeEstimates);
       mockFeeEstimates.get.mockReturnValue(5);
-      mockSendFormRepository.insert.mockResolvedValue('form-id');
+      mockSendFlowRepository.insertForm.mockResolvedValue('interface-id');
       mockSnapClient.displayInterface.mockResolvedValue(null);
 
       await expect(useCases.display('account-id')).rejects.toThrow(
@@ -70,8 +89,9 @@ describe('SendFormUseCases', () => {
       mockAccountRepository.get.mockResolvedValue(mockAccount);
       mockChain.getFeeEstimates.mockResolvedValue(mockFeeEstimates);
       mockFeeEstimates.get.mockReturnValue(5);
-      mockSendFormRepository.insert.mockResolvedValue('form-id');
+      mockSendFlowRepository.insertForm.mockResolvedValue('interface-id');
       mockSnapClient.displayInterface.mockResolvedValue(mockTxRequest);
+      mockSnapClient.getCurrencyRate.mockResolvedValue(mockCurrencyRate);
 
       const result = await useCases.display('account-id');
 
@@ -79,15 +99,340 @@ describe('SendFormUseCases', () => {
       expect(mockChain.getFeeEstimates).toHaveBeenCalledWith(
         mockAccount.network,
       );
+      expect(mockSnapClient.getCurrencyRate).toHaveBeenCalledWith(
+        CurrencyUnit.Bitcoin,
+      );
       expect(mockFeeEstimates.get).toHaveBeenCalledWith(
         targetBlocksConfirmation,
       );
-      expect(mockSendFormRepository.insert).toHaveBeenCalledWith(
+      expect(mockSendFlowRepository.insertForm).toHaveBeenCalledWith(
         mockAccount,
         5,
+        mockCurrencyRate,
       );
-      expect(mockSnapClient.displayInterface).toHaveBeenCalledWith('form-id');
+      expect(mockSnapClient.displayInterface).toHaveBeenCalledWith(
+        'interface-id',
+      );
       expect(result).toStrictEqual(mockTxRequest);
+    });
+  });
+
+  describe('updateForm', () => {
+    const mockContext: SendFormContext = {
+      account: { id: 'account-id', address: 'myAddress' },
+      amount: '1000',
+      balance: '20000',
+      currency: CurrencyUnit.Bitcoin,
+      drain: false,
+      recipient: 'recipientAddress',
+      errors: {
+        recipient: 'invalid recipient',
+        tx: 'errors on tx',
+        amount: 'invalid amount',
+      },
+      feeRate: 2.4,
+      network: 'bitcoin',
+      fee: '10',
+      fiatRate: {
+        currency: 'USD',
+        conversionRate: 100000,
+        conversionDate: 2025,
+      },
+    };
+
+    it('throws error unrecognized event', async () => {
+      await expect(
+        useCases.updateForm(
+          'interface-id',
+          'randomEvent' as SendFormEvent,
+          mockContext,
+        ),
+      ).rejects.toThrow('Unrecognized event');
+    });
+
+    it('resolves to null on Cancel', async () => {
+      await useCases.updateForm(
+        'interface-id',
+        SendFormEvent.Cancel,
+        mockContext,
+      );
+      expect(mockSnapClient.resolveInterface).toHaveBeenCalledWith(
+        'interface-id',
+        null,
+      );
+    });
+
+    it('clears state on ClearRecipient', async () => {
+      const expectedContext = {
+        ...mockContext,
+        recipient: undefined,
+        fee: undefined,
+        errors: {
+          ...mockContext.errors,
+          tx: undefined,
+          recipient: undefined,
+        },
+      };
+
+      await useCases.updateForm(
+        'interface-id',
+        SendFormEvent.ClearRecipient,
+        mockContext,
+      );
+      expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
+        'interface-id',
+        expectedContext,
+      );
+    });
+
+    it('throws error on Review if amount, recipient or fee are not defined', async () => {
+      await expect(
+        useCases.updateForm('interface-id', SendFormEvent.Confirm, {
+          ...mockContext,
+          recipient: undefined,
+        }),
+      ).rejects.toThrow('Inconsistent Send form context');
+
+      await expect(
+        useCases.updateForm('interface-id', SendFormEvent.Confirm, {
+          ...mockContext,
+          amount: undefined,
+        }),
+      ).rejects.toThrow('Inconsistent Send form context');
+
+      await expect(
+        useCases.updateForm('interface-id', SendFormEvent.Confirm, {
+          ...mockContext,
+          fee: undefined,
+        }),
+      ).rejects.toThrow('Inconsistent Send form context');
+    });
+
+    it('updates interface to the transaction review on Confirm', async () => {
+      const expectedReviewContext: ReviewTransactionContext = {
+        from: mockContext.account.address,
+        network: mockContext.network,
+        amount: '1000',
+        recipient: 'recipientAddress',
+        feeRate: mockContext.feeRate,
+        fiatRate: mockContext.fiatRate,
+        currency: mockContext.currency,
+        fee: '10',
+        sendForm: mockContext,
+      };
+
+      await useCases.updateForm(
+        'interface-id',
+        SendFormEvent.Confirm,
+        mockContext,
+      );
+      expect(mockSendFlowRepository.updateReview).toHaveBeenCalledWith(
+        'interface-id',
+        expectedReviewContext,
+      );
+    });
+
+    it('clears state and set drain to true on SetMax', async () => {
+      // avoid computing the fee in this test
+      const testContext = {
+        ...mockContext,
+        recipient: undefined,
+      };
+      const expectedContext = {
+        ...testContext,
+        drain: true,
+        amount: mockContext.balance,
+        fee: undefined,
+        errors: {
+          ...mockContext.errors,
+          tx: undefined,
+          amount: undefined,
+        },
+      };
+
+      await useCases.updateForm(
+        'interface-id',
+        SendFormEvent.SetMax,
+        testContext,
+      );
+      expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
+        'interface-id',
+        expectedContext,
+      );
+    });
+
+    it('sets recipient from state on Recipient', async () => {
+      (Address.new as jest.Mock).mockReturnValue({
+        toString: () => 'newAddressValidated',
+      });
+
+      // avoid computing the fee in this test
+      const testContext = {
+        ...mockContext,
+        amount: undefined,
+      };
+
+      mockSendFlowRepository.getState.mockResolvedValue({
+        recipient: 'newAddress',
+        amount: '',
+      });
+      const expectedContext = {
+        ...testContext,
+        recipient: 'newAddressValidated',
+        errors: {
+          ...mockContext.errors,
+          tx: undefined,
+          recipient: undefined,
+        },
+      };
+
+      await useCases.updateForm(
+        'interface-id',
+        SendFormEvent.Recipient,
+        testContext,
+      );
+
+      expect(mockSendFlowRepository.getState).toHaveBeenCalledWith(
+        'interface-id',
+      );
+      expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
+        'interface-id',
+        expectedContext,
+      );
+    });
+
+    it('sets amount from state on Amount', async () => {
+      (Amount.from_btc as jest.Mock).mockReturnValue({
+        to_sat: () => BigInt('1111'), // Use different amount than state to verify that we get the result from the toString of the bigint
+      });
+
+      const testContext = {
+        ...mockContext,
+        recipient: undefined, // avoid computing the fee in this test
+      };
+
+      mockSendFlowRepository.getState.mockResolvedValue({
+        recipient: '',
+        amount: '21000',
+      });
+      const expectedContext = {
+        ...testContext,
+        drain: undefined,
+        fee: undefined,
+        amount: '1111',
+        errors: {
+          ...mockContext.errors,
+          tx: undefined,
+          amount: undefined,
+        },
+      };
+
+      await useCases.updateForm(
+        'interface-id',
+        SendFormEvent.Amount,
+        testContext,
+      );
+
+      expect(mockSendFlowRepository.getState).toHaveBeenCalledWith(
+        'interface-id',
+      );
+      expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
+        'interface-id',
+        expectedContext,
+      );
+    });
+
+    it('computes the fee when amount and recipient are filled', async () => {
+      const mockPsbt = mock<Psbt>({
+        fee: () => {
+          return { to_sat: () => BigInt(10) } as unknown as Amount;
+        },
+      });
+      mockAccountRepository.get.mockResolvedValue(mockAccount);
+      mockAccount.drainTo.mockReturnValue(mockPsbt);
+
+      const expectedContext = {
+        ...mockContext,
+        drain: expect.anything(),
+        fee: '10',
+        amount: String(20000 - 10),
+        errors: expect.anything(),
+      };
+
+      await useCases.updateForm(
+        'interface-id',
+        SendFormEvent.SetMax,
+        mockContext,
+      );
+
+      expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
+        'interface-id',
+        expectedContext,
+      );
+    });
+  });
+
+  describe('updateReview', () => {
+    const mockContext: ReviewTransactionContext = {
+      from: 'myAddress',
+      network: 'bitcoin',
+      amount: '10000',
+      currency: CurrencyUnit.Bitcoin,
+      recipient: 'recipientAddress',
+      feeRate: 2.4,
+      fee: '10',
+      sendForm: {} as SendFormContext,
+    };
+
+    it('throws error unrecognized event', async () => {
+      await expect(
+        useCases.updateReview(
+          'interface-id',
+          'randomEvent' as ReviewTransactionEvent,
+          mockContext,
+        ),
+      ).rejects.toThrow('Unrecognized event');
+    });
+
+    it('resolves to null on HeaderBack if missing send form in context', async () => {
+      await useCases.updateReview(
+        'interface-id',
+        ReviewTransactionEvent.HeaderBack,
+        { ...mockContext, sendForm: undefined },
+      );
+      expect(mockSnapClient.resolveInterface).toHaveBeenCalledWith(
+        'interface-id',
+        null,
+      );
+    });
+
+    it('reverts interface back to send form if present in context', async () => {
+      await useCases.updateReview(
+        'interface-id',
+        ReviewTransactionEvent.HeaderBack,
+        mockContext,
+      );
+      expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
+        'interface-id',
+        mockContext.sendForm,
+      );
+    });
+
+    it('resolves to the transaction request on Send', async () => {
+      await useCases.updateReview(
+        'interface-id',
+        ReviewTransactionEvent.Send,
+        mockContext,
+      );
+
+      expect(mockSnapClient.resolveInterface).toHaveBeenCalledWith(
+        'interface-id',
+        {
+          amount: mockContext.amount,
+          recipient: mockContext.recipient,
+          feeRate: mockContext.feeRate,
+        },
+      );
     });
   });
 });
