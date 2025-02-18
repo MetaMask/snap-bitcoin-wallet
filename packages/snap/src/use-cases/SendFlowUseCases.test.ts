@@ -19,7 +19,7 @@ import {
   CurrencyUnit,
   SendFormEvent,
 } from '../entities';
-import { SendFlowUseCases } from './SendFormUseCases';
+import { SendFlowUseCases } from './SendFlowUseCases';
 
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
 /* eslint-disable @typescript-eslint/naming-convention */
