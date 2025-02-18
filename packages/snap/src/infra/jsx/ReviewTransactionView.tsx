@@ -27,7 +27,7 @@ export const ReviewTransactionView: SnapComponent<ReviewTransactionContext> = (
   props,
 ) => {
   const t = getTranslator();
-  const { amount, fee, currency, fiatRate, feeRate, recipient, network } =
+  const { amount, fee, currency, fiatRate, feeRate, recipient, network, from } =
     props;
 
   const total = BigInt(amount) + BigInt(fee);
@@ -54,9 +54,7 @@ export const ReviewTransactionView: SnapComponent<ReviewTransactionContext> = (
         <Section>
           <Row label={t('from')}>
             <Address
-              address={
-                `${networkToCaip2[network]}:tb1qqecaw32rvyjgez706t5chpr8gan49wfuk94t3g` as CaipAccountId
-              }
+              address={`${networkToCaip2[network]}:${from}` as CaipAccountId}
               displayName
             />
           </Row>
