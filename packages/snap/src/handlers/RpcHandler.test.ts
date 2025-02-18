@@ -4,7 +4,7 @@ import { assert } from 'superstruct';
 
 import type { TransactionRequest } from '../entities';
 import { InternalRpcMethod } from '../permissions';
-import type { SendFormUseCases } from '../use-cases';
+import type { SendFlowUseCases } from '../use-cases';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 import { CreateSendFormRequest, RpcHandler } from './RpcHandler';
 
@@ -14,14 +14,14 @@ jest.mock('superstruct', () => ({
 }));
 
 describe('RpcHandler', () => {
-  const mockSendFormUseCases = mock<SendFormUseCases>();
+  const mockSendFlowUseCases = mock<SendFlowUseCases>();
   const mockAccountsUseCases = mock<AccountUseCases>();
   const mockTxRequest = mock<TransactionRequest>();
 
   let handler: RpcHandler;
 
   beforeEach(() => {
-    handler = new RpcHandler(mockSendFormUseCases, mockAccountsUseCases);
+    handler = new RpcHandler(mockSendFlowUseCases, mockAccountsUseCases);
   });
 
   describe('route', () => {
@@ -42,7 +42,7 @@ describe('RpcHandler', () => {
     };
 
     it('executes startSendTransactionFlow', async () => {
-      mockSendFormUseCases.display.mockResolvedValue(mockTxRequest);
+      mockSendFlowUseCases.display.mockResolvedValue(mockTxRequest);
       mockAccountsUseCases.send.mockResolvedValue(
         mock<Txid>({
           toString: jest.fn().mockImplementation(() => 'txId'),
@@ -55,7 +55,7 @@ describe('RpcHandler', () => {
       );
 
       expect(assert).toHaveBeenCalledWith(params, CreateSendFormRequest);
-      expect(mockSendFormUseCases.display).toHaveBeenCalledWith('account-id');
+      expect(mockSendFlowUseCases.display).toHaveBeenCalledWith('account-id');
       expect(mockAccountsUseCases.send).toHaveBeenCalledWith(
         'account-id',
         mockTxRequest,
@@ -65,26 +65,26 @@ describe('RpcHandler', () => {
 
     it('propagates errors from display', async () => {
       const error = new Error();
-      mockSendFormUseCases.display.mockRejectedValue(error);
+      mockSendFlowUseCases.display.mockRejectedValue(error);
 
       await expect(
         handler.route(InternalRpcMethod.StartSendTransactionFlow, params),
       ).rejects.toThrow(error);
 
-      expect(mockSendFormUseCases.display).toHaveBeenCalled();
+      expect(mockSendFlowUseCases.display).toHaveBeenCalled();
       expect(mockAccountsUseCases.send).not.toHaveBeenCalled();
     });
 
     it('propagates errors from send', async () => {
       const error = new Error();
-      mockSendFormUseCases.display.mockResolvedValue(mockTxRequest);
+      mockSendFlowUseCases.display.mockResolvedValue(mockTxRequest);
       mockAccountsUseCases.send.mockRejectedValue(error);
 
       await expect(
         handler.route(InternalRpcMethod.StartSendTransactionFlow, params),
       ).rejects.toThrow(error);
 
-      expect(mockSendFormUseCases.display).toHaveBeenCalled();
+      expect(mockSendFlowUseCases.display).toHaveBeenCalled();
       expect(mockAccountsUseCases.send).toHaveBeenCalled();
     });
   });

@@ -1,15 +1,17 @@
-import type { BitcoinAccount } from '../entities';
-import {
-  networkToCurrencyUnit,
-  SENDFORM_NAME,
-  type SendFormContext,
-  type SendFormRepository,
-  type SendFormState,
-  type SnapClient,
-} from '../entities';
-import { SendFormView } from '../infra/jsx';
+import type { CurrencyRate } from '@metamask/snaps-sdk';
 
-export class JSXSendFormRepository implements SendFormRepository {
+import type {
+  SendFormContext,
+  SendFlowRepository,
+  SendFormState,
+  SnapClient,
+  ReviewTransactionContext,
+  BitcoinAccount,
+} from '../entities';
+import { networkToCurrencyUnit, SENDFORM_NAME } from '../entities';
+import { ReviewTransactionView, SendFormView } from '../infra/jsx';
+
+export class JSXSendFlowRepository implements SendFlowRepository {
   readonly #snapClient: SnapClient;
 
   constructor(snapClient: SnapClient) {
@@ -29,19 +31,20 @@ export class JSXSendFormRepository implements SendFormRepository {
     return state;
   }
 
-  async insert(account: BitcoinAccount, feeRate: number): Promise<string> {
-    const currency = networkToCurrencyUnit[account.network];
+  async insertForm(
+    account: BitcoinAccount,
+    feeRate: number,
+    fiatRate?: CurrencyRate,
+  ): Promise<string> {
     const context: SendFormContext = {
       balance: account.balance.trusted_spendable.to_sat().toString(),
-      currency,
-      account: account.id,
+      currency: networkToCurrencyUnit[account.network],
+      account: { id: account.id, address: account.peekAddress(0).address }, // FIXME: Address should not be needed here
       network: account.network,
       feeRate,
+      fiatRate,
       errors: {},
     };
-
-    // TODO: Fetch fiat/fee rates from state and refresh on updates
-    context.fiatRate = await this.#snapClient.getCurrencyRate(currency);
 
     return this.#snapClient.createInterface(
       <SendFormView {...context} />,
@@ -49,10 +52,21 @@ export class JSXSendFormRepository implements SendFormRepository {
     );
   }
 
-  async update(id: string, context: SendFormContext): Promise<void> {
+  async updateForm(id: string, context: SendFormContext): Promise<void> {
     return this.#snapClient.updateInterface(
       id,
       <SendFormView {...context} />,
+      context,
+    );
+  }
+
+  async updateReview(
+    id: string,
+    context: ReviewTransactionContext,
+  ): Promise<void> {
+    return this.#snapClient.updateInterface(
+      id,
+      <ReviewTransactionView {...context} />,
       context,
     );
   }

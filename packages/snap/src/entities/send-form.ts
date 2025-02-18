@@ -1,3 +1,4 @@
+import type { CurrencyRate } from '@metamask/snaps-sdk';
 import type { Network } from 'bitcoindevkit';
 
 import type { BitcoinAccount } from './account';
@@ -6,12 +7,15 @@ import type { CurrencyUnit } from './currency';
 export const SENDFORM_NAME = 'sendForm';
 
 export type SendFormContext = {
-  account: string;
+  account: {
+    id: string;
+    address: string; // FIXME: Address should not be needed to identify an account
+  };
   network: Network;
   balance: string;
   feeRate: number;
   currency: CurrencyUnit;
-  fiatRate?: number;
+  fiatRate?: CurrencyRate;
   recipient?: string;
   amount?: string;
   fee?: string;
@@ -27,9 +31,8 @@ export enum SendFormEvent {
   Amount = 'amount',
   Recipient = 'recipient',
   ClearRecipient = 'clearRecipient',
-  Review = 'review',
+  Confirm = 'confirm',
   Cancel = 'cancel',
-  HeaderBack = 'headerBack',
   SetMax = 'max',
 }
 
@@ -38,28 +41,61 @@ export type SendFormState = {
   amount: string;
 };
 
+export type ReviewTransactionContext = {
+  from: string;
+  network: Network;
+  feeRate: number;
+  currency: CurrencyUnit;
+  fiatRate?: CurrencyRate;
+  recipient: string;
+  amount: string;
+  fee: string;
+
+  /**
+   * Used to repopulate the send form if the user decides to go back in the flow
+   * Optional when sending directly without form.
+   */
+  sendForm?: SendFormContext;
+};
+
+export enum ReviewTransactionEvent {
+  Send = 'send',
+  HeaderBack = 'headerBack',
+}
+
 /**
- * SendFormRepository is a repository that manages Bitcoin Send forms.
+ * SendFlowRepository is a repository that manages Bitcoin Send flow interfaces.
  */
-export type SendFormRepository = {
+export type SendFlowRepository = {
   /**
    * Get the form state.
-   * @param id - the form ID
+   * @param id - the interface ID
    * @returns the form state
    */
   getState(id: string): Promise<SendFormState>;
 
   /**
-   * Insert a new form interface.
+   * Insert a new send form interface.
    * @param context - the form context
-   * @returns the form ID
+   * @returns the interface ID
    */
-  insert(account: BitcoinAccount, feeRate: number): Promise<string>;
+  insertForm(
+    account: BitcoinAccount,
+    feeRate: number,
+    fiatRate?: CurrencyRate,
+  ): Promise<string>;
 
   /**
-   * Update a form interface.
-   * @param id - the form ID
+   * Update an interface to the send form view.
+   * @param id - the interface ID
    * @param context - the form context
    */
-  update(id: string, context: SendFormContext): Promise<void>;
+  updateForm(id: string, context: SendFormContext): Promise<void>;
+
+  /**
+   * Update an interface to the review transaction view.
+   * @param id - the interface ID
+   * @param context - the review transaction context
+   */
+  updateReview(id: string, context: ReviewTransactionContext): Promise<void>;
 };
