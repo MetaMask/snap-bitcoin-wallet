@@ -117,15 +117,14 @@ export class AccountUseCases {
   async synchronizeAll(): Promise<void> {
     logger.trace('Synchronizing all accounts');
 
-    // accounts cannot be empty by assertion.
     const accounts = await this.#repository.getAll();
     const results = await Promise.allSettled(
       accounts.map(async (account) => {
         if (account.isScanned) {
-          await this.#synchronize(account);
-        } else {
-          await this.#fullScan(account);
+          return this.synchronize(account);
         }
+
+        return this.fullScan(account);
       }),
     );
 
@@ -142,23 +141,26 @@ export class AccountUseCases {
     logger.debug('Accounts synchronized successfully');
   }
 
-  async #synchronize(account: BitcoinAccount): Promise<void> {
+  async synchronize(account: BitcoinAccount): Promise<void> {
     logger.trace('Synchronizing account. ID: %s', account.id);
 
     const nOutputsBefore = account.listOutput().length;
     await this.#chain.sync(account);
     const nOutputsAfter = account.listOutput().length;
+    console.log(nOutputsBefore, nOutputsAfter);
 
     // Sync assets only if new outputs exist.
     if (nOutputsAfter > nOutputsBefore) {
       const inscriptions = await this.#metaProtocols.fetchInscriptions(account);
       await this.#repository.update(account, inscriptions);
+    } else {
+      await this.#repository.update(account);
     }
 
     logger.debug('Account synchronized successfully: %s', account.id);
   }
 
-  async #fullScan(account: BitcoinAccount): Promise<void> {
+  async fullScan(account: BitcoinAccount): Promise<void> {
     logger.debug('Performing initial full scan: %s', account.id);
 
     await this.#chain.fullScan(account);

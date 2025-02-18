@@ -6,6 +6,7 @@ import { InternalRpcMethod } from '../permissions';
 import type { SendFormUseCases } from '../use-cases';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 import { CreateSendFormRequest, RpcHandler } from './RpcHandler';
+import { Txid } from 'bitcoindevkit';
 
 jest.mock('superstruct', () => ({
   ...jest.requireActual('superstruct'),
@@ -42,7 +43,11 @@ describe('RpcHandler', () => {
 
     it('executes startSendTransactionFlow', async () => {
       mockSendFormUseCases.display.mockResolvedValue(mockTxRequest);
-      mockAccountsUseCases.send.mockResolvedValue('txId');
+      mockAccountsUseCases.send.mockResolvedValue(
+        mock<Txid>({
+          toString: jest.fn().mockImplementation(() => 'txId'),
+        }),
+      );
 
       const result = await handler.route(
         InternalRpcMethod.StartSendTransactionFlow,

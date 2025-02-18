@@ -45,7 +45,7 @@ describe('BdkAccountRepository', () => {
   describe('get', () => {
     it('returns null if account not found', async () => {
       mockSnapClient.get.mockResolvedValue({
-        accounts: { derivationPaths: {}, wallets: {} },
+        accounts: { derivationPaths: {}, wallets: {}, inscriptions: {} },
       });
 
       const result = await repo.get('non-existent-id');
@@ -57,6 +57,7 @@ describe('BdkAccountRepository', () => {
         accounts: {
           derivationPaths: {},
           wallets: { 'some-id': '{"mywallet": "data"}' },
+          inscriptions: {},
         },
       });
 
@@ -82,6 +83,7 @@ describe('BdkAccountRepository', () => {
             'some-id': '{"foo":"bar"}',
             'another-id': '{"hello":"world"}',
           },
+          inscriptions: {},
         },
       });
 
@@ -102,7 +104,7 @@ describe('BdkAccountRepository', () => {
   describe('getByDerivationPath', () => {
     it('returns null if derivation path not mapped', async () => {
       mockSnapClient.get.mockResolvedValue({
-        accounts: { derivationPaths: {}, wallets: {} },
+        accounts: { derivationPaths: {}, wallets: {}, inscriptions: {} },
       });
 
       const result = await repo.getByDerivationPath(['m', "84'", "0'", "0'"]);
@@ -115,6 +117,7 @@ describe('BdkAccountRepository', () => {
         accounts: {
           derivationPaths: { [derivationPath.join('/')]: 'some-id' },
           wallets: { 'some-id': '{}' },
+          inscriptions: {},
         },
       });
 
@@ -129,7 +132,7 @@ describe('BdkAccountRepository', () => {
   describe('getWithSigner', () => {
     it('returns null if account not found', async () => {
       mockSnapClient.get.mockResolvedValue({
-        accounts: { derivationPaths: {}, wallets: {} },
+        accounts: { derivationPaths: {}, wallets: {}, inscriptions: {} },
       });
       const result = await repo.getWithSigner('non-existent-id');
       expect(result).toBeNull();
@@ -141,6 +144,7 @@ describe('BdkAccountRepository', () => {
         accounts: {
           derivationPaths: {},
           wallets: { 'some-id': walletData },
+          inscriptions: {},
         },
       });
       await expect(repo.getWithSigner('some-id')).rejects.toThrow(
@@ -155,6 +159,7 @@ describe('BdkAccountRepository', () => {
         accounts: {
           derivationPaths: { [derivationPath]: 'some-id' },
           wallets: { 'some-id': walletData },
+          inscriptions: {},
         },
       });
       const slip10Node = {
@@ -187,7 +192,7 @@ describe('BdkAccountRepository', () => {
     it('inserts a new account with xpub', async () => {
       const derivationPath = ['m', "84'", "0'", "0'"];
       mockSnapClient.get.mockResolvedValue({
-        accounts: { derivationPaths: {}, wallets: {} },
+        accounts: { derivationPaths: {}, wallets: {}, inscriptions: {} },
       });
       mockSnapClient.getPublicEntropy.mockResolvedValue({
         masterFingerprint: 0xdeadbeef,
@@ -216,6 +221,7 @@ describe('BdkAccountRepository', () => {
         accounts: {
           derivationPaths: { "m/84'/0'/0'": 'some-id' },
           wallets: { 'some-id': '{"original":"data"}' },
+          inscriptions: {},
         },
       });
 
@@ -244,6 +250,7 @@ describe('BdkAccountRepository', () => {
         accounts: {
           derivationPaths: { "m/84'/0'/0'": 'some-id' },
           wallets: { 'some-id': '{"original":"data"}' },
+          inscriptions: {},
         },
       });
 
@@ -261,6 +268,7 @@ describe('BdkAccountRepository', () => {
         accounts: {
           derivationPaths: {},
           wallets: {},
+          inscriptions: {},
         },
       });
 
@@ -276,7 +284,7 @@ describe('BdkAccountRepository', () => {
   describe('delete', () => {
     it('does nothing if account not found', async () => {
       mockSnapClient.get.mockResolvedValue({
-        accounts: { derivationPaths: {}, wallets: {} },
+        accounts: { derivationPaths: {}, wallets: {}, inscriptions: {} },
       });
 
       await repo.delete('non-existent-id');
@@ -289,6 +297,7 @@ describe('BdkAccountRepository', () => {
         accounts: {
           derivationPaths: { "m/84'/0'/0'": 'some-id' },
           wallets: { 'some-id': '{"wallet":"data"}' },
+          inscriptions: {},
         },
       });
 
