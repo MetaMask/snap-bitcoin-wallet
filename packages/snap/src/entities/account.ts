@@ -10,7 +10,6 @@ import type {
   Psbt,
   Transaction,
   LocalOutput,
-  Outpoint,
 } from 'bitcoindevkit';
 
 import type { Inscription } from './meta-protocols';
@@ -174,9 +173,9 @@ export type BitcoinAccountRepository = {
   delete(id: string): Promise<void>;
 
   /**
-   * Get the list of frozen UTXOs of an account.
+   * Get the list of frozen UTXO outpoints of an account.
    * @param id
-   * @returns the frozen UTXOs.
+   * @returns the frozen UTXO outpoints.
    */
-  getFrozenUTXOs(id: string): Promise<Outpoint[]>;
+  getFrozenUTXOs(id: string): Promise<string[]>;
 };

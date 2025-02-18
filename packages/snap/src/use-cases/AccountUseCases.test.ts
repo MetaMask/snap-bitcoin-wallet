@@ -1,10 +1,4 @@
-import type {
-  LocalOutput,
-  Outpoint,
-  Transaction,
-  TxBuilder,
-  Txid,
-} from 'bitcoindevkit';
+import type { LocalOutput, Transaction, Txid } from 'bitcoindevkit';
 import { type AddressType, type Network, type Psbt } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 
@@ -16,7 +10,6 @@ import type {
   Inscription,
   MetaProtocolsClient,
   SnapClient,
-  TransactionBuilder,
 } from '../entities';
 import { AccountUseCases } from './AccountUseCases';
 
@@ -479,7 +472,7 @@ describe('AccountUseCases', () => {
     };
 
     const mockTxid = mock<Txid>();
-    const mockOutpoint = mock<Outpoint>();
+    const mockOutpoint = 'txid:vout';
     const mockPsbt = mock<Psbt>();
     const mockTransaction = mock<Transaction>({
       // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818

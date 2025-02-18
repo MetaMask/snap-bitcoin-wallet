@@ -1,3 +1,4 @@
+import type { Txid } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
@@ -6,7 +7,6 @@ import { InternalRpcMethod } from '../permissions';
 import type { SendFormUseCases } from '../use-cases';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 import { CreateSendFormRequest, RpcHandler } from './RpcHandler';
-import { Txid } from 'bitcoindevkit';
 
 jest.mock('superstruct', () => ({
   ...jest.requireActual('superstruct'),

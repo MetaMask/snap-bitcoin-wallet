@@ -3,8 +3,6 @@
 
 import type { AddressType, Network } from 'bitcoindevkit';
 import {
-  Outpoint,
-  Txid,
   ChangeSet,
   slip10_to_extended,
   xpriv_to_descriptor,
@@ -107,7 +105,12 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
       return null;
     }
 
-    return this.get(id);
+    const walletData = state.accounts.wallets[id];
+    if (!walletData) {
+      return null;
+    }
+
+    return BdkAccountAdapter.load(id, ChangeSet.from_json(walletData));
   }
 
   async insert(
@@ -187,7 +190,7 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     await this.#snapClient.set(state);
   }
 
-  async getFrozenUTXOs(id: string): Promise<Outpoint[]> {
+  async getFrozenUTXOs(id: string): Promise<string[]> {
     const state = await this.#snapClient.get();
     const inscriptions = state.accounts.inscriptions[id];
     if (!inscriptions) {
@@ -197,7 +200,7 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     return inscriptions.map((inscription) => {
       // format: <txid>:<vout>:<offset>
       const [txid, vout] = inscription.location.split(':');
-      return new Outpoint(Txid.new(txid), Number(vout));
+      return `${txid}:${vout}`;
     });
   }
 }

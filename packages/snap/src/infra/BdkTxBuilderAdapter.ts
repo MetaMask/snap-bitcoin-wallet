@@ -1,5 +1,5 @@
-import type { Network, Psbt, TxBuilder, Outpoint } from 'bitcoindevkit';
-import { Address, Amount, FeeRate, Recipient } from 'bitcoindevkit';
+import type { Network, Psbt, TxBuilder } from 'bitcoindevkit';
+import { Outpoint, Address, Amount, FeeRate, Recipient } from 'bitcoindevkit';
 
 import type { TransactionBuilder } from '../entities';
 
@@ -38,8 +38,11 @@ export class BdkTxBuilderAdapter implements TransactionBuilder {
     return this;
   }
 
-  unspendable(unspendable: Outpoint[]): BdkTxBuilderAdapter {
-    this.#builder.unspendable(unspendable);
+  unspendable(unspendable: string[]): BdkTxBuilderAdapter {
+    const outpoints = unspendable.map((outpoint) =>
+      Outpoint.from_str(outpoint),
+    );
+    this.#builder.unspendable(outpoints);
     return this;
   }
 
