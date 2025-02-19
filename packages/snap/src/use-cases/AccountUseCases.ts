@@ -147,7 +147,6 @@ export class AccountUseCases {
     const nOutputsBefore = account.listOutput().length;
     await this.#chain.sync(account);
     const nOutputsAfter = account.listOutput().length;
-    console.log(nOutputsBefore, nOutputsAfter);
 
     // Sync assets only if new outputs exist.
     if (nOutputsAfter > nOutputsBefore) {

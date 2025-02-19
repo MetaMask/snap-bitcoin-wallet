@@ -23,7 +23,7 @@ export class BdkTxBuilderAdapter implements TransactionBuilder {
   }
 
   feeRate(feeRate: number): BdkTxBuilderAdapter {
-    this.#builder.fee_rate(new FeeRate(BigInt(feeRate)));
+    this.#builder.fee_rate(new FeeRate(BigInt(Math.floor(feeRate))));
     return this;
   }
 
