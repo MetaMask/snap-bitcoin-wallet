@@ -45,7 +45,7 @@ describe('RpcHandler', () => {
       mockSendFlowUseCases.display.mockResolvedValue(mockTxRequest);
       mockAccountsUseCases.send.mockResolvedValue(
         mock<Txid>({
-          toString: jest.fn().mockImplementation(() => 'txId'),
+          toString: jest.fn().mockReturnValue('txId'),
         }),
       );
 
