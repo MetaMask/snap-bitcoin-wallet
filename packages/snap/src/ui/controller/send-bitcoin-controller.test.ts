@@ -1,5 +1,5 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
-import { BtcAccountType, BtcMethod, BtcScopes } from '@metamask/keyring-api';
+import { BtcAccountType, BtcMethod, BtcScope } from '@metamask/keyring-api';
 import type { UserInputEvent } from '@metamask/snaps-sdk';
 import { UserInputEventType } from '@metamask/snaps-sdk';
 import BigNumber from 'bignumber.js';
@@ -49,7 +49,7 @@ const mockAccount = {
     index: '1',
   },
   methods: [`${BtcMethod.SendBitcoin}`],
-  scopes: [BtcScopes.Mainnet],
+  scopes: [BtcScope.Mainnet],
 };
 
 const createMockContext = (request: SendFlowRequest) => {

@@ -1,4 +1,4 @@
-import { BtcScopes } from '@metamask/keyring-api';
+import { BtcScope } from '@metamask/keyring-api';
 import type {
   Keyring,
   KeyringAccount,
@@ -25,7 +25,7 @@ import {
 import { snapToKeyringAccount } from './keyring-account';
 
 export const CreateAccountRequest = object({
-  scope: enums(Object.values(BtcScopes)),
+  scope: enums(Object.values(BtcScope)),
   addressType: optional(enums(Object.values(Caip2AddressType))),
 });
 
@@ -56,6 +56,11 @@ export class KeyringHandler implements Keyring {
       caip2ToNetwork[opts.scope],
       opts.addressType ? caip2ToAddressType[opts.addressType] : undefined,
     );
+
+    // We perform the initial full scan outside of the use case to avoid "mixing" creating accounts and
+    // synchronizing them. Ideally the extension should be the one deciding to synchronize or not.
+    // See: https://github.com/MetaMask/accounts-planning/issues/819
+    await this.#accountsUseCases.fullScan(account);
 
     return snapToKeyringAccount(account);
   }

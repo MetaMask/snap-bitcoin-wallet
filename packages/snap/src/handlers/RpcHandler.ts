@@ -1,4 +1,4 @@
-import { BtcScopes } from '@metamask/keyring-api';
+import { BtcScope } from '@metamask/keyring-api';
 import type { Json, JsonRpcParams } from '@metamask/utils';
 import { assert, enums, object, optional, string } from 'superstruct';
 
@@ -7,7 +7,7 @@ import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
 
 export const CreateSendFormRequest = object({
   account: string(),
-  scope: optional(enums(Object.values(BtcScopes))), // We don't use the scope but need to define it for validation
+  scope: optional(enums(Object.values(BtcScope))), // We don't use the scope but need to define it for validation
 });
 
 type SendTransactionResponse = {
