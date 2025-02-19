@@ -20,6 +20,7 @@ import {
   SendFormEvent,
 } from '../entities';
 import { SendFlowUseCases } from './SendFlowUseCases';
+import { ILogger } from '../infra/logger';
 
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
 /* eslint-disable @typescript-eslint/naming-convention */
@@ -34,7 +35,9 @@ jest.mock('bitcoindevkit', () => {
   };
 });
 
-jest.mock('../utils/logger');
+jest.mock('../infra/logger', () => {
+  return { logger: mock<ILogger>() };
+});
 
 describe('SendFlowUseCases', () => {
   let useCases: SendFlowUseCases;

@@ -15,7 +15,7 @@ import {
   ReviewTransactionEvent,
   networkToCurrencyUnit,
 } from '../entities';
-import { logger } from '../infra';
+import { logger } from '../infra/logger';
 
 export class SendFlowUseCases {
   readonly #snapClient: SnapClient;

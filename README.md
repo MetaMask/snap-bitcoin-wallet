@@ -1,19 +1,24 @@
-# Bitcoin Wallet Snap Monorepo
+# Bitcoin Snap Monorepo
+
+<img src="./packages/snap/images/icon.svg" width="200" style="display: block; margin: 0 auto;" alt="Bitcoin Logo" />
 
 ## Getting Started
 
-The Bitcoin Wallet Snap allows MetaMask and dapp to manage account with Bitcoin network through the new Keyring API SDK that now supports non-EVM accounts.
+The Solana Wallet Snap allows MetaMask and dapps to support all Bitcoin-related networks and address types.
+
+- [@metamask/bitcoin-wallet-snap](packages/snap/README.md)
+- [@metamask/bitcoin-wallet-test-dapp](packages/site/README.md)
 
 ### Prerequisites
 
 - [MetaMask Flask](https://metamask.io/flask/)
-- Nodejs `18`. We **strongly** recommend you install via [NVM](https://github.com/creationix/nvm) to avoid incompatibility issues between different node projects.
+- Nodejs `20`. We **strongly** recommend you install via [NVM](https://github.com/creationix/nvm) to avoid incompatibility issues between different node projects.
   - Once installed, you should also install [Yarn](http://yarnpkg.com/) with `npm i -g yarn` to make working with this repository easiest.
 
 ## Installing
 
 ```bash
-nvm use 18
+nvm use 20
 yarn install
 ```
 

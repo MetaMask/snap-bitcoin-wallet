@@ -12,8 +12,11 @@ import type {
   SnapClient,
 } from '../entities';
 import { AccountUseCases } from './AccountUseCases';
+import { ILogger } from '../infra/logger';
 
-jest.mock('../utils/logger');
+jest.mock('../infra/logger', () => {
+  return { logger: mock<ILogger>() };
+});
 
 describe('AccountUseCases', () => {
   let useCases: AccountUseCases;
