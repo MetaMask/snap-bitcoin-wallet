@@ -15,7 +15,7 @@ export class BdkTxBuilderAdapter implements TransactionBuilder {
 
   addRecipient(amount: string, recipientAddress: string): TransactionBuilder {
     const recipient = new Recipient(
-      Address.from_str(recipientAddress, this.#network),
+      Address.from_string(recipientAddress, this.#network),
       Amount.from_sat(BigInt(amount)),
     );
     this.#builder.add_recipient(recipient);
@@ -33,14 +33,14 @@ export class BdkTxBuilderAdapter implements TransactionBuilder {
   }
 
   drainTo(address: string): BdkTxBuilderAdapter {
-    const to = Address.from_str(address, this.#network);
+    const to = Address.from_string(address, this.#network);
     this.#builder.drain_to(to);
     return this;
   }
 
   unspendable(unspendable: string[]): BdkTxBuilderAdapter {
     const outpoints = unspendable.map((outpoint) =>
-      Outpoint.from_str(outpoint),
+      Outpoint.from_string(outpoint),
     );
     this.#builder.unspendable(outpoints);
     return this;
