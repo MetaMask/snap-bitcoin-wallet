@@ -7,9 +7,9 @@ import {
   type SnapComponent,
 } from '@metamask/snaps-sdk/jsx';
 
-import { ConfigV2 } from '../../../configv2';
+import { Config } from '../../../config';
 import type { CurrencyUnit } from '../../../entities';
-import { getTranslator } from '../../../utils/locale';
+import { getTranslator } from '../../../entities/locale';
 import { displayAmount, displayFiatAmount } from '../format';
 
 type TransactionSummaryProps = {
@@ -38,9 +38,7 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
         />
       </Row>
       <Row label={t('transactionSpeed')} tooltip={t('transactionSpeedTooltip')}>
-        <Text>
-          {`${ConfigV2.targetBlocksConfirmation * 10} ${t('minutes')}`}
-        </Text>
+        <Text>{`${Config.targetBlocksConfirmation * 10} ${t('minutes')}`}</Text>
       </Row>
       <Row label={t('total')}>
         <Value

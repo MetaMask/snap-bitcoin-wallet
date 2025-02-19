@@ -1,7 +1,7 @@
 import type { SnapComponent } from '@metamask/snaps-sdk/jsx';
 import { Box, Button, Heading, Icon, Image } from '@metamask/snaps-sdk/jsx';
 
-import emptySpace from '../../../images/empty-space.svg';
+import emptySpace from '../images/empty-space.svg';
 
 export type HeadingWithReturnProps = {
   heading: string;

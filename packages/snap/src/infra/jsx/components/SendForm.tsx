@@ -12,9 +12,9 @@ import {
 
 import type { SendFormContext } from '../../../entities';
 import { SENDFORM_NAME, SendFormEvent } from '../../../entities';
-import btcIcon from '../../../images/bitcoin.svg';
-import { getTranslator } from '../../../utils/locale';
+import { getTranslator } from '../../../entities/locale';
 import { displayAmount } from '../format';
+import btcIcon from '../images/bitcoin.svg';
 
 export const SendForm: SnapComponent<SendFormContext> = ({
   currency,

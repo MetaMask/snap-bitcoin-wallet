@@ -14,14 +14,14 @@ import {
 } from '@metamask/snaps-sdk/jsx';
 import type { CaipAccountId } from '@metamask/utils';
 
-import { ConfigV2 } from '../../configv2';
+import { Config } from '../../config';
 import type { ReviewTransactionContext } from '../../entities';
 import { ReviewTransactionEvent } from '../../entities';
+import { getTranslator } from '../../entities/locale';
 import { networkToCaip2 } from '../../handlers/caip2';
-import btcIcon from '../../images/btc-halo.svg';
-import { getTranslator } from '../../utils/locale';
 import { HeadingWithReturn } from './components';
 import { displayAmount, displayFiatAmount } from './format';
+import btcIcon from './images/btc-halo.svg';
 
 export const ReviewTransactionView: SnapComponent<ReviewTransactionContext> = (
   props,
@@ -80,7 +80,7 @@ export const ReviewTransactionView: SnapComponent<ReviewTransactionContext> = (
             tooltip={t('transactionSpeedTooltip')}
           >
             <Text>
-              {`${ConfigV2.targetBlocksConfirmation * 10} ${t('minutes')}`}
+              {`${Config.targetBlocksConfirmation * 10} ${t('minutes')}`}
             </Text>
           </Row>
           <Row label={t('transactionFee')} tooltip={t('transactionFeeTooltip')}>

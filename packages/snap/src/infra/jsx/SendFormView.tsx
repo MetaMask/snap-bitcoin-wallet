@@ -10,7 +10,7 @@ import {
 
 import type { SendFormContext } from '../../entities';
 import { SendFormEvent } from '../../entities';
-import { getTranslator } from '../../utils/locale';
+import { getTranslator } from '../../entities/locale';
 import { HeadingWithReturn, SendForm, TransactionSummary } from './components';
 
 export const SendFormView: SnapComponent<SendFormContext> = (props) => {

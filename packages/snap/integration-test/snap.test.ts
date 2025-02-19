@@ -7,8 +7,8 @@ import {
   CurrencyUnit,
   ReviewTransactionEvent,
   SendFormEvent,
-} from '../../src/entities';
-import { Caip2AddressType, Caip19Asset } from '../../src/handlers';
+} from '../src/entities';
+import { Caip2AddressType, Caip19Asset } from '../src/handlers';
 
 describe('Bitcoin Snap', () => {
   const accounts: Record<string, KeyringAccount> = {};
