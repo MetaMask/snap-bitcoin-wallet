@@ -26,7 +26,7 @@ import { SendFlowUseCases } from './SendFlowUseCases';
 jest.mock('bitcoindevkit', () => {
   return {
     Address: {
-      from_str: jest.fn(),
+      from_string: jest.fn(),
     },
     Amount: {
       from_btc: jest.fn(),
