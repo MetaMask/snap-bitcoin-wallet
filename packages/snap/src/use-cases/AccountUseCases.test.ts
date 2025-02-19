@@ -11,8 +11,8 @@ import type {
   MetaProtocolsClient,
   SnapClient,
 } from '../entities';
+import type { ILogger } from '../infra/logger';
 import { AccountUseCases } from './AccountUseCases';
-import { ILogger } from '../infra/logger';
 
 jest.mock('../infra/logger', () => {
   return { logger: mock<ILogger>() };

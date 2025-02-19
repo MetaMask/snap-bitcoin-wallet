@@ -4,7 +4,7 @@
 
 ## Getting Started
 
-The Solana Wallet Snap allows MetaMask and dapps to support all Bitcoin-related networks and address types.
+The Bitcoin Snap allows MetaMask and dapps to support all Bitcoin-related networks and address types.
 
 - [@metamask/bitcoin-wallet-snap](packages/snap/README.md)
 - [@metamask/bitcoin-wallet-test-dapp](packages/site/README.md)

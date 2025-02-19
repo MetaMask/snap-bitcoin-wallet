@@ -22,10 +22,10 @@ import {
   EsploraClientAdapter,
   SimplehashClientAdapter,
 } from './infra';
+import { logger } from './infra/logger';
 import { originPermissions } from './permissions';
 import { BdkAccountRepository, JSXSendFlowRepository } from './store';
 import { AccountUseCases, SendFlowUseCases } from './use-cases';
-import { logger } from './infra/logger';
 
 // Infra layer
 logger.logLevel = parseInt(Config.logLevel, 10);

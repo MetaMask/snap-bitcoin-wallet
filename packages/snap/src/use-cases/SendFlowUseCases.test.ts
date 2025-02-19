@@ -19,8 +19,8 @@ import {
   CurrencyUnit,
   SendFormEvent,
 } from '../entities';
+import type { ILogger } from '../infra/logger';
 import { SendFlowUseCases } from './SendFlowUseCases';
-import { ILogger } from '../infra/logger';
 
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
 /* eslint-disable @typescript-eslint/naming-convention */
