@@ -1,12 +1,20 @@
 import type {
   FungibleAssetMetadata,
+  OnAssetsConversionArguments,
   OnAssetsConversionResponse,
   OnAssetsLookupResponse,
 } from '@metamask/snaps-sdk';
 
 import { Caip19Asset } from './caip19';
+import { AssetsUseCases } from '../use-cases';
 
 export class AssetsHandler {
+  readonly #assetsUseCases: AssetsUseCases;
+
+  constructor(assetsUseCases: AssetsUseCases) {
+    this.#assetsUseCases = assetsUseCases;
+  }
+
   lookup(): OnAssetsLookupResponse {
     const metadata = (
       name: string,
@@ -60,7 +68,14 @@ export class AssetsHandler {
     };
   }
 
-  conversion(): OnAssetsConversionResponse {
-    return { conversionRates: {} };
+  async conversion(
+    conversions: OnAssetsConversionArguments,
+  ): Promise<OnAssetsConversionResponse> {
+    // Validate the froms are only supported assets (caip19asset).
+
+    const conversionRates = await this.#assetsUseCases.conversions(
+      conversions.conversions,
+    );
+    return { conversionRates };
   }
 }
