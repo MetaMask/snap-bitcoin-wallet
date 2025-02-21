@@ -9,7 +9,7 @@ import type {
 } from '../entities';
 import { CurrencyUnit, SENDFORM_NAME } from '../entities';
 import { ReviewTransactionView, SendFormView } from '../infra/jsx';
-import { JSXSendFlowRepository } from './JSXSendFormRepository';
+import { JSXSendFlowRepository } from './JSXSendFlowRepository';
 
 jest.mock('../infra/jsx', () => ({
   SendFormView: jest.fn(),

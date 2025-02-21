@@ -1,3 +1,4 @@
+import type { Txid } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
@@ -42,7 +43,11 @@ describe('RpcHandler', () => {
 
     it('executes startSendTransactionFlow', async () => {
       mockSendFlowUseCases.display.mockResolvedValue(mockTxRequest);
-      mockAccountsUseCases.send.mockResolvedValue('txId');
+      mockAccountsUseCases.send.mockResolvedValue(
+        mock<Txid>({
+          toString: jest.fn().mockReturnValue('txId'),
+        }),
+      );
 
       const result = await handler.route(
         InternalRpcMethod.StartSendTransactionFlow,

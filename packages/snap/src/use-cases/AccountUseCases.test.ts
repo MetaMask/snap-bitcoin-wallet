@@ -1,4 +1,4 @@
-import type { Transaction } from 'bitcoindevkit';
+import type { LocalOutput, Transaction, Txid } from 'bitcoindevkit';
 import { type AddressType, type Network, type Psbt } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 
@@ -7,7 +7,10 @@ import type {
   BitcoinAccount,
   BitcoinAccountRepository,
   BlockchainClient,
+  Inscription,
+  MetaProtocolsClient,
   SnapClient,
+  TransactionRequest,
 } from '../entities';
 import { AccountUseCases } from './AccountUseCases';
 
@@ -19,6 +22,7 @@ describe('AccountUseCases', () => {
   const mockSnapClient = mock<SnapClient>();
   const mockRepository = mock<BitcoinAccountRepository>();
   const mockChain = mock<BlockchainClient>();
+  const mockMetaProtocols = mock<MetaProtocolsClient>();
   const accountsConfig: AccountsConfig = {
     index: 0,
     defaultAddressType: 'p2wpkh',
@@ -30,6 +34,7 @@ describe('AccountUseCases', () => {
       mockSnapClient,
       mockRepository,
       mockChain,
+      mockMetaProtocols,
       accountsConfig,
     );
   });
@@ -222,96 +227,121 @@ describe('AccountUseCases', () => {
   });
 
   describe('synchronize', () => {
-    it('throws Error if account is not found', async () => {
-      mockRepository.get.mockResolvedValue(null);
-
-      await expect(useCases.synchronize('some-id')).rejects.toThrow(
-        'Account not found: some-id',
-      );
-
-      expect(mockRepository.get).toHaveBeenCalledWith('some-id');
-      expect(mockChain.sync).not.toHaveBeenCalled();
-      expect(mockChain.fullScan).not.toHaveBeenCalled();
-      expect(mockRepository.update).not.toHaveBeenCalled();
+    const mockAccount = mock<BitcoinAccount>({
+      id: 'some-id',
+      isScanned: true,
+      listOutput: jest.fn(),
     });
 
-    it('performs a regular sync if the account is already scanned', async () => {
-      const mockAccount = mock<BitcoinAccount>();
-      mockAccount.id = 'some-id';
-      mockAccount.isScanned = true;
+    beforeEach(() => {
+      mockAccount.listOutput.mockReturnValue([]);
+    });
 
+    it('performs a regular sync', async () => {
+      mockAccount.listOutput.mockReturnValue([]);
       mockRepository.get.mockResolvedValue(mockAccount);
 
-      await useCases.synchronize('some-id');
+      await useCases.synchronize(mockAccount);
 
-      expect(mockRepository.get).toHaveBeenCalledWith('some-id');
       expect(mockChain.sync).toHaveBeenCalledWith(mockAccount);
-      expect(mockChain.fullScan).not.toHaveBeenCalled();
+      expect(mockAccount.listOutput).toHaveBeenCalledTimes(2);
       expect(mockRepository.update).toHaveBeenCalledWith(mockAccount);
     });
 
-    it('performs a full scan if the account is not scanned', async () => {
-      const mockAccount = mock<BitcoinAccount>();
-      mockAccount.id = 'some-id';
-      mockAccount.isScanned = false;
+    it('performs a regular sync with assets', async () => {
+      const mockInscriptions = mock<Inscription[]>();
+      mockAccount.listOutput
+        .mockReturnValueOnce([])
+        .mockReturnValueOnce([mock<LocalOutput>()]);
+      mockMetaProtocols.fetchInscriptions.mockResolvedValue(mockInscriptions);
 
-      mockRepository.get.mockResolvedValue(mockAccount);
+      await useCases.synchronize(mockAccount);
 
-      await useCases.synchronize('some-id');
-
-      expect(mockRepository.get).toHaveBeenCalledWith('some-id');
-      expect(mockChain.fullScan).toHaveBeenCalledWith(mockAccount);
-      expect(mockChain.sync).not.toHaveBeenCalled();
-      expect(mockRepository.update).toHaveBeenCalledWith(mockAccount);
+      expect(mockChain.sync).toHaveBeenCalledWith(mockAccount);
+      expect(mockAccount.listOutput).toHaveBeenCalledTimes(2);
+      expect(mockMetaProtocols.fetchInscriptions).toHaveBeenCalledWith(
+        mockAccount,
+      );
+      expect(mockRepository.update).toHaveBeenCalledWith(
+        mockAccount,
+        mockInscriptions,
+      );
     });
 
     it('propagates an error if the chain sync fails', async () => {
-      const mockAccount = mock<BitcoinAccount>();
-      mockAccount.id = 'some-id';
-      mockAccount.isScanned = true;
-
-      mockRepository.get.mockResolvedValue(mockAccount);
       const error = new Error('Sync failed');
       mockChain.sync.mockRejectedValue(error);
 
-      await expect(useCases.synchronize('some-id')).rejects.toBe(error);
+      await expect(useCases.synchronize(mockAccount)).rejects.toBe(error);
 
-      expect(mockRepository.get).toHaveBeenCalledWith('some-id');
-      expect(mockChain.sync).toHaveBeenCalledWith(mockAccount);
-      expect(mockRepository.update).not.toHaveBeenCalled();
-    });
-
-    it('propagates an error if the chain full scan fails', async () => {
-      const mockAccount = mock<BitcoinAccount>();
-      mockAccount.id = 'some-id';
-      mockAccount.isScanned = false;
-
-      mockRepository.get.mockResolvedValue(mockAccount);
-      const error = new Error('Full scan failed');
-      mockChain.fullScan.mockRejectedValue(error);
-
-      await expect(useCases.synchronize('some-id')).rejects.toBe(error);
-
-      expect(mockRepository.get).toHaveBeenCalledWith('some-id');
-      expect(mockChain.fullScan).toHaveBeenCalledWith(mockAccount);
-      expect(mockRepository.update).not.toHaveBeenCalled();
+      expect(mockChain.sync).toHaveBeenCalled();
     });
 
     it('propagates an error if the repository update fails', async () => {
-      const mockAccount = mock<BitcoinAccount>();
-      mockAccount.id = 'some-id';
-      mockAccount.isScanned = true;
-
-      mockRepository.get.mockResolvedValue(mockAccount);
       mockChain.sync.mockResolvedValue();
       const error = new Error('Update failed');
       mockRepository.update.mockRejectedValue(error);
 
-      await expect(useCases.synchronize('some-id')).rejects.toBe(error);
+      await expect(useCases.synchronize(mockAccount)).rejects.toBe(error);
 
-      expect(mockRepository.get).toHaveBeenCalledWith('some-id');
-      expect(mockChain.sync).toHaveBeenCalledWith(mockAccount);
-      expect(mockRepository.update).toHaveBeenCalledWith(mockAccount);
+      expect(mockChain.sync).toHaveBeenCalled();
+      expect(mockRepository.update).toHaveBeenCalled();
+    });
+  });
+
+  describe('fullScan', () => {
+    const mockAccount = mock<BitcoinAccount>({
+      id: 'some-id',
+      isScanned: false,
+    });
+    const mockInscriptions = mock<Inscription[]>();
+
+    it('performs a full scan', async () => {
+      mockMetaProtocols.fetchInscriptions.mockResolvedValue(mockInscriptions);
+
+      await useCases.fullScan(mockAccount);
+
+      expect(mockChain.fullScan).toHaveBeenCalledWith(mockAccount);
+      expect(mockMetaProtocols.fetchInscriptions).toHaveBeenCalledWith(
+        mockAccount,
+      );
+      expect(mockRepository.update).toHaveBeenCalledWith(
+        mockAccount,
+        mockInscriptions,
+      );
+    });
+
+    it('propagates an error if the chain full scan fails', async () => {
+      const error = new Error('Full scan failed');
+      mockChain.fullScan.mockRejectedValue(error);
+
+      await expect(useCases.fullScan(mockAccount)).rejects.toBe(error);
+
+      expect(mockChain.fullScan).toHaveBeenCalled();
+    });
+
+    it('propagates an error if fetchInscriptions fails', async () => {
+      mockChain.fullScan.mockResolvedValue();
+      const error = new Error('fetchInscriptions failed');
+      mockMetaProtocols.fetchInscriptions.mockRejectedValue(error);
+
+      await expect(useCases.fullScan(mockAccount)).rejects.toBe(error);
+
+      expect(mockChain.fullScan).toHaveBeenCalled();
+      expect(mockMetaProtocols.fetchInscriptions).toHaveBeenCalled();
+    });
+
+    it('propagates an error if the repository update fails', async () => {
+      mockChain.fullScan.mockResolvedValue();
+      mockMetaProtocols.fetchInscriptions.mockResolvedValue(mockInscriptions);
+      const error = new Error('Update failed');
+      mockRepository.update.mockRejectedValue(error);
+
+      await expect(useCases.fullScan(mockAccount)).rejects.toBe(error);
+
+      expect(mockChain.fullScan).toHaveBeenCalled();
+      expect(mockMetaProtocols.fetchInscriptions).toHaveBeenCalled();
+      expect(mockRepository.update).toHaveBeenCalled();
     });
   });
 
@@ -320,18 +350,22 @@ describe('AccountUseCases', () => {
       {
         id: 'id-1',
         isScanned: true,
+        listOutput: jest.fn(),
       },
       {
         id: 'id-2',
+        listOutput: jest.fn(),
       },
-    ] as BitcoinAccount[];
+    ] as unknown as BitcoinAccount[];
 
     it('synchronizes all accounts', async () => {
       mockRepository.getAll.mockResolvedValue(mockAccounts);
+      (mockAccounts[0].listOutput as jest.Mock).mockReturnValue([]);
 
       await useCases.synchronizeAll();
 
       expect(mockRepository.getAll).toHaveBeenCalled();
+      expect(mockAccounts[0].listOutput).toHaveBeenCalledTimes(2);
       expect(mockChain.sync).toHaveBeenCalledWith(mockAccounts[0]);
       expect(mockChain.fullScan).toHaveBeenCalledWith(mockAccounts[1]);
     });
@@ -342,17 +376,6 @@ describe('AccountUseCases', () => {
 
       await expect(useCases.synchronizeAll()).rejects.toThrow(error);
       expect(mockRepository.getAll).toHaveBeenCalled();
-    });
-
-    it('do not propagate errors when synchonize fails', async () => {
-      const error = new Error();
-      mockRepository.getAll.mockResolvedValue(mockAccounts);
-      mockChain.sync.mockRejectedValue(error);
-
-      await useCases.synchronizeAll();
-
-      expect(mockRepository.getAll).toHaveBeenCalled();
-      expect(mockChain.sync).toHaveBeenCalled();
     });
   });
 
@@ -439,27 +462,52 @@ describe('AccountUseCases', () => {
   });
 
   describe('send', () => {
-    const requestWithAmount = {
+    const requestWithAmount: TransactionRequest = {
       amount: '1000',
       feeRate: 10,
       recipient: 'recipient-address',
     };
-    const requestDrain = {
+    const requestDrain: TransactionRequest = {
       feeRate: 10,
       recipient: 'recipient-address',
+      drain: true,
     };
 
+    const mockTxid = mock<Txid>();
+    const mockOutpoint = 'txid:vout';
     const mockPsbt = mock<Psbt>();
     const mockTransaction = mock<Transaction>({
       // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
       /* eslint-disable @typescript-eslint/naming-convention */
       compute_txid: jest.fn(),
     });
+    const mockTxBuilder = {
+      addRecipient: jest.fn(),
+      feeRate: jest.fn(),
+      drainTo: jest.fn(),
+      drainWallet: jest.fn(),
+      finish: jest.fn(),
+      unspendable: jest.fn(),
+    };
     const mockAccount = mock<BitcoinAccount>({
       network: 'bitcoin',
       buildTx: jest.fn(),
-      drainTo: jest.fn(),
       sign: jest.fn(),
+    });
+
+    beforeEach(() => {
+      mockTxBuilder.addRecipient.mockReturnThis();
+      mockTxBuilder.feeRate.mockReturnThis();
+      mockTxBuilder.drainTo.mockReturnThis();
+      mockTxBuilder.drainWallet.mockReturnThis();
+      mockTxBuilder.finish.mockReturnValue(mockPsbt);
+      mockTxBuilder.unspendable.mockReturnThis();
+    });
+
+    it('throws error if both drain and amount are specified', async () => {
+      await expect(
+        useCases.send('non-existent-id', { ...requestWithAmount, drain: true }),
+      ).rejects.toThrow("Cannot specify both 'amount' and 'drain' options");
     });
 
     it('throws error if account is not found', async () => {
@@ -472,18 +520,24 @@ describe('AccountUseCases', () => {
 
     it('sends transaction', async () => {
       mockRepository.getWithSigner.mockResolvedValue(mockAccount);
-      mockAccount.buildTx.mockReturnValue(mockPsbt);
+      mockAccount.buildTx.mockReturnValue(mockTxBuilder);
+      mockRepository.getFrozenUTXOs.mockResolvedValue([mockOutpoint]);
       mockAccount.sign.mockReturnValue(mockTransaction);
-      mockTransaction.compute_txid.mockReturnValue('txid-123');
+      mockTransaction.compute_txid.mockReturnValue(mockTxid);
 
       const txId = await useCases.send('account-id', requestWithAmount);
 
       expect(mockRepository.getWithSigner).toHaveBeenCalledWith('account-id');
-      expect(mockAccount.buildTx).toHaveBeenCalledWith(
+      expect(mockAccount.buildTx).toHaveBeenCalled();
+      expect(mockTxBuilder.feeRate).toHaveBeenCalledWith(
         requestWithAmount.feeRate,
-        requestWithAmount.recipient,
-        requestWithAmount.amount,
       );
+      expect(mockTxBuilder.addRecipient).toHaveBeenCalledWith(
+        requestWithAmount.amount,
+        requestWithAmount.recipient,
+      );
+      expect(mockRepository.getFrozenUTXOs).toHaveBeenCalledWith('account-id');
+      expect(mockTxBuilder.unspendable).toHaveBeenCalledWith([mockOutpoint]);
       expect(mockAccount.sign).toHaveBeenCalledWith(mockPsbt);
       expect(mockChain.broadcast).toHaveBeenCalledWith(
         mockAccount.network,
@@ -491,22 +545,27 @@ describe('AccountUseCases', () => {
       );
       expect(mockRepository.update).toHaveBeenCalledWith(mockAccount);
       expect(mockTransaction.compute_txid).toHaveBeenCalled();
-      expect(txId).toBe('txid-123');
+      expect(txId).toBe(mockTxid);
     });
 
     it('sends a drain transaction when amount is not provided', async () => {
       mockRepository.getWithSigner.mockResolvedValue(mockAccount);
-      mockAccount.drainTo.mockReturnValue(mockPsbt);
+      mockAccount.buildTx.mockReturnValue(mockTxBuilder);
+      mockRepository.getFrozenUTXOs.mockResolvedValue([mockOutpoint]);
       mockAccount.sign.mockReturnValue(mockTransaction);
-      mockTransaction.compute_txid.mockReturnValue('txid-123');
+      mockTransaction.compute_txid.mockReturnValue(mockTxid);
 
       const txId = await useCases.send('account-id', requestDrain);
 
       expect(mockRepository.getWithSigner).toHaveBeenCalledWith('account-id');
-      expect(mockAccount.drainTo).toHaveBeenCalledWith(
-        requestDrain.feeRate,
+      expect(mockAccount.buildTx).toHaveBeenCalled();
+      expect(mockTxBuilder.feeRate).toHaveBeenCalledWith(requestDrain.feeRate);
+      expect(mockTxBuilder.drainWallet).toHaveBeenCalled();
+      expect(mockTxBuilder.drainTo).toHaveBeenCalledWith(
         requestDrain.recipient,
       );
+      expect(mockRepository.getFrozenUTXOs).toHaveBeenCalledWith('account-id');
+      expect(mockTxBuilder.unspendable).toHaveBeenCalledWith([mockOutpoint]);
       expect(mockAccount.sign).toHaveBeenCalledWith(mockPsbt);
       expect(mockChain.broadcast).toHaveBeenCalledWith(
         mockAccount.network,
@@ -514,7 +573,7 @@ describe('AccountUseCases', () => {
       );
       expect(mockRepository.update).toHaveBeenCalledWith(mockAccount);
       expect(mockTransaction.compute_txid).toHaveBeenCalled();
-      expect(txId).toBe('txid-123');
+      expect(txId).toBe(mockTxid);
     });
 
     it('propagates an error if getWithSigner fails', async () => {
@@ -538,20 +597,9 @@ describe('AccountUseCases', () => {
       );
     });
 
-    it('propagates an error if drainTo fails', async () => {
-      const error = new Error('drainTo failed');
-      mockRepository.getWithSigner.mockResolvedValue(mockAccount);
-      mockAccount.drainTo.mockImplementation(() => {
-        throw error;
-      });
-
-      await expect(useCases.send('account-id', requestDrain)).rejects.toBe(
-        error,
-      );
-    });
-
     it('propagates an error if broadcast fails', async () => {
       mockRepository.getWithSigner.mockResolvedValue(mockAccount);
+      mockAccount.buildTx.mockReturnValue(mockTxBuilder);
 
       const error = new Error('broadcast failed');
       mockChain.broadcast.mockRejectedValueOnce(error);
@@ -563,6 +611,7 @@ describe('AccountUseCases', () => {
 
     it('propagates an error if update fails', async () => {
       mockRepository.getWithSigner.mockResolvedValue(mockAccount);
+      mockAccount.buildTx.mockReturnValue(mockTxBuilder);
 
       const error = new Error('update failed');
       mockRepository.update.mockRejectedValue(error);

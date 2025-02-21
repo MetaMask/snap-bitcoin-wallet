@@ -1,4 +1,4 @@
-import type { AddressType, Network, Psbt } from 'bitcoindevkit';
+import type { AddressType, Network, Txid } from 'bitcoindevkit';
 
 import type {
   AccountsConfig,
@@ -7,6 +7,7 @@ import type {
   BlockchainClient,
   TransactionRequest,
   SnapClient,
+  MetaProtocolsClient,
 } from '../entities';
 import { logger } from '../utils';
 
@@ -33,17 +34,21 @@ export class AccountUseCases {
 
   readonly #chain: BlockchainClient;
 
+  readonly #metaProtocols: MetaProtocolsClient;
+
   readonly #accountConfig: AccountsConfig;
 
   constructor(
     snapClient: SnapClient,
     repository: BitcoinAccountRepository,
     chain: BlockchainClient,
+    metaProtocols: MetaProtocolsClient,
     accountConfig: AccountsConfig,
   ) {
     this.#snapClient = snapClient;
     this.#repository = repository;
     this.#chain = chain;
+    this.#metaProtocols = metaProtocols;
     this.#accountConfig = accountConfig;
   }
 
@@ -109,31 +114,18 @@ export class AccountUseCases {
     return newAccount;
   }
 
-  /**
-   * Synchronize an account with the blockchain and update its state.
-   * @param id - The account id.
-   * @returns The updated account.
-   */
-  async synchronize(id: string): Promise<void> {
-    logger.trace('Synchronizing account. ID: %s', id);
-
-    const account = await this.#repository.get(id);
-    if (!account) {
-      throw new Error(`Account not found: ${id}`);
-    }
-
-    await this.#synchronize(account);
-
-    logger.debug('Account synchronized successfully: %s', account.id);
-  }
-
   async synchronizeAll(): Promise<void> {
     logger.trace('Synchronizing all accounts');
 
-    // accounts cannot be empty by assertion.
     const accounts = await this.#repository.getAll();
     const results = await Promise.allSettled(
-      accounts.map(async (account) => this.#synchronize(account)),
+      accounts.map(async (account) => {
+        if (account.isScanned) {
+          return this.synchronize(account);
+        }
+
+        return this.fullScan(account);
+      }),
     );
 
     results.forEach((result, index) => {
@@ -149,16 +141,35 @@ export class AccountUseCases {
     logger.debug('Accounts synchronized successfully');
   }
 
-  async #synchronize(account: BitcoinAccount): Promise<void> {
-    // If the account is already scanned, we just sync it, otherwise we do a full scan.
-    if (account.isScanned) {
-      await this.#chain.sync(account);
+  async synchronize(account: BitcoinAccount): Promise<void> {
+    logger.trace('Synchronizing account. ID: %s', account.id);
+
+    // Outputs are monotone, meaning they can only be added, like transactions. So we can be confident
+    // that a change on the balance cam only happen when new outputs appear.
+    const nOutputsBefore = account.listOutput().length;
+    await this.#chain.sync(account);
+    const nOutputsAfter = account.listOutput().length;
+
+    // Sync assets only if new outputs exist.
+    if (nOutputsAfter > nOutputsBefore) {
+      const inscriptions = await this.#metaProtocols.fetchInscriptions(account);
+      await this.#repository.update(account, inscriptions);
     } else {
-      logger.info('Performing initial full scan: %s', account.id);
-      await this.#chain.fullScan(account);
+      await this.#repository.update(account);
     }
 
-    await this.#repository.update(account);
+    logger.debug('Account synchronized successfully: %s', account.id);
+  }
+
+  async fullScan(account: BitcoinAccount): Promise<void> {
+    logger.debug('Performing initial full scan: %s', account.id);
+
+    await this.#chain.fullScan(account);
+
+    const inscriptions = await this.#metaProtocols.fetchInscriptions(account);
+    await this.#repository.update(account, inscriptions);
+
+    logger.debug('initial full scan performed successfully: %s', account.id);
   }
 
   async delete(id: string): Promise<void> {
@@ -182,26 +193,33 @@ export class AccountUseCases {
     logger.info('Account deleted successfully: %s', account.id);
   }
 
-  async send(id: string, request: TransactionRequest): Promise<string> {
+  async send(id: string, request: TransactionRequest): Promise<Txid> {
     logger.debug('Sending transaction. ID: %s. Request: %o', id, request);
+
+    if (request.drain && request.amount) {
+      throw new Error("Cannot specify both 'amount' and 'drain' options");
+    }
 
     const account = await this.#repository.getWithSigner(id);
     if (!account) {
       throw new Error(`Account not found: ${id}`);
     }
 
-    let psbt: Psbt;
-    // If no amount is specified at this point, it is a drain transaction
+    const builder = account.buildTx().feeRate(request.feeRate);
+
     if (request.amount) {
-      psbt = account.buildTx(
-        request.feeRate,
-        request.recipient,
-        request.amount,
-      );
+      builder.addRecipient(request.amount, request.recipient);
+    } else if (request.drain) {
+      builder.drainWallet().drainTo(request.recipient);
     } else {
-      psbt = account.drainTo(request.feeRate, request.recipient);
+      throw new Error("Either 'amount' or 'drain' must be specified");
     }
 
+    // Make sure frozen UTXOs are not spent
+    const frozenUTXOs = await this.#repository.getFrozenUTXOs(id);
+    builder.unspendable(frozenUTXOs);
+
+    const psbt = builder.finish();
     const tx = account.sign(psbt);
     await this.#chain.broadcast(account.network, tx);
     await this.#repository.update(account);
@@ -213,6 +231,7 @@ export class AccountUseCases {
       id,
       account.network,
     );
+
     return txId;
   }
 }

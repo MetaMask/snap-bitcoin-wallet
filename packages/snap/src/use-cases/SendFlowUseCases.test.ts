@@ -19,14 +19,14 @@ import {
   CurrencyUnit,
   SendFormEvent,
 } from '../entities';
-import { SendFlowUseCases } from './SendFormUseCases';
+import { SendFlowUseCases } from './SendFlowUseCases';
 
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
 /* eslint-disable @typescript-eslint/naming-convention */
 jest.mock('bitcoindevkit', () => {
   return {
     Address: {
-      new: jest.fn(),
+      from_string: jest.fn(),
     },
     Amount: {
       from_btc: jest.fn(),
@@ -47,8 +47,8 @@ describe('SendFlowUseCases', () => {
   const fallbackFeeRate = 5.0;
   const mockAccount = mock<BitcoinAccount>({
     network: 'bitcoin',
-    drainTo: jest.fn(),
     buildTx: jest.fn(),
+    sign: jest.fn(),
   });
   const mockFeeEstimates = mock<FeeEstimates>({ get: jest.fn() });
   const mockTxRequest = mock<TransactionRequest>();
@@ -118,6 +118,26 @@ describe('SendFlowUseCases', () => {
   });
 
   describe('updateForm', () => {
+    const mockTxBuilder = {
+      addRecipient: jest.fn(),
+      feeRate: jest.fn(),
+      drainTo: jest.fn(),
+      drainWallet: jest.fn(),
+      finish: jest.fn(),
+      unspendable: jest.fn(),
+    };
+    const mockPsbt = mock<Psbt>();
+
+    beforeEach(() => {
+      mockAccount.buildTx.mockReturnValue(mockTxBuilder);
+      mockTxBuilder.addRecipient.mockReturnThis();
+      mockTxBuilder.feeRate.mockReturnThis();
+      mockTxBuilder.drainTo.mockReturnThis();
+      mockTxBuilder.drainWallet.mockReturnThis();
+      mockTxBuilder.finish.mockReturnValue(mockPsbt);
+      mockTxBuilder.unspendable.mockReturnThis();
+    });
+
     const mockContext: SendFormContext = {
       account: { id: 'account-id', address: 'myAddress' },
       amount: '1000',
@@ -262,7 +282,7 @@ describe('SendFlowUseCases', () => {
     });
 
     it('sets recipient from state on Recipient', async () => {
-      (Address.new as jest.Mock).mockReturnValue({
+      (Address.from_string as jest.Mock).mockReturnValue({
         toString: () => 'newAddressValidated',
       });
 
@@ -342,18 +362,16 @@ describe('SendFlowUseCases', () => {
       );
     });
 
-    it('computes the fee when amount and recipient are filled', async () => {
-      const mockPsbt = mock<Psbt>({
-        fee: () => {
-          return { to_sat: () => BigInt(10) } as unknown as Amount;
-        },
-      });
+    it('computes the fee when amount and recipient are filled: drain', async () => {
+      mockPsbt.fee.mockReturnValue({
+        to_sat: () => BigInt(10),
+      } as unknown as Amount);
       mockAccountRepository.get.mockResolvedValue(mockAccount);
-      mockAccount.drainTo.mockReturnValue(mockPsbt);
+      mockAccountRepository.getFrozenUTXOs.mockResolvedValue(['txid:vout']);
 
       const expectedContext = {
         ...mockContext,
-        drain: expect.anything(),
+        drain: true,
         fee: '10',
         amount: String(20000 - 10),
         errors: expect.anything(),
@@ -365,6 +383,56 @@ describe('SendFlowUseCases', () => {
         mockContext,
       );
 
+      expect(mockAccountRepository.get).toHaveBeenCalledWith('account-id');
+      expect(mockAccountRepository.getFrozenUTXOs).toHaveBeenCalledWith(
+        'account-id',
+      );
+      expect(mockTxBuilder.unspendable).toHaveBeenCalledWith(['txid:vout']);
+      expect(mockTxBuilder.feeRate).toHaveBeenCalledWith(
+        expectedContext.feeRate,
+      );
+      expect(mockTxBuilder.drainWallet).toHaveBeenCalled();
+      expect(mockTxBuilder.drainTo).toHaveBeenCalledWith('recipientAddress');
+      expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
+        'interface-id',
+        expectedContext,
+      );
+    });
+
+    it('computes the fee when amount and recipient are filled', async () => {
+      (Address.from_string as jest.Mock).mockReturnValue({
+        toString: () => 'newAddressValidated',
+      });
+      mockPsbt.fee.mockReturnValue({
+        to_sat: () => BigInt(10),
+      } as unknown as Amount);
+      mockAccountRepository.get.mockResolvedValue(mockAccount);
+      mockAccountRepository.getFrozenUTXOs.mockResolvedValue([]);
+      mockSendFlowRepository.getState.mockResolvedValue({
+        recipient: 'newAddress',
+        amount: '',
+      });
+
+      const expectedContext = {
+        ...mockContext,
+        fee: '10',
+        recipient: 'newAddressValidated',
+      };
+
+      await useCases.updateForm(
+        'interface-id',
+        SendFormEvent.Recipient,
+        mockContext,
+      );
+
+      expect(mockAccountRepository.get).toHaveBeenCalled();
+      expect(mockAccountRepository.getFrozenUTXOs).toHaveBeenCalled();
+      expect(mockTxBuilder.feeRate).toHaveBeenCalled();
+      expect(mockTxBuilder.unspendable).toHaveBeenCalled();
+      expect(mockTxBuilder.addRecipient).toHaveBeenCalledWith(
+        mockContext.amount,
+        'newAddressValidated',
+      );
       expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
         'interface-id',
         expectedContext,

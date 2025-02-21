@@ -10,10 +10,12 @@ import type {
   ChangeSet,
   Psbt,
   Transaction,
+  LocalOutput,
 } from 'bitcoindevkit';
-import { FeeRate, Recipient, Address, Amount, Wallet } from 'bitcoindevkit';
+import { Wallet } from 'bitcoindevkit';
 
-import type { BitcoinAccount } from '../entities';
+import type { BitcoinAccount, TransactionBuilder } from '../entities';
+import { BdkTxBuilderAdapter } from './BdkTxBuilderAdapter';
 
 export class BdkAccountAdapter implements BitcoinAccount {
   readonly #id: string;
@@ -107,19 +109,8 @@ export class BdkAccountAdapter implements BitcoinAccount {
     return this.#wallet.take_staged();
   }
 
-  buildTx(feeRate: number, recipient: string, amount: string): Psbt {
-    const fee = new FeeRate(BigInt(Math.floor(feeRate)));
-    const to = new Recipient(
-      Address.new(recipient, this.network),
-      Amount.from_sat(BigInt(amount)),
-    );
-    return this.#wallet.build_tx(fee, [to]);
-  }
-
-  drainTo(feeRate: number, recipient: string): Psbt {
-    const fee = new FeeRate(BigInt(Math.floor(feeRate)));
-    const to = Address.new(recipient, this.network);
-    return this.#wallet.drain_to(fee, to);
+  buildTx(): TransactionBuilder {
+    return new BdkTxBuilderAdapter(this.#wallet.build_tx(), this.network);
   }
 
   sign(psbt: Psbt): Transaction {
@@ -129,5 +120,13 @@ export class BdkAccountAdapter implements BitcoinAccount {
     }
 
     return psbt.extract_tx();
+  }
+
+  listUnspent(): LocalOutput[] {
+    return this.#wallet.list_unspent();
+  }
+
+  listOutput(): LocalOutput[] {
+    return this.#wallet.list_output();
   }
 }

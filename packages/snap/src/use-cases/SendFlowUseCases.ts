@@ -190,7 +190,7 @@ export class SendFlowUseCases {
     delete updatedContext.errors.tx;
 
     try {
-      updatedContext.recipient = Address.new(
+      updatedContext.recipient = Address.from_string(
         formState.recipient,
         context.network,
       ).toString();
@@ -236,10 +236,18 @@ export class SendFlowUseCases {
       if (!account) {
         throw new Error('Account removed while sending');
       }
+      const frozenUTXOs = await this.#accountRepository.getFrozenUTXOs(
+        context.account.id,
+      );
 
       try {
+        const builder = account
+          .buildTx()
+          .feeRate(context.feeRate)
+          .unspendable(frozenUTXOs);
+
         if (drain) {
-          const psbt = account.drainTo(context.feeRate, recipient);
+          const psbt = builder.drainWallet().drainTo(recipient).finish();
           const fee = psbt.fee().to_sat();
           const realAmount = BigInt(amount) - fee;
           return {
@@ -249,7 +257,7 @@ export class SendFlowUseCases {
           };
         }
 
-        const psbt = account.buildTx(context.feeRate, recipient, amount);
+        const psbt = builder.addRecipient(amount, recipient).finish();
         return { ...context, fee: psbt.fee().to_sat().toString() };
       } catch (error) {
         return {

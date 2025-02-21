@@ -9,7 +9,11 @@ import type {
   ChangeSet,
   Psbt,
   Transaction,
+  LocalOutput,
 } from 'bitcoindevkit';
+
+import type { Inscription } from './meta-protocols';
+import type { TransactionBuilder } from './transaction';
 
 /**
  * A Bitcoin account.
@@ -42,7 +46,7 @@ export type BitcoinAccount = {
 
   /**
    * Get an address at a given index.
-   * @param index
+   * @param index - derivation index.
    * @returns the address
    */
   peekAddress(index: number): AddressInfo;
@@ -79,27 +83,16 @@ export type BitcoinAccount = {
   applyUpdate(update: Update): void;
 
   /**
-   * Get the change set.
+   * Extract the change set if it exists.
    * @returns the change set
    */
   takeStaged(): ChangeSet | undefined;
 
   /**
-   * Create a new PSBT.
-   * @param feeRate - The fee rate in sats/vb
-   * @param recipient. - The recipient address
-   * @param amount. - The amount to send in sats
-   * @returns the PSBT
+   * Returns a Transaction Builder.
+   * @returns the TxBuilder
    */
-  buildTx(feeRate: number, recipient: string, amount: string): Psbt;
-
-  /**
-   * Create a new PSBT by draining the wallet inputs.
-   * @param feeRate. - The fee rate in sats/vb
-   * @param recipient. - The recipient address
-   * @returns the PSBT
-   */
-  drainTo(feeRate: number, recipient: string): Psbt;
+  buildTx(): TransactionBuilder;
 
   /**
    * Sign a PSBT with all the registered signers
@@ -107,6 +100,18 @@ export type BitcoinAccount = {
    * @returns the signed transaction
    */
   sign(psbt: Psbt): Transaction;
+
+  /**
+   * Get the list of UTXOs
+   * @returns the list of UTXOs
+   */
+  listUnspent(): LocalOutput[];
+
+  /**
+   * List all relevant outputs (includes both spent and unspent, confirmed and unconfirmed).
+   * @returns the list of outputs
+   */
+  listOutput(): LocalOutput[];
 };
 
 /**
@@ -115,14 +120,14 @@ export type BitcoinAccount = {
 export type BitcoinAccountRepository = {
   /**
    * Get an account by its id.
-   * @param id
+   * @param id - Account ID.
    * @returns the account or null if it does not exist
    */
   get(id: string): Promise<BitcoinAccount | null>;
 
   /**
    * Get an account by its id with signing capabilities
-   * @param id - Account's id.
+   * @param id - Account ID.
    * @returns the account or null if it does not exist
    */
   getWithSigner(id: string): Promise<BitcoinAccount | null>;
@@ -135,16 +140,16 @@ export type BitcoinAccountRepository = {
 
   /**
    * Get an account by its derivation path.
-   * @param derivationPath
+   * @param derivationPath - derivation path.
    * @returns the account or null if it does not exist
    */
   getByDerivationPath(derivationPath: string[]): Promise<BitcoinAccount | null>;
 
   /**
    * Insert a new account.
-   * @param derivationPath
-   * @param network
-   * @param addressType
+   * @param derivationPath - derivation index.
+   * @param network - network.
+   * @param addressType - address type.
    * @returns the new account
    */
   insert(
@@ -155,14 +160,22 @@ export type BitcoinAccountRepository = {
 
   /**
    * Update an account.
-   * @param account
+   * @param account - Bitcoin account.
+   * @param inscriptions - List of inscriptions.
    */
-  update(account: BitcoinAccount): Promise<void>;
+  update(account: BitcoinAccount, inscriptions?: Inscription[]): Promise<void>;
 
   /**
    * Delete an account.
-   * @param id
+   * @param id - Account ID.
    * @returns true if the account has been deleted.
    */
   delete(id: string): Promise<void>;
+
+  /**
+   * Get the list of frozen UTXO outpoints of an account.
+   * @param id - Account ID.
+   * @returns the frozen UTXO outpoints.
+   */
+  getFrozenUTXOs(id: string): Promise<string[]>;
 };

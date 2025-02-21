@@ -46,6 +46,6 @@ export class RpcHandler {
 
     const txRequest = await this.#sendFlowUseCases.display(params.account);
     const txId = await this.#accountUseCases.send(params.account, txRequest);
-    return { txId };
+    return { txId: txId.toString() };
   }
 }

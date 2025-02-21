@@ -2699,13 +2699,14 @@ __metadata:
     "@metamask/snaps-jest": "npm:^8.11.0"
     "@metamask/snaps-sdk": "npm:^6.17.1"
     "@metamask/utils": "npm:^11.0.1"
+    "@types/qs": "npm:^6.9.18"
     "@typescript-eslint/eslint-plugin": "npm:^5.42.1"
     "@typescript-eslint/parser": "npm:^5.42.1"
     async-mutex: "npm:^0.3.2"
     bignumber.js: "npm:9.1.2"
     bip32: "npm:4.0.0"
     bitcoin-address-validation: "npm:^2.2.3"
-    bitcoindevkit: "npm:^0.1.3"
+    bitcoindevkit: "npm:^0.1.4"
     bitcoinjs-lib: "npm:6.1.5"
     coinselect: "npm:3.1.13"
     concurrently: "npm:^9.1.0"
@@ -2723,6 +2724,7 @@ __metadata:
     jest-mock-extended: "npm:^3.0.7"
     jest-transform-stub: "npm:2.0.0"
     prettier: "npm:^2.7.1"
+    qs: "npm:^6.14.0"
     rimraf: "npm:^3.0.2"
     superstruct: "npm:^1.0.3"
     ts-jest: "npm:^29.1.0"
@@ -5319,6 +5321,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/qs@npm:^6.9.18":
+  version: 6.9.18
+  resolution: "@types/qs@npm:6.9.18"
+  checksum: 10/152fab96efd819cc82ae67c39f089df415da6deddb48f1680edaaaa4e86a2a597de7b2ff0ad391df66d11a07006a08d52c9405e86b8cb8f3d5ba15881fe56cc7
+  languageName: node
+  linkType: hard
+
 "@types/reach__router@npm:^1.3.10":
   version: 1.3.11
   resolution: "@types/reach__router@npm:1.3.11"
@@ -6980,10 +6989,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"bitcoindevkit@npm:^0.1.3":
-  version: 0.1.3
-  resolution: "bitcoindevkit@npm:0.1.3"
-  checksum: 10/73e3df70b0fd0b5829c3012753883687a838cc42d6a7bcbdc66e85e5c88d9ffbdf9fe8ce39f5d3fb736a33f5b428bd6fa050423228dd7d50f3489e0e29e40485
+"bitcoindevkit@npm:^0.1.4":
+  version: 0.1.4
+  resolution: "bitcoindevkit@npm:0.1.4"
+  checksum: 10/19173ef6ed328166adcb439c8388f3c376bf17eb0d0ef53658644102eb016dd22a63383def0a5cdc75e185cf307e7309ba9ec4596c8e3d1ef76c26669a1869c4
   languageName: node
   linkType: hard
 
@@ -16999,6 +17008,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"qs@npm:^6.14.0":
+  version: 6.14.0
+  resolution: "qs@npm:6.14.0"
+  dependencies:
+    side-channel: "npm:^1.1.0"
+  checksum: 10/a60e49bbd51c935a8a4759e7505677b122e23bf392d6535b8fc31c1e447acba2c901235ecb192764013cd2781723dc1f61978b5fdd93cc31d7043d31cdc01974
+  languageName: node
+  linkType: hard
+
 "query-string@npm:^6.14.1":
   version: 6.14.1
   resolution: "query-string@npm:6.14.1"
@@ -18153,7 +18171,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"side-channel@npm:^1.0.6":
+"side-channel@npm:^1.0.6, side-channel@npm:^1.1.0":
   version: 1.1.0
   resolution: "side-channel@npm:1.1.0"
   dependencies:

@@ -2,7 +2,12 @@ import type { SLIP10Node } from '@metamask/key-tree';
 import { ChangeSet } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 
-import type { BitcoinAccount, SnapClient } from '../entities';
+import type {
+  BitcoinAccount,
+  Inscription,
+  SnapClient,
+  SnapState,
+} from '../entities';
 import { BdkAccountAdapter } from '../infra';
 import { BdkAccountRepository } from './BdkAccountRepository';
 
@@ -36,7 +41,9 @@ jest.mock('uuid', () => ({ v4: () => 'mock-uuid' }));
 
 describe('BdkAccountRepository', () => {
   let repo: BdkAccountRepository;
+
   const mockSnapClient = mock<SnapClient>();
+  const mockState = mock<SnapState>();
 
   beforeEach(() => {
     repo = new BdkAccountRepository(mockSnapClient);
@@ -45,7 +52,7 @@ describe('BdkAccountRepository', () => {
   describe('get', () => {
     it('returns null if account not found', async () => {
       mockSnapClient.get.mockResolvedValue({
-        accounts: { derivationPaths: {}, wallets: {} },
+        accounts: { ...mockState.accounts, wallets: {} },
       });
 
       const result = await repo.get('non-existent-id');
@@ -53,12 +60,12 @@ describe('BdkAccountRepository', () => {
     });
 
     it('returns loaded account if found', async () => {
-      mockSnapClient.get.mockResolvedValue({
+      const state = mock<SnapState>({
         accounts: {
-          derivationPaths: {},
           wallets: { 'some-id': '{"mywallet": "data"}' },
         },
       });
+      mockSnapClient.get.mockResolvedValue(state);
 
       const mockAccount = {} as BitcoinAccount;
       (BdkAccountAdapter.load as jest.Mock).mockReturnValue(mockAccount);
@@ -75,15 +82,15 @@ describe('BdkAccountRepository', () => {
 
   describe('getAll', () => {
     it('returns all accounts', async () => {
-      mockSnapClient.get.mockResolvedValue({
+      const state = mock<SnapState>({
         accounts: {
-          derivationPaths: {},
           wallets: {
             'some-id': '{"foo":"bar"}',
             'another-id': '{"hello":"world"}',
           },
         },
       });
+      mockSnapClient.get.mockResolvedValue(state);
 
       const mockAccount1 = {} as BitcoinAccount;
       const mockAccount2 = {} as BitcoinAccount;
@@ -102,7 +109,7 @@ describe('BdkAccountRepository', () => {
   describe('getByDerivationPath', () => {
     it('returns null if derivation path not mapped', async () => {
       mockSnapClient.get.mockResolvedValue({
-        accounts: { derivationPaths: {}, wallets: {} },
+        accounts: { ...mockState.accounts, derivationPaths: {} },
       });
 
       const result = await repo.getByDerivationPath(['m', "84'", "0'", "0'"]);
@@ -111,12 +118,13 @@ describe('BdkAccountRepository', () => {
 
     it('returns account if derivation path exists', async () => {
       const derivationPath = ['m', "84'", "0'", "0'"];
-      mockSnapClient.get.mockResolvedValue({
+      const state = mock<SnapState>({
         accounts: {
           derivationPaths: { [derivationPath.join('/')]: 'some-id' },
           wallets: { 'some-id': '{}' },
         },
       });
+      mockSnapClient.get.mockResolvedValue(state);
 
       const mockAccount = {} as BitcoinAccount;
       (BdkAccountAdapter.load as jest.Mock).mockReturnValue(mockAccount);
@@ -129,7 +137,7 @@ describe('BdkAccountRepository', () => {
   describe('getWithSigner', () => {
     it('returns null if account not found', async () => {
       mockSnapClient.get.mockResolvedValue({
-        accounts: { derivationPaths: {}, wallets: {} },
+        accounts: { ...mockState.accounts, wallets: {} },
       });
       const result = await repo.getWithSigner('non-existent-id');
       expect(result).toBeNull();
@@ -137,12 +145,13 @@ describe('BdkAccountRepository', () => {
 
     it('throws error if derivation path not found', async () => {
       const walletData = '{"mywallet":"data"}';
-      mockSnapClient.get.mockResolvedValue({
+      const state = mock<SnapState>({
         accounts: {
-          derivationPaths: {},
           wallets: { 'some-id': walletData },
         },
       });
+      mockSnapClient.get.mockResolvedValue(state);
+
       await expect(repo.getWithSigner('some-id')).rejects.toThrow(
         'Inconsistent state. No derivation path found for account some-id',
       );
@@ -151,12 +160,13 @@ describe('BdkAccountRepository', () => {
     it('returns account with signer if account exists', async () => {
       const derivationPath = "m/84'/0'/0'";
       const walletData = '{"mywallet":"data"}';
-      mockSnapClient.get.mockResolvedValue({
+      const state = mock<SnapState>({
         accounts: {
           derivationPaths: { [derivationPath]: 'some-id' },
           wallets: { 'some-id': walletData },
         },
       });
+      mockSnapClient.get.mockResolvedValue(state);
       const slip10Node = {
         masterFingerprint: 0xdeadbeef,
       } as unknown as SLIP10Node;
@@ -186,9 +196,14 @@ describe('BdkAccountRepository', () => {
   describe('insert', () => {
     it('inserts a new account with xpub', async () => {
       const derivationPath = ['m', "84'", "0'", "0'"];
-      mockSnapClient.get.mockResolvedValue({
-        accounts: { derivationPaths: {}, wallets: {} },
-      });
+      const state = {
+        accounts: {
+          derivationPaths: {},
+          wallets: {},
+          inscriptions: {},
+        },
+      };
+      mockSnapClient.get.mockResolvedValue(state);
       mockSnapClient.getPublicEntropy.mockResolvedValue({
         masterFingerprint: 0xdeadbeef,
       } as unknown as SLIP10Node);
@@ -204,22 +219,22 @@ describe('BdkAccountRepository', () => {
         accounts: {
           derivationPaths: { [derivationPath.join('/')]: 'mock-uuid' },
           wallets: { 'mock-uuid': '{}' },
+          inscriptions: { 'mock-uuid': [] },
         },
       });
     });
   });
 
   describe('update', () => {
-    it('updates the account when staged changes exist', async () => {
-      // Initial store state with existing account
-      mockSnapClient.get.mockResolvedValue({
+    it('updates the account and inscriptions when staged changes exist', async () => {
+      const state = {
         accounts: {
           derivationPaths: { "m/84'/0'/0'": 'some-id' },
           wallets: { 'some-id': '{"original":"data"}' },
+          inscriptions: {},
         },
-      });
-
-      // Mock account that returns a staged changeset
+      };
+      mockSnapClient.get.mockResolvedValue(state);
       const mockAccount = mock<BitcoinAccount>();
       mockAccount.id = 'some-id';
       const staged = {
@@ -228,25 +243,26 @@ describe('BdkAccountRepository', () => {
       } as unknown as ChangeSet;
       mockAccount.takeStaged.mockReturnValue(staged);
 
-      await repo.update(mockAccount);
+      await repo.update(mockAccount, [{ id: 'myInscription' } as Inscription]);
 
       expect(staged.merge).toHaveBeenCalled();
       expect(mockSnapClient.set).toHaveBeenCalledWith({
         accounts: {
           derivationPaths: { "m/84'/0'/0'": 'some-id' },
+          inscriptions: { 'some-id': [{ id: 'myInscription' }] },
           wallets: { 'some-id': '{"merged":"data"}' },
         },
       });
     });
 
     it('does nothing if account has no staged changes', async () => {
-      mockSnapClient.get.mockResolvedValue({
+      const state = mock<SnapState>({
         accounts: {
           derivationPaths: { "m/84'/0'/0'": 'some-id' },
           wallets: { 'some-id': '{"original":"data"}' },
         },
       });
-
+      mockSnapClient.get.mockResolvedValue(state);
       const mockAccount = mock<BitcoinAccount>();
       mockAccount.id = 'some-id';
       mockAccount.takeStaged.mockReturnValue(undefined);
@@ -257,14 +273,12 @@ describe('BdkAccountRepository', () => {
     });
 
     it('throws an error if account does not exist in store', async () => {
-      mockSnapClient.get.mockResolvedValue({
-        accounts: {
-          derivationPaths: {},
-          wallets: {},
-        },
-      });
-
       const mockAccount = mock<BitcoinAccount>();
+      mockAccount.id = 'some-id';
+      mockAccount.takeStaged.mockReturnValue(mock<ChangeSet>());
+      mockSnapClient.get.mockResolvedValue({
+        accounts: { ...mockState.accounts, wallets: {} },
+      });
       mockAccount.id = 'non-existent-id';
 
       await expect(repo.update(mockAccount)).rejects.toThrow(
@@ -276,7 +290,7 @@ describe('BdkAccountRepository', () => {
   describe('delete', () => {
     it('does nothing if account not found', async () => {
       mockSnapClient.get.mockResolvedValue({
-        accounts: { derivationPaths: {}, wallets: {} },
+        accounts: { ...mockState.accounts, wallets: {} },
       });
 
       await repo.delete('non-existent-id');
@@ -284,19 +298,51 @@ describe('BdkAccountRepository', () => {
       expect(mockSnapClient.set).not.toHaveBeenCalled();
     });
 
-    it('removes wallet data and derivation path from store if present', async () => {
-      mockSnapClient.get.mockResolvedValue({
+    it('removes wallet data from store', async () => {
+      const state = {
         accounts: {
           derivationPaths: { "m/84'/0'/0'": 'some-id' },
           wallets: { 'some-id': '{"wallet":"data"}' },
+          inscriptions: { 'some-id': [] },
         },
-      });
+      };
+      mockSnapClient.get.mockResolvedValue(state);
 
       await repo.delete('some-id');
 
       expect(mockSnapClient.set).toHaveBeenCalledWith({
-        accounts: { derivationPaths: {}, wallets: {} },
+        accounts: { derivationPaths: {}, wallets: {}, inscriptions: {} },
       });
+    });
+  });
+
+  describe('getFrozenUTXOs', () => {
+    it('returns empty array if account is not found', async () => {
+      mockSnapClient.get.mockResolvedValue({
+        accounts: { ...mockState.accounts, inscriptions: {} },
+      });
+
+      const result = await repo.getFrozenUTXOs('non-existent-id');
+      expect(result).toStrictEqual([]);
+    });
+
+    it('returns the list of frozen UTXO outpoints', async () => {
+      const state = mock<SnapState>({
+        accounts: {
+          inscriptions: {
+            'some-id': [
+              { location: 'txid1:vout:offset' },
+              { location: 'txid2:vout:offset' },
+            ],
+          },
+        },
+      });
+      mockSnapClient.get.mockResolvedValue(state);
+
+      const result = await repo.getFrozenUTXOs('some-id');
+
+      expect(mockSnapClient.get).toHaveBeenCalled();
+      expect(result).toStrictEqual(['txid1:vout', 'txid2:vout']);
     });
   });
 });

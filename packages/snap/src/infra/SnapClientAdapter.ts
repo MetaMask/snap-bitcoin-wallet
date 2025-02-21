@@ -35,7 +35,9 @@ export class SnapClientAdapter implements SnapClient {
     });
 
     return (
-      (state as SnapState) ?? { accounts: { derivationPaths: {}, wallets: {} } }
+      (state as SnapState) ?? {
+        accounts: { derivationPaths: {}, wallets: {}, inscriptions: {} },
+      }
     );
   }
 

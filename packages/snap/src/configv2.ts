@@ -18,7 +18,6 @@ export const ConfigV2: SnapConfig = {
   chain: {
     parallelRequests: 1,
     stopGap: 10,
-    targetBlocksConfirmation: 3,
     url: {
       bitcoin:
         process.env.ESPLORA_PROVIDER_BITCOIN ?? 'https://blockstream.info/api',
@@ -33,6 +32,13 @@ export const ConfigV2: SnapConfig = {
       regtest:
         process.env.ESPLORA_PROVIDER_REGTEST ??
         'http://localhost:8094/regtest/api',
+    },
+  },
+  simpleHash: {
+    apiKey: process.env.SIMPLEHASH_API_KEY, // Public test API key
+    url: {
+      bitcoin:
+        process.env.SIMPLEHASH_BITCOIN ?? `https://api.simplehash.com/api/v0`,
     },
   },
   targetBlocksConfirmation: 3,

@@ -1,2 +1,2 @@
 export * from './AccountUseCases';
-export * from './SendFormUseCases';
+export * from './SendFlowUseCases';
