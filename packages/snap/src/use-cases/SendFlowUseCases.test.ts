@@ -26,7 +26,7 @@ import { SendFlowUseCases } from './SendFlowUseCases';
 jest.mock('bitcoindevkit', () => {
   return {
     Address: {
-      from_str: jest.fn(),
+      from_string: jest.fn(),
     },
     Amount: {
       from_btc: jest.fn(),
@@ -282,7 +282,7 @@ describe('SendFlowUseCases', () => {
     });
 
     it('sets recipient from state on Recipient', async () => {
-      (Address.from_str as jest.Mock).mockReturnValue({
+      (Address.from_string as jest.Mock).mockReturnValue({
         toString: () => 'newAddressValidated',
       });
 
@@ -400,7 +400,7 @@ describe('SendFlowUseCases', () => {
     });
 
     it('computes the fee when amount and recipient are filled', async () => {
-      (Address.from_str as jest.Mock).mockReturnValue({
+      (Address.from_string as jest.Mock).mockReturnValue({
         toString: () => 'newAddressValidated',
       });
       mockPsbt.fee.mockReturnValue({

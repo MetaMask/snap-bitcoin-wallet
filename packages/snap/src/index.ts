@@ -1,6 +1,11 @@
 import type { Keyring } from '@metamask/keyring-api';
 import { handleKeyringRequest } from '@metamask/keyring-snap-sdk';
-import type { OnCronjobHandler, OnInstallHandler } from '@metamask/snaps-sdk';
+import type {
+  OnAssetsConversionHandler,
+  OnAssetsLookupHandler,
+  OnCronjobHandler,
+  OnInstallHandler,
+} from '@metamask/snaps-sdk';
 import {
   type OnRpcRequestHandler,
   type OnKeyringRequestHandler,
@@ -18,6 +23,7 @@ import {
   CronHandler,
   UserInputHandler,
   RpcHandler,
+  AssetsHandler,
 } from './handlers';
 import { SnapClientAdapter, EsploraClientAdapter } from './infra';
 import { SimplehashClientAdapter } from './infra/SimplehashClientAdapter';
@@ -52,6 +58,7 @@ let keyringHandler: Keyring;
 let cronHandler: CronHandler;
 let rpcHandler: RpcHandler;
 let userInputHandler: UserInputHandler;
+let assetsHandler: AssetsHandler;
 let accountsUseCases: AccountUseCases;
 if (ConfigV2.keyringVersion === 'v2') {
   // Infra layer
@@ -83,6 +90,7 @@ if (ConfigV2.keyringVersion === 'v2') {
   cronHandler = new CronHandler(accountsUseCases);
   rpcHandler = new RpcHandler(sendFlowUseCases, accountsUseCases);
   userInputHandler = new UserInputHandler(sendFlowUseCases);
+  assetsHandler = new AssetsHandler();
 }
 
 export const validateOrigin = (origin: string, method: string): void => {
@@ -253,6 +261,42 @@ export const onUserInput: OnUserInputHandler = async ({
     }
     logger.error(
       `onUserInput error: ${JSON.stringify(snapError.toJSON(), null, 2)}`,
+    );
+    throw snapError;
+  }
+};
+
+export const onAssetsLookup: OnAssetsLookupHandler = async () => {
+  try {
+    return assetsHandler.lookup();
+  } catch (error) {
+    let snapError = error;
+
+    if (!isSnapRpcError(error)) {
+      snapError = new SnapError(error);
+    }
+    logger.error(
+      `onAssetsLookup error: ${JSON.stringify(snapError.toJSON(), null, 2)}`,
+    );
+    throw snapError;
+  }
+};
+
+export const onAssetsConversion: OnAssetsConversionHandler = async () => {
+  try {
+    return assetsHandler.conversion();
+  } catch (error) {
+    let snapError = error;
+
+    if (!isSnapRpcError(error)) {
+      snapError = new SnapError(error);
+    }
+    logger.error(
+      `onAssetsConversion error: ${JSON.stringify(
+        snapError.toJSON(),
+        null,
+        2,
+      )}`,
     );
     throw snapError;
   }
