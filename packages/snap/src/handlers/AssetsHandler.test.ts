@@ -13,24 +13,20 @@ describe('AssetsHandler', () => {
       const result = handler.lookup();
       console.log(result);
 
-      expect(result.assets[Caip19Asset.Bitcoin]?.name).toEqual('Bitcoin');
-      expect(result.assets[Caip19Asset.Testnet]?.name).toEqual(
-        'Testnet Bitcoin',
-      );
-      expect(result.assets[Caip19Asset.Testnet4]?.name).toEqual(
+      expect(result.assets[Caip19Asset.Bitcoin]?.name).toBe('Bitcoin');
+      expect(result.assets[Caip19Asset.Testnet]?.name).toBe('Testnet Bitcoin');
+      expect(result.assets[Caip19Asset.Testnet4]?.name).toBe(
         'Testnet4 Bitcoin',
       );
-      expect(result.assets[Caip19Asset.Signet]?.name).toEqual('Signet Bitcoin');
-      expect(result.assets[Caip19Asset.Regtest]?.name).toEqual(
-        'Regtest Bitcoin',
-      );
+      expect(result.assets[Caip19Asset.Signet]?.name).toBe('Signet Bitcoin');
+      expect(result.assets[Caip19Asset.Regtest]?.name).toBe('Regtest Bitcoin');
     });
   });
 
   describe('conversion', () => {
     it('returns empty record', () => {
       const result = handler.conversion();
-      expect(result.conversionRates).toEqual({});
+      expect(result.conversionRates).toStrictEqual({});
     });
   });
 });

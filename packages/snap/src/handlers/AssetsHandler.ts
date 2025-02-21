@@ -3,6 +3,7 @@ import type {
   OnAssetsConversionResponse,
   OnAssetsLookupResponse,
 } from '@metamask/snaps-sdk';
+
 import { Caip19Asset } from './caip19';
 
 export class AssetsHandler {
