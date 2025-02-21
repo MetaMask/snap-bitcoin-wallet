@@ -52,7 +52,7 @@
     "@typescript-eslint/eslint-plugin": "^5.42.1",
     "@typescript-eslint/parser": "^5.42.1",
     "async-mutex": "^0.3.2",
-    "bitcoindevkit": "../../../bdk-wasm/pkg",
+    "bitcoindevkit": "^0.1.4",
     "concurrently": "^9.1.0",
     "dotenv": "^16.4.5",
     "eslint": "^8.45.0",

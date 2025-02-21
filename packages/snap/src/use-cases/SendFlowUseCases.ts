@@ -190,7 +190,7 @@ export class SendFlowUseCases {
     delete updatedContext.errors.tx;
 
     try {
-      updatedContext.recipient = Address.from_str(
+      updatedContext.recipient = Address.from_string(
         formState.recipient,
         context.network,
       ).toString();
