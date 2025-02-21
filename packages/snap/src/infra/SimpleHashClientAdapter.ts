@@ -71,7 +71,7 @@ export class SimpleHashClientAdapter implements MetaProtocolsClient {
     let pages = 0;
 
     do {
-      pages++;
+      pages += 1;
       if (pages > MAX_PAGES) {
         console.warn(`Maximum page limit reached (${MAX_PAGES}).`);
         break;
