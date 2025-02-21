@@ -5,7 +5,7 @@ export type SnapConfig = {
   accounts: AccountsConfig;
   chain: ChainConfig;
   keyringVersion: string;
-  simplehash: SimplehashConfig;
+  simpleHash: SimpleHashConfig;
   // Temporary config to set the expected confirmation target, should eventually be chosen by the user
   targetBlocksConfirmation: number;
   fallbackFeeRate: number;
@@ -26,13 +26,9 @@ export type ChainConfig = {
   };
 };
 
-export type SimplehashConfig = {
+export type SimpleHashConfig = {
   apiKey?: string;
   url: {
     [network in Network]?: string;
   };
-};
-
-export type PriceApiConfig = {
-  url: string;
 };

@@ -1,4 +1,4 @@
-import { CaipAssetId } from '@metamask/utils';
+import type { CaipAssetId } from '@metamask/utils';
 
 export type CurrencyPriceClient = {
   getFiatExchangeRates(): Promise<Record<FiatTicker, ExchangeRate>>;

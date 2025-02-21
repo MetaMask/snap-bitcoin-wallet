@@ -5,8 +5,8 @@ import type {
   OnAssetsLookupResponse,
 } from '@metamask/snaps-sdk';
 
+import type { AssetsUseCases } from '../use-cases';
 import { Caip19Asset } from './caip19';
-import { AssetsUseCases } from '../use-cases';
 
 export class AssetsHandler {
   readonly #assetsUseCases: AssetsUseCases;

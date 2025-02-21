@@ -46,7 +46,7 @@ export type BitcoinAccount = {
 
   /**
    * Get an address at a given index.
-   * @param index
+   * @param index - derivation index.
    * @returns the address
    */
   peekAddress(index: number): AddressInfo;
@@ -120,14 +120,14 @@ export type BitcoinAccount = {
 export type BitcoinAccountRepository = {
   /**
    * Get an account by its id.
-   * @param id
+   * @param id - Account ID.
    * @returns the account or null if it does not exist
    */
   get(id: string): Promise<BitcoinAccount | null>;
 
   /**
    * Get an account by its id with signing capabilities
-   * @param id - Account's id.
+   * @param id - Account ID.
    * @returns the account or null if it does not exist
    */
   getWithSigner(id: string): Promise<BitcoinAccount | null>;
@@ -140,16 +140,16 @@ export type BitcoinAccountRepository = {
 
   /**
    * Get an account by its derivation path.
-   * @param derivationPath
+   * @param derivationPath - derivation path.
    * @returns the account or null if it does not exist
    */
   getByDerivationPath(derivationPath: string[]): Promise<BitcoinAccount | null>;
 
   /**
    * Insert a new account.
-   * @param derivationPath
-   * @param network
-   * @param addressType
+   * @param derivationPath - derivation index.
+   * @param network - network.
+   * @param addressType - address type.
    * @returns the new account
    */
   insert(
@@ -160,21 +160,21 @@ export type BitcoinAccountRepository = {
 
   /**
    * Update an account.
-   * @param account
-   * @param inscriptions
+   * @param account - Bitcoin account.
+   * @param inscriptions - List of inscriptions.
    */
   update(account: BitcoinAccount, inscriptions?: Inscription[]): Promise<void>;
 
   /**
    * Delete an account.
-   * @param id
+   * @param id - Account ID.
    * @returns true if the account has been deleted.
    */
   delete(id: string): Promise<void>;
 
   /**
    * Get the list of frozen UTXO outpoints of an account.
-   * @param id
+   * @param id - Account ID.
    * @returns the frozen UTXO outpoints.
    */
   getFrozenUTXOs(id: string): Promise<string[]>;

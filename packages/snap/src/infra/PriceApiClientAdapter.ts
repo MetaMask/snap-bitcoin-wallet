@@ -45,7 +45,7 @@ export class PriceApiClientAdapter implements CurrencyPriceClient {
 
   async getSpotPrices(
     assetIds: CaipAssetId,
-    unit: string = 'usd',
+    unit = 'usd',
   ): Promise<SpotPrices> {
     const queryParams = qs.stringify(
       {
