@@ -10,6 +10,7 @@ import type {
   Inscription,
   MetaProtocolsClient,
   SnapClient,
+  TransactionRequest,
 } from '../entities';
 import { AccountUseCases } from './AccountUseCases';
 
@@ -461,14 +462,15 @@ describe('AccountUseCases', () => {
   });
 
   describe('send', () => {
-    const requestWithAmount = {
+    const requestWithAmount: TransactionRequest = {
       amount: '1000',
       feeRate: 10,
       recipient: 'recipient-address',
     };
-    const requestDrain = {
+    const requestDrain: TransactionRequest = {
       feeRate: 10,
       recipient: 'recipient-address',
+      drain: true,
     };
 
     const mockTxid = mock<Txid>();
@@ -500,6 +502,12 @@ describe('AccountUseCases', () => {
       mockTxBuilder.drainWallet.mockReturnThis();
       mockTxBuilder.finish.mockReturnValue(mockPsbt);
       mockTxBuilder.unspendable.mockReturnThis();
+    });
+
+    it('throws error if both drain and amount are specified', async () => {
+      await expect(
+        useCases.send('non-existent-id', { ...requestWithAmount, drain: true }),
+      ).rejects.toThrow("Cannot specify both 'amount' and 'drain' options");
     });
 
     it('throws error if account is not found', async () => {

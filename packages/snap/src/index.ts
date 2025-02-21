@@ -20,7 +20,7 @@ import {
   RpcHandler,
 } from './handlers';
 import { SnapClientAdapter, EsploraClientAdapter } from './infra';
-import { SimplehashClientAdapter } from './infra/SimplehashClientAdapter';
+import { SimpleHashClientAdapter } from './infra/SimpleHashClientAdapter';
 import { BtcKeyring } from './keyring';
 import { InternalRpcMethod, originPermissions } from './permissions';
 import type {
@@ -57,7 +57,7 @@ if (ConfigV2.keyringVersion === 'v2') {
   // Infra layer
   const snapClient = new SnapClientAdapter(ConfigV2.encrypt);
   const chainClient = new EsploraClientAdapter(ConfigV2.chain);
-  const metaProtocolsClient = new SimplehashClientAdapter(ConfigV2.simplehash);
+  const metaProtocolsClient = new SimpleHashClientAdapter(ConfigV2.simpleHash);
   // Data layer
   const accountRepository = new BdkAccountRepository(snapClient);
   const sendFlowRepository = new JSXSendFlowRepository(snapClient);

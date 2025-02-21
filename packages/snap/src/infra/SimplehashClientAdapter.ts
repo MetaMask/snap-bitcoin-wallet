@@ -6,7 +6,7 @@ import type {
   BitcoinAccount,
   Inscription,
   MetaProtocolsClient,
-  SimplehashConfig,
+  SimpleHashConfig as SimplehHashConfig,
 } from '../entities';
 
 /* eslint-disable @typescript-eslint/naming-convention */
@@ -32,12 +32,12 @@ type NFTResponse = {
   }[];
 };
 
-export class SimplehashClientAdapter implements MetaProtocolsClient {
+export class SimpleHashClientAdapter implements MetaProtocolsClient {
   readonly #endpoints: Record<Network, string | undefined>;
 
   readonly #apiKey: string | undefined;
 
-  constructor(config: SimplehashConfig) {
+  constructor(config: SimplehHashConfig) {
     this.#endpoints = {
       bitcoin: config.url.bitcoin,
       testnet: config.url.testnet,

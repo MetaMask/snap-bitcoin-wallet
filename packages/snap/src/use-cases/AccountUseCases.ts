@@ -144,6 +144,8 @@ export class AccountUseCases {
   async synchronize(account: BitcoinAccount): Promise<void> {
     logger.trace('Synchronizing account. ID: %s', account.id);
 
+    // Outputs are monotone, meaning they can only be added, like transactions. So we can be confident
+    // that a change on the balance cam only happen when new outputs appear.
     const nOutputsBefore = account.listOutput().length;
     await this.#chain.sync(account);
     const nOutputsAfter = account.listOutput().length;
@@ -194,6 +196,10 @@ export class AccountUseCases {
   async send(id: string, request: TransactionRequest): Promise<Txid> {
     logger.debug('Sending transaction. ID: %s. Request: %o', id, request);
 
+    if (request.drain && request.amount) {
+      throw new Error("Cannot specify both 'amount' and 'drain' options");
+    }
+
     const account = await this.#repository.getWithSigner(id);
     if (!account) {
       throw new Error(`Account not found: ${id}`);
@@ -201,11 +207,12 @@ export class AccountUseCases {
 
     const builder = account.buildTx().feeRate(request.feeRate);
 
-    // If no amount is specified at this point, it is a drain transaction
     if (request.amount) {
       builder.addRecipient(request.amount, request.recipient);
-    } else {
+    } else if (request.drain) {
       builder.drainWallet().drainTo(request.recipient);
+    } else {
+      throw new Error("Either 'amount' or 'drain' must be specified");
     }
 
     // Make sure frozen UTXOs are not spent
