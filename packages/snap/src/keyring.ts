@@ -1,3 +1,4 @@
+import type { BtcScope } from '@metamask/keyring-api';
 import {
   BtcMethod,
   KeyringEvent,
@@ -287,7 +288,7 @@ export class BtcKeyring implements Keyring {
       id: uuidv4(),
       address: account.address,
       options,
-      scopes: [scope],
+      scopes: [scope as BtcScope],
       methods: this._methods,
     };
   }

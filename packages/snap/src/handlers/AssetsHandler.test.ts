@@ -11,7 +11,6 @@ describe('AssetsHandler', () => {
   describe('lookup', () => {
     it('returns data for all networks', () => {
       const result = handler.lookup();
-      console.log(result);
 
       expect(result.assets[Caip19Asset.Bitcoin]?.name).toBe('Bitcoin');
       expect(result.assets[Caip19Asset.Testnet]?.name).toBe('Testnet Bitcoin');
