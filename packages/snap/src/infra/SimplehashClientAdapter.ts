@@ -67,8 +67,16 @@ export class SimpleHashClientAdapter implements MetaProtocolsClient {
 
     let cursor: string | undefined;
     const inscriptions: Inscription[] = [];
+    const MAX_PAGES = 5;
+    let pages = 0;
 
     do {
+      pages++;
+      if (pages > MAX_PAGES) {
+        console.warn(`Maximum page limit reached (${MAX_PAGES}).`);
+        break;
+      }
+
       const params = {
         chains: 'bitcoin',
         wallet_addresses: Array.from(usedAddresses),
