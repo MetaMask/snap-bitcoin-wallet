@@ -123,31 +123,30 @@ describe('Bitcoin Snap', () => {
     async ({ addressType, scope, expectedAddress }) => {
       snap.mockJsonRpc({ method: 'snap_manageAccounts', result: {} });
 
-      try {
-        const response = await snap.onKeyringRequest({
-          origin,
-          method: 'keyring_createAccount',
-          params: {
-            options: { scope, addressType },
-          },
-        });
+      const response = await snap.onKeyringRequest({
+        origin,
+        method: 'keyring_createAccount',
+        params: {
+          options: { scope, addressType },
+        },
+      });
 
-        expect(response).toRespondWith({
-          type: addressType,
-          id: expect.anything(),
-          address: expectedAddress,
-          options: {},
-          scopes: [scope],
-          methods: [BtcMethod.SendBitcoin],
-        });
+      console.log('before expect');
+      expect(response).toRespondWith({
+        type: addressType,
+        id: expect.anything(),
+        address: expectedAddress,
+        options: {},
+        scopes: [scope],
+        methods: [BtcMethod.SendBitcoin],
+      });
 
-        if ('result' in response.response) {
-          accounts[`${addressType}:${scope}`] = response.response
-            .result as KeyringAccount;
-        }
-      } catch (error) {
-        console.error('🚨 Keyring Request Error:', error);
-        throw error; // Ensure Jest sees it
+      console.log('before saving account');
+
+      if ('result' in response.response) {
+        console.log('see result', response.response.result);
+        accounts[`${addressType}:${scope}`] = response.response
+          .result as KeyringAccount;
       }
     },
   );

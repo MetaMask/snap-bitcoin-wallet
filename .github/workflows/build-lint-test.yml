@@ -117,7 +117,7 @@ jobs:
     needs:
       - prepare
     env:
-      LOG_LEVEL: 3
+      LOG_LEVEL: 6
       KEYRING_VERSION: v2
       DEFAULT_NETWORK: regtest
     steps:
@@ -138,5 +138,5 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y docker-compose
       - run: |
-          export NODE_OPTIONS="--max_old_space_size=4096"
+          export NODE_OPTIONS="--max_old_space_size=8192"
           yarn test:integration

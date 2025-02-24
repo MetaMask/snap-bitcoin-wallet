@@ -23,7 +23,7 @@ sleep 10
 docker exec esplora bash /init-esplora.sh
 
 echo "Running integration tests..."
-jest --config jest.integration.config.js
+jest --config jest.integration.config.js --runInBand --verbose --forceExit --detectOpenHandles
 
 if [ $? -eq 0 ]; then
   echo "Tests completed successfully."
