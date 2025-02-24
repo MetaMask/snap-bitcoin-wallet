@@ -48,7 +48,6 @@ describe('KeyringHandler', () => {
         caip2ToNetwork[BtcScope.Signet],
         caip2ToAddressType[Caip2AddressType.P2pkh],
       );
-      expect(mockAccounts.fullScan).toHaveBeenCalledWith(mockAccount);
     });
 
     it('propagates errors from createAccount', async () => {
@@ -59,18 +58,6 @@ describe('KeyringHandler', () => {
         handler.createAccount({ options: { scopes: [BtcScope.Mainnet] } }),
       ).rejects.toThrow(error);
       expect(mockAccounts.create).toHaveBeenCalled();
-    });
-
-    it('propagates errors from fullScan', async () => {
-      mockAccounts.create.mockResolvedValue(mockAccount);
-      const error = new Error();
-      mockAccounts.fullScan.mockRejectedValue(error);
-
-      await expect(
-        handler.createAccount({ options: { scopes: [BtcScope.Mainnet] } }),
-      ).rejects.toThrow(error);
-      expect(mockAccounts.create).toHaveBeenCalled();
-      expect(mockAccounts.fullScan).toHaveBeenCalled();
     });
   });
 

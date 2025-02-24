@@ -10,18 +10,10 @@ import {
 } from '../../src/entities';
 import { Caip2AddressType, Caip19Asset } from '../../src/handlers';
 
-process.on('unhandledRejection', (reason) => {
-  console.error('🚨 Unhandled Promise Rejection:', reason);
-});
-
 describe('Bitcoin Snap', () => {
   const accounts: Record<string, KeyringAccount> = {};
   const origin = 'metamask';
   let snap: Snap;
-
-  beforeEach(() => {
-    console.log(`🚀 Running test: ${expect.getState().currentTestName}`);
-  });
 
   it('installs the Snap and creates the default account', async () => {
     snap = await installSnap({
@@ -131,7 +123,6 @@ describe('Bitcoin Snap', () => {
         },
       });
 
-      console.log('before expect');
       expect(response).toRespondWith({
         type: addressType,
         id: expect.anything(),
@@ -141,10 +132,7 @@ describe('Bitcoin Snap', () => {
         methods: [BtcMethod.SendBitcoin],
       });
 
-      console.log('before saving account');
-
       if ('result' in response.response) {
-        console.log('see result', response.response.result);
         accounts[`${addressType}:${scope}`] = response.response
           .result as KeyringAccount;
       }

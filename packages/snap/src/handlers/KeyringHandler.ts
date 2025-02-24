@@ -57,11 +57,6 @@ export class KeyringHandler implements Keyring {
       opts.addressType ? caip2ToAddressType[opts.addressType] : undefined,
     );
 
-    // We perform the initial full scan outside of the use case to avoid "mixing" creating accounts and
-    // synchronizing them. Ideally the extension should be the one deciding to synchronize or not.
-    // See: https://github.com/MetaMask/accounts-planning/issues/819
-    await this.#accountsUseCases.fullScan(account);
-
     return snapToKeyringAccount(account);
   }
 
