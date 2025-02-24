@@ -10,10 +10,18 @@ import {
 } from '../../src/entities';
 import { Caip2AddressType, Caip19Asset } from '../../src/handlers';
 
+process.on('unhandledRejection', (reason) => {
+  console.error('🚨 Unhandled Promise Rejection:', reason);
+});
+
 describe('Bitcoin Snap', () => {
   const accounts: Record<string, KeyringAccount> = {};
   const origin = 'metamask';
   let snap: Snap;
+
+  beforeEach(() => {
+    console.log(`🚀 Running test: ${expect.getState().currentTestName}`);
+  });
 
   it('installs the Snap and creates the default account', async () => {
     snap = await installSnap({
@@ -138,7 +146,8 @@ describe('Bitcoin Snap', () => {
             .result as KeyringAccount;
         }
       } catch (error) {
-        console.error(error);
+        console.error('🚨 Keyring Request Error:', error);
+        throw error; // Ensure Jest sees it
       }
     },
   );
