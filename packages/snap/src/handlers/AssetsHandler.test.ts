@@ -21,11 +21,4 @@ describe('AssetsHandler', () => {
       expect(result.assets[Caip19Asset.Regtest]?.name).toBe('Regtest Bitcoin');
     });
   });
-
-  describe('conversion', () => {
-    it('returns empty record', async () => {
-      const result = await handler.conversion();
-      expect(result.conversionRates).toStrictEqual({});
-    });
-  });
 });

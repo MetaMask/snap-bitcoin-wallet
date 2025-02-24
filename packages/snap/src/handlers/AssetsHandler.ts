@@ -1,6 +1,5 @@
 import type {
   FungibleAssetMetadata,
-  OnAssetsConversionResponse,
   OnAssetsLookupResponse,
 } from '@metamask/snaps-sdk';
 
@@ -58,9 +57,5 @@ export class AssetsHandler {
         [Caip19Asset.Regtest]: metadata('Regtest Bitcoin', 'rBTC'),
       },
     };
-  }
-
-  async conversion(): Promise<OnAssetsConversionResponse> {
-    return { conversionRates: {} };
   }
 }
