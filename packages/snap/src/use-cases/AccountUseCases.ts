@@ -227,8 +227,6 @@ export class AccountUseCases {
     await this.#repository.update(account);
     await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
 
-    await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
-
     const txId = tx.compute_txid();
     logger.info(
       'Transaction sent successfully: %s. Account: %s, Network: %s',
