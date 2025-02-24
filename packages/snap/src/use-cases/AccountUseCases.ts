@@ -225,7 +225,6 @@ export class AccountUseCases {
     const tx = account.sign(psbt);
     await this.#chain.broadcast(account.network, tx);
     await this.#repository.update(account);
-
     await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
 
     const txId = tx.compute_txid();
