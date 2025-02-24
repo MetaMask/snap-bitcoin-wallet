@@ -32,7 +32,7 @@ else
 fi
 
 echo "Stopping Docker services..."
-docker-compose -f tintegration-test/docker-compose.yml down
+docker-compose -f integration-test/docker-compose.yml down
 
 if [ $? -ne 0 ]; then
   echo "Error: Failed to stop Docker services."
