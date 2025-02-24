@@ -1,4 +1,4 @@
 module.exports = {
   preset: '@metamask/snaps-jest',
-  testMatch: ['**/integration/**/*.test.ts'],
+  testMatch: ['**/integration-test/**/*.test.ts'],
 };
