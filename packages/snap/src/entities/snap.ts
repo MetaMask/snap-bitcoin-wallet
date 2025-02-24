@@ -52,9 +52,15 @@ export type SnapClient = {
 
   /**
    * Emit an event notifying the extension of a deleted Bitcoin account
-   * @param account - The Bitcoin account id.
+   * @param id - The Bitcoin account id.
    */
   emitAccountDeletedEvent(id: string): Promise<void>;
+
+  /**
+   * Emit an event notifying the extension of updated balances
+   * @param account - The Bitcoin account.
+   */
+  emitAccountBalancesUpdatedEvent(account: BitcoinAccount): Promise<void>;
 
   /**
    * Create a User Interface.

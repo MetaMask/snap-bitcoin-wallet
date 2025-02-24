@@ -1,4 +1,4 @@
-import { BtcMethod, BtcScopes } from '@metamask/keyring-api';
+import { BtcMethod, BtcScope } from '@metamask/keyring-api';
 import type { Network } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
@@ -37,16 +37,15 @@ describe('KeyringHandler', () => {
   describe('createAccount', () => {
     it('respects provided provided scope and addressType', async () => {
       mockAccounts.create.mockResolvedValue(mockAccount);
-
       const options = {
-        scope: BtcScopes.Signet,
+        scope: BtcScope.Signet,
         addressType: Caip2AddressType.P2pkh,
       };
       await handler.createAccount(options);
 
       expect(assert).toHaveBeenCalledWith(options, CreateAccountRequest);
       expect(mockAccounts.create).toHaveBeenCalledWith(
-        caip2ToNetwork[BtcScopes.Signet],
+        caip2ToNetwork[BtcScope.Signet],
         caip2ToAddressType[Caip2AddressType.P2pkh],
       );
     });
@@ -56,7 +55,7 @@ describe('KeyringHandler', () => {
       mockAccounts.create.mockRejectedValue(error);
 
       await expect(
-        handler.createAccount({ options: { scopes: [BtcScopes.Mainnet] } }),
+        handler.createAccount({ options: { scopes: [BtcScope.Mainnet] } }),
       ).rejects.toThrow(error);
       expect(mockAccounts.create).toHaveBeenCalled();
     });
@@ -94,7 +93,7 @@ describe('KeyringHandler', () => {
       const expectedKeyringAccount = {
         id: 'some-id',
         type: Caip2AddressType.P2wpkh,
-        scopes: [BtcScopes.Mainnet],
+        scopes: [BtcScope.Mainnet],
         address: 'bc1qaddress...',
         options: {},
         methods: [BtcMethod.SendBitcoin],
@@ -121,7 +120,7 @@ describe('KeyringHandler', () => {
         {
           id: 'some-id',
           type: Caip2AddressType.P2wpkh,
-          scopes: [BtcScopes.Mainnet],
+          scopes: [BtcScope.Mainnet],
           address: 'bc1qaddress...',
           options: {},
           methods: [BtcMethod.SendBitcoin],
@@ -147,17 +146,17 @@ describe('KeyringHandler', () => {
       mockAccounts.get.mockResolvedValue(mockAccount);
 
       const result = await handler.filterAccountChains('some-id', [
-        BtcScopes.Mainnet,
+        BtcScope.Mainnet,
       ]);
       expect(mockAccounts.get).toHaveBeenCalledWith('some-id');
-      expect(result).toStrictEqual([BtcScopes.Mainnet]);
+      expect(result).toStrictEqual([BtcScope.Mainnet]);
     });
 
     it('does not include chain if account network does not correspond', async () => {
       mockAccounts.get.mockResolvedValue(mockAccount);
 
       const result = await handler.filterAccountChains('some-id', [
-        BtcScopes.Testnet,
+        BtcScope.Testnet,
       ]);
       expect(mockAccounts.get).toHaveBeenCalledWith('some-id');
       expect(result).toStrictEqual([]);
@@ -168,7 +167,7 @@ describe('KeyringHandler', () => {
       mockAccounts.get.mockRejectedValue(error);
 
       await expect(
-        handler.filterAccountChains('some-id', [BtcScopes.Mainnet]),
+        handler.filterAccountChains('some-id', [BtcScope.Mainnet]),
       ).rejects.toThrow(error);
       expect(mockAccounts.get).toHaveBeenCalled();
     });

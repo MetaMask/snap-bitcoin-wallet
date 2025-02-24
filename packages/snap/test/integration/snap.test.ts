@@ -1,5 +1,5 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
-import { BtcMethod, BtcScopes } from '@metamask/keyring-api';
+import { BtcMethod, BtcScope } from '@metamask/keyring-api';
 import type { Snap } from '@metamask/snaps-jest';
 import { assertIsCustomDialog, installSnap } from '@metamask/snaps-jest';
 
@@ -37,14 +37,14 @@ describe('Bitcoin Snap', () => {
         id: expect.anything(),
         address: 'bcrt1qjtgffm20l9vu6a7gacxvpu2ej4kdcsgcgnly6t',
         options: {},
-        scopes: [BtcScopes.Regtest],
+        scopes: [BtcScope.Regtest],
         methods: [BtcMethod.SendBitcoin],
       },
     ]);
 
     if ('result' in response.response) {
       const [defaultAccount] = response.response.result as KeyringAccount[];
-      accounts[`${Caip2AddressType.P2wpkh}:${BtcScopes.Regtest}`] =
+      accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`] =
         defaultAccount;
     }
   });
@@ -59,7 +59,7 @@ describe('Bitcoin Snap', () => {
       origin,
       method: 'keyring_getAccountBalances',
       params: {
-        id: accounts[`${Caip2AddressType.P2wpkh}:${BtcScopes.Regtest}`].id,
+        id: accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id,
         assets: [Caip19Asset.Regtest],
       },
     });
@@ -75,38 +75,38 @@ describe('Bitcoin Snap', () => {
   it.each([
     {
       addressType: Caip2AddressType.P2wpkh,
-      scope: BtcScopes.Mainnet,
+      scope: BtcScope.Mainnet,
       expectedAddress: 'bc1q832zlt4tgnqy88vd20mazw77dlt0j0wf2naw8q',
     },
     {
       addressType: Caip2AddressType.P2pkh,
-      scope: BtcScopes.Mainnet,
+      scope: BtcScope.Mainnet,
       expectedAddress: '15feVv7kK3z7jxA4RZZzY7Fwdu3yqFwzcT',
     },
     {
       addressType: Caip2AddressType.P2pkh,
-      scope: BtcScopes.Testnet,
+      scope: BtcScope.Testnet,
       expectedAddress: 'mjPQaLkhZN3MxsYN8Nebzwevuz8vdTaRCq',
     },
     {
       addressType: Caip2AddressType.P2sh,
-      scope: BtcScopes.Mainnet,
+      scope: BtcScope.Mainnet,
       expectedAddress: '3QVSaDYjxEh4L3K24eorrQjfVxPAKJMys2',
     },
     {
       addressType: Caip2AddressType.P2sh,
-      scope: BtcScopes.Testnet,
+      scope: BtcScope.Testnet,
       expectedAddress: '2NBG623WvXp1zxKB6gK2mnMe2mSDCur5qRU',
     },
     {
       addressType: Caip2AddressType.P2tr,
-      scope: BtcScopes.Mainnet,
+      scope: BtcScope.Mainnet,
       expectedAddress:
         'bc1p4rue37y0v9snd4z3fvw43d29u97qxf9j3fva72xy2t7hekg24dzsaz40mz',
     },
     {
       addressType: Caip2AddressType.P2tr,
-      scope: BtcScopes.Testnet,
+      scope: BtcScope.Testnet,
       expectedAddress:
         'tb1pwwjax3vpq6h69965hcr22vkpm4qdvyu2pz67wyj8eagp9vxkcz0q0ya20h',
     },
@@ -147,14 +147,14 @@ describe('Bitcoin Snap', () => {
       method: 'keyring_createAccount',
       params: {
         options: {
-          scope: BtcScopes.Mainnet,
+          scope: BtcScope.Mainnet,
           addressType: Caip2AddressType.P2wpkh,
         },
       },
     });
 
     expect(response).toRespondWith(
-      accounts[`${Caip2AddressType.P2wpkh}:${BtcScopes.Mainnet}`],
+      accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Mainnet}`],
     );
   });
 
@@ -163,12 +163,12 @@ describe('Bitcoin Snap', () => {
       origin,
       method: 'keyring_getAccount',
       params: {
-        id: accounts[`${Caip2AddressType.P2wpkh}:${BtcScopes.Mainnet}`].id,
+        id: accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Mainnet}`].id,
       },
     });
 
     expect(response).toRespondWith(
-      accounts[`${Caip2AddressType.P2wpkh}:${BtcScopes.Mainnet}`],
+      accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Mainnet}`],
     );
   });
 
@@ -182,7 +182,7 @@ describe('Bitcoin Snap', () => {
   });
 
   it('removes an account', async () => {
-    const { id } = accounts[`${Caip2AddressType.P2pkh}:${BtcScopes.Mainnet}`];
+    const { id } = accounts[`${Caip2AddressType.P2pkh}:${BtcScope.Mainnet}`];
 
     let response = await snap.onKeyringRequest({
       origin,
@@ -214,7 +214,7 @@ describe('Bitcoin Snap', () => {
       origin,
       method: 'keyring_deleteAccount',
       params: {
-        id: accounts[`${Caip2AddressType.P2wpkh}:${BtcScopes.Regtest}`].id,
+        id: accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id,
       },
     });
 
@@ -230,7 +230,7 @@ describe('Bitcoin Snap', () => {
       origin,
       method: 'keyring_listAccountTransactions',
       params: {
-        id: accounts[`${Caip2AddressType.P2wpkh}:${BtcScopes.Regtest}`].id,
+        id: accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id,
         pagination: { limit: 10, next: null },
       },
     });
@@ -244,17 +244,17 @@ describe('Bitcoin Snap', () => {
   it.each([
     {
       addressType: Caip2AddressType.P2wpkh,
-      scope: BtcScopes.Mainnet,
+      scope: BtcScope.Mainnet,
       expectedAssets: [Caip19Asset.Bitcoin],
     },
     {
       addressType: Caip2AddressType.P2wpkh,
-      scope: BtcScopes.Regtest,
+      scope: BtcScope.Regtest,
       expectedAssets: [Caip19Asset.Regtest],
     },
     {
       addressType: Caip2AddressType.P2tr,
-      scope: BtcScopes.Testnet,
+      scope: BtcScope.Testnet,
       expectedAssets: [Caip19Asset.Testnet],
     },
   ])(
@@ -277,7 +277,7 @@ describe('Bitcoin Snap', () => {
       origin,
       method: 'startSendTransactionFlow',
       params: {
-        account: accounts[`${Caip2AddressType.P2wpkh}:${BtcScopes.Regtest}`].id,
+        account: accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id,
       },
     });
 
@@ -303,7 +303,7 @@ describe('Bitcoin Snap', () => {
       origin,
       method: 'startSendTransactionFlow',
       params: {
-        account: accounts[`${Caip2AddressType.P2wpkh}:${BtcScopes.Regtest}`].id,
+        account: accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id,
       },
     });
 
@@ -336,7 +336,7 @@ describe('Bitcoin Snap', () => {
       origin,
       method: 'startSendTransactionFlow',
       params: {
-        account: accounts[`${Caip2AddressType.P2wpkh}:${BtcScopes.Regtest}`].id,
+        account: accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id,
       },
     });
 
@@ -356,7 +356,7 @@ describe('Bitcoin Snap', () => {
       origin,
       method: 'startSendTransactionFlow',
       params: {
-        account: accounts[`${Caip2AddressType.P2wpkh}:${BtcScopes.Regtest}`].id,
+        account: accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id,
       },
     });
 

@@ -1,4 +1,4 @@
-import { BtcScopes } from '@metamask/keyring-api';
+import { BtcScope } from '@metamask/keyring-api';
 import type { AddressType, Network } from 'bitcoindevkit';
 
 import { reverseMapping } from './mapping';
@@ -11,12 +11,12 @@ export enum Caip2AddressType {
   P2tr = 'bip122:p2tr',
 }
 
-export const caip2ToNetwork: Record<string, Network> = {
-  [BtcScopes.Mainnet]: 'bitcoin',
-  [BtcScopes.Testnet]: 'testnet',
-  [BtcScopes.Testnet4]: 'testnet4',
-  [BtcScopes.Signet]: 'signet',
-  [BtcScopes.Regtest]: 'regtest',
+export const caip2ToNetwork: Record<BtcScope, Network> = {
+  [BtcScope.Mainnet]: 'bitcoin',
+  [BtcScope.Testnet]: 'testnet',
+  [BtcScope.Testnet4]: 'testnet4',
+  [BtcScope.Signet]: 'signet',
+  [BtcScope.Regtest]: 'regtest',
 };
 
 export const caip2ToAddressType: Record<Caip2AddressType, AddressType> = {

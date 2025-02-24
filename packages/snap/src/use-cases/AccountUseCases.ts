@@ -154,6 +154,7 @@ export class AccountUseCases {
     if (nOutputsAfter > nOutputsBefore) {
       const inscriptions = await this.#metaProtocols.fetchInscriptions(account);
       await this.#repository.update(account, inscriptions);
+      await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
     } else {
       await this.#repository.update(account);
     }
@@ -168,6 +169,7 @@ export class AccountUseCases {
 
     const inscriptions = await this.#metaProtocols.fetchInscriptions(account);
     await this.#repository.update(account, inscriptions);
+    await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
 
     logger.debug('initial full scan performed successfully: %s', account.id);
   }
@@ -223,6 +225,7 @@ export class AccountUseCases {
     const tx = account.sign(psbt);
     await this.#chain.broadcast(account.network, tx);
     await this.#repository.update(account);
+    await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
 
     const txId = tx.compute_txid();
     logger.info(

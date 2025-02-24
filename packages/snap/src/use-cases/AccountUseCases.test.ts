@@ -248,7 +248,7 @@ describe('AccountUseCases', () => {
       expect(mockRepository.update).toHaveBeenCalledWith(mockAccount);
     });
 
-    it('performs a regular sync with assets', async () => {
+    it('performs a regular sync with assets and balance update event', async () => {
       const mockInscriptions = mock<Inscription[]>();
       mockAccount.listOutput
         .mockReturnValueOnce([])
@@ -266,6 +266,9 @@ describe('AccountUseCases', () => {
         mockAccount,
         mockInscriptions,
       );
+      expect(
+        mockSnapClient.emitAccountBalancesUpdatedEvent,
+      ).toHaveBeenCalledWith(mockAccount);
     });
 
     it('propagates an error if the chain sync fails', async () => {
@@ -309,6 +312,9 @@ describe('AccountUseCases', () => {
         mockAccount,
         mockInscriptions,
       );
+      expect(
+        mockSnapClient.emitAccountBalancesUpdatedEvent,
+      ).toHaveBeenCalledWith(mockAccount);
     });
 
     it('propagates an error if the chain full scan fails', async () => {
@@ -544,6 +550,9 @@ describe('AccountUseCases', () => {
         mockTransaction,
       );
       expect(mockRepository.update).toHaveBeenCalledWith(mockAccount);
+      expect(
+        mockSnapClient.emitAccountBalancesUpdatedEvent,
+      ).toHaveBeenCalledWith(mockAccount);
       expect(mockTransaction.compute_txid).toHaveBeenCalled();
       expect(txId).toBe(mockTxid);
     });
@@ -572,6 +581,9 @@ describe('AccountUseCases', () => {
         mockTransaction,
       );
       expect(mockRepository.update).toHaveBeenCalledWith(mockAccount);
+      expect(
+        mockSnapClient.emitAccountBalancesUpdatedEvent,
+      ).toHaveBeenCalledWith(mockAccount);
       expect(mockTransaction.compute_txid).toHaveBeenCalled();
       expect(txId).toBe(mockTxid);
     });

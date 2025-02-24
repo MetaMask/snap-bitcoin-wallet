@@ -11,7 +11,8 @@ import type {
 } from '@metamask/snaps-sdk';
 
 import type { BitcoinAccount, SnapClient, SnapState } from '../entities';
-import { CurrencyUnit } from '../entities';
+import { CurrencyUnit, networkToCurrencyUnit } from '../entities';
+import { networkToCaip19 } from '../handlers/caip19';
 import { snapToKeyringAccount } from '../handlers/keyring-account';
 
 export class SnapClientAdapter implements SnapClient {
@@ -94,6 +95,22 @@ export class SnapClientAdapter implements SnapClient {
   async emitAccountDeletedEvent(id: string): Promise<void> {
     return emitSnapKeyringEvent(snap, KeyringEvent.AccountDeleted, {
       id,
+    });
+  }
+
+  async emitAccountBalancesUpdatedEvent(
+    account: BitcoinAccount,
+  ): Promise<void> {
+    const balance = account.balance.trusted_spendable.to_btc().toString();
+    return emitSnapKeyringEvent(snap, KeyringEvent.AccountBalancesUpdated, {
+      balances: {
+        [account.id]: {
+          [networkToCaip19[account.network]]: {
+            amount: balance,
+            unit: networkToCurrencyUnit[account.network],
+          },
+        },
+      },
     });
   }
 

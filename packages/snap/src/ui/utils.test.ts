@@ -1,5 +1,5 @@
 import { expect } from '@jest/globals';
-import { BtcAccountType, BtcMethod, BtcScopes } from '@metamask/keyring-api';
+import { BtcAccountType, BtcMethod, BtcScope } from '@metamask/keyring-api';
 import { BigNumber } from 'bignumber.js';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -36,7 +36,7 @@ const mockAccount = {
     index: '1',
   },
   methods: [`${BtcMethod.SendBitcoin}`],
-  scopes: [BtcScopes.Mainnet],
+  scopes: [BtcScope.Mainnet],
 };
 
 describe('utils', () => {
