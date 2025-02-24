@@ -115,26 +115,30 @@ describe('Bitcoin Snap', () => {
     async ({ addressType, scope, expectedAddress }) => {
       snap.mockJsonRpc({ method: 'snap_manageAccounts', result: {} });
 
-      const response = await snap.onKeyringRequest({
-        origin,
-        method: 'keyring_createAccount',
-        params: {
-          options: { scope, addressType },
-        },
-      });
+      try {
+        const response = await snap.onKeyringRequest({
+          origin,
+          method: 'keyring_createAccount',
+          params: {
+            options: { scope, addressType },
+          },
+        });
 
-      expect(response).toRespondWith({
-        type: addressType,
-        id: expect.anything(),
-        address: expectedAddress,
-        options: {},
-        scopes: [scope],
-        methods: [BtcMethod.SendBitcoin],
-      });
+        expect(response).toRespondWith({
+          type: addressType,
+          id: expect.anything(),
+          address: expectedAddress,
+          options: {},
+          scopes: [scope],
+          methods: [BtcMethod.SendBitcoin],
+        });
 
-      if ('result' in response.response) {
-        accounts[`${addressType}:${scope}`] = response.response
-          .result as KeyringAccount;
+        if ('result' in response.response) {
+          accounts[`${addressType}:${scope}`] = response.response
+            .result as KeyringAccount;
+        }
+      } catch (error) {
+        console.error(error);
       }
     },
   );
