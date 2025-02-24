@@ -23,8 +23,8 @@ describe('AssetsHandler', () => {
   });
 
   describe('conversion', () => {
-    it('returns empty record', () => {
-      const result = handler.conversion();
+    it('returns empty record', async () => {
+      const result = await handler.conversion();
       expect(result.conversionRates).toStrictEqual({});
     });
   });

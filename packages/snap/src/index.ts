@@ -1,7 +1,6 @@
 import type { Keyring } from '@metamask/keyring-api';
 import { handleKeyringRequest } from '@metamask/keyring-snap-sdk';
 import type {
-  OnAssetsConversionHandler,
   OnAssetsLookupHandler,
   OnCronjobHandler,
   OnInstallHandler,
@@ -64,11 +63,7 @@ if (ConfigV2.keyringVersion === 'v2') {
   // Infra layer
   const snapClient = new SnapClientAdapter(ConfigV2.encrypt);
   const chainClient = new EsploraClientAdapter(ConfigV2.chain);
-<<<<<<< HEAD
-  const metaProtocolsClient = new SimplehashClientAdapter(ConfigV2.simplehash);
-=======
   const metaProtocolsClient = new SimpleHashClientAdapter(ConfigV2.simpleHash);
->>>>>>> main
   // Data layer
   const accountRepository = new BdkAccountRepository(snapClient);
   const sendFlowRepository = new JSXSendFlowRepository(snapClient);
@@ -281,26 +276,6 @@ export const onAssetsLookup: OnAssetsLookupHandler = async () => {
     }
     logger.error(
       `onAssetsLookup error: ${JSON.stringify(snapError.toJSON(), null, 2)}`,
-    );
-    throw snapError;
-  }
-};
-
-export const onAssetsConversion: OnAssetsConversionHandler = async () => {
-  try {
-    return assetsHandler.conversion();
-  } catch (error) {
-    let snapError = error;
-
-    if (!isSnapRpcError(error)) {
-      snapError = new SnapError(error);
-    }
-    logger.error(
-      `onAssetsConversion error: ${JSON.stringify(
-        snapError.toJSON(),
-        null,
-        2,
-      )}`,
     );
     throw snapError;
   }

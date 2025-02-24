@@ -9,7 +9,6 @@ export type SnapConfig = {
   // Temporary config to set the expected confirmation target, should eventually be chosen by the user
   targetBlocksConfirmation: number;
   fallbackFeeRate: number;
-  priceApi: PriceApiConfig;
 };
 
 export type AccountsConfig = {
