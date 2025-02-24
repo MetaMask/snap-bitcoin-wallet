@@ -11,7 +11,6 @@ describe('AssetsHandler', () => {
   describe('lookup', () => {
     it('returns data for all networks', () => {
       const result = handler.lookup();
-      console.log(result);
 
       expect(result.assets[Caip19Asset.Bitcoin]?.name).toBe('Bitcoin');
       expect(result.assets[Caip19Asset.Testnet]?.name).toBe('Testnet Bitcoin');
@@ -20,13 +19,6 @@ describe('AssetsHandler', () => {
       );
       expect(result.assets[Caip19Asset.Signet]?.name).toBe('Signet Bitcoin');
       expect(result.assets[Caip19Asset.Regtest]?.name).toBe('Regtest Bitcoin');
-    });
-  });
-
-  describe('conversion', () => {
-    it('returns empty record', () => {
-      const result = handler.conversion();
-      expect(result.conversionRates).toStrictEqual({});
     });
   });
 });

@@ -1,6 +1,5 @@
 import { handleKeyringRequest } from '@metamask/keyring-snap-sdk';
 import type {
-  OnAssetsConversionHandler,
   OnAssetsLookupHandler,
   OnCronjobHandler,
   OnInstallHandler,
@@ -26,7 +25,7 @@ import {
 import {
   SnapClientAdapter,
   EsploraClientAdapter,
-  SimplehashClientAdapter,
+  SimpleHashClientAdapter,
 } from './infra';
 import { logger } from './infra/logger';
 import { originPermissions } from './permissions';
@@ -37,7 +36,7 @@ import { AccountUseCases, SendFlowUseCases } from './use-cases';
 logger.logLevel = parseInt(Config.logLevel, 10);
 const snapClient = new SnapClientAdapter(Config.encrypt);
 const chainClient = new EsploraClientAdapter(Config.chain);
-const metaProtocolsClient = new SimplehashClientAdapter(Config.simplehash);
+const metaProtocolsClient = new SimpleHashClientAdapter(Config.simpleHash);
 
 // Data layer
 const accountRepository = new BdkAccountRepository(snapClient);
@@ -191,26 +190,6 @@ export const onAssetsLookup: OnAssetsLookupHandler = async () => {
     }
     logger.error(
       `onAssetsLookup error: ${JSON.stringify(snapError.toJSON(), null, 2)}`,
-    );
-    throw snapError;
-  }
-};
-
-export const onAssetsConversion: OnAssetsConversionHandler = async () => {
-  try {
-    return assetsHandler.conversion();
-  } catch (error) {
-    let snapError = error;
-
-    if (!isSnapRpcError(error)) {
-      snapError = new SnapError(error);
-    }
-    logger.error(
-      `onAssetsConversion error: ${JSON.stringify(
-        snapError.toJSON(),
-        null,
-        2,
-      )}`,
     );
     throw snapError;
   }

@@ -27,7 +27,7 @@ export const Config: SnapConfig = {
         process.env.ESPLORA_REGTEST ?? 'http://localhost:8094/regtest/api',
     },
   },
-  simplehash: {
+  simpleHash: {
     apiKey: process.env.SIMPLEHASH_API_KEY,
     url: {
       bitcoin:
