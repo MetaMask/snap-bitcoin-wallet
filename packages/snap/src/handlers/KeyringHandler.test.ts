@@ -8,7 +8,6 @@ import type { AccountUseCases } from '../use-cases/AccountUseCases';
 import { Caip19Asset } from './caip19';
 import { caip2ToNetwork, caip2ToAddressType, Caip2AddressType } from './caip2';
 import { KeyringHandler, CreateAccountRequest } from './KeyringHandler';
-import { sync } from 'rimraf';
 
 jest.mock('superstruct', () => ({
   ...jest.requireActual('superstruct'),
