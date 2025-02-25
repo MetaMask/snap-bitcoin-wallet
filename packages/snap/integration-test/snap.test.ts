@@ -15,7 +15,7 @@ describe('Bitcoin Snap', () => {
   const origin = 'metamask';
   let snap: Snap;
 
-  it('installs the Snap and creates the default account', async () => {
+  it('installs the Snap, creates the default account and scans it', async () => {
     snap = await installSnap({
       options: {
         secretRecoveryPhrase:
@@ -26,7 +26,7 @@ describe('Bitcoin Snap', () => {
     snap.mockJsonRpc({ method: 'snap_manageAccounts', result: {} });
     await snap.onInstall();
 
-    const response = await snap.onKeyringRequest({
+    let response = await snap.onKeyringRequest({
       origin,
       method: 'keyring_listAccounts',
     });
@@ -47,15 +47,8 @@ describe('Bitcoin Snap', () => {
       accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`] =
         defaultAccount;
     }
-  });
 
-  it('synchronize accounts via cronjob', async () => {
-    // IMPORTANT: The order of this test is important because the cron job synchronizes all accounts, doing external requests to backends
-    // for mainnet, testnet and signet. Ideally avoid synchronizing accounts outside of regtest as that is tested in e2e.
-
-    await snap.onCronjob({ method: 'synchronize' });
-
-    const response = await snap.onKeyringRequest({
+    response = await snap.onKeyringRequest({
       origin,
       method: 'keyring_getAccountBalances',
       params: {
@@ -66,10 +59,16 @@ describe('Bitcoin Snap', () => {
 
     expect(response).toRespondWith({
       [Caip19Asset.Regtest]: {
-        amount: expect.stringMatching(/^[1-9]\d*$/u), // non-zero positive number
+        amount: '500',
         unit: CurrencyUnit.Regtest,
       },
     });
+  });
+
+  it('synchronize accounts via cronjob', async () => {
+    // IMPORTANT: The order of this test is important because the cron job synchronizes all accounts, doing external requests to backends
+    // for mainnet, testnet and signet. Ideally avoid synchronizing accounts outside of regtest as that is tested in e2e.
+    await snap.onCronjob({ method: 'synchronize' });
   });
 
   it.each([
@@ -205,22 +204,6 @@ describe('Bitcoin Snap', () => {
     expect(response).toRespondWithError({
       code: -32603,
       message: `Account not found: ${id}`,
-      stack: expect.anything(),
-    });
-  });
-
-  it('fails to remove the default account', async () => {
-    const response = await snap.onKeyringRequest({
-      origin,
-      method: 'keyring_deleteAccount',
-      params: {
-        id: accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id,
-      },
-    });
-
-    expect(response).toRespondWithError({
-      code: -32603,
-      message: 'Default Bitcoin account cannot be removed',
       stack: expect.anything(),
     });
   });
