@@ -65,12 +65,6 @@ describe('Bitcoin Snap', () => {
     });
   });
 
-  it('synchronize accounts via cronjob', async () => {
-    // IMPORTANT: The order of this test is important because the cron job synchronizes all accounts, doing external requests to backends
-    // for mainnet, testnet and signet. Ideally avoid synchronizing accounts outside of regtest as that is tested in e2e.
-    await snap.onCronjob({ method: 'synchronize' });
-  });
-
   it.each([
     {
       addressType: Caip2AddressType.P2wpkh,
@@ -365,5 +359,11 @@ describe('Bitcoin Snap', () => {
       message: 'User rejected the request.',
       stack: expect.anything(),
     });
+  });
+
+  // To be improved once listAccountTransactions is implemented to return transactions and check the confirmations
+  it('synchronize accounts via cronjob', async () => {
+    const response = await snap.onCronjob({ method: 'synchronize' });
+    expect(response).toRespondWith(null);
   });
 });
