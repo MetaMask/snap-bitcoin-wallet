@@ -1,7 +1,9 @@
-import { CaipAssetType, parseCaipAssetType } from '@metamask/utils';
+import slip44 from '@metamask/slip44';
+import type { CaipAssetType } from '@metamask/utils';
+import { parseCaipAssetType } from '@metamask/utils';
+
 import type { AssetPricesClient, AssetRate } from '../entities';
 import { logger } from '../infra/logger';
-import slip44 from '@metamask/slip44';
 
 export class AssetsUseCases {
   readonly #assetPrices: AssetPricesClient;
@@ -26,9 +28,7 @@ export class AssetsUseCases {
   }
 
   #assetToTicker(asset: CaipAssetType): string | undefined {
-    console.log('asset', asset);
     const parsed = parseCaipAssetType(asset);
-    console.log('parsed', parsed);
 
     if (parsed.assetNamespace === 'iso4217') {
       return parsed.assetReference.toLowerCase();

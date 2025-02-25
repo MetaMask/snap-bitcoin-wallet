@@ -118,11 +118,7 @@ export class AccountUseCases {
     const accounts = await this.#repository.getAll();
     const results = await Promise.allSettled(
       accounts.map(async (account) => {
-        if (account.isScanned) {
-          return this.synchronize(account);
-        }
-
-        return this.fullScan(account);
+        return this.synchronize(account);
       }),
     );
 
@@ -139,6 +135,14 @@ export class AccountUseCases {
 
   async synchronize(account: BitcoinAccount): Promise<void> {
     logger.trace('Synchronizing account. ID: %s', account.id);
+
+    if (account.isScanned) {
+      logger.warn(
+        'Account has not yet performed initial full scan, skipping synchronization. ID: %s',
+        account.id,
+      );
+      return;
+    }
 
     // Outputs are monotone, meaning they can only be added, like transactions. So we can be confident
     // that a change on the balance cam only happen when new outputs appear.

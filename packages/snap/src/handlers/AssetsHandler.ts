@@ -80,14 +80,13 @@ export class AssetsHandler {
     const conversionTime = Math.floor(Date.now() / 1000); // Unix timestamp
     const conversionRates: Record<CaipAssetType, AssetConversion | null> = {};
 
-    // Return empty conversionRates if any conversion's "from" is not Bitcoin.
-    // The extension does not send conversions with mixed "from" assets.
+    // MetaMak does not send conversions with mixed "from" assets.
     if (conversions.some((conv) => conv.from !== Caip19Asset.Bitcoin)) {
       assetIds.forEach((asset) => {
         conversionRates[asset] = {
-          rate: '0', // Always return 0 for non-Bitcoin conversions
+          rate: '0',
           conversionTime,
-          expirationTime: conversionTime + 60 * 60 * 24 * 7, // Very long expiration time to avoid unnecessary requests
+          expirationTime: conversionTime + 60 * 60 * 24, // Long expiration time (1 day) to avoid unnecessary requests
         };
       });
 
@@ -101,11 +100,13 @@ export class AssetsHandler {
     const assetRates = await this.#assetsUseCases.getBtcRates(assetIds);
 
     assetRates.forEach(([asset, rate]) => {
-      conversionRates[asset] = {
-        rate: String(rate) ?? null,
-        conversionTime,
-        expirationTime: conversionTime + this.#expirationInterval,
-      };
+      conversionRates[asset] = rate
+        ? {
+            rate: rate.toString(),
+            conversionTime,
+            expirationTime: conversionTime + this.#expirationInterval,
+          }
+        : null;
     });
 
     return {

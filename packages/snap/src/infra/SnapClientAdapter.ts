@@ -69,26 +69,43 @@ export class SnapClientAdapter implements SnapClient {
   }
 
   async emitAccountCreatedEvent(account: BitcoinAccount): Promise<void> {
-    const suggestedName = () => {
+    const addressTypeName = () => {
+      switch (account.addressType) {
+        case 'p2pkh':
+          return 'Legacy';
+        case 'p2sh':
+          return 'Nested SegWit';
+        case 'p2wpkh':
+          return 'Native SegWit';
+        case 'p2tr':
+          return 'Taproot';
+        default:
+          return '';
+      }
+    };
+
+    const networkName = () => {
       switch (account.network) {
         case 'bitcoin':
           return 'Bitcoin';
         case 'testnet':
         case 'testnet4':
-          return 'Bitcoin Testnet';
+          return 'BTC Testnet';
         case 'signet':
-          return 'Bitcoin Signet';
+          return 'BTC Signet';
         case 'regtest':
-          return 'Bitcoin Regtest';
+          return 'BTC Regtest';
         default:
           // Leave it blank to fallback to auto-suggested name on the extension side
           return '';
       }
     };
 
+    const accountNameSuggestion = `${networkName()} ${addressTypeName()}`;
+
     return emitSnapKeyringEvent(snap, KeyringEvent.AccountCreated, {
       account: snapToKeyringAccount(account),
-      accountNameSuggestion: suggestedName(),
+      accountNameSuggestion,
     });
   }
 
