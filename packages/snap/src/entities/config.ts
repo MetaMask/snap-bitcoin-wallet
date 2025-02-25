@@ -9,6 +9,8 @@ export type SnapConfig = {
   // Temporary config to set the expected confirmation target, should eventually be chosen by the user
   targetBlocksConfirmation: number;
   fallbackFeeRate: number;
+  priceApi: PriceApiConfig;
+  conversionsExpirationInterval: number;
 };
 
 export type AccountsConfig = {
@@ -30,4 +32,8 @@ export type SimpleHashConfig = {
   url: {
     [network in Network]?: string;
   };
+};
+
+export type PriceApiConfig = {
+  url: string;
 };

@@ -36,4 +36,8 @@ export const Config: SnapConfig = {
   },
   targetBlocksConfirmation: 3,
   fallbackFeeRate: 5.0,
+  priceApi: {
+    url: process.env.PRICE_API_URL ?? 'https://price.api.cx.metamask.io',
+  },
+  conversionsExpirationInterval: 60,
 };

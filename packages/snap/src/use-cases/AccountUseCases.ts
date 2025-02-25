@@ -115,8 +115,6 @@ export class AccountUseCases {
   }
 
   async synchronizeAll(): Promise<void> {
-    logger.trace('Synchronizing all accounts');
-
     const accounts = await this.#repository.getAll();
     const results = await Promise.allSettled(
       accounts.map(async (account) => {
@@ -137,8 +135,6 @@ export class AccountUseCases {
         );
       }
     });
-
-    logger.debug('Accounts synchronized successfully');
   }
 
   async synchronize(account: BitcoinAccount): Promise<void> {
@@ -182,15 +178,8 @@ export class AccountUseCases {
       throw new Error(`Account not found: ${id}`);
     }
 
-    if (
-      account.addressType === this.#accountConfig.defaultAddressType &&
-      account.network === this.#accountConfig.defaultNetwork
-    ) {
-      throw new Error('Default Bitcoin account cannot be removed');
-    }
-
-    await this.#snapClient.emitAccountDeletedEvent(id);
     await this.#repository.delete(id);
+    await this.#snapClient.emitAccountDeletedEvent(id);
 
     logger.info('Account deleted successfully: %s', account.id);
   }

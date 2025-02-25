@@ -1,11 +1,25 @@
 import type {
+  AssetConversion,
+  CaipAssetType,
   FungibleAssetMetadata,
+  OnAssetsConversionArguments,
+  OnAssetsConversionResponse,
   OnAssetsLookupResponse,
 } from '@metamask/snaps-sdk';
 
+import type { AssetsUseCases } from '../use-cases';
 import { Caip19Asset } from './caip19';
 
 export class AssetsHandler {
+  readonly #assetsUseCases: AssetsUseCases;
+
+  readonly #expirationInterval: number;
+
+  constructor(assets: AssetsUseCases, expirationInterval: number) {
+    this.#assetsUseCases = assets;
+    this.#expirationInterval = expirationInterval;
+  }
+
   lookup(): OnAssetsLookupResponse {
     const metadata = (
       name: string,
@@ -55,6 +69,48 @@ export class AssetsHandler {
         [Caip19Asset.Testnet4]: metadata('Testnet4 Bitcoin', 'tBTC'),
         [Caip19Asset.Signet]: metadata('Signet Bitcoin', 'sBTC'),
         [Caip19Asset.Regtest]: metadata('Regtest Bitcoin', 'rBTC'),
+      },
+    };
+  }
+
+  async conversion({
+    conversions,
+  }: OnAssetsConversionArguments): Promise<OnAssetsConversionResponse> {
+    const assetIds = conversions.map((conversion) => conversion.to);
+    const conversionTime = Math.floor(Date.now() / 1000); // Unix timestamp
+    const conversionRates: Record<CaipAssetType, AssetConversion | null> = {};
+
+    // Return empty conversionRates if any conversion's "from" is not Bitcoin.
+    // The extension does not send conversions with mixed "from" assets.
+    if (conversions.some((conv) => conv.from !== Caip19Asset.Bitcoin)) {
+      assetIds.forEach((asset) => {
+        conversionRates[asset] = {
+          rate: '0', // Always return 0 for non-Bitcoin conversions
+          conversionTime,
+          expirationTime: conversionTime + 60 * 60 * 24 * 7, // Very long expiration time to avoid unnecessary requests
+        };
+      });
+
+      return {
+        conversionRates: {
+          [conversions[0].from]: conversionRates,
+        },
+      };
+    }
+
+    const assetRates = await this.#assetsUseCases.getBtcRates(assetIds);
+
+    assetRates.forEach(([asset, rate]) => {
+      conversionRates[asset] = {
+        rate: String(rate) ?? null,
+        conversionTime,
+        expirationTime: conversionTime + this.#expirationInterval,
+      };
+    });
+
+    return {
+      conversionRates: {
+        [Caip19Asset.Bitcoin]: conversionRates,
       },
     };
   }

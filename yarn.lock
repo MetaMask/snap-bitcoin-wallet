@@ -2673,6 +2673,7 @@ __metadata:
     "@metamask/key-tree": "npm:^10.0.2"
     "@metamask/keyring-api": "npm:^17.2.0"
     "@metamask/keyring-snap-sdk": "npm:^3.0.1"
+    "@metamask/slip44": "npm:^4.1.0"
     "@metamask/snaps-cli": "npm:^6.7.0"
     "@metamask/snaps-jest": "npm:^8.12.0"
     "@metamask/snaps-sdk": "npm:^6.18.0"
