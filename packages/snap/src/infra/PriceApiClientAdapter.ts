@@ -1,10 +1,10 @@
 import type {
-  AssetPricesClient,
+  AssetRatesClient,
   ExchangeRates,
   PriceApiConfig,
 } from '../entities';
 
-export class PriceApiClientAdapter implements AssetPricesClient {
+export class PriceApiClientAdapter implements AssetRatesClient {
   readonly #endpoint: string;
 
   constructor(config: PriceApiConfig) {

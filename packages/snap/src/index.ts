@@ -39,7 +39,7 @@ logger.logLevel = parseInt(Config.logLevel, 10);
 const snapClient = new SnapClientAdapter(Config.encrypt);
 const chainClient = new EsploraClientAdapter(Config.chain);
 const metaProtocolsClient = new SimpleHashClientAdapter(Config.simpleHash);
-const assetPricesClient = new PriceApiClientAdapter(Config.priceApi);
+const assetRatesClient = new PriceApiClientAdapter(Config.priceApi);
 
 // Data layer
 const accountRepository = new BdkAccountRepository(snapClient);
@@ -61,7 +61,7 @@ const sendFlowUseCases = new SendFlowUseCases(
   Config.targetBlocksConfirmation,
   Config.fallbackFeeRate,
 );
-const assetsUseCases = new AssetsUseCases(assetPricesClient);
+const assetsUseCases = new AssetsUseCases(assetRatesClient);
 
 // Application layer
 const keyringHandler = new KeyringHandler(accountsUseCases);

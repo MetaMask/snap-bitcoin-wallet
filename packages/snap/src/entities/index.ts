@@ -8,4 +8,4 @@ export * from './snap';
 export * from './meta-protocols';
 export * from './error';
 export * from './locale';
-export * from './prices';
+export * from './rates';

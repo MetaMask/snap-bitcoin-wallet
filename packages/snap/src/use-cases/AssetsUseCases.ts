@@ -2,19 +2,19 @@ import slip44 from '@metamask/slip44';
 import type { CaipAssetType } from '@metamask/utils';
 import { parseCaipAssetType } from '@metamask/utils';
 
-import type { AssetPricesClient, AssetRate } from '../entities';
+import type { AssetRatesClient, AssetRate } from '../entities';
 import { logger } from '../infra/logger';
 
 export class AssetsUseCases {
-  readonly #assetPrices: AssetPricesClient;
+  readonly #assetRates: AssetRatesClient;
 
-  constructor(assetPrices: AssetPricesClient) {
-    this.#assetPrices = assetPrices;
+  constructor(assetRates: AssetRatesClient) {
+    this.#assetRates = assetRates;
   }
 
   async getBtcRates(assets: CaipAssetType[]): Promise<AssetRate[]> {
     logger.trace('Fetching BTC rates for: %o', assets);
-    const exchangeRates = await this.#assetPrices.exchangeRates();
+    const exchangeRates = await this.#assetRates.exchangeRates();
     logger.debug('BTC rates fetched successfully');
 
     return assets.map((asset): AssetRate => {

@@ -8,7 +8,7 @@ export type ExchangeRates = {
   };
 };
 
-export type AssetPricesClient = {
+export type AssetRatesClient = {
   /**
    * Returns a list of exchange rates for all supported currencies.
    * @param baseCurrency - the currency to convert prices to. Defaults to 'btc'.

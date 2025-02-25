@@ -136,7 +136,7 @@ export class AccountUseCases {
   async synchronize(account: BitcoinAccount): Promise<void> {
     logger.trace('Synchronizing account. ID: %s', account.id);
 
-    if (account.isScanned) {
+    if (!account.isScanned) {
       logger.warn(
         'Account has not yet performed initial full scan, skipping synchronization. ID: %s',
         account.id,
@@ -182,8 +182,8 @@ export class AccountUseCases {
       throw new Error(`Account not found: ${id}`);
     }
 
-    await this.#repository.delete(id);
     await this.#snapClient.emitAccountDeletedEvent(id);
+    await this.#repository.delete(id);
 
     logger.info('Account deleted successfully: %s', account.id);
   }

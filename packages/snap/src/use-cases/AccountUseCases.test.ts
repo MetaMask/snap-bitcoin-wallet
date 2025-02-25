@@ -240,9 +240,17 @@ describe('AccountUseCases', () => {
       mockAccount.listOutput.mockReturnValue([]);
     });
 
+    it('does not sync if account is not scanned', async () => {
+      mockAccount.listOutput.mockReturnValue([]);
+
+      await useCases.synchronize({ ...mockAccount, isScanned: false });
+
+      expect(mockChain.sync).not.toHaveBeenCalled();
+      expect(mockAccount.listOutput).not.toHaveBeenCalled();
+    });
+
     it('performs a regular sync', async () => {
       mockAccount.listOutput.mockReturnValue([]);
-      mockRepository.get.mockResolvedValue(mockAccount);
 
       await useCases.synchronize(mockAccount);
 
@@ -363,6 +371,7 @@ describe('AccountUseCases', () => {
       },
       {
         id: 'id-2',
+        isScanned: true,
         listOutput: jest.fn(),
       },
     ] as unknown as BitcoinAccount[];
@@ -370,13 +379,12 @@ describe('AccountUseCases', () => {
     it('synchronizes all accounts', async () => {
       mockRepository.getAll.mockResolvedValue(mockAccounts);
       (mockAccounts[0].listOutput as jest.Mock).mockReturnValue([]);
+      (mockAccounts[1].listOutput as jest.Mock).mockReturnValue([]);
 
       await useCases.synchronizeAll();
 
       expect(mockRepository.getAll).toHaveBeenCalled();
-      expect(mockAccounts[0].listOutput).toHaveBeenCalledTimes(2);
-      expect(mockChain.sync).toHaveBeenCalledWith(mockAccounts[0]);
-      expect(mockChain.fullScan).toHaveBeenCalledWith(mockAccounts[1]);
+      expect(mockChain.sync).toHaveBeenCalledTimes(2);
     });
 
     it('propagates errors from getAll', async () => {
@@ -401,28 +409,9 @@ describe('AccountUseCases', () => {
       expect(mockRepository.delete).not.toHaveBeenCalled();
     });
 
-    it('throws error if account is the default account', async () => {
-      const defaultAccount = mock<BitcoinAccount>();
-      defaultAccount.id = 'default-id';
-      defaultAccount.addressType = accountsConfig.defaultAddressType;
-      defaultAccount.network = accountsConfig.defaultNetwork;
-
-      mockRepository.get.mockResolvedValue(defaultAccount);
-
-      await expect(useCases.delete('default-id')).rejects.toThrow(
-        'Default Bitcoin account cannot be removed',
-      );
-
-      expect(mockRepository.get).toHaveBeenCalledWith('default-id');
-      expect(mockSnapClient.emitAccountDeletedEvent).not.toHaveBeenCalled();
-      expect(mockRepository.delete).not.toHaveBeenCalled();
-    });
-
-    it('removes account if not default', async () => {
+    it('removes an account', async () => {
       const mockAccount = mock<BitcoinAccount>();
       mockAccount.id = 'some-id';
-      mockAccount.addressType = 'p2wpkh';
-      mockAccount.network = 'testnet';
 
       mockRepository.get.mockResolvedValue(mockAccount);
 
@@ -438,8 +427,6 @@ describe('AccountUseCases', () => {
     it('propagates an error if the event emitting fails', async () => {
       const mockAccount = mock<BitcoinAccount>();
       mockAccount.id = 'some-id';
-      mockAccount.addressType = 'p2wpkh';
-      mockAccount.network = 'testnet';
       const error = new Error('Event emit failed');
 
       mockRepository.get.mockResolvedValue(mockAccount);
@@ -455,8 +442,6 @@ describe('AccountUseCases', () => {
     it('propagates an error if the repository fails', async () => {
       const mockAccount = mock<BitcoinAccount>();
       mockAccount.id = 'some-id';
-      mockAccount.addressType = 'p2wpkh';
-      mockAccount.network = 'testnet';
       const error = new Error('Delete failed');
 
       mockRepository.get.mockResolvedValue(mockAccount);

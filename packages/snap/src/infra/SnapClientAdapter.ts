@@ -69,43 +69,49 @@ export class SnapClientAdapter implements SnapClient {
   }
 
   async emitAccountCreatedEvent(account: BitcoinAccount): Promise<void> {
-    const addressTypeName = () => {
-      switch (account.addressType) {
-        case 'p2pkh':
-          return 'Legacy';
-        case 'p2sh':
-          return 'Nested SegWit';
-        case 'p2wpkh':
-          return 'Native SegWit';
-        case 'p2tr':
-          return 'Taproot';
-        default:
-          return '';
-      }
-    };
+    let addressTypeName: string;
+    switch (account.addressType) {
+      case 'p2pkh':
+        addressTypeName = 'Legacy';
+        break;
+      case 'p2sh':
+        addressTypeName = 'Nested SegWit';
+        break;
+      case 'p2wpkh':
+        addressTypeName = 'Native SegWit';
+        break;
+      case 'p2tr':
+        addressTypeName = 'Taproot';
+        break;
+      case 'p2wsh':
+        addressTypeName = 'Multisig';
+        break;
+      default:
+        addressTypeName = '';
+    }
 
-    const networkName = () => {
-      switch (account.network) {
-        case 'bitcoin':
-          return 'Bitcoin';
-        case 'testnet':
-        case 'testnet4':
-          return 'BTC Testnet';
-        case 'signet':
-          return 'BTC Signet';
-        case 'regtest':
-          return 'BTC Regtest';
-        default:
-          // Leave it blank to fallback to auto-suggested name on the extension side
-          return '';
-      }
-    };
-
-    const accountNameSuggestion = `${networkName()} ${addressTypeName()}`;
+    let networkName: string;
+    switch (account.network) {
+      case 'bitcoin':
+        networkName = 'Bitcoin';
+        break;
+      case 'testnet':
+      case 'testnet4':
+        networkName = 'BTC Testnet';
+        break;
+      case 'signet':
+        networkName = 'BTC Signet';
+        break;
+      case 'regtest':
+        networkName = 'BTC Regtest';
+        break;
+      default:
+        networkName = 'Bitcoin';
+    }
 
     return emitSnapKeyringEvent(snap, KeyringEvent.AccountCreated, {
       account: snapToKeyringAccount(account),
-      accountNameSuggestion,
+      accountNameSuggestion: `${networkName} ${addressTypeName}`,
     });
   }
 
