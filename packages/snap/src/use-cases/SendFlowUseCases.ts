@@ -254,13 +254,16 @@ export class SendFlowUseCases {
         this.#fallbackFeeRate;
       updatedContext.feeRate = feeRate;
 
-      const exchangeRates = await this.#ratesClient.exchangeRates();
-      const { currency } = await this.#snapClient.getPreferences();
-      updatedContext.fiatRate = {
-        conversionRate: exchangeRates[currency].value,
-        conversionDate: Date.now() / 1000, // Unix Timestamp
-        currency,
-      };
+      // Fiat rate is only relevant for Bitcoin
+      if (context.network === 'bitcoin') {
+        const exchangeRates = await this.#ratesClient.exchangeRates();
+        const { currency } = await this.#snapClient.getPreferences();
+        updatedContext.fiatRate = {
+          conversionRate: exchangeRates[currency].value,
+          conversionDate: Date.now() / 1000, // Unix Timestamp
+          currency,
+        };
+      }
 
       await this.#computeFee(updatedContext);
     } catch (error) {
