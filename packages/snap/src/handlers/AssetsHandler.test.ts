@@ -51,7 +51,7 @@ describe('AssetsHandler', () => {
         { from: Caip19Asset.Bitcoin, to: Caip19Asset.Testnet },
         { from: Caip19Asset.Bitcoin, to: Caip19Asset.Regtest },
       ];
-      mockAssetsUseCases.getBtcRates.mockResolvedValue([
+      mockAssetsUseCases.getRates.mockResolvedValue([
         [Caip19Asset.Testnet, 0.1],
         [Caip19Asset.Regtest, 0.2],
       ]);
@@ -78,7 +78,7 @@ describe('AssetsHandler', () => {
         { from: Caip19Asset.Bitcoin, to: Caip19Asset.Testnet },
       ];
       const error = new Error();
-      mockAssetsUseCases.getBtcRates.mockRejectedValue(error);
+      mockAssetsUseCases.getRates.mockRejectedValue(error);
 
       await expect(handler.conversion({ conversions })).rejects.toThrow(error);
     });

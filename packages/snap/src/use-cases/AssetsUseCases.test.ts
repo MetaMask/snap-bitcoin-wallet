@@ -28,7 +28,7 @@ describe('AssetsUseCases', () => {
 
       mockAssetRates.exchangeRates.mockResolvedValue(mockExchangeRates);
 
-      const result = await useCases.getBtcRates([
+      const result = await useCases.getRates([
         'eip155:1/slip44:60',
         'bip122:000000000019d6689c085ae165831e93/slip44:0',
         'swift:0/iso4217:USD',
@@ -48,7 +48,7 @@ describe('AssetsUseCases', () => {
       const error = new Error('Get failed');
       mockAssetRates.exchangeRates.mockRejectedValue(error);
 
-      await expect(useCases.getBtcRates([Caip19Asset.Testnet])).rejects.toBe(
+      await expect(useCases.getRates([Caip19Asset.Testnet])).rejects.toBe(
         error,
       );
     });
