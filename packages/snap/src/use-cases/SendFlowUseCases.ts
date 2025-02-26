@@ -11,11 +11,7 @@ import type {
   ReviewTransactionContext,
   AssetRatesClient,
 } from '../entities';
-import {
-  SendFormEvent,
-  ReviewTransactionEvent,
-  SENDFORM_REFRESH_RATE_METHOD,
-} from '../entities';
+import { SendFormEvent, ReviewTransactionEvent } from '../entities';
 import { logger } from '../infra/logger';
 
 export class SendFlowUseCases {
@@ -120,6 +116,12 @@ export class SendFlowUseCases {
             sendForm: context,
           };
 
+          if (context.backgroundEventId) {
+            await this.#snapClient.cancelBackgroundEvent(
+              context.backgroundEventId,
+            );
+          }
+
           return await this.#sendFlowRepository.updateReview(id, reviewContext);
         }
         throw new Error('Inconsistent Send form context');
@@ -152,7 +154,11 @@ export class SendFlowUseCases {
       case ReviewTransactionEvent.HeaderBack: {
         // If we come from a send form, we display it again, otherwise we resolve the interface (reject)
         if (context.sendForm) {
-          return this.#sendFlowRepository.updateForm(id, context.sendForm);
+          return this.#sendFlowRepository.updateForm(
+            id,
+            context.sendForm,
+            'PT1S',
+          );
         }
         return this.#snapClient.resolveInterface(id, null);
       }
@@ -164,11 +170,6 @@ export class SendFlowUseCases {
           recipient,
         };
 
-        if (context.backgroundEventId) {
-          await this.#snapClient.cancelBackgroundEvent(
-            context.backgroundEventId,
-          );
-        }
         return this.#snapClient.resolveInterface(id, txRequest);
       }
       default:
@@ -275,14 +276,11 @@ export class SendFlowUseCases {
       );
     }
 
-    const backgroundEventId = await this.#snapClient.scheduleBackgroundEvent(
+    await this.#sendFlowRepository.updateForm(
+      id,
+      updatedContext,
       this.#ratesRefreshInterval,
-      SENDFORM_REFRESH_RATE_METHOD,
-      { intefaceId: id, context },
     );
-    updatedContext.backgroundEventId = backgroundEventId;
-
-    await this.#sendFlowRepository.updateForm(id, updatedContext);
   }
 
   async #computeFee(context: SendFormContext): Promise<SendFormContext> {

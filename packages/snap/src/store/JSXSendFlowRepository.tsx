@@ -57,7 +57,20 @@ export class JSXSendFlowRepository implements SendFlowRepository {
     return interfaceId;
   }
 
-  async updateForm(id: string, context: SendFormContext): Promise<void> {
+  async updateForm(
+    id: string,
+    context: SendFormContext,
+    ratesRefreshInterval?: string,
+  ): Promise<void> {
+    if (ratesRefreshInterval) {
+      const backgroundEventId = await this.#snapClient.scheduleBackgroundEvent(
+        ratesRefreshInterval,
+        SENDFORM_REFRESH_RATE_METHOD,
+        { intefaceId: id, context },
+      );
+      context.backgroundEventId = backgroundEventId;
+    }
+
     this.#snapClient.updateInterface(
       id,
       <SendFormView {...context} />,

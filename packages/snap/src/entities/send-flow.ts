@@ -90,8 +90,13 @@ export type SendFlowRepository = {
    * Update an interface to the send form view.
    * @param id - the interface ID
    * @param context - the form context
+   * @param ratesRefreshInterval - optional interval duration for the next background event
    */
-  updateForm(id: string, context: SendFormContext): Promise<void>;
+  updateForm(
+    id: string,
+    context: SendFormContext,
+    ratesRefreshInterval?: string,
+  ): Promise<void>;
 
   /**
    * Update an interface to the review transaction view.
