@@ -37,7 +37,7 @@ export class SnapClientAdapter implements SnapClient {
   }
 
   async set(newState: SnapState): Promise<void> {
-    snap.request({
+    await snap.request({
       method: 'snap_manageState',
       params: {
         operation: 'update',
@@ -149,7 +149,7 @@ export class SnapClientAdapter implements SnapClient {
     ui: ComponentOrElement,
     context: Record<string, Json>,
   ): Promise<void> {
-    snap.request({
+    await snap.request({
       method: 'snap_updateInterface',
       params: {
         id,
@@ -181,7 +181,7 @@ export class SnapClientAdapter implements SnapClient {
   }
 
   async resolveInterface(id: string, value: Json): Promise<void> {
-    snap.request({
+    await snap.request({
       method: 'snap_resolveInterface',
       params: {
         id,
@@ -208,7 +208,7 @@ export class SnapClientAdapter implements SnapClient {
   }
 
   async cancelBackgroundEvent(id: string): Promise<void> {
-    snap.request({
+    await snap.request({
       method: 'snap_cancelBackgroundEvent',
       params: {
         id,

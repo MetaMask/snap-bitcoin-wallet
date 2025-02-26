@@ -11,7 +11,11 @@ import type {
   ReviewTransactionContext,
   AssetRatesClient,
 } from '../entities';
-import { SendFormEvent, ReviewTransactionEvent } from '../entities';
+import {
+  SendFormEvent,
+  ReviewTransactionEvent,
+  SENDFORM_REFRESH_RATE_METHOD,
+} from '../entities';
 import { logger } from '../infra/logger';
 
 export class SendFlowUseCases {
@@ -154,11 +158,13 @@ export class SendFlowUseCases {
       case ReviewTransactionEvent.HeaderBack: {
         // If we come from a send form, we display it again, otherwise we resolve the interface (reject)
         if (context.sendForm) {
-          return this.#sendFlowRepository.updateForm(
-            id,
-            context.sendForm,
+          await this.#snapClient.scheduleBackgroundEvent(
             'PT1S',
+            SENDFORM_REFRESH_RATE_METHOD,
+            { interfaceId: id, context },
           );
+
+          return this.#sendFlowRepository.updateForm(id, context.sendForm);
         }
         return this.#snapClient.resolveInterface(id, null);
       }
@@ -276,11 +282,14 @@ export class SendFlowUseCases {
       );
     }
 
-    await this.#sendFlowRepository.updateForm(
-      id,
-      updatedContext,
+    const backgroundEventId = await this.#snapClient.scheduleBackgroundEvent(
       this.#ratesRefreshInterval,
+      SENDFORM_REFRESH_RATE_METHOD,
+      { interfaceId: id, context },
     );
+    updatedContext.backgroundEventId = backgroundEventId;
+
+    await this.#sendFlowRepository.updateForm(id, updatedContext);
   }
 
   async #computeFee(context: SendFormContext): Promise<SendFormContext> {

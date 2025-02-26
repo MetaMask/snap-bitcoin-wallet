@@ -1,14 +1,13 @@
-import { SendFlowUseCases } from '../use-cases';
+import type { Json } from '@metamask/utils';
+
+import type { SendFormContext } from '../entities';
+import { SENDFORM_REFRESH_RATE_METHOD, SendFormEvent } from '../entities';
+import type { SendFlowUseCases } from '../use-cases';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
-import { Json } from '@metamask/utils';
-import {
-  SENDFORM_REFRESH_RATE_METHOD,
-  SendFormContext,
-  SendFormEvent,
-} from '../entities';
 
 export class CronHandler {
   readonly #accountsUseCases: AccountUseCases;
+
   readonly #sendFlowUseCases: SendFlowUseCases;
 
   constructor(accounts: AccountUseCases, sendFlow: SendFlowUseCases) {
