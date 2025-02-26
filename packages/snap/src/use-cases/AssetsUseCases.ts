@@ -12,7 +12,7 @@ export class AssetsUseCases {
     this.#assetRates = assetRates;
   }
 
-  async getBtcRates(assets: CaipAssetType[]): Promise<AssetRate[]> {
+  async getRates(assets: CaipAssetType[]): Promise<AssetRate[]> {
     logger.trace('Fetching BTC rates for: %o', assets);
     const exchangeRates = await this.#assetRates.exchangeRates();
     logger.debug('BTC rates fetched successfully');

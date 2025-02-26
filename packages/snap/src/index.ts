@@ -3,7 +3,6 @@ import type {
   OnAssetsConversionHandler,
   OnAssetsLookupHandler,
   OnCronjobHandler,
-  OnInstallHandler,
 } from '@metamask/snaps-sdk';
 import {
   type OnRpcRequestHandler,
@@ -81,26 +80,6 @@ export const validateOrigin = (origin: string, method: string): void => {
   if (!originPermissions.get(origin)?.has(method)) {
     // eslint-disable-next-line @typescript-eslint/no-throw-literal
     throw new UnauthorizedError(`Permission denied`);
-  }
-};
-
-export const onInstall: OnInstallHandler = async () => {
-  try {
-    const account = await accountsUseCases.create(
-      Config.accounts.defaultNetwork,
-      Config.accounts.defaultAddressType,
-    );
-    await accountsUseCases.fullScan(account);
-  } catch (error) {
-    let snapError = error;
-
-    if (!isSnapRpcError(error)) {
-      snapError = new SnapError(error);
-    }
-    logger.error(
-      `onInstall error: ${JSON.stringify(snapError.toJSON(), null, 2)}`,
-    );
-    throw snapError;
   }
 };
 

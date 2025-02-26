@@ -97,7 +97,7 @@ export class AssetsHandler {
       };
     }
 
-    const assetRates = await this.#assetsUseCases.getBtcRates(assetIds);
+    const assetRates = await this.#assetsUseCases.getRates(assetIds);
 
     assetRates.forEach(([asset, rate]) => {
       conversionRates[asset] = rate

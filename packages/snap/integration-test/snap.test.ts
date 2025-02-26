@@ -22,50 +22,16 @@ describe('Bitcoin Snap', () => {
           'journey embrace permit coil indoor stereo welcome maid movie easy clock spider tent slush bright luxury awake waste legal modify awkward answer acid goose',
       },
     });
-
-    snap.mockJsonRpc({ method: 'snap_manageAccounts', result: {} });
-    await snap.onInstall();
-
-    let response = await snap.onKeyringRequest({
-      origin,
-      method: 'keyring_listAccounts',
-    });
-
-    expect(response).toRespondWith([
-      {
-        type: Caip2AddressType.P2wpkh,
-        id: expect.anything(),
-        address: 'bcrt1qjtgffm20l9vu6a7gacxvpu2ej4kdcsgcgnly6t',
-        options: {},
-        scopes: [BtcScope.Regtest],
-        methods: [BtcMethod.SendBitcoin],
-      },
-    ]);
-
-    if ('result' in response.response) {
-      const [defaultAccount] = response.response.result as KeyringAccount[];
-      accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`] =
-        defaultAccount;
-    }
-
-    response = await snap.onKeyringRequest({
-      origin,
-      method: 'keyring_getAccountBalances',
-      params: {
-        id: accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id,
-        assets: [Caip19Asset.Regtest],
-      },
-    });
-
-    expect(response).toRespondWith({
-      [Caip19Asset.Regtest]: {
-        amount: '500',
-        unit: CurrencyUnit.Regtest,
-      },
-    });
   });
 
   it.each([
+    {
+      // Main account used in the tests, only one to synchronize
+      addressType: Caip2AddressType.P2wpkh,
+      scope: BtcScope.Regtest,
+      expectedAddress: 'bcrt1qjtgffm20l9vu6a7gacxvpu2ej4kdcsgcgnly6t',
+      synchronize: true,
+    },
     {
       addressType: Caip2AddressType.P2wpkh,
       scope: BtcScope.Mainnet,
@@ -105,14 +71,14 @@ describe('Bitcoin Snap', () => {
     },
   ])(
     'creates an account: %s',
-    async ({ addressType, scope, expectedAddress }) => {
+    async ({ addressType, scope, expectedAddress, synchronize }) => {
       snap.mockJsonRpc({ method: 'snap_manageAccounts', result: {} });
 
       const response = await snap.onKeyringRequest({
         origin,
         method: 'keyring_createAccount',
         params: {
-          options: { scope, addressType },
+          options: { scope, addressType, synchronize: synchronize ?? null },
         },
       });
 
@@ -172,6 +138,24 @@ describe('Bitcoin Snap', () => {
     });
 
     expect(response).toRespondWith(Object.values(accounts));
+  });
+
+  it('gets an account balance', async () => {
+    const response = await snap.onKeyringRequest({
+      origin,
+      method: 'keyring_getAccountBalances',
+      params: {
+        id: accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id,
+        assets: [Caip19Asset.Regtest],
+      },
+    });
+
+    expect(response).toRespondWith({
+      [Caip19Asset.Regtest]: {
+        amount: '500',
+        unit: CurrencyUnit.Regtest,
+      },
+    });
   });
 
   it('removes an account', async () => {
@@ -361,7 +345,7 @@ describe('Bitcoin Snap', () => {
     });
   });
 
-  // To be improved once listAccountTransactions is implemented to return transactions and check the confirmations
+  // To be improved once listAccountTransactions is implemented to check the tx confirmation status
   it('synchronize accounts via cronjob', async () => {
     const response = await snap.onCronjob({ method: 'synchronize' });
     expect(response).toRespondWith(null);
