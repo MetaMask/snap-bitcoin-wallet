@@ -3,15 +3,13 @@ import { SLIP10Node } from '@metamask/key-tree';
 import { KeyringEvent } from '@metamask/keyring-api';
 import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
 import type {
-  AvailableCurrency,
   ComponentOrElement,
-  CurrencyRate,
+  GetPreferencesResult,
   Json,
-  SnapsProvider,
 } from '@metamask/snaps-sdk';
 
 import type { BitcoinAccount, SnapClient, SnapState } from '../entities';
-import { CurrencyUnit, networkToCurrencyUnit } from '../entities';
+import { networkToCurrencyUnit } from '../entities';
 import { networkToCaip19 } from '../handlers/caip19';
 import { snapToKeyringAccount } from '../handlers/keyring-account';
 
@@ -20,10 +18,6 @@ export class SnapClientAdapter implements SnapClient {
 
   constructor(encrypt = false) {
     this.#encrypt = encrypt;
-  }
-
-  get provider(): SnapsProvider {
-    return snap;
   }
 
   async get(): Promise<SnapState> {
@@ -43,7 +37,7 @@ export class SnapClientAdapter implements SnapClient {
   }
 
   async set(newState: SnapState): Promise<void> {
-    await snap.request({
+    snap.request({
       method: 'snap_manageState',
       params: {
         operation: 'update',
@@ -54,7 +48,7 @@ export class SnapClientAdapter implements SnapClient {
   }
 
   async getPrivateEntropy(derivationPath: string[]): Promise<JsonSLIP10Node> {
-    return await snap.request({
+    return snap.request({
       method: 'snap_getBip32Entropy',
       params: {
         path: derivationPath,
@@ -141,7 +135,7 @@ export class SnapClientAdapter implements SnapClient {
     ui: ComponentOrElement,
     context: Record<string, Json>,
   ): Promise<string> {
-    return await snap.request({
+    return snap.request({
       method: 'snap_createInterface',
       params: {
         ui,
@@ -155,7 +149,7 @@ export class SnapClientAdapter implements SnapClient {
     ui: ComponentOrElement,
     context: Record<string, Json>,
   ): Promise<void> {
-    await snap.request({
+    snap.request({
       method: 'snap_updateInterface',
       params: {
         id,
@@ -187,7 +181,7 @@ export class SnapClientAdapter implements SnapClient {
   }
 
   async resolveInterface(id: string, value: Json): Promise<void> {
-    await snap.request({
+    snap.request({
       method: 'snap_resolveInterface',
       params: {
         id,
@@ -196,21 +190,35 @@ export class SnapClientAdapter implements SnapClient {
     });
   }
 
-  async getCurrencyRate(
-    currency: CurrencyUnit,
-  ): Promise<CurrencyRate | undefined> {
-    // TODO: Remove when fix implemented: https://github.com/MetaMask/accounts-planning/issues/832
-    if (currency !== CurrencyUnit.Bitcoin) {
-      return undefined;
-    }
-
-    const rate = await snap.request({
-      method: 'snap_getCurrencyRate',
+  async scheduleBackgroundEvent(
+    interval: string,
+    method: string,
+    params: Record<string, Json>,
+  ): Promise<string> {
+    return snap.request({
+      method: 'snap_scheduleBackgroundEvent',
       params: {
-        currency: currency as unknown as AvailableCurrency,
+        duration: interval,
+        request: {
+          method,
+          params,
+        },
       },
     });
+  }
 
-    return rate ?? undefined;
+  async cancelBackgroundEvent(id: string): Promise<void> {
+    snap.request({
+      method: 'snap_cancelBackgroundEvent',
+      params: {
+        id,
+      },
+    });
+  }
+
+  async getPreferences(): Promise<GetPreferencesResult> {
+    return snap.request({
+      method: 'snap_getPreferences',
+    });
   }
 }

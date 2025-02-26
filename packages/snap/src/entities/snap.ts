@@ -1,9 +1,11 @@
 import type { JsonSLIP10Node, SLIP10Node } from '@metamask/key-tree';
-import type { ComponentOrElement, CurrencyRate } from '@metamask/snaps-sdk';
+import type {
+  ComponentOrElement,
+  GetPreferencesResult,
+} from '@metamask/snaps-sdk';
 import type { Json } from '@metamask/utils';
 
 import type { BitcoinAccount } from './account';
-import type { CurrencyUnit } from './currency';
 import type { Inscription } from './meta-protocols';
 
 export type SnapState = {
@@ -111,9 +113,25 @@ export type SnapClient = {
   ): Promise<InterfaceStateType | undefined>;
 
   /**
-   * Retrieve the currency rate.
-   * @param currency - The currency unit.
-   * @returns A Promise that resolves to the currency rate.
+   * Schedule a one-off callback.
+   * @param interval - The interval in seconds before the event is executed.
+   * @param method - The method to call on reception of the event being triggered.
+   * @param params - The params of the event.
    */
-  getCurrencyRate(currency: CurrencyUnit): Promise<CurrencyRate | undefined>;
+  scheduleBackgroundEvent(
+    interval: string,
+    method: string,
+    params: Json,
+  ): Promise<string>;
+
+  /**
+   * Cancel an already scheduled background event.
+   * @param id - The event id.
+   */
+  cancelBackgroundEvent(id: string): Promise<void>;
+
+  /**
+   * Get user preferences.
+   */
+  getPreferences(): Promise<GetPreferencesResult>;
 };

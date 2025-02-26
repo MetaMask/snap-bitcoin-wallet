@@ -25,8 +25,10 @@ export type SendFormContext = {
     recipient?: string;
     amount?: string;
   };
+  backgroundEventId?: string;
 };
 
+export const SENDFORM_REFRESH_RATE_METHOD = 'sendFormRefreshRates';
 export enum SendFormEvent {
   Amount = 'amount',
   Recipient = 'recipient',
@@ -34,6 +36,7 @@ export enum SendFormEvent {
   Confirm = 'confirm',
   Cancel = 'cancel',
   SetMax = 'max',
+  RefreshRates = 'refreshRates',
 }
 
 export type SendFormState = {
@@ -50,6 +53,7 @@ export type ReviewTransactionContext = {
   recipient: string;
   amount: string;
   fee: string;
+  backgroundEventId?: string;
 
   /**
    * Used to repopulate the send form if the user decides to go back in the flow
@@ -76,14 +80,11 @@ export type SendFlowRepository = {
 
   /**
    * Insert a new send form interface.
-   * @param context - the form context
+   * @param account - the Bitcoin account
+   * @param feeRate - the initial fee rate
    * @returns the interface ID
    */
-  insertForm(
-    account: BitcoinAccount,
-    feeRate: number,
-    fiatRate?: CurrencyRate,
-  ): Promise<string>;
+  insertForm(account: BitcoinAccount, feeRate: number): Promise<string>;
 
   /**
    * Update an interface to the send form view.
