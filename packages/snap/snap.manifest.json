@@ -82,7 +82,7 @@
         {
           "expression": "* * * * *",
           "request": {
-            "method": "synchronize"
+            "method": "synchronizeAccounts"
           }
         }
       ]
