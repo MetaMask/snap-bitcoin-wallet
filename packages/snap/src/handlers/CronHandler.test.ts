@@ -1,9 +1,9 @@
 import { mock } from 'jest-mock-extended';
 
 import type { BitcoinAccount } from '../entities';
+import type { ILogger } from '../infra/logger';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 import { CronHandler } from './CronHandler';
-import { ILogger } from '../infra/logger';
 
 jest.mock('../infra/logger', () => {
   return { logger: mock<ILogger>() };
