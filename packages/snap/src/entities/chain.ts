@@ -2,6 +2,14 @@ import type { FeeEstimates, Network, Transaction } from 'bitcoindevkit';
 
 import type { BitcoinAccount } from './account';
 
+export const BlockTime: Record<Network, number> = {
+  bitcoin: 10,
+  testnet: 10,
+  testnet4: 10,
+  signet: 0.5,
+  regtest: 0.5,
+};
+
 export type BlockchainClient = {
   /**
    * Perform a full scan operation on the account.

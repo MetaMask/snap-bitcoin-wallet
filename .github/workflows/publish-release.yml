@@ -32,6 +32,7 @@ jobs:
           yarn build
         env:
           SIMPLEHASH_API_KEY: ${{ secrets.SIMPLEHASH_API_KEY }}
+          LOG_LEVEL: 0
       - uses: actions/cache@v4
         id: restore-build
         with:

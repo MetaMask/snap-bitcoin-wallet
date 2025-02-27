@@ -9,13 +9,14 @@ import {
   SendFormEvent,
 } from '../src/entities';
 import { Caip2AddressType, Caip19Asset } from '../src/handlers';
+import { Json } from '@metamask/utils';
 
 describe('Bitcoin Snap', () => {
   const accounts: Record<string, KeyringAccount> = {};
   const origin = 'metamask';
   let snap: Snap;
 
-  it('installs the Snap, creates the default account and scans it', async () => {
+  it('installs the Snap', async () => {
     snap = await installSnap({
       options: {
         secretRecoveryPhrase:
@@ -76,12 +77,15 @@ describe('Bitcoin Snap', () => {
     async ({ addressType, scope, expectedAddress, synchronize }) => {
       snap.mockJsonRpc({ method: 'snap_manageAccounts', result: {} });
 
+      const options: Record<string, Json> = { scope, addressType };
+      if (synchronize) {
+        options.synchronize = synchronize;
+      }
+
       const response = await snap.onKeyringRequest({
         origin,
         method: 'keyring_createAccount',
-        params: {
-          options: { scope, addressType, synchronize: synchronize ?? null },
-        },
+        params: { options },
       });
 
       expect(response).toRespondWith({
@@ -349,7 +353,7 @@ describe('Bitcoin Snap', () => {
 
   // To be improved once listAccountTransactions is implemented to check the tx confirmation status
   it('synchronize accounts via cronjob', async () => {
-    const response = await snap.onCronjob({ method: 'synchronize' });
+    const response = await snap.onCronjob({ method: 'synchronizeAccounts' });
     expect(response).toRespondWith(null);
   });
 });

@@ -1,8 +1,13 @@
 import { mock } from 'jest-mock-extended';
 
+import type { BitcoinAccount } from '../entities';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 import { CronHandler } from './CronHandler';
-import { BitcoinAccount } from '../entities';
+import { ILogger } from '../infra/logger';
+
+jest.mock('../infra/logger', () => {
+  return { logger: mock<ILogger>() };
+});
 
 describe('CronHandler', () => {
   const mockAccountUseCases = mock<AccountUseCases>();
@@ -31,12 +36,14 @@ describe('CronHandler', () => {
       await expect(handler.route('synchronizeAccounts')).rejects.toThrow(error);
     });
 
-    it('propagates errors from synchronize', async () => {
+    it('does not propagate errors from synchronize', async () => {
       mockAccountUseCases.list.mockResolvedValue(mockAccounts);
       const error = new Error();
       mockAccountUseCases.synchronize.mockRejectedValue(error);
 
-      await expect(handler.route('synchronizeAccounts')).rejects.toThrow(error);
+      await handler.route('synchronizeAccounts');
+
+      expect(mockAccountUseCases.synchronize).toHaveBeenCalledTimes(2);
     });
   });
 });

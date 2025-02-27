@@ -16,7 +16,7 @@ import type { CaipAccountId } from '@metamask/utils';
 
 import { Config } from '../../config';
 import type { ReviewTransactionContext } from '../../entities';
-import { ReviewTransactionEvent } from '../../entities';
+import { BlockTime, ReviewTransactionEvent } from '../../entities';
 import { getTranslator } from '../../entities/locale';
 import { networkToCaip2 } from '../../handlers/caip2';
 import { HeadingWithReturn } from './components';
@@ -80,7 +80,9 @@ export const ReviewTransactionView: SnapComponent<ReviewTransactionContext> = (
             tooltip={t('transactionSpeedTooltip')}
           >
             <Text>
-              {`${Config.targetBlocksConfirmation * 10} ${t('minutes')}`}
+              {`${Config.targetBlocksConfirmation * BlockTime[network]} ${t(
+                'minutes',
+              )}`}
             </Text>
           </Row>
           <Row label={t('transactionFee')} tooltip={t('transactionFeeTooltip')}>

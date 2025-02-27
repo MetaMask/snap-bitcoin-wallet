@@ -11,25 +11,29 @@ export class CronHandler {
   async route(method: string): Promise<void> {
     switch (method) {
       case 'synchronizeAccounts': {
-        const accounts = await this.#accountsUseCases.list();
-        const results = await Promise.allSettled(
-          accounts.map(async (account) => {
-            return this.#accountsUseCases.synchronize(account);
-          }),
-        );
-
-        results.forEach((result, index) => {
-          if (result.status === 'rejected') {
-            logger.error(
-              `Account failed to sync. ID: %s. Error: %o`,
-              accounts[index].id,
-              result.reason,
-            );
-          }
-        });
+        return this.synchronizeAccounts();
       }
       default:
         throw new Error('Method not found.');
     }
+  }
+
+  async synchronizeAccounts(): Promise<void> {
+    const accounts = await this.#accountsUseCases.list();
+    const results = await Promise.allSettled(
+      accounts.map(async (account) => {
+        return this.#accountsUseCases.synchronize(account);
+      }),
+    );
+
+    results.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        logger.error(
+          `Account failed to sync. ID: %s. Error: %o`,
+          accounts[index].id,
+          result.reason,
+        );
+      }
+    });
   }
 }
