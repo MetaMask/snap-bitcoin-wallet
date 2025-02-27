@@ -9,7 +9,7 @@ import type {
   SnapClient,
   MetaProtocolsClient,
 } from '../entities';
-import { logger } from '../utils';
+import { logger } from '../infra/logger';
 
 const addressTypeToPurpose: Record<AddressType, string> = {
   p2pkh: "44'",

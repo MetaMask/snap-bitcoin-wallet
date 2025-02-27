@@ -6,3 +6,5 @@ export * from './send-flow';
 export * from './transaction';
 export * from './snap';
 export * from './meta-protocols';
+export * from './error';
+export * from './locale';

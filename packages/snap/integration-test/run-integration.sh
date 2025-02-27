@@ -3,7 +3,7 @@
 set -e  
 
 echo "Starting Docker services..."
-docker-compose -f test/integration/docker-compose.yml up -d
+docker-compose -f integration-test/docker-compose.yml up -d
 
 # Check if Docker services started successfully
 if [ $? -ne 0 ]; then
@@ -14,7 +14,7 @@ fi
 echo "Docker services started successfully."
 
 # Show Docker service status
-docker-compose -f test/integration/docker-compose.yml ps
+docker-compose -f integration-test/docker-compose.yml ps
 
 echo "Waiting for Esplora to be ready..."
 sleep 10
@@ -32,7 +32,7 @@ else
 fi
 
 echo "Stopping Docker services..."
-docker-compose -f test/integration/docker-compose.yml down
+docker-compose -f integration-test/docker-compose.yml down
 
 if [ $? -ne 0 ]; then
   echo "Error: Failed to stop Docker services."

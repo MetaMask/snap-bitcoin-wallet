@@ -1,82 +1,39 @@
-import { FeeRate } from './bitcoin/chain/constants';
-import { Caip2ChainId, Caip19Asset } from './constants';
+/* eslint-disable no-restricted-globals */
 
-export enum ApiClient {
-  QuickNode = 'QuickNode',
-  SimpleHash = 'SimpleHash',
-}
+import type { AddressType, Network } from 'bitcoindevkit';
 
-export type SnapChainConfig = {
-  onChainService: {
-    apiClient: {
-      [ApiClient.QuickNode]: {
-        options: {
-          mainnetEndpoint: string | undefined;
-          testnetEndpoint: string | undefined;
-        };
-      };
-      [ApiClient.SimpleHash]: {
-        options: {
-          apiKey: string | undefined;
-        };
-      };
-    };
-  };
-  wallet: {
-    defaultAccountIndex: number;
-    defaultAccountType: string;
-  };
-  availableNetworks: string[];
-  availableAssets: string[];
-  defaultFeeRate: FeeRate;
-  unit: string;
-  explorer: {
-    [network in string]: string;
-  };
-  logLevel: string;
-  defaultConfirmationThreshold: number;
-  defaultSatsProtectionEnabled: boolean;
-};
+import type { SnapConfig } from './entities';
 
-export const Config: SnapChainConfig = {
-  onChainService: {
-    apiClient: {
-      [ApiClient.QuickNode]: {
-        options: {
-          // eslint-disable-next-line no-restricted-globals
-          testnetEndpoint: process.env.QUICKNODE_TESTNET_ENDPOINT,
-          // eslint-disable-next-line no-restricted-globals
-          mainnetEndpoint: process.env.QUICKNODE_MAINNET_ENDPOINT,
-        },
-      },
-      [ApiClient.SimpleHash]: {
-        options: {
-          // eslint-disable-next-line no-restricted-globals
-          apiKey: process.env.SIMPLEHASH_API_KEY,
-        },
-      },
+export const Config: SnapConfig = {
+  logLevel: process.env.LOG_LEVEL ?? '3',
+  encrypt: false,
+  accounts: {
+    index: 0,
+    defaultNetwork: (process.env.DEFAULT_NETWORK ?? 'bitcoin') as Network,
+    defaultAddressType: (process.env.DEFAULT_ADDRESS_TYPE ??
+      'p2wpkh') as AddressType,
+  },
+  chain: {
+    parallelRequests: 1,
+    stopGap: 10,
+    url: {
+      bitcoin: process.env.ESPLORA_BITCOIN ?? 'https://blockstream.info/api',
+      testnet:
+        process.env.ESPLORA_TESTNET ?? 'https://blockstream.info/testnet/api',
+      testnet4:
+        process.env.ESPLORA_TESTNET4 ?? 'https://mempool.space/testnet4/api/v1',
+      signet: process.env.ESPLORA_SIGNET ?? 'https://mutinynet.com/api',
+      regtest:
+        process.env.ESPLORA_REGTEST ?? 'http://localhost:8094/regtest/api',
     },
   },
-  wallet: {
-    defaultAccountIndex: 0,
-    defaultAccountType: 'bip122:p2wpkh',
+  simpleHash: {
+    apiKey: process.env.SIMPLEHASH_API_KEY,
+    url: {
+      bitcoin:
+        process.env.SIMPLEHASH_BITCOIN ?? `https://api.simplehash.com/api/v0`,
+    },
   },
-  availableNetworks: Object.values(Caip2ChainId),
-  availableAssets: Object.values(Caip19Asset),
-  defaultFeeRate: FeeRate.Medium,
-  unit: 'BTC',
-  explorer: {
-    // eslint-disable-next-line no-template-curly-in-string
-    [Caip2ChainId.Mainnet]: 'https://blockstream.info/address/${address}',
-    [Caip2ChainId.Testnet]:
-      // eslint-disable-next-line no-template-curly-in-string
-      'https://blockstream.info/testnet/address/${address}',
-  },
-  // eslint-disable-next-line no-restricted-globals
-  logLevel: process.env.LOG_LEVEL ?? '0',
-  // the number of confirmations required for a transaction to be considered confirmed
-  defaultConfirmationThreshold: 6,
-  defaultSatsProtectionEnabled: true,
+  targetBlocksConfirmation: 3,
+  fallbackFeeRate: 5.0,
 };
-
-export const DefaultCacheTtl = 60 * 1000;

@@ -1,6 +1,6 @@
-import { acquireLock } from './lock';
+import { Mutex } from 'async-mutex';
 
-const localeSetterLock = acquireLock(true);
+const localeSetterLock = new Mutex();
 let locale: Locale;
 
 /**

@@ -1,10 +1,10 @@
 import type { AddressType, Network } from 'bitcoindevkit';
 
 export type SnapConfig = {
+  logLevel: string;
   encrypt: boolean;
   accounts: AccountsConfig;
   chain: ChainConfig;
-  keyringVersion: string;
   simpleHash: SimpleHashConfig;
   // Temporary config to set the expected confirmation target, should eventually be chosen by the user
   targetBlocksConfirmation: number;

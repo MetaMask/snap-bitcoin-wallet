@@ -19,6 +19,7 @@ import {
   CurrencyUnit,
   SendFormEvent,
 } from '../entities';
+import type { ILogger } from '../infra/logger';
 import { SendFlowUseCases } from './SendFlowUseCases';
 
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
@@ -34,7 +35,9 @@ jest.mock('bitcoindevkit', () => {
   };
 });
 
-jest.mock('../utils/logger');
+jest.mock('../infra/logger', () => {
+  return { logger: mock<ILogger>() };
+});
 
 describe('SendFlowUseCases', () => {
   let useCases: SendFlowUseCases;

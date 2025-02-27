@@ -20,13 +20,13 @@
     "build:dapp": "yarn workspace @metamask/bitcoin-wallet-test-dapp build",
     "build:snap": "yarn workspace @metamask/bitcoin-wallet-snap build",
     "lint": "yarn workspaces foreach --all --parallel --verbose run lint",
-    "lint:deps": "yarn workspaces foreach --all --parallel --verbose run depcheck",
+    "lint:deps": "yarn workspaces foreach --all --parallel --verbose run lint:deps",
     "lint:eslint": "yarn workspaces foreach --all --parallel --verbose run lint:eslint",
     "lint:fix": "yarn workspaces foreach --all --parallel --verbose run lint:fix",
     "lint:misc": "yarn workspaces foreach --all --parallel --verbose run lint:misc",
     "lint:types": "yarn workspaces foreach --all --parallel --verbose run lint:types",
     "start": "yarn workspaces foreach --all --parallel --verbose --interlaced run start",
-    "test": "yarn workspaces foreach --all --parallel --verbose run test",
+    "test": "yarn workspace @metamask/bitcoin-wallet-snap run test",
     "test:integration": "yarn workspace @metamask/bitcoin-wallet-snap run test:integration"
   },
   "devDependencies": {

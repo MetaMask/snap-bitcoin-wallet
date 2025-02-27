@@ -6,10 +6,11 @@ import {
   Value,
   type SnapComponent,
 } from '@metamask/snaps-sdk/jsx';
+import type { Network } from 'bitcoindevkit';
 
-import { ConfigV2 } from '../../../configv2';
-import type { CurrencyUnit } from '../../../entities';
-import { getTranslator } from '../../../utils/locale';
+import { Config } from '../../../config';
+import { BlockTime, type CurrencyUnit } from '../../../entities';
+import { getTranslator } from '../../../entities/locale';
 import { displayAmount, displayFiatAmount } from '../format';
 
 type TransactionSummaryProps = {
@@ -17,6 +18,7 @@ type TransactionSummaryProps = {
   fiatRate?: CurrencyRate;
   amount: string;
   fee: string;
+  network: Network;
 };
 
 export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
@@ -24,6 +26,7 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
   amount,
   currency,
   fiatRate,
+  network,
 }) => {
   const t = getTranslator();
 
@@ -38,9 +41,9 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
         />
       </Row>
       <Row label={t('transactionSpeed')} tooltip={t('transactionSpeedTooltip')}>
-        <Text>
-          {`${ConfigV2.targetBlocksConfirmation * 10} ${t('minutes')}`}
-        </Text>
+        <Text>{`${Config.targetBlocksConfirmation * BlockTime[network]} ${t(
+          'minutes',
+        )}`}</Text>
       </Row>
       <Row label={t('total')}>
         <Value

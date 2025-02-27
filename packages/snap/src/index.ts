@@ -1,4 +1,3 @@
-import type { Keyring } from '@metamask/keyring-api';
 import { handleKeyringRequest } from '@metamask/keyring-snap-sdk';
 import type {
   OnAssetsLookupHandler,
@@ -12,11 +11,10 @@ import {
   type Json,
   UnauthorizedError,
   SnapError,
-  MethodNotFoundError,
 } from '@metamask/snaps-sdk';
 
 import { Config } from './config';
-import { ConfigV2 } from './configv2';
+import { isSnapRpcError, loadLocale } from './entities';
 import {
   KeyringHandler,
   CronHandler,
@@ -24,73 +22,49 @@ import {
   RpcHandler,
   AssetsHandler,
 } from './handlers';
-import { SnapClientAdapter, EsploraClientAdapter } from './infra';
-import { SimpleHashClientAdapter } from './infra/SimpleHashClientAdapter';
-import { BtcKeyring } from './keyring';
-import { InternalRpcMethod, originPermissions } from './permissions';
-import type {
-  GetTransactionStatusParams,
-  EstimateFeeParams,
-  GetMaxSpendableBalanceParams,
-} from './rpcs';
 import {
-  getTransactionStatus,
-  estimateFee,
-  getMaxSpendableBalance,
-} from './rpcs';
-import type { StartSendTransactionFlowParams } from './rpcs/start-send-transaction-flow';
-import { startSendTransactionFlow } from './rpcs/start-send-transaction-flow';
-import { KeyringStateManager } from './stateManagement';
+  SnapClientAdapter,
+  EsploraClientAdapter,
+  SimpleHashClientAdapter,
+} from './infra';
+import { logger } from './infra/logger';
+import { originPermissions } from './permissions';
 import { BdkAccountRepository, JSXSendFlowRepository } from './store';
-import {
-  isSendFormEvent,
-  SendBitcoinController,
-} from './ui/controller/send-bitcoin-controller';
-import type { SendFlowContext, SendFormState } from './ui/types';
 import { AccountUseCases, SendFlowUseCases } from './use-cases';
-import { isSnapRpcError, logger } from './utils';
-import { loadLocale } from './utils/locale';
 
+// Infra layer
 logger.logLevel = parseInt(Config.logLevel, 10);
+const snapClient = new SnapClientAdapter(Config.encrypt);
+const chainClient = new EsploraClientAdapter(Config.chain);
+const metaProtocolsClient = new SimpleHashClientAdapter(Config.simpleHash);
 
-let keyringHandler: Keyring;
-let cronHandler: CronHandler;
-let rpcHandler: RpcHandler;
-let userInputHandler: UserInputHandler;
-let assetsHandler: AssetsHandler;
-let accountsUseCases: AccountUseCases;
-if (ConfigV2.keyringVersion === 'v2') {
-  // Infra layer
-  const snapClient = new SnapClientAdapter(ConfigV2.encrypt);
-  const chainClient = new EsploraClientAdapter(ConfigV2.chain);
-  const metaProtocolsClient = new SimpleHashClientAdapter(ConfigV2.simpleHash);
-  // Data layer
-  const accountRepository = new BdkAccountRepository(snapClient);
-  const sendFlowRepository = new JSXSendFlowRepository(snapClient);
+// Data layer
+const accountRepository = new BdkAccountRepository(snapClient);
+const sendFlowRepository = new JSXSendFlowRepository(snapClient);
 
-  // Business layer
-  accountsUseCases = new AccountUseCases(
-    snapClient,
-    accountRepository,
-    chainClient,
-    metaProtocolsClient,
-    ConfigV2.accounts,
-  );
-  const sendFlowUseCases = new SendFlowUseCases(
-    snapClient,
-    accountRepository,
-    sendFlowRepository,
-    chainClient,
-    ConfigV2.targetBlocksConfirmation,
-    ConfigV2.fallbackFeeRate,
-  );
-  // Application layer
-  keyringHandler = new KeyringHandler(accountsUseCases);
-  cronHandler = new CronHandler(accountsUseCases);
-  rpcHandler = new RpcHandler(sendFlowUseCases, accountsUseCases);
-  userInputHandler = new UserInputHandler(sendFlowUseCases);
-  assetsHandler = new AssetsHandler();
-}
+// Business layer
+const accountsUseCases = new AccountUseCases(
+  snapClient,
+  accountRepository,
+  chainClient,
+  metaProtocolsClient,
+  Config.accounts,
+);
+const sendFlowUseCases = new SendFlowUseCases(
+  snapClient,
+  accountRepository,
+  sendFlowRepository,
+  chainClient,
+  Config.targetBlocksConfirmation,
+  Config.fallbackFeeRate,
+);
+
+// Application layer
+const keyringHandler = new KeyringHandler(accountsUseCases);
+const cronHandler = new CronHandler(accountsUseCases);
+const rpcHandler = new RpcHandler(sendFlowUseCases, accountsUseCases);
+const userInputHandler = new UserInputHandler(sendFlowUseCases);
+const assetsHandler = new AssetsHandler();
 
 export const validateOrigin = (origin: string, method: string): void => {
   if (!origin) {
@@ -105,13 +79,10 @@ export const validateOrigin = (origin: string, method: string): void => {
 
 export const onInstall: OnInstallHandler = async () => {
   try {
-    // No need for a handler given the lack of request
-    if (accountsUseCases) {
-      await accountsUseCases.create(
-        ConfigV2.accounts.defaultNetwork,
-        ConfigV2.accounts.defaultAddressType,
-      );
-    }
+    await accountsUseCases.create(
+      Config.accounts.defaultNetwork,
+      Config.accounts.defaultAddressType,
+    );
   } catch (error) {
     let snapError = error;
 
@@ -127,9 +98,7 @@ export const onInstall: OnInstallHandler = async () => {
 
 export const onCronjob: OnCronjobHandler = async ({ request }) => {
   try {
-    if (cronHandler) {
-      await cronHandler.route(request.method);
-    }
+    await cronHandler.route(request.method);
   } catch (error) {
     let snapError = error;
 
@@ -151,33 +120,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
 
   try {
     const { method } = request;
-
     validateOrigin(origin, method);
-
-    if (rpcHandler) {
-      return await rpcHandler.route(method, request.params);
-    }
-
-    switch (method) {
-      case InternalRpcMethod.GetTransactionStatus:
-        return await getTransactionStatus(
-          request.params as GetTransactionStatusParams,
-        );
-      case InternalRpcMethod.EstimateFee:
-        return await estimateFee(request.params as EstimateFeeParams);
-      case InternalRpcMethod.GetMaxSpendableBalance:
-        return await getMaxSpendableBalance(
-          request.params as GetMaxSpendableBalanceParams,
-        );
-      case InternalRpcMethod.StartSendTransactionFlow: {
-        return await startSendTransactionFlow(
-          request.params as StartSendTransactionFlowParams,
-        );
-      }
-
-      default:
-        throw new MethodNotFoundError() as unknown as Error;
-    }
+    return await rpcHandler.route(method, request.params);
   } catch (error) {
     let snapError = error;
 
@@ -199,18 +143,7 @@ export const onKeyringRequest: OnKeyringRequestHandler = async ({
 
   try {
     validateOrigin(origin, request.method);
-
-    if (!keyringHandler) {
-      keyringHandler = new BtcKeyring(new KeyringStateManager(), {
-        defaultIndex: Config.wallet.defaultAccountIndex,
-        origin,
-      });
-    }
-
-    return (await handleKeyringRequest(
-      keyringHandler,
-      request,
-    )) as unknown as Promise<Json>;
+    return (await handleKeyringRequest(keyringHandler, request)) ?? null;
   } catch (error) {
     let snapError = error;
 
@@ -232,25 +165,6 @@ export const onUserInput: OnUserInputHandler = async ({
   await loadLocale();
 
   try {
-    if (!userInputHandler) {
-      const state = await snap.request({
-        method: 'snap_getInterfaceState',
-        params: { id },
-      });
-
-      if (isSendFormEvent(event)) {
-        const sendBitcoinController = new SendBitcoinController({
-          context: context as SendFlowContext,
-          interfaceId: id,
-        });
-        return await sendBitcoinController.handleEvent(
-          event,
-          context as SendFlowContext,
-          state.sendForm as SendFormState,
-        );
-      }
-    }
-
     return userInputHandler.route(id, event, context);
   } catch (error) {
     let snapError = error;
