@@ -57,11 +57,6 @@ describe('JSXSendFlowRepository', () => {
       balance: { trusted_spendable: { to_sat: () => BigInt(1234) } },
       peekAddress: jest.fn(),
     });
-    const fiatRate = {
-      currency: 'USD',
-      conversionRate: 100000,
-      conversionDate: 2025,
-    };
 
     it('creates interface with correct context', async () => {
       mockSnapClient.createInterface.mockResolvedValue('interface-id');
@@ -75,10 +70,9 @@ describe('JSXSendFlowRepository', () => {
         network: 'bitcoin',
         feeRate,
         errors: {},
-        fiatRate,
       };
 
-      const result = await repo.insertForm(mockAccount, feeRate, fiatRate);
+      const result = await repo.insertForm(mockAccount, feeRate);
 
       expect(mockAccount.peekAddress).toHaveBeenCalledWith(0);
       expect(mockSnapClient.createInterface).toHaveBeenCalledWith(

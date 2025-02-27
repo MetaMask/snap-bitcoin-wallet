@@ -125,7 +125,6 @@ export class SendFlowUseCases {
             fee: context.fee,
             sendForm: context,
           };
-
           return this.#sendFlowRepository.updateReview(id, reviewContext);
         }
 

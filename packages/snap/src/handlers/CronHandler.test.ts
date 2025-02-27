@@ -4,17 +4,19 @@ import type { BitcoinAccount } from '../entities';
 import type { ILogger } from '../infra/logger';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 import { CronHandler } from './CronHandler';
+import { SendFlowUseCases } from '../use-cases';
 
 jest.mock('../infra/logger', () => {
   return { logger: mock<ILogger>() };
 });
 
 describe('CronHandler', () => {
+  const mockSendFlowUseCases = mock<SendFlowUseCases>();
   const mockAccountUseCases = mock<AccountUseCases>();
   let handler: CronHandler;
 
   beforeEach(() => {
-    handler = new CronHandler(mockAccountUseCases);
+    handler = new CronHandler(mockAccountUseCases, mockSendFlowUseCases);
   });
 
   describe('synchronizeAccounts', () => {

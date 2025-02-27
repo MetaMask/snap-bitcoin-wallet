@@ -66,7 +66,6 @@ describe('UserInputHandler', () => {
       expect(mockSendFlowUseCases.onFormInput).toHaveBeenCalledWith(
         'interface-id',
         SendFormEvent.ClearRecipient,
-        mockContext,
       );
     });
 

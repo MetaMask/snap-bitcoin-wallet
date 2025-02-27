@@ -1,11 +1,7 @@
 import type { Json, UserInputEvent } from '@metamask/snaps-sdk';
 
 import type { ReviewTransactionContext } from '../entities';
-import {
-  ReviewTransactionEvent,
-  type SendFormContext,
-  SendFormEvent,
-} from '../entities';
+import { ReviewTransactionEvent, SendFormEvent } from '../entities';
 import type { SendFlowUseCases } from '../use-cases';
 
 export class UserInputHandler {
@@ -33,7 +29,8 @@ export class UserInputHandler {
       return this.#sendFlowUseCases.onFormInput(
         interfaceId,
         event.name,
-        context as SendFormContext,
+        // TODO: Reuse when fixed: https://github.com/MetaMask/snaps/issues/3069
+        // context as SendFormContext,
       );
     } else if (this.#isReviewTransactionEvent(event.name)) {
       // Cast context to the appropriate type for review
