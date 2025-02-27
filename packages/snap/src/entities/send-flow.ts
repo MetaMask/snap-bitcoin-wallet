@@ -28,7 +28,6 @@ export type SendFormContext = {
   backgroundEventId?: string;
 };
 
-export const SENDFORM_REFRESH_RATE_METHOD = 'sendFormRefreshRates';
 export enum SendFormEvent {
   Amount = 'amount',
   Recipient = 'recipient',

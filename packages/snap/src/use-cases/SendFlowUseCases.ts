@@ -11,11 +11,7 @@ import type {
   ReviewTransactionContext,
   AssetRatesClient,
 } from '../entities';
-import {
-  SendFormEvent,
-  ReviewTransactionEvent,
-  SENDFORM_REFRESH_RATE_METHOD,
-} from '../entities';
+import { SendFormEvent, ReviewTransactionEvent } from '../entities';
 import { logger } from '../infra/logger';
 
 export class SendFlowUseCases {
@@ -80,22 +76,16 @@ export class SendFlowUseCases {
     return request;
   }
 
-  async updateForm(
+  async onFormInput(
     id: string,
     event: SendFormEvent,
     context: SendFormContext,
   ): Promise<void> {
-    logger.trace('Updating Send form. ID: %s. Event: %s', id, event);
+    logger.trace('Send form input. ID: %s. Event: %s', id, event);
 
     switch (event) {
       case SendFormEvent.Cancel: {
-        if (context.backgroundEventId) {
-          await this.#snapClient.cancelBackgroundEvent(
-            context.backgroundEventId,
-          );
-        }
-
-        return await this.#snapClient.resolveInterface(id, null);
+        return this.#snapClient.resolveInterface(id, null);
       }
       case SendFormEvent.ClearRecipient: {
         const updatedContext = { ...context };
@@ -104,9 +94,15 @@ export class SendFlowUseCases {
         delete updatedContext.errors.tx;
         delete updatedContext.fee;
 
-        return await this.#sendFlowRepository.updateForm(id, updatedContext);
+        return this.#sendFlowRepository.updateForm(id, updatedContext);
       }
       case SendFormEvent.Confirm: {
+        if (context.backgroundEventId) {
+          await this.#snapClient.cancelBackgroundEvent(
+            context.backgroundEventId,
+          );
+        }
+
         if (context.amount && context.recipient && context.fee) {
           const reviewContext: ReviewTransactionContext = {
             from: context.account.address,
@@ -120,14 +116,9 @@ export class SendFlowUseCases {
             sendForm: context,
           };
 
-          if (context.backgroundEventId) {
-            await this.#snapClient.cancelBackgroundEvent(
-              context.backgroundEventId,
-            );
-          }
-
-          return await this.#sendFlowRepository.updateReview(id, reviewContext);
+          return this.#sendFlowRepository.updateReview(id, reviewContext);
         }
+
         throw new Error('Inconsistent Send form context');
       }
       case SendFormEvent.SetMax: {
@@ -139,15 +130,12 @@ export class SendFlowUseCases {
       case SendFormEvent.Amount: {
         return this.#handleSetAmount(id, context);
       }
-      case SendFormEvent.RefreshRates: {
-        return this.#handleRefreshRates(id, context);
-      }
       default:
         throw new Error('Unrecognized event');
     }
   }
 
-  async updateReview(
+  async onReviewInput(
     id: string,
     event: ReviewTransactionEvent,
     context: ReviewTransactionContext,
@@ -160,8 +148,8 @@ export class SendFlowUseCases {
         if (context.sendForm) {
           await this.#snapClient.scheduleBackgroundEvent(
             'PT1S',
-            SENDFORM_REFRESH_RATE_METHOD,
-            { interfaceId: id, context },
+            SendFormEvent.RefreshRates,
+            { interfaceId: id },
           );
 
           return this.#sendFlowRepository.updateForm(id, context.sendForm);
@@ -247,11 +235,17 @@ export class SendFlowUseCases {
     return await this.#sendFlowRepository.updateForm(id, updatedContext);
   }
 
-  async #handleRefreshRates(
-    id: string,
-    context: SendFormContext,
-  ): Promise<void> {
-    const updatedContext = { ...context };
+  async refreshRates(id: string): Promise<void> {
+    logger.trace('Send form refresh rates. ID: %s', id);
+
+    let context = await this.#snapClient.getInterfaceContext<SendFormContext>(
+      id,
+    );
+    if (!context) {
+      logger.trace('Gracefully terminating background event loop. ID: %s', id);
+      return;
+    }
+
     try {
       const feeEstimates = await this.#chainClient.getFeeEstimates(
         context.network,
@@ -259,24 +253,24 @@ export class SendFlowUseCases {
       const feeRate =
         feeEstimates.get(this.#targetBlocksConfirmation) ??
         this.#fallbackFeeRate;
-      updatedContext.feeRate = feeRate;
+      context.feeRate = feeRate;
 
       // Fiat rate is only relevant for Bitcoin
       if (context.network === 'bitcoin') {
         const exchangeRates = await this.#ratesClient.exchangeRates();
         const { currency } = await this.#snapClient.getPreferences();
-        updatedContext.fiatRate = {
+        context.fiatRate = {
           conversionRate: exchangeRates[currency].value,
-          conversionDate: Date.now() / 1000, // Unix Timestamp
-          currency,
+          conversionDate: Math.floor(Date.now() / 1000), // Unix Timestamp
+          currency: currency.toUpperCase(),
         };
       }
 
-      await this.#computeFee(updatedContext);
+      context = await this.#computeFee(context);
     } catch (error) {
       // We do not throw so we can reschedule. We will use the default fallback values anyways if fetching rates fail.
       logger.error(
-        `Failed to fetch rates in. Form: ID: %s. Error: %o`,
+        `Failed to fetch rates in send form, ID: %s. Error: %o`,
         id,
         error,
       );
@@ -284,12 +278,13 @@ export class SendFlowUseCases {
 
     const backgroundEventId = await this.#snapClient.scheduleBackgroundEvent(
       this.#ratesRefreshInterval,
-      SENDFORM_REFRESH_RATE_METHOD,
-      { interfaceId: id, context },
+      SendFormEvent.RefreshRates,
+      { interfaceId: id },
     );
-    updatedContext.backgroundEventId = backgroundEventId;
+    context.backgroundEventId = backgroundEventId;
 
-    await this.#sendFlowRepository.updateForm(id, updatedContext);
+    console.log('context before update in refreshRates', context);
+    await this.#sendFlowRepository.updateForm(id, context);
   }
 
   async #computeFee(context: SendFormContext): Promise<SendFormContext> {

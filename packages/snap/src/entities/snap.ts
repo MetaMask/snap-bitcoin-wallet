@@ -113,6 +113,15 @@ export type SnapClient = {
   ): Promise<InterfaceStateType | undefined>;
 
   /**
+   * Get the context of an interface.
+   * @param id - The interface id.
+   * @returns the context value or undefined.
+   */
+  getInterfaceContext<InterfaceContextType>(
+    id: string,
+  ): Promise<InterfaceContextType | undefined>;
+
+  /**
    * Schedule a one-off callback.
    * @param interval - The interval in seconds before the event is executed.
    * @param method - The method to call on reception of the event being triggered.
@@ -132,6 +141,7 @@ export type SnapClient = {
 
   /**
    * Get user preferences.
+   * @returns the user's preferences.
    */
   getPreferences(): Promise<GetPreferencesResult>;
 };

@@ -4,6 +4,7 @@ import { KeyringEvent } from '@metamask/keyring-api';
 import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
 import type {
   ComponentOrElement,
+  GetInterfaceContextResult,
   GetPreferencesResult,
   Json,
 } from '@metamask/snaps-sdk';
@@ -178,6 +179,15 @@ export class SnapClientAdapter implements SnapClient {
     });
 
     return result[field] as unknown as InterfaceStateType;
+  }
+
+  async getInterfaceContext<InterfaceContextType>(
+    id: string,
+  ): Promise<InterfaceContextType> {
+    return (await snap.request({
+      method: 'snap_getInterfaceContext',
+      params: { id },
+    })) as unknown as InterfaceContextType;
   }
 
   async resolveInterface(id: string, value: Json): Promise<void> {
