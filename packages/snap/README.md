@@ -20,7 +20,7 @@ provider.request({
       method: 'keyring_createAccount',
       params: {
         scope: 'bip122:000000000933ea01ad0ee984209779ba', // the CAIP-2 chain ID of the network
-        addressType: 'bip122:p2wpkh', // the CAIP-2 address type
+        addressType: 'bip122:p2wpkh', // the CAIP-like address type
       },
     },
   },
