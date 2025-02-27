@@ -82,12 +82,16 @@ export class SendFlowUseCases {
     return request;
   }
 
-  async onFormInput(
-    id: string,
-    event: SendFormEvent,
-    context: SendFormContext,
-  ): Promise<void> {
+  async onFormInput(id: string, event: SendFormEvent): Promise<void> {
     logger.trace('Send form input. ID: %s. Event: %s', id, event);
+
+    // TODO: Temporary fetch the context while this is fixed: https://github.com/MetaMask/snaps/issues/3069
+    const context = await this.#snapClient.getInterfaceContext<SendFormContext>(
+      id,
+    );
+    if (!context) {
+      throw new Error(`Interface not found:. ID: ${id}`);
+    }
 
     switch (event) {
       case SendFormEvent.Cancel: {
@@ -248,10 +252,9 @@ export class SendFlowUseCases {
       id,
     );
     if (!context) {
-      logger.trace('Gracefully terminating background event loop. ID: %s', id);
+      logger.debug('Gracefully terminating background event loop. ID: %s', id);
       return;
     }
-    console.log('aaiioo context fetched', context);
 
     try {
       const feeEstimates = await this.#chainClient.getFeeEstimates(
@@ -290,7 +293,6 @@ export class SendFlowUseCases {
     );
     context.backgroundEventId = backgroundEventId;
 
-    console.log('aaiioo context before update in refreshRates', context);
     await this.#sendFlowRepository.updateForm(id, context);
   }
 

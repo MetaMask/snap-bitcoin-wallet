@@ -63,16 +63,16 @@ describe('UserInputHandler', () => {
         mockContext,
       );
 
-      expect(mockSendFlowUseCases.updateForm).toHaveBeenCalledWith(
+      expect(mockSendFlowUseCases.onFormInput).toHaveBeenCalledWith(
         'interface-id',
         SendFormEvent.ClearRecipient,
         mockContext,
       );
     });
 
-    it('propagates errors from updateForm', async () => {
+    it('propagates errors from onFormInput', async () => {
       const error = new Error();
-      mockSendFlowUseCases.updateForm.mockRejectedValue(error);
+      mockSendFlowUseCases.onFormInput.mockRejectedValue(error);
 
       await expect(
         handler.route(
@@ -98,16 +98,16 @@ describe('UserInputHandler', () => {
         mockContext,
       );
 
-      expect(mockSendFlowUseCases.updateReview).toHaveBeenCalledWith(
+      expect(mockSendFlowUseCases.onReviewInput).toHaveBeenCalledWith(
         'interface-id',
         ReviewTransactionEvent.Send,
         mockContext,
       );
     });
 
-    it('propagates errors from updateReview', async () => {
+    it('propagates errors from onReviewInput', async () => {
       const error = new Error();
-      mockSendFlowUseCases.updateReview.mockRejectedValue(error);
+      mockSendFlowUseCases.onReviewInput.mockRejectedValue(error);
 
       await expect(
         handler.route(

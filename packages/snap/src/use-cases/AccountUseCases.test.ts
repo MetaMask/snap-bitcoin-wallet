@@ -362,40 +362,6 @@ describe('AccountUseCases', () => {
     });
   });
 
-  describe('synchronizeAll', () => {
-    const mockAccounts = [
-      {
-        id: 'id-1',
-        isScanned: true,
-        listOutput: jest.fn(),
-      },
-      {
-        id: 'id-2',
-        isScanned: true,
-        listOutput: jest.fn(),
-      },
-    ] as unknown as BitcoinAccount[];
-
-    it('synchronizes all accounts', async () => {
-      mockRepository.getAll.mockResolvedValue(mockAccounts);
-      (mockAccounts[0].listOutput as jest.Mock).mockReturnValue([]);
-      (mockAccounts[1].listOutput as jest.Mock).mockReturnValue([]);
-
-      await useCases.synchronizeAll();
-
-      expect(mockRepository.getAll).toHaveBeenCalled();
-      expect(mockChain.sync).toHaveBeenCalledTimes(2);
-    });
-
-    it('propagates errors from getAll', async () => {
-      const error = new Error();
-      mockRepository.getAll.mockRejectedValue(error);
-
-      await expect(useCases.synchronizeAll()).rejects.toThrow(error);
-      expect(mockRepository.getAll).toHaveBeenCalled();
-    });
-  });
-
   describe('delete', () => {
     it('throws error if account is not found', async () => {
       mockRepository.get.mockResolvedValue(null);

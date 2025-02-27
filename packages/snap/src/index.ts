@@ -86,6 +86,8 @@ export const validateOrigin = (origin: string, method: string): void => {
 };
 
 export const onCronjob: OnCronjobHandler = async ({ request }) => {
+  await loadLocale();
+
   try {
     await cronHandler.route(request.method, request.params);
   } catch (error) {

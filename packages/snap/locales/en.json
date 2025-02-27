@@ -50,7 +50,7 @@
       "message": "The estimated time of the transaction"
     },
     "transactionFee": {
-      "message": "Transaction Fee"
+      "message": "Fee"
     },
     "feeRate": {
       "message": "Fee rate"

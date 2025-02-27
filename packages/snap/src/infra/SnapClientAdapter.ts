@@ -3,9 +3,7 @@ import { SLIP10Node } from '@metamask/key-tree';
 import { KeyringEvent } from '@metamask/keyring-api';
 import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
 import {
-  ResourceNotFoundError,
   type ComponentOrElement,
-  type GetInterfaceContextResult,
   type GetPreferencesResult,
   type Json,
 } from '@metamask/snaps-sdk';
@@ -184,16 +182,17 @@ export class SnapClientAdapter implements SnapClient {
 
   async getInterfaceContext<InterfaceContextType>(
     id: string,
-  ): Promise<InterfaceContextType> {
+  ): Promise<InterfaceContextType | undefined> {
     try {
       return (await snap.request({
         method: 'snap_getInterfaceContext',
         params: { id },
       })) as unknown as InterfaceContextType;
     } catch (error) {
-      const errorType =
-        error instanceof Error ? error.constructor.name : typeof error;
-      console.error(`Caught error of type: ${errorType}`, error);
+      // TODO: Use error type instead when one is available.
+      if (error.message === `Interface with id '${id}' not found.`) {
+        return undefined;
+      }
       throw error;
     }
   }

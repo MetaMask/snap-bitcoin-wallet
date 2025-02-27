@@ -114,25 +114,6 @@ export class AccountUseCases {
     return newAccount;
   }
 
-  async synchronizeAll(): Promise<void> {
-    const accounts = await this.#repository.getAll();
-    const results = await Promise.allSettled(
-      accounts.map(async (account) => {
-        return this.synchronize(account);
-      }),
-    );
-
-    results.forEach((result, index) => {
-      if (result.status === 'rejected') {
-        logger.error(
-          `Account failed to sync. ID: %s. Error: %o`,
-          accounts[index].id,
-          result.reason,
-        );
-      }
-    });
-  }
-
   async synchronize(account: BitcoinAccount): Promise<void> {
     logger.trace('Synchronizing account. ID: %s', account.id);
 
@@ -145,7 +126,7 @@ export class AccountUseCases {
     }
 
     // Outputs are monotone, meaning they can only be added, like transactions. So we can be confident
-    // that a change on the balance cam only happen when new outputs appear.
+    // that a change on the balance can only happen when new outputs appear.
     const nOutputsBefore = account.listOutput().length;
     await this.#chain.sync(account);
     const nOutputsAfter = account.listOutput().length;
