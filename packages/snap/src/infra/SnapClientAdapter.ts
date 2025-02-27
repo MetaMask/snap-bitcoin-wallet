@@ -2,11 +2,12 @@ import type { JsonSLIP10Node } from '@metamask/key-tree';
 import { SLIP10Node } from '@metamask/key-tree';
 import { KeyringEvent } from '@metamask/keyring-api';
 import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
-import type {
-  ComponentOrElement,
-  GetInterfaceContextResult,
-  GetPreferencesResult,
-  Json,
+import {
+  ResourceNotFoundError,
+  type ComponentOrElement,
+  type GetInterfaceContextResult,
+  type GetPreferencesResult,
+  type Json,
 } from '@metamask/snaps-sdk';
 
 import type { BitcoinAccount, SnapClient, SnapState } from '../entities';
@@ -184,10 +185,17 @@ export class SnapClientAdapter implements SnapClient {
   async getInterfaceContext<InterfaceContextType>(
     id: string,
   ): Promise<InterfaceContextType> {
-    return (await snap.request({
-      method: 'snap_getInterfaceContext',
-      params: { id },
-    })) as unknown as InterfaceContextType;
+    try {
+      return (await snap.request({
+        method: 'snap_getInterfaceContext',
+        params: { id },
+      })) as unknown as InterfaceContextType;
+    } catch (error) {
+      const errorType =
+        error instanceof Error ? error.constructor.name : typeof error;
+      console.error(`Caught error of type: ${errorType}`, error);
+      throw error;
+    }
   }
 
   async resolveInterface(id: string, value: Json): Promise<void> {
@@ -203,7 +211,7 @@ export class SnapClientAdapter implements SnapClient {
   async scheduleBackgroundEvent(
     interval: string,
     method: string,
-    params: Record<string, Json>,
+    interfaceId: string,
   ): Promise<string> {
     return snap.request({
       method: 'snap_scheduleBackgroundEvent',
@@ -211,7 +219,7 @@ export class SnapClientAdapter implements SnapClient {
         duration: interval,
         request: {
           method,
-          params,
+          params: { interfaceId },
         },
       },
     });

@@ -64,6 +64,12 @@ export class SendFlowUseCases {
       this.#fallbackFeeRate,
     );
 
+    await this.#snapClient.scheduleBackgroundEvent(
+      'PT1S',
+      SendFormEvent.RefreshRates,
+      interfaceId,
+    );
+
     // Blocks and waits for user actions
     const request = await this.#snapClient.displayInterface<TransactionRequest>(
       interfaceId,
@@ -149,7 +155,7 @@ export class SendFlowUseCases {
           await this.#snapClient.scheduleBackgroundEvent(
             'PT1S',
             SendFormEvent.RefreshRates,
-            { interfaceId: id },
+            id,
           );
 
           return this.#sendFlowRepository.updateForm(id, context.sendForm);
@@ -245,6 +251,7 @@ export class SendFlowUseCases {
       logger.trace('Gracefully terminating background event loop. ID: %s', id);
       return;
     }
+    console.log('aaiioo context fetched', context);
 
     try {
       const feeEstimates = await this.#chainClient.getFeeEstimates(
@@ -279,11 +286,11 @@ export class SendFlowUseCases {
     const backgroundEventId = await this.#snapClient.scheduleBackgroundEvent(
       this.#ratesRefreshInterval,
       SendFormEvent.RefreshRates,
-      { interfaceId: id },
+      id,
     );
     context.backgroundEventId = backgroundEventId;
 
-    console.log('context before update in refreshRates', context);
+    console.log('aaiioo context before update in refreshRates', context);
     await this.#sendFlowRepository.updateForm(id, context);
   }
 

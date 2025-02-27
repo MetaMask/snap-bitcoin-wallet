@@ -6,11 +6,7 @@ import type {
   ReviewTransactionContext,
   BitcoinAccount,
 } from '../entities';
-import {
-  networkToCurrencyUnit,
-  SENDFORM_NAME,
-  SENDFORM_REFRESH_RATE_METHOD,
-} from '../entities';
+import { networkToCurrencyUnit, SENDFORM_NAME } from '../entities';
 import { ReviewTransactionView, SendFormView } from '../infra/jsx';
 
 export class JSXSendFlowRepository implements SendFlowRepository {
@@ -43,18 +39,10 @@ export class JSXSendFlowRepository implements SendFlowRepository {
       errors: {},
     };
 
-    const interfaceId = await this.#snapClient.createInterface(
+    return this.#snapClient.createInterface(
       <SendFormView {...context} />,
       context,
     );
-
-    await this.#snapClient.scheduleBackgroundEvent(
-      'PT1S',
-      SENDFORM_REFRESH_RATE_METHOD,
-      { interfaceId, context },
-    );
-
-    return interfaceId;
   }
 
   async updateForm(id: string, context: SendFormContext): Promise<void> {

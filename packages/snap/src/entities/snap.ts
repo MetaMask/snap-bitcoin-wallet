@@ -125,12 +125,12 @@ export type SnapClient = {
    * Schedule a one-off callback.
    * @param interval - The interval in seconds before the event is executed.
    * @param method - The method to call on reception of the event being triggered.
-   * @param params - The params of the event.
+   * @param interfaceId - The interface id.
    */
   scheduleBackgroundEvent(
     interval: string,
     method: string,
-    params: Json,
+    interfaceId: string,
   ): Promise<string>;
 
   /**
