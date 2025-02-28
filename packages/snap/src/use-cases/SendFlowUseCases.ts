@@ -285,14 +285,12 @@ export class SendFlowUseCases {
       );
     }
 
-    console.log('im here', context);
     const backgroundEventId = await this.#snapClient.scheduleBackgroundEvent(
       this.#ratesRefreshInterval,
       SendFormEvent.RefreshRates,
       id,
     );
     context.backgroundEventId = backgroundEventId;
-    console.log('im here after', context);
 
     await this.#sendFlowRepository.updateForm(id, context);
   }

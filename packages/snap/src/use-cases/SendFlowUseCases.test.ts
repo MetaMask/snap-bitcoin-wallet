@@ -476,9 +476,15 @@ describe('SendFlowUseCases', () => {
 
   describe('refreshRates', () => {
     const mockFeeEstimates = mock<FeeEstimates>({ get: jest.fn() });
-    const mockContext = mock<SendFormContext>({
+    const mockContext: SendFormContext = {
+      account: { id: 'account-id', address: 'myAddress' },
+      balance: '20000',
+      currency: CurrencyUnit.Bitcoin,
+      drain: false,
+      errors: {},
+      feeRate: fallbackFeeRate,
       network: 'bitcoin',
-    });
+    };
     const mockExchangeRates = mock<ExchangeRates>({
       usd: { value: 200000 },
     });
@@ -500,7 +506,7 @@ describe('SendFlowUseCases', () => {
       expect(mockSendFlowRepository.updateForm).not.toHaveBeenCalled();
     });
 
-    it.only('schedules next event if fetching rates fail', async () => {
+    it('schedules next event if fetching rates fail', async () => {
       mockChain.getFeeEstimates.mockRejectedValueOnce(
         new Error('getFeeEstimates'),
       );
