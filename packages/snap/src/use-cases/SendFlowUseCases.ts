@@ -120,7 +120,7 @@ export class SendFlowUseCases {
             amount: context.amount,
             recipient: context.recipient,
             feeRate: context.feeRate,
-            fiatRate: context.fiatRate,
+            exchangeRate: context.exchangeRate,
             currency: context.currency,
             fee: context.fee,
             sendForm: context,
@@ -268,7 +268,7 @@ export class SendFlowUseCases {
       if (context.network === 'bitcoin') {
         const exchangeRates = await this.#ratesClient.exchangeRates();
         const { currency } = await this.#snapClient.getPreferences();
-        context.fiatRate = {
+        context.exchangeRate = {
           conversionRate: exchangeRates[currency].value,
           conversionDate: Math.floor(Date.now() / 1000), // Unix Timestamp
           currency: currency.toUpperCase(),
@@ -277,7 +277,7 @@ export class SendFlowUseCases {
 
       context = await this.#computeFee(context);
     } catch (error) {
-      // We do not throw so we can reschedule. We will use the default fallback values anyways if fetching rates fail.
+      // We do not throw so we can reschedule. Previous fetched values or fallbacks will be used.
       logger.error(
         `Failed to fetch rates in send form, ID: %s. Error: %o`,
         id,
@@ -285,12 +285,14 @@ export class SendFlowUseCases {
       );
     }
 
+    console.log('im here', context);
     const backgroundEventId = await this.#snapClient.scheduleBackgroundEvent(
       this.#ratesRefreshInterval,
       SendFormEvent.RefreshRates,
       id,
     );
     context.backgroundEventId = backgroundEventId;
+    console.log('im here after', context);
 
     await this.#sendFlowRepository.updateForm(id, context);
   }

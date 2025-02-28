@@ -1,4 +1,4 @@
-import type { CurrencyRate } from '@metamask/snaps-sdk';
+import type { GetPreferencesResult } from '@metamask/snaps-sdk';
 import { UserRejectedRequestError } from '@metamask/snaps-sdk';
 import type { Psbt, FeeEstimates } from 'bitcoindevkit';
 import { Address, Amount } from 'bitcoindevkit';
@@ -14,6 +14,7 @@ import type {
   TransactionRequest,
   ReviewTransactionContext,
   AssetRatesClient,
+  ExchangeRates,
 } from '../entities';
 import {
   ReviewTransactionEvent,
@@ -47,7 +48,7 @@ describe('SendFlowUseCases', () => {
   const mockAccountRepository = mock<BitcoinAccountRepository>();
   const mockSendFlowRepository = mock<SendFlowRepository>();
   const mockChain = mock<BlockchainClient>();
-  const mockAssetsClient = mock<AssetRatesClient>();
+  const mockRatesClient = mock<AssetRatesClient>();
   const targetBlocksConfirmation = 3;
   const fallbackFeeRate = 5.0;
   const ratesRefreshInterval = 'PT30S';
@@ -56,9 +57,7 @@ describe('SendFlowUseCases', () => {
     buildTx: jest.fn(),
     sign: jest.fn(),
   });
-  const mockFeeEstimates = mock<FeeEstimates>({ get: jest.fn() });
   const mockTxRequest = mock<TransactionRequest>();
-  const mockCurrencyRate = mock<CurrencyRate>();
 
   beforeEach(() => {
     useCases = new SendFlowUseCases(
@@ -66,7 +65,7 @@ describe('SendFlowUseCases', () => {
       mockAccountRepository,
       mockSendFlowRepository,
       mockChain,
-      mockAssetsClient,
+      mockRatesClient,
       targetBlocksConfirmation,
       fallbackFeeRate,
       ratesRefreshInterval,
@@ -83,8 +82,6 @@ describe('SendFlowUseCases', () => {
 
     it('throws UserRejectedRequestError if displayInterface returns null', async () => {
       mockAccountRepository.get.mockResolvedValue(mockAccount);
-      mockChain.getFeeEstimates.mockResolvedValue(mockFeeEstimates);
-      mockFeeEstimates.get.mockReturnValue(5);
       mockSendFlowRepository.insertForm.mockResolvedValue('interface-id');
       mockSnapClient.displayInterface.mockResolvedValue(null);
 
@@ -95,20 +92,20 @@ describe('SendFlowUseCases', () => {
 
     it('displays Send form and returns transaction request when resolved', async () => {
       mockAccountRepository.get.mockResolvedValue(mockAccount);
-      mockFeeEstimates.get.mockReturnValue(5);
       mockSendFlowRepository.insertForm.mockResolvedValue('interface-id');
       mockSnapClient.displayInterface.mockResolvedValue(mockTxRequest);
 
       const result = await useCases.display('account-id');
 
       expect(mockAccountRepository.get).toHaveBeenCalledWith('account-id');
-      expect(mockChain.getFeeEstimates).toHaveBeenCalledWith(
-        mockAccount.network,
-      );
       expect(mockSendFlowRepository.insertForm).toHaveBeenCalledWith(
         mockAccount,
-        5,
-        mockCurrencyRate,
+        fallbackFeeRate,
+      );
+      expect(mockSnapClient.scheduleBackgroundEvent).toHaveBeenCalledWith(
+        'PT1S',
+        SendFormEvent.RefreshRates,
+        'interface-id',
       );
       expect(mockSnapClient.displayInterface).toHaveBeenCalledWith(
         'interface-id',
@@ -117,7 +114,7 @@ describe('SendFlowUseCases', () => {
     });
   });
 
-  describe('updateForm', () => {
+  describe('onFormInput', () => {
     const mockTxBuilder = {
       addRecipient: jest.fn(),
       feeRate: jest.fn(),
@@ -143,7 +140,7 @@ describe('SendFlowUseCases', () => {
       feeRate: 2.4,
       network: 'bitcoin',
       fee: '10',
-      fiatRate: {
+      exchangeRate: {
         currency: 'USD',
         conversionRate: 100000,
         conversionDate: 2025,
@@ -228,7 +225,7 @@ describe('SendFlowUseCases', () => {
         amount: '1000',
         recipient: 'recipientAddress',
         feeRate: mockContext.feeRate,
-        fiatRate: mockContext.fiatRate,
+        exchangeRate: mockContext.exchangeRate,
         currency: mockContext.currency,
         fee: '10',
         sendForm: mockContext,
@@ -247,6 +244,8 @@ describe('SendFlowUseCases', () => {
         ...mockContext,
         recipient: undefined,
       };
+      mockSnapClient.getInterfaceContext.mockResolvedValueOnce(testContext);
+
       const expectedContext = {
         ...testContext,
         drain: true,
@@ -276,6 +275,7 @@ describe('SendFlowUseCases', () => {
         ...mockContext,
         amount: undefined,
       };
+      mockSnapClient.getInterfaceContext.mockResolvedValueOnce(testContext);
 
       mockSendFlowRepository.getState.mockResolvedValue({
         recipient: 'newAddress',
@@ -311,6 +311,7 @@ describe('SendFlowUseCases', () => {
         ...mockContext,
         recipient: undefined, // avoid computing the fee in this test
       };
+      mockSnapClient.getInterfaceContext.mockResolvedValueOnce(testContext);
 
       mockSendFlowRepository.getState.mockResolvedValue({
         recipient: '',
@@ -469,6 +470,106 @@ describe('SendFlowUseCases', () => {
           recipient: mockContext.recipient,
           feeRate: mockContext.feeRate,
         },
+      );
+    });
+  });
+
+  describe('refreshRates', () => {
+    const mockFeeEstimates = mock<FeeEstimates>({ get: jest.fn() });
+    const mockContext = mock<SendFormContext>({
+      network: 'bitcoin',
+    });
+    const mockExchangeRates = mock<ExchangeRates>({
+      usd: { value: 200000 },
+    });
+    const mockPreferences = mock<GetPreferencesResult>({ currency: 'usd' });
+
+    beforeEach(() => {
+      mockSnapClient.getInterfaceContext.mockResolvedValue(mockContext);
+      mockChain.getFeeEstimates.mockResolvedValue(mockFeeEstimates);
+      mockRatesClient.exchangeRates.mockResolvedValue(mockExchangeRates);
+      mockSnapClient.scheduleBackgroundEvent.mockResolvedValue('event-id');
+      mockSnapClient.getPreferences.mockResolvedValue(mockPreferences);
+    });
+
+    it('returns if interface is not found', async () => {
+      mockSnapClient.getInterfaceContext.mockResolvedValueOnce(undefined);
+
+      await useCases.refreshRates('interface-id');
+      expect(mockSnapClient.scheduleBackgroundEvent).not.toHaveBeenCalled();
+      expect(mockSendFlowRepository.updateForm).not.toHaveBeenCalled();
+    });
+
+    it.only('schedules next event if fetching rates fail', async () => {
+      mockChain.getFeeEstimates.mockRejectedValueOnce(
+        new Error('getFeeEstimates'),
+      );
+
+      await useCases.refreshRates('interface-id');
+
+      expect(mockSnapClient.scheduleBackgroundEvent).toHaveBeenCalled();
+      expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
+        'interface-id',
+        {
+          ...mockContext,
+          network: 'bitcoin',
+          backgroundEventId: 'event-id',
+        },
+      );
+    });
+
+    it('sets fee and exchange rates successfully', async () => {
+      (mockFeeEstimates.get as jest.Mock).mockReturnValue(4.4);
+
+      await useCases.refreshRates('interface-id');
+
+      expect(mockSnapClient.scheduleBackgroundEvent).toHaveBeenCalledWith(
+        ratesRefreshInterval,
+        SendFormEvent.RefreshRates,
+        'interface-id',
+      );
+      expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
+        'interface-id',
+        {
+          ...mockContext,
+          backgroundEventId: 'event-id',
+          exchangeRate: {
+            conversionRate: 200000,
+            conversionDate: expect.any(Number),
+            currency: 'USD',
+          },
+          feeRate: 4.4,
+        },
+      );
+    });
+
+    it('does not set exchange rate if network is not bitcoin', async () => {
+      (mockFeeEstimates.get as jest.Mock).mockReturnValue(4.4);
+      mockSnapClient.getInterfaceContext.mockResolvedValueOnce({
+        ...mockContext,
+        network: 'notBitcoin',
+      });
+
+      await useCases.refreshRates('interface-id');
+
+      expect(mockSnapClient.scheduleBackgroundEvent).toHaveBeenCalled();
+      expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
+        'interface-id',
+        {
+          ...mockContext,
+          backgroundEventId: 'event-id',
+          network: 'notBitcoin',
+          feeRate: 4.4,
+        },
+      );
+    });
+
+    it('propagates error if scheduleBackgroundEvent fails', async () => {
+      const error = new Error('scheduleBackgroundEvent failed');
+      mockSnapClient.scheduleBackgroundEvent.mockRejectedValue(error);
+
+      await expect(useCases.refreshRates('interface-id')).rejects.toThrow(
+        error,
       );
     });
   });

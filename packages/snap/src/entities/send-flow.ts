@@ -15,7 +15,7 @@ export type SendFormContext = {
   balance: string;
   feeRate: number;
   currency: CurrencyUnit;
-  fiatRate?: CurrencyRate;
+  exchangeRate?: CurrencyRate;
   recipient?: string;
   amount?: string;
   fee?: string;
@@ -48,7 +48,7 @@ export type ReviewTransactionContext = {
   network: Network;
   feeRate: number;
   currency: CurrencyUnit;
-  fiatRate?: CurrencyRate;
+  exchangeRate?: CurrencyRate;
   recipient: string;
   amount: string;
   fee: string;
