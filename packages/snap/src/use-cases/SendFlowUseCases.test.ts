@@ -124,7 +124,6 @@ describe('SendFlowUseCases', () => {
       unspendable: jest.fn(),
     };
     const mockPsbt = mock<Psbt>();
-
     const mockContext: SendFormContext = {
       account: { id: 'account-id', address: 'myAddress' },
       amount: '1000',
@@ -480,10 +479,10 @@ describe('SendFlowUseCases', () => {
       account: { id: 'account-id', address: 'myAddress' },
       balance: '20000',
       currency: CurrencyUnit.Bitcoin,
-      drain: false,
+      recipient: 'recipientAddress',
       errors: {},
-      feeRate: fallbackFeeRate,
       network: 'bitcoin',
+      feeRate: fallbackFeeRate,
     };
     const mockExchangeRates = mock<ExchangeRates>({
       usd: { value: 200000 },

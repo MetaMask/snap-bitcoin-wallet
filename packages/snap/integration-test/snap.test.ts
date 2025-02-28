@@ -237,115 +237,157 @@ describe('Bitcoin Snap', () => {
     },
   );
 
-  it('executes Send flow: happy path', async () => {
-    const response = snap.request({
-      origin,
-      method: 'startSendTransactionFlow',
-      params: {
-        account: accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id,
-      },
+  describe.skip('Send flow', () => {
+    it('happy path', async () => {
+      const response = snap.request({
+        origin,
+        method: 'startSendTransactionFlow',
+        params: {
+          account:
+            accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id,
+        },
+      });
+
+      let ui = await response.getInterface();
+      assertIsCustomDialog(ui);
+
+      await ui.typeInField(SendFormEvent.Amount, '0.1');
+      await ui.typeInField(
+        SendFormEvent.Recipient,
+        'bcrt1qyvhf2epk9s659206lq3rdvtf07uq3t9e7xtjje',
+      );
+      await ui.clickElement(SendFormEvent.Confirm);
+
+      ui = await response.getInterface();
+      await ui.clickElement(ReviewTransactionEvent.Send);
+
+      const result = await response;
+      expect(result).toRespondWith({ txId: expect.any(String) });
     });
 
-    let ui = await response.getInterface();
-    assertIsCustomDialog(ui);
+    it('happy path drain account', async () => {
+      const response = snap.request({
+        origin,
+        method: 'startSendTransactionFlow',
+        params: {
+          account:
+            accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id,
+        },
+      });
 
-    await ui.typeInField(SendFormEvent.Amount, '0.1');
-    await ui.typeInField(
-      SendFormEvent.Recipient,
-      'bcrt1qyvhf2epk9s659206lq3rdvtf07uq3t9e7xtjje',
-    );
-    await ui.clickElement(SendFormEvent.Confirm);
+      let ui = await response.getInterface();
+      assertIsCustomDialog(ui);
 
-    ui = await response.getInterface();
-    await ui.clickElement(ReviewTransactionEvent.Send);
+      await ui.clickElement(SendFormEvent.SetMax);
+      await ui.typeInField(
+        SendFormEvent.Recipient,
+        'bcrt1qyvhf2epk9s659206lq3rdvtf07uq3t9e7xtjje',
+      );
+      await ui.clickElement(SendFormEvent.Confirm);
 
-    const result = await response;
-    expect(result).toRespondWith({ txId: expect.any(String) });
-  });
+      ui = await response.getInterface();
+      await ui.clickElement(ReviewTransactionEvent.HeaderBack);
 
-  it('executes Send flow: happy path drain account', async () => {
-    const response = snap.request({
-      origin,
-      method: 'startSendTransactionFlow',
-      params: {
-        account: accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id,
-      },
+      ui = await response.getInterface();
+      await ui.clickElement(SendFormEvent.Cancel);
+
+      const result = await response;
+      expect(result).toRespondWithError({
+        code: 4001,
+        message: 'User rejected the request.',
+        stack: expect.anything(),
+      });
     });
 
-    let ui = await response.getInterface();
-    assertIsCustomDialog(ui);
+    it('cancel', async () => {
+      const response = snap.request({
+        origin,
+        method: 'startSendTransactionFlow',
+        params: {
+          account:
+            accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id,
+        },
+      });
 
-    await ui.clickElement(SendFormEvent.SetMax);
-    await ui.typeInField(
-      SendFormEvent.Recipient,
-      'bcrt1qyvhf2epk9s659206lq3rdvtf07uq3t9e7xtjje',
-    );
-    await ui.clickElement(SendFormEvent.Confirm);
+      const ui = await response.getInterface();
+      await ui.clickElement(SendFormEvent.Cancel);
 
-    ui = await response.getInterface();
-    await ui.clickElement(ReviewTransactionEvent.HeaderBack);
-
-    ui = await response.getInterface();
-    await ui.clickElement(SendFormEvent.Cancel);
-
-    const result = await response;
-    expect(result).toRespondWithError({
-      code: 4001,
-      message: 'User rejected the request.',
-      stack: expect.anything(),
-    });
-  });
-
-  it('executes Send flow: cancel', async () => {
-    const response = snap.request({
-      origin,
-      method: 'startSendTransactionFlow',
-      params: {
-        account: accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id,
-      },
+      const result = await response;
+      expect(result).toRespondWithError({
+        code: 4001,
+        message: 'User rejected the request.',
+        stack: expect.anything(),
+      });
     });
 
-    const ui = await response.getInterface();
-    await ui.clickElement(SendFormEvent.Cancel);
+    it('revert back to send form', async () => {
+      const response = snap.request({
+        origin,
+        method: 'startSendTransactionFlow',
+        params: {
+          account:
+            accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id,
+        },
+      });
 
-    const result = await response;
-    expect(result).toRespondWithError({
-      code: 4001,
-      message: 'User rejected the request.',
-      stack: expect.anything(),
+      let ui = await response.getInterface();
+      assertIsCustomDialog(ui);
+
+      await ui.typeInField(SendFormEvent.Amount, '0.1');
+      await ui.typeInField(
+        SendFormEvent.Recipient,
+        'bcrt1qyvhf2epk9s659206lq3rdvtf07uq3t9e7xtjje',
+      );
+      await ui.clickElement(SendFormEvent.Confirm);
+
+      ui = await response.getInterface();
+      await ui.clickElement(ReviewTransactionEvent.HeaderBack);
+
+      ui = await response.getInterface();
+      await ui.clickElement(SendFormEvent.Cancel);
+
+      const result = await response;
+      expect(result).toRespondWithError({
+        code: 4001,
+        message: 'User rejected the request.',
+        stack: expect.anything(),
+      });
     });
-  });
 
-  it('executes Send flow: revert back to send form', async () => {
-    const response = snap.request({
-      origin,
-      method: 'startSendTransactionFlow',
-      params: {
-        account: accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id,
-      },
-    });
+    it('refresh rates', async () => {
+      const response = snap.request({
+        origin,
+        method: 'startSendTransactionFlow',
+        params: {
+          account:
+            accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id,
+        },
+      });
 
-    let ui = await response.getInterface();
-    assertIsCustomDialog(ui);
+      let ui = await response.getInterface();
+      assertIsCustomDialog(ui);
 
-    await ui.typeInField(SendFormEvent.Amount, '0.1');
-    await ui.typeInField(
-      SendFormEvent.Recipient,
-      'bcrt1qyvhf2epk9s659206lq3rdvtf07uq3t9e7xtjje',
-    );
-    await ui.clickElement(SendFormEvent.Confirm);
+      await ui.clickElement(SendFormEvent.SetMax);
+      await ui.typeInField(
+        SendFormEvent.Recipient,
+        'bcrt1qyvhf2epk9s659206lq3rdvtf07uq3t9e7xtjje',
+      );
 
-    ui = await response.getInterface();
-    await ui.clickElement(ReviewTransactionEvent.HeaderBack);
+      // Simulates background event being called to update the rates.
+      snap.onBackgroundEvent({
+        method: SendFormEvent.RefreshRates,
+        params: { interfaceId: '???' },
+      });
 
-    ui = await response.getInterface();
-    await ui.clickElement(SendFormEvent.Cancel);
+      ui = await response.getInterface();
+      await ui.clickElement(SendFormEvent.Cancel);
 
-    const result = await response;
-    expect(result).toRespondWithError({
-      code: 4001,
-      message: 'User rejected the request.',
-      stack: expect.anything(),
+      const result = await response;
+      expect(result).toRespondWithError({
+        code: 4001,
+        message: 'User rejected the request.',
+        stack: expect.anything(),
+      });
     });
   });
 

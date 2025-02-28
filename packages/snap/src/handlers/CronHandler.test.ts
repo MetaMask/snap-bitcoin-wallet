@@ -2,9 +2,9 @@ import { mock } from 'jest-mock-extended';
 
 import { SendFormEvent, type BitcoinAccount } from '../entities';
 import type { ILogger } from '../infra/logger';
+import type { SendFlowUseCases } from '../use-cases';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 import { CronHandler } from './CronHandler';
-import { SendFlowUseCases } from '../use-cases';
 
 jest.mock('../infra/logger', () => {
   return { logger: mock<ILogger>() };
@@ -53,7 +53,7 @@ describe('CronHandler', () => {
     it('throws if invalid params', async () => {
       await expect(
         handler.route(SendFormEvent.RefreshRates, { invalid: 'id' }),
-      ).rejects.toThrow();
+      ).rejects.toThrow('');
     });
 
     it('synchronizes all accounts', async () => {
