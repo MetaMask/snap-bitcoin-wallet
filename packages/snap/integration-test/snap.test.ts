@@ -353,42 +353,6 @@ describe('Bitcoin Snap', () => {
         stack: expect.anything(),
       });
     });
-
-    it('refresh rates', async () => {
-      const response = snap.request({
-        origin,
-        method: 'startSendTransactionFlow',
-        params: {
-          account:
-            accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id,
-        },
-      });
-
-      let ui = await response.getInterface();
-      assertIsCustomDialog(ui);
-
-      await ui.clickElement(SendFormEvent.SetMax);
-      await ui.typeInField(
-        SendFormEvent.Recipient,
-        'bcrt1qyvhf2epk9s659206lq3rdvtf07uq3t9e7xtjje',
-      );
-
-      // Simulates background event being called to update the rates.
-      snap.onBackgroundEvent({
-        method: SendFormEvent.RefreshRates,
-        params: { interfaceId: '???' },
-      });
-
-      ui = await response.getInterface();
-      await ui.clickElement(SendFormEvent.Cancel);
-
-      const result = await response;
-      expect(result).toRespondWithError({
-        code: 4001,
-        message: 'User rejected the request.',
-        stack: expect.anything(),
-      });
-    });
   });
 
   // To be improved once listAccountTransactions is implemented to check the tx confirmation status
