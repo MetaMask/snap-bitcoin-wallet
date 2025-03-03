@@ -18,7 +18,7 @@ import { Config } from '../../config';
 import type { ReviewTransactionContext } from '../../entities';
 import { BlockTime, ReviewTransactionEvent } from '../../entities';
 import { getTranslator } from '../../entities/locale';
-import { networkToCaip2 } from '../../handlers/caip2';
+import { networkToCaip2 } from '../../handlers/caip';
 import { HeadingWithReturn } from './components';
 import { displayAmount, displayExchangeAmount } from './format';
 import btcIcon from './images/btc-halo.svg';

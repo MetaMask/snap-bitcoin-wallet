@@ -8,7 +8,7 @@ import type {
 } from '@metamask/snaps-sdk';
 
 import type { AssetsUseCases } from '../use-cases';
-import { Caip19Asset } from './caip19';
+import { Caip19Asset } from './caip';
 
 export class AssetsHandler {
   readonly #assetsUseCases: AssetsUseCases;

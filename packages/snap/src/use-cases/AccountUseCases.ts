@@ -125,17 +125,18 @@ export class AccountUseCases {
       return;
     }
 
-    // Outputs are monotone, meaning they can only be added, like transactions. So we can be confident
-    // that a change on the balance can only happen when new outputs appear.
-    const nOutputsBefore = account.listOutput().length;
+    // Transactions are monotone, meaning they can only be added, so we can be confident
+    // that a change on the balance can only happen when new txs appear.
+    const nTxsBefore = account.listTransactions().length;
     await this.#chain.sync(account);
-    const nOutputsAfter = account.listOutput().length;
+    const nTxsAfter = account.listTransactions().length;
 
-    // Sync assets only if new outputs exist.
-    if (nOutputsAfter > nOutputsBefore) {
+    if (nTxsBefore !== nTxsAfter) {
       const inscriptions = await this.#metaProtocols.fetchInscriptions(account);
       await this.#repository.update(account, inscriptions);
+
       await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
+      await this.#snapClient.emitAccountTransactionsUpdatedEvent(account);
     } else {
       await this.#repository.update(account);
     }
@@ -150,7 +151,9 @@ export class AccountUseCases {
 
     const inscriptions = await this.#metaProtocols.fetchInscriptions(account);
     await this.#repository.update(account, inscriptions);
+
     await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
+    await this.#snapClient.emitAccountTransactionsUpdatedEvent(account);
 
     logger.debug('initial full scan performed successfully: %s', account.id);
   }
@@ -199,9 +202,12 @@ export class AccountUseCases {
     const tx = account.sign(psbt);
     await this.#chain.broadcast(account.network, tx);
     await this.#repository.update(account);
-    await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
 
     const txId = tx.compute_txid();
+
+    await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
+    await this.#snapClient.emitAccountTransactionsUpdatedEvent(account);
+
     logger.info(
       'Transaction sent successfully: %s. Account: %s, Network: %s',
       txId,

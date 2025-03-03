@@ -5,8 +5,12 @@ import { assert } from 'superstruct';
 
 import type { BitcoinAccount } from '../entities';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
-import { Caip19Asset } from './caip19';
-import { caip2ToNetwork, caip2ToAddressType, Caip2AddressType } from './caip2';
+import {
+  caip2ToNetwork,
+  caip2ToAddressType,
+  Caip2AddressType,
+  Caip19Asset,
+} from './caip';
 import { KeyringHandler, CreateAccountRequest } from './KeyringHandler';
 
 jest.mock('superstruct', () => ({

@@ -11,8 +11,9 @@ import type {
   Psbt,
   Transaction,
   LocalOutput,
+  WalletTx,
 } from 'bitcoindevkit';
-import { Wallet } from 'bitcoindevkit';
+import { OutPoint, Txid, Wallet } from 'bitcoindevkit';
 
 import type { BitcoinAccount, TransactionBuilder } from '../entities';
 import { BdkTxBuilderAdapter } from './BdkTxBuilderAdapter';
@@ -59,7 +60,7 @@ export class BdkAccountAdapter implements BitcoinAccount {
   }
 
   get balance(): Balance {
-    return this.#wallet.balance();
+    return this.#wallet.balance;
   }
 
   get addressType(): AddressType {
@@ -74,11 +75,11 @@ export class BdkAccountAdapter implements BitcoinAccount {
   }
 
   get network(): Network {
-    return this.#wallet.network();
+    return this.#wallet.network;
   }
 
   get isScanned(): boolean {
-    return this.#wallet.latest_checkpoint().height > 0;
+    return this.#wallet.latest_checkpoint.height > 0;
   }
 
   peekAddress(index: number): AddressInfo {
@@ -128,5 +129,17 @@ export class BdkAccountAdapter implements BitcoinAccount {
 
   listOutput(): LocalOutput[] {
     return this.#wallet.list_output();
+  }
+
+  getOutput(op: string): LocalOutput | undefined {
+    return this.#wallet.get_utxo(OutPoint.from_string(op));
+  }
+
+  listTransactions(): WalletTx[] {
+    return this.#wallet.transactions();
+  }
+
+  getTransaction(txid: string): WalletTx | undefined {
+    return this.#wallet.get_tx(Txid.from_string(txid));
   }
 }

@@ -434,7 +434,7 @@ describe('AccountUseCases', () => {
     };
 
     const mockTxid = mock<Txid>();
-    const mockOutpoint = 'txid:vout';
+    const mockOutPoint = 'txid:vout';
     const mockPsbt = mock<Psbt>();
     const mockTransaction = mock<Transaction>({
       // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
@@ -481,7 +481,7 @@ describe('AccountUseCases', () => {
     it('sends transaction', async () => {
       mockRepository.getWithSigner.mockResolvedValue(mockAccount);
       mockAccount.buildTx.mockReturnValue(mockTxBuilder);
-      mockRepository.getFrozenUTXOs.mockResolvedValue([mockOutpoint]);
+      mockRepository.getFrozenUTXOs.mockResolvedValue([mockOutPoint]);
       mockAccount.sign.mockReturnValue(mockTransaction);
       mockTransaction.compute_txid.mockReturnValue(mockTxid);
 
@@ -497,7 +497,7 @@ describe('AccountUseCases', () => {
         requestWithAmount.recipient,
       );
       expect(mockRepository.getFrozenUTXOs).toHaveBeenCalledWith('account-id');
-      expect(mockTxBuilder.unspendable).toHaveBeenCalledWith([mockOutpoint]);
+      expect(mockTxBuilder.unspendable).toHaveBeenCalledWith([mockOutPoint]);
       expect(mockAccount.sign).toHaveBeenCalledWith(mockPsbt);
       expect(mockChain.broadcast).toHaveBeenCalledWith(
         mockAccount.network,
@@ -514,7 +514,7 @@ describe('AccountUseCases', () => {
     it('sends a drain transaction when amount is not provided', async () => {
       mockRepository.getWithSigner.mockResolvedValue(mockAccount);
       mockAccount.buildTx.mockReturnValue(mockTxBuilder);
-      mockRepository.getFrozenUTXOs.mockResolvedValue([mockOutpoint]);
+      mockRepository.getFrozenUTXOs.mockResolvedValue([mockOutPoint]);
       mockAccount.sign.mockReturnValue(mockTransaction);
       mockTransaction.compute_txid.mockReturnValue(mockTxid);
 
@@ -528,7 +528,7 @@ describe('AccountUseCases', () => {
         requestDrain.recipient,
       );
       expect(mockRepository.getFrozenUTXOs).toHaveBeenCalledWith('account-id');
-      expect(mockTxBuilder.unspendable).toHaveBeenCalledWith([mockOutpoint]);
+      expect(mockTxBuilder.unspendable).toHaveBeenCalledWith([mockOutPoint]);
       expect(mockAccount.sign).toHaveBeenCalledWith(mockPsbt);
       expect(mockChain.broadcast).toHaveBeenCalledWith(
         mockAccount.network,

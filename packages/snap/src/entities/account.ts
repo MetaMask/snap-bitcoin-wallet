@@ -10,6 +10,8 @@ import type {
   Psbt,
   Transaction,
   LocalOutput,
+  WalletTx,
+  Amount,
 } from 'bitcoindevkit';
 
 import type { Inscription } from './meta-protocols';
@@ -112,6 +114,35 @@ export type BitcoinAccount = {
    * @returns the list of outputs
    */
   listOutput(): LocalOutput[];
+
+  /**
+   * Return the utxo owned by this wallet corresponding to `outpoint` if it exists in the wallet's database.
+   * @param op - The outpoint.
+   * @returns the output if it exists
+   */
+  getOutput(op: string): LocalOutput | undefined;
+
+  /**
+   * List relevant and canonical transactions in the wallet.
+   * A transaction is relevant when it spends from or spends to at least one tracked output.
+   * A transaction is canonical when it is confirmed in the best chain, or does not conflict with any transaction confirmed in the best chain.
+   * @returns the list of wallet transactions
+   */
+  listTransactions(): WalletTx[];
+
+  /**
+   * Get a wallet transaction
+   * @param txid - The transaction id.
+   * @returns the wallet transaction if it exists
+   */
+  getTransaction(txid: string): WalletTx | undefined;
+
+  /**
+   * Calculate the fee of a given transaction. Returns [`Amount::ZERO`] if `tx` is a coinbase transaction.
+   * @param tx - The transaction.
+   * @returns the fee amount.
+   */
+  calculateFee(tx: Transaction): Amount;
 };
 
 /**
