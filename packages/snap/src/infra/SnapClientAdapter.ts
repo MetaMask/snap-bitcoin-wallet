@@ -14,6 +14,7 @@ import type { BitcoinAccount, SnapClient, SnapState } from '../entities';
 import { CurrencyUnit, networkToCurrencyUnit } from '../entities';
 import { networkToCaip19 } from '../handlers/caip19';
 import { snapToKeyringAccount } from '../handlers/keyring-account';
+import { addressTypeToName, networkToName } from '../handlers/mapping';
 
 export class SnapClientAdapter implements SnapClient {
   readonly #encrypt: boolean;
@@ -69,49 +70,11 @@ export class SnapClientAdapter implements SnapClient {
   }
 
   async emitAccountCreatedEvent(account: BitcoinAccount): Promise<void> {
-    let addressTypeName: string;
-    switch (account.addressType) {
-      case 'p2pkh':
-        addressTypeName = 'Legacy';
-        break;
-      case 'p2sh':
-        addressTypeName = 'Nested SegWit';
-        break;
-      case 'p2wpkh':
-        addressTypeName = 'Native SegWit';
-        break;
-      case 'p2tr':
-        addressTypeName = 'Taproot';
-        break;
-      case 'p2wsh':
-        addressTypeName = 'Multisig';
-        break;
-      default:
-        addressTypeName = '';
-    }
-
-    let networkName: string;
-    switch (account.network) {
-      case 'bitcoin':
-        networkName = 'Bitcoin';
-        break;
-      case 'testnet':
-      case 'testnet4':
-        networkName = 'BTC Testnet';
-        break;
-      case 'signet':
-        networkName = 'BTC Signet';
-        break;
-      case 'regtest':
-        networkName = 'BTC Regtest';
-        break;
-      default:
-        networkName = 'Bitcoin';
-    }
-
     return emitSnapKeyringEvent(snap, KeyringEvent.AccountCreated, {
       account: snapToKeyringAccount(account),
-      accountNameSuggestion: `${networkName} ${addressTypeName}`,
+      accountNameSuggestion: `${networkToName[account.network]} ${
+        addressTypeToName[account.addressType]
+      }`,
     });
   }
 

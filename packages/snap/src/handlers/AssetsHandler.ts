@@ -80,7 +80,7 @@ export class AssetsHandler {
     const conversionTime = Math.floor(Date.now() / 1000); // Unix timestamp
     const conversionRates: Record<CaipAssetType, AssetConversion | null> = {};
 
-    // MetaMak does not send conversions with mixed "from" assets.
+    // MetaMask does not send conversions with mixed "from" assets.
     if (conversions.some((conv) => conv.from !== Caip19Asset.Bitcoin)) {
       assetIds.forEach((asset) => {
         conversionRates[asset] = {

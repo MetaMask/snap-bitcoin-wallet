@@ -6,12 +6,12 @@ import { Caip19Asset } from './caip19';
 
 describe('AssetsHandler', () => {
   const mockAssetsUseCases = mock<AssetsUseCases>();
-  const exirationInterval = 60;
+  const expirationInterval = 60;
 
   let handler: AssetsHandler;
 
   beforeEach(() => {
-    handler = new AssetsHandler(mockAssetsUseCases, exirationInterval);
+    handler = new AssetsHandler(mockAssetsUseCases, expirationInterval);
   });
 
   describe('lookup', () => {

@@ -26,7 +26,9 @@ describe('CronHandler', () => {
       await handler.route('synchronizeAccounts');
 
       expect(mockAccountUseCases.list).toHaveBeenCalled();
-      expect(mockAccountUseCases.synchronize).toHaveBeenCalledTimes(2);
+      expect(mockAccountUseCases.synchronize).toHaveBeenCalledTimes(
+        mockAccounts.length,
+      );
     });
 
     it('propagates errors from list', async () => {
@@ -43,7 +45,9 @@ describe('CronHandler', () => {
 
       await handler.route('synchronizeAccounts');
 
-      expect(mockAccountUseCases.synchronize).toHaveBeenCalledTimes(2);
+      expect(mockAccountUseCases.synchronize).toHaveBeenCalledTimes(
+        mockAccounts.length,
+      );
     });
   });
 });
