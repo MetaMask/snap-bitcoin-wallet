@@ -13,7 +13,6 @@ const config: SnapConfig = {
   environment: {
     /* eslint-disable */
     LOG_LEVEL: process.env.LOG_LEVEL,
-    DEFAULT_NETWORK: process.env.DEFAULT_NETWORK,
     DEFAULT_ADDRESS_TYPE: process.env.DEFAULT_ADDRESS_TYPE,
     ESPLORA_BITCOIN: process.env.ESPLORA_BITCOIN,
     ESPLORA_TESTNET: process.env.ESPLORA_TESTNET,

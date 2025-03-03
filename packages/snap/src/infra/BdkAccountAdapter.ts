@@ -12,6 +12,8 @@ import type {
   Transaction,
   LocalOutput,
   WalletTx,
+  Amount,
+  TxGraph,
 } from 'bitcoindevkit';
 import { OutPoint, Txid, Wallet } from 'bitcoindevkit';
 
@@ -78,6 +80,10 @@ export class BdkAccountAdapter implements BitcoinAccount {
     return this.#wallet.network;
   }
 
+  get tx_graph(): TxGraph {
+    return this.#wallet.tx_graph;
+  }
+
   get isScanned(): boolean {
     return this.#wallet.latest_checkpoint.height > 0;
   }
@@ -141,5 +147,9 @@ export class BdkAccountAdapter implements BitcoinAccount {
 
   getTransaction(txid: string): WalletTx | undefined {
     return this.#wallet.get_tx(Txid.from_string(txid));
+  }
+
+  calculateFee(tx: Transaction): Amount {
+    return this.#wallet.calculate_fee(tx);
   }
 }

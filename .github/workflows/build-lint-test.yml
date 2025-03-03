@@ -118,7 +118,6 @@ jobs:
       - prepare
     env:
       LOG_LEVEL: 0
-      DEFAULT_NETWORK: regtest
     steps:
       - uses: actions/checkout@v4
       - name: Enable Corepack

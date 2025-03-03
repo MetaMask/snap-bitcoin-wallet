@@ -16,7 +16,6 @@ export type SnapConfig = {
 
 export type AccountsConfig = {
   index: number;
-  defaultNetwork: Network;
   defaultAddressType: AddressType;
 };
 

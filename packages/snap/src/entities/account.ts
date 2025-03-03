@@ -12,6 +12,7 @@ import type {
   LocalOutput,
   WalletTx,
   Amount,
+  TxGraph,
 } from 'bitcoindevkit';
 
 import type { Inscription } from './meta-protocols';
@@ -40,6 +41,11 @@ export type BitcoinAccount = {
    * The network in which the account operates.
    */
   network: Network;
+
+  /**
+   * The graph of transactions and spends.
+   */
+  tx_graph: TxGraph;
 
   /**
    * Whether the account has already performed a full scan.

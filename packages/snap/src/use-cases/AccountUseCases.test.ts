@@ -29,7 +29,6 @@ describe('AccountUseCases', () => {
   const accountsConfig: AccountsConfig = {
     index: 0,
     defaultAddressType: 'p2wpkh',
-    defaultNetwork: 'bitcoin',
   };
 
   beforeEach(() => {

@@ -1,7 +1,11 @@
-import type { KeyringAccount, Transaction } from '@metamask/keyring-api';
+import {
+  KeyringAccount,
+  Transaction,
+  TransactionStatus,
+} from '@metamask/keyring-api';
 import { BtcMethod } from '@metamask/keyring-api';
+import { Address, TxOut } from 'bitcoindevkit';
 import type { Amount, Network, WalletTx } from 'bitcoindevkit';
-
 import { networkToCurrencyUnit, type BitcoinAccount } from '../entities';
 import {
   addressTypeToCaip2,
@@ -15,6 +19,11 @@ type TransactionAmount = {
   fungible: true;
   unit: string;
   type: Caip19Asset;
+};
+
+type TransactionRecipient = {
+  address: string;
+  asset: TransactionAmount;
 };
 
 type TransactionEvent = {
@@ -64,66 +73,43 @@ export function mapToTransaction(
   account: BitcoinAccount,
   tx: WalletTx,
 ): Transaction {
+  const network = account.network;
+  const status: TransactionStatus = tx.chain_position.is_confirmed
+    ? TransactionStatus.Confirmed
+    : TransactionStatus.Unconfirmed;
+
   // Send if we have as an input an output that we own
   const isSend = tx.tx.input.some((input) => {
     return account.getOutput(input.previous_output.toString()) !== undefined;
   });
-  console.log('txid', isSend);
 
-  const fee = account.calculateFee(tx.tx);
-  const timestamp = Number(tx.chain_position.last_seen) ?? null;
-  let events: TransactionEvent[] = [
-    {
-      status: 'unconfirmed',
-      timestamp,
-    },
-  ];
-  if (tx.chain_position.anchor) {
-    events.push({
-      status: 'confirmed',
-      timestamp: Number(tx.chain_position.anchor.confirmation_time),
-    });
-  }
+  const [events, timestamp] = mapToEvents(tx);
 
-  const t: Transaction = {
+  return {
     id: tx.txid.toString(),
     type: isSend ? 'send' : 'receive',
     account: account.id,
-    chain: networkToCaip2[account.network],
+    chain: networkToCaip2[network],
+    status,
     timestamp,
-    status: tx.chain_position.is_confirmed ? 'confirmed' : 'unconfirmed',
-    to: tx.tx.output.map((output) => {
-      return {
-        address: output.script_pubkey.toString(),
-        asset: mapToAmount(output.value, account.network),
-      };
-    }),
+    to: tx.tx.output.map((output) => mapToAssetMovement(output, network)),
     from: tx.tx.input.flatMap((input) => {
-      const output = account.getOutput(input.previous_output.toString());
+      const output = account.tx_graph.get_txout(input.previous_output);
       // Skip if no output
       if (!output) {
         return [];
       }
 
-      return [
-        {
-          address: input.script_sig.toString(),
-          asset: mapToAmount(output.txout.value, account.network),
-        },
-      ];
+      return [mapToAssetMovement(output, network)];
     }),
     events,
     fees: [
       {
         type: 'priority',
-        asset: mapToAmount(fee, account.network),
+        asset: mapToAmount(account.calculateFee(tx.tx), network),
       },
     ],
   };
-
-  console.log('transaction', t);
-
-  return t;
 }
 
 function mapToAmount(amount: Amount, network: Network): TransactionAmount {
@@ -133,4 +119,29 @@ function mapToAmount(amount: Amount, network: Network): TransactionAmount {
     unit: networkToCurrencyUnit[network],
     type: networkToCaip19[network],
   };
+}
+
+function mapToAssetMovement(output: TxOut, network: Network) {
+  return {
+    address: Address.from_script(output.script_pubkey, network).toString(),
+    asset: mapToAmount(output.value, network),
+  };
+}
+
+function mapToEvents(tx: WalletTx): [TransactionEvent[], number | null] {
+  let timestamp = Number(tx.chain_position.last_seen) ?? null;
+  const events: TransactionEvent[] = [
+    {
+      status: 'unconfirmed',
+      timestamp,
+    },
+  ];
+  if (tx.chain_position.anchor) {
+    timestamp = Number(tx.chain_position.anchor.confirmation_time);
+    events.push({
+      status: 'confirmed',
+      timestamp: Number(tx.chain_position.anchor.confirmation_time),
+    });
+  }
+  return [events, timestamp];
 }
