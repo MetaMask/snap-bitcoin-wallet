@@ -237,7 +237,17 @@ describe('Bitcoin Snap', () => {
     },
   );
 
-  describe.skip('Send flow', () => {
+  describe('Send flow', () => {
+    snap.mockJsonRpc({
+      method: 'snap_scheduleBackgroundEvent',
+      result: 'background-event-id',
+    });
+
+    snap.mockJsonRpc({
+      method: 'snap_cancelBackgroundEvent',
+      result: null,
+    });
+
     it('happy path', async () => {
       const response = snap.request({
         origin,
@@ -345,6 +355,41 @@ describe('Bitcoin Snap', () => {
 
       ui = await response.getInterface();
       await ui.clickElement(SendFormEvent.Cancel);
+
+      const result = await response;
+      expect(result).toRespondWithError({
+        code: 4001,
+        message: 'User rejected the request.',
+        stack: expect.anything(),
+      });
+    });
+
+    it('refresh rates', async () => {
+      const response = snap.request({
+        origin,
+        method: 'startSendTransactionFlow',
+        params: {
+          account:
+            accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id,
+        },
+      });
+
+      let ui = await response.getInterface();
+      await ui.clickElement(SendFormEvent.SetMax);
+      await ui.typeInField(
+        SendFormEvent.Recipient,
+        'bcrt1qyvhf2epk9s659206lq3rdvtf07uq3t9e7xtjje',
+      );
+
+      await snap.onBackgroundEvent({
+        method: SendFormEvent.RefreshRates,
+        params: {
+          interfaceId: ui.id,
+        },
+      });
+
+      ui = await response.getInterface();
+      console.log('props', ui.content.props);
 
       const result = await response;
       expect(result).toRespondWithError({
