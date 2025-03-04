@@ -26,8 +26,8 @@ export const addressTypeToName: Record<AddressType, string> = {
 
 export const networkToName: Record<Network, string> = {
   bitcoin: 'Bitcoin',
-  testnet: 'BTC Testnet',
-  testnet4: 'BTC Testnet4',
-  signet: 'BTC Regtest',
-  regtest: 'BTC Regtest',
+  testnet: 'Bitcoin Testnet',
+  testnet4: 'Bitcoin Testnet4',
+  signet: 'Bitcoin Regtest',
+  regtest: 'Bitcoin Regtest',
 };

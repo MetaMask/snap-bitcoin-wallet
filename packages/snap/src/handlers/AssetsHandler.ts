@@ -88,10 +88,7 @@ export class AssetsHandler {
       assetMap[from].push(to);
     }
 
-    const conversionRates: Record<
-      CaipAssetType,
-      Record<CaipAssetType, AssetConversion | null>
-    > = {};
+    const conversionRates: OnAssetsConversionResponse['conversionRates'] = {};
     for (const [fromAsset, toAssets] of Object.entries(assetMap)) {
       conversionRates[fromAsset] = {};
 
