@@ -1,6 +1,5 @@
 import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 import type {
-  AssetConversion,
   CaipAssetType,
   FungibleAssetMetadata,
   OnAssetsConversionArguments,
