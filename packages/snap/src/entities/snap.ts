@@ -105,7 +105,7 @@ export type SnapClient = {
    * Get the state of an interface.
    * @param id - The interface id.
    * @param field - The field to return from the state.
-   * @returns the interface state value or undefined.
+   * @returns the interface state value if it exists.
    */
   getInterfaceState<InterfaceStateType>(
     id: string,
@@ -115,7 +115,7 @@ export type SnapClient = {
   /**
    * Get the context of an interface.
    * @param id - The interface id.
-   * @returns the context value or undefined.
+   * @returns the context value if it exists.
    */
   getInterfaceContext<InterfaceContextType>(
     id: string,

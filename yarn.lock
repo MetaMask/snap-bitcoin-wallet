@@ -2716,7 +2716,7 @@ __metadata:
     "@metamask/slip44": "npm:^4.1.0"
     "@metamask/snaps-cli": "npm:^6.7.0"
     "@metamask/snaps-jest": "npm:^8.13.0"
-    "@metamask/snaps-sdk": "npm:^6.19.0"
+    "@metamask/snaps-sdk": "npm:^6.18.0"
     "@metamask/utils": "npm:^11.2.0"
     "@types/qs": "npm:^6.9.18"
     "@typescript-eslint/eslint-plugin": "npm:^5.42.1"
