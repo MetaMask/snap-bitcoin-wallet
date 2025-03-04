@@ -22,6 +22,7 @@ const config: SnapConfig = {
     ESPLORA_REGTEST: process.env.ESPLORA_REGTEST,
     SIMPLEHASH_BITCOIN: process.env.SIMPLEHASH_BITCOIN,
     SIMPLEHASH_API_KEY: process.env.SIMPLEHASH_API_KEY,
+    PRICE_API_URL: process.env.PRICE_API_URL,
     /* eslint-disable */
   },
   polyfills: true,

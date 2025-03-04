@@ -1,8 +1,8 @@
 import { handleKeyringRequest } from '@metamask/keyring-snap-sdk';
 import type {
+  OnAssetsConversionHandler,
   OnAssetsLookupHandler,
   OnCronjobHandler,
-  OnInstallHandler,
 } from '@metamask/snaps-sdk';
 import {
   type OnRpcRequestHandler,
@@ -26,17 +26,19 @@ import {
   SnapClientAdapter,
   EsploraClientAdapter,
   SimpleHashClientAdapter,
+  PriceApiClientAdapter,
 } from './infra';
 import { logger } from './infra/logger';
 import { originPermissions } from './permissions';
 import { BdkAccountRepository, JSXSendFlowRepository } from './store';
-import { AccountUseCases, SendFlowUseCases } from './use-cases';
+import { AccountUseCases, AssetsUseCases, SendFlowUseCases } from './use-cases';
 
 // Infra layer
 logger.logLevel = parseInt(Config.logLevel, 10);
 const snapClient = new SnapClientAdapter(Config.encrypt);
 const chainClient = new EsploraClientAdapter(Config.chain);
 const metaProtocolsClient = new SimpleHashClientAdapter(Config.simpleHash);
+const assetRatesClient = new PriceApiClientAdapter(Config.priceApi);
 
 // Data layer
 const accountRepository = new BdkAccountRepository(snapClient);
@@ -58,13 +60,17 @@ const sendFlowUseCases = new SendFlowUseCases(
   Config.targetBlocksConfirmation,
   Config.fallbackFeeRate,
 );
+const assetsUseCases = new AssetsUseCases(assetRatesClient);
 
 // Application layer
 const keyringHandler = new KeyringHandler(accountsUseCases);
 const cronHandler = new CronHandler(accountsUseCases);
 const rpcHandler = new RpcHandler(sendFlowUseCases, accountsUseCases);
 const userInputHandler = new UserInputHandler(sendFlowUseCases);
-const assetsHandler = new AssetsHandler();
+const assetsHandler = new AssetsHandler(
+  assetsUseCases,
+  Config.conversionsExpirationInterval,
+);
 
 export const validateOrigin = (origin: string, method: string): void => {
   if (!origin) {
@@ -74,25 +80,6 @@ export const validateOrigin = (origin: string, method: string): void => {
   if (!originPermissions.get(origin)?.has(method)) {
     // eslint-disable-next-line @typescript-eslint/no-throw-literal
     throw new UnauthorizedError(`Permission denied`);
-  }
-};
-
-export const onInstall: OnInstallHandler = async () => {
-  try {
-    await accountsUseCases.create(
-      Config.accounts.defaultNetwork,
-      Config.accounts.defaultAddressType,
-    );
-  } catch (error) {
-    let snapError = error;
-
-    if (!isSnapRpcError(error)) {
-      snapError = new SnapError(error);
-    }
-    logger.error(
-      `onInstall error: ${JSON.stringify(snapError.toJSON(), null, 2)}`,
-    );
-    throw snapError;
   }
 };
 
@@ -190,6 +177,26 @@ export const onAssetsLookup: OnAssetsLookupHandler = async () => {
     }
     logger.error(
       `onAssetsLookup error: ${JSON.stringify(snapError.toJSON(), null, 2)}`,
+    );
+    throw snapError;
+  }
+};
+
+export const onAssetsConversion: OnAssetsConversionHandler = async (args) => {
+  try {
+    return assetsHandler.conversion(args);
+  } catch (error) {
+    let snapError = error;
+
+    if (!isSnapRpcError(error)) {
+      snapError = new SnapError(error);
+    }
+    logger.error(
+      `onAssetsConversion error: ${JSON.stringify(
+        snapError.toJSON(),
+        null,
+        2,
+      )}`,
     );
     throw snapError;
   }

@@ -114,38 +114,19 @@ export class AccountUseCases {
     return newAccount;
   }
 
-  async synchronizeAll(): Promise<void> {
-    logger.trace('Synchronizing all accounts');
-
-    const accounts = await this.#repository.getAll();
-    const results = await Promise.allSettled(
-      accounts.map(async (account) => {
-        if (account.isScanned) {
-          return this.synchronize(account);
-        }
-
-        return this.fullScan(account);
-      }),
-    );
-
-    results.forEach((result, index) => {
-      if (result.status === 'rejected') {
-        logger.error(
-          `Account failed to sync. ID: %s. Error: %o`,
-          accounts[index].id,
-          result.reason,
-        );
-      }
-    });
-
-    logger.debug('Accounts synchronized successfully');
-  }
-
   async synchronize(account: BitcoinAccount): Promise<void> {
     logger.trace('Synchronizing account. ID: %s', account.id);
 
+    if (!account.isScanned) {
+      logger.warn(
+        'Account has not yet performed initial full scan, skipping synchronization. ID: %s',
+        account.id,
+      );
+      return;
+    }
+
     // Outputs are monotone, meaning they can only be added, like transactions. So we can be confident
-    // that a change on the balance cam only happen when new outputs appear.
+    // that a change on the balance can only happen when new outputs appear.
     const nOutputsBefore = account.listOutput().length;
     await this.#chain.sync(account);
     const nOutputsAfter = account.listOutput().length;
@@ -180,13 +161,6 @@ export class AccountUseCases {
     const account = await this.#repository.get(id);
     if (!account) {
       throw new Error(`Account not found: ${id}`);
-    }
-
-    if (
-      account.addressType === this.#accountConfig.defaultAddressType &&
-      account.network === this.#accountConfig.defaultNetwork
-    ) {
-      throw new Error('Default Bitcoin account cannot be removed');
     }
 
     await this.#snapClient.emitAccountDeletedEvent(id);

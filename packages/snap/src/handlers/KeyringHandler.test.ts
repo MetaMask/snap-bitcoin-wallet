@@ -48,6 +48,21 @@ describe('KeyringHandler', () => {
         caip2ToNetwork[BtcScope.Signet],
         caip2ToAddressType[Caip2AddressType.P2pkh],
       );
+      expect(mockAccounts.fullScan).not.toHaveBeenCalled();
+    });
+
+    it('performs a full scan when synchronize option is true', async () => {
+      mockAccounts.create.mockResolvedValue(mockAccount);
+      const options = {
+        scope: BtcScope.Signet,
+        addressType: Caip2AddressType.P2pkh,
+        synchronize: true,
+      };
+      await handler.createAccount(options);
+
+      expect(assert).toHaveBeenCalled();
+      expect(mockAccounts.create).toHaveBeenCalled();
+      expect(mockAccounts.fullScan).toHaveBeenCalledWith(mockAccount);
     });
 
     it('propagates errors from createAccount', async () => {
@@ -58,6 +73,21 @@ describe('KeyringHandler', () => {
         handler.createAccount({ options: { scopes: [BtcScope.Mainnet] } }),
       ).rejects.toThrow(error);
       expect(mockAccounts.create).toHaveBeenCalled();
+    });
+
+    it('propagates errors from full scan', async () => {
+      const error = new Error();
+      mockAccounts.create.mockResolvedValue(mockAccount);
+      mockAccounts.fullScan.mockRejectedValue(error);
+
+      await expect(
+        handler.createAccount({
+          options: { scopes: [BtcScope.Mainnet] },
+          synchronize: true,
+        }),
+      ).rejects.toThrow(error);
+      expect(mockAccounts.create).toHaveBeenCalled();
+      expect(mockAccounts.fullScan).toHaveBeenCalled();
     });
   });
 

@@ -1,11 +1,25 @@
+import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 import type {
+  CaipAssetType,
   FungibleAssetMetadata,
+  OnAssetsConversionArguments,
+  OnAssetsConversionResponse,
   OnAssetsLookupResponse,
 } from '@metamask/snaps-sdk';
 
+import type { AssetsUseCases } from '../use-cases';
 import { Caip19Asset } from './caip19';
 
 export class AssetsHandler {
+  readonly #assetsUseCases: AssetsUseCases;
+
+  readonly #expirationInterval: number;
+
+  constructor(assets: AssetsUseCases, expirationInterval: number) {
+    this.#assetsUseCases = assets;
+    this.#expirationInterval = expirationInterval;
+  }
+
   lookup(): OnAssetsLookupResponse {
     const metadata = (
       name: string,
@@ -57,5 +71,51 @@ export class AssetsHandler {
         [Caip19Asset.Regtest]: metadata('Regtest Bitcoin', 'rBTC'),
       },
     };
+  }
+
+  async conversion({
+    conversions,
+  }: OnAssetsConversionArguments): Promise<OnAssetsConversionResponse> {
+    const conversionTime = getCurrentUnixTimestamp();
+
+    // Group conversions by "from"
+    const assetMap: Record<CaipAssetType, CaipAssetType[]> = {};
+    for (const { from, to } of conversions) {
+      if (!assetMap[from]) {
+        assetMap[from] = [];
+      }
+      assetMap[from].push(to);
+    }
+
+    const conversionRates: OnAssetsConversionResponse['conversionRates'] = {};
+    for (const [fromAsset, toAssets] of Object.entries(assetMap)) {
+      conversionRates[fromAsset] = {};
+
+      if (fromAsset === Caip19Asset.Bitcoin) {
+        // For Bitcoin, fetch rates.
+        for (const [toAsset, rate] of await this.#assetsUseCases.getRates(
+          toAssets,
+        )) {
+          conversionRates[fromAsset][toAsset] = rate
+            ? {
+                rate: rate.toString(),
+                conversionTime,
+                expirationTime: conversionTime + this.#expirationInterval,
+              }
+            : null;
+        }
+      } else {
+        // For every other conversions, we just use a rate of 0.
+        for (const toAsset of toAssets) {
+          conversionRates[fromAsset][toAsset] = {
+            rate: '0',
+            conversionTime,
+            expirationTime: conversionTime + 60 * 60 * 24, // Long expiration time (1 day) to avoid unnecessary requests
+          };
+        }
+      }
+    }
+
+    return { conversionRates };
   }
 }

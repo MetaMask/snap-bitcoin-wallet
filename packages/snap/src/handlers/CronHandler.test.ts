@@ -1,7 +1,13 @@
 import { mock } from 'jest-mock-extended';
 
+import type { BitcoinAccount } from '../entities';
+import type { ILogger } from '../infra/logger';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 import { CronHandler } from './CronHandler';
+
+jest.mock('../infra/logger', () => {
+  return { logger: mock<ILogger>() };
+});
 
 describe('CronHandler', () => {
   const mockAccountUseCases = mock<AccountUseCases>();
@@ -11,19 +17,37 @@ describe('CronHandler', () => {
     handler = new CronHandler(mockAccountUseCases);
   });
 
-  describe('route', () => {
-    it('synchronizes all accounts', async () => {
-      await handler.route('synchronize');
+  describe('synchronizeAccounts', () => {
+    const mockAccounts = [mock<BitcoinAccount>(), mock<BitcoinAccount>()];
 
-      expect(mockAccountUseCases.synchronizeAll).toHaveBeenCalled();
+    it('synchronizes all accounts', async () => {
+      mockAccountUseCases.list.mockResolvedValue(mockAccounts);
+
+      await handler.route('synchronizeAccounts');
+
+      expect(mockAccountUseCases.list).toHaveBeenCalled();
+      expect(mockAccountUseCases.synchronize).toHaveBeenCalledTimes(
+        mockAccounts.length,
+      );
     });
 
-    it('propagates errors from synchronizeAll', async () => {
+    it('propagates errors from list', async () => {
       const error = new Error();
-      mockAccountUseCases.synchronizeAll.mockRejectedValue(error);
+      mockAccountUseCases.list.mockRejectedValue(error);
 
-      await expect(handler.route('synchronize')).rejects.toThrow(error);
-      expect(mockAccountUseCases.synchronizeAll).toHaveBeenCalled();
+      await expect(handler.route('synchronizeAccounts')).rejects.toThrow(error);
+    });
+
+    it('does not propagate errors from synchronize', async () => {
+      mockAccountUseCases.list.mockResolvedValue(mockAccounts);
+      const error = new Error();
+      mockAccountUseCases.synchronize.mockRejectedValue(error);
+
+      await handler.route('synchronizeAccounts');
+
+      expect(mockAccountUseCases.synchronize).toHaveBeenCalledTimes(
+        mockAccounts.length,
+      );
     });
   });
 });

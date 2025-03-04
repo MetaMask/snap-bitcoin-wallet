@@ -7,7 +7,7 @@
     "url": "https://github.com/MetaMask/snap-bitcoin-wallet.git"
   },
   "source": {
-    "shasum": "UcY/75+Dj5afjkU4g+7CYF/Xd0oXTnrTl7Xp+kJ/YMM=",
+    "shasum": "keSL7lctZRNpiXhc3kpYTPCgThhJUD5rLDXjW74XA0A=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
@@ -72,7 +72,6 @@
         "curve": "secp256k1"
       }
     ],
-    "endowment:lifecycle-hooks": {},
     "endowment:network-access": {},
     "snap_manageAccounts": {},
     "snap_manageState": {},
@@ -83,7 +82,7 @@
         {
           "expression": "* * * * *",
           "request": {
-            "method": "synchronize"
+            "method": "synchronizeAccounts"
           }
         }
       ]

@@ -2,7 +2,6 @@ import { BtcScope } from '@metamask/keyring-api';
 import type {
   Keyring,
   KeyringAccount,
-  KeyringRequest,
   KeyringResponse,
   Balance,
   CaipAssetType,
@@ -11,7 +10,7 @@ import type {
   Transaction,
 } from '@metamask/keyring-api';
 import type { Json } from '@metamask/utils';
-import { assert, enums, object, optional } from 'superstruct';
+import { assert, boolean, enums, object, optional } from 'superstruct';
 
 import { networkToCurrencyUnit } from '../entities';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
@@ -27,10 +26,8 @@ import { snapToKeyringAccount } from './keyring-account';
 export const CreateAccountRequest = object({
   scope: enums(Object.values(BtcScope)),
   addressType: optional(enums(Object.values(Caip2AddressType))),
+  synchronize: optional(boolean()),
 });
-
-// TODO: enable when all methods are implemented
-/* eslint-disable @typescript-eslint/no-unused-vars */
 
 export class KeyringHandler implements Keyring {
   readonly #accountsUseCases: AccountUseCases;
@@ -56,6 +53,10 @@ export class KeyringHandler implements Keyring {
       caip2ToNetwork[opts.scope],
       opts.addressType ? caip2ToAddressType[opts.addressType] : undefined,
     );
+
+    if (opts.synchronize) {
+      await this.#accountsUseCases.fullScan(account);
+    }
 
     return snapToKeyringAccount(account);
   }
@@ -100,7 +101,7 @@ export class KeyringHandler implements Keyring {
     };
   }
 
-  async submitRequest(request: KeyringRequest): Promise<KeyringResponse> {
+  async submitRequest(): Promise<KeyringResponse> {
     throw new Error('Method not implemented.');
   }
 }
