@@ -2,8 +2,7 @@ import { mock } from 'jest-mock-extended';
 
 import { SendFormEvent, type BitcoinAccount } from '../entities';
 import type { ILogger } from '../infra/logger';
-import type { SendFlowUseCases } from '../use-cases';
-import type { AccountUseCases } from '../use-cases/AccountUseCases';
+import type { SendFlowUseCases, AccountUseCases } from '../use-cases';
 import { CronHandler } from './CronHandler';
 
 jest.mock('../infra/logger', () => {

@@ -28,6 +28,6 @@ export const networkToName: Record<Network, string> = {
   bitcoin: 'Bitcoin',
   testnet: 'Bitcoin Testnet',
   testnet4: 'Bitcoin Testnet4',
-  signet: 'Bitcoin Regtest',
+  signet: 'Bitcoin Signet',
   regtest: 'Bitcoin Regtest',
 };
