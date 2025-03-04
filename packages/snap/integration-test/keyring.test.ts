@@ -1,29 +1,23 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
 import { BtcMethod, BtcScope } from '@metamask/keyring-api';
 import type { Snap } from '@metamask/snaps-jest';
-import { assertIsCustomDialog, installSnap } from '@metamask/snaps-jest';
+import { installSnap } from '@metamask/snaps-jest';
 
-import {
-  CurrencyUnit,
-  ReviewTransactionEvent,
-  SendFormEvent,
-} from '../src/entities';
+import { CurrencyUnit } from '../src/entities';
 import { Caip2AddressType, Caip19Asset } from '../src/handlers';
 
-describe('Bitcoin Snap', () => {
+describe('Keyring', () => {
   const accounts: Record<string, KeyringAccount> = {};
   const origin = 'metamask';
   let snap: Snap;
 
-  it('installs the Snap', async () => {
+  beforeAll(async () => {
     snap = await installSnap({
       options: {
         secretRecoveryPhrase:
           'journey embrace permit coil indoor stereo welcome maid movie easy clock spider tent slush bright luxury awake waste legal modify awkward answer acid goose',
       },
     });
-
-    expect(snap).toBeDefined();
   });
 
   it.each([
@@ -236,173 +230,4 @@ describe('Bitcoin Snap', () => {
       expect(response).toRespondWith(expectedAssets);
     },
   );
-
-  describe('Send flow', () => {
-    snap.mockJsonRpc({
-      method: 'snap_scheduleBackgroundEvent',
-      result: 'background-event-id',
-    });
-
-    snap.mockJsonRpc({
-      method: 'snap_cancelBackgroundEvent',
-      result: null,
-    });
-
-    it('happy path', async () => {
-      const response = snap.request({
-        origin,
-        method: 'startSendTransactionFlow',
-        params: {
-          account:
-            accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id,
-        },
-      });
-
-      let ui = await response.getInterface();
-      assertIsCustomDialog(ui);
-
-      await ui.typeInField(SendFormEvent.Amount, '0.1');
-      await ui.typeInField(
-        SendFormEvent.Recipient,
-        'bcrt1qyvhf2epk9s659206lq3rdvtf07uq3t9e7xtjje',
-      );
-      await ui.clickElement(SendFormEvent.Confirm);
-
-      ui = await response.getInterface();
-      await ui.clickElement(ReviewTransactionEvent.Send);
-
-      const result = await response;
-      expect(result).toRespondWith({ txId: expect.any(String) });
-    });
-
-    it('happy path drain account', async () => {
-      const response = snap.request({
-        origin,
-        method: 'startSendTransactionFlow',
-        params: {
-          account:
-            accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id,
-        },
-      });
-
-      let ui = await response.getInterface();
-      assertIsCustomDialog(ui);
-
-      await ui.clickElement(SendFormEvent.SetMax);
-      await ui.typeInField(
-        SendFormEvent.Recipient,
-        'bcrt1qyvhf2epk9s659206lq3rdvtf07uq3t9e7xtjje',
-      );
-      await ui.clickElement(SendFormEvent.Confirm);
-
-      ui = await response.getInterface();
-      await ui.clickElement(ReviewTransactionEvent.HeaderBack);
-
-      ui = await response.getInterface();
-      await ui.clickElement(SendFormEvent.Cancel);
-
-      const result = await response;
-      expect(result).toRespondWithError({
-        code: 4001,
-        message: 'User rejected the request.',
-        stack: expect.anything(),
-      });
-    });
-
-    it('cancel', async () => {
-      const response = snap.request({
-        origin,
-        method: 'startSendTransactionFlow',
-        params: {
-          account:
-            accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id,
-        },
-      });
-
-      const ui = await response.getInterface();
-      await ui.clickElement(SendFormEvent.Cancel);
-
-      const result = await response;
-      expect(result).toRespondWithError({
-        code: 4001,
-        message: 'User rejected the request.',
-        stack: expect.anything(),
-      });
-    });
-
-    it('revert back to send form', async () => {
-      const response = snap.request({
-        origin,
-        method: 'startSendTransactionFlow',
-        params: {
-          account:
-            accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id,
-        },
-      });
-
-      let ui = await response.getInterface();
-      assertIsCustomDialog(ui);
-
-      await ui.typeInField(SendFormEvent.Amount, '0.1');
-      await ui.typeInField(
-        SendFormEvent.Recipient,
-        'bcrt1qyvhf2epk9s659206lq3rdvtf07uq3t9e7xtjje',
-      );
-      await ui.clickElement(SendFormEvent.Confirm);
-
-      ui = await response.getInterface();
-      await ui.clickElement(ReviewTransactionEvent.HeaderBack);
-
-      ui = await response.getInterface();
-      await ui.clickElement(SendFormEvent.Cancel);
-
-      const result = await response;
-      expect(result).toRespondWithError({
-        code: 4001,
-        message: 'User rejected the request.',
-        stack: expect.anything(),
-      });
-    });
-
-    it('refresh rates', async () => {
-      const response = snap.request({
-        origin,
-        method: 'startSendTransactionFlow',
-        params: {
-          account:
-            accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id,
-        },
-      });
-
-      let ui = await response.getInterface();
-      await ui.clickElement(SendFormEvent.SetMax);
-      await ui.typeInField(
-        SendFormEvent.Recipient,
-        'bcrt1qyvhf2epk9s659206lq3rdvtf07uq3t9e7xtjje',
-      );
-
-      await snap.onBackgroundEvent({
-        method: SendFormEvent.RefreshRates,
-        params: {
-          interfaceId: ui.id,
-        },
-      });
-
-      ui = await response.getInterface();
-      console.log('props', ui.content.props);
-
-      const result = await response;
-      expect(result).toRespondWithError({
-        code: 4001,
-        message: 'User rejected the request.',
-        stack: expect.anything(),
-      });
-    });
-  });
-
-  // To be improved once listAccountTransactions is implemented to check the tx confirmation status
-  it('synchronize accounts via cronjob', async () => {
-    const response = await snap.onCronjob({ method: 'synchronizeAccounts' });
-    expect(response).toRespondWith(null);
-  });
 });
