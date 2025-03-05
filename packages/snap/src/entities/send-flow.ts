@@ -73,9 +73,16 @@ export type SendFlowRepository = {
   /**
    * Get the form state.
    * @param id - the interface ID
-   * @returns the form state
+   * @returns the form state or null
    */
-  getState(id: string): Promise<SendFormState>;
+  getState(id: string): Promise<SendFormState | null>;
+
+  /**
+   * Get the form context.
+   * @param id - the interface ID
+   * @returns the form context or null
+   */
+  getContext(id: string): Promise<SendFormContext | null>;
 
   /**
    * Insert a new send form interface.

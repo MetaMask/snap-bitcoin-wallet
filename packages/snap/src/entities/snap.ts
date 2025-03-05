@@ -104,22 +104,16 @@ export type SnapClient = {
   /**
    * Get the state of an interface.
    * @param id - The interface id.
-   * @param field - The field to return from the state.
-   * @returns the interface state value if it exists.
+   * @returns the interface state.
    */
-  getInterfaceState<InterfaceStateType>(
-    id: string,
-    field: string,
-  ): Promise<InterfaceStateType | undefined>;
+  getInterfaceState(id: string): Promise<Record<string, Json> | null>;
 
   /**
    * Get the context of an interface.
    * @param id - The interface id.
-   * @returns the context value if it exists.
+   * @returns the interface context.
    */
-  getInterfaceContext<InterfaceContextType>(
-    id: string,
-  ): Promise<InterfaceContextType | undefined>;
+  getInterfaceContext(id: string): Promise<Record<string, Json> | null>;
 
   /**
    * Schedule a one-off callback.

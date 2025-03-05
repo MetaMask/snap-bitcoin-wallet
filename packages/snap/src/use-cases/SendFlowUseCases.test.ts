@@ -1,6 +1,6 @@
 import type { GetPreferencesResult } from '@metamask/snaps-sdk';
 import { UserRejectedRequestError } from '@metamask/snaps-sdk';
-import type { Psbt, FeeEstimates } from 'bitcoindevkit';
+import type { Psbt, FeeEstimates, Network } from 'bitcoindevkit';
 import { Address, Amount } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 
@@ -155,7 +155,7 @@ describe('SendFlowUseCases', () => {
       mockTxBuilder.finish.mockReturnValue(mockPsbt);
       mockTxBuilder.unspendable.mockReturnThis();
 
-      mockSnapClient.getInterfaceContext.mockResolvedValue(mockContext);
+      mockSendFlowRepository.getContext.mockResolvedValue(mockContext);
     });
 
     it('throws error unrecognized event', async () => {
@@ -192,7 +192,7 @@ describe('SendFlowUseCases', () => {
     });
 
     it('throws error on Review if amount, recipient or fee are not defined', async () => {
-      mockSnapClient.getInterfaceContext.mockResolvedValueOnce({
+      mockSendFlowRepository.getContext.mockResolvedValueOnce({
         ...mockContext,
         recipient: undefined,
       });
@@ -200,7 +200,7 @@ describe('SendFlowUseCases', () => {
         useCases.onFormInput('interface-id', SendFormEvent.Confirm),
       ).rejects.toThrow('Inconsistent Send form context');
 
-      mockSnapClient.getInterfaceContext.mockResolvedValueOnce({
+      mockSendFlowRepository.getContext.mockResolvedValueOnce({
         ...mockContext,
         amount: undefined,
       });
@@ -208,7 +208,7 @@ describe('SendFlowUseCases', () => {
         useCases.onFormInput('interface-id', SendFormEvent.Confirm),
       ).rejects.toThrow('Inconsistent Send form context');
 
-      mockSnapClient.getInterfaceContext.mockResolvedValueOnce({
+      mockSendFlowRepository.getContext.mockResolvedValueOnce({
         ...mockContext,
         fee: undefined,
       });
@@ -243,7 +243,7 @@ describe('SendFlowUseCases', () => {
         ...mockContext,
         recipient: undefined,
       };
-      mockSnapClient.getInterfaceContext.mockResolvedValueOnce(testContext);
+      mockSendFlowRepository.getContext.mockResolvedValueOnce(testContext);
 
       const expectedContext = {
         ...testContext,
@@ -274,7 +274,7 @@ describe('SendFlowUseCases', () => {
         ...mockContext,
         amount: undefined,
       };
-      mockSnapClient.getInterfaceContext.mockResolvedValueOnce(testContext);
+      mockSendFlowRepository.getContext.mockResolvedValueOnce(testContext);
 
       mockSendFlowRepository.getState.mockResolvedValue({
         recipient: 'newAddress',
@@ -310,7 +310,7 @@ describe('SendFlowUseCases', () => {
         ...mockContext,
         recipient: undefined, // avoid computing the fee in this test
       };
-      mockSnapClient.getInterfaceContext.mockResolvedValueOnce(testContext);
+      mockSendFlowRepository.getContext.mockResolvedValueOnce(testContext);
 
       mockSendFlowRepository.getState.mockResolvedValue({
         recipient: '',
@@ -491,7 +491,7 @@ describe('SendFlowUseCases', () => {
     const mockFeeRate = 4.4;
 
     beforeEach(() => {
-      mockSnapClient.getInterfaceContext.mockResolvedValue(mockContext);
+      mockSendFlowRepository.getContext.mockResolvedValue(mockContext);
       mockChain.getFeeEstimates.mockResolvedValue(mockFeeEstimates);
       mockRatesClient.exchangeRates.mockResolvedValue(mockExchangeRates);
       mockSnapClient.scheduleBackgroundEvent.mockResolvedValue('event-id');
@@ -499,7 +499,7 @@ describe('SendFlowUseCases', () => {
     });
 
     it('returns if interface is not found', async () => {
-      mockSnapClient.getInterfaceContext.mockResolvedValueOnce(undefined);
+      mockSendFlowRepository.getContext.mockResolvedValueOnce(null);
 
       await useCases.refreshRates('interface-id');
       expect(mockSnapClient.scheduleBackgroundEvent).not.toHaveBeenCalled();
@@ -551,9 +551,9 @@ describe('SendFlowUseCases', () => {
 
     it('does not set exchange rate if network is not bitcoin', async () => {
       (mockFeeEstimates.get as jest.Mock).mockReturnValue(mockFeeRate);
-      mockSnapClient.getInterfaceContext.mockResolvedValueOnce({
+      mockSendFlowRepository.getContext.mockResolvedValueOnce({
         ...mockContext,
-        network: 'notBitcoin',
+        network: 'notBitcoin' as Network,
       });
 
       await useCases.refreshRates('interface-id');

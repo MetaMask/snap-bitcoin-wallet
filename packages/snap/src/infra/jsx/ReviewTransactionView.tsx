@@ -100,7 +100,7 @@ export const ReviewTransactionView: SnapComponent<ReviewTransactionContext> = (
             />
           </Row>
           <Row label={t('feeRate')}>
-            <Text>{`${Math.floor(feeRate)} sat/vb`}</Text>
+            <Text>{`${Math.floor(feeRate)} sat/vB`}</Text>
           </Row>
           <Row label={t('total')}>
             <Value

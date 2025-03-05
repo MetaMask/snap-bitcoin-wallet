@@ -16,17 +16,27 @@ export class JSXSendFlowRepository implements SendFlowRepository {
     this.#snapClient = snapClient;
   }
 
-  async getState(id: string): Promise<SendFormState> {
-    const state = await this.#snapClient.getInterfaceState<SendFormState>(
-      id,
-      SENDFORM_NAME,
-    );
-    // Should never occur by assertion. It is a critical inconsistent state error that should be caught in integration tests
+  async getState(id: string): Promise<SendFormState | null> {
+    const state = await this.#snapClient.getInterfaceState(id);
     if (!state) {
-      throw new Error('Missing state from Send Form');
+      return null;
     }
 
-    return state;
+    return (state[SENDFORM_NAME] as SendFormState) ?? null;
+  }
+
+  async getContext(id: string): Promise<SendFormContext | null> {
+    try {
+      return (await this.#snapClient.getInterfaceContext(
+        id,
+      )) as SendFormContext;
+    } catch (error) {
+      // TODO: Use error type instead when one is available.
+      if (error.message === `Interface with id '${id}' not found.`) {
+        return null;
+      }
+      throw error;
+    }
   }
 
   async insertForm(account: BitcoinAccount, feeRate: number): Promise<string> {

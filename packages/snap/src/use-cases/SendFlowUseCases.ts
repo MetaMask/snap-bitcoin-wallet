@@ -1,3 +1,4 @@
+import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 import { UserRejectedRequestError } from '@metamask/snaps-sdk';
 import { Address, Amount } from 'bitcoindevkit';
 
@@ -13,7 +14,6 @@ import type {
 } from '../entities';
 import { SendFormEvent, ReviewTransactionEvent } from '../entities';
 import { logger } from '../infra/logger';
-import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 
 export class SendFlowUseCases {
   readonly #snapClient: SnapClient;
@@ -87,11 +87,9 @@ export class SendFlowUseCases {
     logger.trace('Send form input. ID: %s. Event: %s', id, event);
 
     // TODO: Temporary fetch the context while this is fixed: https://github.com/MetaMask/snaps/issues/3069
-    const context = await this.#snapClient.getInterfaceContext<SendFormContext>(
-      id,
-    );
+    const context = await this.#sendFlowRepository.getContext(id);
     if (!context) {
-      throw new Error(`Interface not found:. ID: ${id}`);
+      throw new Error(`Context not found. Interface ID: ${id}`);
     }
 
     switch (event) {
@@ -200,6 +198,11 @@ export class SendFlowUseCases {
     context: SendFormContext,
   ): Promise<void> {
     const formState = await this.#sendFlowRepository.getState(id);
+    if (!formState) {
+      throw new Error(
+        `Form state not found when setting recipient. Interface ID: ${id}`,
+      );
+    }
 
     let updatedContext = { ...context };
     delete updatedContext.errors.recipient;
@@ -223,6 +226,11 @@ export class SendFlowUseCases {
 
   async #handleSetAmount(id: string, context: SendFormContext): Promise<void> {
     const formState = await this.#sendFlowRepository.getState(id);
+    if (!formState) {
+      throw new Error(
+        `Form state not found when setting amount. Interface ID: ${id}`,
+      );
+    }
 
     let updatedContext = { ...context };
     delete updatedContext.errors.amount;
@@ -248,9 +256,7 @@ export class SendFlowUseCases {
   async refreshRates(id: string): Promise<void> {
     logger.trace('Send form refresh rates. ID: %s', id);
 
-    let context = await this.#snapClient.getInterfaceContext<SendFormContext>(
-      id,
-    );
+    let context = await this.#sendFlowRepository.getContext(id);
     if (!context) {
       logger.debug('Gracefully terminating background event loop. ID: %s', id);
       return;
