@@ -570,6 +570,26 @@ describe('SendFlowUseCases', () => {
       );
     });
 
+    it('does not set exchange rate if currency is not supported', async () => {
+      (mockFeeEstimates.get as jest.Mock).mockReturnValue(mockFeeRate);
+      mockSnapClient.getPreferences.mockResolvedValue({
+        ...mockPreferences,
+        currency: 'unknown',
+      });
+
+      await useCases.refreshRates('interface-id');
+
+      expect(mockSnapClient.scheduleBackgroundEvent).toHaveBeenCalled();
+      expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
+        'interface-id',
+        {
+          ...mockContext,
+          backgroundEventId: 'event-id',
+          feeRate: mockFeeRate,
+        },
+      );
+    });
+
     it('propagates error if scheduleBackgroundEvent fails', async () => {
       const error = new Error('scheduleBackgroundEvent failed');
       mockSnapClient.scheduleBackgroundEvent.mockRejectedValue(error);

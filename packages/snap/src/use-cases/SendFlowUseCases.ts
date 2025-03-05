@@ -275,11 +275,14 @@ export class SendFlowUseCases {
       if (context.network === 'bitcoin') {
         const exchangeRates = await this.#ratesClient.exchangeRates();
         const { currency } = await this.#snapClient.getPreferences();
-        context.exchangeRate = {
-          conversionRate: exchangeRates[currency].value,
-          conversionDate: getCurrentUnixTimestamp(),
-          currency: currency.toUpperCase(),
-        };
+        const conversionRate = exchangeRates[currency];
+        if (conversionRate) {
+          context.exchangeRate = {
+            conversionRate: exchangeRates[currency].value,
+            conversionDate: getCurrentUnixTimestamp(),
+            currency: currency.toUpperCase(),
+          };
+        }
       }
 
       context = await this.#computeFee(context);
