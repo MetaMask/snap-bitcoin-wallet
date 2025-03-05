@@ -1,5 +1,5 @@
+import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 import type {
-  AssetConversion,
   CaipAssetType,
   FungibleAssetMetadata,
   OnAssetsConversionArguments,
@@ -76,43 +76,46 @@ export class AssetsHandler {
   async conversion({
     conversions,
   }: OnAssetsConversionArguments): Promise<OnAssetsConversionResponse> {
-    const assetIds = conversions.map((conversion) => conversion.to);
-    const conversionTime = Math.floor(Date.now() / 1000); // Unix timestamp
-    const conversionRates: Record<CaipAssetType, AssetConversion | null> = {};
+    const conversionTime = getCurrentUnixTimestamp();
 
-    // MetaMak does not send conversions with mixed "from" assets.
-    if (conversions.some((conv) => conv.from !== Caip19Asset.Bitcoin)) {
-      assetIds.forEach((asset) => {
-        conversionRates[asset] = {
-          rate: '0',
-          conversionTime,
-          expirationTime: conversionTime + 60 * 60 * 24, // Long expiration time (1 day) to avoid unnecessary requests
-        };
-      });
-
-      return {
-        conversionRates: {
-          [conversions[0].from]: conversionRates,
-        },
-      };
+    // Group conversions by "from"
+    const assetMap: Record<CaipAssetType, CaipAssetType[]> = {};
+    for (const { from, to } of conversions) {
+      if (!assetMap[from]) {
+        assetMap[from] = [];
+      }
+      assetMap[from].push(to);
     }
 
-    const assetRates = await this.#assetsUseCases.getRates(assetIds);
+    const conversionRates: OnAssetsConversionResponse['conversionRates'] = {};
+    for (const [fromAsset, toAssets] of Object.entries(assetMap)) {
+      conversionRates[fromAsset] = {};
 
-    assetRates.forEach(([asset, rate]) => {
-      conversionRates[asset] = rate
-        ? {
-            rate: rate.toString(),
+      if (fromAsset === Caip19Asset.Bitcoin) {
+        // For Bitcoin, fetch rates.
+        for (const [toAsset, rate] of await this.#assetsUseCases.getRates(
+          toAssets,
+        )) {
+          conversionRates[fromAsset][toAsset] = rate
+            ? {
+                rate: rate.toString(),
+                conversionTime,
+                expirationTime: conversionTime + this.#expirationInterval,
+              }
+            : null;
+        }
+      } else {
+        // For every other conversions, we just use a rate of 0.
+        for (const toAsset of toAssets) {
+          conversionRates[fromAsset][toAsset] = {
+            rate: '0',
             conversionTime,
-            expirationTime: conversionTime + this.#expirationInterval,
-          }
-        : null;
-    });
+            expirationTime: conversionTime + 60 * 60 * 24, // Long expiration time (1 day) to avoid unnecessary requests
+          };
+        }
+      }
+    }
 
-    return {
-      conversionRates: {
-        [Caip19Asset.Bitcoin]: conversionRates,
-      },
-    };
+    return { conversionRates };
   }
 }

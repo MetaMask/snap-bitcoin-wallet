@@ -2,6 +2,10 @@ import type { JsonSLIP10Node } from '@metamask/key-tree';
 import { SLIP10Node } from '@metamask/key-tree';
 import { KeyringEvent } from '@metamask/keyring-api';
 import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
+import type {
+  GetInterfaceContextResult,
+  GetInterfaceStateResult,
+} from '@metamask/snaps-sdk';
 import {
   type ComponentOrElement,
   type GetPreferencesResult,
@@ -14,6 +18,8 @@ import {
   networkToCaip19,
   mapToKeyringAccount,
   mapToTransaction,
+  addressTypeToName,
+  networkToName,
 } from '../handlers';
 
 export class SnapClientAdapter implements SnapClient {
@@ -66,49 +72,11 @@ export class SnapClientAdapter implements SnapClient {
   }
 
   async emitAccountCreatedEvent(account: BitcoinAccount): Promise<void> {
-    let addressTypeName: string;
-    switch (account.addressType) {
-      case 'p2pkh':
-        addressTypeName = 'Legacy';
-        break;
-      case 'p2sh':
-        addressTypeName = 'Nested SegWit';
-        break;
-      case 'p2wpkh':
-        addressTypeName = 'Native SegWit';
-        break;
-      case 'p2tr':
-        addressTypeName = 'Taproot';
-        break;
-      case 'p2wsh':
-        addressTypeName = 'Multisig';
-        break;
-      default:
-        addressTypeName = '';
-    }
-
-    let networkName: string;
-    switch (account.network) {
-      case 'bitcoin':
-        networkName = 'Bitcoin';
-        break;
-      case 'testnet':
-      case 'testnet4':
-        networkName = 'BTC Testnet';
-        break;
-      case 'signet':
-        networkName = 'BTC Signet';
-        break;
-      case 'regtest':
-        networkName = 'BTC Regtest';
-        break;
-      default:
-        networkName = 'Bitcoin';
-    }
-
     return emitSnapKeyringEvent(snap, KeyringEvent.AccountCreated, {
       account: mapToKeyringAccount(account),
-      accountNameSuggestion: `${networkName} ${addressTypeName}`,
+      accountNameSuggestion: `${networkToName[account.network]} ${
+        addressTypeToName[account.addressType]
+      }`,
     });
   }
 
@@ -153,10 +121,7 @@ export class SnapClientAdapter implements SnapClient {
   ): Promise<string> {
     return snap.request({
       method: 'snap_createInterface',
-      params: {
-        ui,
-        context,
-      },
+      params: { ui, context },
     });
   }
 
@@ -167,59 +132,35 @@ export class SnapClientAdapter implements SnapClient {
   ): Promise<void> {
     await snap.request({
       method: 'snap_updateInterface',
-      params: {
-        id,
-        ui,
-        context,
-      },
+      params: { id, ui, context },
     });
   }
 
   async displayInterface<ResolveType>(id: string): Promise<ResolveType | null> {
     return (await snap.request({
       method: 'snap_dialog',
-      params: {
-        id,
-      },
+      params: { id },
     })) as unknown as ResolveType;
   }
 
-  async getInterfaceState<InterfaceStateType>(
-    id: string,
-    field: string,
-  ): Promise<InterfaceStateType> {
-    const result = await snap.request({
+  async getInterfaceState(id: string): Promise<GetInterfaceStateResult> {
+    return snap.request({
       method: 'snap_getInterfaceState',
       params: { id },
     });
-
-    return result[field] as unknown as InterfaceStateType;
   }
 
-  async getInterfaceContext<InterfaceContextType>(
-    id: string,
-  ): Promise<InterfaceContextType | undefined> {
-    try {
-      return (await snap.request({
-        method: 'snap_getInterfaceContext',
-        params: { id },
-      })) as unknown as InterfaceContextType;
-    } catch (error) {
-      // TODO: Use error type instead when one is available.
-      if (error.message === `Interface with id '${id}' not found.`) {
-        return undefined;
-      }
-      throw error;
-    }
+  async getInterfaceContext(id: string): Promise<GetInterfaceContextResult> {
+    return snap.request({
+      method: 'snap_getInterfaceContext',
+      params: { id },
+    });
   }
 
   async resolveInterface(id: string, value: Json): Promise<void> {
     await snap.request({
       method: 'snap_resolveInterface',
-      params: {
-        id,
-        value,
-      },
+      params: { id, value },
     });
   }
 

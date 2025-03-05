@@ -1,18 +1,17 @@
-import {
-  KeyringAccount,
-  Transaction,
-  TransactionStatus,
-} from '@metamask/keyring-api';
-import { BtcMethod } from '@metamask/keyring-api';
-import { Address, TxOut } from 'bitcoindevkit';
-import type { Amount, Network, WalletTx } from 'bitcoindevkit';
+import type { KeyringAccount, Transaction } from '@metamask/keyring-api';
+import { TransactionStatus, BtcMethod } from '@metamask/keyring-api';
+import { Address } from 'bitcoindevkit';
+import type {
+  AddressType,
+  Amount,
+  Network,
+  WalletTx,
+  TxOut,
+} from 'bitcoindevkit';
+
 import { networkToCurrencyUnit, type BitcoinAccount } from '../entities';
-import {
-  addressTypeToCaip2,
-  Caip19Asset,
-  networkToCaip19,
-  networkToCaip2,
-} from './caip';
+import type { Caip19Asset } from './caip';
+import { addressTypeToCaip2, networkToCaip19, networkToCaip2 } from './caip';
 
 type TransactionAmount = {
   amount: string;
@@ -47,6 +46,22 @@ export function reverseMapping<
   ) as Record<To, From>;
 }
 
+export const addressTypeToName: Record<AddressType, string> = {
+  p2pkh: 'Legacy',
+  p2sh: 'Nested SegWit',
+  p2wpkh: 'Native SegWit',
+  p2tr: 'Taproot',
+  p2wsh: 'Multisig',
+};
+
+export const networkToName: Record<Network, string> = {
+  bitcoin: 'Bitcoin',
+  testnet: 'Bitcoin Testnet',
+  testnet4: 'Bitcoin Testnet4',
+  signet: 'Bitcoin Signet',
+  regtest: 'Bitcoin Regtest',
+};
+
 /**
  * Maps a Bitcoin Account to a Keyring Account.
  * @param account - The Bitcoin account.
@@ -73,7 +88,7 @@ export function mapToTransaction(
   account: BitcoinAccount,
   tx: WalletTx,
 ): Transaction {
-  const network = account.network;
+  const { network } = account;
   const status: TransactionStatus = tx.chain_position.is_confirmed
     ? TransactionStatus.Confirmed
     : TransactionStatus.Unconfirmed;
@@ -112,6 +127,11 @@ export function mapToTransaction(
   };
 }
 
+/**
+ *
+ * @param amount
+ * @param network
+ */
 function mapToAmount(amount: Amount, network: Network): TransactionAmount {
   return {
     amount: amount.to_btc().toString(),
@@ -121,6 +141,11 @@ function mapToAmount(amount: Amount, network: Network): TransactionAmount {
   };
 }
 
+/**
+ *
+ * @param output
+ * @param network
+ */
 function mapToAssetMovement(output: TxOut, network: Network) {
   return {
     address: Address.from_script(output.script_pubkey, network).toString(),
@@ -128,6 +153,10 @@ function mapToAssetMovement(output: TxOut, network: Network) {
   };
 }
 
+/**
+ *
+ * @param tx
+ */
 function mapToEvents(tx: WalletTx): [TransactionEvent[], number | null] {
   let timestamp = Number(tx.chain_position.last_seen) ?? null;
   const events: TransactionEvent[] = [

@@ -6,12 +6,12 @@ import { Caip19Asset } from './caip';
 
 describe('AssetsHandler', () => {
   const mockAssetsUseCases = mock<AssetsUseCases>();
-  const exirationInterval = 60;
+  const expirationInterval = 60;
 
   let handler: AssetsHandler;
 
   beforeEach(() => {
-    handler = new AssetsHandler(mockAssetsUseCases, exirationInterval);
+    handler = new AssetsHandler(mockAssetsUseCases, expirationInterval);
   });
 
   describe('lookup', () => {
@@ -29,34 +29,27 @@ describe('AssetsHandler', () => {
   });
 
   describe('conversion', () => {
-    it('returns 0 rates if from is not Bitcoin', async () => {
-      const conversions = [
-        { from: Caip19Asset.Testnet, to: Caip19Asset.Bitcoin },
-      ];
-      const result = await handler.conversion({ conversions });
-
-      expect(result.conversionRates).toStrictEqual({
-        [Caip19Asset.Testnet]: {
-          [Caip19Asset.Bitcoin]: {
-            rate: '0',
-            conversionTime: expect.any(Number),
-            expirationTime: expect.any(Number),
-          },
-        },
-      });
-    });
-
-    it('returns rates for Bitcoin', async () => {
-      const conversions = [
-        { from: Caip19Asset.Bitcoin, to: Caip19Asset.Testnet },
-        { from: Caip19Asset.Bitcoin, to: Caip19Asset.Regtest },
-      ];
+    it('returns rates for all networks successfully', async () => {
       mockAssetsUseCases.getRates.mockResolvedValue([
         [Caip19Asset.Testnet, 0.1],
         [Caip19Asset.Regtest, 0.2],
       ]);
+
+      const conversions = [
+        { from: Caip19Asset.Bitcoin, to: Caip19Asset.Testnet },
+        { from: Caip19Asset.Bitcoin, to: Caip19Asset.Regtest },
+        { from: Caip19Asset.Testnet, to: Caip19Asset.Bitcoin },
+        { from: Caip19Asset.Testnet4, to: Caip19Asset.Bitcoin },
+        { from: Caip19Asset.Signet, to: Caip19Asset.Bitcoin },
+        { from: Caip19Asset.Regtest, to: Caip19Asset.Bitcoin },
+      ];
       const result = await handler.conversion({ conversions });
 
+      expect(mockAssetsUseCases.getRates).toHaveBeenCalledTimes(1);
+      expect(mockAssetsUseCases.getRates).toHaveBeenCalledWith([
+        Caip19Asset.Testnet,
+        Caip19Asset.Regtest,
+      ]);
       expect(result.conversionRates).toStrictEqual({
         [Caip19Asset.Bitcoin]: {
           [Caip19Asset.Testnet]: {
@@ -70,10 +63,38 @@ describe('AssetsHandler', () => {
             expirationTime: expect.any(Number),
           },
         },
+        [Caip19Asset.Testnet]: {
+          [Caip19Asset.Bitcoin]: {
+            rate: '0',
+            conversionTime: expect.any(Number),
+            expirationTime: expect.any(Number),
+          },
+        },
+        [Caip19Asset.Testnet4]: {
+          [Caip19Asset.Bitcoin]: {
+            rate: '0',
+            conversionTime: expect.any(Number),
+            expirationTime: expect.any(Number),
+          },
+        },
+        [Caip19Asset.Signet]: {
+          [Caip19Asset.Bitcoin]: {
+            rate: '0',
+            conversionTime: expect.any(Number),
+            expirationTime: expect.any(Number),
+          },
+        },
+        [Caip19Asset.Regtest]: {
+          [Caip19Asset.Bitcoin]: {
+            rate: '0',
+            conversionTime: expect.any(Number),
+            expirationTime: expect.any(Number),
+          },
+        },
       });
     });
 
-    it('propagates errors from getBtcRates', async () => {
+    it('propagates errors from getRates', async () => {
       const conversions = [
         { from: Caip19Asset.Bitcoin, to: Caip19Asset.Testnet },
       ];

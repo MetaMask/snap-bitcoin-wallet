@@ -28,14 +28,14 @@ export class AssetsUseCases {
   }
 
   #assetToTicker(asset: CaipAssetType): string | undefined {
-    const parsed = parseCaipAssetType(asset);
+    const { assetNamespace, assetReference } = parseCaipAssetType(asset);
 
-    if (parsed.assetNamespace === 'iso4217') {
-      return parsed.assetReference.toLowerCase();
+    if (assetNamespace === 'iso4217') {
+      return assetReference.toLowerCase();
     }
 
-    if (parsed.assetNamespace === 'slip44') {
-      return slip44[parsed.assetReference]?.symbol.toLowerCase();
+    if (assetNamespace === 'slip44') {
+      return slip44[assetReference]?.symbol.toLowerCase();
     }
 
     return undefined;

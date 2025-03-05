@@ -2,8 +2,7 @@ import { mock } from 'jest-mock-extended';
 
 import { SendFormEvent, type BitcoinAccount } from '../entities';
 import type { ILogger } from '../infra/logger';
-import type { SendFlowUseCases } from '../use-cases';
-import type { AccountUseCases } from '../use-cases/AccountUseCases';
+import type { SendFlowUseCases, AccountUseCases } from '../use-cases';
 import { CronHandler } from './CronHandler';
 
 jest.mock('../infra/logger', () => {
@@ -28,7 +27,9 @@ describe('CronHandler', () => {
       await handler.route('synchronizeAccounts');
 
       expect(mockAccountUseCases.list).toHaveBeenCalled();
-      expect(mockAccountUseCases.synchronize).toHaveBeenCalledTimes(2);
+      expect(mockAccountUseCases.synchronize).toHaveBeenCalledTimes(
+        mockAccounts.length,
+      );
     });
 
     it('propagates errors from list', async () => {
@@ -45,7 +46,9 @@ describe('CronHandler', () => {
 
       await handler.route('synchronizeAccounts');
 
-      expect(mockAccountUseCases.synchronize).toHaveBeenCalledTimes(2);
+      expect(mockAccountUseCases.synchronize).toHaveBeenCalledTimes(
+        mockAccounts.length,
+      );
     });
   });
 
@@ -57,9 +60,12 @@ describe('CronHandler', () => {
     });
 
     it('synchronizes all accounts', async () => {
-      await handler.route(SendFormEvent.RefreshRates, { interfaceId: 'id' });
+      const interfaceId = 'id';
+      await handler.route(SendFormEvent.RefreshRates, { interfaceId });
 
-      expect(mockSendFlowUseCases.refreshRates).toHaveBeenCalledWith('id');
+      expect(mockSendFlowUseCases.refreshRates).toHaveBeenCalledWith(
+        interfaceId,
+      );
     });
 
     it('propagates errors from refreshRates', async () => {

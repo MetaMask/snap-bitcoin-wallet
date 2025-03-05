@@ -126,7 +126,7 @@ export class AccountUseCases {
     }
 
     // Transactions are monotone, meaning they can only be added, so we can be confident
-    // that a change on the balance can only happen when new txs appear.
+    // that a change can only happen when new txs appear.
     const nTxsBefore = account.listTransactions().length;
     await this.#chain.sync(account);
     const nTxsAfter = account.listTransactions().length;

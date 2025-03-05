@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 
-import type { AddressType, Network } from 'bitcoindevkit';
+import type { AddressType } from 'bitcoindevkit';
 
 import type { SnapConfig } from './entities';
 

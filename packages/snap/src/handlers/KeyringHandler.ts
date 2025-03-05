@@ -2,7 +2,6 @@ import { BtcScope } from '@metamask/keyring-api';
 import type {
   Keyring,
   KeyringAccount,
-  KeyringRequest,
   KeyringResponse,
   Balance,
   CaipAssetType,
@@ -30,9 +29,6 @@ export const CreateAccountRequest = object({
   addressType: optional(enums(Object.values(Caip2AddressType))),
   synchronize: optional(boolean()),
 });
-
-// TODO: enable when all methods are implemented
-/* eslint-disable @typescript-eslint/no-unused-vars */
 
 export class KeyringHandler implements Keyring {
   readonly #accountsUseCases: AccountUseCases;
@@ -112,7 +108,7 @@ export class KeyringHandler implements Keyring {
     };
   }
 
-  async submitRequest(request: KeyringRequest): Promise<KeyringResponse> {
+  async submitRequest(): Promise<KeyringResponse> {
     throw new Error('Method not implemented.');
   }
 }

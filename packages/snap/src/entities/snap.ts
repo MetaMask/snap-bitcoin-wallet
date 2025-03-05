@@ -110,28 +110,23 @@ export type SnapClient = {
   /**
    * Get the state of an interface.
    * @param id - The interface id.
-   * @param field - The field to return from the state.
-   * @returns the interface state value or undefined.
+   * @returns the interface state.
    */
-  getInterfaceState<InterfaceStateType>(
-    id: string,
-    field: string,
-  ): Promise<InterfaceStateType | undefined>;
+  getInterfaceState(id: string): Promise<Record<string, Json> | null>;
 
   /**
    * Get the context of an interface.
    * @param id - The interface id.
-   * @returns the context value or undefined.
+   * @returns the interface context.
    */
-  getInterfaceContext<InterfaceContextType>(
-    id: string,
-  ): Promise<InterfaceContextType | undefined>;
+  getInterfaceContext(id: string): Promise<Record<string, Json> | null>;
 
   /**
    * Schedule a one-off callback.
    * @param interval - The interval in seconds before the event is executed.
    * @param method - The method to call on reception of the event being triggered.
    * @param interfaceId - The interface id.
+   * @returns the background event id.
    */
   scheduleBackgroundEvent(
     interval: string,
@@ -141,7 +136,7 @@ export type SnapClient = {
 
   /**
    * Cancel an already scheduled background event.
-   * @param id - The event id.
+   * @param id - The background event id.
    */
   cancelBackgroundEvent(id: string): Promise<void>;
 

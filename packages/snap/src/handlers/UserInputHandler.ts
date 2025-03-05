@@ -25,7 +25,6 @@ export class UserInputHandler {
     }
 
     if (this.#isSendFormEvent(event.name)) {
-      // Cast context to SendFormContext
       return this.#sendFlowUseCases.onFormInput(
         interfaceId,
         event.name,
@@ -33,7 +32,6 @@ export class UserInputHandler {
         // context as SendFormContext,
       );
     } else if (this.#isReviewTransactionEvent(event.name)) {
-      // Cast context to the appropriate type for review
       return this.#sendFlowUseCases.onReviewInput(
         interfaceId,
         event.name,

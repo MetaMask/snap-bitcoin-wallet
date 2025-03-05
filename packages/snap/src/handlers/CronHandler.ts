@@ -3,8 +3,7 @@ import { assert, object, string } from 'superstruct';
 
 import { SendFormEvent } from '../entities';
 import { logger } from '../infra/logger';
-import type { SendFlowUseCases } from '../use-cases';
-import type { AccountUseCases } from '../use-cases/AccountUseCases';
+import type { SendFlowUseCases, AccountUseCases } from '../use-cases';
 
 export const SendFormRefreshRatesRequest = object({
   interfaceId: string(),
