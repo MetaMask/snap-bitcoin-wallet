@@ -5,17 +5,18 @@ import { assertIsCustomDialog, installSnap } from '@metamask/snaps-jest';
 
 import { ReviewTransactionEvent, SendFormEvent } from '../src/entities';
 import { Caip2AddressType } from '../src/handlers';
+import { MNEMONIC } from './contants';
 
 describe('Send flow', () => {
   const origin = 'metamask';
+  const recipient = 'bcrt1qyvhf2epk9s659206lq3rdvtf07uq3t9e7xtjje';
   let account: KeyringAccount;
   let snap: Snap;
 
   beforeAll(async () => {
     snap = await installSnap({
       options: {
-        secretRecoveryPhrase:
-          'journey embrace permit coil indoor stereo welcome maid movie easy clock spider tent slush bright luxury awake waste legal modify awkward answer acid goose',
+        secretRecoveryPhrase: MNEMONIC,
       },
     });
 
@@ -59,10 +60,7 @@ describe('Send flow', () => {
     assertIsCustomDialog(ui);
 
     await ui.typeInField(SendFormEvent.Amount, '0.1');
-    await ui.typeInField(
-      SendFormEvent.Recipient,
-      'bcrt1qyvhf2epk9s659206lq3rdvtf07uq3t9e7xtjje',
-    );
+    await ui.typeInField(SendFormEvent.Recipient, recipient);
     await ui.clickElement(SendFormEvent.Confirm);
 
     ui = await response.getInterface();
@@ -85,10 +83,7 @@ describe('Send flow', () => {
     assertIsCustomDialog(ui);
 
     await ui.clickElement(SendFormEvent.SetMax);
-    await ui.typeInField(
-      SendFormEvent.Recipient,
-      'bcrt1qyvhf2epk9s659206lq3rdvtf07uq3t9e7xtjje',
-    );
+    await ui.typeInField(SendFormEvent.Recipient, recipient);
     await ui.clickElement(SendFormEvent.Confirm);
 
     ui = await response.getInterface();
@@ -138,10 +133,7 @@ describe('Send flow', () => {
     assertIsCustomDialog(ui);
 
     await ui.typeInField(SendFormEvent.Amount, '0.1');
-    await ui.typeInField(
-      SendFormEvent.Recipient,
-      'bcrt1qyvhf2epk9s659206lq3rdvtf07uq3t9e7xtjje',
-    );
+    await ui.typeInField(SendFormEvent.Recipient, recipient);
     await ui.clickElement(SendFormEvent.Confirm);
 
     ui = await response.getInterface();
@@ -166,17 +158,18 @@ describe('Send flow', () => {
         account: account.id,
       },
     });
+
     let ui = await response.getInterface();
 
     // Only test that it executes successfully, checking actual values should be done in e2e tests
     // because we don't display exchange rates for testnets.
-    const backGrounEventResponse = await snap.onBackgroundEvent({
+    const backgroundEventResponse = await snap.onBackgroundEvent({
       method: SendFormEvent.RefreshRates,
       params: {
         interfaceId: ui.id,
       },
     });
-    expect(backGrounEventResponse).toRespondWith(null);
+    expect(backgroundEventResponse).toRespondWith(null);
 
     ui = await response.getInterface();
     await ui.clickElement(SendFormEvent.Cancel);
@@ -189,7 +182,7 @@ describe('Send flow', () => {
     });
   });
 
-  // To be improved once listAccountTransactions is implemented to check the tx confirmation status
+  // TODO: To be improved once listAccountTransactions is implemented to check the tx confirmation status.
   it('synchronize accounts via cronjob', async () => {
     const response = await snap.onCronjob({ method: 'synchronizeAccounts' });
     expect(response).toRespondWith(null);

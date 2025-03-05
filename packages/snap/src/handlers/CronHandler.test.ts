@@ -60,9 +60,12 @@ describe('CronHandler', () => {
     });
 
     it('synchronizes all accounts', async () => {
-      await handler.route(SendFormEvent.RefreshRates, { interfaceId: 'id' });
+      const interfaceId = 'id';
+      await handler.route(SendFormEvent.RefreshRates, { interfaceId });
 
-      expect(mockSendFlowUseCases.refreshRates).toHaveBeenCalledWith('id');
+      expect(mockSendFlowUseCases.refreshRates).toHaveBeenCalledWith(
+        interfaceId,
+      );
     });
 
     it('propagates errors from refreshRates', async () => {

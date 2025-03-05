@@ -13,6 +13,7 @@ import type {
 } from '../entities';
 import { SendFormEvent, ReviewTransactionEvent } from '../entities';
 import { logger } from '../infra/logger';
+import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 
 export class SendFlowUseCases {
   readonly #snapClient: SnapClient;
@@ -270,7 +271,7 @@ export class SendFlowUseCases {
         const { currency } = await this.#snapClient.getPreferences();
         context.exchangeRate = {
           conversionRate: exchangeRates[currency].value,
-          conversionDate: Math.floor(Date.now() / 1000), // Unix Timestamp
+          conversionDate: getCurrentUnixTimestamp(),
           currency: currency.toUpperCase(),
         };
       }

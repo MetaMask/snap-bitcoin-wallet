@@ -488,6 +488,7 @@ describe('SendFlowUseCases', () => {
       usd: { value: 200000 },
     });
     const mockPreferences = mock<GetPreferencesResult>({ currency: 'usd' });
+    const mockFeeRate = 4.4;
 
     beforeEach(() => {
       mockSnapClient.getInterfaceContext.mockResolvedValue(mockContext);
@@ -524,7 +525,7 @@ describe('SendFlowUseCases', () => {
     });
 
     it('sets fee and exchange rates successfully', async () => {
-      (mockFeeEstimates.get as jest.Mock).mockReturnValue(4.4);
+      (mockFeeEstimates.get as jest.Mock).mockReturnValue(mockFeeRate);
 
       await useCases.refreshRates('interface-id');
 
@@ -539,17 +540,17 @@ describe('SendFlowUseCases', () => {
           ...mockContext,
           backgroundEventId: 'event-id',
           exchangeRate: {
-            conversionRate: 200000,
+            conversionRate: mockExchangeRates.usd.value,
             conversionDate: expect.any(Number),
             currency: 'USD',
           },
-          feeRate: 4.4,
+          feeRate: mockFeeRate,
         },
       );
     });
 
     it('does not set exchange rate if network is not bitcoin', async () => {
-      (mockFeeEstimates.get as jest.Mock).mockReturnValue(4.4);
+      (mockFeeEstimates.get as jest.Mock).mockReturnValue(mockFeeRate);
       mockSnapClient.getInterfaceContext.mockResolvedValueOnce({
         ...mockContext,
         network: 'notBitcoin',
@@ -564,7 +565,7 @@ describe('SendFlowUseCases', () => {
           ...mockContext,
           backgroundEventId: 'event-id',
           network: 'notBitcoin',
-          feeRate: 4.4,
+          feeRate: mockFeeRate,
         },
       );
     });

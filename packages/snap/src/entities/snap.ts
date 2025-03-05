@@ -126,6 +126,7 @@ export type SnapClient = {
    * @param interval - The interval in seconds before the event is executed.
    * @param method - The method to call on reception of the event being triggered.
    * @param interfaceId - The interface id.
+   * @returns the background event id.
    */
   scheduleBackgroundEvent(
     interval: string,
@@ -135,7 +136,7 @@ export type SnapClient = {
 
   /**
    * Cancel an already scheduled background event.
-   * @param id - The event id.
+   * @param id - The background event id.
    */
   cancelBackgroundEvent(id: string): Promise<void>;
 

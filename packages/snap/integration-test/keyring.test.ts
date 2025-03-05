@@ -5,6 +5,7 @@ import { installSnap } from '@metamask/snaps-jest';
 
 import { CurrencyUnit } from '../src/entities';
 import { Caip2AddressType, Caip19Asset } from '../src/handlers';
+import { MNEMONIC } from './contants';
 
 describe('Keyring', () => {
   const accounts: Record<string, KeyringAccount> = {};
@@ -14,8 +15,7 @@ describe('Keyring', () => {
   beforeAll(async () => {
     snap = await installSnap({
       options: {
-        secretRecoveryPhrase:
-          'journey embrace permit coil indoor stereo welcome maid movie easy clock spider tent slush bright luxury awake waste legal modify awkward answer acid goose',
+        secretRecoveryPhrase: MNEMONIC,
       },
     });
   });
