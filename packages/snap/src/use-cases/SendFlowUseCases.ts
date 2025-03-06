@@ -65,11 +65,8 @@ export class SendFlowUseCases {
       this.#fallbackFeeRate,
     );
 
-    await this.#snapClient.scheduleBackgroundEvent(
-      'PT1S',
-      SendFormEvent.RefreshRates,
-      interfaceId,
-    );
+    // Asynchronously fetch the rates and start the background loop
+    void this.refreshRates(interfaceId);
 
     // Blocks and waits for user actions
     const request = await this.#snapClient.displayInterface<TransactionRequest>(
@@ -154,12 +151,7 @@ export class SendFlowUseCases {
       case ReviewTransactionEvent.HeaderBack: {
         // If we come from a send form, we display it again, otherwise we resolve the interface (reject)
         if (context.sendForm) {
-          await this.#snapClient.scheduleBackgroundEvent(
-            'PT1S',
-            SendFormEvent.RefreshRates,
-            id,
-          );
-
+          void this.refreshRates(id);
           return this.#sendFlowRepository.updateForm(id, context.sendForm);
         }
         return this.#snapClient.resolveInterface(id, null);

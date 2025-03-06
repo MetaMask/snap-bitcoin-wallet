@@ -12,6 +12,7 @@ import type {
   TxOut,
   Transaction,
   ChainPosition,
+  WalletTx,
 } from 'bitcoindevkit';
 
 import { networkToCurrencyUnit, type BitcoinAccount } from '../entities';
@@ -103,19 +104,8 @@ const mapToAssetMovement = (
 };
 
 const mapToEvents = (
-  chainPosition?: ChainPosition,
+  chainPosition: ChainPosition,
 ): [TransactionEvent[], number | null] => {
-  if (!chainPosition) {
-    const timestamp = getCurrentUnixTimestamp();
-    const events = [
-      {
-        status: TransactionStatus.Submitted,
-        timestamp,
-      },
-    ];
-    return [events, timestamp];
-  }
-
   let timestamp = Number(chainPosition.last_seen) ?? null;
   const events: TransactionEvent[] = [
     {
@@ -136,29 +126,27 @@ const mapToEvents = (
 /**
  * Maps a Bitcoin Transaction to a Keyring Transaction.
  * @param account - The account account.
- * @param tx - The Bitcoin transaction.
+ * @param walletTx - The Bitcoin transaction managed by this account.
  * @param chainPosition - The position of the transaction on chain. Optional for submitted transactions.
  * @returns The Keyring transaction.
  */
 export function mapToTransaction(
   account: BitcoinAccount,
-  tx: Transaction,
-  chainPosition?: ChainPosition,
+  walletTx: WalletTx,
 ): KeyringTransaction {
+  const { tx, chain_position, txid } = walletTx;
   const { network } = account;
-  let status: TransactionStatus = TransactionStatus.Submitted;
-  if (chainPosition) {
-    status = chainPosition.is_confirmed
-      ? TransactionStatus.Confirmed
-      : TransactionStatus.Unconfirmed;
-  }
-  const [events, timestamp] = mapToEvents(chainPosition);
+  const status = chain_position.is_confirmed
+    ? TransactionStatus.Confirmed
+    : TransactionStatus.Unconfirmed;
+
+  const [events, timestamp] = mapToEvents(chain_position);
   const [sent] = account.sentAndReceived(tx);
   const isSend = sent.to_btc() > 0;
 
   const transaction: KeyringTransaction = {
     type: isSend ? 'send' : 'receive',
-    id: tx.compute_txid().toString(),
+    id: txid.toString(),
     account: account.id,
     chain: networkToCaip2[network],
     status,

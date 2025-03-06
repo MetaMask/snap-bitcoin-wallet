@@ -140,11 +140,14 @@ export type BitcoinAccount = {
   isMine(script: ScriptBuf): boolean;
 
   /**
-   * Return whether or not a `script` is part of this wallet (either internal or external).
-   * @param script - The Bitcoin script.
+   * Compute the `tx`'s sent and received [`Amount`]s.
+   * This method returns a tuple `(sent, received)`. Sent is the sum of the txin amounts
+   * that spend from previous txouts tracked by this wallet. Received is the summation
+   * of this tx's outputs that send to script pubkeys tracked by this wallet.
+   * @param tx - The Bitcoin transaction.
    * @returns the sent and received amounts.
    */
-  sentAndReceived(script: ScriptBuf): [Amount, Amount];
+  sentAndReceived(tx: Transaction): [Amount, Amount];
 
   /**
    * Finds how the wallet derived the script pubkey `spk`.
