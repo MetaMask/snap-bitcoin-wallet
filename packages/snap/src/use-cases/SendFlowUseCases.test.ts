@@ -442,15 +442,17 @@ describe('SendFlowUseCases', () => {
     });
 
     it('reverts interface back to send form if present in context', async () => {
+      const id = 'interface-id';
       await useCases.onReviewInput(
-        'interface-id',
+        id,
         ReviewTransactionEvent.HeaderBack,
         mockContext,
       );
       expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
-        'interface-id',
+        id,
         mockContext.sendForm,
       );
+      expect(mockSendFlowRepository.getContext).toHaveBeenCalledWith(id);
     });
 
     it('resolves to the transaction request on Send', async () => {
