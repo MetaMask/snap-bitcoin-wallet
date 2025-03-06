@@ -13,9 +13,10 @@ import type {
   LocalOutput,
   WalletTx,
   Amount,
-  TxGraph,
+  ScriptBuf,
+  KeychainKind,
 } from 'bitcoindevkit';
-import { OutPoint, Txid, Wallet } from 'bitcoindevkit';
+import { Wallet } from 'bitcoindevkit';
 
 import type { BitcoinAccount, TransactionBuilder } from '../entities';
 import { BdkTxBuilderAdapter } from './BdkTxBuilderAdapter';
@@ -80,10 +81,6 @@ export class BdkAccountAdapter implements BitcoinAccount {
     return this.#wallet.network;
   }
 
-  get tx_graph(): TxGraph {
-    return this.#wallet.tx_graph;
-  }
-
   get isScanned(): boolean {
     return this.#wallet.latest_checkpoint.height > 0;
   }
@@ -133,23 +130,28 @@ export class BdkAccountAdapter implements BitcoinAccount {
     return this.#wallet.list_unspent();
   }
 
-  listOutput(): LocalOutput[] {
-    return this.#wallet.list_output();
-  }
-
-  getOutput(op: string): LocalOutput | undefined {
-    return this.#wallet.get_utxo(OutPoint.from_string(op));
-  }
-
   listTransactions(): WalletTx[] {
     return this.#wallet.transactions();
   }
 
-  getTransaction(txid: string): WalletTx | undefined {
-    return this.#wallet.get_tx(Txid.from_string(txid));
-  }
-
   calculateFee(tx: Transaction): Amount {
     return this.#wallet.calculate_fee(tx);
+  }
+
+  isMine(script: ScriptBuf): boolean {
+    return this.#wallet.is_mine(script);
+  }
+
+  sentAndReceived(tx: Transaction): [Amount, Amount] {
+    const sentAndReceived = this.#wallet.sent_and_received(tx);
+    return [sentAndReceived[0], sentAndReceived[1]];
+  }
+
+  derivationOfSpk(spk: ScriptBuf): [KeychainKind, number] | undefined {
+    const spkIndex = this.#wallet.derivation_of_spk(spk);
+    if (!spkIndex) {
+      return undefined;
+    }
+    return [spkIndex[0], spkIndex[1]];
   }
 }

@@ -131,7 +131,7 @@ export class AccountUseCases {
     await this.#chain.sync(account);
     const nTxsAfter = account.listTransactions().length;
 
-    if (nTxsBefore !== nTxsAfter) {
+    if (nTxsAfter > nTxsBefore) {
       const inscriptions = await this.#metaProtocols.fetchInscriptions(account);
       await this.#repository.update(account, inscriptions);
 

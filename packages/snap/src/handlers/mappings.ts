@@ -78,86 +78,26 @@ export function mapToKeyringAccount(account: BitcoinAccount): KeyringAccount {
   };
 }
 
-/**
- * Maps a Bitcoin Transaction to a Keyring Transaction.
- * @param account - The account account.
- * @param tx - The Bitcoin transaction.
- * @returns The Keyring transaction.
- */
-export function mapToTransaction(
-  account: BitcoinAccount,
-  tx: WalletTx,
-): Transaction {
-  const { network } = account;
-  const status: TransactionStatus = tx.chain_position.is_confirmed
-    ? TransactionStatus.Confirmed
-    : TransactionStatus.Unconfirmed;
-
-  // Send if we have as an input an output that we own
-  const isSend = tx.tx.input.some((input) => {
-    return account.getOutput(input.previous_output.toString()) !== undefined;
-  });
-
-  const [events, timestamp] = mapToEvents(tx);
-
-  return {
-    id: tx.txid.toString(),
-    type: isSend ? 'send' : 'receive',
-    account: account.id,
-    chain: networkToCaip2[network],
-    status,
-    timestamp,
-    to: tx.tx.output.map((output) => mapToAssetMovement(output, network)),
-    from: tx.tx.input.flatMap((input) => {
-      const output = account.tx_graph.get_txout(input.previous_output);
-      // Skip if no output
-      if (!output) {
-        return [];
-      }
-
-      return [mapToAssetMovement(output, network)];
-    }),
-    events,
-    fees: [
-      {
-        type: 'priority',
-        asset: mapToAmount(account.calculateFee(tx.tx), network),
-      },
-    ],
-  };
-}
-
-/**
- *
- * @param amount
- * @param network
- */
-function mapToAmount(amount: Amount, network: Network): TransactionAmount {
+const mapToAmount = (amount: Amount, network: Network): TransactionAmount => {
   return {
     amount: amount.to_btc().toString(),
     fungible: true,
     unit: networkToCurrencyUnit[network],
     type: networkToCaip19[network],
   };
-}
+};
 
-/**
- *
- * @param output
- * @param network
- */
-function mapToAssetMovement(output: TxOut, network: Network) {
+const mapToAssetMovement = (
+  output: TxOut,
+  network: Network,
+): TransactionRecipient => {
   return {
     address: Address.from_script(output.script_pubkey, network).toString(),
     asset: mapToAmount(output.value, network),
   };
-}
+};
 
-/**
- *
- * @param tx
- */
-function mapToEvents(tx: WalletTx): [TransactionEvent[], number | null] {
+const mapToEvents = (tx: WalletTx): [TransactionEvent[], number | null] => {
   let timestamp = Number(tx.chain_position.last_seen) ?? null;
   const events: TransactionEvent[] = [
     {
@@ -173,4 +113,66 @@ function mapToEvents(tx: WalletTx): [TransactionEvent[], number | null] {
     });
   }
   return [events, timestamp];
+};
+
+/**
+ * Maps a Bitcoin Transaction to a Keyring Transaction.
+ * @param account - The account account.
+ * @param tx - The Bitcoin transaction.
+ * @returns The Keyring transaction.
+ */
+export function mapToTransaction(
+  account: BitcoinAccount,
+  tx: WalletTx,
+): Transaction {
+  const { network } = account;
+  const status: TransactionStatus = tx.chain_position.is_confirmed
+    ? TransactionStatus.Confirmed
+    : TransactionStatus.Unconfirmed;
+  const [events, timestamp] = mapToEvents(tx);
+  const [sent] = account.sentAndReceived(tx.tx);
+  const isSend = sent.to_btc() > 0;
+
+  const transaction: Transaction = {
+    type: isSend ? 'send' : 'receive',
+    id: tx.txid.toString(),
+    account: account.id,
+    chain: networkToCaip2[network],
+    status,
+    timestamp,
+    events,
+    to: [],
+    from: [],
+    fees: [
+      {
+        type: 'priority',
+        asset: mapToAmount(account.calculateFee(tx.tx), network),
+      },
+    ],
+  };
+
+  // If it's a Send transaction:
+  // - to: all the outputs discarding the change (so it also works for consolidations).
+  // - from: empty as irrelevant because we might be sending from multiple addresses. Sufficient to say "Sent from Bitcoin Account".
+  // If it's a Receive transaction:
+  // - to: all the outputs spending to addresses we own.
+  // - from: empty as irrevelant because we might have hundreds of inputs in a tx. Point to explorer for details.
+  if (isSend) {
+    for (const txout of tx.tx.output) {
+      const spkIndex = account.derivationOfSpk(txout.script_pubkey);
+      const isConsolidation = spkIndex && spkIndex[0] === 'external';
+      if (!spkIndex || isConsolidation) {
+        transaction.to.push(mapToAssetMovement(txout, network));
+      }
+    }
+  } else {
+    for (const txout of tx.tx.output) {
+      if (account.isMine(txout.script_pubkey)) {
+        transaction.to.push(mapToAssetMovement(txout, network));
+      }
+    }
+  }
+
+  console.log('transaction', JSON.stringify(transaction, null, 2));
+  return transaction;
 }

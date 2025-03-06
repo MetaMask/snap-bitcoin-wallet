@@ -12,7 +12,8 @@ import type {
   LocalOutput,
   WalletTx,
   Amount,
-  TxGraph,
+  ScriptBuf,
+  KeychainKind,
 } from 'bitcoindevkit';
 
 import type { Inscription } from './meta-protocols';
@@ -41,11 +42,6 @@ export type BitcoinAccount = {
    * The network in which the account operates.
    */
   network: Network;
-
-  /**
-   * The graph of transactions and spends.
-   */
-  tx_graph: TxGraph;
 
   /**
    * Whether the account has already performed a full scan.
@@ -116,19 +112,6 @@ export type BitcoinAccount = {
   listUnspent(): LocalOutput[];
 
   /**
-   * List all relevant outputs (includes both spent and unspent, confirmed and unconfirmed).
-   * @returns the list of outputs
-   */
-  listOutput(): LocalOutput[];
-
-  /**
-   * Return the utxo owned by this wallet corresponding to `outpoint` if it exists in the wallet's database.
-   * @param op - The outpoint.
-   * @returns the output if it exists
-   */
-  getOutput(op: string): LocalOutput | undefined;
-
-  /**
    * List relevant and canonical transactions in the wallet.
    * A transaction is relevant when it spends from or spends to at least one tracked output.
    * A transaction is canonical when it is confirmed in the best chain, or does not conflict with any transaction confirmed in the best chain.
@@ -137,18 +120,32 @@ export type BitcoinAccount = {
   listTransactions(): WalletTx[];
 
   /**
-   * Get a wallet transaction
-   * @param txid - The transaction id.
-   * @returns the wallet transaction if it exists
-   */
-  getTransaction(txid: string): WalletTx | undefined;
-
-  /**
    * Calculate the fee of a given transaction. Returns [`Amount::ZERO`] if `tx` is a coinbase transaction.
    * @param tx - The transaction.
    * @returns the fee amount.
    */
   calculateFee(tx: Transaction): Amount;
+
+  /**
+   * Return whether or not a `script` is part of this wallet (either internal or external).
+   * @param script - The Bitcoin script.
+   * @returns the ownership state.
+   */
+  isMine(script: ScriptBuf): boolean;
+
+  /**
+   * Return whether or not a `script` is part of this wallet (either internal or external).
+   * @param script - The Bitcoin script.
+   * @returns the sent and received amounts.
+   */
+  sentAndReceived(script: ScriptBuf): [Amount, Amount];
+
+  /**
+   * Finds how the wallet derived the script pubkey `spk`.
+   * @param spk - The Bitcoin script.
+   * @returns the keychain used and derivation index, if the script is found.
+   */
+  derivationOfSpk(spk: ScriptBuf): [KeychainKind, number] | undefined;
 };
 
 /**
