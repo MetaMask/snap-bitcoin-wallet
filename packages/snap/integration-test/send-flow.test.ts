@@ -5,7 +5,7 @@ import { assertIsCustomDialog, installSnap } from '@metamask/snaps-jest';
 
 import { ReviewTransactionEvent, SendFormEvent } from '../src/entities';
 import { Caip2AddressType } from '../src/handlers';
-import { MNEMONIC } from './contants';
+import { MNEMONIC } from './constants';
 
 describe('Send flow', () => {
   const origin = 'metamask';
