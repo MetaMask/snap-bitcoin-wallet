@@ -44,7 +44,7 @@ describe('JSXSendFlowRepository', () => {
       expect(result).toBeNull();
     });
 
-    it('returns null if send form state not present in interface state', async () => {
+    it('returns null if send form state is not present in interface state', async () => {
       const state = { unknownField: 'bar' };
       mockSnapClient.getInterfaceState.mockResolvedValue(state);
 

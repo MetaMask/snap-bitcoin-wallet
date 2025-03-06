@@ -49,14 +49,14 @@
     "transactionSpeedTooltip": {
       "message": "The estimated time of the transaction"
     },
-    "transactionFee": {
+    "networkFee": {
       "message": "Network Fee"
     },
     "feeRate": {
       "message": "Fee rate"
     },
-    "transactionFeeTooltip": {
-      "message": "The total transaction fee"
+    "networkFeeTooltip": {
+      "message": "The total network fee"
     },
     "total": {
       "message": "Total"

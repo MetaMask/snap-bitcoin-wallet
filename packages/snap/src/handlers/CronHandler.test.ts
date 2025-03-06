@@ -59,7 +59,7 @@ describe('CronHandler', () => {
       ).rejects.toThrow('');
     });
 
-    it('synchronizes all accounts', async () => {
+    it('refreshes the send form rates', async () => {
       const interfaceId = 'id';
       await handler.route(SendFormEvent.RefreshRates, { interfaceId });
 

@@ -93,7 +93,7 @@ export const ReviewTransactionView: SnapComponent<ReviewTransactionContext> = (
               )}`}
             </Text>
           </Row>
-          <Row label={t('transactionFee')} tooltip={t('transactionFeeTooltip')}>
+          <Row label={t('networkFee')} tooltip={t('networkFeeTooltip')}>
             <Value
               value={`${fee} sats`}
               extra={displayExchangeAmount(BigInt(fee), exchangeRate)}
