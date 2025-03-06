@@ -66,6 +66,7 @@ export class SendFlowUseCases {
     );
 
     // Asynchronously fetch the rates and start the background loop.
+    /* eslint-disable no-void */
     void this.refreshRates(interfaceId);
 
     // Blocks and waits for user actions
@@ -151,6 +152,7 @@ export class SendFlowUseCases {
       case ReviewTransactionEvent.HeaderBack: {
         // If we come from a send form, we display it again, otherwise we resolve the interface (reject)
         if (context.sendForm) {
+          /* eslint-disable no-void */
           void this.refreshRates(id);
           return this.#sendFlowRepository.updateForm(id, context.sendForm);
         }
@@ -281,7 +283,7 @@ export class SendFlowUseCases {
     } catch (error) {
       // We do not throw so we can reschedule. Previous fetched values or fallbacks will be used.
       logger.error(
-        `Failed to fetch rates in send form, ID: %s. Error: %o`,
+        `Failed to fetch rates in send form, ID: %s. Error: %s`,
         id,
         error,
       );

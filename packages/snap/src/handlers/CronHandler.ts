@@ -44,7 +44,7 @@ export class CronHandler {
     results.forEach((result, index) => {
       if (result.status === 'rejected') {
         logger.error(
-          `Account failed to sync. ID: %s. Error: %o`,
+          `Account failed to sync. ID: %s. Error: %s`,
           accounts[index].id,
           result.reason,
         );

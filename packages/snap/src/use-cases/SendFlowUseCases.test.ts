@@ -102,9 +102,7 @@ describe('SendFlowUseCases', () => {
         mockAccount,
         fallbackFeeRate,
       );
-      expect(mockSnapClient.scheduleBackgroundEvent).toHaveBeenCalledWith(
-        'PT1S',
-        SendFormEvent.RefreshRates,
+      expect(mockSendFlowRepository.getContext).toHaveBeenCalledWith(
         'interface-id',
       );
       expect(mockSnapClient.displayInterface).toHaveBeenCalledWith(
