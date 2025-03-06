@@ -120,6 +120,12 @@ export type BitcoinAccount = {
   listTransactions(): WalletTx[];
 
   /**
+   * Get a single transaction from the wallet as a [`WalletTx`] (if the transaction exists).
+   * @returns the wallet transaction
+   */
+  getTransaction(txid: string): WalletTx | undefined;
+
+  /**
    * Calculate the fee of a given transaction. Returns [`Amount::ZERO`] if `tx` is a coinbase transaction.
    * @param tx - The transaction.
    * @returns the fee amount.

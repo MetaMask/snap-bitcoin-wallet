@@ -1,12 +1,17 @@
-import type { KeyringAccount, Transaction } from '@metamask/keyring-api';
+import type {
+  KeyringAccount,
+  Transaction as KeyringTransaction,
+} from '@metamask/keyring-api';
 import { TransactionStatus, BtcMethod } from '@metamask/keyring-api';
+import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 import { Address } from 'bitcoindevkit';
 import type {
   AddressType,
   Amount,
   Network,
-  WalletTx,
   TxOut,
+  Transaction,
+  ChainPosition,
 } from 'bitcoindevkit';
 
 import { networkToCurrencyUnit, type BitcoinAccount } from '../entities';
@@ -26,7 +31,7 @@ type TransactionRecipient = {
 };
 
 type TransactionEvent = {
-  status: 'unconfirmed' | 'confirmed';
+  status: TransactionStatus;
   timestamp: number | null;
 };
 
@@ -97,19 +102,32 @@ const mapToAssetMovement = (
   };
 };
 
-const mapToEvents = (tx: WalletTx): [TransactionEvent[], number | null] => {
-  let timestamp = Number(tx.chain_position.last_seen) ?? null;
+const mapToEvents = (
+  chainPosition?: ChainPosition,
+): [TransactionEvent[], number | null] => {
+  if (!chainPosition) {
+    const timestamp = getCurrentUnixTimestamp();
+    const events = [
+      {
+        status: TransactionStatus.Submitted,
+        timestamp,
+      },
+    ];
+    return [events, timestamp];
+  }
+
+  let timestamp = Number(chainPosition.last_seen) ?? null;
   const events: TransactionEvent[] = [
     {
-      status: 'unconfirmed',
+      status: TransactionStatus.Unconfirmed,
       timestamp,
     },
   ];
-  if (tx.chain_position.anchor) {
-    timestamp = Number(tx.chain_position.anchor.confirmation_time);
+  if (chainPosition.anchor) {
+    timestamp = Number(chainPosition.anchor.confirmation_time);
     events.push({
-      status: 'confirmed',
-      timestamp: Number(tx.chain_position.anchor.confirmation_time),
+      status: TransactionStatus.Confirmed,
+      timestamp: Number(chainPosition.anchor.confirmation_time),
     });
   }
   return [events, timestamp];
@@ -119,23 +137,28 @@ const mapToEvents = (tx: WalletTx): [TransactionEvent[], number | null] => {
  * Maps a Bitcoin Transaction to a Keyring Transaction.
  * @param account - The account account.
  * @param tx - The Bitcoin transaction.
+ * @param chainPosition - The position of the transaction on chain. Optional for submitted transactions.
  * @returns The Keyring transaction.
  */
 export function mapToTransaction(
   account: BitcoinAccount,
-  tx: WalletTx,
-): Transaction {
+  tx: Transaction,
+  chainPosition?: ChainPosition,
+): KeyringTransaction {
   const { network } = account;
-  const status: TransactionStatus = tx.chain_position.is_confirmed
-    ? TransactionStatus.Confirmed
-    : TransactionStatus.Unconfirmed;
-  const [events, timestamp] = mapToEvents(tx);
-  const [sent] = account.sentAndReceived(tx.tx);
+  let status: TransactionStatus = TransactionStatus.Submitted;
+  if (chainPosition) {
+    status = chainPosition.is_confirmed
+      ? TransactionStatus.Confirmed
+      : TransactionStatus.Unconfirmed;
+  }
+  const [events, timestamp] = mapToEvents(chainPosition);
+  const [sent] = account.sentAndReceived(tx);
   const isSend = sent.to_btc() > 0;
 
-  const transaction: Transaction = {
+  const transaction: KeyringTransaction = {
     type: isSend ? 'send' : 'receive',
-    id: tx.txid.toString(),
+    id: tx.compute_txid().toString(),
     account: account.id,
     chain: networkToCaip2[network],
     status,
@@ -146,7 +169,7 @@ export function mapToTransaction(
     fees: [
       {
         type: 'priority',
-        asset: mapToAmount(account.calculateFee(tx.tx), network),
+        asset: mapToAmount(account.calculateFee(tx), network),
       },
     ],
   };
@@ -158,7 +181,7 @@ export function mapToTransaction(
   // - to: all the outputs spending to addresses we own.
   // - from: empty as irrevelant because we might have hundreds of inputs in a tx. Point to explorer for details.
   if (isSend) {
-    for (const txout of tx.tx.output) {
+    for (const txout of tx.output) {
       const spkIndex = account.derivationOfSpk(txout.script_pubkey);
       const isConsolidation = spkIndex && spkIndex[0] === 'external';
       if (!spkIndex || isConsolidation) {
@@ -166,13 +189,12 @@ export function mapToTransaction(
       }
     }
   } else {
-    for (const txout of tx.tx.output) {
+    for (const txout of tx.output) {
       if (account.isMine(txout.script_pubkey)) {
         transaction.to.push(mapToAssetMovement(txout, network));
       }
     }
   }
 
-  console.log('transaction', JSON.stringify(transaction, null, 2));
   return transaction;
 }

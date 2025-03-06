@@ -125,21 +125,34 @@ export class AccountUseCases {
       return;
     }
 
+    // Get the txs already confirmed so we can exclude them after synchronization
+    const txsBefore = account.listTransactions();
+    const confirmedTxids = txsBefore
+      .filter((tx) => tx.chain_position.is_confirmed)
+      .map((tx) => tx.txid.toString());
+
+    await this.#chain.sync(account);
+    const txsAfter = account.listTransactions();
+
     // Transactions are monotone, meaning they can only be added, so we can be confident
     // that a change can only happen when new txs appear.
-    const nTxsBefore = account.listTransactions().length;
-    await this.#chain.sync(account);
-    const nTxsAfter = account.listTransactions().length;
-
-    if (nTxsAfter > nTxsBefore) {
+    if (txsAfter.length > txsBefore.length) {
       const inscriptions = await this.#metaProtocols.fetchInscriptions(account);
       await this.#repository.update(account, inscriptions);
 
       await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
-      await this.#snapClient.emitAccountTransactionsUpdatedEvent(account);
     } else {
       await this.#repository.update(account);
     }
+
+    // Filter out already confirmed transactions
+    const txsToSynchronize = txsAfter.filter(
+      (tx) => !confirmedTxids.includes(tx.txid.toString()),
+    );
+    await this.#snapClient.emitAccountTransactionsUpdatedEvent(
+      account,
+      txsToSynchronize,
+    );
 
     logger.debug('Account synchronized successfully: %s', account.id);
   }
@@ -153,7 +166,10 @@ export class AccountUseCases {
     await this.#repository.update(account, inscriptions);
 
     await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
-    await this.#snapClient.emitAccountTransactionsUpdatedEvent(account);
+    await this.#snapClient.emitAccountTransactionsUpdatedEvent(
+      account,
+      account.listTransactions(),
+    );
 
     logger.debug('initial full scan performed successfully: %s', account.id);
   }
@@ -206,7 +222,14 @@ export class AccountUseCases {
     const txId = tx.compute_txid();
 
     await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
-    await this.#snapClient.emitAccountTransactionsUpdatedEvent(account);
+
+    // We retrieve the tx from the wallet to get a WalletTx.
+    const walletTx = account.getTransaction(txId.toString());
+    if (walletTx) {
+      await this.#snapClient.emitAccountTransactionsUpdatedEvent(account, [
+        walletTx,
+      ]);
+    }
 
     logger.info(
       'Transaction sent successfully: %s. Account: %s, Network: %s',

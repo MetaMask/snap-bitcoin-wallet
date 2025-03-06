@@ -97,14 +97,31 @@ export class KeyringHandler implements Keyring {
 
   async listAccountTransactions(
     id: string,
-    pagination: Pagination,
+    { limit, next }: Pagination,
   ): Promise<Paginated<Transaction>> {
     const account = await this.#accountsUseCases.get(id);
     const transactions = account.listTransactions();
 
+    // Find starting index based on provided cursor
+    let startIndex = 0;
+    if (next) {
+      const cursorIndex = transactions.findIndex(
+        (tx) => tx.txid.toString() === next,
+      );
+      startIndex = cursorIndex >= 0 ? cursorIndex + 1 : 0;
+    }
+
+    const paginatedTxs = transactions.slice(startIndex, startIndex + limit);
+    const nextCursor =
+      startIndex + limit < transactions.length
+        ? paginatedTxs[paginatedTxs.length - 1].txid.toString()
+        : null;
+
     return {
-      data: transactions.map((tx) => mapToTransaction(account, tx)),
-      next: null,
+      data: paginatedTxs.map((tx) =>
+        mapToTransaction(account, tx.tx, tx.chain_position),
+      ),
+      next: nextCursor,
     };
   }
 

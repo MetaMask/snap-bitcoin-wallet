@@ -43,7 +43,10 @@ export class JSXSendFlowRepository implements SendFlowRepository {
     const context: SendFormContext = {
       balance: account.balance.trusted_spendable.to_sat().toString(),
       currency: networkToCurrencyUnit[account.network],
-      account: { id: account.id, address: account.peekAddress(0).address }, // FIXME: Address should not be needed here
+      account: {
+        id: account.id,
+        address: account.peekAddress(0).address.toString(),
+      }, // FIXME: Address should not be needed here
       network: account.network,
       feeRate,
       errors: {},

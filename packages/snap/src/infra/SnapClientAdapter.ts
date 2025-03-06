@@ -11,6 +11,7 @@ import {
   type GetPreferencesResult,
   type Json,
 } from '@metamask/snaps-sdk';
+import type { WalletTx } from 'bitcoindevkit';
 
 import type { BitcoinAccount, SnapClient, SnapState } from '../entities';
 import { networkToCurrencyUnit } from '../entities';
@@ -104,10 +105,11 @@ export class SnapClientAdapter implements SnapClient {
 
   async emitAccountTransactionsUpdatedEvent(
     account: BitcoinAccount,
+    txs: WalletTx[],
   ): Promise<void> {
-    const transactions = account
-      .listTransactions()
-      .map((tx) => mapToTransaction(account, tx));
+    const transactions = txs.map((tx) =>
+      mapToTransaction(account, tx.tx, tx.chain_position),
+    );
     return emitSnapKeyringEvent(snap, KeyringEvent.AccountTransactionsUpdated, {
       transactions: {
         [account.id]: transactions,

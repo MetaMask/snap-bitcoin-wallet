@@ -16,7 +16,7 @@ import type {
   ScriptBuf,
   KeychainKind,
 } from 'bitcoindevkit';
-import { Wallet } from 'bitcoindevkit';
+import { Txid, Wallet } from 'bitcoindevkit';
 
 import type { BitcoinAccount, TransactionBuilder } from '../entities';
 import { BdkTxBuilderAdapter } from './BdkTxBuilderAdapter';
@@ -132,6 +132,10 @@ export class BdkAccountAdapter implements BitcoinAccount {
 
   listTransactions(): WalletTx[] {
     return this.#wallet.transactions();
+  }
+
+  getTransaction(txid: string): WalletTx | undefined {
+    return this.#wallet.get_tx(Txid.from_string(txid));
   }
 
   calculateFee(tx: Transaction): Amount {

@@ -4,6 +4,7 @@ import type {
   GetPreferencesResult,
 } from '@metamask/snaps-sdk';
 import type { Json } from '@metamask/utils';
+import type { WalletTx } from 'bitcoindevkit';
 
 import type { BitcoinAccount } from './account';
 import type { Inscription } from './meta-protocols';
@@ -67,8 +68,12 @@ export type SnapClient = {
   /**
    * Emit an event notifying the extension of updated transactions
    * @param account - The Bitcoin account.
+   * @param txs - The transactions included in the event.
    */
-  emitAccountTransactionsUpdatedEvent(account: BitcoinAccount): Promise<void>;
+  emitAccountTransactionsUpdatedEvent(
+    account: BitcoinAccount,
+    txs: WalletTx[],
+  ): Promise<void>;
 
   /**
    * Create a User Interface.
