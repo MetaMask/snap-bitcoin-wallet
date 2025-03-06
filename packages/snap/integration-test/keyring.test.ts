@@ -5,7 +5,7 @@ import { installSnap } from '@metamask/snaps-jest';
 
 import { CurrencyUnit } from '../src/entities';
 import { Caip2AddressType, Caip19Asset } from '../src/handlers';
-import { MNEMONIC } from './contants';
+import { MNEMONIC } from './constants';
 
 describe('Keyring', () => {
   const accounts: Record<string, KeyringAccount> = {};
