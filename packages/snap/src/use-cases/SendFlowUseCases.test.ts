@@ -151,6 +151,7 @@ describe('SendFlowUseCases', () => {
         conversionRate: 100000,
         conversionDate: 2025,
       },
+      backgroundEventId: 'backgroundEventId',
     };
 
     beforeEach(() => {
@@ -176,6 +177,9 @@ describe('SendFlowUseCases', () => {
       expect(mockSnapClient.resolveInterface).toHaveBeenCalledWith(
         'interface-id',
         null,
+      );
+      expect(mockSnapClient.cancelBackgroundEvent).toHaveBeenCalledWith(
+        mockContext.backgroundEventId,
       );
     });
 
@@ -510,15 +514,6 @@ describe('SendFlowUseCases', () => {
       mockRatesClient.exchangeRates.mockResolvedValue(mockExchangeRates);
       mockSnapClient.scheduleBackgroundEvent.mockResolvedValue('event-id');
       mockSnapClient.getPreferences.mockResolvedValue(mockPreferences);
-    });
-
-    it('returns if interface is not found', async () => {
-      mockSendFlowRepository.getContext.mockResolvedValueOnce(null);
-
-      await useCases.onChangeForm('interface-id', SendFormEvent.RefreshRates);
-
-      expect(mockSnapClient.scheduleBackgroundEvent).not.toHaveBeenCalled();
-      expect(mockSendFlowRepository.updateForm).not.toHaveBeenCalled();
     });
 
     it('schedules next event if fetching rates fail', async () => {

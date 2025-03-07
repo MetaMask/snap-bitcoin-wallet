@@ -49,7 +49,7 @@ describe('Send flow', () => {
     });
   });
 
-  it.only('happy path', async () => {
+  it('happy path', async () => {
     const response = snap.request({
       origin,
       method: 'startSendTransactionFlow',
@@ -72,7 +72,7 @@ describe('Send flow', () => {
     expect(result).toRespondWith({ txId: expect.any(String) });
   });
 
-  it.only('happy path drain', async () => {
+  it('happy path drain', async () => {
     const response = snap.request({
       origin,
       method: 'startSendTransactionFlow',

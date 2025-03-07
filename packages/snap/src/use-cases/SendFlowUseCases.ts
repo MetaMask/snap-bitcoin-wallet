@@ -97,14 +97,16 @@ export class SendFlowUseCases {
     // TODO: Temporary fetch the context while this is fixed: https://github.com/MetaMask/snaps/issues/3069
     const context = await this.#sendFlowRepository.getContext(id);
     if (!context) {
-      logger.debug(
-        `Context not found for interface: ${id}. Gracefully exiting.`,
-      );
-      return undefined;
+      throw new Error(`Context not found in send form. Interface: ${id}`);
     }
 
     switch (event) {
       case SendFormEvent.Cancel: {
+        if (context.backgroundEventId) {
+          await this.#snapClient.cancelBackgroundEvent(
+            context.backgroundEventId,
+          );
+        }
         return this.#snapClient.resolveInterface(id, null);
       }
       case SendFormEvent.ClearRecipient: {
