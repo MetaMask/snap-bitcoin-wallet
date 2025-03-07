@@ -72,17 +72,6 @@ describe('JSXSendFlowRepository', () => {
       expect(result).toBeNull();
     });
 
-    it('returns null if interface is not found', async () => {
-      const id = 'test-id';
-      mockSnapClient.getInterfaceContext.mockRejectedValue(
-        new Error(`Interface with id '${id}' not found.`),
-      );
-
-      const result = await repo.getContext(id);
-
-      expect(result).toBeNull();
-    });
-
     it('propagates error from getInterfaceContext', async () => {
       const error = new Error('getInterfaceContext failed');
       mockSnapClient.getInterfaceContext.mockRejectedValue(error);

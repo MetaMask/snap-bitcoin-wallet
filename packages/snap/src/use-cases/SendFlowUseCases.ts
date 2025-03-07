@@ -75,7 +75,7 @@ export class SendFlowUseCases {
 
     const interfaceId = await this.#sendFlowRepository.insertForm(context);
 
-    // Asynchronously fetch the rates and start the background loop.
+    // Asynchronously start the fetching of rates background loop.
     /* eslint-disable no-void */
     void this.#refreshRates(interfaceId, context);
 
@@ -83,7 +83,6 @@ export class SendFlowUseCases {
     const request = await this.#snapClient.displayInterface<TransactionRequest>(
       interfaceId,
     );
-    console.log('why not entering here?!');
     if (!request) {
       throw new UserRejectedRequestError() as unknown as Error;
     }

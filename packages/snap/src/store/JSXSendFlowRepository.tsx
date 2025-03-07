@@ -25,17 +25,7 @@ export class JSXSendFlowRepository implements SendFlowRepository {
   }
 
   async getContext(id: string): Promise<SendFormContext | null> {
-    try {
-      return (await this.#snapClient.getInterfaceContext(
-        id,
-      )) as SendFormContext;
-    } catch (error) {
-      // TODO: Use error type instead when one is available.
-      if (error.message === `Interface with id '${id}' not found.`) {
-        return null;
-      }
-      throw error;
-    }
+    return (await this.#snapClient.getInterfaceContext(id)) as SendFormContext;
   }
 
   async insertForm(context: SendFormContext): Promise<string> {

@@ -117,6 +117,7 @@ describe('SendFlowUseCases', () => {
       expect(mockSnapClient.displayInterface).toHaveBeenCalledWith(
         'interface-id',
       );
+      expect(mockChain.getFeeEstimates).toHaveBeenCalled();
       expect(result).toStrictEqual(mockTxRequest);
     });
   });

@@ -38,41 +38,6 @@ describe('Send flow', () => {
     }
   });
 
-  it('handles user interactions', async () => {
-    snap.mockJsonRpc({
-      method: 'snap_scheduleBackgroundEvent',
-      result: 'background-event-id',
-    });
-
-    const request = snap.request({
-      origin,
-      method: 'startSendTransactionFlow',
-      params: {
-        account: account.id,
-      },
-    });
-
-    const sendFormUI = await request.getInterface();
-
-    await sendFormUI.clickElement(SendFormEvent.SetMax);
-    await sendFormUI.typeInField(SendFormEvent.Recipient, recipient);
-    await sendFormUI.typeInField(SendFormEvent.Amount, '0.1');
-    await sendFormUI.clickElement(SendFormEvent.Confirm);
-
-    const reviewUI = await request.getInterface();
-    await reviewUI.clickElement(ReviewTransactionEvent.HeaderBack);
-
-    const ui = await request.getInterface();
-    await ui.clickElement(SendFormEvent.Cancel);
-
-    const result = await request;
-    expect(result).toRespondWithError({
-      code: 4001,
-      message: 'User rejected the request.',
-      stack: expect.anything(),
-    });
-  });
-
   it('complete send', async () => {
     snap.mockJsonRpc({
       method: 'snap_scheduleBackgroundEvent',
@@ -105,5 +70,42 @@ describe('Send flow', () => {
       method: 'synchronizeAccounts',
     });
     expect(cronJobResponse).toRespondWith(null);
+  });
+
+  it('user interactions', async () => {
+    snap.mockJsonRpc({
+      method: 'snap_scheduleBackgroundEvent',
+      result: 'background-event-id',
+    });
+
+    snap.mockJsonRpc({
+      method: 'snap_cancelBackgroundEvent',
+      result: null,
+    });
+
+    const response = snap.request({
+      origin,
+      method: 'startSendTransactionFlow',
+      params: {
+        account: account.id,
+      },
+    });
+
+    let ui = await response.getInterface();
+
+    await ui.clickElement(SendFormEvent.SetMax);
+    await ui.typeInField(SendFormEvent.Recipient, recipient);
+    await ui.typeInField(SendFormEvent.Amount, '0.1');
+    await ui.clickElement(SendFormEvent.Confirm);
+
+    ui = await response.getInterface();
+    await ui.clickElement(ReviewTransactionEvent.HeaderBack);
+
+    ui = await response.getInterface();
+    const backgroundEventResponse = await snap.onBackgroundEvent({
+      method: SendFormEvent.RefreshRates,
+      params: { interfaceId: ui.id },
+    });
+    expect(backgroundEventResponse).toRespondWith(null);
   });
 });
