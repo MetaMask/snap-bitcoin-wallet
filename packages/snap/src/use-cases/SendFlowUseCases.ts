@@ -57,7 +57,7 @@ export class SendFlowUseCases {
   }
 
   async display(accountId: string): Promise<TransactionRequest> {
-    logger.trace('Displaying Send form view. Account: %s', accountId);
+    logger.debug('Displaying Send form. Account: %s', accountId);
 
     const account = await this.#accountRepository.get(accountId);
     if (!account) {
@@ -83,6 +83,7 @@ export class SendFlowUseCases {
     const request = await this.#snapClient.displayInterface<TransactionRequest>(
       interfaceId,
     );
+    console.log('why not entering here?!');
     if (!request) {
       throw new UserRejectedRequestError() as unknown as Error;
     }
@@ -92,7 +93,7 @@ export class SendFlowUseCases {
   }
 
   async onChangeForm(id: string, event: SendFormEvent): Promise<void> {
-    logger.trace('Send form input. ID: %s. Event: %s', id, event);
+    logger.debug('Event triggered on send form. ID: %s. Event: %s', id, event);
 
     // TODO: Temporary fetch the context while this is fixed: https://github.com/MetaMask/snaps/issues/3069
     const context = await this.#sendFlowRepository.getContext(id);
@@ -165,7 +166,11 @@ export class SendFlowUseCases {
     event: ReviewTransactionEvent,
     context: ReviewTransactionContext,
   ): Promise<void> {
-    logger.trace('Updating transaction review. ID: %s. Event: %s', id, event);
+    logger.debug(
+      'Event triggered on transaction review. ID: %s. Event: %s',
+      id,
+      event,
+    );
 
     switch (event) {
       case ReviewTransactionEvent.HeaderBack: {

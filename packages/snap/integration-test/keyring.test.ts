@@ -5,7 +5,7 @@ import { installSnap } from '@metamask/snaps-jest';
 
 import { CurrencyUnit } from '../src/entities';
 import { Caip2AddressType, Caip19Asset } from '../src/handlers';
-import { MNEMONIC } from './constants';
+import { MNEMONIC, TEST_ADDRESS } from './constants';
 
 describe.skip('Keyring', () => {
   const accounts: Record<string, KeyringAccount> = {};
@@ -25,7 +25,7 @@ describe.skip('Keyring', () => {
       // Main account used in the tests, only one to synchronize
       addressType: Caip2AddressType.P2wpkh,
       scope: BtcScope.Regtest,
-      expectedAddress: 'bcrt1qjtgffm20l9vu6a7gacxvpu2ej4kdcsgcgnly6t',
+      expectedAddress: TEST_ADDRESS,
       synchronize: true,
     },
     {
