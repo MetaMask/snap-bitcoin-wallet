@@ -63,14 +63,15 @@ describe('CronHandler', () => {
       const interfaceId = 'id';
       await handler.route(SendFormEvent.RefreshRates, { interfaceId });
 
-      expect(mockSendFlowUseCases.refreshRates).toHaveBeenCalledWith(
+      expect(mockSendFlowUseCases.onChangeForm).toHaveBeenCalledWith(
         interfaceId,
+        SendFormEvent.RefreshRates,
       );
     });
 
-    it('propagates errors from refreshRates', async () => {
+    it('propagates errors from onFormInput', async () => {
       const error = new Error();
-      mockSendFlowUseCases.refreshRates.mockRejectedValue(error);
+      mockSendFlowUseCases.onChangeForm.mockRejectedValue(error);
 
       await expect(
         handler.route(SendFormEvent.RefreshRates, { interfaceId: 'id' }),

@@ -25,14 +25,14 @@ export class UserInputHandler {
     }
 
     if (this.#isSendFormEvent(event.name)) {
-      return this.#sendFlowUseCases.onFormInput(
+      return this.#sendFlowUseCases.onChangeForm(
         interfaceId,
         event.name,
         // TODO: Reuse when fixed: https://github.com/MetaMask/snaps/issues/3069
         // context as SendFormContext,
       );
     } else if (this.#isReviewTransactionEvent(event.name)) {
-      return this.#sendFlowUseCases.onReviewInput(
+      return this.#sendFlowUseCases.onChangeReview(
         interfaceId,
         event.name,
         context as ReviewTransactionContext,

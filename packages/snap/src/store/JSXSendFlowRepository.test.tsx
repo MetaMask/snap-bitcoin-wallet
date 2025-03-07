@@ -1,13 +1,11 @@
-import type { AddressInfo } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 
 import type {
   SnapClient,
   SendFormContext,
   ReviewTransactionContext,
-  BitcoinAccount,
 } from '../entities';
-import { CurrencyUnit, SENDFORM_NAME } from '../entities';
+import { SENDFORM_NAME } from '../entities';
 import { ReviewTransactionView, SendFormView } from '../infra/jsx';
 import { JSXSendFlowRepository } from './JSXSendFlowRepository';
 
@@ -94,36 +92,15 @@ describe('JSXSendFlowRepository', () => {
   });
 
   describe('insertForm', () => {
-    const feeRate = 10;
-    const mockAccount = mock<BitcoinAccount>({
-      id: 'acc-id',
-      network: 'bitcoin',
-      // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
-      /* eslint-disable @typescript-eslint/naming-convention */
-      balance: { trusted_spendable: { to_sat: () => BigInt(1234) } },
-      peekAddress: jest.fn(),
-    });
-
     it('creates interface with correct context', async () => {
       mockSnapClient.createInterface.mockResolvedValue('interface-id');
-      mockAccount.peekAddress.mockReturnValue({
-        address: 'myAddress',
-      } as AddressInfo);
-      const expectedContext: SendFormContext = {
-        balance: '1234',
-        currency: CurrencyUnit.Bitcoin,
-        account: { id: 'acc-id', address: 'myAddress' },
-        network: 'bitcoin',
-        feeRate,
-        errors: {},
-      };
+      const mockContext = mock<SendFormContext>({});
 
-      const result = await repo.insertForm(mockAccount, feeRate);
+      const result = await repo.insertForm(mockContext);
 
-      expect(mockAccount.peekAddress).toHaveBeenCalledWith(0);
       expect(mockSnapClient.createInterface).toHaveBeenCalledWith(
-        <SendFormView {...expectedContext} />,
-        expectedContext,
+        <SendFormView {...mockContext} />,
+        mockContext,
       );
       expect(result).toBe('interface-id');
     });

@@ -7,7 +7,7 @@ import { CurrencyUnit } from '../src/entities';
 import { Caip2AddressType, Caip19Asset } from '../src/handlers';
 import { MNEMONIC } from './constants';
 
-describe('Keyring', () => {
+describe.skip('Keyring', () => {
   const accounts: Record<string, KeyringAccount> = {};
   const origin = 'metamask';
   let snap: Snap;

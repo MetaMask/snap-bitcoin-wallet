@@ -1,6 +1,6 @@
 import type { GetPreferencesResult } from '@metamask/snaps-sdk';
 import { UserRejectedRequestError } from '@metamask/snaps-sdk';
-import type { Psbt, FeeEstimates, Network } from 'bitcoindevkit';
+import type { Psbt, FeeEstimates, Network, AddressInfo } from 'bitcoindevkit';
 import { Address, Amount } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 
@@ -14,7 +14,6 @@ import type {
   TransactionRequest,
   ReviewTransactionContext,
   AssetRatesClient,
-  ExchangeRates,
 } from '../entities';
 import {
   ReviewTransactionEvent,
@@ -56,6 +55,11 @@ describe('SendFlowUseCases', () => {
     network: 'bitcoin',
     buildTx: jest.fn(),
     sign: jest.fn(),
+    id: 'acc-id',
+    // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
+    /* eslint-disable @typescript-eslint/naming-convention */
+    balance: { trusted_spendable: { to_sat: () => BigInt(1234) } },
+    peekAddress: jest.fn(),
   });
   const mockTxRequest = mock<TransactionRequest>();
 
@@ -73,6 +77,14 @@ describe('SendFlowUseCases', () => {
   });
 
   describe('displayForm', () => {
+    beforeEach(() => {
+      mockAccountRepository.get.mockResolvedValue(mockAccount);
+      mockAccount.peekAddress.mockReturnValue({
+        address: 'myAddress',
+      } as AddressInfo);
+      mockSendFlowRepository.insertForm.mockResolvedValue('interface-id');
+    });
+
     it('throws error if account not found', async () => {
       mockAccountRepository.get.mockResolvedValue(null);
       await expect(useCases.display('non-existent-account')).rejects.toThrow(
@@ -81,8 +93,6 @@ describe('SendFlowUseCases', () => {
     });
 
     it('throws UserRejectedRequestError if displayInterface returns null', async () => {
-      mockAccountRepository.get.mockResolvedValue(mockAccount);
-      mockSendFlowRepository.insertForm.mockResolvedValue('interface-id');
       mockSnapClient.displayInterface.mockResolvedValue(null);
 
       await expect(useCases.display('account-id')).rejects.toThrow(
@@ -91,20 +101,19 @@ describe('SendFlowUseCases', () => {
     });
 
     it('displays Send form and returns transaction request when resolved', async () => {
-      mockAccountRepository.get.mockResolvedValue(mockAccount);
-      mockSendFlowRepository.insertForm.mockResolvedValue('interface-id');
       mockSnapClient.displayInterface.mockResolvedValue(mockTxRequest);
 
       const result = await useCases.display('account-id');
 
       expect(mockAccountRepository.get).toHaveBeenCalledWith('account-id');
-      expect(mockSendFlowRepository.insertForm).toHaveBeenCalledWith(
-        mockAccount,
-        fallbackFeeRate,
-      );
-      expect(mockSendFlowRepository.getContext).toHaveBeenCalledWith(
-        'interface-id',
-      );
+      expect(mockSendFlowRepository.insertForm).toHaveBeenCalledWith({
+        balance: '1234',
+        currency: CurrencyUnit.Bitcoin,
+        account: { id: 'acc-id', address: 'myAddress' },
+        network: 'bitcoin',
+        feeRate: fallbackFeeRate,
+        errors: {},
+      });
       expect(mockSnapClient.displayInterface).toHaveBeenCalledWith(
         'interface-id',
       );
@@ -112,7 +121,7 @@ describe('SendFlowUseCases', () => {
     });
   });
 
-  describe('onFormInput', () => {
+  describe('onChangeForm', () => {
     const mockTxBuilder = {
       addRecipient: jest.fn(),
       feeRate: jest.fn(),
@@ -158,12 +167,12 @@ describe('SendFlowUseCases', () => {
 
     it('throws error unrecognized event', async () => {
       await expect(
-        useCases.onFormInput('interface-id', 'randomEvent' as SendFormEvent),
+        useCases.onChangeForm('interface-id', 'randomEvent' as SendFormEvent),
       ).rejects.toThrow('Unrecognized event');
     });
 
     it('resolves to null on Cancel', async () => {
-      await useCases.onFormInput('interface-id', SendFormEvent.Cancel);
+      await useCases.onChangeForm('interface-id', SendFormEvent.Cancel);
       expect(mockSnapClient.resolveInterface).toHaveBeenCalledWith(
         'interface-id',
         null,
@@ -182,7 +191,7 @@ describe('SendFlowUseCases', () => {
         },
       };
 
-      await useCases.onFormInput('interface-id', SendFormEvent.ClearRecipient);
+      await useCases.onChangeForm('interface-id', SendFormEvent.ClearRecipient);
       expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
         'interface-id',
         expectedContext,
@@ -195,7 +204,7 @@ describe('SendFlowUseCases', () => {
         recipient: undefined,
       });
       await expect(
-        useCases.onFormInput('interface-id', SendFormEvent.Confirm),
+        useCases.onChangeForm('interface-id', SendFormEvent.Confirm),
       ).rejects.toThrow('Inconsistent Send form context');
 
       mockSendFlowRepository.getContext.mockResolvedValueOnce({
@@ -203,7 +212,7 @@ describe('SendFlowUseCases', () => {
         amount: undefined,
       });
       await expect(
-        useCases.onFormInput('interface-id', SendFormEvent.Confirm),
+        useCases.onChangeForm('interface-id', SendFormEvent.Confirm),
       ).rejects.toThrow('Inconsistent Send form context');
 
       mockSendFlowRepository.getContext.mockResolvedValueOnce({
@@ -211,7 +220,7 @@ describe('SendFlowUseCases', () => {
         fee: undefined,
       });
       await expect(
-        useCases.onFormInput('interface-id', SendFormEvent.Confirm),
+        useCases.onChangeForm('interface-id', SendFormEvent.Confirm),
       ).rejects.toThrow('Inconsistent Send form context');
     });
 
@@ -226,9 +235,10 @@ describe('SendFlowUseCases', () => {
         currency: mockContext.currency,
         fee: '10',
         sendForm: mockContext,
+        drain: mockContext.drain,
       };
 
-      await useCases.onFormInput('interface-id', SendFormEvent.Confirm);
+      await useCases.onChangeForm('interface-id', SendFormEvent.Confirm);
       expect(mockSendFlowRepository.updateReview).toHaveBeenCalledWith(
         'interface-id',
         expectedReviewContext,
@@ -255,7 +265,7 @@ describe('SendFlowUseCases', () => {
         },
       };
 
-      await useCases.onFormInput('interface-id', SendFormEvent.SetMax);
+      await useCases.onChangeForm('interface-id', SendFormEvent.SetMax);
       expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
         'interface-id',
         expectedContext,
@@ -288,7 +298,7 @@ describe('SendFlowUseCases', () => {
         },
       };
 
-      await useCases.onFormInput('interface-id', SendFormEvent.Recipient);
+      await useCases.onChangeForm('interface-id', SendFormEvent.Recipient);
 
       expect(mockSendFlowRepository.getState).toHaveBeenCalledWith(
         'interface-id',
@@ -326,7 +336,7 @@ describe('SendFlowUseCases', () => {
         },
       };
 
-      await useCases.onFormInput('interface-id', SendFormEvent.Amount);
+      await useCases.onChangeForm('interface-id', SendFormEvent.Amount);
 
       expect(mockSendFlowRepository.getState).toHaveBeenCalledWith(
         'interface-id',
@@ -352,7 +362,7 @@ describe('SendFlowUseCases', () => {
         errors: expect.anything(),
       };
 
-      await useCases.onFormInput('interface-id', SendFormEvent.SetMax);
+      await useCases.onChangeForm('interface-id', SendFormEvent.SetMax);
 
       expect(mockAccountRepository.get).toHaveBeenCalledWith('account-id');
       expect(mockAccountRepository.getFrozenUTXOs).toHaveBeenCalledWith(
@@ -390,7 +400,7 @@ describe('SendFlowUseCases', () => {
         recipient: 'newAddressValidated',
       };
 
-      await useCases.onFormInput('interface-id', SendFormEvent.Recipient);
+      await useCases.onChangeForm('interface-id', SendFormEvent.Recipient);
 
       expect(mockAccountRepository.get).toHaveBeenCalled();
       expect(mockAccountRepository.getFrozenUTXOs).toHaveBeenCalled();
@@ -407,7 +417,7 @@ describe('SendFlowUseCases', () => {
     });
   });
 
-  describe('onReviewInput', () => {
+  describe('onChangeReview', () => {
     const mockContext: ReviewTransactionContext = {
       from: 'myAddress',
       network: 'bitcoin',
@@ -416,12 +426,14 @@ describe('SendFlowUseCases', () => {
       recipient: 'recipientAddress',
       feeRate: 2.4,
       fee: '10',
-      sendForm: {} as SendFormContext,
+      sendForm: {
+        network: 'bitcoin',
+      } as SendFormContext,
     };
 
     it('throws error unrecognized event', async () => {
       await expect(
-        useCases.onReviewInput(
+        useCases.onChangeReview(
           'interface-id',
           'randomEvent' as ReviewTransactionEvent,
           mockContext,
@@ -430,7 +442,7 @@ describe('SendFlowUseCases', () => {
     });
 
     it('resolves to null on HeaderBack if missing send form in context', async () => {
-      await useCases.onReviewInput(
+      await useCases.onChangeReview(
         'interface-id',
         ReviewTransactionEvent.HeaderBack,
         { ...mockContext, sendForm: undefined },
@@ -443,7 +455,7 @@ describe('SendFlowUseCases', () => {
 
     it('reverts interface back to send form if present in context', async () => {
       const id = 'interface-id';
-      await useCases.onReviewInput(
+      await useCases.onChangeReview(
         id,
         ReviewTransactionEvent.HeaderBack,
         mockContext,
@@ -452,11 +464,13 @@ describe('SendFlowUseCases', () => {
         id,
         mockContext.sendForm,
       );
-      expect(mockSendFlowRepository.getContext).toHaveBeenCalledWith(id);
+      expect(mockChain.getFeeEstimates).toHaveBeenCalledWith(
+        mockContext.network,
+      );
     });
 
     it('resolves to the transaction request on Send', async () => {
-      await useCases.onReviewInput(
+      await useCases.onChangeReview(
         'interface-id',
         ReviewTransactionEvent.Send,
         mockContext,
@@ -484,9 +498,9 @@ describe('SendFlowUseCases', () => {
       network: 'bitcoin',
       feeRate: fallbackFeeRate,
     };
-    const mockExchangeRates = mock<ExchangeRates>({
+    const mockExchangeRates = {
       usd: { value: 200000 },
-    });
+    };
     const mockPreferences = mock<GetPreferencesResult>({ currency: 'usd' });
     const mockFeeRate = 4.4;
 
@@ -501,7 +515,8 @@ describe('SendFlowUseCases', () => {
     it('returns if interface is not found', async () => {
       mockSendFlowRepository.getContext.mockResolvedValueOnce(null);
 
-      await useCases.refreshRates('interface-id');
+      await useCases.onChangeForm('interface-id', SendFormEvent.RefreshRates);
+
       expect(mockSnapClient.scheduleBackgroundEvent).not.toHaveBeenCalled();
       expect(mockSendFlowRepository.updateForm).not.toHaveBeenCalled();
     });
@@ -511,7 +526,7 @@ describe('SendFlowUseCases', () => {
         new Error('getFeeEstimates'),
       );
 
-      await useCases.refreshRates('interface-id');
+      await useCases.onChangeForm('interface-id', SendFormEvent.RefreshRates);
 
       expect(mockSnapClient.scheduleBackgroundEvent).toHaveBeenCalled();
       expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
@@ -527,7 +542,7 @@ describe('SendFlowUseCases', () => {
     it('sets fee and exchange rates successfully', async () => {
       (mockFeeEstimates.get as jest.Mock).mockReturnValue(mockFeeRate);
 
-      await useCases.refreshRates('interface-id');
+      await useCases.onChangeForm('interface-id', SendFormEvent.RefreshRates);
 
       expect(mockSnapClient.scheduleBackgroundEvent).toHaveBeenCalledWith(
         ratesRefreshInterval,
@@ -556,7 +571,7 @@ describe('SendFlowUseCases', () => {
         network: 'notBitcoin' as Network,
       });
 
-      await useCases.refreshRates('interface-id');
+      await useCases.onChangeForm('interface-id', SendFormEvent.RefreshRates);
 
       expect(mockSnapClient.scheduleBackgroundEvent).toHaveBeenCalled();
       expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
@@ -577,7 +592,7 @@ describe('SendFlowUseCases', () => {
         currency: 'unknown',
       });
 
-      await useCases.refreshRates('interface-id');
+      await useCases.onChangeForm('interface-id', SendFormEvent.RefreshRates);
 
       expect(mockSnapClient.scheduleBackgroundEvent).toHaveBeenCalled();
       expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
@@ -594,9 +609,9 @@ describe('SendFlowUseCases', () => {
       const error = new Error('scheduleBackgroundEvent failed');
       mockSnapClient.scheduleBackgroundEvent.mockRejectedValue(error);
 
-      await expect(useCases.refreshRates('interface-id')).rejects.toThrow(
-        error,
-      );
+      await expect(
+        useCases.onChangeForm('interface-id', SendFormEvent.RefreshRates),
+      ).rejects.toThrow(error);
     });
   });
 });

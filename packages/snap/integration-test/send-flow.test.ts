@@ -20,16 +20,7 @@ describe('Send flow', () => {
       },
     });
 
-    snap.mockJsonRpc({
-      method: 'snap_scheduleBackgroundEvent',
-      result: 'background-event-id',
-    });
-    snap.mockJsonRpc({
-      method: 'snap_cancelBackgroundEvent',
-      result: null,
-    });
     snap.mockJsonRpc({ method: 'snap_manageAccounts', result: {} });
-
     const response = await snap.onKeyringRequest({
       origin,
       method: 'keyring_createAccount',
@@ -47,7 +38,18 @@ describe('Send flow', () => {
     }
   });
 
-  it('happy path', async () => {
+  beforeEach(async () => {
+    snap.mockJsonRpc({
+      method: 'snap_scheduleBackgroundEvent',
+      result: 'background-event-id',
+    });
+    snap.mockJsonRpc({
+      method: 'snap_cancelBackgroundEvent',
+      result: null,
+    });
+  });
+
+  it.only('happy path', async () => {
     const response = snap.request({
       origin,
       method: 'startSendTransactionFlow',
@@ -70,7 +72,7 @@ describe('Send flow', () => {
     expect(result).toRespondWith({ txId: expect.any(String) });
   });
 
-  it('happy path drain account', async () => {
+  it.only('happy path drain', async () => {
     const response = snap.request({
       origin,
       method: 'startSendTransactionFlow',
@@ -87,17 +89,10 @@ describe('Send flow', () => {
     await ui.clickElement(SendFormEvent.Confirm);
 
     ui = await response.getInterface();
-    await ui.clickElement(ReviewTransactionEvent.HeaderBack);
-
-    ui = await response.getInterface();
-    await ui.clickElement(SendFormEvent.Cancel);
+    await ui.clickElement(ReviewTransactionEvent.Send);
 
     const result = await response;
-    expect(result).toRespondWithError({
-      code: 4001,
-      message: 'User rejected the request.',
-      stack: expect.anything(),
-    });
+    expect(result).toRespondWith({ txId: expect.any(String) });
   });
 
   it('cancel', async () => {

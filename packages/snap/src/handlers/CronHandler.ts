@@ -26,7 +26,10 @@ export class CronHandler {
       }
       case SendFormEvent.RefreshRates: {
         assert(params, SendFormRefreshRatesRequest);
-        return this.#sendFlowUseCases.refreshRates(params.interfaceId);
+        return this.#sendFlowUseCases.onChangeForm(
+          params.interfaceId,
+          SendFormEvent.RefreshRates,
+        );
       }
       default:
         throw new Error('Method not found.');
