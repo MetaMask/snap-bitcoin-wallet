@@ -69,7 +69,7 @@ describe('UserInputHandler', () => {
       );
     });
 
-    it('propagates errors from onFormInput', async () => {
+    it('propagates errors from onChangeForm', async () => {
       const error = new Error();
       mockSendFlowUseCases.onChangeForm.mockRejectedValue(error);
 
@@ -104,7 +104,7 @@ describe('UserInputHandler', () => {
       );
     });
 
-    it('propagates errors from onReviewInput', async () => {
+    it('propagates errors from onChangeReview', async () => {
       const error = new Error();
       mockSendFlowUseCases.onChangeReview.mockRejectedValue(error);
 
