@@ -1,7 +1,6 @@
 import type { CurrencyRate } from '@metamask/snaps-sdk';
 import type { Network } from 'bitcoindevkit';
 
-import type { BitcoinAccount } from './account';
 import type { CurrencyUnit } from './currency';
 
 export const SENDFORM_NAME = 'sendForm';
@@ -53,6 +52,7 @@ export type ReviewTransactionContext = {
   amount: string;
   fee: string;
   backgroundEventId?: string;
+  drain?: boolean;
 
   /**
    * Used to repopulate the send form if the user decides to go back in the flow
@@ -86,11 +86,10 @@ export type SendFlowRepository = {
 
   /**
    * Insert a new send form interface.
-   * @param account - the Bitcoin account
-   * @param feeRate - the initial fee rate
+   * @param context - the form context
    * @returns the interface ID
    */
-  insertForm(account: BitcoinAccount, feeRate: number): Promise<string>;
+  insertForm(context: SendFormContext): Promise<string>;
 
   /**
    * Update an interface to the send form view.

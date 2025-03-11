@@ -20,15 +20,15 @@ describe('Send flow', () => {
       },
     });
 
+    snap.mockJsonRpc({ method: 'snap_manageAccounts', result: {} });
     snap.mockJsonRpc({
       method: 'snap_scheduleBackgroundEvent',
       result: 'background-event-id',
     });
     snap.mockJsonRpc({
       method: 'snap_cancelBackgroundEvent',
-      result: null,
+      result: {},
     });
-    snap.mockJsonRpc({ method: 'snap_manageAccounts', result: {} });
 
     const response = await snap.onKeyringRequest({
       origin,
@@ -47,7 +47,7 @@ describe('Send flow', () => {
     }
   });
 
-  it('happy path', async () => {
+  it('sends a transaction', async () => {
     const response = snap.request({
       origin,
       method: 'startSendTransactionFlow',
@@ -55,12 +55,28 @@ describe('Send flow', () => {
         account: account.id,
       },
     });
-
     let ui = await response.getInterface();
     assertIsCustomDialog(ui);
 
-    await ui.typeInField(SendFormEvent.Amount, '0.1');
+    // Perform user interactions.
+    await ui.clickElement(SendFormEvent.SetMax);
     await ui.typeInField(SendFormEvent.Recipient, recipient);
+    await ui.typeInField(SendFormEvent.Amount, '0.1');
+
+    const backgroundEventResponse = await snap.onBackgroundEvent({
+      method: SendFormEvent.RefreshRates,
+      params: { interfaceId: ui.id },
+    });
+    expect(backgroundEventResponse).toRespondWith(null);
+
+    ui = await response.getInterface();
+    await ui.clickElement(SendFormEvent.Confirm);
+
+    // Test that we can successfully revert to send form.
+    ui = await response.getInterface();
+    await ui.clickElement(ReviewTransactionEvent.HeaderBack);
+
+    ui = await response.getInterface();
     await ui.clickElement(SendFormEvent.Confirm);
 
     ui = await response.getInterface();
@@ -68,39 +84,15 @@ describe('Send flow', () => {
 
     const result = await response;
     expect(result).toRespondWith({ txId: expect.any(String) });
+
+    // TODO: To be improved once listAccountTransactions is implemented to check the tx confirmation status.
+    const cronJobResponse = await snap.onCronjob({
+      method: 'synchronizeAccounts',
+    });
+    expect(cronJobResponse).toRespondWith(null);
   });
 
-  it('happy path drain account', async () => {
-    const response = snap.request({
-      origin,
-      method: 'startSendTransactionFlow',
-      params: {
-        account: account.id,
-      },
-    });
-
-    let ui = await response.getInterface();
-    assertIsCustomDialog(ui);
-
-    await ui.clickElement(SendFormEvent.SetMax);
-    await ui.typeInField(SendFormEvent.Recipient, recipient);
-    await ui.clickElement(SendFormEvent.Confirm);
-
-    ui = await response.getInterface();
-    await ui.clickElement(ReviewTransactionEvent.HeaderBack);
-
-    ui = await response.getInterface();
-    await ui.clickElement(SendFormEvent.Cancel);
-
-    const result = await response;
-    expect(result).toRespondWithError({
-      code: 4001,
-      message: 'User rejected the request.',
-      stack: expect.anything(),
-    });
-  });
-
-  it('cancel', async () => {
+  it('cancels by return button', async () => {
     const response = snap.request({
       origin,
       method: 'startSendTransactionFlow',
@@ -118,73 +110,5 @@ describe('Send flow', () => {
       message: 'User rejected the request.',
       stack: expect.anything(),
     });
-  });
-
-  it('revert back to send form', async () => {
-    const response = snap.request({
-      origin,
-      method: 'startSendTransactionFlow',
-      params: {
-        account: account.id,
-      },
-    });
-
-    let ui = await response.getInterface();
-    assertIsCustomDialog(ui);
-
-    await ui.typeInField(SendFormEvent.Amount, '0.1');
-    await ui.typeInField(SendFormEvent.Recipient, recipient);
-    await ui.clickElement(SendFormEvent.Confirm);
-
-    ui = await response.getInterface();
-    await ui.clickElement(ReviewTransactionEvent.HeaderBack);
-
-    ui = await response.getInterface();
-    await ui.clickElement(SendFormEvent.Cancel);
-
-    const result = await response;
-    expect(result).toRespondWithError({
-      code: 4001,
-      message: 'User rejected the request.',
-      stack: expect.anything(),
-    });
-  });
-
-  it('refresh rates', async () => {
-    const response = snap.request({
-      origin,
-      method: 'startSendTransactionFlow',
-      params: {
-        account: account.id,
-      },
-    });
-
-    let ui = await response.getInterface();
-
-    // Only test that it executes successfully, checking actual values should be done in e2e tests
-    // because we don't display exchange rates for testnets.
-    const backgroundEventResponse = await snap.onBackgroundEvent({
-      method: SendFormEvent.RefreshRates,
-      params: {
-        interfaceId: ui.id,
-      },
-    });
-    expect(backgroundEventResponse).toRespondWith(null);
-
-    ui = await response.getInterface();
-    await ui.clickElement(SendFormEvent.Cancel);
-
-    const result = await response;
-    expect(result).toRespondWithError({
-      code: 4001,
-      message: 'User rejected the request.',
-      stack: expect.anything(),
-    });
-  });
-
-  // TODO: To be improved once listAccountTransactions is implemented to check the tx confirmation status.
-  it('synchronize accounts via cronjob', async () => {
-    const response = await snap.onCronjob({ method: 'synchronizeAccounts' });
-    expect(response).toRespondWith(null);
   });
 });

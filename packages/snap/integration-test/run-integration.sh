@@ -17,7 +17,7 @@ echo "Docker services started successfully."
 docker-compose -f integration-test/docker-compose.yml ps
 
 echo "Waiting for Esplora to be ready..."
-sleep 10
+sleep 5
 
 # Transfer funds to test address
 docker exec esplora bash /init-esplora.sh

@@ -4,9 +4,8 @@ import type {
   SendFormState,
   SnapClient,
   ReviewTransactionContext,
-  BitcoinAccount,
 } from '../entities';
-import { networkToCurrencyUnit, SENDFORM_NAME } from '../entities';
+import { SENDFORM_NAME } from '../entities';
 import { ReviewTransactionView, SendFormView } from '../infra/jsx';
 
 export class JSXSendFlowRepository implements SendFlowRepository {
@@ -26,32 +25,12 @@ export class JSXSendFlowRepository implements SendFlowRepository {
   }
 
   async getContext(id: string): Promise<SendFormContext | null> {
-    try {
-      return (await this.#snapClient.getInterfaceContext(
-        id,
-      )) as SendFormContext;
-    } catch (error) {
-      // TODO: Use error type instead when one is available.
-      if (error.message === `Interface with id '${id}' not found.`) {
-        return null;
-      }
-      throw error;
-    }
+    return (await this.#snapClient.getInterfaceContext(
+      id,
+    )) as SendFormContext | null;
   }
 
-  async insertForm(account: BitcoinAccount, feeRate: number): Promise<string> {
-    const context: SendFormContext = {
-      balance: account.balance.trusted_spendable.to_sat().toString(),
-      currency: networkToCurrencyUnit[account.network],
-      account: {
-        id: account.id,
-        address: account.peekAddress(0).address.toString(),
-      }, // FIXME: Address should not be needed here
-      network: account.network,
-      feeRate,
-      errors: {},
-    };
-
+  async insertForm(context: SendFormContext): Promise<string> {
     return this.#snapClient.createInterface(
       <SendFormView {...context} />,
       context,

@@ -3,14 +3,12 @@ import type {
   Transaction as KeyringTransaction,
 } from '@metamask/keyring-api';
 import { TransactionStatus, BtcMethod } from '@metamask/keyring-api';
-import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 import { Address } from 'bitcoindevkit';
 import type {
   AddressType,
   Amount,
   Network,
   TxOut,
-  Transaction,
   ChainPosition,
   WalletTx,
 } from 'bitcoindevkit';
@@ -127,20 +125,19 @@ const mapToEvents = (
  * Maps a Bitcoin Transaction to a Keyring Transaction.
  * @param account - The account account.
  * @param walletTx - The Bitcoin transaction managed by this account.
- * @param chainPosition - The position of the transaction on chain. Optional for submitted transactions.
  * @returns The Keyring transaction.
  */
 export function mapToTransaction(
   account: BitcoinAccount,
   walletTx: WalletTx,
 ): KeyringTransaction {
-  const { tx, chain_position, txid } = walletTx;
+  const { tx, chain_position: chainPosition, txid } = walletTx;
   const { network } = account;
-  const status = chain_position.is_confirmed
+  const status = chainPosition.is_confirmed
     ? TransactionStatus.Confirmed
     : TransactionStatus.Unconfirmed;
 
-  const [events, timestamp] = mapToEvents(chain_position);
+  const [events, timestamp] = mapToEvents(chainPosition);
   const [sent] = account.sentAndReceived(tx);
   const isSend = sent.to_btc() > 0;
 
