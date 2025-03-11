@@ -69,7 +69,7 @@ export class SendFlowUseCases {
       currency: networkToCurrencyUnit[account.network],
       account: {
         id: account.id,
-        address: account.peekAddress(0).address.toString(), // FIXME: Address should not be needed here
+        address: account.peekAddress(0).address.toString(), // FIXME: Address should not be needed in the send flow
       },
       network: account.network,
       feeRate: this.#fallbackFeeRate,
