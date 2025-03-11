@@ -25,7 +25,9 @@ export class JSXSendFlowRepository implements SendFlowRepository {
   }
 
   async getContext(id: string): Promise<SendFormContext | null> {
-    return (await this.#snapClient.getInterfaceContext(id)) as SendFormContext;
+    return (await this.#snapClient.getInterfaceContext(
+      id,
+    )) as SendFormContext | null;
   }
 
   async insertForm(context: SendFormContext): Promise<string> {

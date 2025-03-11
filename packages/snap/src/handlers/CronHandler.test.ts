@@ -69,7 +69,7 @@ describe('CronHandler', () => {
       );
     });
 
-    it('propagates errors from onFormInput', async () => {
+    it('propagates errors from onChangeForm', async () => {
       const error = new Error();
       mockSendFlowUseCases.onChangeForm.mockRejectedValue(error);
 

@@ -92,12 +92,12 @@ export class SendFlowUseCases {
   }
 
   async onChangeForm(id: string, event: SendFormEvent): Promise<void> {
-    logger.debug('Event triggered on send form. ID: %s. Event: %s', id, event);
+    logger.debug('Event triggered on send form: %s. Event: %s', id, event);
 
     // TODO: Temporary fetch the context while this is fixed: https://github.com/MetaMask/snaps/issues/3069
     const context = await this.#sendFlowRepository.getContext(id);
     if (!context) {
-      throw new Error(`Context not found in send form. Interface: ${id}`);
+      throw new Error(`Context not found in send form: ${id}`);
     }
 
     switch (event) {
@@ -166,7 +166,7 @@ export class SendFlowUseCases {
     context: ReviewTransactionContext,
   ): Promise<void> {
     logger.debug(
-      'Event triggered on transaction review. ID: %s. Event: %s',
+      'Event triggered on transaction review: %s. Event: %s',
       id,
       event,
     );
@@ -216,9 +216,7 @@ export class SendFlowUseCases {
   ): Promise<void> {
     const formState = await this.#sendFlowRepository.getState(id);
     if (!formState) {
-      throw new Error(
-        `Form state not found when setting recipient. Interface ID: ${id}`,
-      );
+      throw new Error(`Form state not found when setting recipient: ${id}`);
     }
 
     let updatedContext = { ...context };
@@ -244,9 +242,7 @@ export class SendFlowUseCases {
   async #handleSetAmount(id: string, context: SendFormContext): Promise<void> {
     const formState = await this.#sendFlowRepository.getState(id);
     if (!formState) {
-      throw new Error(
-        `Form state not found when setting amount. Interface ID: ${id}`,
-      );
+      throw new Error(`Form state not found when setting amount: ${id}`);
     }
 
     let updatedContext = { ...context };
@@ -299,7 +295,7 @@ export class SendFlowUseCases {
     } catch (error) {
       // We do not throw so we can reschedule. Previous fetched values or fallbacks will be used.
       logger.error(
-        `Failed to fetch rates in send form, ID: %s. Error: %s`,
+        `Failed to fetch rates in send form: %s. Error: %s`,
         id,
         error,
       );
