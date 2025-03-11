@@ -57,14 +57,16 @@ const sendFlowUseCases = new SendFlowUseCases(
   accountRepository,
   sendFlowRepository,
   chainClient,
+  assetRatesClient,
   Config.targetBlocksConfirmation,
   Config.fallbackFeeRate,
+  Config.ratesRefreshInterval,
 );
 const assetsUseCases = new AssetsUseCases(assetRatesClient);
 
 // Application layer
 const keyringHandler = new KeyringHandler(accountsUseCases);
-const cronHandler = new CronHandler(accountsUseCases);
+const cronHandler = new CronHandler(accountsUseCases, sendFlowUseCases);
 const rpcHandler = new RpcHandler(sendFlowUseCases, accountsUseCases);
 const userInputHandler = new UserInputHandler(sendFlowUseCases);
 const assetsHandler = new AssetsHandler(
@@ -84,8 +86,10 @@ export const validateOrigin = (origin: string, method: string): void => {
 };
 
 export const onCronjob: OnCronjobHandler = async ({ request }) => {
+  await loadLocale();
+
   try {
-    await cronHandler.route(request.method);
+    await cronHandler.route(request.method, request.params);
   } catch (error) {
     let snapError = error;
 

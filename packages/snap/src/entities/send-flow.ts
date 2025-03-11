@@ -1,7 +1,6 @@
 import type { CurrencyRate } from '@metamask/snaps-sdk';
 import type { Network } from 'bitcoindevkit';
 
-import type { BitcoinAccount } from './account';
 import type { CurrencyUnit } from './currency';
 
 export const SENDFORM_NAME = 'sendForm';
@@ -15,7 +14,7 @@ export type SendFormContext = {
   balance: string;
   feeRate: number;
   currency: CurrencyUnit;
-  fiatRate?: CurrencyRate;
+  exchangeRate?: CurrencyRate;
   recipient?: string;
   amount?: string;
   fee?: string;
@@ -25,6 +24,7 @@ export type SendFormContext = {
     recipient?: string;
     amount?: string;
   };
+  backgroundEventId?: string;
 };
 
 export enum SendFormEvent {
@@ -34,6 +34,7 @@ export enum SendFormEvent {
   Confirm = 'confirm',
   Cancel = 'cancel',
   SetMax = 'max',
+  RefreshRates = 'refreshRates',
 }
 
 export type SendFormState = {
@@ -46,10 +47,12 @@ export type ReviewTransactionContext = {
   network: Network;
   feeRate: number;
   currency: CurrencyUnit;
-  fiatRate?: CurrencyRate;
+  exchangeRate?: CurrencyRate;
   recipient: string;
   amount: string;
   fee: string;
+  backgroundEventId?: string;
+  drain?: boolean;
 
   /**
    * Used to repopulate the send form if the user decides to go back in the flow
@@ -70,20 +73,23 @@ export type SendFlowRepository = {
   /**
    * Get the form state.
    * @param id - the interface ID
-   * @returns the form state
+   * @returns the form state or null
    */
-  getState(id: string): Promise<SendFormState>;
+  getState(id: string): Promise<SendFormState | null>;
+
+  /**
+   * Get the form context.
+   * @param id - the interface ID
+   * @returns the form context or null
+   */
+  getContext(id: string): Promise<SendFormContext | null>;
 
   /**
    * Insert a new send form interface.
    * @param context - the form context
    * @returns the interface ID
    */
-  insertForm(
-    account: BitcoinAccount,
-    feeRate: number,
-    fiatRate?: CurrencyRate,
-  ): Promise<string>;
+  insertForm(context: SendFormContext): Promise<string>;
 
   /**
    * Update an interface to the send form view.

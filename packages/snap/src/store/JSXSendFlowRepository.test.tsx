@@ -1,13 +1,11 @@
-import type { AddressInfo } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 
 import type {
   SnapClient,
   SendFormContext,
   ReviewTransactionContext,
-  BitcoinAccount,
 } from '../entities';
-import { CurrencyUnit, SENDFORM_NAME } from '../entities';
+import { SENDFORM_NAME } from '../entities';
 import { ReviewTransactionView, SendFormView } from '../infra/jsx';
 import { JSXSendFlowRepository } from './JSXSendFlowRepository';
 
@@ -25,65 +23,73 @@ describe('JSXSendFlowRepository', () => {
   });
 
   describe('getState', () => {
-    it('returns state when found', async () => {
-      const state = { foo: 'bar' };
+    it('returns send form state if found', async () => {
+      const id = 'test-id';
+      const state = { [SENDFORM_NAME]: 'bar' };
+      mockSnapClient.getInterfaceState.mockResolvedValue(state);
+
+      const result = await repo.getState(id);
+
+      expect(mockSnapClient.getInterfaceState).toHaveBeenCalledWith(id);
+      expect(result).toEqual(state[SENDFORM_NAME]);
+    });
+
+    it('returns null if state is null', async () => {
+      mockSnapClient.getInterfaceState.mockResolvedValue(null);
+
+      const result = await repo.getState('test-id');
+
+      expect(result).toBeNull();
+    });
+
+    it('returns null if send form state is not present in interface state', async () => {
+      const state = { unknownField: 'bar' };
       mockSnapClient.getInterfaceState.mockResolvedValue(state);
 
       const result = await repo.getState('test-id');
 
-      expect(mockSnapClient.getInterfaceState).toHaveBeenCalledWith(
-        'test-id',
-        SENDFORM_NAME,
-      );
-      expect(result).toEqual(state);
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('getContext', () => {
+    it('returns context if found', async () => {
+      const context = { foo: 'bar' };
+      const id = 'test-id';
+      mockSnapClient.getInterfaceContext.mockResolvedValue(context);
+
+      const result = await repo.getContext(id);
+
+      expect(mockSnapClient.getInterfaceContext).toHaveBeenCalledWith(id);
+      expect(result).toEqual(context);
     });
 
-    it('throws error if state is missing', async () => {
-      mockSnapClient.getInterfaceState.mockResolvedValue(null);
+    it('returns null if context is null', async () => {
+      mockSnapClient.getInterfaceContext.mockResolvedValue(null);
 
-      await expect(repo.getState('test-id')).rejects.toThrow(
-        'Missing state from Send Form',
-      );
+      const result = await repo.getContext('test-id');
+
+      expect(result).toBeNull();
+    });
+
+    it('propagates error from getInterfaceContext', async () => {
+      const error = new Error('getInterfaceContext failed');
+      mockSnapClient.getInterfaceContext.mockRejectedValue(error);
+
+      await expect(repo.getContext('test-id')).rejects.toBe(error);
     });
   });
 
   describe('insertForm', () => {
-    const feeRate = 10;
-    const mockAccount = mock<BitcoinAccount>({
-      id: 'acc-id',
-      network: 'bitcoin',
-      // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
-      /* eslint-disable @typescript-eslint/naming-convention */
-      balance: { trusted_spendable: { to_sat: () => BigInt(1234) } },
-      peekAddress: jest.fn(),
-    });
-    const fiatRate = {
-      currency: 'USD',
-      conversionRate: 100000,
-      conversionDate: 2025,
-    };
-
     it('creates interface with correct context', async () => {
       mockSnapClient.createInterface.mockResolvedValue('interface-id');
-      mockAccount.peekAddress.mockReturnValue({
-        address: 'myAddress',
-      } as AddressInfo);
-      const expectedContext: SendFormContext = {
-        balance: '1234',
-        currency: CurrencyUnit.Bitcoin,
-        account: { id: 'acc-id', address: 'myAddress' },
-        network: 'bitcoin',
-        feeRate,
-        errors: {},
-        fiatRate,
-      };
+      const mockContext = mock<SendFormContext>({});
 
-      const result = await repo.insertForm(mockAccount, feeRate, fiatRate);
+      const result = await repo.insertForm(mockContext);
 
-      expect(mockAccount.peekAddress).toHaveBeenCalledWith(0);
       expect(mockSnapClient.createInterface).toHaveBeenCalledWith(
-        <SendFormView {...expectedContext} />,
-        expectedContext,
+        <SendFormView {...mockContext} />,
+        mockContext,
       );
       expect(result).toBe('interface-id');
     });

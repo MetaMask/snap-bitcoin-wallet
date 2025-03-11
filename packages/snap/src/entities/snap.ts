@@ -1,9 +1,11 @@
 import type { JsonSLIP10Node, SLIP10Node } from '@metamask/key-tree';
-import type { ComponentOrElement, CurrencyRate } from '@metamask/snaps-sdk';
+import type {
+  ComponentOrElement,
+  GetPreferencesResult,
+} from '@metamask/snaps-sdk';
 import type { Json } from '@metamask/utils';
 
 import type { BitcoinAccount } from './account';
-import type { CurrencyUnit } from './currency';
 import type { Inscription } from './meta-protocols';
 
 export type SnapState = {
@@ -102,18 +104,39 @@ export type SnapClient = {
   /**
    * Get the state of an interface.
    * @param id - The interface id.
-   * @param field - The field to return from the state.
-   * @returns the interface state value or undefined.
+   * @returns the interface state.
    */
-  getInterfaceState<InterfaceStateType>(
-    id: string,
-    field: string,
-  ): Promise<InterfaceStateType | undefined>;
+  getInterfaceState(id: string): Promise<Record<string, Json> | null>;
 
   /**
-   * Retrieve the currency rate.
-   * @param currency - The currency unit.
-   * @returns A Promise that resolves to the currency rate.
+   * Get the context of an interface.
+   * @param id - The interface id.
+   * @returns the interface context.
    */
-  getCurrencyRate(currency: CurrencyUnit): Promise<CurrencyRate | undefined>;
+  getInterfaceContext(id: string): Promise<Record<string, Json> | null>;
+
+  /**
+   * Schedule a one-off callback.
+   * @param interval - The interval in seconds before the event is executed.
+   * @param method - The method to call on reception of the event being triggered.
+   * @param interfaceId - The interface id.
+   * @returns the background event id.
+   */
+  scheduleBackgroundEvent(
+    interval: string,
+    method: string,
+    interfaceId: string,
+  ): Promise<string>;
+
+  /**
+   * Cancel an already scheduled background event.
+   * @param id - The background event id.
+   */
+  cancelBackgroundEvent(id: string): Promise<void>;
+
+  /**
+   * Get user preferences.
+   * @returns the user's preferences.
+   */
+  getPreferences(): Promise<GetPreferencesResult>;
 };

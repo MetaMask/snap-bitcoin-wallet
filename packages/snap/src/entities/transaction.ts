@@ -20,7 +20,7 @@ export type TransactionBuilder = {
 
   /**
    * Set the PSBT fee rate.
-   * @param feeRate - The fee rate in sat/vb
+   * @param feeRate - The fee rate in sat/vB
    */
   feeRate(feeRate: number): TransactionBuilder;
 

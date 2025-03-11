@@ -53,7 +53,7 @@ export class AccountUseCases {
   }
 
   async list(): Promise<BitcoinAccount[]> {
-    logger.trace('Listing accounts');
+    logger.debug('Listing accounts');
 
     const accounts = await this.#repository.getAll();
 
@@ -62,7 +62,7 @@ export class AccountUseCases {
   }
 
   async get(id: string): Promise<BitcoinAccount> {
-    logger.trace('Fetching account. ID: %s', id);
+    logger.debug('Fetching account: %s', id);
 
     const account = await this.#repository.get(id);
     if (!account) {
@@ -93,7 +93,7 @@ export class AccountUseCases {
     // Idempotent account creation + ensures only one account per derivation path
     const account = await this.#repository.getByDerivationPath(derivationPath);
     if (account) {
-      logger.debug('Account already exists. ID: %s,', account.id);
+      logger.debug('Account already exists: %s,', account.id);
       await this.#snapClient.emitAccountCreatedEvent(account);
       return account;
     }
@@ -115,7 +115,7 @@ export class AccountUseCases {
   }
 
   async synchronize(account: BitcoinAccount): Promise<void> {
-    logger.trace('Synchronizing account. ID: %s', account.id);
+    logger.debug('Synchronizing account: %s', account.id);
 
     if (!account.isScanned) {
       logger.warn(
@@ -156,7 +156,7 @@ export class AccountUseCases {
   }
 
   async delete(id: string): Promise<void> {
-    logger.debug('Deleting account. ID: %s', id);
+    logger.debug('Deleting account: %s', id);
 
     const account = await this.#repository.get(id);
     if (!account) {
@@ -170,7 +170,7 @@ export class AccountUseCases {
   }
 
   async send(id: string, request: TransactionRequest): Promise<Txid> {
-    logger.debug('Sending transaction. ID: %s. Request: %o', id, request);
+    logger.debug('Sending transaction: %s. Request: %o', id, request);
 
     if (request.drain && request.amount) {
       throw new Error("Cannot specify both 'amount' and 'drain' options");

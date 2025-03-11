@@ -15,13 +15,13 @@ export const displayAmount = (
   return amount.toString();
 };
 
-export const displayFiatAmount = (
+export const displayExchangeAmount = (
   amount: bigint,
-  fiatRate?: CurrencyRate,
+  exchangeRate?: CurrencyRate,
 ): string => {
-  return fiatRate
-    ? `${((Number(amount) * fiatRate.conversionRate) / 1e8).toFixed(2)} ${
-        fiatRate.currency
+  return exchangeRate
+    ? `${((Number(amount) * exchangeRate.conversionRate) / 1e8).toFixed(2)} ${
+        exchangeRate.currency
       }`
     : '';
 };

@@ -20,15 +20,23 @@ import { BlockTime, ReviewTransactionEvent } from '../../entities';
 import { getTranslator } from '../../entities/locale';
 import { networkToCaip2 } from '../../handlers/caip2';
 import { HeadingWithReturn } from './components';
-import { displayAmount, displayFiatAmount } from './format';
+import { displayAmount, displayExchangeAmount } from './format';
 import btcIcon from './images/btc-halo.svg';
 
 export const ReviewTransactionView: SnapComponent<ReviewTransactionContext> = (
   props,
 ) => {
   const t = getTranslator();
-  const { amount, fee, currency, fiatRate, feeRate, recipient, network, from } =
-    props;
+  const {
+    amount,
+    fee,
+    currency,
+    exchangeRate,
+    feeRate,
+    recipient,
+    network,
+    from,
+  } = props;
 
   const total = BigInt(amount) + BigInt(fee);
 
@@ -61,7 +69,7 @@ export const ReviewTransactionView: SnapComponent<ReviewTransactionContext> = (
           <Row label={t('amount')}>
             <Value
               value={displayAmount(BigInt(amount), currency)}
-              extra={displayFiatAmount(BigInt(amount), fiatRate)}
+              extra={displayExchangeAmount(BigInt(amount), exchangeRate)}
             />
           </Row>
           <Row label={t('recipient')}>
@@ -85,19 +93,19 @@ export const ReviewTransactionView: SnapComponent<ReviewTransactionContext> = (
               )}`}
             </Text>
           </Row>
-          <Row label={t('transactionFee')} tooltip={t('transactionFeeTooltip')}>
+          <Row label={t('networkFee')} tooltip={t('networkFeeTooltip')}>
             <Value
-              value={displayAmount(BigInt(fee), currency)}
-              extra={displayFiatAmount(BigInt(fee), fiatRate)}
+              value={`${fee} sats`}
+              extra={displayExchangeAmount(BigInt(fee), exchangeRate)}
             />
           </Row>
           <Row label={t('feeRate')}>
-            <Text>{`${feeRate} sat/vb`}</Text>
+            <Text>{`${Math.floor(feeRate)} sat/vB`}</Text>
           </Row>
           <Row label={t('total')}>
             <Value
               value={displayAmount(total, currency)}
-              extra={displayFiatAmount(total, fiatRate)}
+              extra={displayExchangeAmount(total, exchangeRate)}
             />
           </Row>
         </Section>

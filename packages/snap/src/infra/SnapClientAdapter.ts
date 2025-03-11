@@ -3,15 +3,17 @@ import { SLIP10Node } from '@metamask/key-tree';
 import { KeyringEvent } from '@metamask/keyring-api';
 import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
 import type {
-  AvailableCurrency,
-  ComponentOrElement,
-  CurrencyRate,
-  Json,
-  SnapsProvider,
+  GetInterfaceContextResult,
+  GetInterfaceStateResult,
+} from '@metamask/snaps-sdk';
+import {
+  type ComponentOrElement,
+  type GetPreferencesResult,
+  type Json,
 } from '@metamask/snaps-sdk';
 
 import type { BitcoinAccount, SnapClient, SnapState } from '../entities';
-import { CurrencyUnit, networkToCurrencyUnit } from '../entities';
+import { networkToCurrencyUnit } from '../entities';
 import { networkToCaip19 } from '../handlers/caip19';
 import { snapToKeyringAccount } from '../handlers/keyring-account';
 import { addressTypeToName, networkToName } from '../handlers/mapping';
@@ -21,10 +23,6 @@ export class SnapClientAdapter implements SnapClient {
 
   constructor(encrypt = false) {
     this.#encrypt = encrypt;
-  }
-
-  get provider(): SnapsProvider {
-    return snap;
   }
 
   async get(): Promise<SnapState> {
@@ -55,7 +53,7 @@ export class SnapClientAdapter implements SnapClient {
   }
 
   async getPrivateEntropy(derivationPath: string[]): Promise<JsonSLIP10Node> {
-    return await snap.request({
+    return snap.request({
       method: 'snap_getBip32Entropy',
       params: {
         path: derivationPath,
@@ -104,12 +102,9 @@ export class SnapClientAdapter implements SnapClient {
     ui: ComponentOrElement,
     context: Record<string, Json>,
   ): Promise<string> {
-    return await snap.request({
+    return snap.request({
       method: 'snap_createInterface',
-      params: {
-        ui,
-        context,
-      },
+      params: { ui, context },
     });
   }
 
@@ -120,60 +115,67 @@ export class SnapClientAdapter implements SnapClient {
   ): Promise<void> {
     await snap.request({
       method: 'snap_updateInterface',
-      params: {
-        id,
-        ui,
-        context,
-      },
+      params: { id, ui, context },
     });
   }
 
   async displayInterface<ResolveType>(id: string): Promise<ResolveType | null> {
     return (await snap.request({
       method: 'snap_dialog',
-      params: {
-        id,
-      },
+      params: { id },
     })) as unknown as ResolveType;
   }
 
-  async getInterfaceState<InterfaceStateType>(
-    id: string,
-    field: string,
-  ): Promise<InterfaceStateType> {
-    const result = await snap.request({
+  async getInterfaceState(id: string): Promise<GetInterfaceStateResult> {
+    return snap.request({
       method: 'snap_getInterfaceState',
       params: { id },
     });
+  }
 
-    return result[field] as unknown as InterfaceStateType;
+  async getInterfaceContext(id: string): Promise<GetInterfaceContextResult> {
+    return snap.request({
+      method: 'snap_getInterfaceContext',
+      params: { id },
+    });
   }
 
   async resolveInterface(id: string, value: Json): Promise<void> {
     await snap.request({
       method: 'snap_resolveInterface',
+      params: { id, value },
+    });
+  }
+
+  async scheduleBackgroundEvent(
+    interval: string,
+    method: string,
+    interfaceId: string,
+  ): Promise<string> {
+    return snap.request({
+      method: 'snap_scheduleBackgroundEvent',
       params: {
-        id,
-        value,
+        duration: interval,
+        request: {
+          method,
+          params: { interfaceId },
+        },
       },
     });
   }
 
-  async getCurrencyRate(
-    currency: CurrencyUnit,
-  ): Promise<CurrencyRate | undefined> {
-    // TODO: Remove when fix implemented: https://github.com/MetaMask/accounts-planning/issues/832
-    if (currency !== CurrencyUnit.Bitcoin) {
-      return undefined;
-    }
-
-    const rate = await snap.request({
-      method: 'snap_getCurrencyRate',
+  async cancelBackgroundEvent(id: string): Promise<void> {
+    await snap.request({
+      method: 'snap_cancelBackgroundEvent',
       params: {
-        currency: currency as unknown as AvailableCurrency,
+        id,
       },
     });
+  }
 
-    return rate ?? undefined;
+  async getPreferences(): Promise<GetPreferencesResult> {
+    return snap.request({
+      method: 'snap_getPreferences',
+    });
   }
 }

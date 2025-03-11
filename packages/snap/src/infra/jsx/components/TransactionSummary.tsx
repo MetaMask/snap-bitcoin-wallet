@@ -11,11 +11,11 @@ import type { Network } from 'bitcoindevkit';
 import { Config } from '../../../config';
 import { BlockTime, type CurrencyUnit } from '../../../entities';
 import { getTranslator } from '../../../entities/locale';
-import { displayAmount, displayFiatAmount } from '../format';
+import { displayAmount, displayExchangeAmount } from '../format';
 
 type TransactionSummaryProps = {
   currency: CurrencyUnit;
-  fiatRate?: CurrencyRate;
+  exchangeRate?: CurrencyRate;
   amount: string;
   fee: string;
   network: Network;
@@ -25,7 +25,7 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
   fee,
   amount,
   currency,
-  fiatRate,
+  exchangeRate,
   network,
 }) => {
   const t = getTranslator();
@@ -34,21 +34,21 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
 
   return (
     <Section>
-      <Row label={t('transactionFee')} tooltip={t('transactionFeeTooltip')}>
-        <Value
-          value={displayAmount(BigInt(fee), currency)}
-          extra={displayFiatAmount(BigInt(fee), fiatRate)}
-        />
-      </Row>
       <Row label={t('transactionSpeed')} tooltip={t('transactionSpeedTooltip')}>
         <Text>{`${Config.targetBlocksConfirmation * BlockTime[network]} ${t(
           'minutes',
         )}`}</Text>
       </Row>
+      <Row label={t('networkFee')} tooltip={t('networkFeeTooltip')}>
+        <Value
+          value={`${fee} sats`}
+          extra={displayExchangeAmount(BigInt(fee), exchangeRate)}
+        />
+      </Row>
       <Row label={t('total')}>
         <Value
           value={displayAmount(total, currency)}
-          extra={displayFiatAmount(total, fiatRate)}
+          extra={displayExchangeAmount(total, exchangeRate)}
         />
       </Row>
     </Section>
