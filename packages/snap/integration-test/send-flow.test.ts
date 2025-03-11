@@ -111,27 +111,4 @@ describe('Send flow', () => {
       stack: expect.anything(),
     });
   });
-
-  it.only('test interface IDs', async () => {
-    const response0 = snap.request({
-      origin,
-      method: 'startSendTransactionFlow',
-      params: {
-        account: account.id,
-      },
-    });
-
-    const response1 = snap.request({
-      origin,
-      method: 'startSendTransactionFlow',
-      params: {
-        account: account.id,
-      },
-    });
-
-    const ui0 = await response0.getInterface();
-    const ui1 = await response1.getInterface();
-
-    expect(ui0.id).not.toEqual(ui1.id);
-  });
 });
