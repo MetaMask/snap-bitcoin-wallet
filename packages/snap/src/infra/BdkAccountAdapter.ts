@@ -139,7 +139,7 @@ export class BdkAccountAdapter implements BitcoinAccount {
   }
 
   calculateFee(tx: Transaction): Amount {
-    return this.#wallet.calculate_fee(tx);
+    return this.#wallet.calculate_fee(tx.clone());
   }
 
   isMine(script: ScriptBuf): boolean {
@@ -147,7 +147,7 @@ export class BdkAccountAdapter implements BitcoinAccount {
   }
 
   sentAndReceived(tx: Transaction): [Amount, Amount] {
-    const sentAndReceived = this.#wallet.sent_and_received(tx);
+    const sentAndReceived = this.#wallet.sent_and_received(tx.clone());
     return [sentAndReceived[0], sentAndReceived[1]];
   }
 

@@ -103,22 +103,26 @@ const mapToAssetMovement = (
 
 const mapToEvents = (
   chainPosition: ChainPosition,
-): [TransactionEvent[], number | null] => {
-  let timestamp = Number(chainPosition.last_seen) ?? null;
+): [TransactionEvent[], number | null, TransactionStatus] => {
+  let timestamp = chainPosition.last_seen
+    ? Number(chainPosition.last_seen)
+    : null;
+  let status = TransactionStatus.Unconfirmed;
   const events: TransactionEvent[] = [
     {
-      status: TransactionStatus.Unconfirmed,
+      status,
       timestamp,
     },
   ];
   if (chainPosition.anchor) {
     timestamp = Number(chainPosition.anchor.confirmation_time);
+    status = TransactionStatus.Confirmed;
     events.push({
-      status: TransactionStatus.Confirmed,
-      timestamp: Number(chainPosition.anchor.confirmation_time),
+      status,
+      timestamp,
     });
   }
-  return [events, timestamp];
+  return [events, timestamp, status];
 };
 
 /**
@@ -133,11 +137,8 @@ export function mapToTransaction(
 ): KeyringTransaction {
   const { tx, chain_position: chainPosition, txid } = walletTx;
   const { network } = account;
-  const status = chainPosition.is_confirmed
-    ? TransactionStatus.Confirmed
-    : TransactionStatus.Unconfirmed;
 
-  const [events, timestamp] = mapToEvents(chainPosition);
+  const [events, timestamp, status] = mapToEvents(chainPosition);
   const [sent] = account.sentAndReceived(tx);
   const isSend = sent.to_btc() > 0;
 

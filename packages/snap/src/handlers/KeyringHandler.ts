@@ -118,9 +118,7 @@ export class KeyringHandler implements Keyring {
         : null;
 
     return {
-      data: paginatedTxs.map((tx) =>
-        mapToTransaction(account, tx.tx, tx.chain_position),
-      ),
+      data: paginatedTxs.map((tx) => mapToTransaction(account, tx)),
       next: nextCursor,
     };
   }
