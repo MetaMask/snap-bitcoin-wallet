@@ -117,7 +117,7 @@ jobs:
     needs:
       - prepare
     env:
-      LOG_LEVEL: 0
+      LOG_LEVEL: 5
       DEFAULT_NETWORK: regtest
     steps:
       - uses: actions/checkout@v4
