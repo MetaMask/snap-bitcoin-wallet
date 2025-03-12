@@ -11,7 +11,7 @@ module.exports = {
     'id-length': [
       'warn',
       // Used for the localized translator helper.
-      { exceptions: ['t'] },
+      { exceptions: ['t', '_'] },
     ],
   },
 

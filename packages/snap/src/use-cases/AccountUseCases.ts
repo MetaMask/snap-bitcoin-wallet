@@ -1,4 +1,4 @@
-import type { AddressType, Network, Txid } from 'bitcoindevkit';
+import type { AddressType, Network, Txid, WalletTx } from 'bitcoindevkit';
 
 import type {
   AccountsConfig,
@@ -118,40 +118,45 @@ export class AccountUseCases {
     logger.debug('Synchronizing account: %s', account.id);
 
     if (!account.isScanned) {
-      logger.warn(
-        'Account has not yet performed initial full scan, skipping synchronization. ID: %s',
+      logger.debug(
+        'Account has not yet performed initial full scan, skipping synchronization: %s',
         account.id,
       );
       return;
     }
 
-    // Get the txs already confirmed so we can exclude them after synchronization
-    const txsBefore = account.listTransactions();
-    const confirmedTxids = txsBefore
-      .filter((tx) => tx.chain_position.is_confirmed)
-      .map((tx) => tx.txid.toString());
-
+    const txsBeforeSync = account.listTransactions();
     await this.#chain.sync(account);
-    const txsAfter = account.listTransactions();
+    const txsAfterSync = account.listTransactions();
 
-    // Transactions are monotone, meaning they can only be added, so we can be confident
-    // that a change can only happen when new txs appear.
-    if (txsAfter.length > txsBefore.length) {
+    // If new transactions appeared, fetch inscriptions; otherwise, just update.
+    if (txsAfterSync.length > txsBeforeSync.length) {
       const inscriptions = await this.#metaProtocols.fetchInscriptions(account);
       await this.#repository.update(account, inscriptions);
     } else {
       await this.#repository.update(account);
     }
 
-    // Filter out already confirmed transactions
-    const txsToSynchronize = txsAfter.filter(
-      (tx) => !confirmedTxids.includes(tx.txid.toString()),
-    );
-    if (txsToSynchronize.length > 0) {
+    // Create a map for quick lookup of transactions before sync
+    const txMapBefore = new Map<string, WalletTx>();
+    for (const tx of txsBeforeSync) {
+      txMapBefore.set(tx.txid.toString(), tx);
+    }
+
+    // Identify transactions that are either new or whose confirmation status changed
+    const txsToNotify = txsAfterSync.filter((tx) => {
+      const prevTx = txMapBefore.get(tx.txid.toString());
+      return (
+        !prevTx ||
+        prevTx.chain_position.is_confirmed !== tx.chain_position.is_confirmed
+      );
+    });
+
+    if (txsToNotify.length > 0) {
       await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
       await this.#snapClient.emitAccountTransactionsUpdatedEvent(
         account,
-        txsToSynchronize,
+        txsToNotify,
       );
     }
 
@@ -217,12 +222,12 @@ export class AccountUseCases {
 
     const psbt = builder.finish();
     const tx = account.sign(psbt);
-    const txId = tx.compute_txid();
     await this.#chain.broadcast(account.network, tx);
     await this.#repository.update(account);
 
     await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
 
+    const txId = tx.compute_txid();
     logger.info(
       'Transaction sent successfully: %s. Account: %s, Network: %s',
       txId,
