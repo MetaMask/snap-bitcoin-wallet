@@ -23,20 +23,8 @@ sleep 5
 docker exec esplora bash /init-esplora.sh
 
 echo "Running integration tests..."
+set +e
 jest --config jest.integration.config.js
-
-if [ $? -eq 0 ]; then
-  echo "Tests completed successfully."
-else
-  echo "Tests failed."
-fi
 
 echo "Stopping Docker services..."
 docker-compose -f integration-test/docker-compose.yml down
-
-if [ $? -ne 0 ]; then
-  echo "Error: Failed to stop Docker services."
-  exit 1
-fi
-
-echo "Docker services stopped successfully."
