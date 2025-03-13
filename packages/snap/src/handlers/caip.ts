@@ -44,13 +44,7 @@ export const networkToCaip19: Record<Network, Caip19Asset> = {
   regtest: Caip19Asset.Regtest,
 };
 
-/**
- * Reverse a map object.
- *
- * @param map - The map to reverse.
- * @returns New reversed map.
- */
-export function reverseMapping<
+function reverseMapping<
   From extends string | number | symbol,
   // eslint-disable-next-line @typescript-eslint/naming-convention
   To extends string | number | symbol,
