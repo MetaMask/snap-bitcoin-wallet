@@ -9,12 +9,23 @@ import {
   Text,
   type SnapComponent,
 } from '@metamask/snaps-sdk/jsx';
+import type { Network } from 'bitcoindevkit';
 
 import type { SendFormContext } from '../../../entities';
 import { SENDFORM_NAME, SendFormEvent } from '../../../entities';
 import { getTranslator } from '../../../entities/locale';
-import { networkToIcon } from '../../../handlers/mappings';
 import { displayAmount } from '../format';
+import btcIcon from '../images/bitcoin.svg';
+import signetIcon from '../images/signet.svg';
+import testnetIcon from '../images/testnet.svg';
+
+const networkToIcon: Record<Network, string> = {
+  bitcoin: btcIcon,
+  testnet: testnetIcon,
+  testnet4: testnetIcon,
+  signet: signetIcon,
+  regtest: signetIcon,
+};
 
 export const SendForm: SnapComponent<SendFormContext> = ({
   currency,
