@@ -9,6 +9,8 @@ import type {
 
 import type { AssetsUseCases } from '../use-cases';
 import { Caip19Asset } from './caip';
+import { Network } from 'bitcoindevkit';
+import { networkToIcon } from './mappings';
 
 export class AssetsHandler {
   readonly #assetsUseCases: AssetsUseCases;
@@ -22,9 +24,9 @@ export class AssetsHandler {
 
   lookup(): OnAssetsLookupResponse {
     const metadata = (
+      network: Network,
       name: string,
       mainSymbol: string,
-      icon: string,
     ): FungibleAssetMetadata => {
       return {
         fungible: true,
@@ -56,7 +58,7 @@ export class AssetsHandler {
             symbol: 'satoshi',
           },
         ],
-        iconUrl: `./images/${icon}.svg`,
+        iconUrl: networkToIcon[network],
         symbol: '₿',
       };
     };
@@ -64,23 +66,15 @@ export class AssetsHandler {
     // Use the same denominations as Bitcoin for testnets but change the name and main unit symbol
     return {
       assets: {
-        [Caip19Asset.Bitcoin]: metadata('Bitcoin', 'BTC', 'icon'),
-        [Caip19Asset.Testnet]: metadata(
-          'Testnet Bitcoin',
-          'tBTC',
-          'icon-testnet',
-        ),
+        [Caip19Asset.Bitcoin]: metadata('bitcoin', 'Bitcoin', 'BTC'),
+        [Caip19Asset.Testnet]: metadata('testnet', 'Testnet Bitcoin', 'tBTC'),
         [Caip19Asset.Testnet4]: metadata(
+          'testnet4',
           'Testnet4 Bitcoin',
           'tBTC',
-          'icon-testnet',
         ),
-        [Caip19Asset.Signet]: metadata('Signet Bitcoin', 'sBTC', 'icon-signet'),
-        [Caip19Asset.Regtest]: metadata(
-          'Regtest Bitcoin',
-          'rBTC',
-          'icon-signet',
-        ),
+        [Caip19Asset.Signet]: metadata('signet', 'Signet Bitcoin', 'sBTC'),
+        [Caip19Asset.Regtest]: metadata('regtest', 'Regtest Bitcoin', 'rBTC'),
       },
     };
   }
