@@ -6,10 +6,10 @@ import type {
   OnAssetsConversionResponse,
   OnAssetsLookupResponse,
 } from '@metamask/snaps-sdk';
+import type { Network } from 'bitcoindevkit';
 
 import type { AssetsUseCases } from '../use-cases';
 import { Caip19Asset } from './caip';
-import { Network } from 'bitcoindevkit';
 import { networkToIcon } from './mappings';
 
 export class AssetsHandler {

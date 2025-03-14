@@ -13,8 +13,8 @@ import {
 import type { SendFormContext } from '../../../entities';
 import { SENDFORM_NAME, SendFormEvent } from '../../../entities';
 import { getTranslator } from '../../../entities/locale';
-import { displayAmount } from '../format';
 import { networkToIcon } from '../../../handlers/mappings';
+import { displayAmount } from '../format';
 
 export const SendForm: SnapComponent<SendFormContext> = ({
   currency,
