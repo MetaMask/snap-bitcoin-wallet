@@ -1,4 +1,4 @@
-import type { AddressType, Network, Txid } from 'bitcoindevkit';
+import type { AddressType, Network, Txid, WalletTx } from 'bitcoindevkit';
 
 import type {
   AccountsConfig,
@@ -118,26 +118,46 @@ export class AccountUseCases {
     logger.debug('Synchronizing account: %s', account.id);
 
     if (!account.isScanned) {
-      logger.warn(
-        'Account has not yet performed initial full scan, skipping synchronization. ID: %s',
+      logger.debug(
+        'Account has not yet performed initial full scan, skipping synchronization: %s',
         account.id,
       );
       return;
     }
 
-    // Outputs are monotone, meaning they can only be added, like transactions. So we can be confident
-    // that a change on the balance can only happen when new outputs appear.
-    const nOutputsBefore = account.listOutput().length;
+    const txsBeforeSync = account.listTransactions();
     await this.#chain.sync(account);
-    const nOutputsAfter = account.listOutput().length;
+    const txsAfterSync = account.listTransactions();
 
-    // Sync assets only if new outputs exist.
-    if (nOutputsAfter > nOutputsBefore) {
+    // If new transactions appeared, fetch inscriptions; otherwise, just update.
+    if (txsAfterSync.length > txsBeforeSync.length) {
       const inscriptions = await this.#metaProtocols.fetchInscriptions(account);
       await this.#repository.update(account, inscriptions);
-      await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
     } else {
       await this.#repository.update(account);
+    }
+
+    // Create a map for quick lookup of transactions before sync
+    const txMapBefore = new Map<string, WalletTx>();
+    for (const tx of txsBeforeSync) {
+      txMapBefore.set(tx.txid.toString(), tx);
+    }
+
+    // Identify transactions that are either new or whose confirmation status changed
+    const txsToNotify = txsAfterSync.filter((tx) => {
+      const prevTx = txMapBefore.get(tx.txid.toString());
+      return (
+        !prevTx ||
+        prevTx.chain_position.is_confirmed !== tx.chain_position.is_confirmed
+      );
+    });
+
+    if (txsToNotify.length > 0) {
+      await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
+      await this.#snapClient.emitAccountTransactionsUpdatedEvent(
+        account,
+        txsToNotify,
+      );
     }
 
     logger.debug('Account synchronized successfully: %s', account.id);
@@ -150,7 +170,12 @@ export class AccountUseCases {
 
     const inscriptions = await this.#metaProtocols.fetchInscriptions(account);
     await this.#repository.update(account, inscriptions);
+
     await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
+    await this.#snapClient.emitAccountTransactionsUpdatedEvent(
+      account,
+      account.listTransactions(),
+    );
 
     logger.debug('initial full scan performed successfully: %s', account.id);
   }
@@ -199,6 +224,7 @@ export class AccountUseCases {
     const tx = account.sign(psbt);
     await this.#chain.broadcast(account.network, tx);
     await this.#repository.update(account);
+
     await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
 
     const txId = tx.compute_txid();

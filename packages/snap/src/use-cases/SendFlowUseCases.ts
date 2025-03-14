@@ -67,7 +67,10 @@ export class SendFlowUseCases {
     const context: SendFormContext = {
       balance: account.balance.trusted_spendable.to_sat().toString(),
       currency: networkToCurrencyUnit[account.network],
-      account: { id: account.id, address: account.peekAddress(0).address }, // FIXME: Address should not be needed here
+      account: {
+        id: account.id,
+        address: account.peekAddress(0).address.toString(), // FIXME: Address should not be needed in the send flow
+      },
       network: account.network,
       feeRate: this.#fallbackFeeRate,
       errors: {},

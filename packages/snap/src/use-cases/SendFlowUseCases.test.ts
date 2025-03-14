@@ -79,9 +79,11 @@ describe('SendFlowUseCases', () => {
   describe('displayForm', () => {
     beforeEach(() => {
       mockAccountRepository.get.mockResolvedValue(mockAccount);
-      mockAccount.peekAddress.mockReturnValue({
-        address: 'myAddress',
-      } as AddressInfo);
+      mockAccount.peekAddress.mockReturnValue(
+        mock<AddressInfo>({
+          address: mock<Address>({ toString: () => 'myAddress' }),
+        }),
+      );
       mockSendFlowRepository.insertForm.mockResolvedValue('interface-id');
     });
 

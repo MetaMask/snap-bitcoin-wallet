@@ -4,5 +4,9 @@ export * from './RpcHandler';
 export * from './UserInputHandler';
 export * from './AssetsHandler';
 
-export { Caip2AddressType } from './caip2';
-export { Caip19Asset } from './caip19';
+export {
+  Caip2AddressType,
+  Caip19Asset,
+  networkToCaip19,
+  networkToCaip2,
+} from './caip';

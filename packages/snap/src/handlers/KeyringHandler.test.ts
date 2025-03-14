@@ -1,12 +1,24 @@
+import type { Transaction as KeyringTransaction } from '@metamask/keyring-api';
 import { BtcMethod, BtcScope } from '@metamask/keyring-api';
-import type { Network } from 'bitcoindevkit';
+import type {
+  AddressInfo,
+  Amount,
+  Transaction,
+  Txid,
+  TxOut,
+} from 'bitcoindevkit';
+import { Address, type Network, type WalletTx } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
-import type { BitcoinAccount } from '../entities';
+import { CurrencyUnit, type BitcoinAccount } from '../entities';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
-import { Caip19Asset } from './caip19';
-import { caip2ToNetwork, caip2ToAddressType, Caip2AddressType } from './caip2';
+import {
+  caip2ToNetwork,
+  caip2ToAddressType,
+  Caip2AddressType,
+  Caip19Asset,
+} from './caip';
 import { KeyringHandler, CreateAccountRequest } from './KeyringHandler';
 
 jest.mock('superstruct', () => ({
@@ -14,24 +26,39 @@ jest.mock('superstruct', () => ({
   assert: jest.fn(),
 }));
 
+// TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
+/* eslint-disable @typescript-eslint/naming-convention */
+jest.mock('bitcoindevkit', () => {
+  return {
+    Address: {
+      from_script: jest.fn(),
+    },
+  };
+});
+
 describe('KeyringHandler', () => {
   const mockAccounts = mock<AccountUseCases>();
 
+  const mockAddress = mock<Address>({
+    toString: () => 'bc1qaddress...',
+  });
   // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
   /* eslint-disable @typescript-eslint/naming-convention */
-  const mockAccount = {
+  const mockAccount = mock<BitcoinAccount>({
     id: 'some-id',
     addressType: 'p2wpkh',
-    suggestedName: 'My Bitcoin Account',
     balance: { trusted_spendable: { to_btc: () => 1 } },
     network: 'bitcoin',
-    peekAddress: () => ({ address: 'bc1qaddress...' }),
-  } as unknown as BitcoinAccount;
+  });
 
-  let handler: KeyringHandler;
+  const handler = new KeyringHandler(mockAccounts);
 
   beforeEach(() => {
-    handler = new KeyringHandler(mockAccounts);
+    mockAccount.peekAddress.mockReturnValue(
+      mock<AddressInfo>({
+        address: mockAddress,
+      }),
+    );
   });
 
   describe('createAccount', () => {
@@ -249,9 +276,144 @@ describe('KeyringHandler', () => {
   });
 
   describe('listAccountTransactions', () => {
-    it('returns empty list', async () => {
-      const result = await handler.listAccountTransactions();
-      expect(result).toStrictEqual({ data: [], next: null });
+    const pagination = { limit: 10, next: null };
+
+    const mockAmount = mock<Amount>({
+      to_btc: () => 21,
+    });
+    const mockOutput = mock<TxOut>({
+      value: mockAmount,
+    });
+    const mockTxid = mock<Txid>({
+      toString: () => 'txid',
+    });
+    const mockTx = mock<Transaction>({
+      output: [mockOutput],
+    });
+    const mockWalletTx = mock<WalletTx>({
+      tx: mockTx,
+      txid: mockTxid,
+      chain_position: {
+        last_seen: BigInt(12345),
+        anchor: {
+          confirmation_time: BigInt(4567),
+        },
+      },
+    });
+
+    const expectedResult: KeyringTransaction = {
+      account: mockAccount.id,
+      chain: BtcScope.Mainnet,
+      id: 'txid',
+      type: 'send',
+      status: 'confirmed',
+      timestamp: 4567,
+      events: [
+        {
+          status: 'unconfirmed',
+          timestamp: 12345,
+        },
+        {
+          status: 'confirmed',
+          timestamp: 4567,
+        },
+      ],
+      fees: [
+        {
+          type: 'priority',
+          asset: {
+            amount: '21',
+            fungible: true,
+            type: Caip19Asset.Bitcoin,
+            unit: CurrencyUnit.Bitcoin,
+          },
+        },
+      ],
+      from: [],
+      to: [
+        {
+          address: 'bc1qaddress...',
+          asset: {
+            amount: '21',
+            fungible: true,
+            type: Caip19Asset.Bitcoin,
+            unit: CurrencyUnit.Bitcoin,
+          },
+        },
+      ],
+    };
+
+    beforeEach(() => {
+      mockAccount.calculateFee.mockReturnValue(mockAmount);
+      mockAccounts.get.mockResolvedValue(mockAccount);
+      mockAccount.sentAndReceived.mockReturnValue([mockAmount, mockAmount]);
+      mockAccount.listTransactions.mockReturnValue([mockWalletTx]);
+      (Address.from_script as jest.Mock).mockReturnValue(mockAddress);
+    });
+
+    it('lists transactions successfully: send', async () => {
+      const id = 'some-id';
+
+      const result = await handler.listAccountTransactions(id, pagination);
+
+      expect(mockAccounts.get).toHaveBeenCalledWith(id);
+      expect(result.data).toStrictEqual([expectedResult]);
+    });
+
+    it('lists transactions successfully: receive', async () => {
+      const id = 'some-id';
+
+      mockAccount.sentAndReceived.mockReturnValueOnce([
+        { ...mockAmount, to_btc: () => 0 },
+        mockAmount,
+      ]);
+      mockAccount.isMine.mockReturnValueOnce(true);
+
+      const result = await handler.listAccountTransactions(id, pagination);
+
+      expect(mockAccounts.get).toHaveBeenCalledWith(id);
+      expect(result.data).toStrictEqual([
+        { ...expectedResult, type: 'receive' },
+      ]);
+    });
+
+    it('respects limit and sets next to last txid', async () => {
+      const id = 'some-id';
+      const mockTransactions = Array.from({ length: 12 }, (_, index) => ({
+        ...mockWalletTx,
+        txid: mock<Txid>({
+          toString: () => `txid-${index}`,
+        }),
+      }));
+
+      mockAccount.listTransactions.mockReturnValue(mockTransactions);
+
+      const result = await handler.listAccountTransactions(id, pagination);
+
+      expect(result.data).toHaveLength(pagination.limit);
+      expect(result.next).toBe('txid-9');
+    });
+
+    it('applies next parameter until last element', async () => {
+      const id = 'some-id';
+      const mockTransactions = Array.from({ length: 12 }, (_, index) => ({
+        ...mockWalletTx,
+        txid: mock<Txid>({
+          toString: () => `txid-${index}`,
+        }),
+      }));
+
+      mockAccount.listTransactions.mockReturnValue(mockTransactions);
+
+      const result = await handler.listAccountTransactions(id, {
+        ...pagination,
+        next: 'txid-9',
+      });
+
+      expect(result.data).toHaveLength(
+        mockTransactions.length - pagination.limit,
+      );
+      expect(result.next).toBeNull();
     });
   });
 

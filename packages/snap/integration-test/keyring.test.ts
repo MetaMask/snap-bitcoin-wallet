@@ -4,12 +4,11 @@ import type { Snap } from '@metamask/snaps-jest';
 import { installSnap } from '@metamask/snaps-jest';
 
 import { CurrencyUnit } from '../src/entities';
-import { Caip2AddressType, Caip19Asset } from '../src/handlers';
-import { MNEMONIC, TEST_ADDRESS } from './constants';
+import { Caip2AddressType, Caip19Asset } from '../src/handlers/caip';
+import { FUNDING_TX, MNEMONIC, ORIGIN, TEST_ADDRESS } from './constants';
 
 describe('Keyring', () => {
   const accounts: Record<string, KeyringAccount> = {};
-  const origin = 'metamask';
   let snap: Snap;
 
   beforeAll(async () => {
@@ -76,7 +75,7 @@ describe('Keyring', () => {
     snap.mockJsonRpc({ method: 'snap_manageAccounts', result: {} });
 
     const response = await snap.onKeyringRequest({
-      origin,
+      origin: ORIGIN,
       method: 'keyring_createAccount',
       params: { options: { ...requestOpts } },
     });
@@ -100,7 +99,7 @@ describe('Keyring', () => {
     snap.mockJsonRpc({ method: 'snap_manageAccounts', result: {} });
 
     const response = await snap.onKeyringRequest({
-      origin,
+      origin: ORIGIN,
       method: 'keyring_createAccount',
       params: {
         options: {
@@ -117,7 +116,7 @@ describe('Keyring', () => {
 
   it('gets an account', async () => {
     const response = await snap.onKeyringRequest({
-      origin,
+      origin: ORIGIN,
       method: 'keyring_getAccount',
       params: {
         id: accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Mainnet}`].id,
@@ -131,16 +130,34 @@ describe('Keyring', () => {
 
   it('lists all accounts', async () => {
     const response = await snap.onKeyringRequest({
-      origin,
+      origin: ORIGIN,
       method: 'keyring_listAccounts',
     });
 
     expect(response).toRespondWith(Object.values(accounts));
   });
 
+  it('lists account transactions', async () => {
+    const accoundId =
+      accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id;
+    const response = await snap.onKeyringRequest({
+      origin: ORIGIN,
+      method: 'keyring_listAccountTransactions',
+      params: {
+        id: accoundId,
+        pagination: { limit: 10, next: null },
+      },
+    });
+
+    expect(response).toRespondWith({
+      data: [{ ...FUNDING_TX, account: accoundId }],
+      next: null,
+    });
+  });
+
   it('gets an account balance', async () => {
     const response = await snap.onKeyringRequest({
-      origin,
+      origin: ORIGIN,
       method: 'keyring_getAccountBalances',
       params: {
         id: accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id,
@@ -160,7 +177,7 @@ describe('Keyring', () => {
     const { id } = accounts[`${Caip2AddressType.P2pkh}:${BtcScope.Mainnet}`];
 
     let response = await snap.onKeyringRequest({
-      origin,
+      origin: ORIGIN,
       method: 'keyring_deleteAccount',
       params: {
         id,
@@ -170,7 +187,7 @@ describe('Keyring', () => {
     expect(response).toRespondWith(null);
 
     response = await snap.onKeyringRequest({
-      origin,
+      origin: ORIGIN,
       method: 'keyring_getAccount',
       params: {
         id,
@@ -181,22 +198,6 @@ describe('Keyring', () => {
       code: -32603,
       message: `Account not found: ${id}`,
       stack: expect.anything(),
-    });
-  });
-
-  it('returns empty list for account transactions', async () => {
-    const response = await snap.onKeyringRequest({
-      origin,
-      method: 'keyring_listAccountTransactions',
-      params: {
-        id: accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id,
-        pagination: { limit: 10, next: null },
-      },
-    });
-
-    expect(response).toRespondWith({
-      data: [],
-      next: null,
     });
   });
 
@@ -220,7 +221,7 @@ describe('Keyring', () => {
     'lists account assets: %s',
     async ({ addressType, scope, expectedAssets }) => {
       const response = await snap.onKeyringRequest({
-        origin,
+        origin: ORIGIN,
         method: 'keyring_listAccountAssets',
         params: {
           id: accounts[`${addressType}:${scope}`].id,

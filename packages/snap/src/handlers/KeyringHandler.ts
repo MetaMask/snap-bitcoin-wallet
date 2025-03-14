@@ -8,20 +8,21 @@ import type {
   CaipAssetTypeOrId,
   Paginated,
   Transaction,
+  Pagination,
 } from '@metamask/keyring-api';
 import type { Json } from '@metamask/utils';
 import { assert, boolean, enums, object, optional } from 'superstruct';
 
 import { networkToCurrencyUnit } from '../entities';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
-import { networkToCaip19 } from './caip19';
 import {
+  networkToCaip19,
   Caip2AddressType,
   caip2ToAddressType,
   caip2ToNetwork,
   networkToCaip2,
-} from './caip2';
-import { snapToKeyringAccount } from './keyring-account';
+} from './caip';
+import { mapToKeyringAccount, mapToTransaction } from './mappings';
 
 export const CreateAccountRequest = object({
   scope: enums(Object.values(BtcScope)),
@@ -38,12 +39,12 @@ export class KeyringHandler implements Keyring {
 
   async listAccounts(): Promise<KeyringAccount[]> {
     const accounts = await this.#accountsUseCases.list();
-    return accounts.map(snapToKeyringAccount);
+    return accounts.map(mapToKeyringAccount);
   }
 
   async getAccount(id: string): Promise<KeyringAccount | undefined> {
     const account = await this.#accountsUseCases.get(id);
-    return snapToKeyringAccount(account);
+    return mapToKeyringAccount(account);
   }
 
   async createAccount(opts: Record<string, Json>): Promise<KeyringAccount> {
@@ -58,7 +59,7 @@ export class KeyringHandler implements Keyring {
       await this.#accountsUseCases.fullScan(account);
     }
 
-    return snapToKeyringAccount(account);
+    return mapToKeyringAccount(account);
   }
 
   async getAccountBalances(
@@ -94,10 +95,31 @@ export class KeyringHandler implements Keyring {
     return [networkToCaip19[account.network]];
   }
 
-  async listAccountTransactions(): Promise<Paginated<Transaction>> {
+  async listAccountTransactions(
+    id: string,
+    { limit, next }: Pagination,
+  ): Promise<Paginated<Transaction>> {
+    const account = await this.#accountsUseCases.get(id);
+    const transactions = account.listTransactions();
+
+    // Find starting index based on provided cursor
+    let startIndex = 0;
+    if (next) {
+      const cursorIndex = transactions.findIndex(
+        (tx) => tx.txid.toString() === next,
+      );
+      startIndex = cursorIndex >= 0 ? cursorIndex + 1 : 0;
+    }
+
+    const paginatedTxs = transactions.slice(startIndex, startIndex + limit);
+    const nextCursor =
+      startIndex + limit < transactions.length
+        ? paginatedTxs[paginatedTxs.length - 1].txid.toString()
+        : null;
+
     return {
-      data: [],
-      next: null,
+      data: paginatedTxs.map((tx) => mapToTransaction(account, tx)),
+      next: nextCursor,
     };
   }
 

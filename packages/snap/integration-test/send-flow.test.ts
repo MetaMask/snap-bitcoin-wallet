@@ -3,13 +3,18 @@ import { BtcScope } from '@metamask/keyring-api';
 import type { Snap } from '@metamask/snaps-jest';
 import { assertIsCustomDialog, installSnap } from '@metamask/snaps-jest';
 
-import { ReviewTransactionEvent, SendFormEvent } from '../src/entities';
-import { Caip2AddressType } from '../src/handlers';
-import { MNEMONIC } from './constants';
+import {
+  CurrencyUnit,
+  ReviewTransactionEvent,
+  SendFormEvent,
+} from '../src/entities';
+import { Caip19Asset, Caip2AddressType } from '../src/handlers/caip';
+import { FUNDING_TX, MNEMONIC, ORIGIN } from './constants';
 
 describe('Send flow', () => {
-  const origin = 'metamask';
   const recipient = 'bcrt1qyvhf2epk9s659206lq3rdvtf07uq3t9e7xtjje';
+  const sendAmount = '0.1';
+
   let account: KeyringAccount;
   let snap: Snap;
 
@@ -31,7 +36,7 @@ describe('Send flow', () => {
     });
 
     const response = await snap.onKeyringRequest({
-      origin,
+      origin: ORIGIN,
       method: 'keyring_createAccount',
       params: {
         options: {
@@ -49,7 +54,7 @@ describe('Send flow', () => {
 
   it('sends a transaction', async () => {
     const response = snap.request({
-      origin,
+      origin: ORIGIN,
       method: 'startSendTransactionFlow',
       params: {
         account: account.id,
@@ -61,7 +66,7 @@ describe('Send flow', () => {
     // Perform user interactions.
     await ui.clickElement(SendFormEvent.SetMax);
     await ui.typeInField(SendFormEvent.Recipient, recipient);
-    await ui.typeInField(SendFormEvent.Amount, '0.1');
+    await ui.typeInField(SendFormEvent.Amount, sendAmount);
 
     const backgroundEventResponse = await snap.onBackgroundEvent({
       method: SendFormEvent.RefreshRates,
@@ -90,11 +95,59 @@ describe('Send flow', () => {
       method: 'synchronizeAccounts',
     });
     expect(cronJobResponse).toRespondWith(null);
+
+    const listTxsResponse = await snap.onKeyringRequest({
+      origin: ORIGIN,
+      method: 'keyring_listAccountTransactions',
+      params: {
+        id: account.id,
+        pagination: { limit: 10, next: null },
+      },
+    });
+
+    expect(listTxsResponse).toRespondWith({
+      data: [
+        { ...FUNDING_TX, account: account.id },
+        {
+          account: account.id,
+          chain: BtcScope.Regtest,
+          events: [{ status: 'unconfirmed', timestamp: 1741784431 }],
+          fees: [
+            {
+              asset: {
+                amount: expect.any(String),
+                fungible: true,
+                type: Caip19Asset.Regtest,
+                unit: CurrencyUnit.Regtest,
+              },
+              type: 'priority',
+            },
+          ],
+          from: [],
+          id: expect.any(String),
+          status: 'unconfirmed',
+          timestamp: expect.any(Number),
+          to: [
+            {
+              address: recipient,
+              asset: {
+                amount: sendAmount,
+                fungible: true,
+                type: Caip19Asset.Regtest,
+                unit: CurrencyUnit.Regtest,
+              },
+            },
+          ],
+          type: 'send',
+        },
+      ],
+      next: null,
+    });
   });
 
   it('cancels by return button', async () => {
     const response = snap.request({
-      origin,
+      origin: ORIGIN,
       method: 'startSendTransactionFlow',
       params: {
         account: account.id,

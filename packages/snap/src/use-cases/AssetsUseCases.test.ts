@@ -1,7 +1,7 @@
 import { mock } from 'jest-mock-extended';
 
 import type { AssetRatesClient, ExchangeRates } from '../entities';
-import { Caip19Asset } from '../handlers';
+import { Caip19Asset } from '../handlers/caip';
 import type { ILogger } from '../infra/logger';
 import { AssetsUseCases } from './AssetsUseCases';
 

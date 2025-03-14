@@ -10,6 +10,10 @@ import type {
   Psbt,
   Transaction,
   LocalOutput,
+  WalletTx,
+  Amount,
+  ScriptBuf,
+  KeychainKind,
 } from 'bitcoindevkit';
 
 import type { Inscription } from './meta-protocols';
@@ -108,10 +112,49 @@ export type BitcoinAccount = {
   listUnspent(): LocalOutput[];
 
   /**
-   * List all relevant outputs (includes both spent and unspent, confirmed and unconfirmed).
-   * @returns the list of outputs
+   * List relevant and canonical transactions in the wallet.
+   * A transaction is relevant when it spends from or spends to at least one tracked output.
+   * A transaction is canonical when it is confirmed in the best chain, or does not conflict with any transaction confirmed in the best chain.
+   * @returns the list of wallet transactions
    */
-  listOutput(): LocalOutput[];
+  listTransactions(): WalletTx[];
+
+  /**
+   * Get a single transaction from the wallet as a [`WalletTx`] (if the transaction exists).
+   * @returns the wallet transaction
+   */
+  getTransaction(txid: string): WalletTx | undefined;
+
+  /**
+   * Calculate the fee of a given transaction. Returns [`Amount::ZERO`] if `tx` is a coinbase transaction.
+   * @param tx - The transaction.
+   * @returns the fee amount.
+   */
+  calculateFee(tx: Transaction): Amount;
+
+  /**
+   * Return whether or not a `script` is part of this wallet (either internal or external).
+   * @param script - The Bitcoin script.
+   * @returns the ownership state.
+   */
+  isMine(script: ScriptBuf): boolean;
+
+  /**
+   * Compute the `tx`'s sent and received [`Amount`]s.
+   * This method returns a tuple `(sent, received)`. Sent is the sum of the txin amounts
+   * that spend from previous txouts tracked by this wallet. Received is the summation
+   * of this tx's outputs that send to script pubkeys tracked by this wallet.
+   * @param tx - The Bitcoin transaction.
+   * @returns the sent and received amounts.
+   */
+  sentAndReceived(tx: Transaction): [Amount, Amount];
+
+  /**
+   * Finds how the wallet derived the script pubkey `spk`.
+   * @param spk - The Bitcoin script.
+   * @returns the keychain used and derivation index, if the script is found.
+   */
+  derivationOfSpk(spk: ScriptBuf): [KeychainKind, number] | undefined;
 };
 
 /**

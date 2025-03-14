@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 
-import type { AddressType, Network } from 'bitcoindevkit';
+import type { AddressType } from 'bitcoindevkit';
 
 import type { SnapConfig } from './entities';
 
@@ -9,7 +9,6 @@ export const Config: SnapConfig = {
   encrypt: false,
   accounts: {
     index: 0,
-    defaultNetwork: (process.env.DEFAULT_NETWORK ?? 'bitcoin') as Network,
     defaultAddressType: (process.env.DEFAULT_ADDRESS_TYPE ??
       'p2wpkh') as AddressType,
   },

@@ -1,5 +1,11 @@
-import type { LocalOutput, Transaction, Txid } from 'bitcoindevkit';
-import { type AddressType, type Network, type Psbt } from 'bitcoindevkit';
+import type {
+  Transaction,
+  Txid,
+  WalletTx,
+  AddressType,
+  Network,
+  Psbt,
+} from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 
 import type {
@@ -29,7 +35,6 @@ describe('AccountUseCases', () => {
   const accountsConfig: AccountsConfig = {
     index: 0,
     defaultAddressType: 'p2wpkh',
-    defaultNetwork: 'bitcoin',
   };
 
   beforeEach(() => {
@@ -233,43 +238,44 @@ describe('AccountUseCases', () => {
     const mockAccount = mock<BitcoinAccount>({
       id: 'some-id',
       isScanned: true,
-      listOutput: jest.fn(),
+      listTransactions: jest.fn(),
     });
 
     beforeEach(() => {
-      mockAccount.listOutput.mockReturnValue([]);
+      mockAccount.listTransactions.mockReturnValue([]);
     });
 
     it('does not sync if account is not scanned', async () => {
-      mockAccount.listOutput.mockReturnValue([]);
+      mockAccount.listTransactions.mockReturnValue([]);
 
       await useCases.synchronize({ ...mockAccount, isScanned: false });
 
       expect(mockChain.sync).not.toHaveBeenCalled();
-      expect(mockAccount.listOutput).not.toHaveBeenCalled();
+      expect(mockAccount.listTransactions).not.toHaveBeenCalled();
     });
 
-    it('performs a regular sync', async () => {
-      mockAccount.listOutput.mockReturnValue([]);
+    it('synchronizes', async () => {
+      mockAccount.listTransactions.mockReturnValue([]);
 
       await useCases.synchronize(mockAccount);
 
       expect(mockChain.sync).toHaveBeenCalledWith(mockAccount);
-      expect(mockAccount.listOutput).toHaveBeenCalledTimes(2);
+      expect(mockAccount.listTransactions).toHaveBeenCalledTimes(2);
       expect(mockRepository.update).toHaveBeenCalledWith(mockAccount);
     });
 
-    it('performs a regular sync with assets and balance update event', async () => {
+    it('synchronizes with new transactions', async () => {
       const mockInscriptions = mock<Inscription[]>();
-      mockAccount.listOutput
+      const mockTransaction = mock<WalletTx>();
+      mockAccount.listTransactions
         .mockReturnValueOnce([])
-        .mockReturnValueOnce([mock<LocalOutput>()]);
+        .mockReturnValueOnce([mockTransaction]);
       mockMetaProtocols.fetchInscriptions.mockResolvedValue(mockInscriptions);
 
       await useCases.synchronize(mockAccount);
 
       expect(mockChain.sync).toHaveBeenCalledWith(mockAccount);
-      expect(mockAccount.listOutput).toHaveBeenCalledTimes(2);
+      expect(mockAccount.listTransactions).toHaveBeenCalledTimes(2);
       expect(mockMetaProtocols.fetchInscriptions).toHaveBeenCalledWith(
         mockAccount,
       );
@@ -280,6 +286,39 @@ describe('AccountUseCases', () => {
       expect(
         mockSnapClient.emitAccountBalancesUpdatedEvent,
       ).toHaveBeenCalledWith(mockAccount);
+      expect(
+        mockSnapClient.emitAccountTransactionsUpdatedEvent,
+      ).toHaveBeenCalledWith(mockAccount, [mockTransaction]);
+    });
+
+    it('synchronizes with confirmed transactions', async () => {
+      const mockTxPending = mock<WalletTx>({
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        chain_position: { is_confirmed: false },
+        txid: {
+          toString: () => 'txid',
+        },
+      });
+      const mockTxConfirmed = mock<WalletTx>({
+        ...mockTxPending,
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        chain_position: { is_confirmed: true },
+      });
+      mockAccount.listTransactions
+        .mockReturnValueOnce([mockTxPending])
+        .mockReturnValueOnce([mockTxConfirmed]);
+
+      await useCases.synchronize(mockAccount);
+
+      expect(mockChain.sync).toHaveBeenCalledWith(mockAccount);
+      expect(mockAccount.listTransactions).toHaveBeenCalledTimes(2);
+      expect(mockRepository.update).toHaveBeenCalledWith(mockAccount);
+      expect(
+        mockSnapClient.emitAccountBalancesUpdatedEvent,
+      ).toHaveBeenCalledWith(mockAccount);
+      expect(
+        mockSnapClient.emitAccountTransactionsUpdatedEvent,
+      ).toHaveBeenCalledWith(mockAccount, [mockTxConfirmed]);
     });
 
     it('propagates an error if the chain sync fails', async () => {
@@ -309,8 +348,10 @@ describe('AccountUseCases', () => {
       isScanned: false,
     });
     const mockInscriptions = mock<Inscription[]>();
+    const mockTransactions = mock<WalletTx[]>();
 
     it('performs a full scan', async () => {
+      mockAccount.listTransactions.mockReturnValue(mockTransactions);
       mockMetaProtocols.fetchInscriptions.mockResolvedValue(mockInscriptions);
 
       await useCases.fullScan(mockAccount);
@@ -326,6 +367,9 @@ describe('AccountUseCases', () => {
       expect(
         mockSnapClient.emitAccountBalancesUpdatedEvent,
       ).toHaveBeenCalledWith(mockAccount);
+      expect(
+        mockSnapClient.emitAccountTransactionsUpdatedEvent,
+      ).toHaveBeenCalledWith(mockAccount, mockTransactions);
     });
 
     it('propagates an error if the chain full scan fails', async () => {
@@ -434,7 +478,7 @@ describe('AccountUseCases', () => {
     };
 
     const mockTxid = mock<Txid>();
-    const mockOutpoint = 'txid:vout';
+    const mockOutPoint = 'txid:vout';
     const mockPsbt = mock<Psbt>();
     const mockTransaction = mock<Transaction>({
       // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
@@ -481,7 +525,7 @@ describe('AccountUseCases', () => {
     it('sends transaction', async () => {
       mockRepository.getWithSigner.mockResolvedValue(mockAccount);
       mockAccount.buildTx.mockReturnValue(mockTxBuilder);
-      mockRepository.getFrozenUTXOs.mockResolvedValue([mockOutpoint]);
+      mockRepository.getFrozenUTXOs.mockResolvedValue([mockOutPoint]);
       mockAccount.sign.mockReturnValue(mockTransaction);
       mockTransaction.compute_txid.mockReturnValue(mockTxid);
 
@@ -497,7 +541,7 @@ describe('AccountUseCases', () => {
         requestWithAmount.recipient,
       );
       expect(mockRepository.getFrozenUTXOs).toHaveBeenCalledWith('account-id');
-      expect(mockTxBuilder.unspendable).toHaveBeenCalledWith([mockOutpoint]);
+      expect(mockTxBuilder.unspendable).toHaveBeenCalledWith([mockOutPoint]);
       expect(mockAccount.sign).toHaveBeenCalledWith(mockPsbt);
       expect(mockChain.broadcast).toHaveBeenCalledWith(
         mockAccount.network,
@@ -514,7 +558,7 @@ describe('AccountUseCases', () => {
     it('sends a drain transaction when amount is not provided', async () => {
       mockRepository.getWithSigner.mockResolvedValue(mockAccount);
       mockAccount.buildTx.mockReturnValue(mockTxBuilder);
-      mockRepository.getFrozenUTXOs.mockResolvedValue([mockOutpoint]);
+      mockRepository.getFrozenUTXOs.mockResolvedValue([mockOutPoint]);
       mockAccount.sign.mockReturnValue(mockTransaction);
       mockTransaction.compute_txid.mockReturnValue(mockTxid);
 
@@ -528,7 +572,7 @@ describe('AccountUseCases', () => {
         requestDrain.recipient,
       );
       expect(mockRepository.getFrozenUTXOs).toHaveBeenCalledWith('account-id');
-      expect(mockTxBuilder.unspendable).toHaveBeenCalledWith([mockOutpoint]);
+      expect(mockTxBuilder.unspendable).toHaveBeenCalledWith([mockOutPoint]);
       expect(mockAccount.sign).toHaveBeenCalledWith(mockPsbt);
       expect(mockChain.broadcast).toHaveBeenCalledWith(
         mockAccount.network,

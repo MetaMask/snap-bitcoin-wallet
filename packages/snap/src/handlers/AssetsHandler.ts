@@ -8,7 +8,7 @@ import type {
 } from '@metamask/snaps-sdk';
 
 import type { AssetsUseCases } from '../use-cases';
-import { Caip19Asset } from './caip19';
+import { Caip19Asset } from './caip';
 
 export class AssetsHandler {
   readonly #assetsUseCases: AssetsUseCases;
@@ -24,6 +24,7 @@ export class AssetsHandler {
     const metadata = (
       name: string,
       mainSymbol: string,
+      icon: string,
     ): FungibleAssetMetadata => {
       return {
         fungible: true,
@@ -55,8 +56,7 @@ export class AssetsHandler {
             symbol: 'satoshi',
           },
         ],
-        iconUrl:
-          'https://upload.wikimedia.org/wikipedia/commons/4/46/Bitcoin.svg',
+        iconUrl: `./images/${icon}.svg`,
         symbol: '₿',
       };
     };
@@ -64,11 +64,23 @@ export class AssetsHandler {
     // Use the same denominations as Bitcoin for testnets but change the name and main unit symbol
     return {
       assets: {
-        [Caip19Asset.Bitcoin]: metadata('Bitcoin', 'BTC'),
-        [Caip19Asset.Testnet]: metadata('Testnet Bitcoin', 'tBTC'),
-        [Caip19Asset.Testnet4]: metadata('Testnet4 Bitcoin', 'tBTC'),
-        [Caip19Asset.Signet]: metadata('Signet Bitcoin', 'sBTC'),
-        [Caip19Asset.Regtest]: metadata('Regtest Bitcoin', 'rBTC'),
+        [Caip19Asset.Bitcoin]: metadata('Bitcoin', 'BTC', 'icon'),
+        [Caip19Asset.Testnet]: metadata(
+          'Testnet Bitcoin',
+          'tBTC',
+          'icon-testnet',
+        ),
+        [Caip19Asset.Testnet4]: metadata(
+          'Testnet4 Bitcoin',
+          'tBTC',
+          'icon-testnet',
+        ),
+        [Caip19Asset.Signet]: metadata('Signet Bitcoin', 'sBTC', 'icon-signet'),
+        [Caip19Asset.Regtest]: metadata(
+          'Regtest Bitcoin',
+          'rBTC',
+          'icon-signet',
+        ),
       },
     };
   }

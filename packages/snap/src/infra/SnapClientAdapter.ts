@@ -11,12 +11,17 @@ import {
   type GetPreferencesResult,
   type Json,
 } from '@metamask/snaps-sdk';
+import type { WalletTx } from 'bitcoindevkit';
 
 import type { BitcoinAccount, SnapClient, SnapState } from '../entities';
 import { networkToCurrencyUnit } from '../entities';
-import { networkToCaip19 } from '../handlers/caip19';
-import { snapToKeyringAccount } from '../handlers/keyring-account';
-import { addressTypeToName, networkToName } from '../handlers/mapping';
+import { networkToCaip19 } from '../handlers';
+import {
+  mapToKeyringAccount,
+  mapToTransaction,
+  addressTypeToName,
+  networkToName,
+} from '../handlers/mappings';
 
 export class SnapClientAdapter implements SnapClient {
   readonly #encrypt: boolean;
@@ -69,7 +74,7 @@ export class SnapClientAdapter implements SnapClient {
 
   async emitAccountCreatedEvent(account: BitcoinAccount): Promise<void> {
     return emitSnapKeyringEvent(snap, KeyringEvent.AccountCreated, {
-      account: snapToKeyringAccount(account),
+      account: mapToKeyringAccount(account),
       accountNameSuggestion: `${networkToName[account.network]} ${
         addressTypeToName[account.addressType]
       }`,
@@ -94,6 +99,17 @@ export class SnapClientAdapter implements SnapClient {
             unit: networkToCurrencyUnit[account.network],
           },
         },
+      },
+    });
+  }
+
+  async emitAccountTransactionsUpdatedEvent(
+    account: BitcoinAccount,
+    txs: WalletTx[],
+  ): Promise<void> {
+    return emitSnapKeyringEvent(snap, KeyringEvent.AccountTransactionsUpdated, {
+      transactions: {
+        [account.id]: txs.map((tx) => mapToTransaction(account, tx)),
       },
     });
   }
