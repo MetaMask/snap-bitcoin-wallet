@@ -1,12 +1,17 @@
 import { BtcScope } from '@metamask/keyring-api';
 import type { AddressType, Network } from 'bitcoindevkit';
 
-const reverseMapping = <FromType extends string, ToType extends string>(
-  map: Record<FromType, ToType>,
-) =>
-  Object.fromEntries(
+const reverseMapping = <
+  From extends string | number | symbol,
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  To extends string | number | symbol,
+>(
+  map: Record<From, To>,
+) => {
+  return Object.fromEntries(
     Object.entries(map).map(([from, to]) => [to, from]),
-  ) as Record<FromType, ToType>;
+  ) as Record<To, From>;
+};
 
 export enum Caip2AddressType {
   P2pkh = 'bip122:p2pkh',
