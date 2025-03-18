@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0]
+
+### Uncategorized
+
+- feat: events + onAssetLookup ([#416](https://github.com/MetaMask/snap-bitcoin-wallet/pull/416))
+- feat: list account transactions and assets ([#405](https://github.com/MetaMask/snap-bitcoin-wallet/pull/405))
+- build(deps): bump @metamask/providers from 17.1.2 to 18.3.1 ([#388](https://github.com/MetaMask/snap-bitcoin-wallet/pull/388))
+
 ## [0.9.0]
 
 ### Changed
@@ -109,7 +117,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - build(deps): bump @metamask/keyring-api from 5.1.0 to 6.0.0 ([#6](https://github.com/MetaMask/bitcoin/pull/6))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.8.2...v0.9.0
 [0.8.2]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.8.1...v0.8.2
 [0.8.1]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.8.0...v0.8.1
