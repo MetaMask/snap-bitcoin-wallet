@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Icons as base64 ([#422](https://github.com/MetaMask/snap-bitcoin-wallet/pull/422))
 - Synchronize Bitcoin accounts in a cron job ([#407](https://github.com/MetaMask/snap-bitcoin-wallet/pull/407))
 - Integration tests ([#382](https://github.com/MetaMask/snap-bitcoin-wallet/pull/382))
+- Translations ([#382]https://github.com/MetaMask/snap-bitcoin-wallet/pull/403)
 
 ### Changed
 
