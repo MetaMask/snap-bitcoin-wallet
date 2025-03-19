@@ -1,0 +1,95 @@
+{
+  "locale": "ru",
+  "messages": {
+    "snapDescription": {
+      "message": "Управляйте биткойнами с помощью MetaMask"
+    },
+    "snapProposedName": {
+      "message": "Биткойн"
+    },
+    "reviewTransactionWarning": {
+      "message": "Проверьте транзакцию, прежде чем продолжить"
+    },
+    "loading": {
+      "message": "Загрузка..."
+    },
+    "from": {
+      "message": "От"
+    },
+    "toAddress": {
+      "message": "To Address"
+    },
+    "fromAccount": {
+      "message": "Со счета"
+    },
+    "review": {
+      "message": "Просмотр"
+    },
+    "cancel": {
+      "message": "Отмена"
+    },
+    "amount": {
+      "message": "Сумма"
+    },
+    "balance": {
+      "message": "Баланс"
+    },
+    "recipient": {
+      "message": "Получатель"
+    },
+    "network": {
+      "message": "Сеть"
+    },
+    "minutes": {
+      "message": "min"
+    },
+    "transactionSpeed": {
+      "message": "Скорость транзакции"
+    },
+    "transactionSpeedTooltip": {
+      "message": "Примерное время транзакции"
+    },
+    "networkFee": {
+      "message": "Network Fee"
+    },
+    "feeRate": {
+      "message": "Fee rate"
+    },
+    "networkFeeTooltip": {
+      "message": "The total network fee"
+    },
+    "total": {
+      "message": "Итого"
+    },
+    "send": {
+      "message": "Отправить"
+    },
+    "sending": {
+      "message": "Отправка..."
+    },
+    "sendAmount": {
+      "message": "Отправляемая сумма"
+    },
+    "amountPlaceholder": {
+      "message": "Enter amount to send"
+    },
+    "max": {
+      "message": "Макс."
+    },
+    "recipientPlaceholder": {
+      "message": "Enter receiving address"
+    },
+    "validAddress": {
+      "message": "Действительный адрес биткойна"
+    },
+    "preparingTransaction": {
+      "message": "Подготовка транзакции..."
+    },
+    "error": {
+      "message": "Ошибка"
+    },
+    "satProtectionTooltip": {
+      "message": "MetaMask is protecting your Ordinals, Rare SATs, and Runes to be send in Bitcoin Transactions."
+    }
+  }
+}

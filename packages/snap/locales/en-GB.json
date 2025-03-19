@@ -1,0 +1,95 @@
+{
+  "locale": "en",
+  "messages": {
+    "snapDescription": {
+      "message": "Manage Bitcoin using MetaMask"
+    },
+    "snapProposedName": {
+      "message": "Bitcoin"
+    },
+    "reviewTransactionWarning": {
+      "message": "Review the transaction before proceeding"
+    },
+    "loading": {
+      "message": "Loading"
+    },
+    "from": {
+      "message": "From"
+    },
+    "toAddress": {
+      "message": "To Address"
+    },
+    "fromAccount": {
+      "message": "From Account"
+    },
+    "review": {
+      "message": "Review"
+    },
+    "cancel": {
+      "message": "Cancel"
+    },
+    "amount": {
+      "message": "Amount"
+    },
+    "balance": {
+      "message": "Balance"
+    },
+    "recipient": {
+      "message": "Recipient"
+    },
+    "network": {
+      "message": "Network"
+    },
+    "minutes": {
+      "message": "min"
+    },
+    "transactionSpeed": {
+      "message": "Transaction Speed"
+    },
+    "transactionSpeedTooltip": {
+      "message": "The estimated time of the transaction"
+    },
+    "networkFee": {
+      "message": "Network Fee"
+    },
+    "feeRate": {
+      "message": "Fee rate"
+    },
+    "networkFeeTooltip": {
+      "message": "The total network fee"
+    },
+    "total": {
+      "message": "Total"
+    },
+    "send": {
+      "message": "Send"
+    },
+    "sending": {
+      "message": "Sending"
+    },
+    "sendAmount": {
+      "message": "Send Amount"
+    },
+    "amountPlaceholder": {
+      "message": "Enter amount to send"
+    },
+    "max": {
+      "message": "Max"
+    },
+    "recipientPlaceholder": {
+      "message": "Enter receiving address"
+    },
+    "validAddress": {
+      "message": "Valid bitcoin address"
+    },
+    "preparingTransaction": {
+      "message": "Preparing transaction"
+    },
+    "error": {
+      "message": "Error"
+    },
+    "satProtectionTooltip": {
+      "message": "MetaMask is protecting your Ordinals, Rare SATs, and Runes to be send in Bitcoin Transactions."
+    }
+  }
+}

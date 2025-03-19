@@ -1,0 +1,95 @@
+{
+  "locale": "tr",
+  "messages": {
+    "snapDescription": {
+      "message": "MetaMask'i kullanarak Bitcoin'i yönetin"
+    },
+    "snapProposedName": {
+      "message": "Bitcoin"
+    },
+    "reviewTransactionWarning": {
+      "message": "Devam etmeden önce işlemi inceleyin"
+    },
+    "loading": {
+      "message": "Yükleniyor"
+    },
+    "from": {
+      "message": "Gönderen"
+    },
+    "toAddress": {
+      "message": "To Address"
+    },
+    "fromAccount": {
+      "message": "Gönderen Hesap"
+    },
+    "review": {
+      "message": "İncele"
+    },
+    "cancel": {
+      "message": "İptal"
+    },
+    "amount": {
+      "message": "Miktar"
+    },
+    "balance": {
+      "message": "Bakiye"
+    },
+    "recipient": {
+      "message": "Alıcı"
+    },
+    "network": {
+      "message": "Ağ"
+    },
+    "minutes": {
+      "message": "min"
+    },
+    "transactionSpeed": {
+      "message": "İşlem Hızı"
+    },
+    "transactionSpeedTooltip": {
+      "message": "Tahmini işlem süresi"
+    },
+    "networkFee": {
+      "message": "Network Fee"
+    },
+    "feeRate": {
+      "message": "Fee rate"
+    },
+    "networkFeeTooltip": {
+      "message": "The total network fee"
+    },
+    "total": {
+      "message": "Toplam"
+    },
+    "send": {
+      "message": "Gönder"
+    },
+    "sending": {
+      "message": "Gönderiliyor"
+    },
+    "sendAmount": {
+      "message": "Gönderilecek Miktar"
+    },
+    "amountPlaceholder": {
+      "message": "Enter amount to send"
+    },
+    "max": {
+      "message": "Maksimum"
+    },
+    "recipientPlaceholder": {
+      "message": "Enter receiving address"
+    },
+    "validAddress": {
+      "message": "Geçerli bitcoin adresi"
+    },
+    "preparingTransaction": {
+      "message": "İşlem hazırlanıyor"
+    },
+    "error": {
+      "message": "Hata"
+    },
+    "satProtectionTooltip": {
+      "message": "MetaMask is protecting your Ordinals, Rare SATs, and Runes to be send in Bitcoin Transactions."
+    }
+  }
+}
