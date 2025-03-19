@@ -13,7 +13,7 @@ export const Config: SnapConfig = {
       'p2wpkh') as AddressType,
   },
   chain: {
-    parallelRequests: 1,
+    parallelRequests: 3,
     stopGap: 3,
     url: {
       bitcoin: process.env.ESPLORA_BITCOIN ?? 'https://blockstream.info/api',
