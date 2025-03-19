@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0]
+
+### Added
+
+- List account transactions and assets ([#405](https://github.com/MetaMask/snap-bitcoin-wallet/pull/405), [#420](https://github.com/MetaMask/snap-bitcoin-wallet/pull/420), [#408](https://github.com/MetaMask/snap-bitcoin-wallet/pull/408), [#427](https://github.com/MetaMask/snap-bitcoin-wallet/pull/427))
+- Refresh rates and fees in a background loop inside the Send Flow ([#419](https://github.com/MetaMask/snap-bitcoin-wallet/pull/419))
+- On asset conversion handler ([#418](https://github.com/MetaMask/snap-bitcoin-wallet/pull/418))
+- On asset lookup handler + emission of events on balance updates ([#416](https://github.com/MetaMask/snap-bitcoin-wallet/pull/416))
+- Icons as base64 ([#422](https://github.com/MetaMask/snap-bitcoin-wallet/pull/422))
+- Synchronize Bitcoin accounts in a cron job ([#407](https://github.com/MetaMask/snap-bitcoin-wallet/pull/407))
+- Integration tests ([#382](https://github.com/MetaMask/snap-bitcoin-wallet/pull/382))
+- Translations ([#403]https://github.com/MetaMask/snap-bitcoin-wallet/pull/403)
+
+### Changed
+
+- Refactor core Bitcoin library to use the [`bitcoindevkit`](https://www.npmjs.com/package/bitcoindevkit), allowing synchronization of multiple addresses, support of multiple networks (`bitcoin`, `testnet`, `signet`, `regtest`) and address types (`p2pkh`, `p2sh`, `p2wsh`, `p2wpkh`, `p2tr`) ([#361](https://github.com/MetaMask/snap-bitcoin-wallet/pull/361), [#393](https://github.com/MetaMask/snap-bitcoin-wallet/pull/393), [#394](https://github.com/MetaMask/snap-bitcoin-wallet/pull/394), [#378](https://github.com/MetaMask/snap-bitcoin-wallet/pull/378), [#411](https://github.com/MetaMask/snap-bitcoin-wallet/pull/411), [#413](https://github.com/MetaMask/snap-bitcoin-wallet/pull/413), [#414](https://github.com/MetaMask/snap-bitcoin-wallet/pull/414))
+- Upgrade yarn to v4 ([#389](https://github.com/MetaMask/snap-bitcoin-wallet/pull/389))
+
+### Removed
+
+- Remove unused dependencies and codebase ([#417](https://github.com/MetaMask/snap-bitcoin-wallet/pull/417))
+
+### Fixed
+
+- Typo in word "Ordinals" ([#402](https://github.com/MetaMask/snap-bitcoin-wallet/pull/402))
+
 ## [0.9.0]
 
 ### Added
@@ -255,7 +281,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add CI for lint and test ([#2](https://github.com/MetaMask/bitcoin/pull/2))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.8.2...v0.9.0
 [0.8.2]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.8.1...v0.8.2
 [0.8.1]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.8.0...v0.8.1
