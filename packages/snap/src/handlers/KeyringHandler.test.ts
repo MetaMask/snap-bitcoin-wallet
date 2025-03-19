@@ -373,7 +373,7 @@ describe('KeyringHandler', () => {
 
       expect(mockAccounts.get).toHaveBeenCalledWith(id);
       expect(result.data).toStrictEqual([
-        { ...expectedResult, type: 'receive' },
+        { ...expectedResult, type: 'receive', fees: [] },
       ]);
     });
 

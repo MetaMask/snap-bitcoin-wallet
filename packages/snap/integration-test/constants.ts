@@ -14,17 +14,7 @@ export const FUNDING_TX = {
     { status: 'unconfirmed', timestamp: null },
     { status: 'confirmed', timestamp: expect.any(Number) },
   ],
-  fees: [
-    {
-      asset: {
-        amount: expect.any(String),
-        fungible: true,
-        type: Caip19Asset.Regtest,
-        unit: CurrencyUnit.Regtest,
-      },
-      type: 'priority',
-    },
-  ],
+  fees: [],
   from: [],
   id: expect.any(String),
   status: 'confirmed',
