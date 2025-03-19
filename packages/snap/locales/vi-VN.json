@@ -1,0 +1,95 @@
+{
+  "locale": "vi",
+  "messages": {
+    "snapDescription": {
+      "message": "Quản lý Bitcoin bằng MetaMask"
+    },
+    "snapProposedName": {
+      "message": "Bitcoin"
+    },
+    "reviewTransactionWarning": {
+      "message": "Xem lại giao dịch trước khi tiếp tục"
+    },
+    "loading": {
+      "message": "Đang tải"
+    },
+    "from": {
+      "message": "Từ"
+    },
+    "toAddress": {
+      "message": "To Address"
+    },
+    "fromAccount": {
+      "message": "Từ tài khoản"
+    },
+    "review": {
+      "message": "Xem lại"
+    },
+    "cancel": {
+      "message": "Hủy"
+    },
+    "amount": {
+      "message": "Số tiền"
+    },
+    "balance": {
+      "message": "Số dư"
+    },
+    "recipient": {
+      "message": "Người nhận"
+    },
+    "network": {
+      "message": "Mạng"
+    },
+    "minutes": {
+      "message": "min"
+    },
+    "transactionSpeed": {
+      "message": "Tốc độ giao dịch"
+    },
+    "transactionSpeedTooltip": {
+      "message": "Thời gian giao dịch ước tính"
+    },
+    "networkFee": {
+      "message": "Network Fee"
+    },
+    "feeRate": {
+      "message": "Fee rate"
+    },
+    "networkFeeTooltip": {
+      "message": "The total network fee"
+    },
+    "total": {
+      "message": "Tổng"
+    },
+    "send": {
+      "message": "Gửi"
+    },
+    "sending": {
+      "message": "Đang gửi"
+    },
+    "sendAmount": {
+      "message": "Số tiền gửi"
+    },
+    "amountPlaceholder": {
+      "message": "Enter amount to send"
+    },
+    "max": {
+      "message": "Tối đa"
+    },
+    "recipientPlaceholder": {
+      "message": "Enter receiving address"
+    },
+    "validAddress": {
+      "message": "Địa chỉ bitcoin hợp lệ"
+    },
+    "preparingTransaction": {
+      "message": "Đang chuẩn bị giao dịch"
+    },
+    "error": {
+      "message": "Lỗi"
+    },
+    "satProtectionTooltip": {
+      "message": "MetaMask is protecting your Ordinals, Rare SATs, and Runes to be send in Bitcoin Transactions."
+    }
+  }
+}

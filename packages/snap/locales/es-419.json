@@ -1,0 +1,95 @@
+{
+  "locale": "es",
+  "messages": {
+    "snapDescription": {
+      "message": "Gestione Bitcoin con MetaMask"
+    },
+    "snapProposedName": {
+      "message": "Bitcoin"
+    },
+    "reviewTransactionWarning": {
+      "message": "Revise la transacción antes de continuar"
+    },
+    "loading": {
+      "message": "Cargando"
+    },
+    "from": {
+      "message": "De"
+    },
+    "toAddress": {
+      "message": "To Address"
+    },
+    "fromAccount": {
+      "message": "Desde la cuenta"
+    },
+    "review": {
+      "message": "Revisar"
+    },
+    "cancel": {
+      "message": "Cancelar"
+    },
+    "amount": {
+      "message": "Monto"
+    },
+    "balance": {
+      "message": "Saldo"
+    },
+    "recipient": {
+      "message": "Destinatario"
+    },
+    "network": {
+      "message": "Red"
+    },
+    "minutes": {
+      "message": "min"
+    },
+    "transactionSpeed": {
+      "message": "Velocidad de la transacción"
+    },
+    "transactionSpeedTooltip": {
+      "message": "El tiempo estimado de la transacción"
+    },
+    "networkFee": {
+      "message": "Network Fee"
+    },
+    "feeRate": {
+      "message": "Fee rate"
+    },
+    "networkFeeTooltip": {
+      "message": "The total network fee"
+    },
+    "total": {
+      "message": "Total"
+    },
+    "send": {
+      "message": "Enviar"
+    },
+    "sending": {
+      "message": "Enviando"
+    },
+    "sendAmount": {
+      "message": "Enviar monto"
+    },
+    "amountPlaceholder": {
+      "message": "Enter amount to send"
+    },
+    "max": {
+      "message": "Máx."
+    },
+    "recipientPlaceholder": {
+      "message": "Enter receiving address"
+    },
+    "validAddress": {
+      "message": "Dirección de bitcoin válida"
+    },
+    "preparingTransaction": {
+      "message": "Preparando la transacción"
+    },
+    "error": {
+      "message": "Error"
+    },
+    "satProtectionTooltip": {
+      "message": "MetaMask is protecting your Ordinals, Rare SATs, and Runes to be send in Bitcoin Transactions."
+    }
+  }
+}
