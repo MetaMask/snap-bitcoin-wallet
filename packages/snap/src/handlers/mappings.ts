@@ -136,12 +136,14 @@ export function mapToTransaction(
     events,
     to: [],
     from: [],
-    fees: [
-      {
-        type: 'priority',
-        asset: mapToAmount(account.calculateFee(tx), network),
-      },
-    ],
+    fees: isSend
+      ? [
+          {
+            type: 'priority',
+            asset: mapToAmount(account.calculateFee(tx), network),
+          },
+        ]
+      : [],
   };
 
   // If it's a Send transaction:
