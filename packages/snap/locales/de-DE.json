@@ -1,0 +1,95 @@
+{
+  "locale": "de",
+  "messages": {
+    "snapDescription": {
+      "message": "Verwaltung von Bitcoin mit MetaMask"
+    },
+    "snapProposedName": {
+      "message": "Bitcoin"
+    },
+    "reviewTransactionWarning": {
+      "message": "Überprüfen Sie die Transaktion, bevor Sie fortfahren"
+    },
+    "loading": {
+      "message": "Wird geladen"
+    },
+    "from": {
+      "message": "Von"
+    },
+    "toAddress": {
+      "message": "To Address"
+    },
+    "fromAccount": {
+      "message": "Von Konto"
+    },
+    "review": {
+      "message": "Überprüfung"
+    },
+    "cancel": {
+      "message": "Abbrechen"
+    },
+    "amount": {
+      "message": "Betrag"
+    },
+    "balance": {
+      "message": "Guthaben"
+    },
+    "recipient": {
+      "message": "Empfänger"
+    },
+    "network": {
+      "message": "Netzwerk"
+    },
+    "minutes": {
+      "message": "min"
+    },
+    "transactionSpeed": {
+      "message": "Transaktionsgeschwindigkeit"
+    },
+    "transactionSpeedTooltip": {
+      "message": "Die geschätzte Transaktionsdauer"
+    },
+    "networkFee": {
+      "message": "Network Fee"
+    },
+    "feeRate": {
+      "message": "Fee rate"
+    },
+    "networkFeeTooltip": {
+      "message": "The total network fee"
+    },
+    "total": {
+      "message": "Insgesamt"
+    },
+    "send": {
+      "message": "Senden"
+    },
+    "sending": {
+      "message": "Wird gesendet"
+    },
+    "sendAmount": {
+      "message": "Betrag senden"
+    },
+    "amountPlaceholder": {
+      "message": "Enter amount to send"
+    },
+    "max": {
+      "message": "Max."
+    },
+    "recipientPlaceholder": {
+      "message": "Enter receiving address"
+    },
+    "validAddress": {
+      "message": "Gültige Bitcoin-Adresse"
+    },
+    "preparingTransaction": {
+      "message": "Transaktion wird vorbereitet"
+    },
+    "error": {
+      "message": "Fehler"
+    },
+    "satProtectionTooltip": {
+      "message": "MetaMask is protecting your Ordinals, Rare SATs, and Runes to be send in Bitcoin Transactions."
+    }
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "locale": "el",
+  "messages": {
+    "snapDescription": {
+      "message": "Διαχειριστείτε τα Bitcoins χρησιμοποιώντας το MetaMask"
+    },
+    "snapProposedName": {
+      "message": "Bitcoin"
+    },
+    "reviewTransactionWarning": {
+      "message": "Ελέγξτε τη συναλλαγή πριν προχωρήσετε"
+    },
+    "loading": {
+      "message": "Φόρτωση"
+    },
+    "from": {
+      "message": "Από"
+    },
+    "toAddress": {
+      "message": "To Address"
+    },
+    "fromAccount": {
+      "message": "Από λογαριασμό"
+    },
+    "review": {
+      "message": "Έλεγχος"
+    },
+    "cancel": {
+      "message": "Άκυρο"
+    },
+    "amount": {
+      "message": "Ποσό"
+    },
+    "balance": {
+      "message": "Υπόλοιπο"
+    },
+    "recipient": {
+      "message": "Παραλήπτης"
+    },
+    "network": {
+      "message": "Δίκτυο"
+    },
+    "minutes": {
+      "message": "min"
+    },
+    "transactionSpeed": {
+      "message": "Ταχύτητα συναλλαγής"
+    },
+    "transactionSpeedTooltip": {
+      "message": "Ο εκτιμώμενος χρόνος της συναλλαγής"
+    },
+    "networkFee": {
+      "message": "Network Fee"
+    },
+    "feeRate": {
+      "message": "Fee rate"
+    },
+    "networkFeeTooltip": {
+      "message": "The total network fee"
+    },
+    "total": {
+      "message": "Σύνολο"
+    },
+    "send": {
+      "message": "Εστάλη"
+    },
+    "sending": {
+      "message": "Αποστολή"
+    },
+    "sendAmount": {
+      "message": "Ποσό προς αποστολή"
+    },
+    "amountPlaceholder": {
+      "message": "Enter amount to send"
+    },
+    "max": {
+      "message": "Μεγ"
+    },
+    "recipientPlaceholder": {
+      "message": "Enter receiving address"
+    },
+    "validAddress": {
+      "message": "Έγκυρη διεύθυνση των bitcoins"
+    },
+    "preparingTransaction": {
+      "message": "Προετοιμασία συναλλαγής"
+    },
+    "error": {
+      "message": "Σφάλμα"
+    },
+    "satProtectionTooltip": {
+      "message": "MetaMask is protecting your Ordinals, Rare SATs, and Runes to be send in Bitcoin Transactions."
+    }
+  }
+}
