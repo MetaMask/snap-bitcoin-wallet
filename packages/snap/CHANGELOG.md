@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0]
+
+### Uncategorized
+
+- fix: remove fees on receive ([#427](https://github.com/MetaMask/snap-bitcoin-wallet/pull/427))
+- Revert "0.10.0 (#423)" ([#423](https://github.com/MetaMask/snap-bitcoin-wallet/pull/423))
+- 0.10.0 ([#423](https://github.com/MetaMask/snap-bitcoin-wallet/pull/423))
+- New Crowdin translations by Github Action ([#403](https://github.com/MetaMask/snap-bitcoin-wallet/pull/403))
+- chore: increase parallel requests and reduce stop gap ([#424](https://github.com/MetaMask/snap-bitcoin-wallet/pull/424))
+- fix: icons as base64 ([#422](https://github.com/MetaMask/snap-bitcoin-wallet/pull/422))
+- feat: list transactions ([#420](https://github.com/MetaMask/snap-bitcoin-wallet/pull/420))
+- feat: background loop ([#419](https://github.com/MetaMask/snap-bitcoin-wallet/pull/419))
+- feat: on asset conversions ([#418](https://github.com/MetaMask/snap-bitcoin-wallet/pull/418))
+- chore: remove unused dependencies ([#417](https://github.com/MetaMask/snap-bitcoin-wallet/pull/417))
+- feat: events + onAssetLookup ([#416](https://github.com/MetaMask/snap-bitcoin-wallet/pull/416))
+- feat: bdk utxo protection ([#414](https://github.com/MetaMask/snap-bitcoin-wallet/pull/414))
+- bdk: send flow user interfaces ([#413](https://github.com/MetaMask/snap-bitcoin-wallet/pull/413))
+- feat: bdk send flow ([#411](https://github.com/MetaMask/snap-bitcoin-wallet/pull/411))
+- feat: cron job ([#407](https://github.com/MetaMask/snap-bitcoin-wallet/pull/407))
+- fix: missing permissions for transactions and assets ([#408](https://github.com/MetaMask/snap-bitcoin-wallet/pull/408))
+- feat: list account transactions and assets ([#405](https://github.com/MetaMask/snap-bitcoin-wallet/pull/405))
+- fix: typo ([#402](https://github.com/MetaMask/snap-bitcoin-wallet/pull/402))
+- feat: bdk remove account ([#393](https://github.com/MetaMask/snap-bitcoin-wallet/pull/393))
+- feat: bdk list accounts ([#394](https://github.com/MetaMask/snap-bitcoin-wallet/pull/394))
+- feat: initial state on install ([#379](https://github.com/MetaMask/snap-bitcoin-wallet/pull/379))
+- test: integration tests ([#382](https://github.com/MetaMask/snap-bitcoin-wallet/pull/382))
+- chore: upgrade yarn to v4 ([#389](https://github.com/MetaMask/snap-bitcoin-wallet/pull/389))
+- feat: bdk get account balances ([#378](https://github.com/MetaMask/snap-bitcoin-wallet/pull/378))
+- build(deps-dev): bump @metamask/key-tree from 9.1.2 to 10.0.2 ([#376](https://github.com/MetaMask/snap-bitcoin-wallet/pull/376))
+- build(deps): bump the snaps group across 1 directory with 10 updates ([#377](https://github.com/MetaMask/snap-bitcoin-wallet/pull/377))
+- feat: bdk create account ([#361](https://github.com/MetaMask/snap-bitcoin-wallet/pull/361))
+
 ## [0.9.0]
 
 ### Added
@@ -255,7 +287,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add CI for lint and test ([#2](https://github.com/MetaMask/bitcoin/pull/2))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.8.2...v0.9.0
 [0.8.2]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.8.1...v0.8.2
 [0.8.1]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.8.0...v0.8.1
