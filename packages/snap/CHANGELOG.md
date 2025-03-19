@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- List account transactions and assets ([#405](https://github.com/MetaMask/snap-bitcoin-wallet/pull/405), [#420](https://github.com/MetaMask/snap-bitcoin-wallet/pull/420), [#408](https://github.com/MetaMask/snap-bitcoin-wallet/pull/408))
+- List account transactions and assets ([#405](https://github.com/MetaMask/snap-bitcoin-wallet/pull/405), [#420](https://github.com/MetaMask/snap-bitcoin-wallet/pull/420), [#408](https://github.com/MetaMask/snap-bitcoin-wallet/pull/408), [#427](https://github.com/MetaMask/snap-bitcoin-wallet/pull/427))
 - Refresh rates and fees in a background loop inside the Send Flow ([#419](https://github.com/MetaMask/snap-bitcoin-wallet/pull/419))
 - On asset conversion handler ([#418](https://github.com/MetaMask/snap-bitcoin-wallet/pull/418))
 - On asset lookup handler + emission of events on balance updates ([#416](https://github.com/MetaMask/snap-bitcoin-wallet/pull/416))
