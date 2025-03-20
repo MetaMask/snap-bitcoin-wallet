@@ -9,15 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.10.0]
 
-### Uncategorized
+### Changed
 
-- Revert "0.10.0 (#429)" ([#429](https://github.com/MetaMask/snap-bitcoin-wallet/pull/429))
-- 0.10.0 ([#429](https://github.com/MetaMask/snap-bitcoin-wallet/pull/429))
-- Revert "0.10.0 (#423)" ([#423](https://github.com/MetaMask/snap-bitcoin-wallet/pull/423))
-- 0.10.0 ([#423](https://github.com/MetaMask/snap-bitcoin-wallet/pull/423))
-- feat: events + onAssetLookup ([#416](https://github.com/MetaMask/snap-bitcoin-wallet/pull/416))
-- feat: list account transactions and assets ([#405](https://github.com/MetaMask/snap-bitcoin-wallet/pull/405))
-- build(deps): bump @metamask/providers from 17.1.2 to 18.3.1 ([#388](https://github.com/MetaMask/snap-bitcoin-wallet/pull/388))
+- Bump `@metamask/providers` to `^20.0.0` and `@metamask/keyring-api` to `^17.2.0` ([#388](https://github.com/MetaMask/snap-bitcoin-wallet/pull/388), [#405](https://github.com/MetaMask/snap-bitcoin-wallet/pull/405), [#416](https://github.com/MetaMask/snap-bitcoin-wallet/pull/416))
 
 ## [0.9.0]
 
