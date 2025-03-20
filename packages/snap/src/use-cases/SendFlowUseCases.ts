@@ -11,15 +11,17 @@ import type {
   SendFormContext,
   ReviewTransactionContext,
   AssetRatesClient,
+  Logger,
 } from '../entities';
 import {
   SendFormEvent,
   ReviewTransactionEvent,
   networkToCurrencyUnit,
 } from '../entities';
-import { logger } from '../infra/logger';
 
 export class SendFlowUseCases {
+  readonly #logger: Logger;
+
   readonly #snapClient: SnapClient;
 
   readonly #accountRepository: BitcoinAccountRepository;
@@ -37,6 +39,7 @@ export class SendFlowUseCases {
   readonly #ratesRefreshInterval: string;
 
   constructor(
+    logger: Logger,
     snapClient: SnapClient,
     accountRepository: BitcoinAccountRepository,
     sendFlowRepository: SendFlowRepository,
@@ -46,6 +49,7 @@ export class SendFlowUseCases {
     fallbackFeeRate: number,
     ratesRefreshInterval: string,
   ) {
+    this.#logger = logger;
     this.#snapClient = snapClient;
     this.#accountRepository = accountRepository;
     this.#sendFlowRepository = sendFlowRepository;
@@ -57,12 +61,14 @@ export class SendFlowUseCases {
   }
 
   async display(accountId: string): Promise<TransactionRequest> {
-    logger.debug('Displaying Send form. Account: %s', accountId);
+    this.#logger.debug('Displaying Send form. Account: %s', accountId);
 
     const account = await this.#accountRepository.get(accountId);
     if (!account) {
       throw new Error('Account not found');
     }
+
+    const { locale } = await this.#snapClient.getPreferences();
 
     const context: SendFormContext = {
       balance: account.balance.trusted_spendable.to_sat().toString(),
@@ -74,6 +80,7 @@ export class SendFlowUseCases {
       network: account.network,
       feeRate: this.#fallbackFeeRate,
       errors: {},
+      locale,
     };
 
     const interfaceId = await this.#sendFlowRepository.insertForm(context);
@@ -90,12 +97,19 @@ export class SendFlowUseCases {
       throw new UserRejectedRequestError() as unknown as Error;
     }
 
-    logger.debug('Transaction request generated successfully: %o', request);
+    this.#logger.debug(
+      'Transaction request generated successfully: %o',
+      request,
+    );
     return request;
   }
 
   async onChangeForm(id: string, event: SendFormEvent): Promise<void> {
-    logger.debug('Event triggered on send form: %s. Event: %s', id, event);
+    this.#logger.debug(
+      'Event triggered on send form: %s. Event: %s',
+      id,
+      event,
+    );
 
     // TODO: Temporary fetch the context while this is fixed: https://github.com/MetaMask/snaps/issues/3069
     const context = await this.#sendFlowRepository.getContext(id);
@@ -140,6 +154,7 @@ export class SendFlowUseCases {
             fee: context.fee,
             drain: context.drain,
             sendForm: context,
+            locale: context.locale,
           };
           return this.#sendFlowRepository.updateReview(id, reviewContext);
         }
@@ -168,7 +183,7 @@ export class SendFlowUseCases {
     event: ReviewTransactionEvent,
     context: ReviewTransactionContext,
   ): Promise<void> {
-    logger.debug(
+    this.#logger.debug(
       'Event triggered on transaction review: %s. Event: %s',
       id,
       event,
@@ -273,6 +288,8 @@ export class SendFlowUseCases {
     const { network } = context;
     let updatedContext = { ...context };
 
+    const { locale, currency } = await this.#snapClient.getPreferences();
+
     try {
       const feeEstimates = await this.#chainClient.getFeeEstimates(network);
       const feeRate =
@@ -283,7 +300,6 @@ export class SendFlowUseCases {
       // Exchange rate is only relevant for Bitcoin
       if (network === 'bitcoin') {
         const exchangeRates = await this.#ratesClient.exchangeRates();
-        const { currency } = await this.#snapClient.getPreferences();
         const conversionRate = exchangeRates[currency];
         if (conversionRate) {
           updatedContext.exchangeRate = {
@@ -297,7 +313,7 @@ export class SendFlowUseCases {
       updatedContext = await this.#computeFee(updatedContext);
     } catch (error) {
       // We do not throw so we can reschedule. Previous fetched values or fallbacks will be used.
-      logger.error(
+      this.#logger.error(
         `Failed to fetch rates in send form: %s. Error: %s`,
         id,
         error,
@@ -310,6 +326,7 @@ export class SendFlowUseCases {
         SendFormEvent.RefreshRates,
         id,
       );
+    updatedContext.locale = locale; // Take advantage of the loop to update the locale as well
 
     await this.#sendFlowRepository.updateForm(id, updatedContext);
   }

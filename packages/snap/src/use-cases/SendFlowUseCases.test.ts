@@ -14,13 +14,13 @@ import type {
   TransactionRequest,
   ReviewTransactionContext,
   AssetRatesClient,
+  Logger,
 } from '../entities';
 import {
   ReviewTransactionEvent,
   CurrencyUnit,
   SendFormEvent,
 } from '../entities';
-import type { ILogger } from '../infra/logger';
 import { SendFlowUseCases } from './SendFlowUseCases';
 
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
@@ -36,13 +36,8 @@ jest.mock('bitcoindevkit', () => {
   };
 });
 
-jest.mock('../infra/logger', () => {
-  return { logger: mock<ILogger>() };
-});
-
 describe('SendFlowUseCases', () => {
-  let useCases: SendFlowUseCases;
-
+  const mockLogger = mock<Logger>();
   const mockSnapClient = mock<SnapClient>();
   const mockAccountRepository = mock<BitcoinAccountRepository>();
   const mockSendFlowRepository = mock<SendFlowRepository>();
@@ -62,19 +57,22 @@ describe('SendFlowUseCases', () => {
     peekAddress: jest.fn(),
   });
   const mockTxRequest = mock<TransactionRequest>();
-
-  beforeEach(() => {
-    useCases = new SendFlowUseCases(
-      mockSnapClient,
-      mockAccountRepository,
-      mockSendFlowRepository,
-      mockChain,
-      mockRatesClient,
-      targetBlocksConfirmation,
-      fallbackFeeRate,
-      ratesRefreshInterval,
-    );
+  const mockPreferences = mock<GetPreferencesResult>({
+    currency: 'usd',
+    locale: 'en',
   });
+
+  const useCases = new SendFlowUseCases(
+    mockLogger,
+    mockSnapClient,
+    mockAccountRepository,
+    mockSendFlowRepository,
+    mockChain,
+    mockRatesClient,
+    targetBlocksConfirmation,
+    fallbackFeeRate,
+    ratesRefreshInterval,
+  );
 
   describe('displayForm', () => {
     beforeEach(() => {
@@ -85,6 +83,7 @@ describe('SendFlowUseCases', () => {
         }),
       );
       mockSendFlowRepository.insertForm.mockResolvedValue('interface-id');
+      mockSnapClient.getPreferences.mockResolvedValue(mockPreferences);
     });
 
     it('throws error if account not found', async () => {
@@ -108,6 +107,7 @@ describe('SendFlowUseCases', () => {
       const result = await useCases.display('account-id');
 
       expect(mockAccountRepository.get).toHaveBeenCalledWith('account-id');
+      expect(mockSnapClient.getPreferences).toHaveBeenCalled();
       expect(mockSendFlowRepository.insertForm).toHaveBeenCalledWith({
         balance: '1234',
         currency: CurrencyUnit.Bitcoin,
@@ -115,6 +115,7 @@ describe('SendFlowUseCases', () => {
         network: 'bitcoin',
         feeRate: fallbackFeeRate,
         errors: {},
+        locale: 'en',
       });
       expect(mockSnapClient.displayInterface).toHaveBeenCalledWith(
         'interface-id',
@@ -155,6 +156,7 @@ describe('SendFlowUseCases', () => {
         conversionDate: 2025,
       },
       backgroundEventId: 'backgroundEventId',
+      locale: 'en',
     };
 
     beforeEach(() => {
@@ -243,6 +245,7 @@ describe('SendFlowUseCases', () => {
         fee: '10',
         sendForm: mockContext,
         drain: mockContext.drain,
+        locale: 'en',
       };
 
       await useCases.onChangeForm('interface-id', SendFormEvent.Confirm);
@@ -436,6 +439,7 @@ describe('SendFlowUseCases', () => {
       sendForm: {
         network: 'bitcoin',
       } as SendFormContext,
+      locale: 'en',
     };
 
     it('throws error unrecognized event', async () => {
@@ -462,6 +466,8 @@ describe('SendFlowUseCases', () => {
 
     it('reverts interface back to send form if present in context', async () => {
       const id = 'interface-id';
+      mockSnapClient.getPreferences.mockResolvedValue(mockPreferences);
+
       await useCases.onChangeReview(
         id,
         ReviewTransactionEvent.HeaderBack,
@@ -504,11 +510,11 @@ describe('SendFlowUseCases', () => {
       errors: {},
       network: 'bitcoin',
       feeRate: fallbackFeeRate,
+      locale: 'en',
     };
     const mockExchangeRates = {
       usd: { value: 200000 },
     };
-    const mockPreferences = mock<GetPreferencesResult>({ currency: 'usd' });
     const mockFeeRate = 4.4;
 
     beforeEach(() => {

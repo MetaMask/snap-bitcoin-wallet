@@ -11,13 +11,12 @@ import {
 } from '@metamask/snaps-sdk/jsx';
 import type { Network } from 'bitcoindevkit';
 
-import type { SendFormContext } from '../../../entities';
 import { SENDFORM_NAME, SendFormEvent } from '../../../entities';
-import { getTranslator } from '../../../entities/locale';
-import { displayAmount } from '../format';
+import { displayAmount, translate } from '../format';
 import btcIcon from '../images/bitcoin.svg';
 import signetIcon from '../images/signet.svg';
 import testnetIcon from '../images/testnet.svg';
+import type { SendFormViewProps } from '../SendFormView';
 
 const networkToIcon: Record<Network, string> = {
   bitcoin: btcIcon,
@@ -27,15 +26,12 @@ const networkToIcon: Record<Network, string> = {
   regtest: signetIcon,
 };
 
-export const SendForm: SnapComponent<SendFormContext> = ({
-  currency,
-  balance,
-  amount,
-  recipient,
-  errors,
-  network,
+export const SendForm: SnapComponent<SendFormViewProps> = ({
+  context,
+  messages,
 }) => {
-  const t = getTranslator();
+  const t = translate(messages);
+  const { currency, balance, amount, recipient, errors, network } = context;
 
   const validAddress = Boolean(recipient && !errors.recipient);
 

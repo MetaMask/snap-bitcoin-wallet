@@ -14,20 +14,15 @@ import type {
   BitcoinAccountRepository,
   BlockchainClient,
   Inscription,
+  Logger,
   MetaProtocolsClient,
   SnapClient,
   TransactionRequest,
 } from '../entities';
-import type { ILogger } from '../infra/logger';
 import { AccountUseCases } from './AccountUseCases';
 
-jest.mock('../infra/logger', () => {
-  return { logger: mock<ILogger>() };
-});
-
 describe('AccountUseCases', () => {
-  let useCases: AccountUseCases;
-
+  const mockLogger = mock<Logger>();
   const mockSnapClient = mock<SnapClient>();
   const mockRepository = mock<BitcoinAccountRepository>();
   const mockChain = mock<BlockchainClient>();
@@ -37,15 +32,14 @@ describe('AccountUseCases', () => {
     defaultAddressType: 'p2wpkh',
   };
 
-  beforeEach(() => {
-    useCases = new AccountUseCases(
-      mockSnapClient,
-      mockRepository,
-      mockChain,
-      mockMetaProtocols,
-      accountsConfig,
-    );
-  });
+  const useCases = new AccountUseCases(
+    mockLogger,
+    mockSnapClient,
+    mockRepository,
+    mockChain,
+    mockMetaProtocols,
+    accountsConfig,
+  );
 
   describe('get', () => {
     it('returns account', async () => {

@@ -1,22 +1,14 @@
 import { mock } from 'jest-mock-extended';
 
-import type { AssetRatesClient, ExchangeRates } from '../entities';
+import type { AssetRatesClient, ExchangeRates, Logger } from '../entities';
 import { Caip19Asset } from '../handlers/caip';
-import type { ILogger } from '../infra/logger';
 import { AssetsUseCases } from './AssetsUseCases';
 
-jest.mock('../infra/logger', () => {
-  return { logger: mock<ILogger>() };
-});
-
 describe('AssetsUseCases', () => {
-  let useCases: AssetsUseCases;
-
+  const mockLogger = mock<Logger>();
   const mockAssetRates = mock<AssetRatesClient>();
 
-  beforeEach(() => {
-    useCases = new AssetsUseCases(mockAssetRates);
-  });
+  const useCases = new AssetsUseCases(mockLogger, mockAssetRates);
 
   describe('getBtcRates', () => {
     it('returns rate for the known assets and null for unknown', async () => {

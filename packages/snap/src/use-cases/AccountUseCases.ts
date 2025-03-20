@@ -8,8 +8,8 @@ import type {
   TransactionRequest,
   SnapClient,
   MetaProtocolsClient,
+  Logger,
 } from '../entities';
-import { logger } from '../infra/logger';
 
 const addressTypeToPurpose: Record<AddressType, string> = {
   p2pkh: "44'",
@@ -28,6 +28,8 @@ const networkToCoinType: Record<Network, string> = {
 };
 
 export class AccountUseCases {
+  readonly #logger: Logger;
+
   readonly #snapClient: SnapClient;
 
   readonly #repository: BitcoinAccountRepository;
@@ -39,12 +41,14 @@ export class AccountUseCases {
   readonly #accountConfig: AccountsConfig;
 
   constructor(
+    logger: Logger,
     snapClient: SnapClient,
     repository: BitcoinAccountRepository,
     chain: BlockchainClient,
     metaProtocols: MetaProtocolsClient,
     accountConfig: AccountsConfig,
   ) {
+    this.#logger = logger;
     this.#snapClient = snapClient;
     this.#repository = repository;
     this.#chain = chain;
@@ -53,23 +57,23 @@ export class AccountUseCases {
   }
 
   async list(): Promise<BitcoinAccount[]> {
-    logger.debug('Listing accounts');
+    this.#logger.debug('Listing accounts');
 
     const accounts = await this.#repository.getAll();
 
-    logger.debug('Accounts listed successfully');
+    this.#logger.debug('Accounts listed successfully');
     return accounts;
   }
 
   async get(id: string): Promise<BitcoinAccount> {
-    logger.debug('Fetching account: %s', id);
+    this.#logger.debug('Fetching account: %s', id);
 
     const account = await this.#repository.get(id);
     if (!account) {
       throw new Error(`Account not found: ${id}`);
     }
 
-    logger.debug('Account found: %s', account.id);
+    this.#logger.debug('Account found: %s', account.id);
     return account;
   }
 
@@ -77,7 +81,7 @@ export class AccountUseCases {
     network: Network,
     addressType: AddressType = this.#accountConfig.defaultAddressType,
   ): Promise<BitcoinAccount> {
-    logger.debug(
+    this.#logger.debug(
       'Creating new Bitcoin account. Network: %o. addressType: %o,',
       network,
       addressType,
@@ -93,7 +97,7 @@ export class AccountUseCases {
     // Idempotent account creation + ensures only one account per derivation path
     const account = await this.#repository.getByDerivationPath(derivationPath);
     if (account) {
-      logger.debug('Account already exists: %s,', account.id);
+      this.#logger.debug('Account already exists: %s,', account.id);
       await this.#snapClient.emitAccountCreatedEvent(account);
       return account;
     }
@@ -106,7 +110,7 @@ export class AccountUseCases {
 
     await this.#snapClient.emitAccountCreatedEvent(newAccount);
 
-    logger.info(
+    this.#logger.info(
       'Bitcoin account created successfully: %s. derivationPath: %s',
       newAccount.id,
       derivationPath.join('/'),
@@ -115,10 +119,10 @@ export class AccountUseCases {
   }
 
   async synchronize(account: BitcoinAccount): Promise<void> {
-    logger.debug('Synchronizing account: %s', account.id);
+    this.#logger.debug('Synchronizing account: %s', account.id);
 
     if (!account.isScanned) {
-      logger.debug(
+      this.#logger.debug(
         'Account has not yet performed initial full scan, skipping synchronization: %s',
         account.id,
       );
@@ -160,11 +164,11 @@ export class AccountUseCases {
       );
     }
 
-    logger.debug('Account synchronized successfully: %s', account.id);
+    this.#logger.debug('Account synchronized successfully: %s', account.id);
   }
 
   async fullScan(account: BitcoinAccount): Promise<void> {
-    logger.debug('Performing initial full scan: %s', account.id);
+    this.#logger.debug('Performing initial full scan: %s', account.id);
 
     await this.#chain.fullScan(account);
 
@@ -177,11 +181,14 @@ export class AccountUseCases {
       account.listTransactions(),
     );
 
-    logger.debug('initial full scan performed successfully: %s', account.id);
+    this.#logger.debug(
+      'initial full scan performed successfully: %s',
+      account.id,
+    );
   }
 
   async delete(id: string): Promise<void> {
-    logger.debug('Deleting account: %s', id);
+    this.#logger.debug('Deleting account: %s', id);
 
     const account = await this.#repository.get(id);
     if (!account) {
@@ -191,11 +198,11 @@ export class AccountUseCases {
     await this.#snapClient.emitAccountDeletedEvent(id);
     await this.#repository.delete(id);
 
-    logger.info('Account deleted successfully: %s', account.id);
+    this.#logger.info('Account deleted successfully: %s', account.id);
   }
 
   async send(id: string, request: TransactionRequest): Promise<Txid> {
-    logger.debug('Sending transaction: %s. Request: %o', id, request);
+    this.#logger.debug('Sending transaction: %s. Request: %o', id, request);
 
     if (request.drain && request.amount) {
       throw new Error("Cannot specify both 'amount' and 'drain' options");
@@ -228,7 +235,7 @@ export class AccountUseCases {
     await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
 
     const txId = tx.compute_txid();
-    logger.info(
+    this.#logger.info(
       'Transaction sent successfully: %s. Account: %s, Network: %s',
       txId,
       id,

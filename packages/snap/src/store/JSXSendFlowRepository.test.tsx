@@ -1,9 +1,11 @@
+import type { GetPreferencesResult } from '@metamask/snaps-sdk';
 import { mock } from 'jest-mock-extended';
 
 import type {
   SnapClient,
   SendFormContext,
   ReviewTransactionContext,
+  Translator,
 } from '../entities';
 import { SENDFORM_NAME } from '../entities';
 import { ReviewTransactionView, SendFormView } from '../infra/jsx';
@@ -15,12 +17,12 @@ jest.mock('../infra/jsx', () => ({
 }));
 
 describe('JSXSendFlowRepository', () => {
-  const mockSnapClient = mock<SnapClient>();
-  let repo: JSXSendFlowRepository;
+  const mockMessages = { foo: { message: 'bar' } };
 
-  beforeEach(() => {
-    repo = new JSXSendFlowRepository(mockSnapClient);
-  });
+  const mockSnapClient = mock<SnapClient>();
+  const mockTranslator = mock<Translator>({ messages: mockMessages });
+
+  const repo = new JSXSendFlowRepository(mockSnapClient, mockTranslator);
 
   describe('getState', () => {
     it('returns send form state if found', async () => {
@@ -82,15 +84,16 @@ describe('JSXSendFlowRepository', () => {
 
   describe('insertForm', () => {
     it('creates interface with correct context', async () => {
+      const mockContext = mock<SendFormContext>({ locale: 'en' });
       mockSnapClient.createInterface.mockResolvedValue('interface-id');
-      const mockContext = mock<SendFormContext>({});
 
       const result = await repo.insertForm(mockContext);
 
       expect(mockSnapClient.createInterface).toHaveBeenCalledWith(
-        <SendFormView {...mockContext} />,
+        <SendFormView context={mockContext} messages={mockMessages} />,
         mockContext,
       );
+      expect(mockTranslator.load).toHaveBeenCalledWith('en');
       expect(result).toBe('interface-id');
     });
   });
@@ -98,13 +101,17 @@ describe('JSXSendFlowRepository', () => {
   describe('updateForm', () => {
     it('updates interface with context', async () => {
       const id = 'interface-id';
-      const mockContext = mock<SendFormContext>({});
+      const mockContext = mock<SendFormContext>({ locale: 'de' });
+      mockSnapClient.getPreferences.mockResolvedValue({
+        locale: 'en',
+      } as GetPreferencesResult);
 
       await repo.updateForm(id, mockContext);
 
+      expect(mockTranslator.load).toHaveBeenCalledWith('de');
       expect(mockSnapClient.updateInterface).toHaveBeenCalledWith(
         id,
-        <SendFormView {...mockContext} />,
+        <SendFormView context={mockContext} messages={mockMessages} />,
         mockContext,
       );
     });
@@ -113,13 +120,17 @@ describe('JSXSendFlowRepository', () => {
   describe('updateReview', () => {
     it('updates interface with context', async () => {
       const id = 'interface-id';
-      const mockContext = mock<ReviewTransactionContext>({});
+      const mockContext = mock<ReviewTransactionContext>({ locale: 'fr' });
+      mockSnapClient.getPreferences.mockResolvedValue({
+        locale: 'en',
+      } as GetPreferencesResult);
 
       await repo.updateReview(id, mockContext);
 
+      expect(mockTranslator.load).toHaveBeenCalledWith('fr');
       expect(mockSnapClient.updateInterface).toHaveBeenCalledWith(
         id,
-        <ReviewTransactionView {...mockContext} />,
+        <ReviewTransactionView context={mockContext} messages={{}} />,
         mockContext,
       );
     });
