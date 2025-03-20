@@ -7,6 +7,7 @@ const logLevelPriority = {
   [LogLevel.INFO]: 2,
   [LogLevel.DEBUG]: 3,
   [LogLevel.TRACE]: 4,
+  [LogLevel.SILENT]: 5,
 };
 
 export class ConsoleLoggerAdapter implements Logger {
