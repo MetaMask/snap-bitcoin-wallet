@@ -2,10 +2,10 @@
 
 import type { AddressType } from 'bitcoindevkit';
 
-import type { SnapConfig } from './entities';
+import { LogLevel, type SnapConfig } from './entities';
 
 export const Config: SnapConfig = {
-  logLevel: process.env.LOG_LEVEL ?? '3',
+  logLevel: (process.env.LOG_LEVEL ?? LogLevel.INFO) as LogLevel,
   encrypt: false,
   accounts: {
     index: 0,
