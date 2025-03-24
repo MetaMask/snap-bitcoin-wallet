@@ -25,7 +25,6 @@ export type SendFormContext = {
     amount?: string;
   };
   backgroundEventId?: string;
-  locale: string;
 };
 
 export enum SendFormEvent {
@@ -54,7 +53,6 @@ export type ReviewTransactionContext = {
   fee: string;
   backgroundEventId?: string;
   drain?: boolean;
-  locale: string;
 
   /**
    * Used to repopulate the send form if the user decides to go back in the flow

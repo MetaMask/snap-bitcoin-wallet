@@ -9,9 +9,9 @@ import {
 import type { Network } from 'bitcoindevkit';
 
 import { Config } from '../../../config';
-import type { Messages } from '../../../entities';
 import { BlockTime, type CurrencyUnit } from '../../../entities';
-import { displayAmount, displayExchangeAmount, translate } from '../format';
+import { getTranslator } from '../../../entities/locale';
+import { displayAmount, displayExchangeAmount } from '../format';
 
 type TransactionSummaryProps = {
   currency: CurrencyUnit;
@@ -19,7 +19,6 @@ type TransactionSummaryProps = {
   amount: string;
   fee: string;
   network: Network;
-  messages: Messages;
 };
 
 export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
@@ -28,9 +27,8 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
   currency,
   exchangeRate,
   network,
-  messages,
 }) => {
-  const t = translate(messages);
+  const t = getTranslator();
 
   const total = BigInt(amount) + BigInt(fee);
 

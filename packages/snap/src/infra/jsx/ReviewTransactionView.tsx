@@ -15,22 +15,18 @@ import {
 import type { CaipAccountId } from '@metamask/utils';
 
 import { Config } from '../../config';
-import type { Messages, ReviewTransactionContext } from '../../entities';
+import type { ReviewTransactionContext } from '../../entities';
 import { BlockTime, ReviewTransactionEvent } from '../../entities';
+import { getTranslator } from '../../entities/locale';
 import { networkToCaip2 } from '../../handlers';
 import { HeadingWithReturn } from './components';
-import { displayAmount, displayExchangeAmount, translate } from './format';
+import { displayAmount, displayExchangeAmount } from './format';
 import btcIcon from './images/btc-halo.svg';
 
-type ReviewTransactionViewProps = {
-  context: ReviewTransactionContext;
-  messages: Messages;
-};
-
-export const ReviewTransactionView: SnapComponent<
-  ReviewTransactionViewProps
-> = ({ context, messages }) => {
-  const t = translate(messages);
+export const ReviewTransactionView: SnapComponent<ReviewTransactionContext> = (
+  props,
+) => {
+  const t = getTranslator();
   const {
     amount,
     fee,
@@ -40,7 +36,7 @@ export const ReviewTransactionView: SnapComponent<
     recipient,
     network,
     from,
-  } = context;
+  } = props;
 
   const total = BigInt(amount) + BigInt(fee);
 

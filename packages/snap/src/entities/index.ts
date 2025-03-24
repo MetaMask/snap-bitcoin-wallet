@@ -7,6 +7,6 @@ export * from './transaction';
 export * from './snap';
 export * from './meta-protocols';
 export * from './error';
-export * from './translator';
+export * from './locale';
 export * from './rates';
 export * from './logger';

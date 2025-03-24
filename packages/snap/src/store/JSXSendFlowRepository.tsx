@@ -4,7 +4,6 @@ import type {
   SendFormState,
   SnapClient,
   ReviewTransactionContext,
-  Translator,
 } from '../entities';
 import { SENDFORM_NAME } from '../entities';
 import { ReviewTransactionView, SendFormView } from '../infra/jsx';
@@ -12,11 +11,8 @@ import { ReviewTransactionView, SendFormView } from '../infra/jsx';
 export class JSXSendFlowRepository implements SendFlowRepository {
   readonly #snapClient: SnapClient;
 
-  readonly #translator: Translator;
-
-  constructor(snapClient: SnapClient, translator: Translator) {
+  constructor(snapClient: SnapClient) {
     this.#snapClient = snapClient;
-    this.#translator = translator;
   }
 
   async getState(id: string): Promise<SendFormState | null> {
@@ -35,18 +31,16 @@ export class JSXSendFlowRepository implements SendFlowRepository {
   }
 
   async insertForm(context: SendFormContext): Promise<string> {
-    await this.#translator.load(context.locale);
     return this.#snapClient.createInterface(
-      <SendFormView context={context} messages={this.#translator.messages} />,
+      <SendFormView {...context} />,
       context,
     );
   }
 
   async updateForm(id: string, context: SendFormContext): Promise<void> {
-    await this.#translator.load(context.locale);
     return this.#snapClient.updateInterface(
       id,
-      <SendFormView context={context} messages={this.#translator.messages} />,
+      <SendFormView {...context} />,
       context,
     );
   }
@@ -55,13 +49,9 @@ export class JSXSendFlowRepository implements SendFlowRepository {
     id: string,
     context: ReviewTransactionContext,
   ): Promise<void> {
-    await this.#translator.load(context.locale);
     return this.#snapClient.updateInterface(
       id,
-      <ReviewTransactionView
-        context={context}
-        messages={this.#translator.messages}
-      />,
+      <ReviewTransactionView {...context} />,
       context,
     );
   }
