@@ -2759,7 +2759,7 @@ __metadata:
     "@types/qs": "npm:^6.9.18"
     "@typescript-eslint/eslint-plugin": "npm:^5.42.1"
     "@typescript-eslint/parser": "npm:^5.42.1"
-    bitcoindevkit: "npm:^0.1.5"
+    bitcoindevkit: "file:../../../bdk-wasm/pkg"
     concurrently: "npm:^9.1.0"
     dotenv: "npm:^16.4.5"
     eslint: "npm:^8.45.0"
@@ -6940,10 +6940,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"bitcoindevkit@npm:^0.1.5":
+"bitcoindevkit@file:../../../bdk-wasm/pkg::locator=%40metamask%2Fbitcoin-wallet-snap%40workspace%3Apackages%2Fsnap":
   version: 0.1.5
-  resolution: "bitcoindevkit@npm:0.1.5"
-  checksum: 10/dc792ed368112af6ea04b86b5c9ecb4100e1df7f3632e00ea5fc22e512288730ca38fdebc848b71089cb3664a7410a0c6554bf6b2eb79d1956ce6cb972ea76f9
+  resolution: "bitcoindevkit@file:../../../bdk-wasm/pkg#../../../bdk-wasm/pkg::hash=233d4f&locator=%40metamask%2Fbitcoin-wallet-snap%40workspace%3Apackages%2Fsnap"
+  checksum: 10/0e19b17317bf7e2d0290d353eb020201483299d9dc044efde3e54b80ae515ea063de0cd73e77f11f5ccdc5b2beb8d8c2758436a56a21e4d94b06403541dc0cba
   languageName: node
   linkType: hard
 

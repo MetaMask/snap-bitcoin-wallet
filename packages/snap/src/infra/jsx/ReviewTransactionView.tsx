@@ -18,9 +18,8 @@ import { Config } from '../../config';
 import type { Messages, ReviewTransactionContext } from '../../entities';
 import { BlockTime, ReviewTransactionEvent } from '../../entities';
 import { networkToCaip2 } from '../../handlers';
-import { HeadingWithReturn } from './components';
+import { HeadingWithReturn, AssetIcon } from './components';
 import { displayAmount, displayExchangeAmount, translate } from './format';
-import btcIcon from './images/btc-halo.svg';
 
 type ReviewTransactionViewProps = {
   context: ReviewTransactionContext;
@@ -53,9 +52,7 @@ export const ReviewTransactionView: SnapComponent<
         />
 
         <Box alignment="center" center>
-          <Box direction="horizontal" center>
-            <Image src={btcIcon} />
-          </Box>
+          <AssetIcon network={network} />
           <Heading size="lg">{`${t('sending')} ${displayAmount(
             BigInt(amount),
             currency,

@@ -4,27 +4,15 @@ import {
   Field,
   Form,
   Icon,
-  Image,
   Input,
   Text,
   type SnapComponent,
 } from '@metamask/snaps-sdk/jsx';
-import type { Network } from 'bitcoindevkit';
 
 import { SENDFORM_NAME, SendFormEvent } from '../../../entities';
 import { displayAmount, translate } from '../format';
-import btcIcon from '../images/bitcoin.svg';
-import signetIcon from '../images/signet.svg';
-import testnetIcon from '../images/testnet.svg';
 import type { SendFormViewProps } from '../SendFormView';
-
-const networkToIcon: Record<Network, string> = {
-  bitcoin: btcIcon,
-  testnet: testnetIcon,
-  testnet4: testnetIcon,
-  signet: signetIcon,
-  regtest: signetIcon,
-};
+import { AssetIcon } from './AssetIcon';
 
 export const SendForm: SnapComponent<SendFormViewProps> = ({
   context,
@@ -38,9 +26,7 @@ export const SendForm: SnapComponent<SendFormViewProps> = ({
   return (
     <Form name={SENDFORM_NAME}>
       <Field label={t('sendAmount')} error={errors.amount}>
-        <Box direction="horizontal" center>
-          <Image src={networkToIcon[network]} />
-        </Box>
+        <AssetIcon network={network} />
         <Input
           name={SendFormEvent.Amount}
           type="number"
