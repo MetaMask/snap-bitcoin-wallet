@@ -1,22 +1,20 @@
 import { mock } from 'jest-mock-extended';
 
+import type { Logger } from '../entities';
 import { SendFormEvent, type BitcoinAccount } from '../entities';
-import type { ILogger } from '../infra/logger';
 import type { SendFlowUseCases, AccountUseCases } from '../use-cases';
 import { CronHandler } from './CronHandler';
 
-jest.mock('../infra/logger', () => {
-  return { logger: mock<ILogger>() };
-});
-
 describe('CronHandler', () => {
+  const mockLogger = mock<Logger>();
   const mockSendFlowUseCases = mock<SendFlowUseCases>();
   const mockAccountUseCases = mock<AccountUseCases>();
-  let handler: CronHandler;
 
-  beforeEach(() => {
-    handler = new CronHandler(mockAccountUseCases, mockSendFlowUseCases);
-  });
+  const handler = new CronHandler(
+    mockLogger,
+    mockAccountUseCases,
+    mockSendFlowUseCases,
+  );
 
   describe('synchronizeAccounts', () => {
     const mockAccounts = [mock<BitcoinAccount>(), mock<BitcoinAccount>()];

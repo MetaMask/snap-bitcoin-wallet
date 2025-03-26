@@ -27,14 +27,14 @@ import {
   EsploraClientAdapter,
   SimpleHashClientAdapter,
   PriceApiClientAdapter,
+  ConsoleLoggerAdapter,
 } from './infra';
-import { logger } from './infra/logger';
 import { originPermissions } from './permissions';
 import { BdkAccountRepository, JSXSendFlowRepository } from './store';
 import { AccountUseCases, AssetsUseCases, SendFlowUseCases } from './use-cases';
 
 // Infra layer
-logger.logLevel = parseInt(Config.logLevel, 10);
+const logger = new ConsoleLoggerAdapter(Config.logLevel);
 const snapClient = new SnapClientAdapter(Config.encrypt);
 const chainClient = new EsploraClientAdapter(Config.chain);
 const metaProtocolsClient = new SimpleHashClientAdapter(Config.simpleHash);
@@ -46,6 +46,7 @@ const sendFlowRepository = new JSXSendFlowRepository(snapClient);
 
 // Business layer
 const accountsUseCases = new AccountUseCases(
+  logger,
   snapClient,
   accountRepository,
   chainClient,
@@ -53,6 +54,7 @@ const accountsUseCases = new AccountUseCases(
   Config.accounts,
 );
 const sendFlowUseCases = new SendFlowUseCases(
+  logger,
   snapClient,
   accountRepository,
   sendFlowRepository,
@@ -62,11 +64,11 @@ const sendFlowUseCases = new SendFlowUseCases(
   Config.fallbackFeeRate,
   Config.ratesRefreshInterval,
 );
-const assetsUseCases = new AssetsUseCases(assetRatesClient);
+const assetsUseCases = new AssetsUseCases(logger, assetRatesClient);
 
 // Application layer
 const keyringHandler = new KeyringHandler(accountsUseCases);
-const cronHandler = new CronHandler(accountsUseCases, sendFlowUseCases);
+const cronHandler = new CronHandler(logger, accountsUseCases, sendFlowUseCases);
 const rpcHandler = new RpcHandler(sendFlowUseCases, accountsUseCases);
 const userInputHandler = new UserInputHandler(sendFlowUseCases);
 const assetsHandler = new AssetsHandler(

@@ -1,8 +1,8 @@
 import type { JsonRpcParams } from '@metamask/utils';
 import { assert, object, string } from 'superstruct';
 
+import type { Logger } from '../entities';
 import { SendFormEvent } from '../entities';
-import { logger } from '../infra/logger';
 import type { SendFlowUseCases, AccountUseCases } from '../use-cases';
 
 export const SendFormRefreshRatesRequest = object({
@@ -10,11 +10,18 @@ export const SendFormRefreshRatesRequest = object({
 });
 
 export class CronHandler {
+  readonly #logger: Logger;
+
   readonly #accountsUseCases: AccountUseCases;
 
   readonly #sendFlowUseCases: SendFlowUseCases;
 
-  constructor(accounts: AccountUseCases, sendFlow: SendFlowUseCases) {
+  constructor(
+    logger: Logger,
+    accounts: AccountUseCases,
+    sendFlow: SendFlowUseCases,
+  ) {
+    this.#logger = logger;
     this.#accountsUseCases = accounts;
     this.#sendFlowUseCases = sendFlow;
   }
@@ -46,7 +53,7 @@ export class CronHandler {
 
     results.forEach((result, index) => {
       if (result.status === 'rejected') {
-        logger.error(
+        this.#logger.error(
           `Account failed to sync. ID: %s. Error: %s`,
           accounts[index].id,
           result.reason,

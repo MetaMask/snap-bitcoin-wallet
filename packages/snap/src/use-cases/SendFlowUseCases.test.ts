@@ -14,13 +14,13 @@ import type {
   TransactionRequest,
   ReviewTransactionContext,
   AssetRatesClient,
+  Logger,
 } from '../entities';
 import {
   ReviewTransactionEvent,
   CurrencyUnit,
   SendFormEvent,
 } from '../entities';
-import type { ILogger } from '../infra/logger';
 import { SendFlowUseCases } from './SendFlowUseCases';
 
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
@@ -36,13 +36,8 @@ jest.mock('bitcoindevkit', () => {
   };
 });
 
-jest.mock('../infra/logger', () => {
-  return { logger: mock<ILogger>() };
-});
-
 describe('SendFlowUseCases', () => {
-  let useCases: SendFlowUseCases;
-
+  const mockLogger = mock<Logger>();
   const mockSnapClient = mock<SnapClient>();
   const mockAccountRepository = mock<BitcoinAccountRepository>();
   const mockSendFlowRepository = mock<SendFlowRepository>();
@@ -63,18 +58,17 @@ describe('SendFlowUseCases', () => {
   });
   const mockTxRequest = mock<TransactionRequest>();
 
-  beforeEach(() => {
-    useCases = new SendFlowUseCases(
-      mockSnapClient,
-      mockAccountRepository,
-      mockSendFlowRepository,
-      mockChain,
-      mockRatesClient,
-      targetBlocksConfirmation,
-      fallbackFeeRate,
-      ratesRefreshInterval,
-    );
-  });
+  const useCases = new SendFlowUseCases(
+    mockLogger,
+    mockSnapClient,
+    mockAccountRepository,
+    mockSendFlowRepository,
+    mockChain,
+    mockRatesClient,
+    targetBlocksConfirmation,
+    fallbackFeeRate,
+    ratesRefreshInterval,
+  );
 
   describe('displayForm', () => {
     beforeEach(() => {

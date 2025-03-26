@@ -1,8 +1,11 @@
 import type { FeeEstimates, Network, Transaction } from 'bitcoindevkit';
 import { EsploraClient } from 'bitcoindevkit';
 
-import type { BitcoinAccount, ChainConfig } from '../entities';
-import type { BlockchainClient } from '../entities/chain';
+import type {
+  BitcoinAccount,
+  ChainConfig,
+  BlockchainClient,
+} from '../entities';
 
 export class EsploraClientAdapter implements BlockchainClient {
   // Should be a Repository but we don't support custom networks so we can save in memory from config values

@@ -11,15 +11,17 @@ import type {
   SendFormContext,
   ReviewTransactionContext,
   AssetRatesClient,
+  Logger,
 } from '../entities';
 import {
   SendFormEvent,
   ReviewTransactionEvent,
   networkToCurrencyUnit,
 } from '../entities';
-import { logger } from '../infra/logger';
 
 export class SendFlowUseCases {
+  readonly #logger: Logger;
+
   readonly #snapClient: SnapClient;
 
   readonly #accountRepository: BitcoinAccountRepository;
@@ -37,6 +39,7 @@ export class SendFlowUseCases {
   readonly #ratesRefreshInterval: string;
 
   constructor(
+    logger: Logger,
     snapClient: SnapClient,
     accountRepository: BitcoinAccountRepository,
     sendFlowRepository: SendFlowRepository,
@@ -46,6 +49,7 @@ export class SendFlowUseCases {
     fallbackFeeRate: number,
     ratesRefreshInterval: string,
   ) {
+    this.#logger = logger;
     this.#snapClient = snapClient;
     this.#accountRepository = accountRepository;
     this.#sendFlowRepository = sendFlowRepository;
@@ -57,7 +61,7 @@ export class SendFlowUseCases {
   }
 
   async display(accountId: string): Promise<TransactionRequest> {
-    logger.debug('Displaying Send form. Account: %s', accountId);
+    this.#logger.debug('Displaying Send form. Account: %s', accountId);
 
     const account = await this.#accountRepository.get(accountId);
     if (!account) {
@@ -90,12 +94,19 @@ export class SendFlowUseCases {
       throw new UserRejectedRequestError() as unknown as Error;
     }
 
-    logger.debug('Transaction request generated successfully: %o', request);
+    this.#logger.debug(
+      'Transaction request generated successfully: %o',
+      request,
+    );
     return request;
   }
 
   async onChangeForm(id: string, event: SendFormEvent): Promise<void> {
-    logger.debug('Event triggered on send form: %s. Event: %s', id, event);
+    this.#logger.debug(
+      'Event triggered on send form: %s. Event: %s',
+      id,
+      event,
+    );
 
     // TODO: Temporary fetch the context while this is fixed: https://github.com/MetaMask/snaps/issues/3069
     const context = await this.#sendFlowRepository.getContext(id);
@@ -168,7 +179,7 @@ export class SendFlowUseCases {
     event: ReviewTransactionEvent,
     context: ReviewTransactionContext,
   ): Promise<void> {
-    logger.debug(
+    this.#logger.debug(
       'Event triggered on transaction review: %s. Event: %s',
       id,
       event,
@@ -297,7 +308,7 @@ export class SendFlowUseCases {
       updatedContext = await this.#computeFee(updatedContext);
     } catch (error) {
       // We do not throw so we can reschedule. Previous fetched values or fallbacks will be used.
-      logger.error(
+      this.#logger.error(
         `Failed to fetch rates in send form: %s. Error: %s`,
         id,
         error,

@@ -8,7 +8,6 @@ import type {
   MetaProtocolsClient,
   SimpleHashConfig as SimplehHashConfig,
 } from '../entities';
-import { logger } from './logger';
 
 /* eslint-disable @typescript-eslint/naming-convention */
 type NFTResponse = {
@@ -74,7 +73,6 @@ export class SimpleHashClientAdapter implements MetaProtocolsClient {
     do {
       pages += 1;
       if (pages > MAX_PAGES) {
-        logger.warn(`Maximum page limit reached (${MAX_PAGES}).`);
         break;
       }
 

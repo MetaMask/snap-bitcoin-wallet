@@ -1,7 +1,9 @@
 import type { AddressType, Network } from 'bitcoindevkit';
 
+import type { LogLevel } from './logger';
+
 export type SnapConfig = {
-  logLevel: string;
+  logLevel: LogLevel;
   encrypt: boolean;
   accounts: AccountsConfig;
   chain: ChainConfig;
