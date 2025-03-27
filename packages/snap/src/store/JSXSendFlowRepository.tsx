@@ -35,18 +35,18 @@ export class JSXSendFlowRepository implements SendFlowRepository {
   }
 
   async insertForm(context: SendFormContext): Promise<string> {
-    await this.#translator.load(context.locale);
+    const messages = await this.#translator.load(context.locale);
     return this.#snapClient.createInterface(
-      <SendFormView context={context} messages={this.#translator.messages} />,
+      <SendFormView context={context} messages={messages} />,
       context,
     );
   }
 
   async updateForm(id: string, context: SendFormContext): Promise<void> {
-    await this.#translator.load(context.locale);
+    const messages = await this.#translator.load(context.locale);
     return this.#snapClient.updateInterface(
       id,
-      <SendFormView context={context} messages={this.#translator.messages} />,
+      <SendFormView context={context} messages={messages} />,
       context,
     );
   }
@@ -55,13 +55,10 @@ export class JSXSendFlowRepository implements SendFlowRepository {
     id: string,
     context: ReviewTransactionContext,
   ): Promise<void> {
-    await this.#translator.load(context.locale);
+    const messages = await this.#translator.load(context.locale);
     return this.#snapClient.updateInterface(
       id,
-      <ReviewTransactionView
-        context={context}
-        messages={this.#translator.messages}
-      />,
+      <ReviewTransactionView context={context} messages={messages} />,
       context,
     );
   }

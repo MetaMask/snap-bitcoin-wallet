@@ -20,7 +20,7 @@ describe('JSXSendFlowRepository', () => {
   const mockMessages = { foo: { message: 'bar' } };
 
   const mockSnapClient = mock<SnapClient>();
-  const mockTranslator = mock<Translator>({ messages: mockMessages });
+  const mockTranslator = mock<Translator>();
 
   const repo = new JSXSendFlowRepository(mockSnapClient, mockTranslator);
 
@@ -86,6 +86,7 @@ describe('JSXSendFlowRepository', () => {
     it('creates interface with correct context', async () => {
       const mockContext = mock<SendFormContext>({ locale: 'en' });
       mockSnapClient.createInterface.mockResolvedValue('interface-id');
+      mockTranslator.load.mockResolvedValue(mockMessages);
 
       const result = await repo.insertForm(mockContext);
 
@@ -105,6 +106,7 @@ describe('JSXSendFlowRepository', () => {
       mockSnapClient.getPreferences.mockResolvedValue({
         locale: 'en',
       } as GetPreferencesResult);
+      mockTranslator.load.mockResolvedValue(mockMessages);
 
       await repo.updateForm(id, mockContext);
 
@@ -124,6 +126,7 @@ describe('JSXSendFlowRepository', () => {
       mockSnapClient.getPreferences.mockResolvedValue({
         locale: 'en',
       } as GetPreferencesResult);
+      mockTranslator.load.mockResolvedValue(mockMessages);
 
       await repo.updateReview(id, mockContext);
 

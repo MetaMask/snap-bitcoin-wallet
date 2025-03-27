@@ -1,26 +1,27 @@
 import type { Messages, Translator } from '../entities';
 
 export class LocalTranslatorAdapter implements Translator {
-  messages: Messages;
+  #messages: Messages;
 
   #locale: string;
 
   constructor() {
     this.#locale = '';
-    this.messages = {};
+    this.#messages = {};
   }
 
-  async load(locale: string): Promise<void> {
+  async load(locale: string): Promise<Messages> {
     if (this.#locale === locale) {
-      return;
+      return this.#messages;
     }
 
     try {
-      this.messages = (await import(`../../locales/${locale}.json`)).messages;
+      this.#messages = (await import(`../../locales/${locale}.json`)).messages;
     } catch (error) {
-      this.messages = (await import(`../../locales/en.json`)).messages;
+      this.#messages = (await import(`../../locales/en.json`)).messages;
     }
 
     this.#locale = locale;
+    return this.#messages;
   }
 }
