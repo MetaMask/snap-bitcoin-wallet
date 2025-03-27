@@ -9,7 +9,6 @@ import {
   Section,
   Text,
   Value,
-  Image,
   Address,
 } from '@metamask/snaps-sdk/jsx';
 import type { CaipAccountId } from '@metamask/utils';
@@ -19,9 +18,8 @@ import type { ReviewTransactionContext } from '../../entities';
 import { BlockTime, ReviewTransactionEvent } from '../../entities';
 import { getTranslator } from '../../entities/locale';
 import { networkToCaip2 } from '../../handlers';
-import { HeadingWithReturn } from './components';
+import { AssetIcon, HeadingWithReturn } from './components';
 import { displayAmount, displayExchangeAmount } from './format';
-import btcIcon from './images/btc-halo.svg';
 
 export const ReviewTransactionView: SnapComponent<ReviewTransactionContext> = (
   props,
@@ -49,9 +47,7 @@ export const ReviewTransactionView: SnapComponent<ReviewTransactionContext> = (
         />
 
         <Box alignment="center" center>
-          <Box direction="horizontal" center>
-            <Image src={btcIcon} />
-          </Box>
+          <AssetIcon network={network} />
           <Heading size="lg">{`${t('sending')} ${displayAmount(
             BigInt(amount),
             currency,

@@ -1,4 +1,8 @@
-import type { FeeEstimates, Network, Transaction } from 'bitcoindevkit';
+import type {
+  FeeEstimates,
+  Network,
+  Transaction,
+} from '@metamask/bitcoindevkit';
 
 import type { BitcoinAccount } from './account';
 

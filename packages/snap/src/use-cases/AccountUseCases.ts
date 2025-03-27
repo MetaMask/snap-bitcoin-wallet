@@ -1,4 +1,9 @@
-import type { AddressType, Network, Txid, WalletTx } from 'bitcoindevkit';
+import type {
+  AddressType,
+  Network,
+  Txid,
+  WalletTx,
+} from '@metamask/bitcoindevkit';
 
 import type {
   AccountsConfig,

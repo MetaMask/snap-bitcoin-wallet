@@ -1,13 +1,13 @@
-import type { Transaction as KeyringTransaction } from '@metamask/keyring-api';
-import { BtcMethod, BtcScope } from '@metamask/keyring-api';
 import type {
   AddressInfo,
   Amount,
   Transaction,
   Txid,
   TxOut,
-} from 'bitcoindevkit';
-import { Address, type Network, type WalletTx } from 'bitcoindevkit';
+} from '@metamask/bitcoindevkit';
+import { Address, type Network, type WalletTx } from '@metamask/bitcoindevkit';
+import type { Transaction as KeyringTransaction } from '@metamask/keyring-api';
+import { BtcMethod, BtcScope } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
@@ -28,7 +28,7 @@ jest.mock('superstruct', () => ({
 
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
 /* eslint-disable @typescript-eslint/naming-convention */
-jest.mock('bitcoindevkit', () => {
+jest.mock('@metamask/bitcoindevkit', () => {
   return {
     Address: {
       from_script: jest.fn(),

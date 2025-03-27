@@ -1,4 +1,4 @@
-import type { Txid } from 'bitcoindevkit';
+import type { Txid } from '@metamask/bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 

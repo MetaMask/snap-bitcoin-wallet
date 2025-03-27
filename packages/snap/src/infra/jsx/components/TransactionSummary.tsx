@@ -1,3 +1,4 @@
+import type { Network } from '@metamask/bitcoindevkit';
 import type { CurrencyRate } from '@metamask/snaps-sdk';
 import {
   Row,
@@ -6,7 +7,6 @@ import {
   Value,
   type SnapComponent,
 } from '@metamask/snaps-sdk/jsx';
-import type { Network } from 'bitcoindevkit';
 
 import { Config } from '../../../config';
 import { BlockTime, type CurrencyUnit } from '../../../entities';

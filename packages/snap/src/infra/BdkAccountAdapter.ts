@@ -15,8 +15,8 @@ import type {
   Amount,
   ScriptBuf,
   KeychainKind,
-} from 'bitcoindevkit';
-import { Txid, Wallet } from 'bitcoindevkit';
+} from '@metamask/bitcoindevkit';
+import { Txid, Wallet } from '@metamask/bitcoindevkit';
 
 import type { BitcoinAccount, TransactionBuilder } from '../entities';
 import { BdkTxBuilderAdapter } from './BdkTxBuilderAdapter';
