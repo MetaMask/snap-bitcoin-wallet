@@ -1,6 +1,6 @@
+import { Address, Amount } from '@metamask/bitcoindevkit';
 import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 import { UserRejectedRequestError } from '@metamask/snaps-sdk';
-import { Address, Amount } from 'bitcoindevkit';
 
 import type {
   BitcoinAccountRepository,

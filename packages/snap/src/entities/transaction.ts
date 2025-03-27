@@ -1,4 +1,4 @@
-import type { Psbt } from 'bitcoindevkit';
+import type { Psbt } from '@metamask/bitcoindevkit';
 
 export type TransactionRequest = {
   recipient: string;

@@ -1,5 +1,5 @@
+import type { Network } from '@metamask/bitcoindevkit';
 import type { CurrencyRate } from '@metamask/snaps-sdk';
-import type { Network } from 'bitcoindevkit';
 
 import type { CurrencyUnit } from './currency';
 

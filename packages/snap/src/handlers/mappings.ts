@@ -1,9 +1,4 @@
-import type {
-  KeyringAccount,
-  Transaction as KeyringTransaction,
-} from '@metamask/keyring-api';
-import { TransactionStatus, BtcMethod } from '@metamask/keyring-api';
-import { Address } from 'bitcoindevkit';
+import { Address } from '@metamask/bitcoindevkit';
 import type {
   AddressType,
   Amount,
@@ -11,7 +6,12 @@ import type {
   TxOut,
   ChainPosition,
   WalletTx,
-} from 'bitcoindevkit';
+} from '@metamask/bitcoindevkit';
+import type {
+  KeyringAccount,
+  Transaction as KeyringTransaction,
+} from '@metamask/keyring-api';
+import { TransactionStatus, BtcMethod } from '@metamask/keyring-api';
 
 import { networkToCurrencyUnit, type BitcoinAccount } from '../entities';
 import type { Caip19Asset } from './caip';

@@ -1,13 +1,13 @@
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
 /* eslint-disable camelcase */
 
-import type { AddressType, Network } from 'bitcoindevkit';
+import type { AddressType, Network } from '@metamask/bitcoindevkit';
 import {
   ChangeSet,
   slip10_to_extended,
   xpriv_to_descriptor,
   xpub_to_descriptor,
-} from 'bitcoindevkit';
+} from '@metamask/bitcoindevkit';
 import { v4 } from 'uuid';
 
 import type {

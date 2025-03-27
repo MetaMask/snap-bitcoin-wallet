@@ -111,7 +111,7 @@ describe('Send flow', () => {
         {
           account: account.id,
           chain: BtcScope.Regtest,
-          events: [{ status: 'unconfirmed', timestamp: 1741784431 }],
+          events: [{ status: 'unconfirmed', timestamp: expect.any(Number) }],
           fees: [
             {
               asset: {

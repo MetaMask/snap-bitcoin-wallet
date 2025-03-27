@@ -5,7 +5,7 @@ import type {
   AddressType,
   Network,
   Psbt,
-} from 'bitcoindevkit';
+} from '@metamask/bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 
 import type {

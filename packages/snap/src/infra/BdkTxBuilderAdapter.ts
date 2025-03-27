@@ -1,5 +1,11 @@
-import type { Network, Psbt, TxBuilder } from 'bitcoindevkit';
-import { OutPoint, Address, Amount, FeeRate, Recipient } from 'bitcoindevkit';
+import type { Network, Psbt, TxBuilder } from '@metamask/bitcoindevkit';
+import {
+  OutPoint,
+  Address,
+  Amount,
+  FeeRate,
+  Recipient,
+} from '@metamask/bitcoindevkit';
 
 import type { TransactionBuilder } from '../entities';
 

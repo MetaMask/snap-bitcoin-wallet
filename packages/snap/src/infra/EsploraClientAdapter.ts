@@ -1,5 +1,9 @@
-import type { FeeEstimates, Network, Transaction } from 'bitcoindevkit';
-import { EsploraClient } from 'bitcoindevkit';
+import type {
+  FeeEstimates,
+  Network,
+  Transaction,
+} from '@metamask/bitcoindevkit';
+import { EsploraClient } from '@metamask/bitcoindevkit';
 
 import type {
   BitcoinAccount,
