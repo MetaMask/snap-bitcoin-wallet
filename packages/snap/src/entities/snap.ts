@@ -1,10 +1,10 @@
+import type { WalletTx } from '@metamask/bitcoindevkit';
 import type { JsonSLIP10Node, SLIP10Node } from '@metamask/key-tree';
 import type {
   ComponentOrElement,
   GetPreferencesResult,
 } from '@metamask/snaps-sdk';
 import type { Json } from '@metamask/utils';
-import type { WalletTx } from 'bitcoindevkit';
 
 import type { BitcoinAccount } from './account';
 import type { Inscription } from './meta-protocols';

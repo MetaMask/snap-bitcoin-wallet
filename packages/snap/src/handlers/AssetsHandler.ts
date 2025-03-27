@@ -1,3 +1,4 @@
+import type { Network } from '@metamask/bitcoindevkit';
 import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 import type {
   CaipAssetType,
@@ -6,7 +7,6 @@ import type {
   OnAssetsConversionResponse,
   OnAssetsLookupResponse,
 } from '@metamask/snaps-sdk';
-import type { Network } from 'bitcoindevkit';
 
 import type { AssetsUseCases } from '../use-cases';
 import { Caip19Asset } from './caip';

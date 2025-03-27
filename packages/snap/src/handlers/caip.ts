@@ -1,5 +1,5 @@
+import type { AddressType, Network } from '@metamask/bitcoindevkit';
 import { BtcScope } from '@metamask/keyring-api';
-import type { AddressType, Network } from 'bitcoindevkit';
 
 const reverseMapping = <
   From extends string | number | symbol,

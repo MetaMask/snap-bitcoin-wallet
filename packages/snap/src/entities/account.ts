@@ -14,7 +14,7 @@ import type {
   Amount,
   ScriptBuf,
   KeychainKind,
-} from 'bitcoindevkit';
+} from '@metamask/bitcoindevkit';
 
 import type { Inscription } from './meta-protocols';
 import type { TransactionBuilder } from './transaction';

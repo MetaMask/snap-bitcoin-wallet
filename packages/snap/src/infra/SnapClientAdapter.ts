@@ -1,3 +1,4 @@
+import type { WalletTx } from '@metamask/bitcoindevkit';
 import type { JsonSLIP10Node } from '@metamask/key-tree';
 import { SLIP10Node } from '@metamask/key-tree';
 import { KeyringEvent } from '@metamask/keyring-api';
@@ -11,7 +12,6 @@ import {
   type GetPreferencesResult,
   type Json,
 } from '@metamask/snaps-sdk';
-import type { WalletTx } from 'bitcoindevkit';
 
 import type { BitcoinAccount, SnapClient, SnapState } from '../entities';
 import { networkToCurrencyUnit } from '../entities';

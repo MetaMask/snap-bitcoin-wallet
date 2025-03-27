@@ -1,6 +1,6 @@
+import type { Network } from '@metamask/bitcoindevkit';
 import type { SnapComponent } from '@metamask/snaps-sdk/jsx';
 import { Box, Image } from '@metamask/snaps-sdk/jsx';
-import type { Network } from 'bitcoindevkit';
 
 import btcIcon from '../images/bitcoin.svg';
 import signetIcon from '../images/signet.svg';

@@ -1,7 +1,12 @@
+import type {
+  Psbt,
+  FeeEstimates,
+  Network,
+  AddressInfo,
+} from '@metamask/bitcoindevkit';
+import { Address, Amount } from '@metamask/bitcoindevkit';
 import type { GetPreferencesResult } from '@metamask/snaps-sdk';
 import { UserRejectedRequestError } from '@metamask/snaps-sdk';
-import type { Psbt, FeeEstimates, Network, AddressInfo } from 'bitcoindevkit';
-import { Address, Amount } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 
 import type {

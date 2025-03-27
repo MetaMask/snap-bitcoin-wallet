@@ -1,5 +1,5 @@
+import type { Network } from '@metamask/bitcoindevkit';
 import type { Json } from '@metamask/utils';
-import type { Network } from 'bitcoindevkit';
 import qs from 'qs';
 
 import type {

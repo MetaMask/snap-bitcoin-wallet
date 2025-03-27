@@ -1,5 +1,5 @@
+import { ChangeSet } from '@metamask/bitcoindevkit';
 import type { SLIP10Node } from '@metamask/key-tree';
-import { ChangeSet } from 'bitcoindevkit';
 import { mock } from 'jest-mock-extended';
 
 import type {
