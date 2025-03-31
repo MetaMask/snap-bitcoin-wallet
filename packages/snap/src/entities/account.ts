@@ -13,7 +13,6 @@ import type {
   WalletTx,
   Amount,
   ScriptBuf,
-  KeychainKind,
 } from '@metamask/bitcoindevkit';
 
 import type { Inscription } from './meta-protocols';
