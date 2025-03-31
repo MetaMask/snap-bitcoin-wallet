@@ -362,7 +362,7 @@ describe('KeyringHandler', () => {
 
     it('discards own outputs from send transactions', async () => {
       const id = 'some-id';
-      mockAccount.derivationOfSpk.mockReturnValueOnce(['external', 0]);
+      mockAccount.isMine.mockReturnValueOnce(true);
 
       const result = await handler.listAccountTransactions(id, pagination);
 

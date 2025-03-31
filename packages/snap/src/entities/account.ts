@@ -148,13 +148,6 @@ export type BitcoinAccount = {
    * @returns the sent and received amounts.
    */
   sentAndReceived(tx: Transaction): [Amount, Amount];
-
-  /**
-   * Finds how the wallet derived the script pubkey `spk`.
-   * @param spk - The Bitcoin script.
-   * @returns the keychain used and derivation index, if the script is found.
-   */
-  derivationOfSpk(spk: ScriptBuf): [KeychainKind, number] | undefined;
 };
 
 /**

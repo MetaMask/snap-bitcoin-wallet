@@ -154,9 +154,7 @@ export function mapToTransaction(
   // - from: empty as irrevelant because we might have hundreds of inputs in a tx. Point to explorer for details.
   if (isSend) {
     for (const txout of tx.output) {
-      const spkIndex = account.derivationOfSpk(txout.script_pubkey);
-      const isRedeposit = spkIndex && spkIndex[0] === 'external';
-      if (!spkIndex || !isRedeposit) {
+      if (!account.isMine(txout.script_pubkey)) {
         transaction.to.push(mapToAssetMovement(txout, network));
       }
     }
@@ -167,8 +165,6 @@ export function mapToTransaction(
       }
     }
   }
-
-  console.log('transaction', transaction);
 
   return transaction;
 }
