@@ -155,8 +155,8 @@ export function mapToTransaction(
   if (isSend) {
     for (const txout of tx.output) {
       const spkIndex = account.derivationOfSpk(txout.script_pubkey);
-      const isConsolidation = spkIndex && spkIndex[0] === 'external';
-      if (!spkIndex || isConsolidation) {
+      const isRedeposit = spkIndex && spkIndex[0] === 'external';
+      if (!spkIndex || !isRedeposit) {
         transaction.to.push(mapToAssetMovement(txout, network));
       }
     }
@@ -167,6 +167,8 @@ export function mapToTransaction(
       }
     }
   }
+
+  console.log('transaction', transaction);
 
   return transaction;
 }

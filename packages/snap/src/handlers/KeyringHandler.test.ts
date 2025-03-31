@@ -360,6 +360,16 @@ describe('KeyringHandler', () => {
       expect(result.data).toStrictEqual([expectedResult]);
     });
 
+    it('discards own outputs from send transactions', async () => {
+      const id = 'some-id';
+      mockAccount.derivationOfSpk.mockReturnValueOnce(['external', 0]);
+
+      const result = await handler.listAccountTransactions(id, pagination);
+
+      expect(mockAccounts.get).toHaveBeenCalledWith(id);
+      expect(result.data).toStrictEqual([{ ...expectedResult, to: [] }]);
+    });
+
     it('lists transactions successfully: receive', async () => {
       const id = 'some-id';
 
