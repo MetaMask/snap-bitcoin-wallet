@@ -14,7 +14,6 @@ import type {
   WalletTx,
   Amount,
   ScriptBuf,
-  KeychainKind,
 } from '@metamask/bitcoindevkit';
 import { Txid, Wallet } from '@metamask/bitcoindevkit';
 
@@ -149,13 +148,5 @@ export class BdkAccountAdapter implements BitcoinAccount {
   sentAndReceived(tx: Transaction): [Amount, Amount] {
     const sentAndReceived = this.#wallet.sent_and_received(tx.clone());
     return [sentAndReceived[0], sentAndReceived[1]];
-  }
-
-  derivationOfSpk(spk: ScriptBuf): [KeychainKind, number] | undefined {
-    const spkIndex = this.#wallet.derivation_of_spk(spk);
-    if (!spkIndex) {
-      return undefined;
-    }
-    return [spkIndex[0], spkIndex[1]];
   }
 }
