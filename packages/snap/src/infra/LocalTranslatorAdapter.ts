@@ -17,7 +17,7 @@ export class LocalTranslatorAdapter implements Translator {
 
     try {
       this.#messages = (await import(`../../locales/${locale}.json`)).messages;
-    } catch (error) {
+    } catch {
       this.#messages = (await import(`../../locales/en.json`)).messages;
     }
 

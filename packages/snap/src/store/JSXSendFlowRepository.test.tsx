@@ -1,4 +1,3 @@
-import type { GetPreferencesResult } from '@metamask/snaps-sdk';
 import { mock } from 'jest-mock-extended';
 
 import type {
@@ -103,9 +102,6 @@ describe('JSXSendFlowRepository', () => {
     it('updates interface with context', async () => {
       const id = 'interface-id';
       const mockContext = mock<SendFormContext>({ locale: 'de' });
-      mockSnapClient.getPreferences.mockResolvedValue({
-        locale: 'en',
-      } as GetPreferencesResult);
       mockTranslator.load.mockResolvedValue(mockMessages);
 
       await repo.updateForm(id, mockContext);
@@ -123,9 +119,6 @@ describe('JSXSendFlowRepository', () => {
     it('updates interface with context', async () => {
       const id = 'interface-id';
       const mockContext = mock<ReviewTransactionContext>({ locale: 'fr' });
-      mockSnapClient.getPreferences.mockResolvedValue({
-        locale: 'en',
-      } as GetPreferencesResult);
       mockTranslator.load.mockResolvedValue(mockMessages);
 
       await repo.updateReview(id, mockContext);
@@ -133,7 +126,7 @@ describe('JSXSendFlowRepository', () => {
       expect(mockTranslator.load).toHaveBeenCalledWith('fr');
       expect(mockSnapClient.updateInterface).toHaveBeenCalledWith(
         id,
-        <ReviewTransactionView context={mockContext} messages={{}} />,
+        <ReviewTransactionView context={mockContext} messages={mockMessages} />,
         mockContext,
       );
     });

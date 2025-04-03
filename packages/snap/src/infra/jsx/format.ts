@@ -29,4 +29,4 @@ export const displayExchangeAmount = (
 export const translate =
   (messages: Messages) =>
   (key: string): string =>
-    messages[key]?.message ?? '';
+    messages[key]?.message ?? `{${key}}`;
