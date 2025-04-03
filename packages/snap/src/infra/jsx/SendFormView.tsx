@@ -32,7 +32,7 @@ export const SendFormView: SnapComponent<SendFormViewProps> = ({
           returnButtonName={SendFormEvent.Cancel}
         />
 
-        <SendForm context={context} messages={messages} />
+        <SendForm {...context} messages={messages} />
 
         {context.errors.tx !== undefined && (
           <Row label={t('error')} variant="warning">

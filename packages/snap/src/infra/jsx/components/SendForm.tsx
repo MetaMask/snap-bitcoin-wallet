@@ -16,8 +16,8 @@ import { AssetIcon } from './AssetIcon';
 type SendFormProps = {
   currency: SendFormContext['currency'];
   balance: SendFormContext['balance'];
-  amount: SendFormContext['amount'];
-  recipient: SendFormContext['recipient'];
+  amount?: SendFormContext['amount'];
+  recipient?: SendFormContext['recipient'];
   errors: SendFormContext['errors'];
   network: SendFormContext['network'];
   messages: Messages;
