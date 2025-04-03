@@ -68,6 +68,8 @@ export class SendFlowUseCases {
       throw new Error('Account not found');
     }
 
+    const { locale } = await this.#snapClient.getPreferences();
+
     const context: SendFormContext = {
       balance: account.balance.trusted_spendable.to_sat().toString(),
       currency: networkToCurrencyUnit[account.network],
@@ -78,6 +80,7 @@ export class SendFlowUseCases {
       network: account.network,
       feeRate: this.#fallbackFeeRate,
       errors: {},
+      locale,
     };
 
     const interfaceId = await this.#sendFlowRepository.insertForm(context);
@@ -151,6 +154,7 @@ export class SendFlowUseCases {
             fee: context.fee,
             drain: context.drain,
             sendForm: context,
+            locale: context.locale,
           };
           return this.#sendFlowRepository.updateReview(id, reviewContext);
         }
@@ -284,6 +288,8 @@ export class SendFlowUseCases {
     const { network } = context;
     let updatedContext = { ...context };
 
+    const { locale, currency } = await this.#snapClient.getPreferences();
+
     try {
       const feeEstimates = await this.#chainClient.getFeeEstimates(network);
       const feeRate =
@@ -294,7 +300,6 @@ export class SendFlowUseCases {
       // Exchange rate is only relevant for Bitcoin
       if (network === 'bitcoin') {
         const exchangeRates = await this.#ratesClient.exchangeRates();
-        const { currency } = await this.#snapClient.getPreferences();
         const conversionRate = exchangeRates[currency];
         if (conversionRate) {
           updatedContext.exchangeRate = {
@@ -321,6 +326,7 @@ export class SendFlowUseCases {
         SendFormEvent.RefreshRates,
         id,
       );
+    updatedContext.locale = locale; // Take advantage of the loop to update the locale as well
 
     await this.#sendFlowRepository.updateForm(id, updatedContext);
   }

@@ -9,9 +9,9 @@ import {
 } from '@metamask/snaps-sdk/jsx';
 
 import { Config } from '../../../config';
+import type { Messages } from '../../../entities';
 import { BlockTime, type CurrencyUnit } from '../../../entities';
-import { getTranslator } from '../../../entities/locale';
-import { displayAmount, displayExchangeAmount } from '../format';
+import { displayAmount, displayExchangeAmount, translate } from '../format';
 
 type TransactionSummaryProps = {
   currency: CurrencyUnit;
@@ -19,6 +19,7 @@ type TransactionSummaryProps = {
   amount: string;
   fee: string;
   network: Network;
+  messages: Messages;
 };
 
 export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
@@ -27,8 +28,9 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
   currency,
   exchangeRate,
   network,
+  messages,
 }) => {
-  const t = getTranslator();
+  const t = translate(messages);
 
   const total = BigInt(amount) + BigInt(fee);
 

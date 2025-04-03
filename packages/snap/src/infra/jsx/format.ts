@@ -1,7 +1,7 @@
 import { Amount } from '@metamask/bitcoindevkit';
 import type { CurrencyRate } from '@metamask/snaps-sdk';
 
-import type { CurrencyUnit } from '../../entities';
+import type { CurrencyUnit, Messages } from '../../entities';
 
 export const displayAmount = (
   amountSats: bigint,
@@ -25,3 +25,8 @@ export const displayExchangeAmount = (
       }`
     : '';
 };
+
+export const translate =
+  (messages: Messages) =>
+  (key: string): string =>
+    messages[key]?.message ?? `{${key}}`;

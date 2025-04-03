@@ -62,6 +62,10 @@ describe('SendFlowUseCases', () => {
     peekAddress: jest.fn(),
   });
   const mockTxRequest = mock<TransactionRequest>();
+  const mockPreferences = mock<GetPreferencesResult>({
+    currency: 'usd',
+    locale: 'en',
+  });
 
   const useCases = new SendFlowUseCases(
     mockLogger,
@@ -84,6 +88,7 @@ describe('SendFlowUseCases', () => {
         }),
       );
       mockSendFlowRepository.insertForm.mockResolvedValue('interface-id');
+      mockSnapClient.getPreferences.mockResolvedValue(mockPreferences);
     });
 
     it('throws error if account not found', async () => {
@@ -107,6 +112,7 @@ describe('SendFlowUseCases', () => {
       const result = await useCases.display('account-id');
 
       expect(mockAccountRepository.get).toHaveBeenCalledWith('account-id');
+      expect(mockSnapClient.getPreferences).toHaveBeenCalled();
       expect(mockSendFlowRepository.insertForm).toHaveBeenCalledWith({
         balance: '1234',
         currency: CurrencyUnit.Bitcoin,
@@ -114,6 +120,7 @@ describe('SendFlowUseCases', () => {
         network: 'bitcoin',
         feeRate: fallbackFeeRate,
         errors: {},
+        locale: 'en',
       });
       expect(mockSnapClient.displayInterface).toHaveBeenCalledWith(
         'interface-id',
@@ -154,6 +161,7 @@ describe('SendFlowUseCases', () => {
         conversionDate: 2025,
       },
       backgroundEventId: 'backgroundEventId',
+      locale: 'en',
     };
 
     beforeEach(() => {
@@ -242,6 +250,7 @@ describe('SendFlowUseCases', () => {
         fee: '10',
         sendForm: mockContext,
         drain: mockContext.drain,
+        locale: 'en',
       };
 
       await useCases.onChangeForm('interface-id', SendFormEvent.Confirm);
@@ -435,6 +444,7 @@ describe('SendFlowUseCases', () => {
       sendForm: {
         network: 'bitcoin',
       } as SendFormContext,
+      locale: 'en',
     };
 
     it('throws error unrecognized event', async () => {
@@ -461,6 +471,8 @@ describe('SendFlowUseCases', () => {
 
     it('reverts interface back to send form if present in context', async () => {
       const id = 'interface-id';
+      mockSnapClient.getPreferences.mockResolvedValue(mockPreferences);
+
       await useCases.onChangeReview(
         id,
         ReviewTransactionEvent.HeaderBack,
@@ -503,11 +515,11 @@ describe('SendFlowUseCases', () => {
       errors: {},
       network: 'bitcoin',
       feeRate: fallbackFeeRate,
+      locale: 'en',
     };
     const mockExchangeRates = {
       usd: { value: 200000 },
     };
-    const mockPreferences = mock<GetPreferencesResult>({ currency: 'usd' });
     const mockFeeRate = 4.4;
 
     beforeEach(() => {

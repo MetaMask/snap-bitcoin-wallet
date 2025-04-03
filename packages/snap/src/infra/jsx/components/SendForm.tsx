@@ -6,24 +6,21 @@ import {
   Icon,
   Input,
   Text,
-  type SnapComponent,
 } from '@metamask/snaps-sdk/jsx';
 
-import type { SendFormContext } from '../../../entities';
+import type { Messages, SendFormContext } from '../../../entities';
 import { SENDFORM_NAME, SendFormEvent } from '../../../entities';
-import { getTranslator } from '../../../entities/locale';
-import { displayAmount } from '../format';
+import { displayAmount, translate } from '../format';
 import { AssetIcon } from './AssetIcon';
 
-export const SendForm: SnapComponent<SendFormContext> = ({
-  currency,
-  balance,
-  amount,
-  recipient,
-  errors,
-  network,
-}) => {
-  const t = getTranslator();
+type SendFormProps = SendFormContext & {
+  messages: Messages;
+};
+
+export const SendForm = (props: SendFormProps) => {
+  const { currency, balance, amount, recipient, errors, network, messages } =
+    props;
+  const t = translate(messages);
 
   const validAddress = Boolean(recipient && !errors.recipient);
 
