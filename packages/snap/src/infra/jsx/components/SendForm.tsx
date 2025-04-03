@@ -13,13 +13,7 @@ import { SENDFORM_NAME, SendFormEvent } from '../../../entities';
 import { displayAmount, translate } from '../format';
 import { AssetIcon } from './AssetIcon';
 
-type SendFormProps = {
-  currency: SendFormContext['currency'];
-  balance: SendFormContext['balance'];
-  amount?: SendFormContext['amount'];
-  recipient?: SendFormContext['recipient'];
-  errors: SendFormContext['errors'];
-  network: SendFormContext['network'];
+type SendFormProps = SendFormContext & {
   messages: Messages;
 };
 
@@ -28,7 +22,7 @@ export const SendForm = (props: SendFormProps) => {
     props;
   const t = translate(messages);
 
-  const validAddress = Boolean(props.recipient && !errors.recipient);
+  const validAddress = Boolean(recipient && !errors.recipient);
 
   return (
     <Form name={SENDFORM_NAME}>
