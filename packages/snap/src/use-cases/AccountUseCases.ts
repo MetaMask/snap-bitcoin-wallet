@@ -85,6 +85,7 @@ export class AccountUseCases {
   async create(
     network: Network,
     addressType: AddressType = this.#accountConfig.defaultAddressType,
+    entropySourceId: string,
   ): Promise<BitcoinAccount> {
     this.#logger.debug(
       'Creating new Bitcoin account. Network: %o. addressType: %o,',
@@ -93,7 +94,7 @@ export class AccountUseCases {
     );
 
     const derivationPath = [
-      'm',
+      entropySourceId,
       addressTypeToPurpose[addressType],
       networkToCoinType[network],
       `${this.#accountConfig.index}'`,

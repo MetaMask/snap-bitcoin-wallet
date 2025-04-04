@@ -27,7 +27,7 @@ import { mapToKeyringAccount, mapToTransaction } from './mappings';
 export const CreateAccountRequest = object({
   scope: enums(Object.values(BtcScope)),
   addressType: optional(enums(Object.values(Caip2AddressType))),
-  entropySource: optional(string()),
+  entropySource: string(),
   accountNameSuggestion: optional(string()),
   synchronize: optional(boolean()),
 });
@@ -55,6 +55,7 @@ export class KeyringHandler implements Keyring {
     const account = await this.#accountsUseCases.create(
       caip2ToNetwork[opts.scope],
       opts.addressType ? caip2ToAddressType[opts.addressType] : undefined,
+      opts.entropySource,
     );
 
     if (opts.synchronize) {

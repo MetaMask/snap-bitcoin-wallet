@@ -58,11 +58,15 @@ export class SnapClientAdapter implements SnapClient {
   }
 
   async getPrivateEntropy(derivationPath: string[]): Promise<JsonSLIP10Node> {
+    const source = derivationPath[0];
+    const path = ['m', ...derivationPath.slice(1)];
+
     return snap.request({
       method: 'snap_getBip32Entropy',
       params: {
-        path: derivationPath,
+        path,
         curve: 'secp256k1',
+        source,
       },
     });
   }
@@ -78,6 +82,8 @@ export class SnapClientAdapter implements SnapClient {
       accountNameSuggestion: `${networkToName[account.network]} ${
         addressTypeToName[account.addressType]
       }`,
+      displayAccountNameSuggestion: false,
+      displayConfirmation: false,
     });
   }
 
