@@ -82,9 +82,9 @@ export class AssetsHandler {
     };
   }
 
-  async conversion({
-    conversions,
-  }: OnAssetsConversionArguments): Promise<OnAssetsConversionResponse> {
+  async conversion(
+    conversions: OnAssetsConversionArguments['conversions'],
+  ): Promise<OnAssetsConversionResponse> {
     const conversionTime = getCurrentUnixTimestamp();
 
     // Group conversions by "from"

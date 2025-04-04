@@ -71,14 +71,19 @@ const assetsHandler = new AssetsHandler(
 );
 
 export const onCronjob: OnCronjobHandler = async (args) =>
-  cronHandler.route(args);
+  cronHandler.route(args.request);
+
 export const onRpcRequest: OnRpcRequestHandler = async (args) =>
-  rpcHandler.route(args);
+  rpcHandler.route(args.origin, args.request);
+
 export const onKeyringRequest: OnKeyringRequestHandler = async (args) =>
-  keyringHandler.route(args);
+  keyringHandler.route(args.origin, args.request);
+
 export const onUserInput: OnUserInputHandler = async (args) =>
-  userInputHandler.route(args);
-export const onAssetsLookup: OnAssetsLookupHandler = async (_) =>
+  userInputHandler.route(args.id, args.event, args.context);
+
+export const onAssetsLookup: OnAssetsLookupHandler = async () =>
   assetsHandler.lookup();
+
 export const onAssetsConversion: OnAssetsConversionHandler = async (args) =>
-  assetsHandler.conversion(args);
+  assetsHandler.conversion(args.conversions);

@@ -6,8 +6,8 @@ import { assert } from 'superstruct';
 import type { TransactionRequest } from '../entities';
 import type { SendFlowUseCases } from '../use-cases';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
-import { InternalRpcMethod } from './permissions';
-import { CreateSendFormRequest, RpcHandler } from './RpcHandler';
+import { CreateSendFormRequest, RpcHandler, RpcMethod } from './RpcHandler';
+import { SnapError } from '@metamask/snaps-sdk';
 
 jest.mock('superstruct', () => ({
   ...jest.requireActual('superstruct'),
@@ -19,35 +19,36 @@ describe('RpcHandler', () => {
   const mockAccountsUseCases = mock<AccountUseCases>();
   const mockTxRequest = mock<TransactionRequest>();
   const origin = 'metamask';
+  const mockRequest = mock<JsonRpcRequest>({
+    method: RpcMethod.StartSendTransactionFlow,
+    params: {
+      account: 'account-id',
+    },
+  });
 
   const handler = new RpcHandler(mockSendFlowUseCases, mockAccountsUseCases);
 
   describe('route', () => {
-    it('throws error if missing params', async () => {
-      const request = mock<JsonRpcRequest>();
-
-      await expect(handler.route({ origin, request })).rejects.toThrow(
-        'Missing params',
+    it('throws error if invalid origin', async () => {
+      await expect(handler.route('invalidOrigin', mockRequest)).rejects.toThrow(
+        'Permission denied',
       );
     });
 
-    it('throws error if unrecognized method', async () => {
-      const request = mock<JsonRpcRequest>({ method: 'randomMethod' });
+    it('throws error if missing params', async () => {
+      await expect(
+        handler.route(origin, { ...mockRequest, params: undefined }),
+      ).rejects.toThrow('Missing params');
+    });
 
-      await expect(handler.route({ origin, request })).rejects.toThrow(
-        'Method not found: randomMethod',
-      );
+    it('throws error if unrecognized method', async () => {
+      await expect(
+        handler.route(origin, { ...mockRequest, method: 'randomMethod' }),
+      ).rejects.toThrow('Method not found: randomMethod');
     });
   });
 
   describe('executeSendFlow', () => {
-    const mockRequest = mock<JsonRpcRequest>({
-      method: InternalRpcMethod.StartSendTransactionFlow,
-      params: {
-        account: 'account-id',
-      },
-    });
-
     it('executes startSendTransactionFlow', async () => {
       mockSendFlowUseCases.display.mockResolvedValue(mockTxRequest);
       mockAccountsUseCases.send.mockResolvedValue(
@@ -56,7 +57,7 @@ describe('RpcHandler', () => {
         }),
       );
 
-      const result = await handler.route({ origin, request: mockRequest });
+      const result = await handler.route(origin, mockRequest);
 
       expect(assert).toHaveBeenCalledWith(
         mockRequest.params,
@@ -74,9 +75,9 @@ describe('RpcHandler', () => {
       const error = new Error();
       mockSendFlowUseCases.display.mockRejectedValue(error);
 
-      await expect(
-        handler.route({ origin, request: mockRequest }),
-      ).rejects.toThrow(error);
+      await expect(handler.route(origin, mockRequest)).rejects.toThrow(
+        new SnapError(error),
+      );
 
       expect(mockSendFlowUseCases.display).toHaveBeenCalled();
       expect(mockAccountsUseCases.send).not.toHaveBeenCalled();
@@ -87,9 +88,9 @@ describe('RpcHandler', () => {
       mockSendFlowUseCases.display.mockResolvedValue(mockTxRequest);
       mockAccountsUseCases.send.mockRejectedValue(error);
 
-      await expect(
-        handler.route({ origin, request: mockRequest }),
-      ).rejects.toThrow(error);
+      await expect(handler.route(origin, mockRequest)).rejects.toThrow(
+        new SnapError(error),
+      );
 
       expect(mockSendFlowUseCases.display).toHaveBeenCalled();
       expect(mockAccountsUseCases.send).toHaveBeenCalled();

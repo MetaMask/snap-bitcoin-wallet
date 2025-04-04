@@ -4,7 +4,11 @@ import { assert, enums, object, optional, string } from 'superstruct';
 
 import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
 import { handle } from './errors';
-import { InternalRpcMethod, validateOrigin } from './permissions';
+import { validateOrigin } from './permissions';
+
+export enum RpcMethod {
+  StartSendTransactionFlow = 'startSendTransactionFlow',
+}
 
 export const CreateSendFormRequest = object({
   account: string(),
@@ -25,12 +29,8 @@ export class RpcHandler {
     this.#accountUseCases = accounts;
   }
 
-  async route(args: {
-    origin: string;
-    request: JsonRpcRequest;
-  }): Promise<Json> {
-    const { origin, request } = args;
-    validateOrigin(origin, request.method);
+  async route(origin: string, request: JsonRpcRequest): Promise<Json> {
+    validateOrigin(origin);
 
     return handle(async () => {
       if (!request.params) {
@@ -38,7 +38,7 @@ export class RpcHandler {
       }
 
       switch (request.method) {
-        case InternalRpcMethod.StartSendTransactionFlow: {
+        case RpcMethod.StartSendTransactionFlow: {
           return this.#executeSendFlow(request.params);
         }
 

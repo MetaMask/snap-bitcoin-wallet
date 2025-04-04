@@ -27,17 +27,17 @@ export class CronHandler {
     this.#sendFlowUseCases = sendFlow;
   }
 
-  async route(args: { request: JsonRpcRequest }) {
-    const { request } = args;
+  async route(request: JsonRpcRequest) {
+    const { method, params } = request;
 
     return handle(async () => {
-      switch (request.method) {
+      switch (method) {
         case 'synchronizeAccounts': {
           return this.synchronizeAccounts();
         }
         case SendFormEvent.RefreshRates: {
-          assert(request.params, SendFormRefreshRatesRequest);
-          return this.#sendFlowUseCases.refresh(request.params.interfaceId);
+          assert(params, SendFormRefreshRatesRequest);
+          return this.#sendFlowUseCases.refresh(params.interfaceId);
         }
         default:
           throw new Error('Method not found.');

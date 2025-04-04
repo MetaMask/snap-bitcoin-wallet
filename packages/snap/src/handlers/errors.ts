@@ -1,13 +1,4 @@
-import { SnapError, UnauthorizedError } from '@metamask/snaps-sdk';
-
-import { isSnapRpcError } from '../entities';
-
-export const mapError = (error: unknown): string => {
-  if (error instanceof UnauthorizedError) {
-    return 'Permission denied.';
-  }
-  return 'An internal error occurred.';
-};
+import { SnapError } from '@metamask/snaps-sdk';
 
 export const handle = async <ResponseT>(
   fn: () => Promise<ResponseT>,
@@ -15,9 +6,13 @@ export const handle = async <ResponseT>(
   try {
     return await fn();
   } catch (error) {
-    if (isSnapRpcError(error)) {
-      throw error;
-    }
-    throw new SnapError(mapError(error));
+    // TODO: Improve error handling in the following way:
+    // 1. Use custom error types in the use cases with the initial error message (+context if necessary).
+    // 2. Log the error using the context from the custom error.
+    // 3. Map the error to a user-friendly message.
+    // 4. Throw the more aligned error type from the Snaps SDK.
+    // 5. Default to InternalError('an internal error occurred') if no custom error is thrown.
+
+    throw new SnapError(error);
   }
 };

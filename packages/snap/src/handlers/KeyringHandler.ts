@@ -23,7 +23,6 @@ import {
   caip2ToNetwork,
   networkToCaip2,
 } from './caip';
-import { handle } from './errors';
 import { mapToKeyringAccount, mapToTransaction } from './mappings';
 import { validateOrigin } from './permissions';
 
@@ -40,16 +39,9 @@ export class KeyringHandler implements Keyring {
     this.#accountsUseCases = accounts;
   }
 
-  async route(args: {
-    origin: string;
-    request: JsonRpcRequest;
-  }): Promise<Json> {
-    const { origin, request } = args;
-    validateOrigin(origin, request.method);
-
-    return handle(async () => {
-      return (await handleKeyringRequest(this, request)) ?? null;
-    });
+  async route(origin: string, request: JsonRpcRequest): Promise<Json> {
+    validateOrigin(origin);
+    return (await handleKeyringRequest(this, request)) ?? null;
   }
 
   async listAccounts(): Promise<KeyringAccount[]> {

@@ -12,13 +12,11 @@ export class UserInputHandler {
     this.#sendFlowUseCases = sendFlow;
   }
 
-  async route(args: {
-    id: string;
-    event: UserInputEvent;
-    context: Record<string, Json> | null;
-  }): Promise<void> {
-    const { id, event, context } = args;
-
+  async route(
+    interfaceId: string,
+    event: UserInputEvent,
+    context: Record<string, Json> | null,
+  ): Promise<void> {
     return handle(async () => {
       if (!context) {
         throw new Error('Missing context');
@@ -30,13 +28,13 @@ export class UserInputHandler {
 
       if (this.#isSendFormEvent(event.name)) {
         return this.#sendFlowUseCases.onChangeForm(
-          id,
+          interfaceId,
           event.name,
           context as SendFormContext,
         );
       } else if (this.#isReviewTransactionEvent(event.name)) {
         return this.#sendFlowUseCases.onChangeReview(
-          id,
+          interfaceId,
           event.name,
           context as ReviewTransactionContext,
         );
