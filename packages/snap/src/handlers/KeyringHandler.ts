@@ -12,7 +12,7 @@ import type {
 } from '@metamask/keyring-api';
 import { handleKeyringRequest } from '@metamask/keyring-snap-sdk';
 import type { Json, JsonRpcRequest } from '@metamask/utils';
-import { assert, boolean, enums, object, optional } from 'superstruct';
+import { assert, boolean, enums, object, optional, string } from 'superstruct';
 
 import { networkToCurrencyUnit } from '../entities';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
@@ -23,6 +23,7 @@ import {
   caip2ToNetwork,
   networkToCaip2,
 } from './caip';
+import { handle } from './errors';
 import { mapToKeyringAccount, mapToTransaction } from './mappings';
 import { validateOrigin } from './permissions';
 
@@ -41,7 +42,11 @@ export class KeyringHandler implements Keyring {
 
   async route(origin: string, request: JsonRpcRequest): Promise<Json> {
     validateOrigin(origin);
-    return (await handleKeyringRequest(this, request)) ?? null;
+    return (
+      (await handle(async () => {
+        return await handleKeyringRequest(this, request);
+      })) ?? null
+    );
   }
 
   async listAccounts(): Promise<KeyringAccount[]> {
