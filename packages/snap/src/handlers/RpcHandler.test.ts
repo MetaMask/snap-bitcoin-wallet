@@ -1,4 +1,5 @@
 import type { Txid } from '@metamask/bitcoindevkit';
+import { SnapError } from '@metamask/snaps-sdk';
 import type { JsonRpcRequest } from '@metamask/utils';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
@@ -7,7 +8,6 @@ import type { TransactionRequest } from '../entities';
 import type { SendFlowUseCases } from '../use-cases';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 import { CreateSendFormRequest, RpcHandler, RpcMethod } from './RpcHandler';
-import { SnapError } from '@metamask/snaps-sdk';
 
 jest.mock('superstruct', () => ({
   ...jest.requireActual('superstruct'),
