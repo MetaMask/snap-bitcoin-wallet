@@ -11,7 +11,7 @@ import type {
   Pagination,
 } from '@metamask/keyring-api';
 import type { Json } from '@metamask/utils';
-import { assert, boolean, enums, object, optional } from 'superstruct';
+import { assert, boolean, enums, object, optional, string } from 'superstruct';
 
 import { networkToCurrencyUnit } from '../entities';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
@@ -27,6 +27,8 @@ import { mapToKeyringAccount, mapToTransaction } from './mappings';
 export const CreateAccountRequest = object({
   scope: enums(Object.values(BtcScope)),
   addressType: optional(enums(Object.values(Caip2AddressType))),
+  entropySource: optional(string()),
+  accountNameSuggestion: optional(string()),
   synchronize: optional(boolean()),
 });
 
