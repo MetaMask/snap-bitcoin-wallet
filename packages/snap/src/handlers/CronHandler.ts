@@ -1,9 +1,10 @@
-import type { JsonRpcParams } from '@metamask/utils';
+import type { JsonRpcRequest } from '@metamask/utils';
 import { assert, object, string } from 'superstruct';
 
 import type { Logger } from '../entities';
 import { SendFormEvent } from '../entities';
 import type { SendFlowUseCases, AccountUseCases } from '../use-cases';
+import { handle } from './errors';
 
 export const SendFormRefreshRatesRequest = object({
   interfaceId: string(),
@@ -26,21 +27,22 @@ export class CronHandler {
     this.#sendFlowUseCases = sendFlow;
   }
 
-  async route(method: string, params?: JsonRpcParams): Promise<void> {
-    switch (method) {
-      case 'synchronizeAccounts': {
-        return this.synchronizeAccounts();
+  async route(args: { request: JsonRpcRequest }) {
+    const { request } = args;
+
+    return handle(async () => {
+      switch (request.method) {
+        case 'synchronizeAccounts': {
+          return this.synchronizeAccounts();
+        }
+        case SendFormEvent.RefreshRates: {
+          assert(request.params, SendFormRefreshRatesRequest);
+          return this.#sendFlowUseCases.refresh(request.params.interfaceId);
+        }
+        default:
+          throw new Error('Method not found.');
       }
-      case SendFormEvent.RefreshRates: {
-        assert(params, SendFormRefreshRatesRequest);
-        return this.#sendFlowUseCases.onChangeForm(
-          params.interfaceId,
-          SendFormEvent.RefreshRates,
-        );
-      }
-      default:
-        throw new Error('Method not found.');
-    }
+    });
   }
 
   async synchronizeAccounts(): Promise<void> {

@@ -1,11 +1,12 @@
 import type { Txid } from '@metamask/bitcoindevkit';
+import type { JsonRpcRequest } from '@metamask/utils';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
 import type { TransactionRequest } from '../entities';
-import { InternalRpcMethod } from '../permissions';
 import type { SendFlowUseCases } from '../use-cases';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
+import { InternalRpcMethod } from './permissions';
 import { CreateSendFormRequest, RpcHandler } from './RpcHandler';
 
 jest.mock('superstruct', () => ({
@@ -17,29 +18,35 @@ describe('RpcHandler', () => {
   const mockSendFlowUseCases = mock<SendFlowUseCases>();
   const mockAccountsUseCases = mock<AccountUseCases>();
   const mockTxRequest = mock<TransactionRequest>();
+  const origin = 'metamask';
 
-  let handler: RpcHandler;
-
-  beforeEach(() => {
-    handler = new RpcHandler(mockSendFlowUseCases, mockAccountsUseCases);
-  });
+  const handler = new RpcHandler(mockSendFlowUseCases, mockAccountsUseCases);
 
   describe('route', () => {
     it('throws error if missing params', async () => {
-      await expect(handler.route('method')).rejects.toThrow('Missing params');
+      const request = mock<JsonRpcRequest>();
+
+      await expect(handler.route({ origin, request })).rejects.toThrow(
+        'Missing params',
+      );
     });
 
     it('throws error if unrecognized method', async () => {
-      await expect(handler.route('randomMethod', {})).rejects.toThrow(
+      const request = mock<JsonRpcRequest>({ method: 'randomMethod' });
+
+      await expect(handler.route({ origin, request })).rejects.toThrow(
         'Method not found: randomMethod',
       );
     });
   });
 
   describe('executeSendFlow', () => {
-    const params = {
-      account: 'account-id',
-    };
+    const mockRequest = mock<JsonRpcRequest>({
+      method: InternalRpcMethod.StartSendTransactionFlow,
+      params: {
+        account: 'account-id',
+      },
+    });
 
     it('executes startSendTransactionFlow', async () => {
       mockSendFlowUseCases.display.mockResolvedValue(mockTxRequest);
@@ -49,12 +56,12 @@ describe('RpcHandler', () => {
         }),
       );
 
-      const result = await handler.route(
-        InternalRpcMethod.StartSendTransactionFlow,
-        params,
-      );
+      const result = await handler.route({ origin, request: mockRequest });
 
-      expect(assert).toHaveBeenCalledWith(params, CreateSendFormRequest);
+      expect(assert).toHaveBeenCalledWith(
+        mockRequest.params,
+        CreateSendFormRequest,
+      );
       expect(mockSendFlowUseCases.display).toHaveBeenCalledWith('account-id');
       expect(mockAccountsUseCases.send).toHaveBeenCalledWith(
         'account-id',
@@ -68,7 +75,7 @@ describe('RpcHandler', () => {
       mockSendFlowUseCases.display.mockRejectedValue(error);
 
       await expect(
-        handler.route(InternalRpcMethod.StartSendTransactionFlow, params),
+        handler.route({ origin, request: mockRequest }),
       ).rejects.toThrow(error);
 
       expect(mockSendFlowUseCases.display).toHaveBeenCalled();
@@ -81,7 +88,7 @@ describe('RpcHandler', () => {
       mockAccountsUseCases.send.mockRejectedValue(error);
 
       await expect(
-        handler.route(InternalRpcMethod.StartSendTransactionFlow, params),
+        handler.route({ origin, request: mockRequest }),
       ).rejects.toThrow(error);
 
       expect(mockSendFlowUseCases.display).toHaveBeenCalled();

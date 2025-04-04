@@ -1,9 +1,10 @@
 import { BtcScope } from '@metamask/keyring-api';
-import type { Json, JsonRpcParams } from '@metamask/utils';
+import type { Json, JsonRpcParams, JsonRpcRequest } from '@metamask/utils';
 import { assert, enums, object, optional, string } from 'superstruct';
 
-import { InternalRpcMethod } from '../permissions';
 import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
+import { handle } from './errors';
+import { InternalRpcMethod, validateOrigin } from './permissions';
 
 export const CreateSendFormRequest = object({
   account: string(),
@@ -24,19 +25,27 @@ export class RpcHandler {
     this.#accountUseCases = accounts;
   }
 
-  async route(method: string, params?: JsonRpcParams): Promise<Json> {
-    if (!params) {
-      throw new Error('Missing params');
-    }
+  async route(args: {
+    origin: string;
+    request: JsonRpcRequest;
+  }): Promise<Json> {
+    const { origin, request } = args;
+    validateOrigin(origin, request.method);
 
-    switch (method) {
-      case InternalRpcMethod.StartSendTransactionFlow: {
-        return this.#executeSendFlow(params);
+    return handle(async () => {
+      if (!request.params) {
+        throw new Error('Missing params');
       }
 
-      default:
-        throw new Error(`Method not found: ${method}`);
-    }
+      switch (request.method) {
+        case InternalRpcMethod.StartSendTransactionFlow: {
+          return this.#executeSendFlow(request.params);
+        }
+
+        default:
+          throw new Error(`Method not found: ${request.method}`);
+      }
+    });
   }
 
   async #executeSendFlow(

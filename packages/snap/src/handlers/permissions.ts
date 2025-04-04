@@ -1,4 +1,5 @@
 import { KeyringRpcMethod } from '@metamask/keyring-api';
+import { UnauthorizedError } from '@metamask/snaps-sdk';
 
 export enum InternalRpcMethod {
   StartSendTransactionFlow = 'startSendTransactionFlow',
@@ -42,3 +43,14 @@ for (const origin of allowedOrigins) {
   originPermissions.set(origin, dappPermissions);
 }
 originPermissions.set(metamask, metamaskPermissions);
+
+export const validateOrigin = (origin: string, method: string) => {
+  if (!origin) {
+    // eslint-disable-next-line @typescript-eslint/no-throw-literal
+    throw new UnauthorizedError('Origin not found');
+  }
+  if (!originPermissions.get(origin)?.has(method)) {
+    // eslint-disable-next-line @typescript-eslint/no-throw-literal
+    throw new UnauthorizedError('Permission denied');
+  }
+};

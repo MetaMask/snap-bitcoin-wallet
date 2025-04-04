@@ -104,18 +104,16 @@ export class SendFlowUseCases {
     return request;
   }
 
-  async onChangeForm(id: string, event: SendFormEvent): Promise<void> {
+  async onChangeForm(
+    id: string,
+    event: SendFormEvent,
+    context: SendFormContext,
+  ): Promise<void> {
     this.#logger.debug(
       'Event triggered on send form: %s. Event: %s',
       id,
       event,
     );
-
-    // TODO: Temporary fetch the context while this is fixed: https://github.com/MetaMask/snaps/issues/3069
-    const context = await this.#sendFlowRepository.getContext(id);
-    if (!context) {
-      throw new Error(`Context not found in send form: ${id}`);
-    }
 
     switch (event) {
       case SendFormEvent.Cancel: {
@@ -169,9 +167,6 @@ export class SendFlowUseCases {
       }
       case SendFormEvent.Amount: {
         return this.#handleSetAmount(id, context);
-      }
-      case SendFormEvent.RefreshRates: {
-        return this.#refreshRates(id, context);
       }
       default:
         throw new Error('Unrecognized event');
@@ -282,6 +277,15 @@ export class SendFlowUseCases {
     }
 
     return await this.#sendFlowRepository.updateForm(id, updatedContext);
+  }
+
+  async refresh(id: string): Promise<void> {
+    const context = await this.#sendFlowRepository.getContext(id);
+    if (!context) {
+      throw new Error(`Context not found in send form: ${id}`);
+    }
+
+    return this.#refreshRates(id, context);
   }
 
   async #refreshRates(id: string, context: SendFormContext): Promise<void> {
