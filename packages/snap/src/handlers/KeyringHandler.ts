@@ -12,7 +12,7 @@ import type {
 } from '@metamask/keyring-api';
 import { handleKeyringRequest } from '@metamask/keyring-snap-sdk';
 import type { Json, JsonRpcRequest } from '@metamask/utils';
-import { assert, boolean, enums, object, optional, string } from 'superstruct';
+import { assert, boolean, enums, object, optional } from 'superstruct';
 
 import { networkToCurrencyUnit } from '../entities';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
