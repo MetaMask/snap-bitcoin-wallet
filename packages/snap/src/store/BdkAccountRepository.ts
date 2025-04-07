@@ -118,6 +118,7 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     network: Network,
     addressType: AddressType,
   ): Promise<BitcoinAccount> {
+    console.log('in insert');
     const slip10 = await this.#snapClient.getPublicEntropy(derivationPath);
     const id = v4();
     const fingerprint = (

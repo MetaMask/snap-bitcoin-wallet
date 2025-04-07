@@ -62,13 +62,17 @@ describe('KeyringHandler', () => {
 
   describe('createAccount', () => {
     const entropySource = 'some-source';
+    const correlationId = 'correlation-id';
 
-    it('respects provided provided scope and addressType', async () => {
+    it('respects provided params', async () => {
       mockAccounts.create.mockResolvedValue(mockAccount);
       const options = {
         scope: BtcScope.Signet,
         entropySource,
         addressType: Caip2AddressType.P2pkh,
+        metamask: {
+          correlationId,
+        },
       };
       await handler.createAccount(options);
 
@@ -77,6 +81,7 @@ describe('KeyringHandler', () => {
         caip2ToNetwork[BtcScope.Signet],
         entropySource,
         caip2ToAddressType[Caip2AddressType.P2pkh],
+        correlationId,
       );
       expect(mockAccounts.fullScan).not.toHaveBeenCalled();
     });

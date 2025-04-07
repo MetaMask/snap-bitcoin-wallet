@@ -58,7 +58,7 @@ export class SnapClientAdapter implements SnapClient {
   }
 
   async getPrivateEntropy(derivationPath: string[]): Promise<JsonSLIP10Node> {
-    const source = derivationPath[0];
+    const source = derivationPath[0] === 'm' ? undefined : derivationPath[0];
     const path = ['m', ...derivationPath.slice(1)];
 
     return snap.request({
@@ -76,7 +76,11 @@ export class SnapClientAdapter implements SnapClient {
     return (await SLIP10Node.fromJSON(slip10)).neuter();
   }
 
-  async emitAccountCreatedEvent(account: BitcoinAccount): Promise<void> {
+  async emitAccountCreatedEvent(
+    account: BitcoinAccount,
+    correlationId?: string,
+  ): Promise<void> {
+    const metamask = correlationId ? { correlationId } : undefined;
     return emitSnapKeyringEvent(snap, KeyringEvent.AccountCreated, {
       account: mapToKeyringAccount(account),
       accountNameSuggestion: `${networkToName[account.network]} ${
@@ -84,6 +88,7 @@ export class SnapClientAdapter implements SnapClient {
       }`,
       displayAccountNameSuggestion: false,
       displayConfirmation: false,
+      metamask,
     });
   }
 

@@ -103,6 +103,7 @@ describe('AccountUseCases', () => {
     const network: Network = 'bitcoin';
     const addressType: AddressType = 'p2wpkh';
     const entropySource = 'some-source';
+    const correlationId = 'some-correlation-id';
 
     const mockAccount = mock<BitcoinAccount>();
 
@@ -126,7 +127,12 @@ describe('AccountUseCases', () => {
           `${accountsConfig.index}'`,
         ];
 
-        await useCases.create(network, entropySource, tAddressType);
+        await useCases.create(
+          network,
+          entropySource,
+          tAddressType,
+          correlationId,
+        );
 
         expect(mockRepository.getByDerivationPath).toHaveBeenCalledWith(
           derivationPath,
@@ -138,6 +144,7 @@ describe('AccountUseCases', () => {
         );
         expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalledWith(
           mockAccount,
+          correlationId,
         );
       },
     );
@@ -158,7 +165,12 @@ describe('AccountUseCases', () => {
           `${accountsConfig.index}'`,
         ];
 
-        await useCases.create(tNetwork, entropySource, addressType);
+        await useCases.create(
+          tNetwork,
+          entropySource,
+          addressType,
+          correlationId,
+        );
 
         expect(mockRepository.getByDerivationPath).toHaveBeenCalledWith(
           expectedDerivationPath,
@@ -170,6 +182,7 @@ describe('AccountUseCases', () => {
         );
         expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalledWith(
           mockAccount,
+          correlationId,
         );
       },
     );

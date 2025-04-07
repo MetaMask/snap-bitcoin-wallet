@@ -9,6 +9,7 @@ import type {
   Paginated,
   Transaction,
   Pagination,
+  MetaMaskOptions,
 } from '@metamask/keyring-api';
 import type { Json } from '@metamask/utils';
 import { assert, boolean, enums, object, optional, string } from 'superstruct';
@@ -27,9 +28,14 @@ import { mapToKeyringAccount, mapToTransaction } from './mappings';
 export const CreateAccountRequest = object({
   scope: enums(Object.values(BtcScope)),
   addressType: optional(enums(Object.values(Caip2AddressType))),
-  entropySource: string(),
+  entropySource: optional(string()),
   accountNameSuggestion: optional(string()),
   synchronize: optional(boolean()),
+  metamask: optional(
+    object({
+      correlationId: string(),
+    }),
+  ),
 });
 
 export class KeyringHandler implements Keyring {
@@ -49,13 +55,16 @@ export class KeyringHandler implements Keyring {
     return mapToKeyringAccount(account);
   }
 
-  async createAccount(opts: Record<string, Json>): Promise<KeyringAccount> {
+  async createAccount(
+    opts: Record<string, Json> & MetaMaskOptions,
+  ): Promise<KeyringAccount> {
     assert(opts, CreateAccountRequest);
 
     const account = await this.#accountsUseCases.create(
       caip2ToNetwork[opts.scope],
       opts.entropySource,
       opts.addressType ? caip2ToAddressType[opts.addressType] : undefined,
+      opts.metamask?.correlationId,
     );
 
     if (opts.synchronize) {
