@@ -84,16 +84,19 @@ export class AccountUseCases {
 
   async create(
     network: Network,
+    entropySource?: string,
     addressType: AddressType = this.#accountConfig.defaultAddressType,
+    correlationId?: string,
   ): Promise<BitcoinAccount> {
-    this.#logger.debug(
-      'Creating new Bitcoin account. Network: %o. addressType: %o,',
+    this.#logger.debug('Creating new Bitcoin account. Params: %o', {
       network,
       addressType,
-    );
+      entropySource,
+      correlationId,
+    });
 
     const derivationPath = [
-      'm',
+      entropySource ?? 'm',
       addressTypeToPurpose[addressType],
       networkToCoinType[network],
       `${this.#accountConfig.index}'`,
@@ -103,7 +106,7 @@ export class AccountUseCases {
     const account = await this.#repository.getByDerivationPath(derivationPath);
     if (account) {
       this.#logger.debug('Account already exists: %s,', account.id);
-      await this.#snapClient.emitAccountCreatedEvent(account);
+      await this.#snapClient.emitAccountCreatedEvent(account, correlationId);
       return account;
     }
 
@@ -113,7 +116,7 @@ export class AccountUseCases {
       addressType,
     );
 
-    await this.#snapClient.emitAccountCreatedEvent(newAccount);
+    await this.#snapClient.emitAccountCreatedEvent(newAccount, correlationId);
 
     this.#logger.info(
       'Bitcoin account created successfully: %s. derivationPath: %s',

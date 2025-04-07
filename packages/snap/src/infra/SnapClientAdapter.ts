@@ -58,11 +58,15 @@ export class SnapClientAdapter implements SnapClient {
   }
 
   async getPrivateEntropy(derivationPath: string[]): Promise<JsonSLIP10Node> {
+    const source = derivationPath[0] === 'm' ? undefined : derivationPath[0];
+    const path = ['m', ...derivationPath.slice(1)];
+
     return snap.request({
       method: 'snap_getBip32Entropy',
       params: {
-        path: derivationPath,
+        path,
         curve: 'secp256k1',
+        source,
       },
     });
   }
@@ -72,12 +76,17 @@ export class SnapClientAdapter implements SnapClient {
     return (await SLIP10Node.fromJSON(slip10)).neuter();
   }
 
-  async emitAccountCreatedEvent(account: BitcoinAccount): Promise<void> {
+  async emitAccountCreatedEvent(
+    account: BitcoinAccount,
+    correlationId?: string,
+  ): Promise<void> {
     return emitSnapKeyringEvent(snap, KeyringEvent.AccountCreated, {
       account: mapToKeyringAccount(account),
       accountNameSuggestion: `${networkToName[account.network]} ${
         addressTypeToName[account.addressType]
       }`,
+      displayConfirmation: false,
+      ...(correlationId ? { metamask: { correlationId } } : {}),
     });
   }
 

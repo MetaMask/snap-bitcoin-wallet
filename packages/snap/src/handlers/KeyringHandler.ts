@@ -1,4 +1,4 @@
-import { BtcScope } from '@metamask/keyring-api';
+import { BtcScope, MetaMaskOptionsStruct } from '@metamask/keyring-api';
 import type {
   Keyring,
   KeyringAccount,
@@ -9,9 +9,10 @@ import type {
   Paginated,
   Transaction,
   Pagination,
+  MetaMaskOptions,
 } from '@metamask/keyring-api';
 import type { Json } from '@metamask/utils';
-import { assert, boolean, enums, object, optional } from 'superstruct';
+import { assert, boolean, enums, object, optional, string } from 'superstruct';
 
 import { networkToCurrencyUnit } from '../entities';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
@@ -27,7 +28,10 @@ import { mapToKeyringAccount, mapToTransaction } from './mappings';
 export const CreateAccountRequest = object({
   scope: enums(Object.values(BtcScope)),
   addressType: optional(enums(Object.values(Caip2AddressType))),
+  entropySource: optional(string()),
+  accountNameSuggestion: optional(string()),
   synchronize: optional(boolean()),
+  ...MetaMaskOptionsStruct.schema,
 });
 
 export class KeyringHandler implements Keyring {
@@ -47,12 +51,16 @@ export class KeyringHandler implements Keyring {
     return mapToKeyringAccount(account);
   }
 
-  async createAccount(opts: Record<string, Json>): Promise<KeyringAccount> {
+  async createAccount(
+    opts: Record<string, Json> & MetaMaskOptions,
+  ): Promise<KeyringAccount> {
     assert(opts, CreateAccountRequest);
 
     const account = await this.#accountsUseCases.create(
       caip2ToNetwork[opts.scope],
+      opts.entropySource,
       opts.addressType ? caip2ToAddressType[opts.addressType] : undefined,
+      opts.metamask?.correlationId,
     );
 
     if (opts.synchronize) {
