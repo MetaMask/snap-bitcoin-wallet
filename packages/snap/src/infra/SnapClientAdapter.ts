@@ -80,15 +80,13 @@ export class SnapClientAdapter implements SnapClient {
     account: BitcoinAccount,
     correlationId?: string,
   ): Promise<void> {
-    const metamask = correlationId ? { correlationId } : undefined;
     return emitSnapKeyringEvent(snap, KeyringEvent.AccountCreated, {
       account: mapToKeyringAccount(account),
       accountNameSuggestion: `${networkToName[account.network]} ${
         addressTypeToName[account.addressType]
       }`,
-      displayAccountNameSuggestion: false,
       displayConfirmation: false,
-      metamask,
+      ...(correlationId ? { metamask: { correlationId } } : {}),
     });
   }
 
