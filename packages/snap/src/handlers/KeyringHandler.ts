@@ -1,4 +1,4 @@
-import { BtcScope } from '@metamask/keyring-api';
+import { BtcScope, MetaMaskOptionsStruct } from '@metamask/keyring-api';
 import type {
   Keyring,
   KeyringAccount,
@@ -31,11 +31,7 @@ export const CreateAccountRequest = object({
   entropySource: optional(string()),
   accountNameSuggestion: optional(string()),
   synchronize: optional(boolean()),
-  metamask: optional(
-    object({
-      correlationId: string(),
-    }),
-  ),
+  ...MetaMaskOptionsStruct.schema,
 });
 
 export class KeyringHandler implements Keyring {
