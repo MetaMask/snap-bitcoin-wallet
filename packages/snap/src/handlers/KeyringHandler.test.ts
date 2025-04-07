@@ -38,7 +38,6 @@ jest.mock('@metamask/bitcoindevkit', () => {
 
 describe('KeyringHandler', () => {
   const mockAccounts = mock<AccountUseCases>();
-
   const mockAddress = mock<Address>({
     toString: () => 'bc1qaddress...',
   });
@@ -62,18 +61,27 @@ describe('KeyringHandler', () => {
   });
 
   describe('createAccount', () => {
-    it('respects provided provided scope and addressType', async () => {
+    const entropySource = 'some-source';
+    const correlationId = 'correlation-id';
+
+    it('respects provided params', async () => {
       mockAccounts.create.mockResolvedValue(mockAccount);
       const options = {
         scope: BtcScope.Signet,
+        entropySource,
         addressType: Caip2AddressType.P2pkh,
+        metamask: {
+          correlationId,
+        },
       };
       await handler.createAccount(options);
 
       expect(assert).toHaveBeenCalledWith(options, CreateAccountRequest);
       expect(mockAccounts.create).toHaveBeenCalledWith(
         caip2ToNetwork[BtcScope.Signet],
+        entropySource,
         caip2ToAddressType[Caip2AddressType.P2pkh],
+        correlationId,
       );
       expect(mockAccounts.fullScan).not.toHaveBeenCalled();
     });
@@ -82,6 +90,7 @@ describe('KeyringHandler', () => {
       mockAccounts.create.mockResolvedValue(mockAccount);
       const options = {
         scope: BtcScope.Signet,
+        entropySourceId: entropySource,
         addressType: Caip2AddressType.P2pkh,
         synchronize: true,
       };

@@ -102,6 +102,9 @@ describe('AccountUseCases', () => {
   describe('create', () => {
     const network: Network = 'bitcoin';
     const addressType: AddressType = 'p2wpkh';
+    const entropySource = 'some-source';
+    const correlationId = 'some-correlation-id';
+
     const mockAccount = mock<BitcoinAccount>();
 
     beforeEach(() => {
@@ -117,9 +120,19 @@ describe('AccountUseCases', () => {
     ] as { tAddressType: AddressType; purpose: string }[])(
       'creates an account of type: %s',
       async ({ tAddressType, purpose }) => {
-        const derivationPath = ['m', purpose, "0'", `${accountsConfig.index}'`];
+        const derivationPath = [
+          entropySource,
+          purpose,
+          "0'",
+          `${accountsConfig.index}'`,
+        ];
 
-        await useCases.create(network, tAddressType);
+        await useCases.create(
+          network,
+          entropySource,
+          tAddressType,
+          correlationId,
+        );
 
         expect(mockRepository.getByDerivationPath).toHaveBeenCalledWith(
           derivationPath,
@@ -131,6 +144,7 @@ describe('AccountUseCases', () => {
         );
         expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalledWith(
           mockAccount,
+          correlationId,
         );
       },
     );
@@ -145,13 +159,18 @@ describe('AccountUseCases', () => {
       'should create an account on network: %s',
       async ({ tNetwork, coinType }) => {
         const expectedDerivationPath = [
-          'm',
+          entropySource,
           "84'",
           coinType,
           `${accountsConfig.index}'`,
         ];
 
-        await useCases.create(tNetwork, addressType);
+        await useCases.create(
+          tNetwork,
+          entropySource,
+          addressType,
+          correlationId,
+        );
 
         expect(mockRepository.getByDerivationPath).toHaveBeenCalledWith(
           expectedDerivationPath,
@@ -163,6 +182,7 @@ describe('AccountUseCases', () => {
         );
         expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalledWith(
           mockAccount,
+          correlationId,
         );
       },
     );
@@ -171,7 +191,7 @@ describe('AccountUseCases', () => {
       const mockExistingAccount = mock<BitcoinAccount>();
       mockRepository.getByDerivationPath.mockResolvedValue(mockExistingAccount);
 
-      const result = await useCases.create(network, addressType);
+      const result = await useCases.create(network, entropySource, addressType);
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).not.toHaveBeenCalled();
@@ -183,7 +203,7 @@ describe('AccountUseCases', () => {
     it('creates a new account if one does not exist', async () => {
       mockRepository.getByDerivationPath.mockResolvedValue(null);
 
-      const result = await useCases.create(network, addressType);
+      const result = await useCases.create(network, entropySource, addressType);
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).toHaveBeenCalled();
@@ -196,7 +216,9 @@ describe('AccountUseCases', () => {
       const error = new Error();
       mockRepository.getByDerivationPath.mockRejectedValue(error);
 
-      await expect(useCases.create(network, addressType)).rejects.toBe(error);
+      await expect(
+        useCases.create(network, entropySource, addressType),
+      ).rejects.toBe(error);
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).not.toHaveBeenCalled();
@@ -208,7 +230,9 @@ describe('AccountUseCases', () => {
       mockRepository.getByDerivationPath.mockResolvedValue(null);
       mockRepository.insert.mockRejectedValue(error);
 
-      await expect(useCases.create(network, addressType)).rejects.toBe(error);
+      await expect(
+        useCases.create(network, entropySource, addressType),
+      ).rejects.toBe(error);
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).toHaveBeenCalled();
@@ -220,7 +244,9 @@ describe('AccountUseCases', () => {
       mockRepository.getByDerivationPath.mockResolvedValue(null);
       mockSnapClient.emitAccountCreatedEvent.mockRejectedValue(error);
 
-      await expect(useCases.create(network, addressType)).rejects.toBe(error);
+      await expect(
+        useCases.create(network, entropySource, addressType),
+      ).rejects.toBe(error);
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).toHaveBeenCalled();

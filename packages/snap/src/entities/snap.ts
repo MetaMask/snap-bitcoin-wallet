@@ -50,8 +50,12 @@ export type SnapClient = {
   /**
    * Emit an event notifying the extension of a newly created Bitcoin account
    * @param account - The Bitcoin account.
+   * @param correlationId - The correlation ID to be used for the event.
    */
-  emitAccountCreatedEvent(account: BitcoinAccount): Promise<void>;
+  emitAccountCreatedEvent(
+    account: BitcoinAccount,
+    correlationId?: string,
+  ): Promise<void>;
 
   /**
    * Emit an event notifying the extension of a deleted Bitcoin account

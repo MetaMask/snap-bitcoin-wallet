@@ -4,7 +4,7 @@ export const handle = async <ResponseT>(
   fn: () => Promise<ResponseT>,
 ): Promise<ResponseT> => {
   try {
-    return fn();
+    return await fn();
   } catch (error) {
     // TODO: Improve error handling in the following way:
     // 1. Use custom error types in the use cases with the initial error message (+context if necessary).
