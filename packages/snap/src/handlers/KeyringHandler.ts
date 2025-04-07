@@ -54,8 +54,8 @@ export class KeyringHandler implements Keyring {
 
     const account = await this.#accountsUseCases.create(
       caip2ToNetwork[opts.scope],
-      opts.addressType ? caip2ToAddressType[opts.addressType] : undefined,
       opts.entropySource,
+      opts.addressType ? caip2ToAddressType[opts.addressType] : undefined,
     );
 
     if (opts.synchronize) {
