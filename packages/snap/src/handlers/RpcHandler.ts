@@ -1,9 +1,14 @@
 import { BtcScope } from '@metamask/keyring-api';
-import type { Json, JsonRpcParams } from '@metamask/utils';
+import type { Json, JsonRpcRequest } from '@metamask/utils';
 import { assert, enums, object, optional, string } from 'superstruct';
 
-import { InternalRpcMethod } from '../permissions';
 import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
+import { handle } from './errors';
+import { validateOrigin } from './permissions';
+
+export enum RpcMethod {
+  StartSendTransactionFlow = 'startSendTransactionFlow',
+}
 
 export const CreateSendFormRequest = object({
   account: string(),
@@ -24,28 +29,31 @@ export class RpcHandler {
     this.#accountUseCases = accounts;
   }
 
-  async route(method: string, params?: JsonRpcParams): Promise<Json> {
-    if (!params) {
-      throw new Error('Missing params');
-    }
+  async route(origin: string, request: JsonRpcRequest): Promise<Json> {
+    validateOrigin(origin);
 
-    switch (method) {
-      case InternalRpcMethod.StartSendTransactionFlow: {
-        return this.#executeSendFlow(params);
+    const { method, params } = request;
+
+    return handle(async () => {
+      if (!params) {
+        throw new Error('Missing params');
       }
 
-      default:
-        throw new Error(`Method not found: ${method}`);
-    }
+      switch (method) {
+        case RpcMethod.StartSendTransactionFlow: {
+          assert(params, CreateSendFormRequest);
+          return this.#executeSendFlow(params.account);
+        }
+
+        default:
+          throw new Error(`Method not found: ${method}`);
+      }
+    });
   }
 
-  async #executeSendFlow(
-    params: JsonRpcParams,
-  ): Promise<SendTransactionResponse> {
-    assert(params, CreateSendFormRequest);
-
-    const txRequest = await this.#sendFlowUseCases.display(params.account);
-    const txId = await this.#accountUseCases.send(params.account, txRequest);
+  async #executeSendFlow(account: string): Promise<SendTransactionResponse> {
+    const txRequest = await this.#sendFlowUseCases.display(account);
+    const txId = await this.#accountUseCases.send(account, txRequest);
     return { txId: txId.toString() };
   }
 }

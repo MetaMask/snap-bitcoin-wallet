@@ -11,7 +11,8 @@ import type {
   Pagination,
   MetaMaskOptions,
 } from '@metamask/keyring-api';
-import type { Json } from '@metamask/utils';
+import { handleKeyringRequest } from '@metamask/keyring-snap-sdk';
+import type { Json, JsonRpcRequest } from '@metamask/utils';
 import { assert, boolean, enums, object, optional, string } from 'superstruct';
 
 import { networkToCurrencyUnit } from '../entities';
@@ -23,7 +24,9 @@ import {
   caip2ToNetwork,
   networkToCaip2,
 } from './caip';
+import { handle } from './errors';
 import { mapToKeyringAccount, mapToTransaction } from './mappings';
+import { validateOrigin } from './permissions';
 
 export const CreateAccountRequest = object({
   scope: enums(Object.values(BtcScope)),
@@ -39,6 +42,16 @@ export class KeyringHandler implements Keyring {
 
   constructor(accounts: AccountUseCases) {
     this.#accountsUseCases = accounts;
+  }
+
+  async route(origin: string, request: JsonRpcRequest): Promise<Json> {
+    validateOrigin(origin);
+
+    const result = await handle(async () =>
+      handleKeyringRequest(this, request),
+    );
+
+    return result ?? null; // Use `null` since `undefined` is not valid in JSON.
   }
 
   async listAccounts(): Promise<KeyringAccount[]> {

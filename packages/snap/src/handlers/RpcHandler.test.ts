@@ -1,12 +1,13 @@
 import type { Txid } from '@metamask/bitcoindevkit';
+import { SnapError } from '@metamask/snaps-sdk';
+import type { JsonRpcRequest } from '@metamask/utils';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
 import type { TransactionRequest } from '../entities';
-import { InternalRpcMethod } from '../permissions';
 import type { SendFlowUseCases } from '../use-cases';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
-import { CreateSendFormRequest, RpcHandler } from './RpcHandler';
+import { CreateSendFormRequest, RpcHandler, RpcMethod } from './RpcHandler';
 
 jest.mock('superstruct', () => ({
   ...jest.requireActual('superstruct'),
@@ -17,30 +18,37 @@ describe('RpcHandler', () => {
   const mockSendFlowUseCases = mock<SendFlowUseCases>();
   const mockAccountsUseCases = mock<AccountUseCases>();
   const mockTxRequest = mock<TransactionRequest>();
-
-  let handler: RpcHandler;
-
-  beforeEach(() => {
-    handler = new RpcHandler(mockSendFlowUseCases, mockAccountsUseCases);
+  const origin = 'metamask';
+  const mockRequest = mock<JsonRpcRequest>({
+    method: RpcMethod.StartSendTransactionFlow,
+    params: {
+      account: 'account-id',
+    },
   });
 
+  const handler = new RpcHandler(mockSendFlowUseCases, mockAccountsUseCases);
+
   describe('route', () => {
+    it('throws error if invalid origin', async () => {
+      await expect(handler.route('invalidOrigin', mockRequest)).rejects.toThrow(
+        'Permission denied',
+      );
+    });
+
     it('throws error if missing params', async () => {
-      await expect(handler.route('method')).rejects.toThrow('Missing params');
+      await expect(
+        handler.route(origin, { ...mockRequest, params: undefined }),
+      ).rejects.toThrow('Missing params');
     });
 
     it('throws error if unrecognized method', async () => {
-      await expect(handler.route('randomMethod', {})).rejects.toThrow(
-        'Method not found: randomMethod',
-      );
+      await expect(
+        handler.route(origin, { ...mockRequest, method: 'randomMethod' }),
+      ).rejects.toThrow('Method not found: randomMethod');
     });
   });
 
   describe('executeSendFlow', () => {
-    const params = {
-      account: 'account-id',
-    };
-
     it('executes startSendTransactionFlow', async () => {
       mockSendFlowUseCases.display.mockResolvedValue(mockTxRequest);
       mockAccountsUseCases.send.mockResolvedValue(
@@ -49,12 +57,12 @@ describe('RpcHandler', () => {
         }),
       );
 
-      const result = await handler.route(
-        InternalRpcMethod.StartSendTransactionFlow,
-        params,
-      );
+      const result = await handler.route(origin, mockRequest);
 
-      expect(assert).toHaveBeenCalledWith(params, CreateSendFormRequest);
+      expect(assert).toHaveBeenCalledWith(
+        mockRequest.params,
+        CreateSendFormRequest,
+      );
       expect(mockSendFlowUseCases.display).toHaveBeenCalledWith('account-id');
       expect(mockAccountsUseCases.send).toHaveBeenCalledWith(
         'account-id',
@@ -67,9 +75,9 @@ describe('RpcHandler', () => {
       const error = new Error();
       mockSendFlowUseCases.display.mockRejectedValue(error);
 
-      await expect(
-        handler.route(InternalRpcMethod.StartSendTransactionFlow, params),
-      ).rejects.toThrow(error);
+      await expect(handler.route(origin, mockRequest)).rejects.toThrow(
+        new SnapError(error),
+      );
 
       expect(mockSendFlowUseCases.display).toHaveBeenCalled();
       expect(mockAccountsUseCases.send).not.toHaveBeenCalled();
@@ -80,9 +88,9 @@ describe('RpcHandler', () => {
       mockSendFlowUseCases.display.mockResolvedValue(mockTxRequest);
       mockAccountsUseCases.send.mockRejectedValue(error);
 
-      await expect(
-        handler.route(InternalRpcMethod.StartSendTransactionFlow, params),
-      ).rejects.toThrow(error);
+      await expect(handler.route(origin, mockRequest)).rejects.toThrow(
+        new SnapError(error),
+      );
 
       expect(mockSendFlowUseCases.display).toHaveBeenCalled();
       expect(mockAccountsUseCases.send).toHaveBeenCalled();

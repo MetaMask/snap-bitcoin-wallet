@@ -1,8 +1,9 @@
 import type { Json, UserInputEvent } from '@metamask/snaps-sdk';
 
-import type { ReviewTransactionContext } from '../entities';
+import type { ReviewTransactionContext, SendFormContext } from '../entities';
 import { ReviewTransactionEvent, SendFormEvent } from '../entities';
 import type { SendFlowUseCases } from '../use-cases';
+import { handle } from './errors';
 
 export class UserInputHandler {
   readonly #sendFlowUseCases: SendFlowUseCases;
@@ -16,30 +17,31 @@ export class UserInputHandler {
     event: UserInputEvent,
     context: Record<string, Json> | null,
   ): Promise<void> {
-    if (!context) {
-      throw new Error('Missing context');
-    }
+    return handle(async () => {
+      if (!context) {
+        throw new Error('Missing context');
+      }
 
-    if (!event.name) {
-      throw new Error('Missing event name');
-    }
+      if (!event.name) {
+        throw new Error('Missing event name');
+      }
 
-    if (this.#isSendFormEvent(event.name)) {
-      return this.#sendFlowUseCases.onChangeForm(
-        interfaceId,
-        event.name,
-        // TODO: Reuse when fixed: https://github.com/MetaMask/snaps/issues/3069
-        // context as SendFormContext,
-      );
-    } else if (this.#isReviewTransactionEvent(event.name)) {
-      return this.#sendFlowUseCases.onChangeReview(
-        interfaceId,
-        event.name,
-        context as ReviewTransactionContext,
-      );
-    }
+      if (this.#isSendFormEvent(event.name)) {
+        return this.#sendFlowUseCases.onChangeForm(
+          interfaceId,
+          event.name,
+          context as SendFormContext,
+        );
+      } else if (this.#isReviewTransactionEvent(event.name)) {
+        return this.#sendFlowUseCases.onChangeReview(
+          interfaceId,
+          event.name,
+          context as ReviewTransactionContext,
+        );
+      }
 
-    throw new Error(`Unsupported event: ${event.name}`);
+      throw new Error(`Unsupported event: ${event.name}`);
+    });
   }
 
   #isSendFormEvent(name: string): name is SendFormEvent {

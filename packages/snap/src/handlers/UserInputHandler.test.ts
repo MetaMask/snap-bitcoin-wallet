@@ -1,5 +1,5 @@
 import type { UserInputEvent } from '@metamask/snaps-sdk';
-import { UserInputEventType } from '@metamask/snaps-sdk';
+import { SnapError, UserInputEventType } from '@metamask/snaps-sdk';
 import { mock } from 'jest-mock-extended';
 
 import type { SendFormContext } from '../entities';
@@ -66,6 +66,7 @@ describe('UserInputHandler', () => {
       expect(mockSendFlowUseCases.onChangeForm).toHaveBeenCalledWith(
         'interface-id',
         SendFormEvent.ClearRecipient,
+        mockContext,
       );
     });
 
@@ -82,7 +83,7 @@ describe('UserInputHandler', () => {
           },
           mockContext,
         ),
-      ).rejects.toThrow(error);
+      ).rejects.toThrow(new SnapError(error));
     });
   });
 
@@ -117,7 +118,7 @@ describe('UserInputHandler', () => {
           },
           mockContext,
         ),
-      ).rejects.toThrow(error);
+      ).rejects.toThrow(new SnapError(error));
     });
   });
 });

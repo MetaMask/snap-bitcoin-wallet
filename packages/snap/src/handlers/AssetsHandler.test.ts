@@ -1,3 +1,4 @@
+import { SnapError } from '@metamask/snaps-sdk';
 import { mock } from 'jest-mock-extended';
 
 import type { AssetsUseCases } from '../use-cases';
@@ -15,8 +16,8 @@ describe('AssetsHandler', () => {
   });
 
   describe('lookup', () => {
-    it('returns data for all networks', () => {
-      const result = handler.lookup();
+    it('returns data for all networks', async () => {
+      const result = await handler.lookup();
 
       expect(result.assets[Caip19Asset.Bitcoin]?.name).toBe('Bitcoin');
       expect(result.assets[Caip19Asset.Testnet]?.name).toBe('Testnet Bitcoin');
@@ -43,7 +44,7 @@ describe('AssetsHandler', () => {
         { from: Caip19Asset.Signet, to: Caip19Asset.Bitcoin },
         { from: Caip19Asset.Regtest, to: Caip19Asset.Bitcoin },
       ];
-      const result = await handler.conversion({ conversions });
+      const result = await handler.conversion(conversions);
 
       expect(mockAssetsUseCases.getRates).toHaveBeenCalledTimes(1);
       expect(mockAssetsUseCases.getRates).toHaveBeenCalledWith([
@@ -101,7 +102,9 @@ describe('AssetsHandler', () => {
       const error = new Error();
       mockAssetsUseCases.getRates.mockRejectedValue(error);
 
-      await expect(handler.conversion({ conversions })).rejects.toThrow(error);
+      await expect(handler.conversion(conversions)).rejects.toThrow(
+        new SnapError(error),
+      );
     });
   });
 });
