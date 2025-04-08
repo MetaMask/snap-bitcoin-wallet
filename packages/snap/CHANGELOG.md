@@ -9,14 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.11.0]
 
-### Uncategorized
+### Changed
 
-- refactor: error handling ([#442](https://github.com/MetaMask/snap-bitcoin-wallet/pull/442))
-- feat: align latest dependencies ([#443](https://github.com/MetaMask/snap-bitcoin-wallet/pull/443))
-- chore: refactor locale ([#433](https://github.com/MetaMask/snap-bitcoin-wallet/pull/433))
-- fix: discard own outputs from send transactions ([#441](https://github.com/MetaMask/snap-bitcoin-wallet/pull/441))
-- chore: reduce bundle size ([#439](https://github.com/MetaMask/snap-bitcoin-wallet/pull/439))
-- chore: logger refactor ([#437](https://github.com/MetaMask/snap-bitcoin-wallet/pull/437))
+- Refactor error handling ([#442](https://github.com/MetaMask/snap-bitcoin-wallet/pull/442))
+- Align latest dependencies ([#443](https://github.com/MetaMask/snap-bitcoin-wallet/pull/443))
+- Refactor locale ([#433](https://github.com/MetaMask/snap-bitcoin-wallet/pull/433))
+- Refactor logger ([#437](https://github.com/MetaMask/snap-bitcoin-wallet/pull/437))
+- Reduce bundle size ([#439](https://github.com/MetaMask/snap-bitcoin-wallet/pull/439))
+
+### Fixed
+
+- Discard own outputs from send transactions ([#441](https://github.com/MetaMask/snap-bitcoin-wallet/pull/441))
 
 ## [0.10.0]
 
