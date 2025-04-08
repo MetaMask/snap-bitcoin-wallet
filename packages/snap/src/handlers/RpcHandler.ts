@@ -32,19 +32,21 @@ export class RpcHandler {
   async route(origin: string, request: JsonRpcRequest): Promise<Json> {
     validateOrigin(origin);
 
+    const { method, params } = request;
+
     return handle(async () => {
-      if (!request.params) {
+      if (!params) {
         throw new Error('Missing params');
       }
 
-      switch (request.method) {
+      switch (method) {
         case RpcMethod.StartSendTransactionFlow: {
-          assert(request.params, CreateSendFormRequest);
-          return this.#executeSendFlow(request.params.account);
+          assert(params, CreateSendFormRequest);
+          return this.#executeSendFlow(params.account);
         }
 
         default:
-          throw new Error(`Method not found: ${request.method}`);
+          throw new Error(`Method not found: ${method}`);
       }
     });
   }
