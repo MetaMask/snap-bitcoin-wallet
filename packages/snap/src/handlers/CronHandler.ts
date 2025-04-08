@@ -6,6 +6,10 @@ import { SendFormEvent } from '../entities';
 import type { SendFlowUseCases, AccountUseCases } from '../use-cases';
 import { handle } from './errors';
 
+export enum CronMethod {
+  SynchronizeAccounts = 'synchronizeAccounts',
+}
+
 export const SendFormRefreshRatesRequest = object({
   interfaceId: string(),
 });
@@ -32,7 +36,7 @@ export class CronHandler {
 
     return handle(async () => {
       switch (method) {
-        case 'synchronizeAccounts': {
+        case CronMethod.SynchronizeAccounts: {
           return this.synchronizeAccounts();
         }
         case SendFormEvent.RefreshRates: {
@@ -40,7 +44,7 @@ export class CronHandler {
           return this.#sendFlowUseCases.refresh(params.interfaceId);
         }
         default:
-          throw new Error('Method not found.');
+          throw new Error(`Method not found: ${method}`);
       }
     });
   }

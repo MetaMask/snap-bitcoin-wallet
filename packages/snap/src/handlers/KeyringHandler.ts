@@ -46,11 +46,12 @@ export class KeyringHandler implements Keyring {
 
   async route(origin: string, request: JsonRpcRequest): Promise<Json> {
     validateOrigin(origin);
-    return (
-      (await handle(async () => {
-        return await handleKeyringRequest(this, request);
-      })) ?? null
+
+    const result = await handle(async () =>
+      handleKeyringRequest(this, request),
     );
+
+    return result ?? null; // Use `null` since `undefined` is not valid in JSON.
   }
 
   async listAccounts(): Promise<KeyringAccount[]> {
