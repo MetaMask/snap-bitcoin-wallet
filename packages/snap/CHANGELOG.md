@@ -9,10 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.11.0]
 
+### Added
+
+- Support for `correlationId` and `entropySource` ([#443](https://github.com/MetaMask/snap-bitcoin-wallet/pull/443))
+
 ### Changed
 
 - Refactor error handling ([#442](https://github.com/MetaMask/snap-bitcoin-wallet/pull/442))
-- Align latest dependencies ([#443](https://github.com/MetaMask/snap-bitcoin-wallet/pull/443))
 - Refactor locale ([#433](https://github.com/MetaMask/snap-bitcoin-wallet/pull/433))
 - Refactor logger ([#437](https://github.com/MetaMask/snap-bitcoin-wallet/pull/437))
 - Reduce bundle size ([#439](https://github.com/MetaMask/snap-bitcoin-wallet/pull/439))
