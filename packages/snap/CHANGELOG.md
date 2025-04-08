@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0]
+
+### Uncategorized
+
+- refactor: error handling ([#442](https://github.com/MetaMask/snap-bitcoin-wallet/pull/442))
+- feat: align latest dependencies ([#443](https://github.com/MetaMask/snap-bitcoin-wallet/pull/443))
+- chore: refactor locale ([#433](https://github.com/MetaMask/snap-bitcoin-wallet/pull/433))
+- fix: discard own outputs from send transactions ([#441](https://github.com/MetaMask/snap-bitcoin-wallet/pull/441))
+- chore: reduce bundle size ([#439](https://github.com/MetaMask/snap-bitcoin-wallet/pull/439))
+- chore: logger refactor ([#437](https://github.com/MetaMask/snap-bitcoin-wallet/pull/437))
+
 ## [0.10.0]
 
 ### Added
@@ -281,7 +292,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add CI for lint and test ([#2](https://github.com/MetaMask/bitcoin/pull/2))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.8.2...v0.9.0
 [0.8.2]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.8.1...v0.8.2
