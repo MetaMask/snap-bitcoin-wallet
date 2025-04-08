@@ -1,5 +1,5 @@
 import { BtcScope } from '@metamask/keyring-api';
-import type { Json, JsonRpcParams, JsonRpcRequest } from '@metamask/utils';
+import type { Json, JsonRpcRequest } from '@metamask/utils';
 import { assert, enums, object, optional, string } from 'superstruct';
 
 import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
@@ -39,7 +39,8 @@ export class RpcHandler {
 
       switch (request.method) {
         case RpcMethod.StartSendTransactionFlow: {
-          return this.#executeSendFlow(request.params);
+          assert(request.params, CreateSendFormRequest);
+          return this.#executeSendFlow(request.params.account);
         }
 
         default:
@@ -48,13 +49,9 @@ export class RpcHandler {
     });
   }
 
-  async #executeSendFlow(
-    params: JsonRpcParams,
-  ): Promise<SendTransactionResponse> {
-    assert(params, CreateSendFormRequest);
-
-    const txRequest = await this.#sendFlowUseCases.display(params.account);
-    const txId = await this.#accountUseCases.send(params.account, txRequest);
+  async #executeSendFlow(account: string): Promise<SendTransactionResponse> {
+    const txRequest = await this.#sendFlowUseCases.display(account);
+    const txId = await this.#accountUseCases.send(account, txRequest);
     return { txId: txId.toString() };
   }
 }
