@@ -8,8 +8,7 @@ export type SnapConfig = {
   accounts: AccountsConfig;
   chain: ChainConfig;
   simpleHash: SimpleHashConfig;
-  // Temporary config to set the expected confirmation target, should eventually be chosen by the user
-  targetBlocksConfirmation: number;
+  targetBlocksConfirmation: number; // Temporary global config to set the expected confirmation target, should eventually be a user setting
   fallbackFeeRate: number;
   ratesRefreshInterval: string;
   priceApi: PriceApiConfig;
@@ -19,6 +18,7 @@ export type SnapConfig = {
 export type AccountsConfig = {
   index: number;
   defaultAddressType: AddressType;
+  utxoProtectionEnabled: boolean; // Temporary global config, should eventually be a user setting
 };
 
 export type ChainConfig = {

@@ -47,10 +47,14 @@ export class BdkTxBuilderAdapter implements TransactionBuilder {
   }
 
   unspendable(unspendable: string[]): BdkTxBuilderAdapter {
-    const outpoints = unspendable.map((outpoint) =>
-      OutPoint.from_string(outpoint),
-    );
-    this.#builder = this.#builder.unspendable(outpoints);
+    // Avoid calling WASM if there are no unspendable UTXOs
+    if (unspendable.length) {
+      const outpoints = unspendable.map((outpoint) =>
+        OutPoint.from_string(outpoint),
+      );
+      this.#builder = this.#builder.unspendable(outpoints);
+    }
+
     return this;
   }
 

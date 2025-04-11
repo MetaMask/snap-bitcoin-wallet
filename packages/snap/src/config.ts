@@ -11,6 +11,7 @@ export const Config: SnapConfig = {
     index: 0,
     defaultAddressType: (process.env.DEFAULT_ADDRESS_TYPE ??
       'p2wpkh') as AddressType,
+    utxoProtectionEnabled: false,
   },
   chain: {
     parallelRequests: 3,

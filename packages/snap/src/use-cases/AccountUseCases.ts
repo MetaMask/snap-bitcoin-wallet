@@ -143,7 +143,9 @@ export class AccountUseCases {
 
     // If new transactions appeared, fetch inscriptions; otherwise, just update.
     if (txsAfterSync.length > txsBeforeSync.length) {
-      const inscriptions = await this.#metaProtocols.fetchInscriptions(account);
+      const inscriptions = this.#accountConfig.utxoProtectionEnabled
+        ? await this.#metaProtocols.fetchInscriptions(account)
+        : [];
       await this.#repository.update(account, inscriptions);
     } else {
       await this.#repository.update(account);
@@ -180,7 +182,9 @@ export class AccountUseCases {
 
     await this.#chain.fullScan(account);
 
-    const inscriptions = await this.#metaProtocols.fetchInscriptions(account);
+    const inscriptions = this.#accountConfig.utxoProtectionEnabled
+      ? await this.#metaProtocols.fetchInscriptions(account)
+      : [];
     await this.#repository.update(account, inscriptions);
 
     await this.#snapClient.emitAccountBalancesUpdatedEvent(account);

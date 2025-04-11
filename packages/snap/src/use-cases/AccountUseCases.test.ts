@@ -30,6 +30,7 @@ describe('AccountUseCases', () => {
   const accountsConfig: AccountsConfig = {
     index: 0,
     defaultAddressType: 'p2wpkh',
+    utxoProtectionEnabled: true,
   };
 
   const useCases = new AccountUseCases(
@@ -360,6 +361,25 @@ describe('AccountUseCases', () => {
       expect(mockChain.sync).toHaveBeenCalled();
       expect(mockRepository.update).toHaveBeenCalled();
     });
+
+    it('does not synchronize assets if utxo protection is disabled', async () => {
+      const testUseCases = new AccountUseCases(
+        mockLogger,
+        mockSnapClient,
+        mockRepository,
+        mockChain,
+        mockMetaProtocols,
+        { ...accountsConfig, utxoProtectionEnabled: false },
+      );
+      const mockTransaction = mock<WalletTx>();
+      mockAccount.listTransactions
+        .mockReturnValueOnce([])
+        .mockReturnValueOnce([mockTransaction]);
+
+      await testUseCases.synchronize(mockAccount);
+
+      expect(mockMetaProtocols.fetchInscriptions).not.toHaveBeenCalled();
+    });
   });
 
   describe('fullScan', () => {
@@ -423,6 +443,22 @@ describe('AccountUseCases', () => {
       expect(mockChain.fullScan).toHaveBeenCalled();
       expect(mockMetaProtocols.fetchInscriptions).toHaveBeenCalled();
       expect(mockRepository.update).toHaveBeenCalled();
+    });
+
+    it('does not scans for assets if utxo protection is disabled', async () => {
+      const testUseCases = new AccountUseCases(
+        mockLogger,
+        mockSnapClient,
+        mockRepository,
+        mockChain,
+        mockMetaProtocols,
+        { ...accountsConfig, utxoProtectionEnabled: false },
+      );
+      mockAccount.listTransactions.mockReturnValue(mockTransactions);
+
+      await testUseCases.synchronize(mockAccount);
+
+      expect(mockMetaProtocols.fetchInscriptions).not.toHaveBeenCalled();
     });
   });
 
