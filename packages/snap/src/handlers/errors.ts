@@ -13,7 +13,6 @@ export const handle = async <ResponseT>(
     // 4. Throw the more aligned error type from the Snaps SDK.
     // 5. Default to InternalError('an internal error occurred') if no custom error is thrown.
 
-    console.error(error);
     throw new SnapError(error);
   }
 };
