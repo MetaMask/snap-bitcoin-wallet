@@ -86,6 +86,7 @@ export class SnapClientAdapter implements SnapClient {
         addressTypeToName[account.addressType]
       }`,
       displayConfirmation: false,
+      displayAccountNameSuggestion: false,
       ...(correlationId ? { metamask: { correlationId } } : {}),
     });
   }
