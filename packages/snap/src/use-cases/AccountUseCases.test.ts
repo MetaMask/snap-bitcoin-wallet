@@ -30,7 +30,6 @@ describe('AccountUseCases', () => {
   const accountsConfig: AccountsConfig = {
     index: 0,
     defaultAddressType: 'p2wpkh',
-    utxoProtectionEnabled: true,
   };
 
   const useCases = new AccountUseCases(
@@ -38,8 +37,8 @@ describe('AccountUseCases', () => {
     mockSnapClient,
     mockRepository,
     mockChain,
-    mockMetaProtocols,
     accountsConfig,
+    mockMetaProtocols,
   );
 
   describe('get', () => {
@@ -368,8 +367,8 @@ describe('AccountUseCases', () => {
         mockSnapClient,
         mockRepository,
         mockChain,
-        mockMetaProtocols,
-        { ...accountsConfig, utxoProtectionEnabled: false },
+        accountsConfig,
+        undefined,
       );
       const mockTransaction = mock<WalletTx>();
       mockAccount.listTransactions
@@ -451,8 +450,8 @@ describe('AccountUseCases', () => {
         mockSnapClient,
         mockRepository,
         mockChain,
-        mockMetaProtocols,
-        { ...accountsConfig, utxoProtectionEnabled: false },
+        accountsConfig,
+        undefined,
       );
       mockAccount.listTransactions.mockReturnValue(mockTransactions);
 

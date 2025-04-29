@@ -2726,7 +2726,6 @@ __metadata:
     "@metamask/snaps-jest": "npm:^8.14.1"
     "@metamask/snaps-sdk": "npm:^6.22.1"
     "@metamask/utils": "npm:^11.4.0"
-    "@types/qs": "npm:^6.9.18"
     "@typescript-eslint/eslint-plugin": "npm:^5.42.1"
     "@typescript-eslint/parser": "npm:^5.42.1"
     concurrently: "npm:^9.1.0"
@@ -2743,7 +2742,6 @@ __metadata:
     jest-mock-extended: "npm:^3.0.7"
     jest-transform-stub: "npm:2.0.0"
     prettier: "npm:^2.7.1"
-    qs: "npm:^6.14.0"
     rimraf: "npm:^3.0.2"
     superstruct: "npm:^1.0.3"
     ts-jest: "npm:^29.1.0"
@@ -5337,13 +5335,6 @@ __metadata:
   version: 2.1.1
   resolution: "@types/punycode@npm:2.1.1"
   checksum: 10/a1fdbb0d4d22ceb8fd901995d72d66b096e4c46bd603faf192085f04113afc42a6a76403f7806a2c31d45a2f70d57c042d68329ba6affc202c15fa34870b51fa
-  languageName: node
-  linkType: hard
-
-"@types/qs@npm:^6.9.18":
-  version: 6.9.18
-  resolution: "@types/qs@npm:6.9.18"
-  checksum: 10/152fab96efd819cc82ae67c39f089df415da6deddb48f1680edaaaa4e86a2a597de7b2ff0ad391df66d11a07006a08d52c9405e86b8cb8f3d5ba15881fe56cc7
   languageName: node
   linkType: hard
 

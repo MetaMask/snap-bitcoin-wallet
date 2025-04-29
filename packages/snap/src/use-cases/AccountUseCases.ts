@@ -41,7 +41,7 @@ export class AccountUseCases {
 
   readonly #chain: BlockchainClient;
 
-  readonly #metaProtocols: MetaProtocolsClient;
+  readonly #metaProtocols: MetaProtocolsClient | undefined;
 
   readonly #accountConfig: AccountsConfig;
 
@@ -50,8 +50,8 @@ export class AccountUseCases {
     snapClient: SnapClient,
     repository: BitcoinAccountRepository,
     chain: BlockchainClient,
-    metaProtocols: MetaProtocolsClient,
     accountConfig: AccountsConfig,
+    metaProtocols?: MetaProtocolsClient,
   ) {
     this.#logger = logger;
     this.#snapClient = snapClient;
@@ -143,7 +143,7 @@ export class AccountUseCases {
 
     // If new transactions appeared, fetch inscriptions; otherwise, just update.
     if (txsAfterSync.length > txsBeforeSync.length) {
-      const inscriptions = this.#accountConfig.utxoProtectionEnabled
+      const inscriptions = this.#metaProtocols
         ? await this.#metaProtocols.fetchInscriptions(account)
         : [];
       await this.#repository.update(account, inscriptions);
@@ -182,7 +182,7 @@ export class AccountUseCases {
 
     await this.#chain.fullScan(account);
 
-    const inscriptions = this.#accountConfig.utxoProtectionEnabled
+    const inscriptions = this.#metaProtocols
       ? await this.#metaProtocols.fetchInscriptions(account)
       : [];
     await this.#repository.update(account, inscriptions);

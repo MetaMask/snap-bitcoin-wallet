@@ -18,7 +18,6 @@ import {
 import {
   SnapClientAdapter,
   EsploraClientAdapter,
-  SimpleHashClientAdapter,
   PriceApiClientAdapter,
   ConsoleLoggerAdapter,
   LocalTranslatorAdapter,
@@ -30,7 +29,6 @@ import { AccountUseCases, AssetsUseCases, SendFlowUseCases } from './use-cases';
 const logger = new ConsoleLoggerAdapter(Config.logLevel);
 const snapClient = new SnapClientAdapter(Config.encrypt);
 const chainClient = new EsploraClientAdapter(Config.chain);
-const metaProtocolsClient = new SimpleHashClientAdapter(Config.simpleHash);
 const assetRatesClient = new PriceApiClientAdapter(Config.priceApi);
 const translator = new LocalTranslatorAdapter();
 
@@ -44,7 +42,6 @@ const accountsUseCases = new AccountUseCases(
   snapClient,
   accountRepository,
   chainClient,
-  metaProtocolsClient,
   Config.accounts,
 );
 const sendFlowUseCases = new SendFlowUseCases(
