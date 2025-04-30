@@ -1,5 +1,4 @@
-import type { Psbt } from '@metamask/bitcoindevkit';
-import { Address, Amount } from '@metamask/bitcoindevkit';
+import { Psbt, Address, Amount } from '@metamask/bitcoindevkit';
 import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 import { UserRejectedRequestError } from '@metamask/snaps-sdk';
 
@@ -8,7 +7,6 @@ import type {
   SendFlowRepository,
   SnapClient,
   BlockchainClient,
-  TransactionRequest,
   SendFormContext,
   ReviewTransactionContext,
   AssetRatesClient,
@@ -91,33 +89,13 @@ export class SendFlowUseCases {
     void this.#refreshRates(interfaceId, context);
 
     // Blocks and waits for user actions
-    const request = await this.#snapClient.displayInterface<TransactionRequest>(
-      interfaceId,
-    );
-    if (!request) {
+    const psbt = await this.#snapClient.displayInterface<string>(interfaceId);
+    if (!psbt) {
       throw new UserRejectedRequestError() as unknown as Error;
     }
 
-    this.#logger.debug(
-      'Transaction request generated successfully: %o',
-      request,
-    );
-
-    const builder = account.buildTx().feeRate(request.feeRate);
-
-    if (request.amount) {
-      builder.addRecipient(request.amount, request.recipient);
-    } else if (request.drain) {
-      builder.drainWallet().drainTo(request.recipient);
-    } else {
-      throw new Error("Either 'amount' or 'drain' must be specified");
-    }
-
-    // Make sure frozen UTXOs are not spent
-    const frozenUTXOs = await this.#accountRepository.getFrozenUTXOs(accountId);
-    builder.unspendable(frozenUTXOs);
-
-    return builder.finish();
+    this.#logger.debug('PSBT generated successfully');
+    return Psbt.from_string(psbt);
   }
 
   async onChangeForm(
@@ -156,17 +134,35 @@ export class SendFlowUseCases {
           );
         }
 
-        if (context.amount && context.recipient && context.fee) {
+        if (context.amount && context.recipient) {
+          const account = await this.#accountRepository.get(context.account.id);
+          if (!account) {
+            throw new Error('Account removed while confirming send flow');
+          }
+          const frozenUTXOs = await this.#accountRepository.getFrozenUTXOs(
+            context.account.id,
+          );
+
+          const builder = account
+            .buildTx()
+            .feeRate(context.feeRate)
+            .unspendable(frozenUTXOs);
+
+          if (context.drain) {
+            builder.drainWallet().drainTo(context.recipient);
+          } else {
+            builder.addRecipient(context.amount, context.recipient);
+          }
+          const psbt = builder.finish();
+
           const reviewContext: ReviewTransactionContext = {
             from: context.account.address,
             network: context.network,
             amount: context.amount,
             recipient: context.recipient,
-            feeRate: context.feeRate,
             exchangeRate: context.exchangeRate,
             currency: context.currency,
-            fee: context.fee,
-            drain: context.drain,
+            psbt: psbt.toString(),
             sendForm: context,
             locale: context.locale,
           };
@@ -210,15 +206,7 @@ export class SendFlowUseCases {
         return this.#snapClient.resolveInterface(id, null);
       }
       case ReviewTransactionEvent.Send: {
-        const { amount, feeRate, recipient, drain } = context;
-        const txRequest: TransactionRequest = {
-          feeRate,
-          amount: drain ? undefined : amount,
-          recipient,
-          drain,
-        };
-
-        return this.#snapClient.resolveInterface(id, txRequest);
+        return this.#snapClient.resolveInterface(id, context.psbt);
       }
       default:
         throw new Error('Unrecognized event');

@@ -11,7 +11,6 @@ import type {
   BitcoinAccount,
   BitcoinAccountRepository,
   BlockchainClient,
-  TransactionRequest,
   SnapClient,
   MetaProtocolsClient,
   Logger,
@@ -212,36 +211,6 @@ export class AccountUseCases {
     await this.#repository.delete(id);
 
     this.#logger.info('Account deleted successfully: %s', account.id);
-  }
-
-  async buildPsbt(id: string, request: TransactionRequest): Promise<Txid> {
-    this.#logger.debug('Sending transaction: %s. Request: %o', id, request);
-
-    if (request.drain && request.amount) {
-      throw new Error("Cannot specify both 'amount' and 'drain' options");
-    }
-
-    const account = await this.#repository.get(id);
-    if (!account) {
-      throw new Error(`Account not found: ${id}`);
-    }
-
-    const builder = account.buildTx().feeRate(request.feeRate);
-
-    if (request.amount) {
-      builder.addRecipient(request.amount, request.recipient);
-    } else if (request.drain) {
-      builder.drainWallet().drainTo(request.recipient);
-    } else {
-      throw new Error("Either 'amount' or 'drain' must be specified");
-    }
-
-    // Make sure frozen UTXOs are not spent
-    const frozenUTXOs = await this.#repository.getFrozenUTXOs(id);
-    builder.unspendable(frozenUTXOs);
-
-    const psbt = builder.finish();
-    return this.sendPsbt(id, psbt);
   }
 
   async sendPsbt(id: string, psbt: Psbt): Promise<Txid> {

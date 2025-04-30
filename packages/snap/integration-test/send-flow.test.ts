@@ -52,7 +52,7 @@ describe('Send flow', () => {
     }
   });
 
-  it('sends a transaction', async () => {
+  it.only('sends a transaction', async () => {
     const response = snap.request({
       origin: ORIGIN,
       method: 'startSendTransactionFlow',

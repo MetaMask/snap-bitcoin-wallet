@@ -46,15 +46,13 @@ export type SendFormState = {
 export type ReviewTransactionContext = {
   from: string;
   network: Network;
-  feeRate: number;
   currency: CurrencyUnit;
   exchangeRate?: CurrencyRate;
   recipient: string;
   amount: string;
-  fee: string;
   backgroundEventId?: string;
-  drain?: boolean;
   locale: string;
+  psbt: string;
 
   /**
    * Used to repopulate the send form if the user decides to go back in the flow

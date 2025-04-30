@@ -1,3 +1,4 @@
+import { Psbt } from '@metamask/bitcoindevkit';
 import type { SnapComponent } from '@metamask/snaps-sdk/jsx';
 import {
   Box,
@@ -29,18 +30,12 @@ export const ReviewTransactionView: SnapComponent<
   ReviewTransactionViewProps
 > = ({ context, messages }) => {
   const t = translate(messages);
-  const {
-    amount,
-    fee,
-    currency,
-    exchangeRate,
-    feeRate,
-    recipient,
-    network,
-    from,
-  } = context;
+  const { amount, currency, exchangeRate, recipient, network, from } = context;
 
-  const total = BigInt(amount) + BigInt(fee);
+  const psbt = Psbt.from_string(context.psbt);
+  const fee = psbt.fee().to_sat();
+  const feeRate = psbt.fee_rate()?.to_sat_per_vb_floor;
+  const total = BigInt(amount) + fee;
 
   return (
     <Container>
@@ -100,7 +95,7 @@ export const ReviewTransactionView: SnapComponent<
             />
           </Row>
           <Row label={t('feeRate')}>
-            <Text>{`${Math.floor(feeRate)} sat/vB`}</Text>
+            <Text>{`${feeRate ?? 'unknown'} sat/vB`}</Text>
           </Row>
           <Row label={t('total')}>
             <Value

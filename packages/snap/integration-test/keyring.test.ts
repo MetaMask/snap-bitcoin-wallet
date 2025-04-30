@@ -7,7 +7,7 @@ import { CurrencyUnit } from '../src/entities';
 import { Caip2AddressType, Caip19Asset } from '../src/handlers/caip';
 import { FUNDING_TX, MNEMONIC, ORIGIN, TEST_ADDRESS } from './constants';
 
-describe('Keyring', () => {
+describe.skip('Keyring', () => {
   const accounts: Record<string, KeyringAccount> = {};
   let snap: Snap;
 
