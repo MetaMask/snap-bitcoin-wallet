@@ -5,7 +5,6 @@ import { resolve } from 'path';
 require('dotenv').config();
 
 const config: SnapConfig = {
-  bundler: 'webpack',
   input: resolve(__dirname, 'src/index.ts'),
   server: {
     port: 8080,
@@ -19,8 +18,6 @@ const config: SnapConfig = {
     ESPLORA_TESTNET4: process.env.ESPLORA_TESTNET4,
     ESPLORA_SIGNET: process.env.ESPLORA_SIGNET,
     ESPLORA_REGTEST: process.env.ESPLORA_REGTEST,
-    SIMPLEHASH_BITCOIN: process.env.SIMPLEHASH_BITCOIN,
-    SIMPLEHASH_API_KEY: process.env.SIMPLEHASH_API_KEY,
     PRICE_API_URL: process.env.PRICE_API_URL,
     /* eslint-disable */
   },
