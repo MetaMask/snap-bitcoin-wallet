@@ -1,10 +1,9 @@
-import type { Txid } from '@metamask/bitcoindevkit';
+import type { Psbt, Txid } from '@metamask/bitcoindevkit';
 import { SnapError } from '@metamask/snaps-sdk';
 import type { JsonRpcRequest } from '@metamask/utils';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
-import type { TransactionRequest } from '../entities';
 import type { SendFlowUseCases } from '../use-cases';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 import { CreateSendFormRequest, RpcHandler, RpcMethod } from './RpcHandler';
@@ -17,7 +16,7 @@ jest.mock('superstruct', () => ({
 describe('RpcHandler', () => {
   const mockSendFlowUseCases = mock<SendFlowUseCases>();
   const mockAccountsUseCases = mock<AccountUseCases>();
-  const mockTxRequest = mock<TransactionRequest>();
+  const mockPsbt = mock<Psbt>();
   const origin = 'metamask';
   const mockRequest = mock<JsonRpcRequest>({
     method: RpcMethod.StartSendTransactionFlow,
@@ -50,8 +49,8 @@ describe('RpcHandler', () => {
 
   describe('executeSendFlow', () => {
     it('executes startSendTransactionFlow', async () => {
-      mockSendFlowUseCases.display.mockResolvedValue(mockTxRequest);
-      mockAccountsUseCases.send.mockResolvedValue(
+      mockSendFlowUseCases.display.mockResolvedValue(mockPsbt);
+      mockAccountsUseCases.sendPsbt.mockResolvedValue(
         mock<Txid>({
           toString: jest.fn().mockReturnValue('txId'),
         }),
@@ -64,9 +63,9 @@ describe('RpcHandler', () => {
         CreateSendFormRequest,
       );
       expect(mockSendFlowUseCases.display).toHaveBeenCalledWith('account-id');
-      expect(mockAccountsUseCases.send).toHaveBeenCalledWith(
+      expect(mockAccountsUseCases.sendPsbt).toHaveBeenCalledWith(
         'account-id',
-        mockTxRequest,
+        mockPsbt,
       );
       expect(result).toStrictEqual({ txId: 'txId' });
     });
@@ -80,20 +79,20 @@ describe('RpcHandler', () => {
       );
 
       expect(mockSendFlowUseCases.display).toHaveBeenCalled();
-      expect(mockAccountsUseCases.send).not.toHaveBeenCalled();
+      expect(mockAccountsUseCases.sendPsbt).not.toHaveBeenCalled();
     });
 
     it('propagates errors from send', async () => {
       const error = new Error();
-      mockSendFlowUseCases.display.mockResolvedValue(mockTxRequest);
-      mockAccountsUseCases.send.mockRejectedValue(error);
+      mockSendFlowUseCases.display.mockResolvedValue(mockPsbt);
+      mockAccountsUseCases.sendPsbt.mockRejectedValue(error);
 
       await expect(handler.route(origin, mockRequest)).rejects.toThrow(
         new SnapError(error),
       );
 
       expect(mockSendFlowUseCases.display).toHaveBeenCalled();
-      expect(mockAccountsUseCases.send).toHaveBeenCalled();
+      expect(mockAccountsUseCases.sendPsbt).toHaveBeenCalled();
     });
   });
 });

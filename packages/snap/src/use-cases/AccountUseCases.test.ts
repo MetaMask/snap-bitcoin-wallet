@@ -17,7 +17,6 @@ import type {
   Logger,
   MetaProtocolsClient,
   SnapClient,
-  TransactionRequest,
 } from '../entities';
 import { AccountUseCases } from './AccountUseCases';
 
@@ -521,114 +520,35 @@ describe('AccountUseCases', () => {
     });
   });
 
-  describe('send', () => {
-    const requestWithAmount: TransactionRequest = {
-      amount: '1000',
-      feeRate: 10,
-      recipient: 'recipient-address',
-    };
-    const requestDrain: TransactionRequest = {
-      feeRate: 10,
-      recipient: 'recipient-address',
-      drain: true,
-    };
-
+  describe('sendPsbt', () => {
     const mockTxid = mock<Txid>();
-    const mockOutPoint = 'txid:vout';
     const mockPsbt = mock<Psbt>();
     const mockTransaction = mock<Transaction>({
       // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
       /* eslint-disable @typescript-eslint/naming-convention */
       compute_txid: jest.fn(),
     });
-    const mockTxBuilder = {
-      addRecipient: jest.fn(),
-      feeRate: jest.fn(),
-      drainTo: jest.fn(),
-      drainWallet: jest.fn(),
-      finish: jest.fn(),
-      unspendable: jest.fn(),
-    };
     const mockAccount = mock<BitcoinAccount>({
       network: 'bitcoin',
-      buildTx: jest.fn(),
       sign: jest.fn(),
-    });
-
-    beforeEach(() => {
-      mockTxBuilder.addRecipient.mockReturnThis();
-      mockTxBuilder.feeRate.mockReturnThis();
-      mockTxBuilder.drainTo.mockReturnThis();
-      mockTxBuilder.drainWallet.mockReturnThis();
-      mockTxBuilder.finish.mockReturnValue(mockPsbt);
-      mockTxBuilder.unspendable.mockReturnThis();
-    });
-
-    it('throws error if both drain and amount are specified', async () => {
-      await expect(
-        useCases.send('non-existent-id', { ...requestWithAmount, drain: true }),
-      ).rejects.toThrow("Cannot specify both 'amount' and 'drain' options");
     });
 
     it('throws error if account is not found', async () => {
       mockRepository.getWithSigner.mockResolvedValue(null);
 
       await expect(
-        useCases.send('non-existent-id', requestWithAmount),
+        useCases.sendPsbt('non-existent-id', mockPsbt),
       ).rejects.toThrow('Account not found: non-existent-id');
     });
 
     it('sends transaction', async () => {
       mockRepository.getWithSigner.mockResolvedValue(mockAccount);
-      mockAccount.buildTx.mockReturnValue(mockTxBuilder);
-      mockRepository.getFrozenUTXOs.mockResolvedValue([mockOutPoint]);
       mockAccount.sign.mockReturnValue(mockTransaction);
       mockTransaction.compute_txid.mockReturnValue(mockTxid);
 
-      const txId = await useCases.send('account-id', requestWithAmount);
+      const txId = await useCases.sendPsbt('account-id', mockPsbt);
 
       expect(mockRepository.getWithSigner).toHaveBeenCalledWith('account-id');
-      expect(mockAccount.buildTx).toHaveBeenCalled();
-      expect(mockTxBuilder.feeRate).toHaveBeenCalledWith(
-        requestWithAmount.feeRate,
-      );
-      expect(mockTxBuilder.addRecipient).toHaveBeenCalledWith(
-        requestWithAmount.amount,
-        requestWithAmount.recipient,
-      );
-      expect(mockRepository.getFrozenUTXOs).toHaveBeenCalledWith('account-id');
-      expect(mockTxBuilder.unspendable).toHaveBeenCalledWith([mockOutPoint]);
-      expect(mockAccount.sign).toHaveBeenCalledWith(mockPsbt);
-      expect(mockChain.broadcast).toHaveBeenCalledWith(
-        mockAccount.network,
-        mockTransaction,
-      );
-      expect(mockRepository.update).toHaveBeenCalledWith(mockAccount);
-      expect(
-        mockSnapClient.emitAccountBalancesUpdatedEvent,
-      ).toHaveBeenCalledWith(mockAccount);
-      expect(mockTransaction.compute_txid).toHaveBeenCalled();
-      expect(txId).toBe(mockTxid);
-    });
-
-    it('sends a drain transaction when amount is not provided', async () => {
-      mockRepository.getWithSigner.mockResolvedValue(mockAccount);
-      mockAccount.buildTx.mockReturnValue(mockTxBuilder);
-      mockRepository.getFrozenUTXOs.mockResolvedValue([mockOutPoint]);
-      mockAccount.sign.mockReturnValue(mockTransaction);
-      mockTransaction.compute_txid.mockReturnValue(mockTxid);
-
-      const txId = await useCases.send('account-id', requestDrain);
-
-      expect(mockRepository.getWithSigner).toHaveBeenCalledWith('account-id');
-      expect(mockAccount.buildTx).toHaveBeenCalled();
-      expect(mockTxBuilder.feeRate).toHaveBeenCalledWith(requestDrain.feeRate);
-      expect(mockTxBuilder.drainWallet).toHaveBeenCalled();
-      expect(mockTxBuilder.drainTo).toHaveBeenCalledWith(
-        requestDrain.recipient,
-      );
-      expect(mockRepository.getFrozenUTXOs).toHaveBeenCalledWith('account-id');
-      expect(mockTxBuilder.unspendable).toHaveBeenCalledWith([mockOutPoint]);
       expect(mockAccount.sign).toHaveBeenCalledWith(mockPsbt);
       expect(mockChain.broadcast).toHaveBeenCalledWith(
         mockAccount.network,
@@ -646,43 +566,29 @@ describe('AccountUseCases', () => {
       const error = new Error('getWithSigner failed');
       mockRepository.getWithSigner.mockRejectedValueOnce(error);
 
-      await expect(useCases.send('account-id', requestWithAmount)).rejects.toBe(
-        error,
-      );
-    });
-
-    it('propagates an error if buildTx fails', async () => {
-      const error = new Error('buildTx failed');
-      mockRepository.getWithSigner.mockResolvedValue(mockAccount);
-      mockAccount.buildTx.mockImplementation(() => {
-        throw error;
-      });
-
-      await expect(useCases.send('account-id', requestWithAmount)).rejects.toBe(
+      await expect(useCases.sendPsbt('account-id', mockPsbt)).rejects.toBe(
         error,
       );
     });
 
     it('propagates an error if broadcast fails', async () => {
       mockRepository.getWithSigner.mockResolvedValue(mockAccount);
-      mockAccount.buildTx.mockReturnValue(mockTxBuilder);
 
       const error = new Error('broadcast failed');
       mockChain.broadcast.mockRejectedValueOnce(error);
 
-      await expect(useCases.send('account-id', requestWithAmount)).rejects.toBe(
+      await expect(useCases.sendPsbt('account-id', mockPsbt)).rejects.toBe(
         error,
       );
     });
 
     it('propagates an error if update fails', async () => {
       mockRepository.getWithSigner.mockResolvedValue(mockAccount);
-      mockAccount.buildTx.mockReturnValue(mockTxBuilder);
 
       const error = new Error('update failed');
       mockRepository.update.mockRejectedValue(error);
 
-      await expect(useCases.send('account-id', requestWithAmount)).rejects.toBe(
+      await expect(useCases.sendPsbt('account-id', mockPsbt)).rejects.toBe(
         error,
       );
     });

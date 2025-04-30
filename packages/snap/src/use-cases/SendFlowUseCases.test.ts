@@ -61,11 +61,18 @@ describe('SendFlowUseCases', () => {
     balance: { trusted_spendable: { to_sat: () => BigInt(1234) } },
     peekAddress: jest.fn(),
   });
-  const mockTxRequest = mock<TransactionRequest>();
   const mockPreferences = mock<GetPreferencesResult>({
     currency: 'usd',
     locale: 'en',
   });
+  const mockTxBuilder = {
+    addRecipient: jest.fn(),
+    feeRate: jest.fn(),
+    drainTo: jest.fn(),
+    drainWallet: jest.fn(),
+    finish: jest.fn(),
+    unspendable: jest.fn(),
+  };
 
   const useCases = new SendFlowUseCases(
     mockLogger,
@@ -80,6 +87,19 @@ describe('SendFlowUseCases', () => {
   );
 
   describe('displayForm', () => {
+    const mockOutPoint = 'txid:vout';
+    const mockPsbt = mock<Psbt>();
+    const requestWithAmount: TransactionRequest = {
+      amount: '1000',
+      feeRate: 10,
+      recipient: 'recipient-address',
+    };
+    const requestDrain: TransactionRequest = {
+      feeRate: 10,
+      recipient: 'recipient-address',
+      drain: true,
+    };
+
     beforeEach(() => {
       mockAccountRepository.get.mockResolvedValue(mockAccount);
       mockAccount.peekAddress.mockReturnValue(
@@ -89,6 +109,13 @@ describe('SendFlowUseCases', () => {
       );
       mockSendFlowRepository.insertForm.mockResolvedValue('interface-id');
       mockSnapClient.getPreferences.mockResolvedValue(mockPreferences);
+      mockAccount.buildTx.mockReturnValue(mockTxBuilder);
+      mockTxBuilder.addRecipient.mockReturnThis();
+      mockTxBuilder.feeRate.mockReturnThis();
+      mockTxBuilder.drainTo.mockReturnThis();
+      mockTxBuilder.drainWallet.mockReturnThis();
+      mockTxBuilder.finish.mockReturnValue(mockPsbt);
+      mockTxBuilder.unspendable.mockReturnThis();
     });
 
     it('throws error if account not found', async () => {
@@ -106,8 +133,9 @@ describe('SendFlowUseCases', () => {
       );
     });
 
-    it('displays Send form and returns transaction request when resolved', async () => {
-      mockSnapClient.displayInterface.mockResolvedValue(mockTxRequest);
+    it('displays Send form and returns PSBT when resolved', async () => {
+      mockSnapClient.displayInterface.mockResolvedValue(requestWithAmount);
+      mockAccountRepository.getFrozenUTXOs.mockResolvedValue([mockOutPoint]);
 
       const result = await useCases.display('account-id');
 
@@ -126,19 +154,58 @@ describe('SendFlowUseCases', () => {
         'interface-id',
       );
       expect(mockChain.getFeeEstimates).toHaveBeenCalled();
-      expect(result).toStrictEqual(mockTxRequest);
+      expect(mockAccount.buildTx).toHaveBeenCalled();
+      expect(mockTxBuilder.feeRate).toHaveBeenCalledWith(
+        requestWithAmount.feeRate,
+      );
+      expect(mockTxBuilder.addRecipient).toHaveBeenCalledWith(
+        requestWithAmount.amount,
+        requestWithAmount.recipient,
+      );
+      expect(mockAccountRepository.getFrozenUTXOs).toHaveBeenCalledWith(
+        'account-id',
+      );
+      expect(mockTxBuilder.unspendable).toHaveBeenCalledWith([mockOutPoint]);
+
+      expect(result).toStrictEqual(mockPsbt);
+    });
+
+    it('displays Send form and returns a drain PSBT when resolved', async () => {
+      mockSnapClient.displayInterface.mockResolvedValue(requestDrain);
+      mockAccountRepository.getFrozenUTXOs.mockResolvedValue([mockOutPoint]);
+
+      const result = await useCases.display('account-id');
+
+      expect(mockAccountRepository.get).toHaveBeenCalledWith('account-id');
+      expect(mockSnapClient.getPreferences).toHaveBeenCalled();
+      expect(mockSendFlowRepository.insertForm).toHaveBeenCalledWith({
+        balance: '1234',
+        currency: CurrencyUnit.Bitcoin,
+        account: { id: 'acc-id', address: 'myAddress' },
+        network: 'bitcoin',
+        feeRate: fallbackFeeRate,
+        errors: {},
+        locale: 'en',
+      });
+      expect(mockSnapClient.displayInterface).toHaveBeenCalledWith(
+        'interface-id',
+      );
+      expect(mockChain.getFeeEstimates).toHaveBeenCalled();
+      expect(mockAccount.buildTx).toHaveBeenCalled();
+      expect(mockTxBuilder.feeRate).toHaveBeenCalledWith(requestDrain.feeRate);
+      expect(mockTxBuilder.drainWallet).toHaveBeenCalled();
+      expect(mockTxBuilder.drainTo).toHaveBeenCalledWith(
+        requestDrain.recipient,
+      );
+      expect(mockAccountRepository.getFrozenUTXOs).toHaveBeenCalledWith(
+        'account-id',
+      );
+      expect(mockTxBuilder.unspendable).toHaveBeenCalledWith([mockOutPoint]);
+      expect(result).toStrictEqual(mockPsbt);
     });
   });
 
   describe('onChangeForm', () => {
-    const mockTxBuilder = {
-      addRecipient: jest.fn(),
-      feeRate: jest.fn(),
-      drainTo: jest.fn(),
-      drainWallet: jest.fn(),
-      finish: jest.fn(),
-      unspendable: jest.fn(),
-    };
     const mockPsbt = mock<Psbt>();
     const mockContext: SendFormContext = {
       account: { id: 'account-id', address: 'myAddress' },
