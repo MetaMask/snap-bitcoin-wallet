@@ -52,8 +52,8 @@ export class RpcHandler {
   }
 
   async #executeSendFlow(account: string): Promise<SendTransactionResponse> {
-    const txRequest = await this.#sendFlowUseCases.display(account);
-    const txId = await this.#accountUseCases.send(account, txRequest);
+    const psbt = await this.#sendFlowUseCases.display(account);
+    const txId = await this.#accountUseCases.sendPsbt(account, psbt);
     return { txId: txId.toString() };
   }
 }

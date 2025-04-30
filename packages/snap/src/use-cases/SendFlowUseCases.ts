@@ -1,3 +1,4 @@
+import type { Psbt } from '@metamask/bitcoindevkit';
 import { Address, Amount } from '@metamask/bitcoindevkit';
 import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 import { UserRejectedRequestError } from '@metamask/snaps-sdk';
@@ -60,7 +61,7 @@ export class SendFlowUseCases {
     this.#ratesRefreshInterval = ratesRefreshInterval;
   }
 
-  async display(accountId: string): Promise<TransactionRequest> {
+  async display(accountId: string): Promise<Psbt> {
     this.#logger.debug('Displaying Send form. Account: %s', accountId);
 
     const account = await this.#accountRepository.get(accountId);
@@ -101,7 +102,22 @@ export class SendFlowUseCases {
       'Transaction request generated successfully: %o',
       request,
     );
-    return request;
+
+    const builder = account.buildTx().feeRate(request.feeRate);
+
+    if (request.amount) {
+      builder.addRecipient(request.amount, request.recipient);
+    } else if (request.drain) {
+      builder.drainWallet().drainTo(request.recipient);
+    } else {
+      throw new Error("Either 'amount' or 'drain' must be specified");
+    }
+
+    // Make sure frozen UTXOs are not spent
+    const frozenUTXOs = await this.#accountRepository.getFrozenUTXOs(accountId);
+    builder.unspendable(frozenUTXOs);
+
+    return builder.finish();
   }
 
   async onChangeForm(
