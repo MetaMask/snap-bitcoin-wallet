@@ -11,7 +11,6 @@ export const Config: SnapConfig = {
     index: 0,
     defaultAddressType: (process.env.DEFAULT_ADDRESS_TYPE ??
       'p2wpkh') as AddressType,
-    utxoProtectionEnabled: false,
   },
   chain: {
     parallelRequests: 3,
@@ -25,13 +24,6 @@ export const Config: SnapConfig = {
       signet: process.env.ESPLORA_SIGNET ?? 'https://mutinynet.com/api',
       regtest:
         process.env.ESPLORA_REGTEST ?? 'http://localhost:8094/regtest/api',
-    },
-  },
-  simpleHash: {
-    apiKey: process.env.SIMPLEHASH_API_KEY,
-    url: {
-      bitcoin:
-        process.env.SIMPLEHASH_BITCOIN ?? `https://api.simplehash.com/api/v0`,
     },
   },
   targetBlocksConfirmation: 3,

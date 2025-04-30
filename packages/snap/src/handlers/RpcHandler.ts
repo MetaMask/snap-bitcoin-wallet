@@ -13,6 +13,7 @@ export enum RpcMethod {
 export const CreateSendFormRequest = object({
   account: string(),
   scope: optional(enums(Object.values(BtcScope))), // We don't use the scope but need to define it for validation
+  assetId: optional(string()), // We don't use the Caip19 but need to define it for validation
 });
 
 type SendTransactionResponse = {

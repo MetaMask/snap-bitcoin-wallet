@@ -75,4 +75,3 @@ jobs:
     secrets:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-      SIMPLEHASH_API_KEY: ${{ secrets.SIMPLEHASH_API_KEY }}
