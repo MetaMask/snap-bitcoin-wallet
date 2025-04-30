@@ -52,7 +52,7 @@ describe('Send flow', () => {
     }
   });
 
-  it.only('sends a transaction', async () => {
+  it('sends a transaction', async () => {
     const response = snap.request({
       origin: ORIGIN,
       method: 'startSendTransactionFlow',
@@ -159,7 +159,7 @@ describe('Send flow', () => {
 
     const result = await response;
     expect(result).toRespondWithError({
-      code: 4001,
+      code: -32603,
       message: 'User rejected the request.',
       stack: expect.anything(),
     });
