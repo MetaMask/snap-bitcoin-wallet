@@ -5,6 +5,7 @@ const { readFileSync, writeFileSync } = require('node:fs');
 const { join } = require('node:path');
 
 const packageFile = require('../package.json');
+const ZstdCodec = require('zstd-codec').ZstdCodec;
 
 console.log('[preinstalled-snap] - attempt to build preinstalled snap');
 
@@ -71,6 +72,13 @@ try {
   console.log(
     `[preinstalled-snap] - successfully created preinstalled snap at ${outputPath}`,
   );
+
+  ZstdCodec.run(zstd => {
+      const compressed = new zstd.Simple().compress(Buffer.from(JSON.stringify(preinstalledSnap, null, 0)));
+      const compressedPath = join(__dirname, '..', 'dist/preinstalled-snap.json.zst');
+      writeFileSync(compressedPath, compressed);
+      console.log(`[preinstalled-snap] - compressed version created at ${compressedPath}`);
+  });
 } catch (error) {
   console.error('Error writing combined file to disk:', error);
   throw error;
