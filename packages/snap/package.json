@@ -16,12 +16,13 @@
   ],
   "scripts": {
     "allow-scripts": "yarn workspace root allow-scripts",
-    "build": "mm-snap build && yarn build:locale && yarn build-preinstalled-snap",
+    "build": "mm-snap build && yarn build:locale && yarn build-preinstalled-snap && yarn compress-preinstalled-snap",
     "build-preinstalled-snap": "node scripts/build-preinstalled-snap.js",
     "build:clean": "yarn clean && yarn build:locale && yarn build",
     "build:locale": "node ./scripts/populate-en-locale.js && prettier 'locales/**/*.json' -w",
     "build:locale:watch": "npx nodemon --watch packages/snap/messages.json --exec \"node ./scripts/populate-en-locale.js && prettier 'locales/**/*.json' -w\"",
     "clean": "rimraf dist",
+    "compress-preinstalled-snap": "gzip -9 -c dist/preinstalled-snap.json > dist/preinstalled-snap.json.gz",
     "lint": "yarn lint:eslint && yarn lint:misc && yarn lint:deps && yarn lint:types",
     "lint:deps": "depcheck",
     "lint:eslint": "eslint . --cache --ext js,jsx,ts,tsx",
@@ -70,8 +71,7 @@
     "superstruct": "^1.0.3",
     "ts-jest": "^29.1.0",
     "typescript": "^4.7.4",
-    "uuid": "^11.1.0",
-    "zstd-codec": "^0.1.5"
+    "uuid": "^11.1.0"
   },
   "packageManager": "yarn@4.5.1",
   "engines": {
