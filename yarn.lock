@@ -2740,7 +2740,6 @@ __metadata:
     ts-jest: "npm:^29.1.0"
     typescript: "npm:^4.7.4"
     uuid: "npm:^11.1.0"
-    zstd-codec: "npm:^0.1.5"
   languageName: unknown
   linkType: soft
 
@@ -20199,12 +20198,5 @@ __metadata:
     read: "npm:^1.0.7"
     strip-ansi: "npm:^5.2.0"
   checksum: 10/398b368d860d25a9821efeea32eeb9bf936725dc3fc40e24fc10caa068ddbe5b1a7ea9146899199d5e7bbeeead17cbba5b97fe72398fe04c26a08c47c15f4916
-  languageName: node
-  linkType: hard
-
-"zstd-codec@npm:^0.1.5":
-  version: 0.1.5
-  resolution: "zstd-codec@npm:0.1.5"
-  checksum: 10/deee384c29129e3ed86b4f2ac4dc415fd8dad8b62b12ad07cc092c89481bee362477478c6179f2beb252bec67b57120fad8fd84f0a7f7b5914a77e24b3608094
   languageName: node
   linkType: hard
