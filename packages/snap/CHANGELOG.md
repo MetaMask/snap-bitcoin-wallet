@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0]
+
+### Added
+
+- Compress preinstalled Snap during build ([#451](https://github.com/MetaMask/snap-bitcoin-wallet/pull/451))
+
+### Changed
+
+- Disable UTXO protection ([#445](https://github.com/MetaMask/snap-bitcoin-wallet/pull/445))
+- Generate PSBT in send flow ([#448](https://github.com/MetaMask/snap-bitcoin-wallet/pull/448))
+
+### Removed
+
+- Remove SimpleHash ([#447](https://github.com/MetaMask/snap-bitcoin-wallet/pull/447))
+
 ## [0.11.0]
 
 ### Added
@@ -298,7 +313,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add CI for lint and test ([#2](https://github.com/MetaMask/bitcoin/pull/2))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.8.2...v0.9.0
