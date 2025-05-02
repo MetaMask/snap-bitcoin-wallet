@@ -9,12 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.12.0]
 
-### Uncategorized
+### Added
 
-- refactor: generate and send psbt ([#448](https://github.com/MetaMask/snap-bitcoin-wallet/pull/448))
-- build: compress snap ([#451](https://github.com/MetaMask/snap-bitcoin-wallet/pull/451))
-- chore: remove simplehash residue ([#447](https://github.com/MetaMask/snap-bitcoin-wallet/pull/447))
-- chore: disable utxo protection ([#445](https://github.com/MetaMask/snap-bitcoin-wallet/pull/445))
+- Compress preinstalled Snap during build ([#451](https://github.com/MetaMask/snap-bitcoin-wallet/pull/451))
+
+### Changed
+
+- Disable UTXO protection ([#445](https://github.com/MetaMask/snap-bitcoin-wallet/pull/445))
+- Generate PSBT in Send Flow ([#448](https://github.com/MetaMask/snap-bitcoin-wallet/pull/448))
+
+### Removed
+
+Remove SimpleHash ([#447](https://github.com/MetaMask/snap-bitcoin-wallet/pull/447))
 
 ## [0.11.0]
 
