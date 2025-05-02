@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Disable UTXO protection ([#445](https://github.com/MetaMask/snap-bitcoin-wallet/pull/445))
-- Generate PSBT in Send Flow ([#448](https://github.com/MetaMask/snap-bitcoin-wallet/pull/448))
+- Generate PSBT in send flow ([#448](https://github.com/MetaMask/snap-bitcoin-wallet/pull/448))
 
 ### Removed
 
