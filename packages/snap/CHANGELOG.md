@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-Remove SimpleHash ([#447](https://github.com/MetaMask/snap-bitcoin-wallet/pull/447))
+- Remove SimpleHash ([#447](https://github.com/MetaMask/snap-bitcoin-wallet/pull/447))
 
 ## [0.11.0]
 
