@@ -1,6 +1,7 @@
 import type {
   AddressType,
   Network,
+  Psbt,
   Txid,
   WalletTx,
 } from '@metamask/bitcoindevkit';
@@ -10,7 +11,6 @@ import type {
   BitcoinAccount,
   BitcoinAccountRepository,
   BlockchainClient,
-  TransactionRequest,
   SnapClient,
   MetaProtocolsClient,
   Logger,
@@ -213,33 +213,14 @@ export class AccountUseCases {
     this.#logger.info('Account deleted successfully: %s', account.id);
   }
 
-  async send(id: string, request: TransactionRequest): Promise<Txid> {
-    this.#logger.debug('Sending transaction: %s. Request: %o', id, request);
-
-    if (request.drain && request.amount) {
-      throw new Error("Cannot specify both 'amount' and 'drain' options");
-    }
+  async sendPsbt(id: string, psbt: Psbt): Promise<Txid> {
+    this.#logger.debug('Sending transaction: %s', id);
 
     const account = await this.#repository.getWithSigner(id);
     if (!account) {
       throw new Error(`Account not found: ${id}`);
     }
 
-    const builder = account.buildTx().feeRate(request.feeRate);
-
-    if (request.amount) {
-      builder.addRecipient(request.amount, request.recipient);
-    } else if (request.drain) {
-      builder.drainWallet().drainTo(request.recipient);
-    } else {
-      throw new Error("Either 'amount' or 'drain' must be specified");
-    }
-
-    // Make sure frozen UTXOs are not spent
-    const frozenUTXOs = await this.#repository.getFrozenUTXOs(id);
-    builder.unspendable(frozenUTXOs);
-
-    const psbt = builder.finish();
     const tx = account.sign(psbt);
     await this.#chain.broadcast(account.network, tx);
     await this.#repository.update(account);

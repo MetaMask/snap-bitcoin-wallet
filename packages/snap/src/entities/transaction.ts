@@ -1,12 +1,5 @@
 import type { Psbt } from '@metamask/bitcoindevkit';
 
-export type TransactionRequest = {
-  recipient: string;
-  amount?: string;
-  feeRate: number;
-  drain?: boolean;
-};
-
 /**
  * A Bitcoin transaction builder.
  */

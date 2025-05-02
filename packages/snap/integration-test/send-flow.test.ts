@@ -159,7 +159,7 @@ describe('Send flow', () => {
 
     const result = await response;
     expect(result).toRespondWithError({
-      code: 4001,
+      code: -32603,
       message: 'User rejected the request.',
       stack: expect.anything(),
     });
