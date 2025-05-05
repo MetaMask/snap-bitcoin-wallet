@@ -1,4 +1,4 @@
-import {
+import type {
   AddressInfo,
   AddressType,
   Balance,
@@ -14,9 +14,13 @@ import {
   WalletTx,
   Amount,
   ScriptBuf,
-  UnconfirmedTx,
 } from '@metamask/bitcoindevkit';
-import { SignOptions, Txid, Wallet } from '@metamask/bitcoindevkit';
+import {
+  UnconfirmedTx,
+  SignOptions,
+  Txid,
+  Wallet,
+} from '@metamask/bitcoindevkit';
 
 import type { BitcoinAccount, TransactionBuilder } from '../entities';
 import { BdkTxBuilderAdapter } from './BdkTxBuilderAdapter';

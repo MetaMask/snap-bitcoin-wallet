@@ -5,6 +5,7 @@ import type {
   Txid,
   WalletTx,
 } from '@metamask/bitcoindevkit';
+import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 
 import type {
   AccountsConfig,
@@ -15,7 +16,6 @@ import type {
   MetaProtocolsClient,
   Logger,
 } from '../entities';
-import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 
 const addressTypeToPurpose: Record<AddressType, string> = {
   p2pkh: "44'",
@@ -223,23 +223,20 @@ export class AccountUseCases {
     }
 
     const tx = account.sign(psbt);
-    await this.#chain.broadcast(account.network, tx);
+    const txId = tx.compute_txid();
+    await this.#chain.broadcast(account.network, tx.clone());
     account.applyUnconfirmedTx(tx, getCurrentUnixTimestamp());
     await this.#repository.update(account);
 
-    const txId = tx.compute_txid();
     await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
+
     const walletTx = account.getTransaction(txId.toString());
-    if (!walletTx) {
-      // This should never happen by assertion, but needed to satisfy TS
-      throw new Error(
-        `Transaction not found in wallet after broadcast: ${txId}`,
-      );
+    if (walletTx) {
+      // should always be true by assertion but needed for type checking
+      await this.#snapClient.emitAccountTransactionsUpdatedEvent(account, [
+        walletTx,
+      ]);
     }
-    this.#logger.debug('should emit transaction!!!');
-    await this.#snapClient.emitAccountTransactionsUpdatedEvent(account, [
-      walletTx,
-    ]);
 
     this.#logger.info(
       'Transaction sent successfully: %s. Account: %s, Network: %s',

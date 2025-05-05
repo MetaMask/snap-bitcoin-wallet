@@ -526,10 +526,18 @@ describe('AccountUseCases', () => {
       // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
       /* eslint-disable @typescript-eslint/naming-convention */
       compute_txid: jest.fn(),
+      clone: jest.fn(),
     });
     const mockAccount = mock<BitcoinAccount>({
       network: 'bitcoin',
       sign: jest.fn(),
+    });
+    const mockWalletTx = mock<WalletTx>();
+
+    beforeEach(() => {
+      mockRepository.getWithSigner.mockResolvedValue(mockAccount);
+      mockTransaction.compute_txid.mockReturnValue(mockTxid);
+      mockTransaction.clone.mockReturnThis();
     });
 
     it('throws error if account is not found', async () => {
@@ -541,11 +549,8 @@ describe('AccountUseCases', () => {
     });
 
     it('sends transaction', async () => {
-      const mockWalletTx = mock<WalletTx>();
-      mockRepository.getWithSigner.mockResolvedValue(mockAccount);
       mockAccount.sign.mockReturnValue(mockTransaction);
       mockAccount.getTransaction.mockReturnValue(mockWalletTx);
-      mockTransaction.compute_txid.mockReturnValue(mockTxid);
 
       const txId = await useCases.sendPsbt('account-id', mockPsbt);
 
@@ -576,9 +581,8 @@ describe('AccountUseCases', () => {
     });
 
     it('propagates an error if broadcast fails', async () => {
-      mockRepository.getWithSigner.mockResolvedValue(mockAccount);
-
       const error = new Error('broadcast failed');
+      mockAccount.sign.mockReturnValue(mockTransaction);
       mockChain.broadcast.mockRejectedValueOnce(error);
 
       await expect(useCases.sendPsbt('account-id', mockPsbt)).rejects.toBe(
@@ -587,9 +591,8 @@ describe('AccountUseCases', () => {
     });
 
     it('propagates an error if update fails', async () => {
-      mockRepository.getWithSigner.mockResolvedValue(mockAccount);
-
       const error = new Error('update failed');
+      mockAccount.sign.mockReturnValue(mockTransaction);
       mockRepository.update.mockRejectedValue(error);
 
       await expect(useCases.sendPsbt('account-id', mockPsbt)).rejects.toBe(
