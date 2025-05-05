@@ -541,8 +541,10 @@ describe('AccountUseCases', () => {
     });
 
     it('sends transaction', async () => {
+      const mockWalletTx = mock<WalletTx>();
       mockRepository.getWithSigner.mockResolvedValue(mockAccount);
       mockAccount.sign.mockReturnValue(mockTransaction);
+      mockAccount.getTransaction.mockReturnValue(mockWalletTx);
       mockTransaction.compute_txid.mockReturnValue(mockTxid);
 
       const txId = await useCases.sendPsbt('account-id', mockPsbt);
@@ -554,10 +556,13 @@ describe('AccountUseCases', () => {
         mockTransaction,
       );
       expect(mockRepository.update).toHaveBeenCalledWith(mockAccount);
+      expect(mockTransaction.compute_txid).toHaveBeenCalled();
       expect(
         mockSnapClient.emitAccountBalancesUpdatedEvent,
       ).toHaveBeenCalledWith(mockAccount);
-      expect(mockTransaction.compute_txid).toHaveBeenCalled();
+      expect(
+        mockSnapClient.emitAccountTransactionsUpdatedEvent,
+      ).toHaveBeenCalledWith(mockAccount, [mockWalletTx]);
       expect(txId).toBe(mockTxid);
     });
 

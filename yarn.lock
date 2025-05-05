@@ -2706,7 +2706,7 @@ __metadata:
   dependencies:
     "@babel/preset-typescript": "npm:^7.23.3"
     "@metamask/auto-changelog": "npm:^3.4.4"
-    "@metamask/bitcoindevkit": "npm:^0.1.6"
+    "@metamask/bitcoindevkit": "file:../../../bdk-wasm/pkg"
     "@metamask/eslint-config": "npm:^12.2.0"
     "@metamask/eslint-config-jest": "npm:^12.1.0"
     "@metamask/eslint-config-nodejs": "npm:^12.1.0"
@@ -2790,10 +2790,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@metamask/bitcoindevkit@npm:^0.1.6":
+"@metamask/bitcoindevkit@file:../../../bdk-wasm/pkg::locator=%40metamask%2Fbitcoin-wallet-snap%40workspace%3Apackages%2Fsnap":
   version: 0.1.6
-  resolution: "@metamask/bitcoindevkit@npm:0.1.6"
-  checksum: 10/6802f8a2420905ba51772dc838bd8b016d9e7eb46422fc8bb39f26d3663d5a072b32e641440e4871da328660f6659aaa176038b1f6ddb0b95f25dee4f21d0447
+  resolution: "@metamask/bitcoindevkit@file:../../../bdk-wasm/pkg#../../../bdk-wasm/pkg::hash=3f9e8e&locator=%40metamask%2Fbitcoin-wallet-snap%40workspace%3Apackages%2Fsnap"
+  checksum: 10/7de2e8d4bd2910950a95985417a365e6a6d6854676f484778f9f1dc8fe476aecfd79c30a17092425604b2df8ce7f3a079743dca5e32def73c6f8f4a3461c942d
   languageName: node
   linkType: hard
 

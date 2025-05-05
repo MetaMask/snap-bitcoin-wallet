@@ -15,6 +15,7 @@ import type {
   MetaProtocolsClient,
   Logger,
 } from '../entities';
+import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 
 const addressTypeToPurpose: Record<AddressType, string> = {
   p2pkh: "44'",
@@ -223,11 +224,23 @@ export class AccountUseCases {
 
     const tx = account.sign(psbt);
     await this.#chain.broadcast(account.network, tx);
+    account.applyUnconfirmedTx(tx, getCurrentUnixTimestamp());
     await this.#repository.update(account);
 
-    await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
-
     const txId = tx.compute_txid();
+    await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
+    const walletTx = account.getTransaction(txId.toString());
+    if (!walletTx) {
+      // This should never happen by assertion, but needed to satisfy TS
+      throw new Error(
+        `Transaction not found in wallet after broadcast: ${txId}`,
+      );
+    }
+    this.#logger.debug('should emit transaction!!!');
+    await this.#snapClient.emitAccountTransactionsUpdatedEvent(account, [
+      walletTx,
+    ]);
+
     this.#logger.info(
       'Transaction sent successfully: %s. Account: %s, Network: %s',
       txId,
