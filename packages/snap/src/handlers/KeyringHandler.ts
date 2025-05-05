@@ -1,4 +1,8 @@
-import { BtcScope, MetaMaskOptionsStruct } from '@metamask/keyring-api';
+import {
+  BtcAccountType,
+  BtcScope,
+  MetaMaskOptionsStruct,
+} from '@metamask/keyring-api';
 import type {
   Keyring,
   KeyringAccount,
@@ -19,7 +23,6 @@ import { networkToCurrencyUnit } from '../entities';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 import {
   networkToCaip19,
-  Caip2AddressType,
   caip2ToAddressType,
   caip2ToNetwork,
   networkToCaip2,
@@ -30,7 +33,7 @@ import { validateOrigin } from './permissions';
 
 export const CreateAccountRequest = object({
   scope: enums(Object.values(BtcScope)),
-  addressType: optional(enums(Object.values(Caip2AddressType))),
+  addressType: optional(enums(Object.values(BtcAccountType))),
   entropySource: optional(string()),
   accountNameSuggestion: optional(string()),
   synchronize: optional(boolean()),
