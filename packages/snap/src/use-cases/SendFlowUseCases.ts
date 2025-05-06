@@ -94,7 +94,7 @@ export class SendFlowUseCases {
       throw new UserRejectedRequestError() as unknown as Error;
     }
 
-    this.#logger.debug('PSBT generated successfully');
+    this.#logger.info('PSBT generated successfully');
     return Psbt.from_string(psbt);
   }
 

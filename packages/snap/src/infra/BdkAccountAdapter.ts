@@ -15,7 +15,12 @@ import type {
   Amount,
   ScriptBuf,
 } from '@metamask/bitcoindevkit';
-import { Txid, Wallet } from '@metamask/bitcoindevkit';
+import {
+  UnconfirmedTx,
+  SignOptions,
+  Txid,
+  Wallet,
+} from '@metamask/bitcoindevkit';
 
 import type { BitcoinAccount, TransactionBuilder } from '../entities';
 import { BdkTxBuilderAdapter } from './BdkTxBuilderAdapter';
@@ -117,7 +122,7 @@ export class BdkAccountAdapter implements BitcoinAccount {
   }
 
   sign(psbt: Psbt): Transaction {
-    const success = this.#wallet.sign(psbt);
+    const success = this.#wallet.sign(psbt, new SignOptions());
     if (!success) {
       throw new Error('failed to sign PSBT');
     }
@@ -148,5 +153,11 @@ export class BdkAccountAdapter implements BitcoinAccount {
   sentAndReceived(tx: Transaction): [Amount, Amount] {
     const sentAndReceived = this.#wallet.sent_and_received(tx.clone());
     return [sentAndReceived[0], sentAndReceived[1]];
+  }
+
+  applyUnconfirmedTx(tx: Transaction, lastSeen: number): void {
+    this.#wallet.apply_unconfirmed_txs([
+      new UnconfirmedTx(tx, BigInt(lastSeen)),
+    ]);
   }
 }

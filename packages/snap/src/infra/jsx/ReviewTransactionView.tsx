@@ -34,7 +34,7 @@ export const ReviewTransactionView: SnapComponent<
 
   const psbt = Psbt.from_string(context.psbt);
   const fee = psbt.fee().to_sat();
-  const feeRate = psbt.fee_rate()?.to_sat_per_vb_floor;
+  const feeRate = psbt.fee_rate()?.to_sat_per_vb_floor();
   const total = BigInt(amount) + fee;
 
   return (

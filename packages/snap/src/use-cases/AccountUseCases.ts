@@ -5,6 +5,7 @@ import type {
   Txid,
   WalletTx,
 } from '@metamask/bitcoindevkit';
+import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 
 import type {
   AccountsConfig,
@@ -222,12 +223,21 @@ export class AccountUseCases {
     }
 
     const tx = account.sign(psbt);
-    await this.#chain.broadcast(account.network, tx);
+    const txId = tx.compute_txid();
+    await this.#chain.broadcast(account.network, tx.clone());
+    account.applyUnconfirmedTx(tx, getCurrentUnixTimestamp());
     await this.#repository.update(account);
 
     await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
 
-    const txId = tx.compute_txid();
+    const walletTx = account.getTransaction(txId.toString());
+    if (walletTx) {
+      // should always be true by assertion but needed for type checking
+      await this.#snapClient.emitAccountTransactionsUpdatedEvent(account, [
+        walletTx,
+      ]);
+    }
+
     this.#logger.info(
       'Transaction sent successfully: %s. Account: %s, Network: %s',
       txId,

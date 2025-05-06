@@ -147,6 +147,14 @@ export type BitcoinAccount = {
    * @returns the sent and received amounts.
    */
   sentAndReceived(tx: Transaction): [Amount, Amount];
+
+  /**
+   * Apply relevant unconfirmed transactions to the wallet.
+   * Transactions that are not relevant are filtered out.
+   * @param tx - The Bitcoin transaction.
+   * @param lastSeen - Timestamp of when the transaction was last seen in the mempool.
+   */
+  applyUnconfirmedTx(tx: Transaction, lastSeen: number): void;
 };
 
 /**
