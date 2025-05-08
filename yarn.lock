@@ -2706,7 +2706,7 @@ __metadata:
   dependencies:
     "@babel/preset-typescript": "npm:^7.23.3"
     "@metamask/auto-changelog": "npm:^3.4.4"
-    "@metamask/bitcoindevkit": "npm:^0.1.7"
+    "@metamask/bitcoindevkit": "npm:^0.1.8"
     "@metamask/eslint-config": "npm:^12.2.0"
     "@metamask/eslint-config-jest": "npm:^12.1.0"
     "@metamask/eslint-config-nodejs": "npm:^12.1.0"
@@ -2790,10 +2790,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@metamask/bitcoindevkit@npm:^0.1.7":
-  version: 0.1.7
-  resolution: "@metamask/bitcoindevkit@npm:0.1.7"
-  checksum: 10/160654dbb34535ae9aab6a4430cddaaba1b0609b058c6409ad04779753366a3d32310e072abfcbf9b096161b8b79da5f6c4a0dfacc9e2ffea866181b11b38013
+"@metamask/bitcoindevkit@npm:^0.1.8":
+  version: 0.1.8
+  resolution: "@metamask/bitcoindevkit@npm:0.1.8"
+  checksum: 10/10137d0e71159102de8ed1fadd0d5a45960fada8369cd942f0d8d41fdb3e9d91390758b52b3c86879dd6427522d72dcc92d6c70034ba176977b8c0e2df1c59bb
   languageName: node
   linkType: hard
 
