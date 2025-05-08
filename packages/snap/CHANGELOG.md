@@ -9,10 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.12.1]
 
-### Uncategorized
+### Added
 
-- build: bump bitcoindevkit version ([#454](https://github.com/MetaMask/snap-bitcoin-wallet/pull/454))
-- feat: add unconfirmed tx to history ([#453](https://github.com/MetaMask/snap-bitcoin-wallet/pull/453))
+- Add unconfirmed transactions to wallet history ([#453](https://github.com/MetaMask/snap-bitcoin-wallet/pull/453))
+
+### Changed
+
+- Reduce bundle size ([#454](https://github.com/MetaMask/snap-bitcoin-wallet/pull/454))
 
 ## [0.12.0]
 
