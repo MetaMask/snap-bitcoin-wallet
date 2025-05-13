@@ -1,6 +1,7 @@
 import type { HistoricalPriceValue } from '@metamask/snaps-sdk';
 import type { CaipAssetType } from '@metamask/utils';
 
+export type TimePeriod = 'P1D' | 'P7D' | 'P1M' | 'P3M' | 'P1Y' | 'P1000Y';
 export type AssetRate = [CaipAssetType, number | null];
 
 export type ExchangeRates = {
@@ -23,7 +24,7 @@ export type AssetRatesClient = {
    * @param baseCurrency - the currency to get prices for. Defaults to 'bitcoin'.
    */
   historicalPrices(
-    timePeriod: string,
+    timePeriod: TimePeriod,
     vsCurrency?: string,
     baseCurrency?: string,
   ): Promise<HistoricalPriceValue[]>;

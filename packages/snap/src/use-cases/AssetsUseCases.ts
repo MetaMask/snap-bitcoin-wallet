@@ -3,7 +3,12 @@ import type { HistoricalPriceIntervals } from '@metamask/snaps-sdk';
 import type { CaipAssetType } from '@metamask/utils';
 import { parseCaipAssetType } from '@metamask/utils';
 
-import type { AssetRatesClient, AssetRate, Logger } from '../entities';
+import type {
+  AssetRatesClient,
+  AssetRate,
+  Logger,
+  TimePeriod,
+} from '../entities';
 
 export class AssetsUseCases {
   readonly #logger: Logger;
@@ -35,7 +40,14 @@ export class AssetsUseCases {
   ): Promise<HistoricalPriceIntervals> {
     this.#logger.debug('Fetching BTC historical prices. To %s', to);
 
-    const timePeriods = ['1D', '7D', '1M', '3M', '1Y', '5Y'];
+    const timePeriods: TimePeriod[] = [
+      'P1D',
+      'P7D',
+      'P1M',
+      'P3M',
+      'P1Y',
+      'P1000Y',
+    ];
     const vsCurrency = this.#assetToTicker(to);
     const historicalPrices: HistoricalPriceIntervals = {};
     await Promise.all(
@@ -45,8 +57,7 @@ export class AssetsUseCases {
             timePeriod,
             vsCurrency,
           );
-          const iso8601Interval = `P${timePeriod}`;
-          historicalPrices[iso8601Interval] = prices;
+          historicalPrices[timePeriod] = prices;
         } catch (error) {
           this.#logger.error(
             `Failed to fetch historical prices. Time period: %s. Error: %s`,

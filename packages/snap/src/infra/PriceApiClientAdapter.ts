@@ -4,6 +4,7 @@ import type {
   AssetRatesClient,
   ExchangeRates,
   PriceApiConfig,
+  TimePeriod,
 } from '../entities';
 
 export type HistoricalPricesResponse = {
@@ -31,13 +32,15 @@ export class PriceApiClientAdapter implements AssetRatesClient {
   }
 
   async historicalPrices(
-    timePeriod: string,
+    timePeriod: TimePeriod,
     vsCurrency = 'usd',
     baseCurrency = 'bitcoin',
   ): Promise<HistoricalPriceValue[]> {
     const url = `${
       this.#endpoint
-    }/v1/historical-prices/${baseCurrency}?timePeriod=${timePeriod}&vsCurrency=${vsCurrency}`;
+    }/v1/historical-prices/${baseCurrency}?timePeriod=${timePeriod.slice(
+      1,
+    )}&vsCurrency=${vsCurrency}`;
     const response = await fetch(url);
 
     if (!response.ok) {
