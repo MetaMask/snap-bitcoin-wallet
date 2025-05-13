@@ -2717,7 +2717,7 @@ __metadata:
     "@metamask/slip44": "npm:^4.1.0"
     "@metamask/snaps-cli": "npm:^7.1.0"
     "@metamask/snaps-jest": "npm:^8.14.1"
-    "@metamask/snaps-sdk": "npm:^6.22.1"
+    "@metamask/snaps-sdk": "npm:^6.23.0"
     "@metamask/utils": "npm:^11.4.0"
     "@typescript-eslint/eslint-plugin": "npm:^5.42.1"
     "@typescript-eslint/parser": "npm:^5.42.1"
@@ -2736,7 +2736,7 @@ __metadata:
     jest-transform-stub: "npm:2.0.0"
     prettier: "npm:^2.7.1"
     rimraf: "npm:^3.0.2"
-    superstruct: "npm:^1.0.3"
+    superstruct: "npm:^2.0.2"
     ts-jest: "npm:^29.1.0"
     typescript: "npm:^4.7.4"
     uuid: "npm:^11.1.0"
@@ -3381,6 +3381,19 @@ __metadata:
     "@metamask/superstruct": "npm:^3.2.1"
     "@metamask/utils": "npm:^11.4.0"
   checksum: 10/52db16c30a9e29e3d4d738c923a2969ea7e1c69cf28e95ad205e2355ffdc93839d4328a5457092b1c36fc481d0f5334e33a6d27340aafabef24e814eb911e317
+  languageName: node
+  linkType: hard
+
+"@metamask/snaps-sdk@npm:^6.23.0":
+  version: 6.23.0
+  resolution: "@metamask/snaps-sdk@npm:6.23.0"
+  dependencies:
+    "@metamask/key-tree": "npm:^10.1.1"
+    "@metamask/providers": "npm:^22.1.0"
+    "@metamask/rpc-errors": "npm:^7.0.2"
+    "@metamask/superstruct": "npm:^3.2.1"
+    "@metamask/utils": "npm:^11.4.0"
+  checksum: 10/ded883df9849d77431764b07d9e54756fe72276da10d4117ad60427a2719a14f2d8742ec50f9daed0d94d533919d35ab780f5def9f869e92f3ac9811bf2330b8
   languageName: node
   linkType: hard
 
@@ -18547,10 +18560,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"superstruct@npm:^1.0.3":
-  version: 1.0.3
-  resolution: "superstruct@npm:1.0.3"
-  checksum: 10/632b6171ac136b6750e62a55f806cc949b3dbf2b4a7dc70cc85f54adcdf19d21eab9711f04e8a643b7dd622bbd8658366ead924f467adaccb2c8005c133b7976
+"superstruct@npm:^2.0.2":
+  version: 2.0.2
+  resolution: "superstruct@npm:2.0.2"
+  checksum: 10/10e1944a9da4baee187fbaa6c5d97d7af266b55786dfe50bce67f0f1e7d93f1a5a42dd51e245a2e16404f8336d07c21c67f1c1fbc4ad0a252d3d2601d6c926da
   languageName: node
   linkType: hard
 

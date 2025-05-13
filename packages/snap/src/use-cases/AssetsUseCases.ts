@@ -1,4 +1,5 @@
 import slip44 from '@metamask/slip44';
+import type { HistoricalPriceIntervals } from '@metamask/snaps-sdk';
 import type { CaipAssetType } from '@metamask/utils';
 import { parseCaipAssetType } from '@metamask/utils';
 
@@ -27,6 +28,37 @@ export class AssetsUseCases {
 
       return [asset, null];
     });
+  }
+
+  async getPriceIntervals(
+    to: CaipAssetType,
+  ): Promise<HistoricalPriceIntervals> {
+    this.#logger.debug('Fetching BTC historical prices. To %s', to);
+
+    const timePeriods = ['1D', '7D', '1M', '3M', '1Y', '5Y'];
+    const vsCurrency = this.#assetToTicker(to);
+    const historicalPrices: HistoricalPriceIntervals = {};
+    await Promise.all(
+      timePeriods.map(async (timePeriod) => {
+        try {
+          const prices = await this.#assetRates.historicalPrices(
+            timePeriod,
+            vsCurrency,
+          );
+          const iso8601Interval = `P${timePeriod}`;
+          historicalPrices[iso8601Interval] = prices;
+        } catch (error) {
+          this.#logger.error(
+            `Failed to fetch historical prices. Time period: %s. Error: %s`,
+            timePeriod,
+            error,
+          );
+        }
+      }),
+    );
+
+    this.#logger.debug('BTC historical prices fetched successfully');
+    return historicalPrices;
   }
 
   #assetToTicker(asset: CaipAssetType): string | undefined {
