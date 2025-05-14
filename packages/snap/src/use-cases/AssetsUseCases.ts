@@ -21,7 +21,7 @@ export class AssetsUseCases {
   }
 
   async getRates(assets: CaipAssetType[]): Promise<AssetRate[]> {
-    this.#logger.debug('Fetching BTC rates for: %o', assets);
+    this.#logger.trace('Fetching BTC rates for: %o', assets);
     const exchangeRates = await this.#assetRates.exchangeRates();
     this.#logger.debug('BTC rates fetched successfully');
 
@@ -38,7 +38,7 @@ export class AssetsUseCases {
   async getPriceIntervals(
     to: CaipAssetType,
   ): Promise<HistoricalPriceIntervals> {
-    this.#logger.debug('Fetching BTC historical prices. To %s', to);
+    this.#logger.trace('Fetching BTC historical prices. To %s', to);
 
     const timePeriods: TimePeriod[] = [
       'P1D',

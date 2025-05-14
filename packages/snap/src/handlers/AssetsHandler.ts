@@ -87,6 +87,7 @@ export class AssetsHandler {
 
   async conversion(
     conversions: OnAssetsConversionArguments['conversions'],
+    includeMarketData?: boolean,
   ): Promise<OnAssetsConversionResponse> {
     const conversionTime = getCurrentUnixTimestamp();
 
