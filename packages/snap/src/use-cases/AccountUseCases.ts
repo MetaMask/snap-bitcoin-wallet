@@ -86,6 +86,7 @@ export class AccountUseCases {
   async create(
     network: Network,
     entropySource?: string,
+    index = 0,
     addressType: AddressType = this.#accountConfig.defaultAddressType,
     correlationId?: string,
   ): Promise<BitcoinAccount> {
@@ -93,6 +94,7 @@ export class AccountUseCases {
       network,
       addressType,
       entropySource,
+      index,
       correlationId,
     });
 
@@ -100,7 +102,7 @@ export class AccountUseCases {
       entropySource ?? 'm',
       addressTypeToPurpose[addressType],
       networkToCoinType[network],
-      `${this.#accountConfig.index}'`,
+      `${index}'`,
     ];
 
     // Idempotent account creation + ensures only one account per derivation path

@@ -13,7 +13,15 @@ import type {
 } from '@metamask/keyring-api';
 import { handleKeyringRequest } from '@metamask/keyring-snap-sdk';
 import type { Json, JsonRpcRequest } from '@metamask/utils';
-import { assert, boolean, enums, object, optional, string } from 'superstruct';
+import {
+  assert,
+  boolean,
+  enums,
+  number,
+  object,
+  optional,
+  string,
+} from 'superstruct';
 
 import { networkToCurrencyUnit } from '../entities';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
@@ -34,6 +42,7 @@ export const CreateAccountRequest = object({
   entropySource: optional(string()),
   accountNameSuggestion: optional(string()),
   synchronize: optional(boolean()),
+  index: optional(number()),
   ...MetaMaskOptionsStruct.schema,
 });
 
@@ -72,6 +81,7 @@ export class KeyringHandler implements Keyring {
     const account = await this.#accountsUseCases.create(
       caip2ToNetwork[opts.scope],
       opts.entropySource,
+      opts.index,
       opts.addressType ? caip2ToAddressType[opts.addressType] : undefined,
       opts.metamask?.correlationId,
     );

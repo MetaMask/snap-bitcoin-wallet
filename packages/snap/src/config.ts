@@ -8,7 +8,6 @@ export const Config: SnapConfig = {
   logLevel: (process.env.LOG_LEVEL ?? LogLevel.INFO) as LogLevel,
   encrypt: false,
   accounts: {
-    index: 0,
     defaultAddressType: (process.env.DEFAULT_ADDRESS_TYPE ??
       'p2wpkh') as AddressType,
   },
