@@ -1,3 +1,4 @@
+import type { HistoricalPriceIntervals } from '@metamask/snaps-sdk';
 import { SnapError } from '@metamask/snaps-sdk';
 import { mock } from 'jest-mock-extended';
 
@@ -105,6 +106,40 @@ describe('AssetsHandler', () => {
       await expect(handler.conversion(conversions)).rejects.toThrow(
         new SnapError(error),
       );
+    });
+  });
+
+  describe('historicalPrice', () => {
+    it('returns null if from is not Bitcoin', async () => {
+      const result = await handler.historicalPrice(
+        Caip19Asset.Testnet,
+        Caip19Asset.Bitcoin,
+      );
+      expect(result).toBeNull();
+    });
+
+    it('returns prices for Bitcoin successfully', async () => {
+      const mockIntervals = mock<HistoricalPriceIntervals>();
+      mockAssetsUseCases.getPriceIntervals.mockResolvedValue(mockIntervals);
+
+      const result = await handler.historicalPrice(
+        Caip19Asset.Bitcoin,
+        Caip19Asset.Testnet,
+      );
+
+      expect(mockAssetsUseCases.getPriceIntervals).toHaveBeenCalledWith(
+        Caip19Asset.Testnet,
+      );
+      expect(result?.historicalPrice.intervals).toStrictEqual(mockIntervals);
+    });
+
+    it('propagates errors from getPriceIntervals', async () => {
+      const error = new Error();
+      mockAssetsUseCases.getPriceIntervals.mockRejectedValue(error);
+
+      await expect(
+        handler.historicalPrice(Caip19Asset.Bitcoin, Caip19Asset.Testnet),
+      ).rejects.toThrow(new SnapError(error));
     });
   });
 });

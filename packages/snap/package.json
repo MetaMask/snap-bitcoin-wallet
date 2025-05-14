@@ -49,7 +49,7 @@
     "@metamask/slip44": "^4.1.0",
     "@metamask/snaps-cli": "^7.1.0",
     "@metamask/snaps-jest": "^8.14.1",
-    "@metamask/snaps-sdk": "^6.22.1",
+    "@metamask/snaps-sdk": "^6.23.0",
     "@metamask/utils": "^11.4.0",
     "@typescript-eslint/eslint-plugin": "^5.42.1",
     "@typescript-eslint/parser": "^5.42.1",
@@ -68,7 +68,7 @@
     "jest-transform-stub": "2.0.0",
     "prettier": "^2.7.1",
     "rimraf": "^3.0.2",
-    "superstruct": "^1.0.3",
+    "superstruct": "^2.0.2",
     "ts-jest": "^29.1.0",
     "typescript": "^4.7.4",
     "uuid": "^11.1.0"

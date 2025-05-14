@@ -1,3 +1,4 @@
+import type { HistoricalPriceValue } from '@metamask/snaps-sdk';
 import { mock } from 'jest-mock-extended';
 
 import type { AssetRatesClient, ExchangeRates, Logger } from '../entities';
@@ -37,12 +38,39 @@ describe('AssetsUseCases', () => {
     });
 
     it('propagates an error if exchangeRates fails', async () => {
-      const error = new Error('Get failed');
+      const error = new Error('getRates failed');
       mockAssetRates.exchangeRates.mockRejectedValue(error);
 
       await expect(useCases.getRates([Caip19Asset.Testnet])).rejects.toBe(
         error,
       );
+    });
+  });
+
+  describe('getPriceIntervals', () => {
+    it('returns prices against the specified token', async () => {
+      const mockHistoricalPrices = mock<HistoricalPriceValue[]>();
+      mockAssetRates.historicalPrices.mockResolvedValue(mockHistoricalPrices);
+
+      const result = await useCases.getPriceIntervals('swift:0/iso4217:USD');
+
+      expect(mockAssetRates.historicalPrices).toHaveBeenCalledTimes(6);
+      expect(result).toStrictEqual({
+        P1D: mockHistoricalPrices,
+        P7D: mockHistoricalPrices,
+        P1M: mockHistoricalPrices,
+        P3M: mockHistoricalPrices,
+        P1Y: mockHistoricalPrices,
+        P1000Y: mockHistoricalPrices,
+      });
+    });
+
+    it('does not fail if historicalPrices returns an error', async () => {
+      const error = new Error('historicalPrices failed');
+      mockAssetRates.historicalPrices.mockRejectedValue(error);
+
+      const result = await useCases.getPriceIntervals('swift:0/iso4217:USD');
+      expect(result).toStrictEqual({});
     });
   });
 });

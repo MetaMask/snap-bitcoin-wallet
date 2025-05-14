@@ -5,6 +5,7 @@ import type {
   OnRpcRequestHandler,
   OnKeyringRequestHandler,
   OnUserInputHandler,
+  OnAssetHistoricalPriceHandler,
 } from '@metamask/snaps-sdk';
 
 import { Config } from './config';
@@ -87,3 +88,8 @@ export const onAssetsLookup: OnAssetsLookupHandler = async () =>
 export const onAssetsConversion: OnAssetsConversionHandler = async ({
   conversions,
 }) => assetsHandler.conversion(conversions);
+
+export const onAssetHistoricalPrice: OnAssetHistoricalPriceHandler = async ({
+  from,
+  to,
+}) => assetsHandler.historicalPrice(from, to);

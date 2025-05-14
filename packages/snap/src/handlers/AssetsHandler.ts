@@ -3,10 +3,13 @@ import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 import type {
   CaipAssetType,
   FungibleAssetMetadata,
+  OnAssetHistoricalPriceResponse,
   OnAssetsConversionArguments,
   OnAssetsConversionResponse,
   OnAssetsLookupResponse,
 } from '@metamask/snaps-sdk';
+import { CaipAssetTypeStruct } from '@metamask/utils';
+import { assert } from 'superstruct';
 
 import type { AssetsUseCases } from '../use-cases';
 import { Caip19Asset } from './caip';
@@ -128,6 +131,31 @@ export class AssetsHandler {
       }
 
       return { conversionRates };
+    });
+  }
+
+  async historicalPrice(
+    from: CaipAssetType,
+    to: CaipAssetType,
+  ): Promise<OnAssetHistoricalPriceResponse> {
+    assert(from, CaipAssetTypeStruct);
+    assert(to, CaipAssetTypeStruct);
+
+    if (from !== Caip19Asset.Bitcoin) {
+      return null;
+    }
+
+    const updateTime = getCurrentUnixTimestamp();
+    return handle(async () => {
+      const intervals = await this.#assetsUseCases.getPriceIntervals(to);
+
+      return {
+        historicalPrice: {
+          intervals,
+          updateTime,
+          expirationTime: updateTime + this.#expirationInterval,
+        },
+      };
     });
   }
 }
