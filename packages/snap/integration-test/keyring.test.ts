@@ -112,6 +112,26 @@ describe('Keyring', () => {
     }
   });
 
+  it('creates account by derivationPath idempotently', async () => {
+    snap.mockJsonRpc({ method: 'snap_manageAccounts', result: {} });
+
+    const response = await snap.onKeyringRequest({
+      origin: ORIGIN,
+      method: 'keyring_createAccount',
+      params: {
+        options: {
+          scope: BtcScope.Mainnet,
+          addressType: Caip2AddressType.P2wpkh,
+          derivationPath: "m/84'/0'/1'",
+        },
+      },
+    });
+
+    expect(response).toRespondWith(
+      accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Mainnet}:1`],
+    );
+  });
+
   it('returns the same account if already exists', async () => {
     snap.mockJsonRpc({ method: 'snap_manageAccounts', result: {} });
 

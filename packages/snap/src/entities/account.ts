@@ -222,3 +222,31 @@ export type BitcoinAccountRepository = {
    */
   getFrozenUTXOs(id: string): Promise<string[]>;
 };
+
+export enum Purpose {
+  Legacy = 44,
+  Segwit = 49,
+  NativeSegwit = 84,
+  Taproot = 86,
+  Multisig = 45,
+}
+export enum Slip44 {
+  Bitcoin = 0,
+  Testnet = 1,
+}
+
+export const addressTypeToPurpose: Record<AddressType, Purpose> = {
+  p2pkh: Purpose.Legacy,
+  p2sh: Purpose.Segwit,
+  p2wsh: Purpose.Multisig,
+  p2wpkh: Purpose.NativeSegwit,
+  p2tr: Purpose.Taproot,
+};
+
+export const networkToCoinType: Record<Network, Slip44> = {
+  bitcoin: Slip44.Bitcoin,
+  testnet: Slip44.Testnet,
+  testnet4: Slip44.Testnet,
+  signet: Slip44.Testnet,
+  regtest: Slip44.Testnet,
+};

@@ -121,13 +121,13 @@ describe('AccountUseCases', () => {
       async ({ tAddressType, purpose }) => {
         const derivationPath = [entropySource, purpose, "0'", `${index}'`];
 
-        await useCases.create(
+        await useCases.create({
           network,
           entropySource,
           index,
-          tAddressType,
+          addressType: tAddressType,
           correlationId,
-        );
+        });
 
         expect(mockRepository.getByDerivationPath).toHaveBeenCalledWith(
           derivationPath,
@@ -160,13 +160,13 @@ describe('AccountUseCases', () => {
           `${index}'`,
         ];
 
-        await useCases.create(
-          tNetwork,
+        await useCases.create({
+          network: tNetwork,
           entropySource,
           index,
           addressType,
           correlationId,
-        );
+        });
 
         expect(mockRepository.getByDerivationPath).toHaveBeenCalledWith(
           expectedDerivationPath,
@@ -187,12 +187,12 @@ describe('AccountUseCases', () => {
       const mockExistingAccount = mock<BitcoinAccount>();
       mockRepository.getByDerivationPath.mockResolvedValue(mockExistingAccount);
 
-      const result = await useCases.create(
+      const result = await useCases.create({
         network,
         entropySource,
         index,
         addressType,
-      );
+      });
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).not.toHaveBeenCalled();
@@ -204,12 +204,12 @@ describe('AccountUseCases', () => {
     it('creates a new account if one does not exist', async () => {
       mockRepository.getByDerivationPath.mockResolvedValue(null);
 
-      const result = await useCases.create(
+      const result = await useCases.create({
         network,
         entropySource,
         index,
         addressType,
-      );
+      });
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).toHaveBeenCalled();
@@ -223,7 +223,7 @@ describe('AccountUseCases', () => {
       mockRepository.getByDerivationPath.mockRejectedValue(error);
 
       await expect(
-        useCases.create(network, entropySource, index, addressType),
+        useCases.create({ network, entropySource, index, addressType }),
       ).rejects.toBe(error);
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
@@ -237,7 +237,7 @@ describe('AccountUseCases', () => {
       mockRepository.insert.mockRejectedValue(error);
 
       await expect(
-        useCases.create(network, entropySource, index, addressType),
+        useCases.create({ network, entropySource, index, addressType }),
       ).rejects.toBe(error);
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
@@ -251,7 +251,7 @@ describe('AccountUseCases', () => {
       mockSnapClient.emitAccountCreatedEvent.mockRejectedValue(error);
 
       await expect(
-        useCases.create(network, entropySource, index, addressType),
+        useCases.create({ network, entropySource, index, addressType }),
       ).rejects.toBe(error);
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();

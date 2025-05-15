@@ -12,7 +12,10 @@ import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
 import { CurrencyUnit, type BitcoinAccount } from '../entities';
-import type { AccountUseCases } from '../use-cases/AccountUseCases';
+import type {
+  AccountUseCases,
+  CreateAccountParams,
+} from '../use-cases/AccountUseCases';
 import {
   caip2ToNetwork,
   caip2ToAddressType,
@@ -53,6 +56,7 @@ describe('KeyringHandler', () => {
   const handler = new KeyringHandler(mockAccounts);
 
   beforeEach(() => {
+    mockAccounts.create.mockResolvedValue(mockAccount);
     mockAccount.peekAddress.mockReturnValue(
       mock<AddressInfo>({
         address: mockAddress,
@@ -66,7 +70,6 @@ describe('KeyringHandler', () => {
     const correlationId = 'correlation-id';
 
     it('respects provided params', async () => {
-      mockAccounts.create.mockResolvedValue(mockAccount);
       const options = {
         scope: BtcScope.Signet,
         entropySource,
@@ -76,30 +79,67 @@ describe('KeyringHandler', () => {
           correlationId,
         },
       };
+      const expectedCreateParams: CreateAccountParams = {
+        network: caip2ToNetwork[BtcScope.Signet],
+        entropySource,
+        index,
+        addressType: caip2ToAddressType[Caip2AddressType.P2pkh],
+        correlationId,
+      };
+
       await handler.createAccount(options);
 
       expect(assert).toHaveBeenCalledWith(options, CreateAccountRequest);
-      expect(mockAccounts.create).toHaveBeenCalledWith(
-        caip2ToNetwork[BtcScope.Signet],
-        entropySource,
-        index,
-        caip2ToAddressType[Caip2AddressType.P2pkh],
-        correlationId,
-      );
+      expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
       expect(mockAccounts.fullScan).not.toHaveBeenCalled();
     });
 
-    it('performs a full scan when synchronize option is true', async () => {
-      mockAccounts.create.mockResolvedValue(mockAccount);
+    it('extracts index from derivationPath', async () => {
       const options = {
         scope: BtcScope.Signet,
-        entropySource,
-        addressType: Caip2AddressType.P2pkh,
+        derivationPath: "m/44'/0'/5'/*/*", // change and address indexes can be anything
+      };
+      const expectedCreateParams: CreateAccountParams = {
+        network: 'signet',
+        index: 5,
+      };
+
+      await handler.createAccount(options);
+      expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
+
+      // Test with a valid derivationPath without change and address index
+      await handler.createAccount({
+        ...options,
+        derivationPath: "m/44'/0'/3'",
+      });
+      expect(mockAccounts.create).toHaveBeenCalledWith({
+        ...expectedCreateParams,
+        index: 3,
+      });
+    });
+
+    it('fails if derivationPath is invalid', async () => {
+      const options = {
+        scope: BtcScope.Signet,
+        derivationPath: "m/44'/0'/NaN'",
+      };
+
+      await expect(handler.createAccount(options)).rejects.toThrow(
+        'Invalid account index: NaN',
+      );
+
+      await expect(
+        handler.createAccount({ ...options, derivationPath: "m/44'" }), // missing segments
+      ).rejects.toThrow("Invalid derivation path: m/44'");
+    });
+
+    it('performs a full scan when synchronize option is true', async () => {
+      const options = {
+        scope: BtcScope.Signet,
         synchronize: true,
       };
       await handler.createAccount(options);
 
-      expect(assert).toHaveBeenCalled();
       expect(mockAccounts.create).toHaveBeenCalled();
       expect(mockAccounts.fullScan).toHaveBeenCalledWith(mockAccount);
     });
@@ -116,7 +156,6 @@ describe('KeyringHandler', () => {
 
     it('propagates errors from full scan', async () => {
       const error = new Error();
-      mockAccounts.create.mockResolvedValue(mockAccount);
       mockAccounts.fullScan.mockRejectedValue(error);
 
       await expect(
