@@ -27,7 +27,6 @@ describe('AccountUseCases', () => {
   const mockChain = mock<BlockchainClient>();
   const mockMetaProtocols = mock<MetaProtocolsClient>();
   const accountsConfig: AccountsConfig = {
-    index: 0,
     defaultAddressType: 'p2wpkh',
   };
 
@@ -102,6 +101,7 @@ describe('AccountUseCases', () => {
     const network: Network = 'bitcoin';
     const addressType: AddressType = 'p2wpkh';
     const entropySource = 'some-source';
+    const index = 1;
     const correlationId = 'some-correlation-id';
 
     const mockAccount = mock<BitcoinAccount>();
@@ -119,19 +119,15 @@ describe('AccountUseCases', () => {
     ] as { tAddressType: AddressType; purpose: string }[])(
       'creates an account of type: %s',
       async ({ tAddressType, purpose }) => {
-        const derivationPath = [
-          entropySource,
-          purpose,
-          "0'",
-          `${accountsConfig.index}'`,
-        ];
+        const derivationPath = [entropySource, purpose, "0'", `${index}'`];
 
-        await useCases.create(
+        await useCases.create({
           network,
           entropySource,
-          tAddressType,
+          index,
+          addressType: tAddressType,
           correlationId,
-        );
+        });
 
         expect(mockRepository.getByDerivationPath).toHaveBeenCalledWith(
           derivationPath,
@@ -161,15 +157,16 @@ describe('AccountUseCases', () => {
           entropySource,
           "84'",
           coinType,
-          `${accountsConfig.index}'`,
+          `${index}'`,
         ];
 
-        await useCases.create(
-          tNetwork,
+        await useCases.create({
+          network: tNetwork,
           entropySource,
+          index,
           addressType,
           correlationId,
-        );
+        });
 
         expect(mockRepository.getByDerivationPath).toHaveBeenCalledWith(
           expectedDerivationPath,
@@ -190,7 +187,12 @@ describe('AccountUseCases', () => {
       const mockExistingAccount = mock<BitcoinAccount>();
       mockRepository.getByDerivationPath.mockResolvedValue(mockExistingAccount);
 
-      const result = await useCases.create(network, entropySource, addressType);
+      const result = await useCases.create({
+        network,
+        entropySource,
+        index,
+        addressType,
+      });
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).not.toHaveBeenCalled();
@@ -202,7 +204,12 @@ describe('AccountUseCases', () => {
     it('creates a new account if one does not exist', async () => {
       mockRepository.getByDerivationPath.mockResolvedValue(null);
 
-      const result = await useCases.create(network, entropySource, addressType);
+      const result = await useCases.create({
+        network,
+        entropySource,
+        index,
+        addressType,
+      });
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).toHaveBeenCalled();
@@ -216,7 +223,7 @@ describe('AccountUseCases', () => {
       mockRepository.getByDerivationPath.mockRejectedValue(error);
 
       await expect(
-        useCases.create(network, entropySource, addressType),
+        useCases.create({ network, entropySource, index, addressType }),
       ).rejects.toBe(error);
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
@@ -230,7 +237,7 @@ describe('AccountUseCases', () => {
       mockRepository.insert.mockRejectedValue(error);
 
       await expect(
-        useCases.create(network, entropySource, addressType),
+        useCases.create({ network, entropySource, index, addressType }),
       ).rejects.toBe(error);
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
@@ -244,7 +251,7 @@ describe('AccountUseCases', () => {
       mockSnapClient.emitAccountCreatedEvent.mockRejectedValue(error);
 
       await expect(
-        useCases.create(network, entropySource, addressType),
+        useCases.create({ network, entropySource, index, addressType }),
       ).rejects.toBe(error);
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();

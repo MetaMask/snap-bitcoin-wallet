@@ -13,7 +13,15 @@ import type {
 } from '@metamask/keyring-api';
 import { handleKeyringRequest } from '@metamask/keyring-snap-sdk';
 import type { Json, JsonRpcRequest } from '@metamask/utils';
-import { assert, boolean, enums, object, optional, string } from 'superstruct';
+import {
+  assert,
+  boolean,
+  enums,
+  number,
+  object,
+  optional,
+  string,
+} from 'superstruct';
 
 import { networkToCurrencyUnit } from '../entities';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
@@ -34,6 +42,8 @@ export const CreateAccountRequest = object({
   entropySource: optional(string()),
   accountNameSuggestion: optional(string()),
   synchronize: optional(boolean()),
+  index: optional(number()),
+  derivationPath: optional(string()),
   ...MetaMaskOptionsStruct.schema,
 });
 
@@ -68,13 +78,23 @@ export class KeyringHandler implements Keyring {
     opts: Record<string, Json> & MetaMaskOptions,
   ): Promise<KeyringAccount> {
     assert(opts, CreateAccountRequest);
+    const {
+      metamask,
+      scope,
+      entropySource,
+      index,
+      derivationPath,
+      addressType,
+    } = opts;
 
-    const account = await this.#accountsUseCases.create(
-      caip2ToNetwork[opts.scope],
-      opts.entropySource,
-      opts.addressType ? caip2ToAddressType[opts.addressType] : undefined,
-      opts.metamask?.correlationId,
-    );
+    const createParams = {
+      network: caip2ToNetwork[scope],
+      entropySource,
+      index: derivationPath ? this.#extractAccountIndex(derivationPath) : index,
+      addressType: addressType ? caip2ToAddressType[addressType] : undefined,
+      correlationId: metamask?.correlationId,
+    };
+    const account = await this.#accountsUseCases.create(createParams);
 
     if (opts.synchronize) {
       await this.#accountsUseCases.fullScan(account);
@@ -146,5 +166,20 @@ export class KeyringHandler implements Keyring {
 
   async submitRequest(): Promise<KeyringResponse> {
     throw new Error('Method not implemented.');
+  }
+
+  #extractAccountIndex(path: string): number {
+    const segments = path.split('/');
+    if (segments.length < 4) {
+      throw new Error(`Invalid derivation path: ${path}`);
+    }
+
+    const accountPart = segments[3];
+    const match = accountPart.match(/^(\d+)/u);
+    if (!match) {
+      throw new Error(`Invalid account index: ${accountPart}`);
+    }
+
+    return parseInt(match[1], 10);
   }
 }

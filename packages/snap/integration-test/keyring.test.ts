@@ -24,42 +24,57 @@ describe('Keyring', () => {
       // Main account used in the tests, only one to synchronize
       addressType: Caip2AddressType.P2wpkh,
       scope: BtcScope.Regtest,
+      index: 0,
       expectedAddress: TEST_ADDRESS,
       synchronize: true,
     },
     {
       addressType: Caip2AddressType.P2wpkh,
       scope: BtcScope.Mainnet,
+      index: 0,
       expectedAddress: 'bc1q832zlt4tgnqy88vd20mazw77dlt0j0wf2naw8q',
+      synchronize: false,
+    },
+    {
+      // Tests multiple accounts of same address type
+      addressType: Caip2AddressType.P2wpkh,
+      scope: BtcScope.Mainnet,
+      index: 1,
+      expectedAddress: 'bc1qe2e3tdkqwytw7furyl2nlfy3sqs23acynn50d9',
       synchronize: false,
     },
     {
       addressType: Caip2AddressType.P2pkh,
       scope: BtcScope.Mainnet,
+      index: 0,
       expectedAddress: '15feVv7kK3z7jxA4RZZzY7Fwdu3yqFwzcT',
       synchronize: false,
     },
     {
       addressType: Caip2AddressType.P2pkh,
       scope: BtcScope.Testnet,
+      index: 0,
       expectedAddress: 'mjPQaLkhZN3MxsYN8Nebzwevuz8vdTaRCq',
       synchronize: false,
     },
     {
       addressType: Caip2AddressType.P2sh,
       scope: BtcScope.Mainnet,
+      index: 0,
       expectedAddress: '3QVSaDYjxEh4L3K24eorrQjfVxPAKJMys2',
       synchronize: false,
     },
     {
       addressType: Caip2AddressType.P2sh,
       scope: BtcScope.Testnet,
+      index: 0,
       expectedAddress: '2NBG623WvXp1zxKB6gK2mnMe2mSDCur5qRU',
       synchronize: false,
     },
     {
       addressType: Caip2AddressType.P2tr,
       scope: BtcScope.Mainnet,
+      index: 0,
       expectedAddress:
         'bc1p4rue37y0v9snd4z3fvw43d29u97qxf9j3fva72xy2t7hekg24dzsaz40mz',
       synchronize: false,
@@ -67,6 +82,7 @@ describe('Keyring', () => {
     {
       addressType: Caip2AddressType.P2tr,
       scope: BtcScope.Testnet,
+      index: 0,
       expectedAddress:
         'tb1pwwjax3vpq6h69965hcr22vkpm4qdvyu2pz67wyj8eagp9vxkcz0q0ya20h',
       synchronize: false,
@@ -90,9 +106,30 @@ describe('Keyring', () => {
     });
 
     if ('result' in response.response) {
-      accounts[`${requestOpts.addressType}:${requestOpts.scope}`] = response
-        .response.result as KeyringAccount;
+      accounts[
+        `${requestOpts.addressType}:${requestOpts.scope}:${requestOpts.index}`
+      ] = response.response.result as KeyringAccount;
     }
+  });
+
+  it('creates account by derivationPath idempotently', async () => {
+    snap.mockJsonRpc({ method: 'snap_manageAccounts', result: {} });
+
+    const response = await snap.onKeyringRequest({
+      origin: ORIGIN,
+      method: 'keyring_createAccount',
+      params: {
+        options: {
+          scope: BtcScope.Mainnet,
+          addressType: Caip2AddressType.P2wpkh,
+          derivationPath: "m/84'/0'/1'",
+        },
+      },
+    });
+
+    expect(response).toRespondWith(
+      accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Mainnet}:1`],
+    );
   });
 
   it('returns the same account if already exists', async () => {
@@ -110,7 +147,7 @@ describe('Keyring', () => {
     });
 
     expect(response).toRespondWith(
-      accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Mainnet}`],
+      accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Mainnet}:0`],
     );
   });
 
@@ -119,12 +156,12 @@ describe('Keyring', () => {
       origin: ORIGIN,
       method: 'keyring_getAccount',
       params: {
-        id: accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Mainnet}`].id,
+        id: accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Mainnet}:0`].id,
       },
     });
 
     expect(response).toRespondWith(
-      accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Mainnet}`],
+      accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Mainnet}:0`],
     );
   });
 
@@ -139,7 +176,7 @@ describe('Keyring', () => {
 
   it('lists account transactions', async () => {
     const accoundId =
-      accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id;
+      accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}:0`].id;
     const response = await snap.onKeyringRequest({
       origin: ORIGIN,
       method: 'keyring_listAccountTransactions',
@@ -160,7 +197,7 @@ describe('Keyring', () => {
       origin: ORIGIN,
       method: 'keyring_getAccountBalances',
       params: {
-        id: accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}`].id,
+        id: accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}:0`].id,
         assets: [Caip19Asset.Regtest],
       },
     });
@@ -174,7 +211,7 @@ describe('Keyring', () => {
   });
 
   it('removes an account', async () => {
-    const { id } = accounts[`${Caip2AddressType.P2pkh}:${BtcScope.Mainnet}`];
+    const { id } = accounts[`${Caip2AddressType.P2pkh}:${BtcScope.Mainnet}:0`];
 
     let response = await snap.onKeyringRequest({
       origin: ORIGIN,
@@ -224,7 +261,7 @@ describe('Keyring', () => {
         origin: ORIGIN,
         method: 'keyring_listAccountAssets',
         params: {
-          id: accounts[`${addressType}:${scope}`].id,
+          id: accounts[`${addressType}:${scope}:0`].id,
         },
       });
 

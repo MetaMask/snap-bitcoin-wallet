@@ -7,30 +7,24 @@ import type {
 } from '@metamask/bitcoindevkit';
 import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 
-import type {
-  AccountsConfig,
-  BitcoinAccount,
-  BitcoinAccountRepository,
-  BlockchainClient,
-  SnapClient,
-  MetaProtocolsClient,
-  Logger,
+import {
+  type AccountsConfig,
+  type BitcoinAccount,
+  type BitcoinAccountRepository,
+  type BlockchainClient,
+  type SnapClient,
+  type MetaProtocolsClient,
+  type Logger,
+  addressTypeToPurpose,
+  networkToCoinType,
 } from '../entities';
 
-const addressTypeToPurpose: Record<AddressType, string> = {
-  p2pkh: "44'",
-  p2sh: "49'",
-  p2wsh: "45'",
-  p2wpkh: "84'",
-  p2tr: "86'",
-};
-
-const networkToCoinType: Record<Network, string> = {
-  bitcoin: "0'",
-  testnet: "1'",
-  testnet4: "1'",
-  signet: "1'",
-  regtest: "1'",
+export type CreateAccountParams = {
+  network: Network;
+  index?: number;
+  entropySource?: string;
+  addressType?: AddressType;
+  correlationId?: string;
 };
 
 export class AccountUseCases {
@@ -83,24 +77,21 @@ export class AccountUseCases {
     return account;
   }
 
-  async create(
-    network: Network,
-    entropySource?: string,
-    addressType: AddressType = this.#accountConfig.defaultAddressType,
-    correlationId?: string,
-  ): Promise<BitcoinAccount> {
-    this.#logger.debug('Creating new Bitcoin account. Params: %o', {
+  async create(req: CreateAccountParams): Promise<BitcoinAccount> {
+    this.#logger.debug('Creating new Bitcoin account. Params: %o', req);
+    const {
+      addressType = this.#accountConfig.defaultAddressType,
+      index = 0,
       network,
-      addressType,
-      entropySource,
       correlationId,
-    });
+      entropySource = 'm',
+    } = req;
 
     const derivationPath = [
-      entropySource ?? 'm',
-      addressTypeToPurpose[addressType],
-      networkToCoinType[network],
-      `${this.#accountConfig.index}'`,
+      entropySource,
+      `${addressTypeToPurpose[addressType]}'`,
+      `${networkToCoinType[network]}'`,
+      `${index}'`,
     ];
 
     // Idempotent account creation + ensures only one account per derivation path
