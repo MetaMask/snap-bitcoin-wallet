@@ -4,18 +4,16 @@ import type {
   Transaction,
   Txid,
   TxOut,
+  Address,
+  type Network,
+  type WalletTx,
 } from '@metamask/bitcoindevkit';
-import { Address, type Network, type WalletTx } from '@metamask/bitcoindevkit';
 import type { Transaction as KeyringTransaction } from '@metamask/keyring-api';
 import { BtcMethod, BtcScope } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
 import { CurrencyUnit, type BitcoinAccount } from '../entities';
-import type {
-  AccountUseCases,
-  CreateAccountParams,
-} from '../use-cases/AccountUseCases';
 import {
   caip2ToNetwork,
   caip2ToAddressType,
@@ -23,6 +21,10 @@ import {
   Caip19Asset,
 } from './caip';
 import { KeyringHandler, CreateAccountRequest } from './KeyringHandler';
+import type {
+  AccountUseCases,
+  CreateAccountParams,
+} from '../use-cases/AccountUseCases';
 
 jest.mock('superstruct', () => ({
   ...jest.requireActual('superstruct'),

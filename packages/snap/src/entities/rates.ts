@@ -13,12 +13,14 @@ export type ExchangeRates = {
 export type AssetRatesClient = {
   /**
    * Returns a list of exchange rates for all supported currencies.
+   *
    * @param baseCurrency - the currency to convert prices to. Defaults to 'btc'.
    */
   exchangeRates(baseCurrency?: string): Promise<ExchangeRates>;
 
   /**
    * Returns a list of historical prices for a token against another.
+   *
    * @param timePeriod - the time period to fetch prices for.
    * @param vsCurrency - the currency to convert prices to. Defaults to 'usd'.
    * @param baseCurrency - the currency to get prices for. Defaults to 'bitcoin'.

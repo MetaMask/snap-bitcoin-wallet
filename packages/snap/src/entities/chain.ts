@@ -18,6 +18,7 @@ export type BlockchainClient = {
   /**
    * Perform a full scan operation on the account.
    * Note that this operation modifies the account in place.
+   *
    * @param account - the account to full scan.
    */
   fullScan(account: BitcoinAccount): Promise<void>;
@@ -25,12 +26,14 @@ export type BlockchainClient = {
   /**
    * Perform a sync operation on the account.
    * Note that this operation modifies the account in place.
+   *
    * @param account - the account to sync.
    */
   sync(account: BitcoinAccount): Promise<void>;
 
   /**
    * Broadcast the signed transaction to the network.
+   *
    * @param network - Network where the signed transaction will be broadcasted.
    * @param transaction - Transaction to broadcast.
    */
@@ -38,6 +41,7 @@ export type BlockchainClient = {
 
   /**
    * Fetch fee estimates from the chain indexer.
+   *
    * @param network - Network to fetch the fees from.
    * @returns the map of fee estimates
    */

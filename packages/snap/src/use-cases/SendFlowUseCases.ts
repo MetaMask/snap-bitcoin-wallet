@@ -17,6 +17,7 @@ import {
   ReviewTransactionEvent,
   networkToCurrencyUnit,
 } from '../entities';
+import { CronMethod } from '../handlers';
 
 export class SendFlowUseCases {
   readonly #logger: Logger;
@@ -331,7 +332,7 @@ export class SendFlowUseCases {
     updatedContext.backgroundEventId =
       await this.#snapClient.scheduleBackgroundEvent(
         this.#ratesRefreshInterval,
-        SendFormEvent.RefreshRates,
+        CronMethod.RefreshRates,
         id,
       );
     updatedContext.locale = locale; // Take advantage of the loop to update the locale as well

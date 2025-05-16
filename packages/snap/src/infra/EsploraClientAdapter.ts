@@ -29,7 +29,7 @@ export class EsploraClientAdapter implements BlockchainClient {
     this.#config = config;
   }
 
-  async fullScan(account: BitcoinAccount) {
+  async fullScan(account: BitcoinAccount): Promise<void> {
     const request = account.startFullScan();
     const update = await this.#clients[account.network].full_scan(
       request,
@@ -39,7 +39,7 @@ export class EsploraClientAdapter implements BlockchainClient {
     account.applyUpdate(update);
   }
 
-  async sync(account: BitcoinAccount) {
+  async sync(account: BitcoinAccount): Promise<void> {
     const request = account.startSync();
     const update = await this.#clients[account.network].sync(
       request,

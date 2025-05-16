@@ -52,6 +52,7 @@ export const networkToName: Record<Network, string> = {
 
 /**
  * Maps a Bitcoin Account to a Keyring Account.
+ *
  * @param account - The Bitcoin account.
  * @returns The Keyring account.
  */
@@ -111,6 +112,7 @@ const mapToEvents = (
 
 /**
  * Maps a Bitcoin Transaction to a Keyring Transaction.
+ *
  * @param account - The account account.
  * @param walletTx - The Bitcoin transaction managed by this account.
  * @returns The Keyring transaction.

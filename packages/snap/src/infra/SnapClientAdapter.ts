@@ -6,11 +6,9 @@ import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
 import type {
   GetInterfaceContextResult,
   GetInterfaceStateResult,
-} from '@metamask/snaps-sdk';
-import {
-  type ComponentOrElement,
-  type GetPreferencesResult,
-  type Json,
+  Json,
+  ComponentOrElement,
+  GetPreferencesResult,
 } from '@metamask/snaps-sdk';
 
 import type { BitcoinAccount, SnapClient, SnapState } from '../entities';

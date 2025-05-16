@@ -40,7 +40,7 @@ export class RpcHandler {
         throw new Error('Missing params');
       }
 
-      switch (method) {
+      switch (method as RpcMethod) {
         case RpcMethod.StartSendTransactionFlow: {
           assert(params, CreateSendFormRequest);
           return this.#executeSendFlow(params.account);

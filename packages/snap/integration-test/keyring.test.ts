@@ -3,9 +3,9 @@ import { BtcMethod, BtcScope } from '@metamask/keyring-api';
 import type { Snap } from '@metamask/snaps-jest';
 import { installSnap } from '@metamask/snaps-jest';
 
+import { FUNDING_TX, MNEMONIC, ORIGIN, TEST_ADDRESS } from './constants';
 import { CurrencyUnit } from '../src/entities';
 import { Caip2AddressType, Caip19Asset } from '../src/handlers/caip';
-import { FUNDING_TX, MNEMONIC, ORIGIN, TEST_ADDRESS } from './constants';
 
 describe('Keyring', () => {
   const accounts: Record<string, KeyringAccount> = {};
@@ -105,6 +105,7 @@ describe('Keyring', () => {
       methods: [BtcMethod.SendBitcoin],
     });
 
+    // eslint-disable-next-line jest/no-conditional-in-test
     if ('result' in response.response) {
       accounts[
         `${requestOpts.addressType}:${requestOpts.scope}:${requestOpts.index}`

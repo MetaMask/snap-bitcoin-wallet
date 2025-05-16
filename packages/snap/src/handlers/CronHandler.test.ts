@@ -2,8 +2,7 @@ import { SnapError } from '@metamask/snaps-sdk';
 import type { JsonRpcRequest } from '@metamask/utils';
 import { mock } from 'jest-mock-extended';
 
-import type { Logger } from '../entities';
-import { SendFormEvent, type BitcoinAccount } from '../entities';
+import type { Logger, SendFormEvent, type BitcoinAccount } from '../entities';
 import type { SendFlowUseCases, AccountUseCases } from '../use-cases';
 import { CronHandler } from './CronHandler';
 

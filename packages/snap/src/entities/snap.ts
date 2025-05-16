@@ -23,18 +23,21 @@ export type SnapState = {
 export type SnapClient = {
   /**
    * Get the Snap state.
+   *
    * @returns The Snap state.
    */
   get(): Promise<SnapState>;
 
   /**
    * Set the Snap state.
+   *
    * @param newState - The new state.
    */
   set(newState: SnapState): Promise<void>;
 
   /**
    * Get the private SLIP10 for a given derivation path from the Snap SRP.
+   *
    * @param derivationPath - The derivation path.
    * @returns The private SLIP10 node.
    */
@@ -42,6 +45,7 @@ export type SnapClient = {
 
   /**
    * Get the public SLIP10 for a given derivation path from the Snap SRP.
+   *
    * @param derivationPath - The derivation path.
    * @returns The public SLIP10 node.
    */
@@ -49,6 +53,7 @@ export type SnapClient = {
 
   /**
    * Emit an event notifying the extension of a newly created Bitcoin account
+   *
    * @param account - The Bitcoin account.
    * @param correlationId - The correlation ID to be used for the event.
    */
@@ -59,18 +64,21 @@ export type SnapClient = {
 
   /**
    * Emit an event notifying the extension of a deleted Bitcoin account
+   *
    * @param id - The Bitcoin account id.
    */
   emitAccountDeletedEvent(id: string): Promise<void>;
 
   /**
    * Emit an event notifying the extension of updated balances
+   *
    * @param account - The Bitcoin account.
    */
   emitAccountBalancesUpdatedEvent(account: BitcoinAccount): Promise<void>;
 
   /**
    * Emit an event notifying the extension of updated transactions
+   *
    * @param account - The Bitcoin account.
    * @param txs - The transactions included in the event.
    */
@@ -81,6 +89,7 @@ export type SnapClient = {
 
   /**
    * Create a User Interface.
+   *
    * @param ui - The UI Component.
    * @param context - The Interface context.
    * @returns the interface ID
@@ -92,6 +101,7 @@ export type SnapClient = {
 
   /**
    * Update a User Interface.
+   *
    * @param id - The interface id.
    * @param ui - The user interface.
    * @param context - The Interface context.
@@ -104,6 +114,7 @@ export type SnapClient = {
 
   /**
    * Display a User Interface.
+   *
    * @param id - The interface id.
    * @returns the resolved value or null.
    */
@@ -111,6 +122,7 @@ export type SnapClient = {
 
   /**
    * Resolve a User Interface.
+   *
    * @param id - The interface id.
    * @param value - The resolved value.
    */
@@ -118,6 +130,7 @@ export type SnapClient = {
 
   /**
    * Get the state of an interface.
+   *
    * @param id - The interface id.
    * @returns the interface state.
    */
@@ -125,6 +138,7 @@ export type SnapClient = {
 
   /**
    * Get the context of an interface.
+   *
    * @param id - The interface id.
    * @returns the interface context.
    */
@@ -132,6 +146,7 @@ export type SnapClient = {
 
   /**
    * Schedule a one-off callback.
+   *
    * @param interval - The interval in seconds before the event is executed.
    * @param method - The method to call on reception of the event being triggered.
    * @param interfaceId - The interface id.
@@ -145,12 +160,14 @@ export type SnapClient = {
 
   /**
    * Cancel an already scheduled background event.
+   *
    * @param id - The background event id.
    */
   cancelBackgroundEvent(id: string): Promise<void>;
 
   /**
    * Get user preferences.
+   *
    * @returns the user's preferences.
    */
   getPreferences(): Promise<GetPreferencesResult>;

@@ -5,13 +5,13 @@ import {
   Container,
   Footer,
   Row,
-  Text,
+  Text as SnapText,
 } from '@metamask/snaps-sdk/jsx';
 
-import type { Messages, SendFormContext } from '../../entities';
-import { SendFormEvent } from '../../entities';
 import { HeadingWithReturn, SendForm, TransactionSummary } from './components';
 import { translate } from './format';
+import type { Messages, SendFormContext } from '../../entities';
+import { SendFormEvent } from '../../entities';
 
 export type SendFormViewProps = {
   context: SendFormContext;
@@ -36,7 +36,7 @@ export const SendFormView: SnapComponent<SendFormViewProps> = ({
 
         {context.errors.tx !== undefined && (
           <Row label={t('error')} variant="warning">
-            <Text>{context.errors.tx}</Text>
+            <SnapText>{context.errors.tx}</SnapText>
           </Row>
         )}
 

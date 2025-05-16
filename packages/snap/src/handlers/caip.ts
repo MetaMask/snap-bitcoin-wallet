@@ -7,11 +7,8 @@ const reverseMapping = <
   To extends string | number | symbol,
 >(
   map: Record<From, To>,
-) => {
-  return Object.fromEntries(
-    Object.entries(map).map(([from, to]) => [to, from]),
-  ) as Record<To, From>;
-};
+): Record<To, From> =>
+  Object.fromEntries(Object.entries(map).map(([from, to]) => [to, from]));
 
 export enum Caip2AddressType {
   P2pkh = 'bip122:p2pkh',

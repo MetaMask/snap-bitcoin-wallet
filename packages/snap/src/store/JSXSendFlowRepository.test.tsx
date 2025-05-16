@@ -7,8 +7,8 @@ import type {
   Translator,
 } from '../entities';
 import { SENDFORM_NAME } from '../entities';
-import { ReviewTransactionView, SendFormView } from '../infra/jsx';
 import { JSXSendFlowRepository } from './JSXSendFlowRepository';
+import { ReviewTransactionView, SendFormView } from '../infra/jsx';
 
 jest.mock('../infra/jsx', () => ({
   SendFormView: jest.fn(),
@@ -32,7 +32,7 @@ describe('JSXSendFlowRepository', () => {
       const result = await repo.getState(id);
 
       expect(mockSnapClient.getInterfaceState).toHaveBeenCalledWith(id);
-      expect(result).toEqual(state[SENDFORM_NAME]);
+      expect(result).toStrictEqual(state[SENDFORM_NAME]);
     });
 
     it('returns null if state is null', async () => {
@@ -62,7 +62,7 @@ describe('JSXSendFlowRepository', () => {
       const result = await repo.getContext(id);
 
       expect(mockSnapClient.getInterfaceContext).toHaveBeenCalledWith(id);
-      expect(result).toEqual(context);
+      expect(result).toStrictEqual(context);
     });
 
     it('returns null if context is null', async () => {

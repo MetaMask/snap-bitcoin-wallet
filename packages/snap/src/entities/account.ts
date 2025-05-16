@@ -49,6 +49,7 @@ export type BitcoinAccount = {
 
   /**
    * Get an address at a given index.
+   *
    * @param index - derivation index.
    * @returns the address
    */
@@ -57,6 +58,7 @@ export type BitcoinAccount = {
   /**
    * Get the next unused address. This will reveal a new address if there is no unused address.
    * Note that the account needs to be persisted for this operation to be idempotent.
+   *
    * @returns the address
    */
   nextUnusedAddress(): AddressInfo;
@@ -64,18 +66,21 @@ export type BitcoinAccount = {
   /**
    * Reveal the next address.
    * Note that the account needs to be persisted for this operation to be idempotent.
+   *
    * @returns the address
    */
   revealNextAddress(): AddressInfo;
 
   /**
    * Start a full scan.
+   *
    * @returns the full scan request
    */
   startFullScan(): FullScanRequest;
 
   /**
    * Start a sync with revealed scripts.
+   *
    * @returns the sync request
    */
   startSync(): SyncRequest;
@@ -87,18 +92,21 @@ export type BitcoinAccount = {
 
   /**
    * Extract the change set if it exists.
+   *
    * @returns the change set
    */
   takeStaged(): ChangeSet | undefined;
 
   /**
    * Returns a Transaction Builder.
+   *
    * @returns the TxBuilder
    */
   buildTx(): TransactionBuilder;
 
   /**
    * Sign a PSBT with all the registered signers
+   *
    * @param psbt - The PSBT to be signed.
    * @returns the signed transaction
    */
@@ -106,6 +114,7 @@ export type BitcoinAccount = {
 
   /**
    * Get the list of UTXOs
+   *
    * @returns the list of UTXOs
    */
   listUnspent(): LocalOutput[];
@@ -114,18 +123,21 @@ export type BitcoinAccount = {
    * List relevant and canonical transactions in the wallet.
    * A transaction is relevant when it spends from or spends to at least one tracked output.
    * A transaction is canonical when it is confirmed in the best chain, or does not conflict with any transaction confirmed in the best chain.
+   *
    * @returns the list of wallet transactions
    */
   listTransactions(): WalletTx[];
 
   /**
    * Get a single transaction from the wallet as a [`WalletTx`] (if the transaction exists).
+   *
    * @returns the wallet transaction
    */
   getTransaction(txid: string): WalletTx | undefined;
 
   /**
    * Calculate the fee of a given transaction. Returns [`Amount::ZERO`] if `tx` is a coinbase transaction.
+   *
    * @param tx - The transaction.
    * @returns the fee amount.
    */
@@ -133,6 +145,7 @@ export type BitcoinAccount = {
 
   /**
    * Return whether or not a `script` is part of this wallet (either internal or external).
+   *
    * @param script - The Bitcoin script.
    * @returns the ownership state.
    */
@@ -143,6 +156,7 @@ export type BitcoinAccount = {
    * This method returns a tuple `(sent, received)`. Sent is the sum of the txin amounts
    * that spend from previous txouts tracked by this wallet. Received is the summation
    * of this tx's outputs that send to script pubkeys tracked by this wallet.
+   *
    * @param tx - The Bitcoin transaction.
    * @returns the sent and received amounts.
    */
@@ -151,6 +165,7 @@ export type BitcoinAccount = {
   /**
    * Apply relevant unconfirmed transactions to the wallet.
    * Transactions that are not relevant are filtered out.
+   *
    * @param tx - The Bitcoin transaction.
    * @param lastSeen - Timestamp of when the transaction was last seen in the mempool.
    */
@@ -163,6 +178,7 @@ export type BitcoinAccount = {
 export type BitcoinAccountRepository = {
   /**
    * Get an account by its id.
+   *
    * @param id - Account ID.
    * @returns the account or null if it does not exist
    */
@@ -170,6 +186,7 @@ export type BitcoinAccountRepository = {
 
   /**
    * Get an account by its id with signing capabilities
+   *
    * @param id - Account ID.
    * @returns the account or null if it does not exist
    */
@@ -177,12 +194,14 @@ export type BitcoinAccountRepository = {
 
   /**
    * Get all accounts.
+   *
    * @returns the list of accounts
    */
   getAll(): Promise<BitcoinAccount[]>;
 
   /**
    * Get an account by its derivation path.
+   *
    * @param derivationPath - derivation path.
    * @returns the account or null if it does not exist
    */
@@ -190,6 +209,7 @@ export type BitcoinAccountRepository = {
 
   /**
    * Insert a new account.
+   *
    * @param derivationPath - derivation index.
    * @param network - network.
    * @param addressType - address type.
@@ -203,6 +223,7 @@ export type BitcoinAccountRepository = {
 
   /**
    * Update an account.
+   *
    * @param account - Bitcoin account.
    * @param inscriptions - List of inscriptions.
    */
@@ -210,6 +231,7 @@ export type BitcoinAccountRepository = {
 
   /**
    * Delete an account.
+   *
    * @param id - Account ID.
    * @returns true if the account has been deleted.
    */
@@ -217,6 +239,7 @@ export type BitcoinAccountRepository = {
 
   /**
    * Get the list of frozen UTXO outpoints of an account.
+   *
    * @param id - Account ID.
    * @returns the frozen UTXO outpoints.
    */
