@@ -5,9 +5,5 @@
     "jsx": "react-jsx",
     "jsxImportSource": "@metamask/snaps-sdk"
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "locales/*.json"
-  ]
+  "include": ["**/*.ts", "**/*.tsx", "locales/*.json"]
 }

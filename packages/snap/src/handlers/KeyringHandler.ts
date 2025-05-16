@@ -24,7 +24,6 @@ import {
 } from 'superstruct';
 
 import { networkToCurrencyUnit } from '../entities';
-import type { AccountUseCases } from '../use-cases/AccountUseCases';
 import {
   networkToCaip19,
   Caip2AddressType,
@@ -35,6 +34,7 @@ import {
 import { handle } from './errors';
 import { mapToKeyringAccount, mapToTransaction } from './mappings';
 import { validateOrigin } from './permissions';
+import type { AccountUseCases } from '../use-cases/AccountUseCases';
 
 export const CreateAccountRequest = object({
   scope: enums(Object.values(BtcScope)),

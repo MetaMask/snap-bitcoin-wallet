@@ -2,12 +2,12 @@ import type { JsonRpcRequest } from '@metamask/utils';
 import { assert, object, string } from 'superstruct';
 
 import type { Logger } from '../entities';
-import { SendFormEvent } from '../entities';
 import type { SendFlowUseCases, AccountUseCases } from '../use-cases';
 import { handle } from './errors';
 
 export enum CronMethod {
   SynchronizeAccounts = 'synchronizeAccounts',
+  RefreshRates = 'refreshRates',
 }
 
 export const SendFormRefreshRatesRequest = object({
@@ -31,15 +31,15 @@ export class CronHandler {
     this.#sendFlowUseCases = sendFlow;
   }
 
-  async route(request: JsonRpcRequest) {
+  async route(request: JsonRpcRequest): Promise<void> {
     const { method, params } = request;
 
     return handle(async () => {
-      switch (method) {
+      switch (method as CronMethod) {
         case CronMethod.SynchronizeAccounts: {
           return this.synchronizeAccounts();
         }
-        case SendFormEvent.RefreshRates: {
+        case CronMethod.RefreshRates: {
           assert(params, SendFormRefreshRatesRequest);
           return this.#sendFlowUseCases.refresh(params.interfaceId);
         }

@@ -93,9 +93,7 @@ export class AssetsHandler {
     // Group conversions by "from"
     const assetMap: Record<CaipAssetType, CaipAssetType[]> = {};
     for (const { from, to } of conversions) {
-      if (!assetMap[from]) {
-        assetMap[from] = [];
-      }
+      assetMap[from] ??= [];
       assetMap[from].push(to);
     }
 
@@ -105,7 +103,7 @@ export class AssetsHandler {
       for (const [fromAsset, toAssets] of Object.entries(assetMap)) {
         conversionRates[fromAsset] = {};
 
-        if (fromAsset === Caip19Asset.Bitcoin) {
+        if (fromAsset === (Caip19Asset.Bitcoin as string)) {
           // For Bitcoin, fetch rates.
           for (const [toAsset, rate] of await this.#assetsUseCases.getRates(
             toAssets,
@@ -141,7 +139,7 @@ export class AssetsHandler {
     assert(from, CaipAssetTypeStruct);
     assert(to, CaipAssetTypeStruct);
 
-    if (from !== Caip19Asset.Bitcoin) {
+    if (from !== (Caip19Asset.Bitcoin as CaipAssetType)) {
       return null;
     }
 

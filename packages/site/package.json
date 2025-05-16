@@ -38,7 +38,6 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
-    "@metamask/eslint-config-browser": "^14.0.0",
     "@svgr/webpack": "^8.1.0",
     "@testing-library/dom": "^8.17.1",
     "@testing-library/jest-dom": "^5.16.4",
@@ -50,7 +49,6 @@
     "gatsby": "^5.13.3",
     "gatsby-plugin-manifest": "^5.13.1",
     "gatsby-plugin-styled-components": "^6.13.1",
-    "gatsby-plugin-svgr": "^3.0.0-beta.0",
-    "rimraf": "^6.0.1"
+    "gatsby-plugin-svgr": "^3.0.0-beta.0"
   }
 }

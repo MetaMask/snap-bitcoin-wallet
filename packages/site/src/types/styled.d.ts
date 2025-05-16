@@ -1,9 +1,12 @@
+/* eslint-disable import-x/no-unassigned-import */
+
 import 'styled-components';
 
 /**
  * styled-component default theme extension
  */
 declare module 'styled-components' {
+  /* eslint-disable @typescript-eslint/consistent-type-definitions */
   export interface DefaultTheme {
     fonts: Record<string, string>;
     fontSizes: Record<string, string>;

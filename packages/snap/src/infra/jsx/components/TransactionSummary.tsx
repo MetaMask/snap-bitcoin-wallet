@@ -3,14 +3,14 @@ import type { CurrencyRate } from '@metamask/snaps-sdk';
 import {
   Row,
   Section,
-  Text,
+  Text as SnapText,
   Value,
   type SnapComponent,
 } from '@metamask/snaps-sdk/jsx';
 
 import { Config } from '../../../config';
-import type { Messages } from '../../../entities';
-import { BlockTime, type CurrencyUnit } from '../../../entities';
+import type { Messages, CurrencyUnit } from '../../../entities';
+import { BlockTime } from '../../../entities';
 import { displayAmount, displayExchangeAmount, translate } from '../format';
 
 type TransactionSummaryProps = {
@@ -37,9 +37,9 @@ export const TransactionSummary: SnapComponent<TransactionSummaryProps> = ({
   return (
     <Section>
       <Row label={t('transactionSpeed')} tooltip={t('transactionSpeedTooltip')}>
-        <Text>{`${Config.targetBlocksConfirmation * BlockTime[network]} ${t(
+        <SnapText>{`${Config.targetBlocksConfirmation * BlockTime[network]} ${t(
           'minutes',
-        )}`}</Text>
+        )}`}</SnapText>
       </Row>
       <Row label={t('networkFee')} tooltip={t('networkFeeTooltip')}>
         <Value
