@@ -9,10 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.13.0]
 
-### Uncategorized
+### Added
 
-- feat: multi account support ([#457](https://github.com/MetaMask/snap-bitcoin-wallet/pull/457))
-- feat: historical prices ([#456](https://github.com/MetaMask/snap-bitcoin-wallet/pull/456))
+- Multi account ([#457](https://github.com/MetaMask/snap-bitcoin-wallet/pull/457))
+- Historical prices ([#456](https://github.com/MetaMask/snap-bitcoin-wallet/pull/456))
 
 ## [0.12.1]
 
