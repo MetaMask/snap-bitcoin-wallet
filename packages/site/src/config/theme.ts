@@ -184,4 +184,4 @@ export const GlobalStyle = createGlobalStyle`
       border: 1px solid ${(props) => props.theme.colors.background?.inverse};
     }
   }
-`;
+` as unknown as React.ComponentType;

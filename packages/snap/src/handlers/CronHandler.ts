@@ -61,7 +61,7 @@ export class CronHandler {
       if (result.status === 'rejected') {
         this.#logger.error(
           `Account failed to sync. ID: %s. Error: %s`,
-          accounts[index].id,
+          accounts[index]?.id,
           result.reason,
         );
       }

@@ -3,7 +3,9 @@
   "compilerOptions": {
     "resolveJsonModule": true /*  lets us import JSON modules from within TypeScript modules. */,
     "jsx": "react-jsx",
-    "jsxImportSource": "@metamask/snaps-sdk"
+    "jsxImportSource": "@metamask/snaps-sdk",
+    "exactOptionalPropertyTypes": false,
+    "types": []
   },
   "include": ["**/*.ts", "**/*.tsx", "locales/*.json"]
 }

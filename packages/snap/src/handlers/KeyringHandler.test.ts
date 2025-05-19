@@ -4,10 +4,10 @@ import type {
   Transaction,
   Txid,
   TxOut,
-  Address,
-  type Network,
-  type WalletTx,
+  Network,
+  WalletTx,
 } from '@metamask/bitcoindevkit';
+import { Address } from '@metamask/bitcoindevkit';
 import type { Transaction as KeyringTransaction } from '@metamask/keyring-api';
 import { BtcMethod, BtcScope } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';

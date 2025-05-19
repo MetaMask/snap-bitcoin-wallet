@@ -5,9 +5,15 @@ import browser from '@metamask/eslint-config-browser';
 
 export default createConfig([
   {
+    ignores: [
+      'packages/snap/dist/',
+      'packages/site/.cache/',
+      'packages/site/public/',
+    ],
+  },
+  {
     files: ['packages/snap/**/*.{ts,tsx}'],
     extends: [base, typescript],
-    ignores: ['dist/'],
     rules: {
       'id-length': ['warn', { exceptions: ['t'] }] // Used for the localized translator helper.
     },
@@ -15,7 +21,6 @@ export default createConfig([
   {
     files: ['packages/site/**/*.{ts,tsx}'],
     extends: [base, typescript, browser],
-    ignores: ['.cache/', 'public/'],
     rules: {
       '@typescript-eslint/explicit-function-return-type': 'off' // this rule should be removed eventually for non tests files
     },

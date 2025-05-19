@@ -1,3 +1,4 @@
+import type { JSXElement } from '@metamask/snaps-sdk/jsx';
 import {
   Box,
   Button,
@@ -17,7 +18,7 @@ type SendFormProps = SendFormContext & {
   messages: Messages;
 };
 
-export const SendForm = (props: SendFormProps): JSX.Element => {
+export const SendForm = (props: SendFormProps): JSXElement => {
   const { currency, balance, amount, recipient, errors, network, messages } =
     props;
   const t = translate(messages);

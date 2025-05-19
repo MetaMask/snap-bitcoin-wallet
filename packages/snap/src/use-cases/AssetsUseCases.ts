@@ -80,7 +80,9 @@ export class AssetsUseCases {
     }
 
     if (assetNamespace === 'slip44') {
-      return slip44[assetReference]?.symbol.toLowerCase();
+      return slip44[
+        assetReference as keyof typeof slip44
+      ]?.symbol.toLowerCase();
     }
 
     return undefined;
