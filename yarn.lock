@@ -2713,6 +2713,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@metamask/bitcoin-wallet-snap@workspace:packages/snap"
   dependencies:
+    "@jest/globals": "npm:^29.7.0"
     "@metamask/bitcoindevkit": "npm:^0.1.8"
     "@metamask/key-tree": "npm:^10.1.1"
     "@metamask/keyring-api": "npm:^17.5.0"
@@ -2722,14 +2723,13 @@ __metadata:
     "@metamask/snaps-jest": "npm:^8.15.0"
     "@metamask/snaps-sdk": "npm:^6.23.0"
     "@metamask/utils": "npm:^11.4.0"
-    concurrently: "npm:^9.1.0"
-    dotenv: "npm:^16.4.5"
-    jest: "npm:^29.5.0"
-    jest-mock-extended: "npm:^3.0.7"
+    concurrently: "npm:^9.1.2"
+    dotenv: "npm:^16.5.0"
+    jest: "npm:^29.7.0"
+    jest-mock-extended: "npm:^4.0.0-beta1"
     jest-transform-stub: "npm:2.0.0"
     superstruct: "npm:^2.0.2"
     ts-jest: "npm:^29.3.3"
-    typescript: "npm:~5.8.3"
     uuid: "npm:^11.1.0"
   languageName: unknown
   linkType: soft
@@ -8100,7 +8100,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"concurrently@npm:^9.1.0":
+"concurrently@npm:^9.1.2":
   version: 9.1.2
   resolution: "concurrently@npm:9.1.2"
   dependencies:
@@ -9302,7 +9302,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dotenv@npm:^16.4.5":
+"dotenv@npm:^16.5.0":
   version: 16.5.0
   resolution: "dotenv@npm:16.5.0"
   checksum: 10/e68a16834f1a41cc2dfb01563bc150668ad675e6cd09191211467b5c0806b6ecd6ec438e021aa8e01cd0e72d2b70ef4302bec7cc0fe15b6955f85230b62dc8a9
@@ -13595,15 +13595,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jest-mock-extended@npm:^3.0.7":
-  version: 3.0.7
-  resolution: "jest-mock-extended@npm:3.0.7"
+"jest-mock-extended@npm:^4.0.0-beta1":
+  version: 4.0.0-beta1
+  resolution: "jest-mock-extended@npm:4.0.0-beta1"
   dependencies:
-    ts-essentials: "npm:^10.0.0"
+    ts-essentials: "npm:^10.0.2"
   peerDependencies:
+    "@jest/globals": ^28.0.0 || ^29.0.0
     jest: ^24.0.0 || ^25.0.0 || ^26.0.0 || ^27.0.0 || ^28.0.0 || ^29.0.0
     typescript: ^3.0.0 || ^4.0.0 || ^5.0.0
-  checksum: 10/7d5fb9d4ad07dbed9d4f1dd011eb26ca20d9ca4aab3c807749f761220315ef8a6bdf767b1ce1e68ae10405e35ba899c4fcee55cf327deb2d9950910e818f40fa
+  checksum: 10/784605af9edc229c8bdac7aab7a0101369d61510201c4380b36170117b6cb5573eb76e6115c59d3facee242dbc8a23f1c57d9fa4f2d5d22aa27d2e27867652e7
   languageName: node
   linkType: hard
 
@@ -13836,7 +13837,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jest@npm:^29.5.0":
+"jest@npm:^29.7.0":
   version: 29.7.0
   resolution: "jest@npm:29.7.0"
   dependencies:
@@ -19330,7 +19331,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ts-essentials@npm:^10.0.0":
+"ts-essentials@npm:^10.0.2":
   version: 10.0.4
   resolution: "ts-essentials@npm:10.0.4"
   peerDependencies:
@@ -19343,8 +19344,8 @@ __metadata:
   linkType: hard
 
 "ts-jest@npm:^29.3.3":
-  version: 29.3.3
-  resolution: "ts-jest@npm:29.3.3"
+  version: 29.3.4
+  resolution: "ts-jest@npm:29.3.4"
   dependencies:
     bs-logger: "npm:^0.2.6"
     ejs: "npm:^3.1.10"
@@ -19376,7 +19377,7 @@ __metadata:
       optional: true
   bin:
     ts-jest: cli.js
-  checksum: 10/b3de49404bc3eafb66f95795c718c321a25a0e934324b79ce500641cd8ecc84f2d691cba97699d2e45bad3655b1595c3e52cbd38ae1910a603162aff68b35d9c
+  checksum: 10/9f22469ef9cbdfb819fe03c4554a83af66d810e7ac72efca433d098f09b73c15b5f5d83a56732e01b40baf621e288c2e0178fad45d304ff69d18d8e0490498d3
   languageName: node
   linkType: hard
 

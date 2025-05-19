@@ -72,6 +72,7 @@ describe('RpcHandler', () => {
 
     it('propagates errors from display', async () => {
       const error = new Error();
+      mockAccountsUseCases.sendPsbt.mockReset();
       mockSendFlowUseCases.display.mockRejectedValue(error);
 
       await expect(handler.route(origin, mockRequest)).rejects.toThrow(
