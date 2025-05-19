@@ -22,7 +22,8 @@ export default createConfig([
     files: ['packages/site/**/*.{ts,tsx}'],
     extends: [base, typescript, browser],
     rules: {
-      '@typescript-eslint/explicit-function-return-type': 'off' // this rule should be removed eventually for non tests files
+      '@typescript-eslint/explicit-function-return-type': 'off', // this rule should be removed eventually for non tests files,
+      '@typescript-eslint/no-misused-promises': 'off',
     },
   },
   {

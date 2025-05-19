@@ -148,12 +148,10 @@ export const HeaderButtons = () => {
   }
 
   if (!installedSnap) {
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     return <ConnectButton onClick={requestSnap} />;
   }
 
   if (shouldDisplayReconnectButton(installedSnap)) {
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     return <ReconnectButton onClick={requestSnap} />;
   }
 

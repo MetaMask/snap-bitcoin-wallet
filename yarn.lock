@@ -2749,7 +2749,6 @@ __metadata:
     "@types/react-dom": "npm:^18.0.6"
     "@types/styled-components": "npm:^5.1.25"
     gatsby: "npm:^5.13.3"
-    gatsby-plugin-manifest: "npm:^5.13.1"
     gatsby-plugin-styled-components: "npm:^6.13.1"
     gatsby-plugin-svgr: "npm:^3.0.0-beta.0"
     react: "npm:^18.2.0"
@@ -11428,21 +11427,6 @@ __metadata:
   peerDependencies:
     "@parcel/core": ^2.0.0
   checksum: 10/e012f2aedcf90842783286c613c7c927dfe748e4bc78ac3c05a054c744592423c62c73db0a1a28842bf4eb6d91af14ab77d286c7e749fd653835bb844c6cc60a
-  languageName: node
-  linkType: hard
-
-"gatsby-plugin-manifest@npm:^5.13.1":
-  version: 5.14.0
-  resolution: "gatsby-plugin-manifest@npm:5.14.0"
-  dependencies:
-    "@babel/runtime": "npm:^7.20.13"
-    gatsby-core-utils: "npm:^4.14.0"
-    gatsby-plugin-utils: "npm:^4.14.0"
-    semver: "npm:^7.5.3"
-    sharp: "npm:^0.32.6"
-  peerDependencies:
-    gatsby: ^5.0.0-next
-  checksum: 10/9663fdaca22377f9d384b416ce044c118c5be979c0faa7367aa2fd2c517c684fd39600156510714139edc25ade24b6fb5123ac515e7849d831006372b70cd8fb
   languageName: node
   linkType: hard
 
