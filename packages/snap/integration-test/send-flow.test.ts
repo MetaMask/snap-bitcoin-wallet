@@ -9,8 +9,8 @@ import {
   ReviewTransactionEvent,
   SendFormEvent,
 } from '../src/entities';
-import { CronMethod } from '../src/handlers/CronHandler';
 import { Caip19Asset, Caip2AddressType } from '../src/handlers/caip';
+import { CronMethod } from '../src/handlers/CronHandler';
 
 describe('Send flow', () => {
   const recipient = 'bcrt1qyvhf2epk9s659206lq3rdvtf07uq3t9e7xtjje';
