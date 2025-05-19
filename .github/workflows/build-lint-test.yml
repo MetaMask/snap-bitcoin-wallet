@@ -81,8 +81,8 @@ jobs:
             exit 1
           fi
 
-  test:
-    name: Test
+  snap-test:
+    name: Snap Tests
     runs-on: ubuntu-latest
     needs:
       - prepare
@@ -101,7 +101,7 @@ jobs:
       - run: yarn --immutable --immutable-cache
       - run: |
           export NODE_OPTIONS="--max_old_space_size=4096"
-          yarn build
+          yarn build:snap
       - run: yarn test
       - name: Require clean working directory
         shell: bash
