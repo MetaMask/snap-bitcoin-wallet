@@ -8,18 +8,18 @@ import {
   Heading,
   Row,
   Section,
-  Text,
+  Text as SnapText,
   Value,
   Address,
 } from '@metamask/snaps-sdk/jsx';
 import type { CaipAccountId } from '@metamask/utils';
 
+import { AssetIcon, HeadingWithReturn } from './components';
+import { displayAmount, displayExchangeAmount, translate } from './format';
 import { Config } from '../../config';
 import type { Messages, ReviewTransactionContext } from '../../entities';
 import { BlockTime, ReviewTransactionEvent } from '../../entities';
 import { networkToCaip2 } from '../../handlers';
-import { AssetIcon, HeadingWithReturn } from './components';
-import { displayAmount, displayExchangeAmount, translate } from './format';
 
 type ReviewTransactionViewProps = {
   context: ReviewTransactionContext;
@@ -51,7 +51,7 @@ export const ReviewTransactionView: SnapComponent<
             BigInt(amount),
             currency,
           )}`}</Heading>
-          <Text color="muted">{t('reviewTransactionWarning')}</Text>
+          <SnapText color="muted">{t('reviewTransactionWarning')}</SnapText>
         </Box>
 
         <Section>
@@ -82,11 +82,11 @@ export const ReviewTransactionView: SnapComponent<
             label={t('transactionSpeed')}
             tooltip={t('transactionSpeedTooltip')}
           >
-            <Text>
+            <SnapText>
               {`${Config.targetBlocksConfirmation * BlockTime[network]} ${t(
                 'minutes',
               )}`}
-            </Text>
+            </SnapText>
           </Row>
           <Row label={t('networkFee')} tooltip={t('networkFeeTooltip')}>
             <Value
@@ -95,7 +95,7 @@ export const ReviewTransactionView: SnapComponent<
             />
           </Row>
           <Row label={t('feeRate')}>
-            <Text>{`${feeRate ?? 'unknown'} sat/vB`}</Text>
+            <SnapText>{`${feeRate ?? 'unknown'} sat/vB`}</SnapText>
           </Row>
           <Row label={t('total')}>
             <Value

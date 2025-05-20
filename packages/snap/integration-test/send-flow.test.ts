@@ -3,13 +3,14 @@ import { BtcScope } from '@metamask/keyring-api';
 import type { Snap } from '@metamask/snaps-jest';
 import { assertIsCustomDialog, installSnap } from '@metamask/snaps-jest';
 
+import { FUNDING_TX, MNEMONIC, ORIGIN } from './constants';
 import {
   CurrencyUnit,
   ReviewTransactionEvent,
   SendFormEvent,
 } from '../src/entities';
 import { Caip19Asset, Caip2AddressType } from '../src/handlers/caip';
-import { FUNDING_TX, MNEMONIC, ORIGIN } from './constants';
+import { CronMethod } from '../src/handlers/CronHandler';
 
 describe('Send flow', () => {
   const recipient = 'bcrt1qyvhf2epk9s659206lq3rdvtf07uq3t9e7xtjje';
@@ -69,7 +70,7 @@ describe('Send flow', () => {
     await ui.typeInField(SendFormEvent.Amount, sendAmount);
 
     const backgroundEventResponse = await snap.onBackgroundEvent({
-      method: SendFormEvent.RefreshRates,
+      method: CronMethod.RefreshRates,
       params: { interfaceId: ui.id },
     });
     expect(backgroundEventResponse).toRespondWith(null);

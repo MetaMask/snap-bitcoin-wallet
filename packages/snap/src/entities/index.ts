@@ -1,11 +1,11 @@
 export * from './account';
-export * from './config';
+export type * from './config';
 export * from './chain';
 export * from './currency';
 export * from './send-flow';
-export * from './transaction';
-export * from './snap';
-export * from './meta-protocols';
-export * from './translator';
-export * from './rates';
+export type * from './transaction';
+export type * from './snap';
+export type * from './meta-protocols';
+export type * from './translator';
+export type * from './rates';
 export * from './logger';

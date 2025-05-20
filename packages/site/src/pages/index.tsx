@@ -1,4 +1,4 @@
-import type { KeyringAccount } from '@metamask/keyring-api';
+import { BtcScope, type KeyringAccount } from '@metamask/keyring-api';
 import { useState } from 'react';
 import styled from 'styled-components';
 
@@ -137,11 +137,6 @@ const Dropdown = styled.select`
   padding: 1.2rem;
 `;
 
-export enum Caip2ChainId {
-  Mainnet = 'bip122:000000000019d6689c085ae165831e93',
-  Testnet = 'bip122:000000000933ea01ad0ee984209779ba',
-}
-
 const Index = () => {
   const { error, resp, loading } = useMetaMaskContext();
   const { isFlask, snapsDetected, installedSnap } = useMetaMask();
@@ -149,7 +144,7 @@ const Index = () => {
   const invokeKeyring = useInvokeKeyring();
   const [btcAccount, setBtcAccount] = useState<KeyringAccount>();
 
-  const [scope, setScope] = useState<string>(Caip2ChainId.Mainnet);
+  const [scope, setScope] = useState<BtcScope>(BtcScope.Mainnet);
 
   const isMetaMaskReady = isLocalSnap(defaultSnapOrigin)
     ? isFlask
@@ -175,12 +170,8 @@ const Index = () => {
   };
 
   const scopeOnChange = (chgEvent: React.ChangeEvent<HTMLSelectElement>) => {
-    if (
-      Object.values(Caip2ChainId).includes(
-        chgEvent.target.value as unknown as Caip2ChainId,
-      )
-    ) {
-      setScope(chgEvent.target.value);
+    if (Object.values(BtcScope).includes(chgEvent.target.value as BtcScope)) {
+      setScope(chgEvent.target.value as BtcScope);
     }
   };
 
@@ -258,14 +249,14 @@ const Index = () => {
             button: (
               <Dropdown onChange={scopeOnChange}>
                 <option
-                  value={Caip2ChainId.Mainnet}
-                  selected={scope === Caip2ChainId.Mainnet}
+                  value={BtcScope.Mainnet}
+                  selected={scope === BtcScope.Mainnet}
                 >
                   Mainnet
                 </option>
                 <option
-                  value={Caip2ChainId.Testnet}
-                  selected={scope === Caip2ChainId.Testnet}
+                  value={BtcScope.Testnet}
+                  selected={scope === BtcScope.Testnet}
                 >
                   Testnet
                 </option>

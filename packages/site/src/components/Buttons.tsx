@@ -1,4 +1,4 @@
-import type { ComponentProps } from 'react';
+import type { ComponentPropsWithoutRef } from 'react';
 import styled from 'styled-components';
 
 import { ReactComponent as FlaskFox } from '../assets/flask_fox.svg';
@@ -77,7 +77,7 @@ export const InstallFlaskButton = () => (
   </Link>
 );
 
-export const ConnectButton = (props: ComponentProps<typeof Button>) => {
+export const ConnectButton = (props: ComponentPropsWithoutRef<'button'>) => {
   return (
     <Button {...props}>
       <FlaskFox />
@@ -86,7 +86,7 @@ export const ConnectButton = (props: ComponentProps<typeof Button>) => {
   );
 };
 
-export const ReconnectButton = (props: ComponentProps<typeof Button>) => {
+export const ReconnectButton = (props: ComponentPropsWithoutRef<'button'>) => {
   return (
     <Button {...props}>
       <FlaskFox />
@@ -95,41 +95,47 @@ export const ReconnectButton = (props: ComponentProps<typeof Button>) => {
   );
 };
 
-export const SendHelloButton = (props: ComponentProps<typeof Button>) => {
+export const SendHelloButton = (props: ComponentPropsWithoutRef<'button'>) => {
   return <Button {...props}>Send message</Button>;
 };
 
 export const GetBTCAccountBalanceButton = (
-  props: ComponentProps<typeof Button>,
+  props: ComponentPropsWithoutRef<'button'>,
 ) => {
   return <Button {...props}>Get BTC Account balance</Button>;
 };
 
-export const ListAccountsButton = (props: ComponentProps<typeof Button>) => {
+export const ListAccountsButton = (
+  props: ComponentPropsWithoutRef<'button'>,
+) => {
   return <Button {...props}>List Accounts</Button>;
 };
 
 export const GetTransactionStatusButton = (
-  props: ComponentProps<typeof Button>,
+  props: ComponentPropsWithoutRef<'button'>,
 ) => {
   return <Button {...props}>Get Status</Button>;
 };
 
-export const SendBitcoinButton = (props: ComponentProps<typeof Button>) => {
+export const SendBitcoinButton = (
+  props: ComponentPropsWithoutRef<'button'>,
+) => {
   return <Button {...props}>Send txn</Button>;
 };
 
-export const EstimateFeeButton = (props: ComponentProps<typeof Button>) => {
+export const EstimateFeeButton = (
+  props: ComponentPropsWithoutRef<'button'>,
+) => {
   return <Button {...props}>Estimate Fee</Button>;
 };
 
 export const GetMaxSpendableBalanceButton = (
-  props: ComponentProps<typeof Button>,
+  props: ComponentPropsWithoutRef<'button'>,
 ) => {
   return <Button {...props}>Get Max Spendable Balance</Button>;
 };
 
-export const SellBTCButton = (props: ComponentProps<typeof Button>) => {
+export const SellBTCButton = (props: ComponentPropsWithoutRef<'button'>) => {
   return <Button {...props}>Sell your BTC</Button>;
 };
 

@@ -1,8 +1,5 @@
-import { UnauthorizedError } from '@metamask/snaps-sdk';
-
-export const validateOrigin = (origin: string) => {
+export const validateOrigin = (origin: string): void => {
   if (origin !== 'metamask') {
-    // eslint-disable-next-line @typescript-eslint/no-throw-literal
-    throw new UnauthorizedError('Permission denied');
+    throw new Error('Permission denied');
   }
 };

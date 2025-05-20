@@ -35,7 +35,6 @@ export enum SendFormEvent {
   Confirm = 'confirm',
   Cancel = 'cancel',
   SetMax = 'max',
-  RefreshRates = 'refreshRates',
 }
 
 export type SendFormState = {
@@ -72,6 +71,7 @@ export enum ReviewTransactionEvent {
 export type SendFlowRepository = {
   /**
    * Get the form state.
+   *
    * @param id - the interface ID
    * @returns the form state or null
    */
@@ -79,6 +79,7 @@ export type SendFlowRepository = {
 
   /**
    * Get the form context.
+   *
    * @param id - the interface ID
    * @returns the form context or null
    */
@@ -86,6 +87,7 @@ export type SendFlowRepository = {
 
   /**
    * Insert a new send form interface.
+   *
    * @param context - the form context
    * @returns the interface ID
    */
@@ -93,6 +95,7 @@ export type SendFlowRepository = {
 
   /**
    * Update an interface to the send form view.
+   *
    * @param id - the interface ID
    * @param context - the form context
    */
@@ -100,6 +103,7 @@ export type SendFlowRepository = {
 
   /**
    * Update an interface to the review transaction view.
+   *
    * @param id - the interface ID
    * @param context - the review transaction context
    */

@@ -25,6 +25,7 @@ import {
   SendFormEvent,
 } from '../entities';
 import { SendFlowUseCases } from './SendFlowUseCases';
+import { CronMethod } from '../handlers';
 
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
 /* eslint-disable @typescript-eslint/naming-convention */
@@ -624,7 +625,7 @@ describe('SendFlowUseCases', () => {
 
       expect(mockSnapClient.scheduleBackgroundEvent).toHaveBeenCalledWith(
         ratesRefreshInterval,
-        SendFormEvent.RefreshRates,
+        CronMethod.RefreshRates,
         'interface-id',
       );
       expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(

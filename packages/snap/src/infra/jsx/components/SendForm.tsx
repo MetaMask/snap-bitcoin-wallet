@@ -1,3 +1,4 @@
+import type { JSXElement } from '@metamask/snaps-sdk/jsx';
 import {
   Box,
   Button,
@@ -5,7 +6,7 @@ import {
   Form,
   Icon,
   Input,
-  Text,
+  Text as SnapText,
 } from '@metamask/snaps-sdk/jsx';
 
 import type { Messages, SendFormContext } from '../../../entities';
@@ -17,7 +18,7 @@ type SendFormProps = SendFormContext & {
   messages: Messages;
 };
 
-export const SendForm = (props: SendFormProps) => {
+export const SendForm = (props: SendFormProps): JSXElement => {
   const { currency, balance, amount, recipient, errors, network, messages } =
     props;
   const t = translate(messages);
@@ -39,9 +40,9 @@ export const SendForm = (props: SendFormProps) => {
       </Field>
       <Box direction="horizontal" alignment={'space-between'}>
         <Box direction="horizontal">
-          <Text color="alternative">
+          <SnapText color="alternative">
             {`${t('balance')}: ${displayAmount(BigInt(balance), currency)}`}
-          </Text>
+          </SnapText>
         </Box>
 
         <Button name={SendFormEvent.SetMax}>{t('max')}</Button>

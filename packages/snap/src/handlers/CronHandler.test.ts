@@ -2,10 +2,9 @@ import { SnapError } from '@metamask/snaps-sdk';
 import type { JsonRpcRequest } from '@metamask/utils';
 import { mock } from 'jest-mock-extended';
 
-import type { Logger } from '../entities';
-import { SendFormEvent, type BitcoinAccount } from '../entities';
+import type { Logger, BitcoinAccount } from '../entities';
 import type { SendFlowUseCases, AccountUseCases } from '../use-cases';
-import { CronHandler } from './CronHandler';
+import { CronHandler, CronMethod } from './CronHandler';
 
 describe('CronHandler', () => {
   const mockLogger = mock<Logger>();
@@ -57,7 +56,7 @@ describe('CronHandler', () => {
 
   describe('refreshRates', () => {
     const request = {
-      method: SendFormEvent.RefreshRates,
+      method: CronMethod.RefreshRates,
       params: { interfaceId: 'id' },
     } as unknown as JsonRpcRequest;
 

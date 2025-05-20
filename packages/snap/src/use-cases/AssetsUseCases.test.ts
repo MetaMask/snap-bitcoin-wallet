@@ -2,8 +2,8 @@ import type { HistoricalPriceValue } from '@metamask/snaps-sdk';
 import { mock } from 'jest-mock-extended';
 
 import type { AssetRatesClient, ExchangeRates, Logger } from '../entities';
-import { Caip19Asset } from '../handlers/caip';
 import { AssetsUseCases } from './AssetsUseCases';
+import { Caip19Asset } from '../handlers/caip';
 
 describe('AssetsUseCases', () => {
   const mockLogger = mock<Logger>();

@@ -1,8 +1,8 @@
 import type { SnapConfig } from '@metamask/snaps-cli';
+import { config as dotenv } from 'dotenv';
 import { resolve } from 'path';
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports,@typescript-eslint/no-var-requires
-require('dotenv').config();
+dotenv();
 
 const config: SnapConfig = {
   input: resolve(__dirname, 'src/index.ts'),
@@ -10,7 +10,6 @@ const config: SnapConfig = {
     port: 8080,
   },
   environment: {
-    /* eslint-disable */
     LOG_LEVEL: process.env.LOG_LEVEL,
     DEFAULT_ADDRESS_TYPE: process.env.DEFAULT_ADDRESS_TYPE,
     ESPLORA_BITCOIN: process.env.ESPLORA_BITCOIN,
@@ -19,7 +18,6 @@ const config: SnapConfig = {
     ESPLORA_SIGNET: process.env.ESPLORA_SIGNET,
     ESPLORA_REGTEST: process.env.ESPLORA_REGTEST,
     PRICE_API_URL: process.env.PRICE_API_URL,
-    /* eslint-disable */
   },
   polyfills: true,
   experimental: { wasm: true },

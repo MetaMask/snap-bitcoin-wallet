@@ -3,9 +3,11 @@ import { BtcMethod, BtcScope } from '@metamask/keyring-api';
 import type { Snap } from '@metamask/snaps-jest';
 import { installSnap } from '@metamask/snaps-jest';
 
+import { FUNDING_TX, MNEMONIC, ORIGIN, TEST_ADDRESS } from './constants';
 import { CurrencyUnit } from '../src/entities';
 import { Caip2AddressType, Caip19Asset } from '../src/handlers/caip';
-import { FUNDING_TX, MNEMONIC, ORIGIN, TEST_ADDRESS } from './constants';
+
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 describe('Keyring', () => {
   const accounts: Record<string, KeyringAccount> = {};
@@ -105,6 +107,7 @@ describe('Keyring', () => {
       methods: [BtcMethod.SendBitcoin],
     });
 
+    // eslint-disable-next-line jest/no-conditional-in-test
     if ('result' in response.response) {
       accounts[
         `${requestOpts.addressType}:${requestOpts.scope}:${requestOpts.index}`
@@ -156,7 +159,7 @@ describe('Keyring', () => {
       origin: ORIGIN,
       method: 'keyring_getAccount',
       params: {
-        id: accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Mainnet}:0`].id,
+        id: accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Mainnet}:0`]!.id,
       },
     });
 
@@ -176,7 +179,7 @@ describe('Keyring', () => {
 
   it('lists account transactions', async () => {
     const accoundId =
-      accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}:0`].id;
+      accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}:0`]!.id;
     const response = await snap.onKeyringRequest({
       origin: ORIGIN,
       method: 'keyring_listAccountTransactions',
@@ -197,7 +200,7 @@ describe('Keyring', () => {
       origin: ORIGIN,
       method: 'keyring_getAccountBalances',
       params: {
-        id: accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}:0`].id,
+        id: accounts[`${Caip2AddressType.P2wpkh}:${BtcScope.Regtest}:0`]!.id,
         assets: [Caip19Asset.Regtest],
       },
     });
@@ -211,7 +214,7 @@ describe('Keyring', () => {
   });
 
   it('removes an account', async () => {
-    const { id } = accounts[`${Caip2AddressType.P2pkh}:${BtcScope.Mainnet}:0`];
+    const { id } = accounts[`${Caip2AddressType.P2pkh}:${BtcScope.Mainnet}:0`]!;
 
     let response = await snap.onKeyringRequest({
       origin: ORIGIN,
@@ -261,7 +264,7 @@ describe('Keyring', () => {
         origin: ORIGIN,
         method: 'keyring_listAccountAssets',
         params: {
-          id: accounts[`${addressType}:${scope}:0`].id,
+          id: accounts[`${addressType}:${scope}:0`]!.id,
         },
       });
 

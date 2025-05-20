@@ -39,7 +39,7 @@ const RightContainer = styled.div`
 export const Header = ({
   handleToggleClick,
 }: {
-  handleToggleClick(): void;
+  handleToggleClick: () => void;
 }) => {
   const theme = useTheme();
 

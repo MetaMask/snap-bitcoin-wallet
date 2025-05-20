@@ -24,7 +24,6 @@ import {
 } from 'superstruct';
 
 import { networkToCurrencyUnit } from '../entities';
-import type { AccountUseCases } from '../use-cases/AccountUseCases';
 import {
   networkToCaip19,
   Caip2AddressType,
@@ -35,6 +34,7 @@ import {
 import { handle } from './errors';
 import { mapToKeyringAccount, mapToTransaction } from './mappings';
 import { validateOrigin } from './permissions';
+import type { AccountUseCases } from '../use-cases/AccountUseCases';
 
 export const CreateAccountRequest = object({
   scope: enums(Object.values(BtcScope)),
@@ -153,9 +153,11 @@ export class KeyringHandler implements Keyring {
     }
 
     const paginatedTxs = transactions.slice(startIndex, startIndex + limit);
+    const hasMore = startIndex + limit < transactions.length;
     const nextCursor =
-      startIndex + limit < transactions.length
-        ? paginatedTxs[paginatedTxs.length - 1].txid.toString()
+      hasMore && paginatedTxs.length > 0
+        ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          paginatedTxs[paginatedTxs.length - 1]!.txid.toString()
         : null;
 
     return {
@@ -174,12 +176,14 @@ export class KeyringHandler implements Keyring {
       throw new Error(`Invalid derivation path: ${path}`);
     }
 
-    const accountPart = segments[3];
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const accountPart = segments[3]!;
     const match = accountPart.match(/^(\d+)/u);
     if (!match) {
       throw new Error(`Invalid account index: ${accountPart}`);
     }
 
-    return parseInt(match[1], 10);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return parseInt(match[1]!, 10);
   }
 }

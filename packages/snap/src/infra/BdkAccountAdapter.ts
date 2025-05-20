@@ -109,7 +109,7 @@ export class BdkAccountAdapter implements BitcoinAccount {
     return this.#wallet.start_sync_with_revealed_spks();
   }
 
-  applyUpdate(update: Update) {
+  applyUpdate(update: Update): void {
     return this.#wallet.apply_update(update);
   }
 

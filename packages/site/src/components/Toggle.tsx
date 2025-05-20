@@ -93,7 +93,7 @@ export const Toggle = ({
   onToggle,
   defaultChecked = false,
 }: {
-  onToggle(): void;
+  onToggle: () => void;
   defaultChecked?: boolean;
 }) => {
   const [checked, setChecked] = useState(defaultChecked);

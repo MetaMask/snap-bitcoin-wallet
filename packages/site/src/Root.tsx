@@ -1,10 +1,12 @@
-import type { FunctionComponent, ReactNode } from 'react';
+import type { ComponentType, FunctionComponent, ReactNode } from 'react';
 import { createContext, useState } from 'react';
-import { ThemeProvider } from 'styled-components';
+import { ThemeProvider as StyledThemeProvider } from 'styled-components';
 
 import { dark, light } from './config/theme';
 import { MetaMaskProvider } from './hooks';
 import { getThemePreference, setLocalStorage } from './utils';
+
+const ThemeProvider = StyledThemeProvider as unknown as ComponentType<any>;
 
 export type RootProps = {
   children: ReactNode;

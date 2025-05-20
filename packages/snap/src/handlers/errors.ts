@@ -14,6 +14,6 @@ export const handle = async <ResponseT>(
     // 5. Default to InternalError('an internal error occurred') if no custom error is thrown.
 
     // console.error('Error occurred:', error);
-    throw new SnapError(error);
+    throw new SnapError(error as Error);
   }
 };
