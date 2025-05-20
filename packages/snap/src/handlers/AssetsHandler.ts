@@ -104,13 +104,12 @@ export class AssetsHandler {
         const fromKey = fromAsset as keyof typeof conversionRates;
         conversionRates[fromKey] = {};
 
-        if (fromAsset === (Caip19Asset.Bitcoin as string)) {
+        if (fromKey === (Caip19Asset.Bitcoin as CaipAssetType)) {
           // For Bitcoin, fetch rates.
           for (const [toAsset, rate] of await this.#assetsUseCases.getRates(
             toAssets,
           )) {
-            const toKey = toAsset;
-            conversionRates[fromKey][toKey] = rate
+            conversionRates[fromKey][toAsset] = rate
               ? {
                   rate: rate.toString(),
                   conversionTime,
@@ -121,8 +120,7 @@ export class AssetsHandler {
         } else {
           // For every other conversions, we just use a rate of 0.
           for (const toAsset of toAssets) {
-            const toKey = toAsset;
-            conversionRates[fromKey][toKey] = {
+            conversionRates[fromKey][toAsset] = {
               rate: '0',
               conversionTime,
               expirationTime: conversionTime + 60 * 60 * 24, // Long expiration time (1 day) to avoid unnecessary requests
