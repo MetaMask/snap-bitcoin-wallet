@@ -29,6 +29,7 @@ import {
   networkToCurrencyUnit,
   Purpose,
   purposeToAddressType,
+  SnapClient,
 } from '../entities';
 import {
   networkToCaip19,
@@ -60,8 +61,11 @@ export const CreateAccountRequest = object({
 export class KeyringHandler implements Keyring {
   readonly #accountsUseCases: AccountUseCases;
 
-  constructor(accounts: AccountUseCases) {
+  readonly #snapClient: SnapClient;
+
+  constructor(accounts: AccountUseCases, snapClient: SnapClient) {
     this.#accountsUseCases = accounts;
+    this.#snapClient = snapClient;
   }
 
   async route(origin: string, request: JsonRpcRequest): Promise<Json> {
@@ -114,12 +118,52 @@ export class KeyringHandler implements Keyring {
       entropySource,
       index: resolvedIndex,
       addressType: resolvedAddressType,
-      correlationId: metamask?.correlationId,
       synchronize,
     };
     const account = await this.#accountsUseCases.create(createParams);
 
+    await this.#snapClient.emitAccountCreatedEvent(
+      account,
+      metamask?.correlationId,
+    );
+
+    if (synchronize) {
+      await this.#accountsUseCases.fullScan(account);
+    }
+
     return mapToKeyringAccount(account);
+  }
+
+  async discoverAccounts(
+    scopes: BtcScope[],
+    entropySource: string,
+    groupIndex: number,
+  ): Promise<DiscoveredAccount[]> {
+    // Discovery is essentially the same as batch creation with synchronization, but without emitting events.
+    // Accounts are unique per network and address type.
+
+    const accounts = await Promise.all(
+      scopes.flatMap((scope) =>
+        Object.values(Caip2AddressType).map(async (addressType) => {
+          const createParams = {
+            network: caip2ToNetwork[scope],
+            entropySource,
+            index: groupIndex,
+            addressType: caip2ToAddressType[addressType],
+            synchronize: true,
+          };
+
+          const account = await this.#accountsUseCases.create(createParams);
+          await this.#accountsUseCases.fullScan(account);
+          return account;
+        }),
+      ),
+    );
+
+    // Return only accounts with history (even if balance is 0).
+    return accounts
+      .filter((account) => account.listTransactions().length > 0)
+      .map((account) => mapToDiscoveredAccount(account, groupIndex));
   }
 
   async getAccountBalances(
@@ -183,34 +227,6 @@ export class KeyringHandler implements Keyring {
       data: paginatedTxs.map((tx) => mapToTransaction(account, tx)),
       next: nextCursor,
     };
-  }
-
-  async discoverAccounts(
-    scopes: BtcScope[],
-    entropySource: string,
-    groupIndex: number,
-  ): Promise<DiscoveredAccount[]> {
-    // Accounts are unque per network and address type.
-    const accounts = await Promise.all(
-      scopes.flatMap((scope) =>
-        Object.values(Caip2AddressType).map(async (addressType) => {
-          const createParams = {
-            network: caip2ToNetwork[scope],
-            entropySource,
-            index: groupIndex,
-            addressType: caip2ToAddressType[addressType],
-            synchronize: true,
-          };
-
-          return this.#accountsUseCases.create(createParams);
-        }),
-      ),
-    );
-
-    // Return only accounts with a history.
-    return accounts
-      .filter((account) => account.listTransactions().length > 0)
-      .map((account) => mapToDiscoveredAccount(account, groupIndex));
   }
 
   async submitRequest(): Promise<KeyringResponse> {

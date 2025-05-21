@@ -14,7 +14,12 @@ import { BtcMethod, BtcScope } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
-import { CurrencyUnit, Purpose, type BitcoinAccount } from '../entities';
+import {
+  CurrencyUnit,
+  Purpose,
+  SnapClient,
+  type BitcoinAccount,
+} from '../entities';
 import {
   caip2ToNetwork,
   caip2ToAddressType,
@@ -44,6 +49,7 @@ jest.mock('@metamask/bitcoindevkit', () => {
 
 describe('KeyringHandler', () => {
   const mockAccounts = mock<AccountUseCases>();
+  const mockSnapClient = mock<SnapClient>();
   const mockAddress = mock<Address>({
     toString: () => 'bc1qaddress...',
   });
@@ -56,7 +62,7 @@ describe('KeyringHandler', () => {
     network: 'bitcoin',
   });
 
-  const handler = new KeyringHandler(mockAccounts);
+  const handler = new KeyringHandler(mockAccounts, mockSnapClient);
 
   beforeEach(() => {
     mockAccounts.create.mockResolvedValue(mockAccount);
@@ -87,13 +93,16 @@ describe('KeyringHandler', () => {
         entropySource,
         index,
         addressType: caip2ToAddressType[Caip2AddressType.P2pkh],
-        correlationId,
       };
 
       await handler.createAccount(options);
 
       expect(assert).toHaveBeenCalledWith(options, CreateAccountRequest);
       expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
+      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalledWith(
+        mockAccount,
+        correlationId,
+      );
       expect(mockAccounts.fullScan).not.toHaveBeenCalled();
     });
 
