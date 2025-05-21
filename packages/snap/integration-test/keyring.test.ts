@@ -21,6 +21,27 @@ describe('Keyring', () => {
     });
   });
 
+  it('discover accounts successfully', async () => {
+    const response = await snap.onKeyringRequest({
+      origin: ORIGIN,
+      method: 'keyring_discoverAccounts',
+      params: {
+        scopes: [BtcScope.Regtest], // avoid using other networks than Regtest as real external calls will be performed
+        entropySource: 'm', // we don't know the real entropy source so "m" acts as the default
+        groupIndex: 0,
+      },
+    });
+
+    // We should get 1 account, the p2wpkh one of Regtest
+    expect(response).toRespondWith([
+      {
+        type: 'bip44',
+        scopes: [BtcScope.Regtest],
+        derivationPath: "m/84'/0'/0'",
+      },
+    ]);
+  });
+
   it.each([
     {
       // Main account used in the tests, only one to synchronize

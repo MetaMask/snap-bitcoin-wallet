@@ -2,12 +2,12 @@ import type { Logger } from '../entities';
 import { LogLevel } from '../entities';
 
 const logLevelPriority = {
-  [LogLevel.ERROR]: 0,
-  [LogLevel.WARN]: 1,
-  [LogLevel.INFO]: 2,
-  [LogLevel.DEBUG]: 3,
-  [LogLevel.TRACE]: 4,
-  [LogLevel.SILENT]: 5,
+  [LogLevel.SILENT]: 0,
+  [LogLevel.ERROR]: 1,
+  [LogLevel.WARN]: 2,
+  [LogLevel.INFO]: 3,
+  [LogLevel.DEBUG]: 4,
+  [LogLevel.TRACE]: 5,
 };
 
 export class ConsoleLoggerAdapter implements Logger {
