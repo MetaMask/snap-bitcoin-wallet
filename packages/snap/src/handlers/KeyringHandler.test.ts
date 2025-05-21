@@ -14,12 +14,8 @@ import { BtcMethod, BtcScope } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
-import {
-  CurrencyUnit,
-  Purpose,
-  SnapClient,
-  type BitcoinAccount,
-} from '../entities';
+import type { SnapClient, BitcoinAccount } from '../entities';
+import { CurrencyUnit, Purpose } from '../entities';
 import {
   caip2ToNetwork,
   caip2ToAddressType,
@@ -178,14 +174,48 @@ describe('KeyringHandler', () => {
       ).rejects.toThrow("Invalid derivation path: m/44'");
     });
 
+    it('performs a full scan when synchronize option is true', async () => {
+      const options = {
+        scope: BtcScope.Signet,
+        synchronize: true,
+      };
+      await handler.createAccount(options);
+
+      expect(mockAccounts.create).toHaveBeenCalled();
+      expect(mockAccounts.fullScan).toHaveBeenCalledWith(mockAccount);
+    });
+
     it('propagates errors from createAccount', async () => {
-      const error = new Error();
+      const error = new Error('createAccount error');
       mockAccounts.create.mockRejectedValue(error);
 
       await expect(
-        handler.createAccount({ options: { scopes: [BtcScope.Mainnet] } }),
+        handler.createAccount({ scopes: [BtcScope.Mainnet] }),
       ).rejects.toThrow(error);
       expect(mockAccounts.create).toHaveBeenCalled();
+    });
+
+    it('propagates errors from fullScan', async () => {
+      const error = new Error('fullScan error');
+      mockAccounts.fullScan.mockRejectedValue(error);
+
+      await expect(
+        handler.createAccount({
+          scopes: [BtcScope.Mainnet],
+          synchronize: true,
+        }),
+      ).rejects.toThrow(error);
+      expect(mockAccounts.fullScan).toHaveBeenCalled();
+    });
+
+    it('propagates errors from full scan', async () => {
+      const error = new Error('emitEvent error');
+      mockSnapClient.emitAccountCreatedEvent.mockRejectedValue(error);
+
+      await expect(
+        handler.createAccount({ scopes: [BtcScope.Mainnet] }),
+      ).rejects.toThrow(error);
+      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalled();
     });
   });
 

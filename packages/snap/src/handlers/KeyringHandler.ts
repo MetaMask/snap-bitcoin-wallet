@@ -25,11 +25,11 @@ import {
   string,
 } from 'superstruct';
 
+import type { SnapClient } from '../entities';
 import {
   networkToCurrencyUnit,
   Purpose,
   purposeToAddressType,
-  SnapClient,
 } from '../entities';
 import {
   networkToCaip19,
@@ -89,9 +89,9 @@ export class KeyringHandler implements Keyring {
   }
 
   async createAccount(
-    opts: Record<string, Json> & MetaMaskOptions,
+    options: Record<string, Json> & MetaMaskOptions,
   ): Promise<KeyringAccount> {
-    assert(opts, CreateAccountRequest);
+    assert(options, CreateAccountRequest);
     const {
       metamask,
       scope,
@@ -100,7 +100,7 @@ export class KeyringHandler implements Keyring {
       derivationPath,
       addressType,
       synchronize,
-    } = opts;
+    } = options;
 
     const resolvedIndex = derivationPath
       ? this.#extractAccountIndex(derivationPath)

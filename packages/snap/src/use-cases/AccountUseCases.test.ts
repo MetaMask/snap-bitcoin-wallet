@@ -185,7 +185,6 @@ describe('AccountUseCases', () => {
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).not.toHaveBeenCalled();
-      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalled();
 
       expect(result).toBe(mockExistingAccount);
     });
@@ -202,7 +201,6 @@ describe('AccountUseCases', () => {
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).toHaveBeenCalled();
-      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalled();
 
       expect(result).toBe(mockAccount);
     });
@@ -232,20 +230,6 @@ describe('AccountUseCases', () => {
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).toHaveBeenCalled();
       expect(mockSnapClient.emitAccountCreatedEvent).not.toHaveBeenCalled();
-    });
-
-    it('propagates an error if emitAccountCreatedEvent throws', async () => {
-      const error = new Error();
-      mockRepository.getByDerivationPath.mockResolvedValue(null);
-      mockSnapClient.emitAccountCreatedEvent.mockRejectedValue(error);
-
-      await expect(
-        useCases.create({ network, entropySource, index, addressType }),
-      ).rejects.toBe(error);
-
-      expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
-      expect(mockRepository.insert).toHaveBeenCalled();
-      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalled();
     });
   });
 
