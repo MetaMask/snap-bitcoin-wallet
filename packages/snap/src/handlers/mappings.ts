@@ -182,11 +182,11 @@ export function mapToTransaction(
 }
 
 /**
- * Maps a Bitcoin Account to a Keyring Account.
+ * Maps a Bitcoin Account to a Discovered Account.
  *
  * @param account - The Bitcoin account.
  * @param groupIndex - The group index.
- * @returns The Keyring account.
+ * @returns The Discovered account.
  */
 export function mapToDiscoveredAccount(
   account: BitcoinAccount,

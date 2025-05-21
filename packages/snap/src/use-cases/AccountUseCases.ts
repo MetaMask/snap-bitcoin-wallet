@@ -26,13 +26,6 @@ export type CreateAccountParams = {
   addressType?: AddressType;
 };
 
-export type DiscoverAccountParams = {
-  network: Network;
-  index?: number;
-  entropySource?: string;
-  addressType?: AddressType;
-};
-
 export class AccountUseCases {
   readonly #logger: Logger;
 

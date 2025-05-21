@@ -208,8 +208,8 @@ describe('KeyringHandler', () => {
       expect(mockAccounts.fullScan).toHaveBeenCalled();
     });
 
-    it('propagates errors from full scan', async () => {
-      const error = new Error('emitEvent error');
+    it('propagates errors from emitAccountCreatedEvent', async () => {
+      const error = new Error('emitAccountCreatedEvent error');
       mockSnapClient.emitAccountCreatedEvent.mockRejectedValue(error);
 
       await expect(
