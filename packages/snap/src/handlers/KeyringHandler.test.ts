@@ -9,7 +9,10 @@ import type {
   AddressType,
 } from '@metamask/bitcoindevkit';
 import { Address } from '@metamask/bitcoindevkit';
-import type { Transaction as KeyringTransaction } from '@metamask/keyring-api';
+import type {
+  DiscoveredAccount,
+  Transaction as KeyringTransaction,
+} from '@metamask/keyring-api';
 import { BtcMethod, BtcScope } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
@@ -23,6 +26,7 @@ import {
   Caip19Asset,
 } from './caip';
 import { KeyringHandler, CreateAccountRequest } from './KeyringHandler';
+import { mapToDiscoveredAccount } from './mappings';
 import type {
   AccountUseCases,
   CreateAccountParams,
@@ -216,6 +220,100 @@ describe('KeyringHandler', () => {
         handler.createAccount({ scopes: [BtcScope.Mainnet] }),
       ).rejects.toThrow(error);
       expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalled();
+    });
+  });
+
+  describe('discoverAccounts', () => {
+    const entropySource = 'some-source';
+    const groupIndex = 0;
+    const scopes = Object.values(BtcScope);
+
+    it('creates, scans and returns accounts for every scope/addressType combination', async () => {
+      const addressTypes = Object.values(Caip2AddressType);
+      const totalCombinations = scopes.length * addressTypes.length;
+
+      const expected: DiscoveredAccount[] = [];
+      scopes.forEach((scope) => {
+        addressTypes.forEach((addrType) => {
+          const acc = mock<BitcoinAccount>({
+            addressType: caip2ToAddressType[addrType],
+            network: caip2ToNetwork[scope],
+            listTransactions: jest.fn().mockReturnValue([{}]), // has history
+          });
+
+          expected.push(mapToDiscoveredAccount(acc, groupIndex));
+          mockAccounts.create.mockResolvedValueOnce(acc);
+        });
+      });
+
+      const discovered = await handler.discoverAccounts(
+        scopes,
+        entropySource,
+        groupIndex,
+      );
+
+      expect(mockAccounts.create).toHaveBeenCalledTimes(totalCombinations);
+      expect(mockAccounts.fullScan).toHaveBeenCalledTimes(totalCombinations);
+
+      // validate each individual create() call arguments
+      scopes.forEach((scope, sIdx) => {
+        addressTypes.forEach((addrType, aIdx) => {
+          const callIdx = sIdx * addressTypes.length + aIdx;
+          expect(mockAccounts.create).toHaveBeenNthCalledWith(callIdx + 1, {
+            network: caip2ToNetwork[scope],
+            entropySource,
+            index: groupIndex,
+            addressType: caip2ToAddressType[addrType],
+            synchronize: true,
+          });
+        });
+      });
+
+      // Order is not guaranteed, so compare as sets
+      expect(discovered).toHaveLength(expected.length);
+      expect(discovered).toStrictEqual(expect.arrayContaining(expected));
+    });
+
+    it('filters out accounts that have no transaction history', async () => {
+      const addressTypes = Object.values(Caip2AddressType);
+      const totalCombinations = scopes.length * addressTypes.length;
+
+      for (let i = 0; i < totalCombinations; i += 1) {
+        const acc = mock<BitcoinAccount>({
+          listTransactions: jest.fn().mockReturnValue([]), // no history
+        });
+
+        mockAccounts.create.mockResolvedValueOnce(acc);
+      }
+
+      const discovered = await handler.discoverAccounts(
+        scopes,
+        entropySource,
+        groupIndex,
+      );
+
+      expect(discovered).toHaveLength(0);
+    });
+
+    it('propagates errors from create', async () => {
+      const error = new Error('create error');
+      mockAccounts.create.mockRejectedValue(error);
+
+      await expect(
+        handler.discoverAccounts(scopes, entropySource, groupIndex),
+      ).rejects.toThrow(error);
+      expect(mockAccounts.create).toHaveBeenCalled();
+    });
+
+    it('propagates errors from fullScan()', async () => {
+      const error = new Error('fullScan error');
+      mockAccounts.create.mockResolvedValue(mock<BitcoinAccount>());
+      mockAccounts.fullScan.mockRejectedValue(error);
+
+      await expect(
+        handler.discoverAccounts(scopes, entropySource, groupIndex),
+      ).rejects.toThrow(error);
+      expect(mockAccounts.fullScan).toHaveBeenCalled();
     });
   });
 
