@@ -1,3 +1,4 @@
+import type { AddressType } from '@metamask/bitcoindevkit';
 import { BtcScope, MetaMaskOptionsStruct } from '@metamask/keyring-api';
 import type {
   Keyring,
@@ -10,6 +11,7 @@ import type {
   Transaction,
   Pagination,
   MetaMaskOptions,
+  DiscoveredAccount,
 } from '@metamask/keyring-api';
 import { handleKeyringRequest } from '@metamask/keyring-snap-sdk';
 import type { Json, JsonRpcRequest } from '@metamask/utils';
@@ -23,7 +25,11 @@ import {
   string,
 } from 'superstruct';
 
-import { networkToCurrencyUnit } from '../entities';
+import {
+  networkToCurrencyUnit,
+  Purpose,
+  purposeToAddressType,
+} from '../entities';
 import {
   networkToCaip19,
   Caip2AddressType,
@@ -32,7 +38,11 @@ import {
   networkToCaip2,
 } from './caip';
 import { handle } from './errors';
-import { mapToKeyringAccount, mapToTransaction } from './mappings';
+import {
+  mapToDiscoveredAccount,
+  mapToKeyringAccount,
+  mapToTransaction,
+} from './mappings';
 import { validateOrigin } from './permissions';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 
@@ -85,20 +95,29 @@ export class KeyringHandler implements Keyring {
       index,
       derivationPath,
       addressType,
+      synchronize,
     } = opts;
+
+    const resolvedIndex = derivationPath
+      ? this.#extractAccountIndex(derivationPath)
+      : index;
+
+    let resolvedAddressType: AddressType | undefined;
+    if (addressType) {
+      resolvedAddressType = caip2ToAddressType[addressType];
+    } else if (derivationPath) {
+      resolvedAddressType = this.#extractAddressType(derivationPath);
+    }
 
     const createParams = {
       network: caip2ToNetwork[scope],
       entropySource,
-      index: derivationPath ? this.#extractAccountIndex(derivationPath) : index,
-      addressType: addressType ? caip2ToAddressType[addressType] : undefined,
+      index: resolvedIndex,
+      addressType: resolvedAddressType,
       correlationId: metamask?.correlationId,
+      synchronize,
     };
     const account = await this.#accountsUseCases.create(createParams);
-
-    if (opts.synchronize) {
-      await this.#accountsUseCases.fullScan(account);
-    }
 
     return mapToKeyringAccount(account);
   }
@@ -166,8 +185,62 @@ export class KeyringHandler implements Keyring {
     };
   }
 
+  async discoverAccounts(
+    scopes: BtcScope[],
+    entropySource: string,
+    groupIndex: number,
+  ): Promise<DiscoveredAccount[]> {
+    // Accounts are unque per network and address type.
+    const accounts = await Promise.all(
+      scopes.flatMap((scope) =>
+        Object.values(Caip2AddressType).map(async (addressType) => {
+          const createParams = {
+            network: caip2ToNetwork[scope],
+            entropySource,
+            index: groupIndex,
+            addressType: caip2ToAddressType[addressType],
+            synchronize: true,
+          };
+
+          return this.#accountsUseCases.create(createParams);
+        }),
+      ),
+    );
+
+    // Return only accounts with a history.
+    return accounts
+      .filter((account) => account.listTransactions().length > 0)
+      .map((account) => mapToDiscoveredAccount(account, groupIndex));
+  }
+
   async submitRequest(): Promise<KeyringResponse> {
     throw new Error('Method not implemented.');
+  }
+
+  #extractAddressType(path: string): AddressType {
+    const segments = path.split('/');
+    if (segments.length < 4) {
+      throw new Error(`Invalid derivation path: ${path}`);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const purposePart = segments[1]!;
+    const match = purposePart.match(/^(\d+)/u);
+    if (!match) {
+      throw new Error(`Invalid purpose segment: ${purposePart}`);
+    }
+
+    const purpose = Number(match[1]);
+    if (!Object.values(Purpose).includes(purpose)) {
+      throw new Error(`Invalid BIP-purpose: ${purpose}`);
+    }
+
+    const addressType = purposeToAddressType[purpose as Purpose];
+    if (!addressType) {
+      throw new Error(`No address-type mapping for purpose: ${purpose}`);
+    }
+
+    return addressType;
   }
 
   #extractAccountIndex(path: string): number {
@@ -183,7 +256,13 @@ export class KeyringHandler implements Keyring {
       throw new Error(`Invalid account index: ${accountPart}`);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return parseInt(match[1]!, 10);
+    const index = Number(match[1]);
+    if (!Number.isInteger(index) || index < 0) {
+      throw new Error(
+        `Account index must be a non-negative integer, got: ${index}`,
+      );
+    }
+
+    return index;
   }
 }

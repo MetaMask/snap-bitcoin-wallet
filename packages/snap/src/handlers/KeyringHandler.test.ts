@@ -6,6 +6,7 @@ import type {
   TxOut,
   Network,
   WalletTx,
+  AddressType,
 } from '@metamask/bitcoindevkit';
 import { Address } from '@metamask/bitcoindevkit';
 import type { Transaction as KeyringTransaction } from '@metamask/keyring-api';
@@ -13,7 +14,7 @@ import { BtcMethod, BtcScope } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
-import { CurrencyUnit, type BitcoinAccount } from '../entities';
+import { CurrencyUnit, Purpose, type BitcoinAccount } from '../entities';
 import {
   caip2ToNetwork,
   caip2ToAddressType,
@@ -104,6 +105,7 @@ describe('KeyringHandler', () => {
       const expectedCreateParams: CreateAccountParams = {
         network: 'signet',
         index: 5,
+        addressType: 'p2pkh',
       };
 
       await handler.createAccount(options);
@@ -120,6 +122,30 @@ describe('KeyringHandler', () => {
       });
     });
 
+    it.each([
+      { purpose: Purpose.Legacy, addressType: 'p2pkh' },
+      { purpose: Purpose.Segwit, addressType: 'p2sh' },
+      { purpose: Purpose.NativeSegwit, addressType: 'p2wpkh' },
+      { purpose: Purpose.Taproot, addressType: 'p2tr' },
+      { purpose: Purpose.Multisig, addressType: 'p2wsh' },
+    ] as { purpose: Purpose; addressType: AddressType }[])(
+      'extracts address type from derivationPath: %s',
+      async ({ purpose, addressType }) => {
+        const options = {
+          scope: BtcScope.Signet,
+          derivationPath: `m/${purpose}'/0'/0'`,
+        };
+        const expectedCreateParams: CreateAccountParams = {
+          network: 'signet',
+          index: 0,
+          addressType,
+        };
+
+        await handler.createAccount(options);
+        expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
+      },
+    );
+
     it('fails if derivationPath is invalid', async () => {
       const options = {
         scope: BtcScope.Signet,
@@ -131,19 +157,16 @@ describe('KeyringHandler', () => {
       );
 
       await expect(
+        handler.createAccount({ ...options, derivationPath: "m/60'/0'/0'" }), // unknown purpose
+      ).rejects.toThrow('Invalid BIP-purpose: 60');
+
+      await expect(
+        handler.createAccount({ ...options, derivationPath: "m/44'/0'/-1'" }), // negative index
+      ).rejects.toThrow("Invalid account index: -1'");
+
+      await expect(
         handler.createAccount({ ...options, derivationPath: "m/44'" }), // missing segments
       ).rejects.toThrow("Invalid derivation path: m/44'");
-    });
-
-    it('performs a full scan when synchronize option is true', async () => {
-      const options = {
-        scope: BtcScope.Signet,
-        synchronize: true,
-      };
-      await handler.createAccount(options);
-
-      expect(mockAccounts.create).toHaveBeenCalled();
-      expect(mockAccounts.fullScan).toHaveBeenCalledWith(mockAccount);
     });
 
     it('propagates errors from createAccount', async () => {
@@ -154,20 +177,6 @@ describe('KeyringHandler', () => {
         handler.createAccount({ options: { scopes: [BtcScope.Mainnet] } }),
       ).rejects.toThrow(error);
       expect(mockAccounts.create).toHaveBeenCalled();
-    });
-
-    it('propagates errors from full scan', async () => {
-      const error = new Error();
-      mockAccounts.fullScan.mockRejectedValue(error);
-
-      await expect(
-        handler.createAccount({
-          options: { scopes: [BtcScope.Mainnet] },
-          synchronize: true,
-        }),
-      ).rejects.toThrow(error);
-      expect(mockAccounts.create).toHaveBeenCalled();
-      expect(mockAccounts.fullScan).toHaveBeenCalled();
     });
   });
 

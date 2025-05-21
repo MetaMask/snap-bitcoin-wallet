@@ -25,6 +25,7 @@ export type CreateAccountParams = {
   entropySource?: string;
   addressType?: AddressType;
   correlationId?: string;
+  synchronize?: boolean;
 };
 
 export class AccountUseCases {
@@ -85,6 +86,7 @@ export class AccountUseCases {
       network,
       correlationId,
       entropySource = 'm',
+      synchronize = false,
     } = req;
 
     const derivationPath = [
@@ -109,6 +111,10 @@ export class AccountUseCases {
     );
 
     await this.#snapClient.emitAccountCreatedEvent(newAccount, correlationId);
+
+    if (synchronize) {
+      await this.fullScan(newAccount);
+    }
 
     this.#logger.info(
       'Bitcoin account created successfully: %s. derivationPath: %s',

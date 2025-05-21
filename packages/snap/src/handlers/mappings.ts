@@ -8,12 +8,22 @@ import type {
   WalletTx,
 } from '@metamask/bitcoindevkit';
 import type {
+  DiscoveredAccount,
   KeyringAccount,
   Transaction as KeyringTransaction,
 } from '@metamask/keyring-api';
-import { TransactionStatus, BtcMethod } from '@metamask/keyring-api';
+import {
+  TransactionStatus,
+  BtcMethod,
+  DiscoveredAccountType,
+} from '@metamask/keyring-api';
 
-import { networkToCurrencyUnit, type BitcoinAccount } from '../entities';
+import {
+  addressTypeToPurpose,
+  networkToCoinType,
+  networkToCurrencyUnit,
+  type BitcoinAccount,
+} from '../entities';
 import type { Caip19Asset } from './caip';
 import { addressTypeToCaip2, networkToCaip19, networkToCaip2 } from './caip';
 
@@ -169,4 +179,22 @@ export function mapToTransaction(
   }
 
   return transaction;
+}
+
+/**
+ * Maps a Bitcoin Account to a Keyring Account.
+ *
+ * @param account - The Bitcoin account.
+ * @param groupIndex - The group index.
+ * @returns The Keyring account.
+ */
+export function mapToDiscoveredAccount(
+  account: BitcoinAccount,
+  groupIndex: number,
+): DiscoveredAccount {
+  return {
+    type: DiscoveredAccountType.Bip44,
+    scopes: [networkToCaip2[account.network]],
+    derivationPath: `m/${addressTypeToPurpose[account.addressType]}'/${networkToCoinType[account.network]}'/${groupIndex}'`,
+  };
 }
