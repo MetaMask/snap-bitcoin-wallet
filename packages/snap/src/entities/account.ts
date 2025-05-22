@@ -253,6 +253,7 @@ export enum Purpose {
   Taproot = 86,
   Multisig = 45,
 }
+
 export enum Slip44 {
   Bitcoin = 0,
   Testnet = 1,
@@ -264,6 +265,14 @@ export const addressTypeToPurpose: Record<AddressType, Purpose> = {
   p2wsh: Purpose.Multisig,
   p2wpkh: Purpose.NativeSegwit,
   p2tr: Purpose.Taproot,
+};
+
+export const purposeToAddressType: Record<Purpose, AddressType> = {
+  [Purpose.Legacy]: 'p2pkh',
+  [Purpose.Segwit]: 'p2sh',
+  [Purpose.Multisig]: 'p2wsh',
+  [Purpose.NativeSegwit]: 'p2wpkh',
+  [Purpose.Taproot]: 'p2tr',
 };
 
 export const networkToCoinType: Record<Network, Slip44> = {

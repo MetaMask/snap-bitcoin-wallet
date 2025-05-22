@@ -1,3 +1,4 @@
+import type { AddressType } from '@metamask/bitcoindevkit';
 import { BtcScope, MetaMaskOptionsStruct } from '@metamask/keyring-api';
 import type {
   Keyring,
@@ -10,6 +11,7 @@ import type {
   Transaction,
   Pagination,
   MetaMaskOptions,
+  DiscoveredAccount,
 } from '@metamask/keyring-api';
 import { handleKeyringRequest } from '@metamask/keyring-snap-sdk';
 import type { Json, JsonRpcRequest } from '@metamask/utils';
@@ -23,7 +25,12 @@ import {
   string,
 } from 'superstruct';
 
-import { networkToCurrencyUnit } from '../entities';
+import type { SnapClient } from '../entities';
+import {
+  networkToCurrencyUnit,
+  Purpose,
+  purposeToAddressType,
+} from '../entities';
 import {
   networkToCaip19,
   Caip2AddressType,
@@ -32,7 +39,11 @@ import {
   networkToCaip2,
 } from './caip';
 import { handle } from './errors';
-import { mapToKeyringAccount, mapToTransaction } from './mappings';
+import {
+  mapToDiscoveredAccount,
+  mapToKeyringAccount,
+  mapToTransaction,
+} from './mappings';
 import { validateOrigin } from './permissions';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 
@@ -50,8 +61,11 @@ export const CreateAccountRequest = object({
 export class KeyringHandler implements Keyring {
   readonly #accountsUseCases: AccountUseCases;
 
-  constructor(accounts: AccountUseCases) {
+  readonly #snapClient: SnapClient;
+
+  constructor(accounts: AccountUseCases, snapClient: SnapClient) {
     this.#accountsUseCases = accounts;
+    this.#snapClient = snapClient;
   }
 
   async route(origin: string, request: JsonRpcRequest): Promise<Json> {
@@ -75,9 +89,9 @@ export class KeyringHandler implements Keyring {
   }
 
   async createAccount(
-    opts: Record<string, Json> & MetaMaskOptions,
+    options: Record<string, Json> & MetaMaskOptions,
   ): Promise<KeyringAccount> {
-    assert(opts, CreateAccountRequest);
+    assert(options, CreateAccountRequest);
     const {
       metamask,
       scope,
@@ -85,22 +99,71 @@ export class KeyringHandler implements Keyring {
       index,
       derivationPath,
       addressType,
-    } = opts;
+      synchronize,
+    } = options;
+
+    const resolvedIndex = derivationPath
+      ? this.#extractAccountIndex(derivationPath)
+      : index;
+
+    let resolvedAddressType: AddressType | undefined;
+    if (addressType) {
+      resolvedAddressType = caip2ToAddressType[addressType];
+    } else if (derivationPath) {
+      resolvedAddressType = this.#extractAddressType(derivationPath);
+    }
 
     const createParams = {
       network: caip2ToNetwork[scope],
       entropySource,
-      index: derivationPath ? this.#extractAccountIndex(derivationPath) : index,
-      addressType: addressType ? caip2ToAddressType[addressType] : undefined,
-      correlationId: metamask?.correlationId,
+      index: resolvedIndex,
+      addressType: resolvedAddressType,
+      synchronize,
     };
     const account = await this.#accountsUseCases.create(createParams);
 
-    if (opts.synchronize) {
+    await this.#snapClient.emitAccountCreatedEvent(
+      account,
+      metamask?.correlationId,
+    );
+
+    if (synchronize) {
       await this.#accountsUseCases.fullScan(account);
     }
 
     return mapToKeyringAccount(account);
+  }
+
+  async discoverAccounts(
+    scopes: BtcScope[],
+    entropySource: string,
+    groupIndex: number,
+  ): Promise<DiscoveredAccount[]> {
+    // Discovery is essentially the same as batch creation with synchronization, but without emitting events.
+    // Accounts are unique per network and address type.
+
+    const accounts = await Promise.all(
+      scopes.flatMap((scope) =>
+        Object.values(Caip2AddressType).map(async (addressType) => {
+          const createParams = {
+            network: caip2ToNetwork[scope],
+            entropySource,
+            index: groupIndex,
+            addressType: caip2ToAddressType[addressType],
+            synchronize: true,
+          };
+
+          const account = await this.#accountsUseCases.create(createParams);
+          await this.#accountsUseCases.fullScan(account);
+          return account;
+        }),
+      ),
+    );
+
+    // Return only accounts with history (even if balance is 0).
+    return accounts
+      .filter((account) => account.listTransactions().length > 0)
+      .map((account) => mapToDiscoveredAccount(account, groupIndex));
   }
 
   async getAccountBalances(
@@ -170,6 +233,32 @@ export class KeyringHandler implements Keyring {
     throw new Error('Method not implemented.');
   }
 
+  #extractAddressType(path: string): AddressType {
+    const segments = path.split('/');
+    if (segments.length < 4) {
+      throw new Error(`Invalid derivation path: ${path}`);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const purposePart = segments[1]!;
+    const match = purposePart.match(/^(\d+)/u);
+    if (!match) {
+      throw new Error(`Invalid purpose segment: ${purposePart}`);
+    }
+
+    const purpose = Number(match[1]);
+    if (!Object.values(Purpose).includes(purpose)) {
+      throw new Error(`Invalid BIP-purpose: ${purpose}`);
+    }
+
+    const addressType = purposeToAddressType[purpose as Purpose];
+    if (!addressType) {
+      throw new Error(`No address-type mapping for purpose: ${purpose}`);
+    }
+
+    return addressType;
+  }
+
   #extractAccountIndex(path: string): number {
     const segments = path.split('/');
     if (segments.length < 4) {
@@ -183,7 +272,13 @@ export class KeyringHandler implements Keyring {
       throw new Error(`Invalid account index: ${accountPart}`);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return parseInt(match[1]!, 10);
+    const index = Number(match[1]);
+    if (!Number.isInteger(index) || index < 0) {
+      throw new Error(
+        `Account index must be a non-negative integer, got: ${index}`,
+      );
+    }
+
+    return index;
   }
 }

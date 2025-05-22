@@ -24,7 +24,6 @@ export type CreateAccountParams = {
   index?: number;
   entropySource?: string;
   addressType?: AddressType;
-  correlationId?: string;
 };
 
 export class AccountUseCases {
@@ -83,7 +82,6 @@ export class AccountUseCases {
       addressType = this.#accountConfig.defaultAddressType,
       index = 0,
       network,
-      correlationId,
       entropySource = 'm',
     } = req;
 
@@ -98,7 +96,6 @@ export class AccountUseCases {
     const account = await this.#repository.getByDerivationPath(derivationPath);
     if (account) {
       this.#logger.debug('Account already exists: %s,', account.id);
-      await this.#snapClient.emitAccountCreatedEvent(account, correlationId);
       return account;
     }
 
@@ -107,8 +104,6 @@ export class AccountUseCases {
       network,
       addressType,
     );
-
-    await this.#snapClient.emitAccountCreatedEvent(newAccount, correlationId);
 
     this.#logger.info(
       'Bitcoin account created successfully: %s. derivationPath: %s',

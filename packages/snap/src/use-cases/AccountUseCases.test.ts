@@ -102,7 +102,6 @@ describe('AccountUseCases', () => {
     const addressType: AddressType = 'p2wpkh';
     const entropySource = 'some-source';
     const index = 1;
-    const correlationId = 'some-correlation-id';
 
     const mockAccount = mock<BitcoinAccount>();
 
@@ -126,7 +125,6 @@ describe('AccountUseCases', () => {
           entropySource,
           index,
           addressType: tAddressType,
-          correlationId,
         });
 
         expect(mockRepository.getByDerivationPath).toHaveBeenCalledWith(
@@ -136,10 +134,6 @@ describe('AccountUseCases', () => {
           derivationPath,
           network,
           tAddressType,
-        );
-        expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalledWith(
-          mockAccount,
-          correlationId,
         );
       },
     );
@@ -165,7 +159,6 @@ describe('AccountUseCases', () => {
           entropySource,
           index,
           addressType,
-          correlationId,
         });
 
         expect(mockRepository.getByDerivationPath).toHaveBeenCalledWith(
@@ -175,10 +168,6 @@ describe('AccountUseCases', () => {
           expectedDerivationPath,
           tNetwork,
           addressType,
-        );
-        expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalledWith(
-          mockAccount,
-          correlationId,
         );
       },
     );
@@ -196,7 +185,6 @@ describe('AccountUseCases', () => {
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).not.toHaveBeenCalled();
-      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalled();
 
       expect(result).toBe(mockExistingAccount);
     });
@@ -213,7 +201,6 @@ describe('AccountUseCases', () => {
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).toHaveBeenCalled();
-      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalled();
 
       expect(result).toBe(mockAccount);
     });
@@ -243,20 +230,6 @@ describe('AccountUseCases', () => {
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.insert).toHaveBeenCalled();
       expect(mockSnapClient.emitAccountCreatedEvent).not.toHaveBeenCalled();
-    });
-
-    it('propagates an error if emitAccountCreatedEvent throws', async () => {
-      const error = new Error();
-      mockRepository.getByDerivationPath.mockResolvedValue(null);
-      mockSnapClient.emitAccountCreatedEvent.mockRejectedValue(error);
-
-      await expect(
-        useCases.create({ network, entropySource, index, addressType }),
-      ).rejects.toBe(error);
-
-      expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
-      expect(mockRepository.insert).toHaveBeenCalled();
-      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalled();
     });
   });
 
