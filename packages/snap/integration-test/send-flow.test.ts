@@ -9,7 +9,7 @@ import {
   ReviewTransactionEvent,
   SendFormEvent,
 } from '../src/entities';
-import { Caip19Asset } from '../src/handlers';
+import { Caip19Asset } from '../src/handlers/caip';
 import { CronMethod } from '../src/handlers/CronHandler';
 
 describe('Send flow', () => {
