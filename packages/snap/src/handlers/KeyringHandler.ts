@@ -35,17 +35,19 @@ import {
   Purpose,
   purposeToAddressType,
 } from '../entities';
-import { handle } from './errors';
 import {
   networkToCaip19,
-  caip2ToAddressType,
+  caipToAddressType,
   caip2ToNetwork,
   networkToCaip2,
+} from './caip';
+import { handle } from './errors';
+import {
   mapToDiscoveredAccount,
   mapToKeyringAccount,
+  mapToTransaction,
 } from './mappings';
 import { validateOrigin } from './permissions';
-import { mapToTransaction } from './tx-mappings';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 
 export const CreateAccountRequest = object({
@@ -109,7 +111,7 @@ export class KeyringHandler implements Keyring {
 
     let resolvedAddressType: AddressType | undefined;
     if (addressType) {
-      resolvedAddressType = caip2ToAddressType[addressType];
+      resolvedAddressType = caipToAddressType[addressType];
     } else if (derivationPath) {
       resolvedAddressType = this.#extractAddressType(derivationPath);
     }
@@ -150,7 +152,7 @@ export class KeyringHandler implements Keyring {
             network: caip2ToNetwork[scope],
             entropySource,
             index: groupIndex,
-            addressType: caip2ToAddressType[addressType],
+            addressType: caipToAddressType[addressType],
             synchronize: true,
           };
 

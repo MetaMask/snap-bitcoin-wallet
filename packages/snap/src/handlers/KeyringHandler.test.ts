@@ -19,13 +19,9 @@ import { assert } from 'superstruct';
 
 import type { SnapClient, BitcoinAccount } from '../entities';
 import { CurrencyUnit, Purpose } from '../entities';
+import { caip2ToNetwork, caipToAddressType, Caip19Asset } from './caip';
 import { KeyringHandler, CreateAccountRequest } from './KeyringHandler';
-import {
-  caip2ToNetwork,
-  caip2ToAddressType,
-  Caip19Asset,
-  mapToDiscoveredAccount,
-} from './mappings';
+import { mapToDiscoveredAccount } from './mappings';
 import type {
   AccountUseCases,
   CreateAccountParams,
@@ -91,7 +87,7 @@ describe('KeyringHandler', () => {
         network: caip2ToNetwork[BtcScope.Signet],
         entropySource,
         index,
-        addressType: caip2ToAddressType[BtcAccountType.P2pkh],
+        addressType: caipToAddressType[BtcAccountType.P2pkh],
       };
 
       await handler.createAccount(options);
@@ -235,7 +231,7 @@ describe('KeyringHandler', () => {
       scopes.forEach((scope) => {
         addressTypes.forEach((addrType) => {
           const acc = mock<BitcoinAccount>({
-            addressType: caip2ToAddressType[addrType],
+            addressType: caipToAddressType[addrType],
             network: caip2ToNetwork[scope],
             listTransactions: jest.fn().mockReturnValue([{}]), // has history
           });
@@ -262,7 +258,7 @@ describe('KeyringHandler', () => {
             network: caip2ToNetwork[scope],
             entropySource,
             index: groupIndex,
-            addressType: caip2ToAddressType[addrType],
+            addressType: caipToAddressType[addrType],
             synchronize: true,
           });
         });
