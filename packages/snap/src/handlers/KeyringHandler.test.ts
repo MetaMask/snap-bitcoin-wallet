@@ -19,14 +19,14 @@ import { assert } from 'superstruct';
 
 import type { SnapClient, BitcoinAccount } from '../entities';
 import { CurrencyUnit, Purpose } from '../entities';
+import { KeyringHandler, CreateAccountRequest } from './KeyringHandler';
 import {
-  caip2ToNetwork,
-  caip2ToAddressType,
+  scopeToNetwork,
+  caipToAddressType,
   Caip2AddressType,
   Caip19Asset,
-} from './caip';
-import { KeyringHandler, CreateAccountRequest } from './KeyringHandler';
-import { mapToDiscoveredAccount } from './mappings';
+} from './mappings';
+import { mapToDiscoveredAccount } from './tx-mapping';
 import type {
   AccountUseCases,
   CreateAccountParams,
@@ -89,10 +89,10 @@ describe('KeyringHandler', () => {
         },
       };
       const expectedCreateParams: CreateAccountParams = {
-        network: caip2ToNetwork[BtcScope.Signet],
+        network: scopeToNetwork[BtcScope.Signet],
         entropySource,
         index,
-        addressType: caip2ToAddressType[Caip2AddressType.P2pkh],
+        addressType: caipToAddressType[Caip2AddressType.P2pkh],
       };
 
       await handler.createAccount(options);
@@ -236,8 +236,8 @@ describe('KeyringHandler', () => {
       scopes.forEach((scope) => {
         addressTypes.forEach((addrType) => {
           const acc = mock<BitcoinAccount>({
-            addressType: caip2ToAddressType[addrType],
-            network: caip2ToNetwork[scope],
+            addressType: caipToAddressType[addrType],
+            network: scopeToNetwork[scope],
             listTransactions: jest.fn().mockReturnValue([{}]), // has history
           });
 
@@ -260,10 +260,10 @@ describe('KeyringHandler', () => {
         addressTypes.forEach((addrType, aIdx) => {
           const callIdx = sIdx * addressTypes.length + aIdx;
           expect(mockAccounts.create).toHaveBeenNthCalledWith(callIdx + 1, {
-            network: caip2ToNetwork[scope],
+            network: scopeToNetwork[scope],
             entropySource,
             index: groupIndex,
-            addressType: caip2ToAddressType[addrType],
+            addressType: caipToAddressType[addrType],
             synchronize: true,
           });
         });

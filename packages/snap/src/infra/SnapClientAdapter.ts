@@ -13,13 +13,13 @@ import type {
 
 import type { BitcoinAccount, SnapClient, SnapState } from '../entities';
 import { networkToCurrencyUnit } from '../entities';
-import { networkToCaip19 } from '../handlers';
 import {
+  networkToCaip19,
   mapToKeyringAccount,
-  mapToTransaction,
   addressTypeToName,
   networkToName,
-} from '../handlers/mappings';
+} from '../handlers';
+import { mapToTransaction } from '../handlers/tx-mapping';
 
 export class SnapClientAdapter implements SnapClient {
   readonly #encrypt: boolean;

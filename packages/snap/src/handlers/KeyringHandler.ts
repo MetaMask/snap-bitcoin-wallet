@@ -1,5 +1,9 @@
 import type { AddressType } from '@metamask/bitcoindevkit';
-import { BtcScope, MetaMaskOptionsStruct } from '@metamask/keyring-api';
+import {
+  BtcAccountType,
+  BtcScope,
+  MetaMaskOptionsStruct,
+} from '@metamask/keyring-api';
 import type {
   Keyring,
   KeyringAccount,
@@ -31,25 +35,22 @@ import {
   Purpose,
   purposeToAddressType,
 } from '../entities';
-import {
-  networkToCaip19,
-  Caip2AddressType,
-  caip2ToAddressType,
-  caip2ToNetwork,
-  networkToCaip2,
-} from './caip';
 import { handle } from './errors';
 import {
+  networkToCaip19,
+  caipToAddressType,
+  scopeToNetwork,
+  networkToCaip2,
   mapToDiscoveredAccount,
   mapToKeyringAccount,
-  mapToTransaction,
 } from './mappings';
 import { validateOrigin } from './permissions';
+import { mapToTransaction } from './tx-mapping';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 
 export const CreateAccountRequest = object({
   scope: enums(Object.values(BtcScope)),
-  addressType: optional(enums(Object.values(Caip2AddressType))),
+  addressType: optional(enums(Object.values(BtcAccountType))),
   entropySource: optional(string()),
   accountNameSuggestion: optional(string()),
   synchronize: optional(boolean()),
@@ -108,13 +109,13 @@ export class KeyringHandler implements Keyring {
 
     let resolvedAddressType: AddressType | undefined;
     if (addressType) {
-      resolvedAddressType = caip2ToAddressType[addressType];
+      resolvedAddressType = caipToAddressType[addressType];
     } else if (derivationPath) {
       resolvedAddressType = this.#extractAddressType(derivationPath);
     }
 
     const createParams = {
-      network: caip2ToNetwork[scope],
+      network: scopeToNetwork[scope],
       entropySource,
       index: resolvedIndex,
       addressType: resolvedAddressType,
@@ -144,12 +145,12 @@ export class KeyringHandler implements Keyring {
 
     const accounts = await Promise.all(
       scopes.flatMap((scope) =>
-        Object.values(Caip2AddressType).map(async (addressType) => {
+        Object.values(BtcAccountType).map(async (addressType) => {
           const createParams = {
-            network: caip2ToNetwork[scope],
+            network: scopeToNetwork[scope],
             entropySource,
             index: groupIndex,
-            addressType: caip2ToAddressType[addressType],
+            addressType: caipToAddressType[addressType],
             synchronize: true,
           };
 

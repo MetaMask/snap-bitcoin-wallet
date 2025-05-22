@@ -4,7 +4,7 @@ import { mock } from 'jest-mock-extended';
 
 import type { AssetsUseCases } from '../use-cases';
 import { AssetsHandler } from './AssetsHandler';
-import { Caip19Asset } from './caip';
+import { Caip19Asset } from './mappings';
 
 describe('AssetsHandler', () => {
   const mockAssetsUseCases = mock<AssetsUseCases>();
