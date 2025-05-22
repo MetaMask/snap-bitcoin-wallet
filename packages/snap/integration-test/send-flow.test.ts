@@ -1,5 +1,5 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
-import { BtcScope } from '@metamask/keyring-api';
+import { BtcAccountType, BtcScope } from '@metamask/keyring-api';
 import type { Snap } from '@metamask/snaps-jest';
 import { assertIsCustomDialog, installSnap } from '@metamask/snaps-jest';
 
@@ -9,7 +9,7 @@ import {
   ReviewTransactionEvent,
   SendFormEvent,
 } from '../src/entities';
-import { Caip19Asset, Caip2AddressType } from '../src/handlers/caip';
+import { Caip19Asset } from '../src/handlers/caip';
 import { CronMethod } from '../src/handlers/CronHandler';
 
 describe('Send flow', () => {
@@ -41,7 +41,7 @@ describe('Send flow', () => {
       method: 'keyring_createAccount',
       params: {
         options: {
-          addressType: Caip2AddressType.P2wpkh,
+          addressType: BtcAccountType.P2wpkh,
           scope: BtcScope.Regtest,
           synchronize: true,
         },

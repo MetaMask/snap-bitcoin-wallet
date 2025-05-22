@@ -25,7 +25,7 @@ import {
   type BitcoinAccount,
 } from '../entities';
 import type { Caip19Asset } from './caip';
-import { addressTypeToCaip2, networkToCaip19, networkToCaip2 } from './caip';
+import { addressTypeToCaip, networkToCaip19, networkToScope } from './caip';
 
 type TransactionAmount = {
   amount: string;
@@ -68,8 +68,8 @@ export const networkToName: Record<Network, string> = {
  */
 export function mapToKeyringAccount(account: BitcoinAccount): KeyringAccount {
   return {
-    type: addressTypeToCaip2[account.addressType] as KeyringAccount['type'],
-    scopes: [networkToCaip2[account.network]],
+    type: addressTypeToCaip[account.addressType] as KeyringAccount['type'],
+    scopes: [networkToScope[account.network]],
     id: account.id,
     address: account.peekAddress(0).address.toString(),
     options: {},
@@ -142,7 +142,7 @@ export function mapToTransaction(
     type: isSend ? 'send' : 'receive',
     id: txid.toString(),
     account: account.id,
-    chain: networkToCaip2[network],
+    chain: networkToScope[network],
     status,
     timestamp,
     events,
@@ -194,7 +194,7 @@ export function mapToDiscoveredAccount(
 ): DiscoveredAccount {
   return {
     type: DiscoveredAccountType.Bip44,
-    scopes: [networkToCaip2[account.network]],
+    scopes: [networkToScope[account.network]],
     derivationPath: `m/${addressTypeToPurpose[account.addressType]}'/${networkToCoinType[account.network]}'/${groupIndex}'`,
   };
 }

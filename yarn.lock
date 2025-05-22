@@ -2716,7 +2716,7 @@ __metadata:
     "@jest/globals": "npm:^29.7.0"
     "@metamask/bitcoindevkit": "npm:^0.1.9"
     "@metamask/key-tree": "npm:^10.1.1"
-    "@metamask/keyring-api": "npm:^17.5.0"
+    "@metamask/keyring-api": "npm:^17.6.0"
     "@metamask/keyring-snap-sdk": "npm:^3.2.0"
     "@metamask/slip44": "npm:^4.1.0"
     "@metamask/snaps-cli": "npm:^7.1.0"
@@ -2738,7 +2738,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@metamask/bitcoin-wallet-test-dapp@workspace:packages/site"
   dependencies:
-    "@metamask/keyring-api": "npm:^17.5.0"
+    "@metamask/keyring-api": "npm:^17.6.0"
     "@metamask/providers": "npm:^22.1.0"
     "@svgr/webpack": "npm:^8.1.0"
     "@testing-library/dom": "npm:^8.17.1"
@@ -2982,15 +2982,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/keyring-api@npm:^17.5.0":
-  version: 17.5.0
-  resolution: "@metamask/keyring-api@npm:17.5.0"
+"@metamask/keyring-api@npm:^17.6.0":
+  version: 17.6.0
+  resolution: "@metamask/keyring-api@npm:17.6.0"
   dependencies:
     "@metamask/keyring-utils": "npm:^3.0.0"
     "@metamask/superstruct": "npm:^3.1.0"
     "@metamask/utils": "npm:^11.1.0"
-    bech32: "npm:^2.0.0"
-  checksum: 10/b6409b235c02f102f142ec9bf89486591262fdc717341a0a8425454755b625c5ab63f1c5fd745ec743e220772bed51f1315c43e219e88c3e4fbe9d19efce660c
+    bitcoin-address-validation: "npm:^2.2.3"
+  checksum: 10/96d847176e6de4a24f62dce4f69e4756842bba50dd7cb90aa1a37626fb0ac9db68187d011d1ba19a71ca7396fa2c0aee27628dec773b6af20c99628c9e85ffe4
   languageName: node
   linkType: hard
 

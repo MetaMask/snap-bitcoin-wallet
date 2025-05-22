@@ -19,7 +19,7 @@ import { displayAmount, displayExchangeAmount, translate } from './format';
 import { Config } from '../../config';
 import type { Messages, ReviewTransactionContext } from '../../entities';
 import { BlockTime, ReviewTransactionEvent } from '../../entities';
-import { networkToCaip2 } from '../../handlers';
+import { networkToScope } from '../../handlers';
 
 type ReviewTransactionViewProps = {
   context: ReviewTransactionContext;
@@ -57,7 +57,7 @@ export const ReviewTransactionView: SnapComponent<
         <Section>
           <Row label={t('from')}>
             <Address
-              address={`${networkToCaip2[network]}:${from}` as CaipAccountId}
+              address={`${networkToScope[network]}:${from}` as CaipAccountId}
               displayName
             />
           </Row>
@@ -70,7 +70,7 @@ export const ReviewTransactionView: SnapComponent<
           <Row label={t('recipient')}>
             <Address
               address={
-                `${networkToCaip2[network]}:${recipient}` as CaipAccountId
+                `${networkToScope[network]}:${recipient}` as CaipAccountId
               }
               avatar={false}
             />

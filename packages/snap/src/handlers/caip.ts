@@ -1,5 +1,5 @@
 import type { AddressType, Network } from '@metamask/bitcoindevkit';
-import { BtcScope } from '@metamask/keyring-api';
+import { BtcAccountType, BtcScope } from '@metamask/keyring-api';
 
 const reverseMapping = <
   From extends string | number | symbol,
@@ -10,14 +10,7 @@ const reverseMapping = <
 ): Record<To, From> =>
   Object.fromEntries(Object.entries(map).map(([from, to]) => [to, from]));
 
-export enum Caip2AddressType {
-  P2pkh = 'bip122:p2pkh',
-  P2sh = 'bip122:p2sh',
-  P2wpkh = 'bip122:p2wpkh',
-  P2tr = 'bip122:p2tr',
-}
-
-export const caip2ToNetwork: Record<BtcScope, Network> = {
+export const scopeToNetwork: Record<BtcScope, Network> = {
   [BtcScope.Mainnet]: 'bitcoin',
   [BtcScope.Testnet]: 'testnet',
   [BtcScope.Testnet4]: 'testnet4',
@@ -25,15 +18,15 @@ export const caip2ToNetwork: Record<BtcScope, Network> = {
   [BtcScope.Regtest]: 'regtest',
 };
 
-export const caip2ToAddressType: Record<Caip2AddressType, AddressType> = {
-  [Caip2AddressType.P2pkh]: 'p2pkh',
-  [Caip2AddressType.P2sh]: 'p2sh',
-  [Caip2AddressType.P2wpkh]: 'p2wpkh',
-  [Caip2AddressType.P2tr]: 'p2tr',
+export const caipToAddressType: Record<BtcAccountType, AddressType> = {
+  [BtcAccountType.P2pkh]: 'p2pkh',
+  [BtcAccountType.P2sh]: 'p2sh',
+  [BtcAccountType.P2wpkh]: 'p2wpkh',
+  [BtcAccountType.P2tr]: 'p2tr',
 };
 
-export const networkToCaip2 = reverseMapping(caip2ToNetwork);
-export const addressTypeToCaip2 = reverseMapping(caip2ToAddressType);
+export const networkToScope = reverseMapping(scopeToNetwork);
+export const addressTypeToCaip = reverseMapping(caipToAddressType);
 
 export enum Caip19Asset {
   Bitcoin = 'bip122:000000000019d6689c085ae165831e93/slip44:0',
