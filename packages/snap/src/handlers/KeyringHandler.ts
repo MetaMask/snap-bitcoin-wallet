@@ -38,14 +38,14 @@ import {
 import { handle } from './errors';
 import {
   networkToCaip19,
-  caipToAddressType,
-  scopeToNetwork,
+  caip2ToAddressType,
+  caip2ToNetwork,
   networkToCaip2,
   mapToDiscoveredAccount,
   mapToKeyringAccount,
 } from './mappings';
 import { validateOrigin } from './permissions';
-import { mapToTransaction } from './tx-mapping';
+import { mapToTransaction } from './tx-mappings';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 
 export const CreateAccountRequest = object({
@@ -109,13 +109,13 @@ export class KeyringHandler implements Keyring {
 
     let resolvedAddressType: AddressType | undefined;
     if (addressType) {
-      resolvedAddressType = caipToAddressType[addressType];
+      resolvedAddressType = caip2ToAddressType[addressType];
     } else if (derivationPath) {
       resolvedAddressType = this.#extractAddressType(derivationPath);
     }
 
     const createParams = {
-      network: scopeToNetwork[scope],
+      network: caip2ToNetwork[scope],
       entropySource,
       index: resolvedIndex,
       addressType: resolvedAddressType,
@@ -147,10 +147,10 @@ export class KeyringHandler implements Keyring {
       scopes.flatMap((scope) =>
         Object.values(BtcAccountType).map(async (addressType) => {
           const createParams = {
-            network: scopeToNetwork[scope],
+            network: caip2ToNetwork[scope],
             entropySource,
             index: groupIndex,
-            addressType: caipToAddressType[addressType],
+            addressType: caip2ToAddressType[addressType],
             synchronize: true,
           };
 

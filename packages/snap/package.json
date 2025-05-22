@@ -43,7 +43,7 @@
     "@metamask/slip44": "^4.1.0",
     "@metamask/snaps-cli": "^7.1.0",
     "@metamask/snaps-jest": "^8.15.0",
-    "@metamask/snaps-sdk": "^7.0.0",
+    "@metamask/snaps-sdk": "^6.23.0",
     "@metamask/utils": "^11.4.0",
     "concurrently": "^9.1.2",
     "dotenv": "^16.5.0",

@@ -5,11 +5,11 @@ import { assertIsCustomDialog, installSnap } from '@metamask/snaps-jest';
 
 import { FUNDING_TX, MNEMONIC, ORIGIN } from './constants';
 import {
-  Caip19Asset,
   CurrencyUnit,
   ReviewTransactionEvent,
   SendFormEvent,
 } from '../src/entities';
+import { Caip19Asset } from '../src/handlers';
 import { CronMethod } from '../src/handlers/CronHandler';
 
 describe('Send flow', () => {

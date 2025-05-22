@@ -16,10 +16,10 @@ import { networkToCurrencyUnit } from '../entities';
 import {
   networkToCaip19,
   mapToKeyringAccount,
-  addressTypeToName,
   networkToName,
+  addressTypeToName,
 } from '../handlers';
-import { mapToTransaction } from '../handlers/tx-mapping';
+import { mapToTransaction } from '../handlers/tx-mappings';
 
 export class SnapClientAdapter implements SnapClient {
   readonly #encrypt: boolean;
