@@ -1,7 +1,7 @@
 import { BtcScope } from '@metamask/keyring-api';
 
 import { CurrencyUnit } from '../src/entities';
-import { Caip19Asset } from '../src/handlers/mappings';
+import { Caip19Asset } from '../src/handlers';
 
 export const MNEMONIC =
   'journey embrace permit coil indoor stereo welcome maid movie easy clock spider tent slush bright luxury awake waste legal modify awkward answer acid goose';

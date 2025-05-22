@@ -9,3 +9,4 @@ export type * from './meta-protocols';
 export type * from './translator';
 export type * from './rates';
 export * from './logger';
+export * from './assets';

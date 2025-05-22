@@ -1,16 +1,16 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
-import { BtcScope } from '@metamask/keyring-api';
+import { BtcAccountType, BtcScope } from '@metamask/keyring-api';
 import type { Snap } from '@metamask/snaps-jest';
 import { assertIsCustomDialog, installSnap } from '@metamask/snaps-jest';
 
 import { FUNDING_TX, MNEMONIC, ORIGIN } from './constants';
 import {
+  Caip19Asset,
   CurrencyUnit,
   ReviewTransactionEvent,
   SendFormEvent,
 } from '../src/entities';
 import { CronMethod } from '../src/handlers/CronHandler';
-import { Caip19Asset, Caip2AddressType } from '../src/handlers/mappings';
 
 describe('Send flow', () => {
   const recipient = 'bcrt1qyvhf2epk9s659206lq3rdvtf07uq3t9e7xtjje';
@@ -41,7 +41,7 @@ describe('Send flow', () => {
       method: 'keyring_createAccount',
       params: {
         options: {
-          addressType: Caip2AddressType.P2wpkh,
+          addressType: BtcAccountType.P2wpkh,
           scope: BtcScope.Regtest,
           synchronize: true,
         },

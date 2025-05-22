@@ -5,7 +5,7 @@ import { installSnap } from '@metamask/snaps-jest';
 
 import { FUNDING_TX, MNEMONIC, ORIGIN, TEST_ADDRESS } from './constants';
 import { CurrencyUnit } from '../src/entities';
-import { Caip2AddressType, Caip19Asset } from '../src/handlers/mappings';
+import { Caip2AddressType, Caip19Asset } from '../src/handlers';
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 

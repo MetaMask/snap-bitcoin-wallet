@@ -12,8 +12,8 @@ import type {
 import type { Transaction as KeyringTransaction } from '@metamask/keyring-api';
 import { TransactionStatus } from '@metamask/keyring-api';
 
-import { networkToCurrencyUnit, type BitcoinAccount } from '../entities';
-import type { Caip19Asset } from './mappings';
+import type { Caip19Asset, BitcoinAccount } from '../entities';
+import { networkToCurrencyUnit } from '../entities';
 import { networkToCaip19, networkToCaip2 } from './mappings';
 
 type TransactionAmount = {

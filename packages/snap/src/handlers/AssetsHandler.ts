@@ -14,7 +14,7 @@ import { assert } from 'superstruct';
 import type { AssetsUseCases } from '../use-cases';
 import { handle } from './errors';
 import { networkToIcon } from './icons';
-import { Caip19Asset } from './mappings';
+import { Caip19Asset } from '../entities';
 
 export class AssetsHandler {
   readonly #assetsUseCases: AssetsUseCases;

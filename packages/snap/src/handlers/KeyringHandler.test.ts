@@ -13,20 +13,18 @@ import type {
   DiscoveredAccount,
   Transaction as KeyringTransaction,
 } from '@metamask/keyring-api';
-import { BtcMethod, BtcScope } from '@metamask/keyring-api';
+import { BtcAccountType, BtcMethod, BtcScope } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
 import type { SnapClient, BitcoinAccount } from '../entities';
-import { CurrencyUnit, Purpose } from '../entities';
+import { Caip19Asset, CurrencyUnit, Purpose } from '../entities';
 import { KeyringHandler, CreateAccountRequest } from './KeyringHandler';
 import {
   scopeToNetwork,
   caipToAddressType,
-  Caip2AddressType,
-  Caip19Asset,
+  mapToDiscoveredAccount,
 } from './mappings';
-import { mapToDiscoveredAccount } from './tx-mapping';
 import type {
   AccountUseCases,
   CreateAccountParams,
@@ -83,7 +81,7 @@ describe('KeyringHandler', () => {
         scope: BtcScope.Signet,
         entropySource,
         index,
-        addressType: Caip2AddressType.P2pkh,
+        addressType: BtcAccountType.P2pkh,
         metamask: {
           correlationId,
         },
@@ -92,7 +90,7 @@ describe('KeyringHandler', () => {
         network: scopeToNetwork[BtcScope.Signet],
         entropySource,
         index,
-        addressType: caipToAddressType[Caip2AddressType.P2pkh],
+        addressType: caipToAddressType[BtcAccountType.P2pkh],
       };
 
       await handler.createAccount(options);
@@ -229,7 +227,7 @@ describe('KeyringHandler', () => {
     const scopes = Object.values(BtcScope);
 
     it('creates, scans and returns accounts for every scope/addressType combination', async () => {
-      const addressTypes = Object.values(Caip2AddressType);
+      const addressTypes = Object.values(BtcAccountType);
       const totalCombinations = scopes.length * addressTypes.length;
 
       const expected: DiscoveredAccount[] = [];
@@ -275,7 +273,7 @@ describe('KeyringHandler', () => {
     });
 
     it('filters out accounts that have no transaction history', async () => {
-      const addressTypes = Object.values(Caip2AddressType);
+      const addressTypes = Object.values(BtcAccountType);
       const totalCombinations = scopes.length * addressTypes.length;
 
       for (let i = 0; i < totalCombinations; i += 1) {
@@ -348,7 +346,7 @@ describe('KeyringHandler', () => {
       mockAccounts.get.mockResolvedValue(mockAccount);
       const expectedKeyringAccount = {
         id: 'some-id',
-        type: Caip2AddressType.P2wpkh,
+        type: BtcAccountType.P2wpkh,
         scopes: [BtcScope.Mainnet],
         address: 'bc1qaddress...',
         options: {},
@@ -375,7 +373,7 @@ describe('KeyringHandler', () => {
       const expectedKeyringAccounts = [
         {
           id: 'some-id',
-          type: Caip2AddressType.P2wpkh,
+          type: BtcAccountType.P2wpkh,
           scopes: [BtcScope.Mainnet],
           address: 'bc1qaddress...',
           options: {},
