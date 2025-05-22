@@ -8,7 +8,6 @@ import type {
 import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 
 import {
-  type AccountsConfig,
   type BitcoinAccount,
   type BitcoinAccountRepository,
   type BlockchainClient,
@@ -21,9 +20,9 @@ import {
 
 export type CreateAccountParams = {
   network: Network;
-  index?: number;
-  entropySource?: string;
-  addressType?: AddressType;
+  index: number;
+  entropySource: string;
+  addressType: AddressType;
 };
 
 export class AccountUseCases {
@@ -37,14 +36,11 @@ export class AccountUseCases {
 
   readonly #metaProtocols: MetaProtocolsClient | undefined;
 
-  readonly #accountConfig: AccountsConfig;
-
   constructor(
     logger: Logger,
     snapClient: SnapClient,
     repository: BitcoinAccountRepository,
     chain: BlockchainClient,
-    accountConfig: AccountsConfig,
     metaProtocols?: MetaProtocolsClient,
   ) {
     this.#logger = logger;
@@ -52,7 +48,6 @@ export class AccountUseCases {
     this.#repository = repository;
     this.#chain = chain;
     this.#metaProtocols = metaProtocols;
-    this.#accountConfig = accountConfig;
   }
 
   async list(): Promise<BitcoinAccount[]> {
@@ -78,12 +73,7 @@ export class AccountUseCases {
 
   async create(req: CreateAccountParams): Promise<BitcoinAccount> {
     this.#logger.debug('Creating new Bitcoin account. Params: %o', req);
-    const {
-      addressType = this.#accountConfig.defaultAddressType,
-      index = 0,
-      network,
-      entropySource = 'm',
-    } = req;
+    const { addressType, index, network, entropySource } = req;
 
     const derivationPath = [
       entropySource,

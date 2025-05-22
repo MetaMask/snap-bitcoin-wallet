@@ -66,9 +66,16 @@ export class KeyringHandler implements Keyring {
 
   readonly #snapClient: SnapClient;
 
-  constructor(accounts: AccountUseCases, snapClient: SnapClient) {
+  readonly #defaultAddressType: AddressType;
+
+  constructor(
+    accounts: AccountUseCases,
+    snapClient: SnapClient,
+    defaultAddressType: AddressType,
+  ) {
     this.#accountsUseCases = accounts;
     this.#snapClient = snapClient;
+    this.#defaultAddressType = defaultAddressType;
   }
 
   async route(origin: string, request: JsonRpcRequest): Promise<Json> {
@@ -98,11 +105,11 @@ export class KeyringHandler implements Keyring {
     const {
       metamask,
       scope,
-      entropySource,
-      index,
+      entropySource = 'm',
+      index = 0,
       derivationPath,
       addressType,
-      synchronize,
+      synchronize = false,
     } = options;
 
     const resolvedIndex = derivationPath
@@ -120,7 +127,7 @@ export class KeyringHandler implements Keyring {
       network: scopeToNetwork[scope],
       entropySource,
       index: resolvedIndex,
-      addressType: resolvedAddressType,
+      addressType: resolvedAddressType ?? this.#defaultAddressType,
       synchronize,
     };
     const account = await this.#accountsUseCases.create(createParams);

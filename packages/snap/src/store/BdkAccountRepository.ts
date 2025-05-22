@@ -15,9 +15,12 @@ import type {
   BitcoinAccount,
   SnapClient,
   Inscription,
+  AccountState,
+  SnapState,
 } from '../entities';
 import { BdkAccountAdapter } from '../infra';
 
+// Developers should not worry about concurrency issues due to
 export class BdkAccountRepository implements BitcoinAccountRepository {
   readonly #snapClient: SnapClient;
 
@@ -26,52 +29,50 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
   }
 
   async get(id: string): Promise<BitcoinAccount | null> {
-    const state = await this.#snapClient.get();
-    const walletData = state.accounts.wallets[id];
+    const walletData = await this.#snapClient.getState(`accounts.${id}.wallet`);
     if (!walletData) {
       return null;
     }
 
-    return BdkAccountAdapter.load(id, ChangeSet.from_json(walletData));
+    return BdkAccountAdapter.load(
+      id,
+      ChangeSet.from_json(walletData as string),
+    );
   }
 
   async fetchInscriptions(id: string): Promise<Inscription[] | null> {
-    const state = await this.#snapClient.get();
-    const inscriptions = state.accounts.inscriptions[id];
+    const inscriptions = await this.#snapClient.getState(
+      `accounts.${id}.inscriptions`,
+    );
     if (!inscriptions) {
       return null;
     }
 
-    return inscriptions;
+    return inscriptions as Inscription[];
   }
 
   async getWithSigner(id: string): Promise<BitcoinAccount | null> {
-    const state = await this.#snapClient.get();
-    const walletData = state.accounts.wallets[id];
-    if (!walletData) {
+    const accountState = (await this.#snapClient.getState(
+      `accounts.${id}`,
+    )) as AccountState | null;
+    if (!accountState) {
       return null;
-    }
-    const account = BdkAccountAdapter.load(id, ChangeSet.from_json(walletData));
-
-    const derivationPath = Object.entries(state.accounts.derivationPaths).find(
-      ([, walletId]) => walletId === id,
-    );
-
-    // Should never occur by assertion. It is a critical inconsistent state error that should be caught in integration tests
-    if (!derivationPath) {
-      throw new Error(
-        `Inconsistent state. No derivation path found for account ${id}`,
-      );
     }
 
     const slip10 = await this.#snapClient.getPrivateEntropy(
-      derivationPath[0].split('/'),
+      accountState.derivationPath,
     );
     const fingerprint = (
       slip10.masterFingerprint ?? slip10.parentFingerprint
     ).toString(16);
+
+    const account = BdkAccountAdapter.load(
+      id,
+      ChangeSet.from_json(accountState.wallet),
+    );
+
     const xpriv = slip10_to_extended(slip10, account.network);
-    const descriptors = xpriv_to_descriptor(
+    const privDescriptors = xpriv_to_descriptor(
       xpriv,
       fingerprint,
       account.network,
@@ -80,37 +81,36 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
 
     return BdkAccountAdapter.load(
       id,
-      ChangeSet.from_json(walletData),
-      descriptors,
+      ChangeSet.from_json(accountState.wallet),
+      privDescriptors,
     );
   }
 
   async getAll(): Promise<BitcoinAccount[]> {
-    const state = await this.#snapClient.get();
-    const walletsData = state.accounts.wallets;
+    const accounts = await this.#snapClient.getState('accounts');
+    if (!accounts) {
+      throw new Error(
+        `Inconsistent state. Empty "accounts" key in state. Missing state initialization?`,
+      );
+    }
 
-    return Object.entries(walletsData).map(([id, walletData]) =>
-      BdkAccountAdapter.load(id, ChangeSet.from_json(walletData)),
+    return Object.entries(accounts as SnapState['accounts']).map(
+      ([id, account]) =>
+        BdkAccountAdapter.load(id, ChangeSet.from_json(account.wallet)),
     );
   }
 
   async getByDerivationPath(
     derivationPath: string[],
   ): Promise<BitcoinAccount | null> {
-    const derivationPathId = derivationPath.join('/');
-    const state = await this.#snapClient.get();
-
-    const id = state.accounts.derivationPaths[derivationPathId];
+    const id = await this.#snapClient.getState(
+      `derivationPaths.${derivationPath.join('/')}`,
+    );
     if (!id) {
       return null;
     }
 
-    const walletData = state.accounts.wallets[id];
-    if (!walletData) {
-      return null;
-    }
-
-    return BdkAccountAdapter.load(id, ChangeSet.from_json(walletData));
+    return this.get(id as string);
   }
 
   async insert(
@@ -133,71 +133,75 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     );
 
     const account = BdkAccountAdapter.create(id, descriptors, network);
+    const walletData = account.takeStaged();
+    if (!walletData) {
+      throw new Error(
+        `Missing changeset data for account ${id} after creation.`, // Impossible by assertion
+      );
+    }
 
-    const state = await this.#snapClient.get();
-    state.accounts.derivationPaths[derivationPath.join('/')] = id;
-    state.accounts.wallets[id] = account.takeStaged()?.to_json() ?? '';
-    state.accounts.inscriptions[id] = [];
-    await this.#snapClient.set(state);
+    await this.#snapClient.setState(
+      `derivationPaths.${derivationPath.join('/')}`,
+      id,
+    );
+    await this.#snapClient.setState(`accounts.${id}`, {
+      wallet: walletData.to_json(),
+      inscriptions: [],
+      derivationPath,
+    });
 
     return account;
   }
 
-  async update(
-    account: BitcoinAccount,
-    inscriptions?: Inscription[],
-  ): Promise<void> {
+  async update(account: BitcoinAccount): Promise<void> {
+    const { id } = account;
+
     const newWalletData = account.takeStaged();
     if (!newWalletData) {
       // Nothing to update
       return;
     }
 
-    const state = await this.#snapClient.get();
-    const walletData = state.accounts.wallets[account.id];
+    const walletData = await this.#snapClient.getState(`accounts.${id}.wallet`);
     if (!walletData) {
-      throw new Error('Inconsistent state: account not found for update');
+      throw new Error(`Account ${id} not found for update`);
     }
 
-    newWalletData.merge(ChangeSet.from_json(walletData));
-    state.accounts.wallets[account.id] = newWalletData.to_json();
-    if (inscriptions) {
-      state.accounts.inscriptions[account.id] = inscriptions;
-    }
-    await this.#snapClient.set(state);
+    newWalletData.merge(ChangeSet.from_json(walletData as string));
+    await this.#snapClient.setState(
+      `accounts.${id}.wallet`,
+      newWalletData.to_json(),
+    );
   }
 
   async delete(id: string): Promise<void> {
-    const state = await this.#snapClient.get();
-    const walletData = state.accounts.wallets[id];
-    if (!walletData) {
-      return;
+    // Find the path in derivationPaths that points to this id and remove it
+    const derivationPaths = await this.#snapClient.getState('derivationPaths.');
+    if (!derivationPaths) {
+      throw new Error(
+        `Inconsistent state. Empty "derivationPaths" key in state. Missing state initialization?`,
+      );
     }
 
-    delete state.accounts.wallets[id];
-    delete state.accounts.inscriptions[id];
-
-    // Find the path in derivationPaths that points to this id and remove it
-    for (const [path, existingId] of Object.entries(
-      state.accounts.derivationPaths,
-    )) {
+    for (const [path, existingId] of Object.entries(derivationPaths)) {
       if (existingId === id) {
-        delete state.accounts.derivationPaths[path];
+        await this.#snapClient.setState(`derivationPaths.${path}`, null);
         break;
       }
     }
 
-    await this.#snapClient.set(state);
+    await this.#snapClient.setState(`accounts.${id}`, null);
   }
 
   async getFrozenUTXOs(id: string): Promise<string[]> {
-    const state = await this.#snapClient.get();
-    const inscriptions = state.accounts.inscriptions[id];
+    const inscriptions = await this.#snapClient.getState(
+      `accounts.${id}.inscriptions`,
+    );
     if (!inscriptions) {
       return [];
     }
 
-    return inscriptions.map((inscription) => {
+    return (inscriptions as AccountState['inscriptions']).map((inscription) => {
       // format: <txid>:<vout>:<offset>
       const [txid, vout] = inscription.location.split(':');
       return `${txid}:${vout}`;
