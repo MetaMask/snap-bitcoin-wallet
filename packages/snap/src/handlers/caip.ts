@@ -10,7 +10,7 @@ const reverseMapping = <
 ): Record<To, From> =>
   Object.fromEntries(Object.entries(map).map(([from, to]) => [to, from]));
 
-export const caip2ToNetwork: Record<BtcScope, Network> = {
+export const scopeToNetwork: Record<BtcScope, Network> = {
   [BtcScope.Mainnet]: 'bitcoin',
   [BtcScope.Testnet]: 'testnet',
   [BtcScope.Testnet4]: 'testnet4',
@@ -25,8 +25,8 @@ export const caipToAddressType: Record<BtcAccountType, AddressType> = {
   [BtcAccountType.P2tr]: 'p2tr',
 };
 
-export const networkToCaip2 = reverseMapping(caip2ToNetwork);
-export const addressTypeToCaip2 = reverseMapping(caipToAddressType);
+export const networkToScope = reverseMapping(scopeToNetwork);
+export const addressTypeToCaip = reverseMapping(caipToAddressType);
 
 export enum Caip19Asset {
   Bitcoin = 'bip122:000000000019d6689c085ae165831e93/slip44:0',

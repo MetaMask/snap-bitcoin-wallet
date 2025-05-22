@@ -38,8 +38,8 @@ import {
 import {
   networkToCaip19,
   caipToAddressType,
-  caip2ToNetwork,
-  networkToCaip2,
+  scopeToNetwork,
+  networkToScope,
 } from './caip';
 import { handle } from './errors';
 import {
@@ -117,7 +117,7 @@ export class KeyringHandler implements Keyring {
     }
 
     const createParams = {
-      network: caip2ToNetwork[scope],
+      network: scopeToNetwork[scope],
       entropySource,
       index: resolvedIndex,
       addressType: resolvedAddressType,
@@ -149,7 +149,7 @@ export class KeyringHandler implements Keyring {
       scopes.flatMap((scope) =>
         Object.values(BtcAccountType).map(async (addressType) => {
           const createParams = {
-            network: caip2ToNetwork[scope],
+            network: scopeToNetwork[scope],
             entropySource,
             index: groupIndex,
             addressType: caipToAddressType[addressType],
@@ -185,7 +185,7 @@ export class KeyringHandler implements Keyring {
 
   async filterAccountChains(id: string, chains: string[]): Promise<string[]> {
     const account = await this.#accountsUseCases.get(id);
-    const accountChain = networkToCaip2[account.network];
+    const accountChain = networkToScope[account.network];
     return chains.includes(accountChain) ? [accountChain] : [];
   }
 

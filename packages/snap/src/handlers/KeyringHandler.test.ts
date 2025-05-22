@@ -19,7 +19,7 @@ import { assert } from 'superstruct';
 
 import type { SnapClient, BitcoinAccount } from '../entities';
 import { CurrencyUnit, Purpose } from '../entities';
-import { caip2ToNetwork, caipToAddressType, Caip19Asset } from './caip';
+import { scopeToNetwork, caipToAddressType, Caip19Asset } from './caip';
 import { KeyringHandler, CreateAccountRequest } from './KeyringHandler';
 import { mapToDiscoveredAccount } from './mappings';
 import type {
@@ -84,7 +84,7 @@ describe('KeyringHandler', () => {
         },
       };
       const expectedCreateParams: CreateAccountParams = {
-        network: caip2ToNetwork[BtcScope.Signet],
+        network: scopeToNetwork[BtcScope.Signet],
         entropySource,
         index,
         addressType: caipToAddressType[BtcAccountType.P2pkh],
@@ -232,7 +232,7 @@ describe('KeyringHandler', () => {
         addressTypes.forEach((addrType) => {
           const acc = mock<BitcoinAccount>({
             addressType: caipToAddressType[addrType],
-            network: caip2ToNetwork[scope],
+            network: scopeToNetwork[scope],
             listTransactions: jest.fn().mockReturnValue([{}]), // has history
           });
 
@@ -255,7 +255,7 @@ describe('KeyringHandler', () => {
         addressTypes.forEach((addrType, aIdx) => {
           const callIdx = sIdx * addressTypes.length + aIdx;
           expect(mockAccounts.create).toHaveBeenNthCalledWith(callIdx + 1, {
-            network: caip2ToNetwork[scope],
+            network: scopeToNetwork[scope],
             entropySource,
             index: groupIndex,
             addressType: caipToAddressType[addrType],
