@@ -61,7 +61,6 @@ const assetsUseCases = new AssetsUseCases(logger, assetRatesClient);
 // Application layer
 const keyringHandler = new KeyringHandler(
   accountsUseCases,
-  snapClient,
   Config.defaultAddressType,
 );
 const cronHandler = new CronHandler(logger, accountsUseCases, sendFlowUseCases);

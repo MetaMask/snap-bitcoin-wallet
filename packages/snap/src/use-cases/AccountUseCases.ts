@@ -18,11 +18,16 @@ import {
   networkToCoinType,
 } from '../entities';
 
-export type CreateAccountParams = {
+export type DiscoverAccountParams = {
   network: Network;
   index: number;
   entropySource: string;
   addressType: AddressType;
+};
+
+export type CreateAccountParams = DiscoverAccountParams & {
+  synchronize: boolean;
+  correlationId?: string;
 };
 
 export class AccountUseCases {
@@ -71,8 +76,9 @@ export class AccountUseCases {
     return account;
   }
 
-  async create(req: CreateAccountParams): Promise<BitcoinAccount> {
-    this.#logger.debug('Creating new Bitcoin account. Params: %o', req);
+  async discover(req: DiscoverAccountParams): Promise<BitcoinAccount> {
+    this.#logger.debug('Discovering Bitcoin account. Params: %o', req);
+
     const { addressType, index, network, entropySource } = req;
 
     const derivationPath = [
@@ -89,17 +95,63 @@ export class AccountUseCases {
       return account;
     }
 
-    const newAccount = await this.#repository.insert(
+    const newAccount = await this.#repository.create(
       derivationPath,
       network,
       addressType,
     );
 
+    await this.#chain.fullScan(newAccount);
+
     this.#logger.info(
-      'Bitcoin account created successfully: %s. derivationPath: %s. Network: %s',
-      newAccount.id,
-      derivationPath.join('/'),
+      'Bitcoin account discovered successfully. addressType: %s. Network: %s',
+      req.addressType,
+      req.network,
+    );
+    return newAccount;
+  }
+
+  async create(req: CreateAccountParams): Promise<BitcoinAccount> {
+    this.#logger.debug('Creating new Bitcoin account. Params: %o', req);
+
+    const { addressType, index, network, entropySource } = req;
+
+    const derivationPath = [
+      entropySource,
+      `${addressTypeToPurpose[addressType]}'`,
+      `${networkToCoinType[network]}'`,
+      `${index}'`,
+    ];
+
+    // Idempotent account creation + ensures only one account per derivation path
+    const account = await this.#repository.getByDerivationPath(derivationPath);
+    if (account && account.network === network) {
+      this.#logger.debug('Account already exists: %s,', account.id);
+      return account;
+    }
+
+    const newAccount = await this.#repository.create(
+      derivationPath,
       network,
+      addressType,
+    );
+
+    await this.#repository.insert(newAccount);
+
+    // First notify the event has been created, then full scan.
+    await this.#snapClient.emitAccountCreatedEvent(
+      newAccount,
+      req.correlationId,
+    );
+    if (req.synchronize) {
+      await this.fullScan(newAccount);
+    }
+
+    this.#logger.info(
+      'Bitcoin account created successfully: %s. addressType: %s. Network: %s',
+      newAccount.id,
+      req.addressType,
+      req.network,
     );
     return newAccount;
   }
@@ -187,6 +239,7 @@ export class AccountUseCases {
 
     await this.#snapClient.emitAccountDeletedEvent(id);
     await this.#repository.delete(id);
+    console.log('deleted', id);
 
     this.#logger.info('Account deleted successfully: %s', account.id);
   }

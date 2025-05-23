@@ -62,6 +62,7 @@ describe('Keyring', () => {
           addressType: BtcAccountType.P2wpkh,
           scope: BtcScope.Regtest,
           index: 0,
+          synchronize: true,
         },
       },
     });
@@ -83,6 +84,13 @@ describe('Keyring', () => {
   });
 
   it.each([
+    {
+      // tests creation of multiple accounts of same address type and network
+      addressType: BtcAccountType.P2wpkh,
+      scope: BtcScope.Regtest,
+      index: 1, // index incremented by 1
+      expectedAddress: 'bcrt1qstku2y3pfh9av50lxj55arm8r5gj8tf2yv5nxz',
+    },
     {
       addressType: BtcAccountType.P2wpkh,
       scope: BtcScope.Mainnet,
@@ -155,29 +163,6 @@ describe('Keyring', () => {
     }
   });
 
-  it('creates multiple accounts of same address type and network', async () => {
-    const response = await snap.onKeyringRequest({
-      origin: ORIGIN,
-      method: 'keyring_createAccount',
-      params: {
-        options: {
-          addressType: BtcAccountType.P2wpkh,
-          scope: BtcScope.Regtest,
-          index: 1, // Index is incremented by 1
-        },
-      },
-    });
-
-    expect(response).toRespondWith({
-      type: BtcAccountType.P2wpkh,
-      id: expect.anything(),
-      address: 'bcrt1qstku2y3pfh9av50lxj55arm8r5gj8tf2yv5nxz',
-      options: {},
-      scopes: [BtcScope.Regtest],
-      methods: [BtcMethod.SendBitcoin],
-    });
-  });
-
   it('creates account by derivationPath idempotently', async () => {
     // Account already exists so we should get the same account
     const response = await snap.onKeyringRequest({
@@ -187,7 +172,7 @@ describe('Keyring', () => {
         options: {
           scope: BtcScope.Testnet,
           addressType: BtcAccountType.P2wpkh,
-          derivationPath: "m/84'/0'/1'",
+          derivationPath: "m/84'/0'/0'",
         },
       },
     });
@@ -228,6 +213,17 @@ describe('Keyring', () => {
       method: 'keyring_listAccounts',
     });
 
+    // eslint-disable-next-line jest/no-conditional-in-test
+    if ('result' in response.response) {
+      const fetchedAccounts = response.response.result as KeyringAccount[];
+      /* console.log(
+        'Fetched accounts:',
+        JSON.stringify(fetchedAccounts, null, 2),
+      );*/
+
+      expect(fetchedAccounts).toHaveLength(Object.keys(accounts).length);
+    }
+
     expect(response).toRespondWith(Object.values(accounts));
   });
 
@@ -267,7 +263,10 @@ describe('Keyring', () => {
   });
 
   it('removes an account', async () => {
-    const { id } = accounts['mjPQaLkhZN3MxsYN8Nebzwevuz8vdTaRCq']!;
+    const { id } =
+      accounts[
+        'tb1pwwjax3vpq6h69965hcr22vkpm4qdvyu2pz67wyj8eagp9vxkcz0q0ya20h'
+      ]!;
 
     let response = await snap.onKeyringRequest({
       origin: ORIGIN,

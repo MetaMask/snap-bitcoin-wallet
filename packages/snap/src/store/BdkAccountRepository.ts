@@ -29,14 +29,17 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
   }
 
   async get(id: string): Promise<BitcoinAccount | null> {
-    const walletData = await this.#snapClient.getState(`accounts.${id}.wallet`);
-    if (!walletData) {
+    const account = (await this.#snapClient.getState(
+      `accounts.${id}`,
+    )) as AccountState | null;
+    if (!account) {
       return null;
     }
 
     return BdkAccountAdapter.load(
       id,
-      ChangeSet.from_json(walletData as string),
+      account.derivationPath,
+      ChangeSet.from_json(account.wallet),
     );
   }
 
@@ -68,6 +71,7 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
 
     const account = BdkAccountAdapter.load(
       id,
+      accountState.derivationPath,
       ChangeSet.from_json(accountState.wallet),
     );
 
@@ -81,6 +85,7 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
 
     return BdkAccountAdapter.load(
       id,
+      account.derivationPath,
       ChangeSet.from_json(accountState.wallet),
       privDescriptors,
     );
@@ -96,7 +101,11 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
 
     return Object.entries(accounts as SnapState['accounts']).map(
       ([id, account]) =>
-        BdkAccountAdapter.load(id, ChangeSet.from_json(account.wallet)),
+        BdkAccountAdapter.load(
+          id,
+          account.derivationPath,
+          ChangeSet.from_json(account.wallet),
+        ),
     );
   }
 
@@ -113,7 +122,7 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     return this.get(id as string);
   }
 
-  async insert(
+  async create(
     derivationPath: string[],
     network: Network,
     addressType: AddressType,
@@ -132,7 +141,12 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
       addressType,
     );
 
-    const account = BdkAccountAdapter.create(id, descriptors, network);
+    return BdkAccountAdapter.create(id, derivationPath, descriptors, network);
+  }
+
+  async insert(account: BitcoinAccount): Promise<BitcoinAccount> {
+    const { id, derivationPath } = account;
+
     const walletData = account.takeStaged();
     if (!walletData) {
       throw new Error(
@@ -167,7 +181,7 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
 
     const walletData = await this.#snapClient.getState(`accounts.${id}.wallet`);
     if (!walletData) {
-      throw new Error(`Account ${id} not found for update`);
+      throw new Error('Inconsistent state: account not found for update');
     }
 
     newWalletData.merge(ChangeSet.from_json(walletData as string));
@@ -186,22 +200,18 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
   }
 
   async delete(id: string): Promise<void> {
-    // Find the path in derivationPaths that points to this id and remove it
-    const derivationPaths = await this.#snapClient.getState('derivationPaths.');
-    if (!derivationPaths) {
-      throw new Error(
-        `Inconsistent state. Empty "derivationPaths" key in state. Missing state initialization?`,
-      );
-    }
-
-    for (const [path, existingId] of Object.entries(derivationPaths)) {
-      if (existingId === id) {
-        await this.#snapClient.setState(`derivationPaths.${path}`, null);
-        break;
-      }
+    const accountState = (await this.#snapClient.getState(
+      `accounts.${id}`,
+    )) as AccountState | null;
+    if (!accountState) {
+      return;
     }
 
     await this.#snapClient.setState(`accounts.${id}`, null);
+    await this.#snapClient.setState(
+      `derivationPaths.${accountState.derivationPath.join('/')}`,
+      null,
+    );
   }
 
   async getFrozenUTXOs(id: string): Promise<string[]> {

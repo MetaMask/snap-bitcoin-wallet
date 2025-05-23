@@ -1,6 +1,6 @@
 services:
   esplora:
-    image: esplora
+    image: blockstream/esplora
     container_name: esplora
     ports:
       - "50001:50001" 

@@ -13,7 +13,6 @@ import type {
   WalletTx,
   Amount,
   ScriptBuf,
-  NetworkKind,
 } from '@metamask/bitcoindevkit';
 
 import type { Inscription } from './meta-protocols';
@@ -29,6 +28,11 @@ export type BitcoinAccount = {
   id: string;
 
   /**
+   * Derivation path.
+   */
+  derivationPath: string[];
+
+  /**
    * The balance of the account.
    */
   balance: Balance;
@@ -42,11 +46,6 @@ export type BitcoinAccount = {
    * The network in which the account operates.
    */
   network: Network;
-
-  /**
-   *  What kind of network we are on.
-   */
-  networkKind: NetworkKind;
 
   /**
    * Whether the account has already performed a full scan.
@@ -214,18 +213,25 @@ export type BitcoinAccountRepository = {
   getByDerivationPath(derivationPath: string[]): Promise<BitcoinAccount | null>;
 
   /**
-   * Insert a new account.
+   * Create a new account, without persisting it.
    *
-   * @param derivationPath - derivation index.
+   * @param derivationPath - derivation path.
    * @param network - network.
    * @param addressType - address type.
    * @returns the new account
    */
-  insert(
+  create(
     derivationPath: string[],
     network: Network,
     addressType: AddressType,
   ): Promise<BitcoinAccount>;
+
+  /**
+   * Insert an account.
+   *
+   * @param account - Bitcoin account.
+   */
+  insert(account: BitcoinAccount): Promise<BitcoinAccount>;
 
   /**
    * Update an account.
