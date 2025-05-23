@@ -6,7 +6,6 @@ import type {
   OnKeyringRequestHandler,
   OnUserInputHandler,
   OnAssetHistoricalPriceHandler,
-  OnInstallHandler,
 } from '@metamask/snaps-sdk';
 
 import { Config } from './config';
@@ -70,11 +69,6 @@ const assetsHandler = new AssetsHandler(
   assetsUseCases,
   Config.conversionsExpirationInterval,
 );
-
-export const onInstall: OnInstallHandler = async () => {
-  await snapClient.initState();
-  logger.info('Snap installed');
-};
 
 export const onCronjob: OnCronjobHandler = async ({ request }) =>
   cronHandler.route(request);

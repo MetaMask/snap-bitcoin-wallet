@@ -213,17 +213,6 @@ describe('Keyring', () => {
       method: 'keyring_listAccounts',
     });
 
-    // eslint-disable-next-line jest/no-conditional-in-test
-    if ('result' in response.response) {
-      const fetchedAccounts = response.response.result as KeyringAccount[];
-      /* console.log(
-        'Fetched accounts:',
-        JSON.stringify(fetchedAccounts, null, 2),
-      );*/
-
-      expect(fetchedAccounts).toHaveLength(Object.keys(accounts).length);
-    }
-
     expect(response).toRespondWith(Object.values(accounts));
   });
 
@@ -264,9 +253,7 @@ describe('Keyring', () => {
 
   it('removes an account', async () => {
     const { id } =
-      accounts[
-        'tb1pwwjax3vpq6h69965hcr22vkpm4qdvyu2pz67wyj8eagp9vxkcz0q0ya20h'
-      ]!;
+      accounts.tb1pwwjax3vpq6h69965hcr22vkpm4qdvyu2pz67wyj8eagp9vxkcz0q0ya20h!;
 
     let response = await snap.onKeyringRequest({
       origin: ORIGIN,

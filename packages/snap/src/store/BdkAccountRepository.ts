@@ -94,9 +94,7 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
   async getAll(): Promise<BitcoinAccount[]> {
     const accounts = await this.#snapClient.getState('accounts');
     if (!accounts) {
-      throw new Error(
-        `Inconsistent state. Empty "accounts" key in state. Missing state initialization?`,
-      );
+      return [];
     }
 
     return Object.entries(accounts as SnapState['accounts']).map(
