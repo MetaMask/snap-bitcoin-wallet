@@ -171,9 +171,12 @@ export class KeyringHandler implements Keyring {
     );
 
     // Return only accounts with history (even if balance is 0).
-    return accounts
+    const d = accounts
       .filter((account) => account.listTransactions().length > 0)
       .map((account) => mapToDiscoveredAccount(account, groupIndex));
+
+    console.log('discovered', d);
+    return d;
   }
 
   async getAccountBalances(

@@ -153,7 +153,10 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     return account;
   }
 
-  async update(account: BitcoinAccount): Promise<void> {
+  async update(
+    account: BitcoinAccount,
+    inscriptions?: Inscription[],
+  ): Promise<void> {
     const { id } = account;
 
     const newWalletData = account.takeStaged();
@@ -172,6 +175,14 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
       `accounts.${id}.wallet`,
       newWalletData.to_json(),
     );
+
+    // Inscriptions are overwritten and not merged
+    if (inscriptions) {
+      await this.#snapClient.setState(
+        `accounts.${id}.inscriptions`,
+        inscriptions,
+      );
+    }
   }
 
   async delete(id: string): Promise<void> {

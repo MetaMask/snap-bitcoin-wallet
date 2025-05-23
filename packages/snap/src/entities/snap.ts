@@ -7,16 +7,21 @@ import type {
 import type { Json } from '@metamask/utils';
 
 import type { BitcoinAccount } from './account';
-import type { Inscription } from './meta-protocols';
+import { Inscription } from './meta-protocols';
 
 export type SnapState = {
+  // accountId -> account state. This is the main state of the snap.
   accounts: Record<string, AccountState>;
-  derivationPaths: Record<string, string>; // accountId -> derivationPath. Only needed for fast lookup.
+  // accountId -> derivationPath. Only needed for fast lookup.
+  derivationPaths: Record<string, string>;
 };
 
 export type AccountState = {
+  // Split derivation path.
   derivationPath: string[];
+  // Wallet data.
   wallet: string;
+  // Wallet inscriptions for meta protocols (ordinals, etc.)
   inscriptions: Inscription[];
 };
 

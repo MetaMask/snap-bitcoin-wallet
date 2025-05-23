@@ -1,4 +1,5 @@
 import type { AddressType, Network } from '@metamask/bitcoindevkit';
+import { NetworkKind } from '@metamask/bitcoindevkit';
 import { BtcAccountType, BtcScope } from '@metamask/keyring-api';
 
 const reverseMapping = <
@@ -26,6 +27,7 @@ export const caipToAddressType: Record<BtcAccountType, AddressType> = {
 };
 
 export const networkToScope = reverseMapping(scopeToNetwork);
+
 export const addressTypeToCaip = reverseMapping(caipToAddressType);
 
 export enum Caip19Asset {

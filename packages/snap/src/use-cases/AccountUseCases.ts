@@ -84,7 +84,7 @@ export class AccountUseCases {
 
     // Idempotent account creation + ensures only one account per derivation path
     const account = await this.#repository.getByDerivationPath(derivationPath);
-    if (account) {
+    if (account && account.network === network) {
       this.#logger.debug('Account already exists: %s,', account.id);
       return account;
     }
@@ -96,9 +96,10 @@ export class AccountUseCases {
     );
 
     this.#logger.info(
-      'Bitcoin account created successfully: %s. derivationPath: %s',
+      'Bitcoin account created successfully: %s. derivationPath: %s. Network: %s',
       newAccount.id,
       derivationPath.join('/'),
+      network,
     );
     return newAccount;
   }

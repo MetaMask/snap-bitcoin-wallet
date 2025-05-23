@@ -14,6 +14,7 @@ import type {
   WalletTx,
   Amount,
   ScriptBuf,
+  NetworkKind,
 } from '@metamask/bitcoindevkit';
 import {
   UnconfirmedTx,
@@ -83,6 +84,10 @@ export class BdkAccountAdapter implements BitcoinAccount {
 
   get network(): Network {
     return this.#wallet.network;
+  }
+
+  get networkKind(): NetworkKind {
+    return this.#wallet.network_kind;
   }
 
   get isScanned(): boolean {

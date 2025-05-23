@@ -192,13 +192,9 @@ export function mapToDiscoveredAccount(
   account: BitcoinAccount,
   groupIndex: number,
 ): DiscoveredAccount {
-  const a: DiscoveredAccount = {
+  return {
     type: DiscoveredAccountType.Bip44,
     scopes: [networkToScope[account.network]],
     derivationPath: `m/${addressTypeToPurpose[account.addressType]}'/${networkToCoinType[account.network]}'/${groupIndex}'`,
   };
-
-  console.log('mapToDiscoveredAccount', a);
-
-  return a;
 }

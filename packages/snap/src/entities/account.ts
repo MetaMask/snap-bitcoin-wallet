@@ -13,6 +13,7 @@ import type {
   WalletTx,
   Amount,
   ScriptBuf,
+  NetworkKind,
 } from '@metamask/bitcoindevkit';
 
 import type { Inscription } from './meta-protocols';
@@ -41,6 +42,11 @@ export type BitcoinAccount = {
    * The network in which the account operates.
    */
   network: Network;
+
+  /**
+   *  What kind of network we are on.
+   */
+  networkKind: NetworkKind;
 
   /**
    * Whether the account has already performed a full scan.
