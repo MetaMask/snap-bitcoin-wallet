@@ -65,7 +65,7 @@ export class AssetsHandler {
           },
         ],
         iconUrl: networkToIcon[network],
-        symbol: '₿',
+        symbol: mainSymbol,
       };
     };
 

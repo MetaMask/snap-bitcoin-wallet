@@ -28,26 +28,32 @@ import { BdkTxBuilderAdapter } from './BdkTxBuilderAdapter';
 export class BdkAccountAdapter implements BitcoinAccount {
   readonly #id: string;
 
+  readonly #derivationPath: string[];
+
   readonly #wallet: Wallet;
 
-  constructor(id: string, wallet: Wallet) {
+  constructor(id: string, derivationPath: string[], wallet: Wallet) {
     this.#id = id;
+    this.#derivationPath = derivationPath;
     this.#wallet = wallet;
   }
 
   static create(
     id: string,
+    derivationPath: string[],
     descriptors: DescriptorPair,
     network: Network,
   ): BdkAccountAdapter {
     return new BdkAccountAdapter(
       id,
+      derivationPath,
       Wallet.create(network, descriptors.external, descriptors.internal),
     );
   }
 
   static load(
     id: string,
+    derivationPath: string[],
     walletData: ChangeSet,
     descriptors?: DescriptorPair,
   ): BdkAccountAdapter {
@@ -55,15 +61,20 @@ export class BdkAccountAdapter implements BitcoinAccount {
     if (descriptors) {
       return new BdkAccountAdapter(
         id,
+        derivationPath,
         Wallet.load(walletData, descriptors.external, descriptors.internal),
       );
     }
 
-    return new BdkAccountAdapter(id, Wallet.load(walletData));
+    return new BdkAccountAdapter(id, derivationPath, Wallet.load(walletData));
   }
 
   get id(): string {
     return this.#id;
+  }
+
+  get derivationPath(): string[] {
+    return this.#derivationPath;
   }
 
   get balance(): Balance {

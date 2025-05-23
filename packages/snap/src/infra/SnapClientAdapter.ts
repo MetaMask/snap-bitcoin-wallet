@@ -28,28 +28,37 @@ export class SnapClientAdapter implements SnapClient {
     this.#encrypt = encrypt;
   }
 
-  async get(): Promise<SnapState> {
-    const state = await snap.request({
-      method: 'snap_manageState',
+  async initState(): Promise<void> {
+    const snapState: SnapState = {
+      accounts: {},
+      derivationPaths: {},
+    };
+
+    await snap.request({
+      method: 'snap_setState',
       params: {
-        operation: 'get',
+        value: snapState,
         encrypted: this.#encrypt,
       },
     });
-
-    return (
-      (state as SnapState) ?? {
-        accounts: { derivationPaths: {}, wallets: {}, inscriptions: {} },
-      }
-    );
   }
 
-  async set(newState: SnapState): Promise<void> {
-    await snap.request({
-      method: 'snap_manageState',
+  async getState(key: string): Promise<Json | null> {
+    return snap.request({
+      method: 'snap_getState',
       params: {
-        operation: 'update',
-        newState,
+        key,
+        encrypted: this.#encrypt,
+      },
+    });
+  }
+
+  async setState(key: string, newState: Json | null): Promise<void> {
+    await snap.request({
+      method: 'snap_setState',
+      params: {
+        key,
+        value: newState,
         encrypted: this.#encrypt,
       },
     });
