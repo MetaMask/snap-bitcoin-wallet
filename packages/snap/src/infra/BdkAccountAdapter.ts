@@ -96,10 +96,6 @@ export class BdkAccountAdapter implements BitcoinAccount {
     return this.#wallet.network;
   }
 
-  get isScanned(): boolean {
-    return this.#wallet.latest_checkpoint.height > 0;
-  }
-
   peekAddress(index: number): AddressInfo {
     return this.#wallet.peek_address('external', index);
   }
