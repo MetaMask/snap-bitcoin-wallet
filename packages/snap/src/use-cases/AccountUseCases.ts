@@ -99,11 +99,12 @@ export class AccountUseCases {
       return account;
     }
 
-    const newAccount = await this.#repository.insert(
+    const newAccount = await this.#repository.create(
       derivationPath,
       network,
       addressType,
     );
+    await this.#repository.insert(newAccount);
 
     this.#logger.info(
       'Bitcoin account created successfully: %s. derivationPath: %s',
