@@ -3,21 +3,14 @@ import { BtcAccountType, BtcMethod, BtcScope } from '@metamask/keyring-api';
 import type { Snap } from '@metamask/snaps-jest';
 import { installSnap } from '@metamask/snaps-jest';
 
-import {
-  FUNDING_TX,
-  MNEMONIC,
-  ORIGIN,
-  TEST_ADDRESS_REGTEST,
-  TEST_ADDRESS_MAINNET,
-  TEST_ADDRESS_TESTNET,
-} from './constants';
+import { FUNDING_TX, MNEMONIC, ORIGIN, TEST_ADDRESS } from './constants';
 import { CurrencyUnit } from '../src/entities';
 import { Caip19Asset } from '../src/handlers/caip';
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 describe('Keyring', () => {
-  const accounts: Record<string, KeyringAccount> = {}; // accounts stored by address
+  const accounts: Record<string, KeyringAccount> = {};
   let snap: Snap;
 
   beforeAll(async () => {
@@ -26,10 +19,6 @@ describe('Keyring', () => {
         secretRecoveryPhrase: MNEMONIC,
       },
     });
-  });
-
-  beforeEach(() => {
-    snap.mockJsonRpc({ method: 'snap_manageAccounts', result: {} });
   });
 
   it('discover accounts successfully', async () => {
@@ -48,84 +37,62 @@ describe('Keyring', () => {
       {
         type: 'bip44',
         scopes: [BtcScope.Regtest],
-        derivationPath: "m/84'/1'/0'",
+        derivationPath: "m/84'/0'/0'",
       },
     ]);
   });
 
-  it('creates discovered account', async () => {
-    const response = await snap.onKeyringRequest({
-      origin: ORIGIN,
-      method: 'keyring_createAccount',
-      params: {
-        options: {
-          addressType: BtcAccountType.P2wpkh,
-          scope: BtcScope.Regtest,
-          index: 0,
-          synchronize: true,
-        },
-      },
-    });
-
-    expect(response).toRespondWith({
-      type: BtcAccountType.P2wpkh,
-      id: expect.anything(),
-      address: TEST_ADDRESS_REGTEST,
-      options: {},
-      scopes: [BtcScope.Regtest],
-      methods: [BtcMethod.SendBitcoin],
-    });
-
-    // eslint-disable-next-line jest/no-conditional-in-test
-    if ('result' in response.response) {
-      accounts[TEST_ADDRESS_REGTEST] = response.response
-        .result as KeyringAccount;
-    }
-  });
-
   it.each([
     {
-      // tests creation of multiple accounts of same address type and network
+      // Main account used in the tests, only one to synchronize
       addressType: BtcAccountType.P2wpkh,
       scope: BtcScope.Regtest,
-      index: 1, // index incremented by 1
-      expectedAddress: 'bcrt1qstku2y3pfh9av50lxj55arm8r5gj8tf2yv5nxz',
+      index: 0,
+      expectedAddress: TEST_ADDRESS,
+      synchronize: true,
     },
     {
       addressType: BtcAccountType.P2wpkh,
       scope: BtcScope.Mainnet,
       index: 0,
-      expectedAddress: TEST_ADDRESS_MAINNET,
+      expectedAddress: 'bc1q832zlt4tgnqy88vd20mazw77dlt0j0wf2naw8q',
+      synchronize: false,
     },
     {
+      // Tests multiple accounts of same address type
       addressType: BtcAccountType.P2wpkh,
-      scope: BtcScope.Testnet,
-      index: 0,
-      expectedAddress: TEST_ADDRESS_TESTNET,
+      scope: BtcScope.Mainnet,
+      index: 1,
+      expectedAddress: 'bc1qe2e3tdkqwytw7furyl2nlfy3sqs23acynn50d9',
+      synchronize: false,
     },
     {
       addressType: BtcAccountType.P2pkh,
       scope: BtcScope.Mainnet,
       index: 0,
       expectedAddress: '15feVv7kK3z7jxA4RZZzY7Fwdu3yqFwzcT',
+      synchronize: false,
     },
     {
       addressType: BtcAccountType.P2pkh,
       scope: BtcScope.Testnet,
       index: 0,
       expectedAddress: 'mjPQaLkhZN3MxsYN8Nebzwevuz8vdTaRCq',
+      synchronize: false,
     },
     {
       addressType: BtcAccountType.P2sh,
       scope: BtcScope.Mainnet,
       index: 0,
       expectedAddress: '3QVSaDYjxEh4L3K24eorrQjfVxPAKJMys2',
+      synchronize: false,
     },
     {
       addressType: BtcAccountType.P2sh,
       scope: BtcScope.Testnet,
       index: 0,
       expectedAddress: '2NBG623WvXp1zxKB6gK2mnMe2mSDCur5qRU',
+      synchronize: false,
     },
     {
       addressType: BtcAccountType.P2tr,
@@ -133,6 +100,7 @@ describe('Keyring', () => {
       index: 0,
       expectedAddress:
         'bc1p4rue37y0v9snd4z3fvw43d29u97qxf9j3fva72xy2t7hekg24dzsaz40mz',
+      synchronize: false,
     },
     {
       addressType: BtcAccountType.P2tr,
@@ -140,8 +108,11 @@ describe('Keyring', () => {
       index: 0,
       expectedAddress:
         'tb1pwwjax3vpq6h69965hcr22vkpm4qdvyu2pz67wyj8eagp9vxkcz0q0ya20h',
+      synchronize: false,
     },
   ])('creates an account: %s', async ({ expectedAddress, ...requestOpts }) => {
+    snap.mockJsonRpc({ method: 'snap_manageAccounts', result: {} });
+
     const response = await snap.onKeyringRequest({
       origin: ORIGIN,
       method: 'keyring_createAccount',
@@ -159,40 +130,49 @@ describe('Keyring', () => {
 
     // eslint-disable-next-line jest/no-conditional-in-test
     if ('result' in response.response) {
-      accounts[expectedAddress] = response.response.result as KeyringAccount;
+      accounts[
+        `${requestOpts.addressType}:${requestOpts.scope}:${requestOpts.index}`
+      ] = response.response.result as KeyringAccount;
     }
   });
 
   it('creates account by derivationPath idempotently', async () => {
-    // Account already exists so we should get the same account
+    snap.mockJsonRpc({ method: 'snap_manageAccounts', result: {} });
+
     const response = await snap.onKeyringRequest({
       origin: ORIGIN,
       method: 'keyring_createAccount',
       params: {
         options: {
-          scope: BtcScope.Testnet,
+          scope: BtcScope.Mainnet,
           addressType: BtcAccountType.P2wpkh,
-          derivationPath: "m/84'/0'/0'",
+          derivationPath: "m/84'/0'/1'",
         },
       },
     });
 
-    expect(response).toRespondWith(accounts[TEST_ADDRESS_TESTNET]);
+    expect(response).toRespondWith(
+      accounts[`${BtcAccountType.P2wpkh}:${BtcScope.Mainnet}:1`],
+    );
   });
 
   it('returns the same account if already exists', async () => {
+    snap.mockJsonRpc({ method: 'snap_manageAccounts', result: {} });
+
     const response = await snap.onKeyringRequest({
       origin: ORIGIN,
       method: 'keyring_createAccount',
       params: {
         options: {
-          scope: BtcScope.Testnet,
+          scope: BtcScope.Mainnet,
           addressType: BtcAccountType.P2wpkh,
         },
       },
     });
 
-    expect(response).toRespondWith(accounts[TEST_ADDRESS_TESTNET]);
+    expect(response).toRespondWith(
+      accounts[`${BtcAccountType.P2wpkh}:${BtcScope.Mainnet}:0`],
+    );
   });
 
   it('gets an account', async () => {
@@ -200,11 +180,13 @@ describe('Keyring', () => {
       origin: ORIGIN,
       method: 'keyring_getAccount',
       params: {
-        id: accounts[TEST_ADDRESS_REGTEST]!.id,
+        id: accounts[`${BtcAccountType.P2wpkh}:${BtcScope.Mainnet}:0`]!.id,
       },
     });
 
-    expect(response).toRespondWith(accounts[TEST_ADDRESS_REGTEST]);
+    expect(response).toRespondWith(
+      accounts[`${BtcAccountType.P2wpkh}:${BtcScope.Mainnet}:0`],
+    );
   });
 
   it('lists all accounts', async () => {
@@ -217,7 +199,8 @@ describe('Keyring', () => {
   });
 
   it('lists account transactions', async () => {
-    const accoundId = accounts[TEST_ADDRESS_REGTEST]!.id;
+    const accoundId =
+      accounts[`${BtcAccountType.P2wpkh}:${BtcScope.Regtest}:0`]!.id;
     const response = await snap.onKeyringRequest({
       origin: ORIGIN,
       method: 'keyring_listAccountTransactions',
@@ -238,7 +221,7 @@ describe('Keyring', () => {
       origin: ORIGIN,
       method: 'keyring_getAccountBalances',
       params: {
-        id: accounts[TEST_ADDRESS_REGTEST]!.id,
+        id: accounts[`${BtcAccountType.P2wpkh}:${BtcScope.Regtest}:0`]!.id,
         assets: [Caip19Asset.Regtest],
       },
     });
@@ -252,8 +235,7 @@ describe('Keyring', () => {
   });
 
   it('removes an account', async () => {
-    const { id } =
-      accounts.tb1pwwjax3vpq6h69965hcr22vkpm4qdvyu2pz67wyj8eagp9vxkcz0q0ya20h!;
+    const { id } = accounts[`${BtcAccountType.P2pkh}:${BtcScope.Mainnet}:0`]!;
 
     let response = await snap.onKeyringRequest({
       origin: ORIGIN,
@@ -282,26 +264,32 @@ describe('Keyring', () => {
 
   it.each([
     {
-      address: TEST_ADDRESS_REGTEST,
-      expectedAssets: [Caip19Asset.Regtest],
-    },
-    {
-      address: TEST_ADDRESS_MAINNET,
+      addressType: BtcAccountType.P2wpkh,
+      scope: BtcScope.Mainnet,
       expectedAssets: [Caip19Asset.Bitcoin],
     },
     {
-      address: TEST_ADDRESS_TESTNET,
+      addressType: BtcAccountType.P2wpkh,
+      scope: BtcScope.Regtest,
+      expectedAssets: [Caip19Asset.Regtest],
+    },
+    {
+      addressType: BtcAccountType.P2tr,
+      scope: BtcScope.Testnet,
       expectedAssets: [Caip19Asset.Testnet],
     },
-  ])('lists account assets: %s', async ({ address, expectedAssets }) => {
-    const response = await snap.onKeyringRequest({
-      origin: ORIGIN,
-      method: 'keyring_listAccountAssets',
-      params: {
-        id: accounts[address]!.id,
-      },
-    });
+  ])(
+    'lists account assets: %s',
+    async ({ addressType, scope, expectedAssets }) => {
+      const response = await snap.onKeyringRequest({
+        origin: ORIGIN,
+        method: 'keyring_listAccountAssets',
+        params: {
+          id: accounts[`${addressType}:${scope}:0`]!.id,
+        },
+      });
 
-    expect(response).toRespondWith(expectedAssets);
-  });
+      expect(response).toRespondWith(expectedAssets);
+    },
+  );
 });

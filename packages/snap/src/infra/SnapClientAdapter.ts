@@ -11,7 +11,7 @@ import type {
   GetPreferencesResult,
 } from '@metamask/snaps-sdk';
 
-import type { BitcoinAccount, SnapClient, SnapState } from '../entities';
+import type { BitcoinAccount, SnapClient } from '../entities';
 import { networkToCurrencyUnit } from '../entities';
 import { networkToCaip19 } from '../handlers';
 import {
@@ -26,21 +26,6 @@ export class SnapClientAdapter implements SnapClient {
 
   constructor(encrypt = false) {
     this.#encrypt = encrypt;
-  }
-
-  async initState(): Promise<void> {
-    const snapState: SnapState = {
-      accounts: {},
-      derivationPaths: {},
-    };
-
-    await snap.request({
-      method: 'snap_setState',
-      params: {
-        value: snapState,
-        encrypted: this.#encrypt,
-      },
-    });
   }
 
   async getState(key: string): Promise<Json | null> {

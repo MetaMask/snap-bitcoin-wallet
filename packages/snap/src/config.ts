@@ -7,9 +7,13 @@ import { LogLevel, type SnapConfig } from './entities';
 export const Config: SnapConfig = {
   logLevel: (process.env.LOG_LEVEL ?? LogLevel.INFO) as LogLevel,
   encrypt: false,
+  accounts: {
+    defaultAddressType: (process.env.DEFAULT_ADDRESS_TYPE ??
+      'p2wpkh') as AddressType,
+  },
   chain: {
-    parallelRequests: 1,
-    stopGap: 2,
+    parallelRequests: 3,
+    stopGap: 3,
     url: {
       bitcoin: process.env.ESPLORA_BITCOIN ?? 'https://blockstream.info/api',
       testnet:
@@ -28,6 +32,4 @@ export const Config: SnapConfig = {
     url: process.env.PRICE_API_URL ?? 'https://price.api.cx.metamask.io',
   },
   conversionsExpirationInterval: 60,
-  defaultAddressType: (process.env.DEFAULT_ADDRESS_TYPE ??
-    'p2wpkh') as AddressType,
 };

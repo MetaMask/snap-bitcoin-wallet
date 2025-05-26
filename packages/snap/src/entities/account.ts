@@ -48,6 +48,11 @@ export type BitcoinAccount = {
   network: Network;
 
   /**
+   * Whether the account has already performed a full scan.
+   */
+  isScanned: boolean;
+
+  /**
    * Get an address at a given index.
    *
    * @param index - derivation index.

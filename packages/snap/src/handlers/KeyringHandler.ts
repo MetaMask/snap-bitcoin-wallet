@@ -29,6 +29,7 @@ import {
   string,
 } from 'superstruct';
 
+import type { SnapClient } from '../entities';
 import {
   networkToCurrencyUnit,
   Purpose,
@@ -63,11 +64,11 @@ export const CreateAccountRequest = object({
 export class KeyringHandler implements Keyring {
   readonly #accountsUseCases: AccountUseCases;
 
-  readonly #defaultAddressType: AddressType;
+  readonly #snapClient: SnapClient;
 
-  constructor(accounts: AccountUseCases, defaultAddressType: AddressType) {
+  constructor(accounts: AccountUseCases, snapClient: SnapClient) {
     this.#accountsUseCases = accounts;
-    this.#defaultAddressType = defaultAddressType;
+    this.#snapClient = snapClient;
   }
 
   async route(origin: string, request: JsonRpcRequest): Promise<Json> {
@@ -97,11 +98,11 @@ export class KeyringHandler implements Keyring {
     const {
       metamask,
       scope,
-      entropySource = 'm',
-      index = 0,
+      entropySource,
+      index,
       derivationPath,
       addressType,
-      synchronize = false,
+      synchronize,
     } = options;
 
     const resolvedIndex = derivationPath
@@ -115,14 +116,23 @@ export class KeyringHandler implements Keyring {
       resolvedAddressType = this.#extractAddressType(derivationPath);
     }
 
-    const account = await this.#accountsUseCases.create({
+    const createParams = {
       network: scopeToNetwork[scope],
       entropySource,
       index: resolvedIndex,
-      addressType: resolvedAddressType ?? this.#defaultAddressType,
-      correlationId: metamask?.correlationId,
+      addressType: resolvedAddressType,
       synchronize,
-    });
+    };
+    const account = await this.#accountsUseCases.create(createParams);
+
+    await this.#snapClient.emitAccountCreatedEvent(
+      account,
+      metamask?.correlationId,
+    );
+
+    if (synchronize) {
+      await this.#accountsUseCases.fullScan(account);
+    }
 
     return mapToKeyringAccount(account);
   }
@@ -132,20 +142,28 @@ export class KeyringHandler implements Keyring {
     entropySource: string,
     groupIndex: number,
   ): Promise<DiscoveredAccount[]> {
+    // Discovery is essentially the same as batch creation with synchronization, but without emitting events.
+    // Accounts are unique per network and address type.
+
     const accounts = await Promise.all(
       scopes.flatMap((scope) =>
-        Object.values(BtcAccountType).map(async (addressType) =>
-          this.#accountsUseCases.discover({
+        Object.values(BtcAccountType).map(async (addressType) => {
+          const createParams = {
             network: scopeToNetwork[scope],
             entropySource,
             index: groupIndex,
             addressType: caipToAddressType[addressType],
-          }),
-        ),
+            synchronize: true,
+          };
+
+          const account = await this.#accountsUseCases.create(createParams);
+          await this.#accountsUseCases.fullScan(account);
+          return account;
+        }),
       ),
     );
 
-    // Return only accounts with history.
+    // Return only accounts with history (even if balance is 0).
     return accounts
       .filter((account) => account.listTransactions().length > 0)
       .map((account) => mapToDiscoveredAccount(account, groupIndex));

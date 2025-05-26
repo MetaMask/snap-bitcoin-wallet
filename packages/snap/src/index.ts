@@ -43,6 +43,7 @@ const accountsUseCases = new AccountUseCases(
   snapClient,
   accountRepository,
   chainClient,
+  Config.accounts,
 );
 const sendFlowUseCases = new SendFlowUseCases(
   logger,
@@ -58,10 +59,7 @@ const sendFlowUseCases = new SendFlowUseCases(
 const assetsUseCases = new AssetsUseCases(logger, assetRatesClient);
 
 // Application layer
-const keyringHandler = new KeyringHandler(
-  accountsUseCases,
-  Config.defaultAddressType,
-);
+const keyringHandler = new KeyringHandler(accountsUseCases, snapClient);
 const cronHandler = new CronHandler(logger, accountsUseCases, sendFlowUseCases);
 const rpcHandler = new RpcHandler(sendFlowUseCases, accountsUseCases);
 const userInputHandler = new UserInputHandler(sendFlowUseCases);
