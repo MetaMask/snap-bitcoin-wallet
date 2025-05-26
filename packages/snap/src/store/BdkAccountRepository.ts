@@ -20,7 +20,6 @@ import type {
 } from '../entities';
 import { BdkAccountAdapter } from '../infra';
 
-// Developers should not worry about concurrency issues due to
 export class BdkAccountRepository implements BitcoinAccountRepository {
   readonly #snapClient: SnapClient;
 
@@ -43,67 +42,20 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     );
   }
 
-  async fetchInscriptions(id: string): Promise<Inscription[] | null> {
-    const inscriptions = await this.#snapClient.getState(
-      `accounts.${id}.inscriptions`,
-    );
-    if (!inscriptions) {
-      return null;
-    }
-
-    return inscriptions as Inscription[];
-  }
-
-  async getWithSigner(id: string): Promise<BitcoinAccount | null> {
-    const accountState = (await this.#snapClient.getState(
-      `accounts.${id}`,
-    )) as AccountState | null;
-    if (!accountState) {
-      return null;
-    }
-
-    const slip10 = await this.#snapClient.getPrivateEntropy(
-      accountState.derivationPath,
-    );
-    const fingerprint = (
-      slip10.masterFingerprint ?? slip10.parentFingerprint
-    ).toString(16);
-
-    const account = BdkAccountAdapter.load(
-      id,
-      accountState.derivationPath,
-      ChangeSet.from_json(accountState.wallet),
-    );
-
-    const xpriv = slip10_to_extended(slip10, account.network);
-    const privDescriptors = xpriv_to_descriptor(
-      xpriv,
-      fingerprint,
-      account.network,
-      account.addressType,
-    );
-
-    return BdkAccountAdapter.load(
-      id,
-      account.derivationPath,
-      ChangeSet.from_json(accountState.wallet),
-      privDescriptors,
-    );
-  }
-
   async getAll(): Promise<BitcoinAccount[]> {
-    const accounts = await this.#snapClient.getState('accounts');
+    const accounts = (await this.#snapClient.getState('accounts')) as
+      | SnapState['accounts']
+      | null;
     if (!accounts) {
       return [];
     }
 
-    return Object.entries(accounts as SnapState['accounts']).map(
-      ([id, account]) =>
-        BdkAccountAdapter.load(
-          id,
-          account.derivationPath,
-          ChangeSet.from_json(account.wallet),
-        ),
+    return Object.entries(accounts).map(([id, account]) =>
+      BdkAccountAdapter.load(
+        id,
+        account.derivationPath,
+        ChangeSet.from_json(account.wallet),
+      ),
     );
   }
 
@@ -118,6 +70,42 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     }
 
     return this.get(id as string);
+  }
+
+  async getWithSigner(id: string): Promise<BitcoinAccount | null> {
+    const accountState = (await this.#snapClient.getState(
+      `accounts.${id}`,
+    )) as AccountState | null;
+    if (!accountState) {
+      return null;
+    }
+
+    const { derivationPath, wallet } = accountState;
+
+    const slip10 = await this.#snapClient.getPrivateEntropy(derivationPath);
+    const fingerprint = (
+      slip10.masterFingerprint ?? slip10.parentFingerprint
+    ).toString(16);
+
+    const account = BdkAccountAdapter.load(
+      id,
+      derivationPath,
+      ChangeSet.from_json(wallet),
+    );
+
+    const privDescriptors = xpriv_to_descriptor(
+      slip10_to_extended(slip10, account.network),
+      fingerprint,
+      account.network,
+      account.addressType,
+    );
+
+    return BdkAccountAdapter.load(
+      id,
+      derivationPath,
+      ChangeSet.from_json(wallet),
+      privDescriptors,
+    );
   }
 
   async create(
@@ -148,7 +136,7 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     const walletData = account.takeStaged();
     if (!walletData) {
       throw new Error(
-        `Missing changeset data for account ${id} after creation.`, // Impossible by assertion
+        `Missing changeset data for account "${id}" for insertion.`,
       );
     }
 
@@ -179,7 +167,9 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
 
     const walletData = await this.#snapClient.getState(`accounts.${id}.wallet`);
     if (!walletData) {
-      throw new Error('Inconsistent state: account not found for update');
+      throw new Error(
+        `Inconsistent state: account "${id}" not found for update`,
+      );
     }
 
     newWalletData.merge(ChangeSet.from_json(walletData as string));
@@ -210,6 +200,17 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
       `derivationPaths.${accountState.derivationPath.join('/')}`,
       null,
     );
+  }
+
+  async fetchInscriptions(id: string): Promise<Inscription[] | null> {
+    const inscriptions = await this.#snapClient.getState(
+      `accounts.${id}.inscriptions`,
+    );
+    if (!inscriptions) {
+      return null;
+    }
+
+    return inscriptions as Inscription[];
   }
 
   async getFrozenUTXOs(id: string): Promise<string[]> {

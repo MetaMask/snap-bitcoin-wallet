@@ -143,6 +143,7 @@ export class AccountUseCases {
       newAccount,
       req.correlationId,
     );
+
     if (req.synchronize) {
       await this.fullScan(newAccount);
     }
@@ -239,7 +240,6 @@ export class AccountUseCases {
 
     await this.#snapClient.emitAccountDeletedEvent(id);
     await this.#repository.delete(id);
-    console.log('deleted', id);
 
     this.#logger.info('Account deleted successfully: %s', account.id);
   }
