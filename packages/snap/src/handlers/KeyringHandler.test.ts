@@ -55,8 +55,9 @@ describe('KeyringHandler', () => {
     balance: { trusted_spendable: { to_btc: () => 1 } },
     network: 'bitcoin',
   });
+  const defaultAddressType: AddressType = 'p2wpkh';
 
-  const handler = new KeyringHandler(mockAccounts, 'p2wpkh');
+  const handler = new KeyringHandler(mockAccounts, defaultAddressType);
 
   beforeEach(() => {
     mockAccounts.create.mockResolvedValue(mockAccount);
