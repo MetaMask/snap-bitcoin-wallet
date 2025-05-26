@@ -17,7 +17,7 @@ import { BtcAccountType, BtcMethod, BtcScope } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
-import type { SnapClient, BitcoinAccount } from '../entities';
+import type { BitcoinAccount } from '../entities';
 import { CurrencyUnit, Purpose } from '../entities';
 import { scopeToNetwork, caipToAddressType, Caip19Asset } from './caip';
 import { KeyringHandler, CreateAccountRequest } from './KeyringHandler';
@@ -44,7 +44,6 @@ jest.mock('@metamask/bitcoindevkit', () => {
 
 describe('KeyringHandler', () => {
   const mockAccounts = mock<AccountUseCases>();
-  const mockSnapClient = mock<SnapClient>();
   const mockAddress = mock<Address>({
     toString: () => 'bc1qaddress...',
   });
@@ -57,7 +56,7 @@ describe('KeyringHandler', () => {
     network: 'bitcoin',
   });
 
-  const handler = new KeyringHandler(mockAccounts, mockSnapClient);
+  const handler = new KeyringHandler(mockAccounts, 'p2wpkh');
 
   beforeEach(() => {
     mockAccounts.create.mockResolvedValue(mockAccount);
@@ -87,17 +86,15 @@ describe('KeyringHandler', () => {
         network: scopeToNetwork[BtcScope.Signet],
         entropySource,
         index,
-        addressType: caipToAddressType[BtcAccountType.P2pkh],
+        addressType: 'p2pkh',
+        synchronize: false,
+        correlationId,
       };
 
       await handler.createAccount(options);
 
       expect(assert).toHaveBeenCalledWith(options, CreateAccountRequest);
       expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
-      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalledWith(
-        mockAccount,
-        correlationId,
-      );
       expect(mockAccounts.fullScan).not.toHaveBeenCalled();
     });
 
@@ -110,6 +107,8 @@ describe('KeyringHandler', () => {
         network: 'signet',
         index: 5,
         addressType: 'p2pkh',
+        entropySource: 'm',
+        synchronize: false,
       };
 
       await handler.createAccount(options);
@@ -143,6 +142,8 @@ describe('KeyringHandler', () => {
           network: 'signet',
           index: 0,
           addressType,
+          entropySource: 'm',
+          synchronize: false,
         };
 
         await handler.createAccount(options);
@@ -173,17 +174,6 @@ describe('KeyringHandler', () => {
       ).rejects.toThrow("Invalid derivation path: m/44'");
     });
 
-    it('performs a full scan when synchronize option is true', async () => {
-      const options = {
-        scope: BtcScope.Signet,
-        synchronize: true,
-      };
-      await handler.createAccount(options);
-
-      expect(mockAccounts.create).toHaveBeenCalled();
-      expect(mockAccounts.fullScan).toHaveBeenCalledWith(mockAccount);
-    });
-
     it('propagates errors from createAccount', async () => {
       const error = new Error('createAccount error');
       mockAccounts.create.mockRejectedValue(error);
@@ -192,29 +182,6 @@ describe('KeyringHandler', () => {
         handler.createAccount({ scopes: [BtcScope.Mainnet] }),
       ).rejects.toThrow(error);
       expect(mockAccounts.create).toHaveBeenCalled();
-    });
-
-    it('propagates errors from fullScan', async () => {
-      const error = new Error('fullScan error');
-      mockAccounts.fullScan.mockRejectedValue(error);
-
-      await expect(
-        handler.createAccount({
-          scopes: [BtcScope.Mainnet],
-          synchronize: true,
-        }),
-      ).rejects.toThrow(error);
-      expect(mockAccounts.fullScan).toHaveBeenCalled();
-    });
-
-    it('propagates errors from emitAccountCreatedEvent', async () => {
-      const error = new Error('emitAccountCreatedEvent error');
-      mockSnapClient.emitAccountCreatedEvent.mockRejectedValue(error);
-
-      await expect(
-        handler.createAccount({ scopes: [BtcScope.Mainnet] }),
-      ).rejects.toThrow(error);
-      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalled();
     });
   });
 
@@ -237,7 +204,7 @@ describe('KeyringHandler', () => {
           });
 
           expected.push(mapToDiscoveredAccount(acc, groupIndex));
-          mockAccounts.create.mockResolvedValueOnce(acc);
+          mockAccounts.discover.mockResolvedValueOnce(acc);
         });
       });
 
@@ -247,19 +214,17 @@ describe('KeyringHandler', () => {
         groupIndex,
       );
 
-      expect(mockAccounts.create).toHaveBeenCalledTimes(totalCombinations);
-      expect(mockAccounts.fullScan).toHaveBeenCalledTimes(totalCombinations);
+      expect(mockAccounts.discover).toHaveBeenCalledTimes(totalCombinations);
 
       // validate each individual create() call arguments
       scopes.forEach((scope, sIdx) => {
         addressTypes.forEach((addrType, aIdx) => {
           const callIdx = sIdx * addressTypes.length + aIdx;
-          expect(mockAccounts.create).toHaveBeenNthCalledWith(callIdx + 1, {
+          expect(mockAccounts.discover).toHaveBeenNthCalledWith(callIdx + 1, {
             network: scopeToNetwork[scope],
             entropySource,
             index: groupIndex,
             addressType: caipToAddressType[addrType],
-            synchronize: true,
           });
         });
       });
@@ -278,7 +243,7 @@ describe('KeyringHandler', () => {
           listTransactions: jest.fn().mockReturnValue([]), // no history
         });
 
-        mockAccounts.create.mockResolvedValueOnce(acc);
+        mockAccounts.discover.mockResolvedValueOnce(acc);
       }
 
       const discovered = await handler.discoverAccounts(
@@ -290,25 +255,14 @@ describe('KeyringHandler', () => {
       expect(discovered).toHaveLength(0);
     });
 
-    it('propagates errors from create', async () => {
-      const error = new Error('create error');
-      mockAccounts.create.mockRejectedValue(error);
+    it('propagates errors from discover', async () => {
+      const error = new Error('discover error');
+      mockAccounts.discover.mockRejectedValue(error);
 
       await expect(
         handler.discoverAccounts(scopes, entropySource, groupIndex),
       ).rejects.toThrow(error);
-      expect(mockAccounts.create).toHaveBeenCalled();
-    });
-
-    it('propagates errors from fullScan()', async () => {
-      const error = new Error('fullScan error');
-      mockAccounts.create.mockResolvedValue(mock<BitcoinAccount>());
-      mockAccounts.fullScan.mockRejectedValue(error);
-
-      await expect(
-        handler.discoverAccounts(scopes, entropySource, groupIndex),
-      ).rejects.toThrow(error);
-      expect(mockAccounts.fullScan).toHaveBeenCalled();
+      expect(mockAccounts.discover).toHaveBeenCalled();
     });
   });
 

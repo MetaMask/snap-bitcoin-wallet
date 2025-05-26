@@ -8,7 +8,6 @@ import type {
 import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 
 import {
-  type AccountsConfig,
   type BitcoinAccount,
   type BitcoinAccountRepository,
   type BlockchainClient,
@@ -19,11 +18,16 @@ import {
   networkToCoinType,
 } from '../entities';
 
-export type CreateAccountParams = {
+export type DiscoverAccountParams = {
   network: Network;
-  index?: number;
-  entropySource?: string;
-  addressType?: AddressType;
+  index: number;
+  entropySource: string;
+  addressType: AddressType;
+};
+
+export type CreateAccountParams = DiscoverAccountParams & {
+  synchronize: boolean;
+  correlationId?: string;
 };
 
 export class AccountUseCases {
@@ -37,14 +41,11 @@ export class AccountUseCases {
 
   readonly #metaProtocols: MetaProtocolsClient | undefined;
 
-  readonly #accountConfig: AccountsConfig;
-
   constructor(
     logger: Logger,
     snapClient: SnapClient,
     repository: BitcoinAccountRepository,
     chain: BlockchainClient,
-    accountConfig: AccountsConfig,
     metaProtocols?: MetaProtocolsClient,
   ) {
     this.#logger = logger;
@@ -52,7 +53,6 @@ export class AccountUseCases {
     this.#repository = repository;
     this.#chain = chain;
     this.#metaProtocols = metaProtocols;
-    this.#accountConfig = accountConfig;
   }
 
   async list(): Promise<BitcoinAccount[]> {
@@ -76,14 +76,10 @@ export class AccountUseCases {
     return account;
   }
 
-  async create(req: CreateAccountParams): Promise<BitcoinAccount> {
-    this.#logger.debug('Creating new Bitcoin account. Params: %o', req);
-    const {
-      addressType = this.#accountConfig.defaultAddressType,
-      index = 0,
-      network,
-      entropySource = 'm',
-    } = req;
+  async discover(req: DiscoverAccountParams): Promise<BitcoinAccount> {
+    this.#logger.debug('Discovering Bitcoin account. Request: %o', req);
+
+    const { addressType, index, network, entropySource } = req;
 
     const derivationPath = [
       entropySource,
@@ -94,7 +90,7 @@ export class AccountUseCases {
 
     // Idempotent account creation + ensures only one account per derivation path
     const account = await this.#repository.getByDerivationPath(derivationPath);
-    if (account) {
+    if (account && account.network === network) {
       this.#logger.debug('Account already exists: %s,', account.id);
       return account;
     }
@@ -104,26 +100,63 @@ export class AccountUseCases {
       network,
       addressType,
     );
-    await this.#repository.insert(newAccount);
+
+    await this.#chain.fullScan(newAccount);
 
     this.#logger.info(
-      'Bitcoin account created successfully: %s. derivationPath: %s',
+      'Bitcoin account discovered successfully. Request: %o',
+      req,
+    );
+    return newAccount;
+  }
+
+  async create(req: CreateAccountParams): Promise<BitcoinAccount> {
+    this.#logger.debug('Creating new Bitcoin account. Request: %o', req);
+
+    const { addressType, index, network, entropySource } = req;
+
+    const derivationPath = [
+      entropySource,
+      `${addressTypeToPurpose[addressType]}'`,
+      `${networkToCoinType[network]}'`,
+      `${index}'`,
+    ];
+
+    // Idempotent account creation + ensures only one account per derivation path
+    const account = await this.#repository.getByDerivationPath(derivationPath);
+    if (account && account.network === network) {
+      this.#logger.debug('Account already exists: %s,', account.id);
+      return account;
+    }
+
+    const newAccount = await this.#repository.create(
+      derivationPath,
+      network,
+      addressType,
+    );
+
+    await this.#repository.insert(newAccount);
+
+    // First notify the event has been created, then full scan.
+    await this.#snapClient.emitAccountCreatedEvent(
+      newAccount,
+      req.correlationId,
+    );
+
+    if (req.synchronize) {
+      await this.fullScan(newAccount);
+    }
+
+    this.#logger.info(
+      'Bitcoin account created successfully: %s. Request: %o',
       newAccount.id,
-      derivationPath.join('/'),
+      req,
     );
     return newAccount;
   }
 
   async synchronize(account: BitcoinAccount): Promise<void> {
     this.#logger.debug('Synchronizing account: %s', account.id);
-
-    if (!account.isScanned) {
-      this.#logger.debug(
-        'Account has not yet performed initial full scan, skipping synchronization: %s',
-        account.id,
-      );
-      return;
-    }
 
     const txsBeforeSync = account.listTransactions();
     await this.#chain.sync(account);
@@ -181,7 +214,7 @@ export class AccountUseCases {
       account.listTransactions(),
     );
 
-    this.#logger.debug(
+    this.#logger.info(
       'initial full scan performed successfully: %s',
       account.id,
     );

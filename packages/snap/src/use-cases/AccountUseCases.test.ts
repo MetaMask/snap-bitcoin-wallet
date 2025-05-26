@@ -9,7 +9,6 @@ import type {
 import { mock } from 'jest-mock-extended';
 
 import type {
-  AccountsConfig,
   BitcoinAccount,
   BitcoinAccountRepository,
   BlockchainClient,
@@ -18,6 +17,10 @@ import type {
   MetaProtocolsClient,
   SnapClient,
 } from '../entities';
+import type {
+  CreateAccountParams,
+  DiscoverAccountParams,
+} from './AccountUseCases';
 import { AccountUseCases } from './AccountUseCases';
 
 describe('AccountUseCases', () => {
@@ -26,16 +29,12 @@ describe('AccountUseCases', () => {
   const mockRepository = mock<BitcoinAccountRepository>();
   const mockChain = mock<BlockchainClient>();
   const mockMetaProtocols = mock<MetaProtocolsClient>();
-  const accountsConfig: AccountsConfig = {
-    defaultAddressType: 'p2wpkh',
-  };
 
   const useCases = new AccountUseCases(
     mockLogger,
     mockSnapClient,
     mockRepository,
     mockChain,
-    accountsConfig,
     mockMetaProtocols,
   );
 
@@ -98,12 +97,15 @@ describe('AccountUseCases', () => {
   });
 
   describe('create', () => {
-    const network: Network = 'bitcoin';
-    const addressType: AddressType = 'p2wpkh';
-    const entropySource = 'some-source';
-    const index = 1;
-
-    const mockAccount = mock<BitcoinAccount>();
+    const createParams: CreateAccountParams = {
+      network: 'bitcoin',
+      entropySource: 'some-source',
+      index: 1,
+      addressType: 'p2wpkh',
+      synchronize: false,
+      correlationId: 'correlation-id',
+    };
+    const mockAccount = mock<BitcoinAccount>({ network: createParams.network });
 
     beforeEach(() => {
       mockRepository.create.mockResolvedValue(mockAccount);
@@ -118,13 +120,17 @@ describe('AccountUseCases', () => {
     ] as { tAddressType: AddressType; purpose: string }[])(
       'creates an account of type: %s',
       async ({ tAddressType, purpose }) => {
-        const derivationPath = [entropySource, purpose, "0'", `${index}'`];
+        const derivationPath = [
+          createParams.entropySource,
+          purpose,
+          "0'",
+          `${createParams.index}'`,
+        ];
 
         await useCases.create({
-          network,
-          entropySource,
-          index,
+          ...createParams,
           addressType: tAddressType,
+          synchronize: true,
         });
 
         expect(mockRepository.getByDerivationPath).toHaveBeenCalledWith(
@@ -132,9 +138,15 @@ describe('AccountUseCases', () => {
         );
         expect(mockRepository.create).toHaveBeenCalledWith(
           derivationPath,
-          network,
+          createParams.network,
           tAddressType,
         );
+        expect(mockRepository.insert).toHaveBeenCalledWith(mockAccount);
+        expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalledWith(
+          mockAccount,
+          createParams.correlationId,
+        );
+        expect(mockChain.fullScan).toHaveBeenCalledWith(mockAccount);
       },
     );
 
@@ -148,17 +160,16 @@ describe('AccountUseCases', () => {
       'should create an account on network: %s',
       async ({ tNetwork, coinType }) => {
         const expectedDerivationPath = [
-          entropySource,
+          createParams.entropySource,
           "84'",
           coinType,
-          `${index}'`,
+          `${createParams.index}'`,
         ];
 
         await useCases.create({
+          ...createParams,
           network: tNetwork,
-          entropySource,
-          index,
-          addressType,
+          synchronize: true,
         });
 
         expect(mockRepository.getByDerivationPath).toHaveBeenCalledWith(
@@ -167,90 +178,219 @@ describe('AccountUseCases', () => {
         expect(mockRepository.create).toHaveBeenCalledWith(
           expectedDerivationPath,
           tNetwork,
-          addressType,
+          createParams.addressType,
         );
+        expect(mockRepository.insert).toHaveBeenCalledWith(mockAccount);
+        expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalledWith(
+          mockAccount,
+          createParams.correlationId,
+        );
+        expect(mockChain.fullScan).toHaveBeenCalledWith(mockAccount);
       },
     );
 
-    it('returns an existing account if one already exists', async () => {
-      const mockExistingAccount = mock<BitcoinAccount>();
-      mockRepository.getByDerivationPath.mockResolvedValue(mockExistingAccount);
+    it('returns an existing account if one already exists on same network', async () => {
+      mockRepository.getByDerivationPath.mockResolvedValue(mockAccount);
 
-      const result = await useCases.create({
-        network,
-        entropySource,
-        index,
-        addressType,
-      });
+      const result = await useCases.create(createParams);
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.create).not.toHaveBeenCalled();
-
-      expect(result).toBe(mockExistingAccount);
-    });
-
-    it('creates a new account if one does not exist', async () => {
-      mockRepository.getByDerivationPath.mockResolvedValue(null);
-
-      const result = await useCases.create({
-        network,
-        entropySource,
-        index,
-        addressType,
-      });
-
-      expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
-      expect(mockRepository.create).toHaveBeenCalled();
 
       expect(result).toBe(mockAccount);
     });
 
     it('propagates an error if getByDerivationPath throws', async () => {
-      const error = new Error();
+      const error = new Error('getByDerivationPath failed');
       mockRepository.getByDerivationPath.mockRejectedValue(error);
 
-      await expect(
-        useCases.create({ network, entropySource, index, addressType }),
-      ).rejects.toBe(error);
+      await expect(useCases.create(createParams)).rejects.toBe(error);
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.create).not.toHaveBeenCalled();
-      expect(mockSnapClient.emitAccountCreatedEvent).not.toHaveBeenCalled();
+    });
+
+    it('propagates an error if create throws', async () => {
+      const error = new Error('create failed');
+      mockRepository.create.mockRejectedValue(error);
+
+      await expect(useCases.create(createParams)).rejects.toBe(error);
+
+      expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
+      expect(mockRepository.create).toHaveBeenCalled();
     });
 
     it('propagates an error if insert throws', async () => {
-      const error = new Error();
-      mockRepository.getByDerivationPath.mockResolvedValue(null);
-      mockRepository.create.mockRejectedValue(error);
+      const error = new Error('insert failed');
+      mockRepository.insert.mockRejectedValue(error);
+
+      await expect(useCases.create(createParams)).rejects.toBe(error);
+
+      expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
+      expect(mockRepository.create).toHaveBeenCalled();
+      expect(mockRepository.insert).toHaveBeenCalled();
+    });
+
+    it('propagates an error if emitAccountCreatedEvent throws', async () => {
+      const error = new Error('emitAccountCreatedEvent failed');
+      mockSnapClient.emitAccountCreatedEvent.mockRejectedValue(error);
+
+      await expect(useCases.create(createParams)).rejects.toBe(error);
+
+      expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
+      expect(mockRepository.create).toHaveBeenCalled();
+      expect(mockRepository.insert).toHaveBeenCalled();
+      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalled();
+    });
+
+    it('propagates an error if fullScan throws', async () => {
+      const error = new Error('fullScan failed');
+      mockChain.fullScan.mockRejectedValue(error);
 
       await expect(
-        useCases.create({ network, entropySource, index, addressType }),
+        useCases.create({ ...createParams, synchronize: true }),
       ).rejects.toBe(error);
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.create).toHaveBeenCalled();
-      expect(mockSnapClient.emitAccountCreatedEvent).not.toHaveBeenCalled();
+      expect(mockRepository.insert).toHaveBeenCalled();
+      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalled();
+      expect(mockChain.fullScan).toHaveBeenCalled();
+    });
+  });
+
+  describe('discover', () => {
+    const discoverParams: DiscoverAccountParams = {
+      network: 'bitcoin',
+      entropySource: 'some-source',
+      index: 1,
+      addressType: 'p2wpkh',
+    };
+    const mockAccount = mock<BitcoinAccount>({
+      network: discoverParams.network,
+    });
+
+    beforeEach(() => {
+      mockRepository.create.mockResolvedValue(mockAccount);
+    });
+
+    it.each([
+      { tAddressType: 'p2pkh', purpose: "44'" },
+      { tAddressType: 'p2sh', purpose: "49'" },
+      { tAddressType: 'p2wsh', purpose: "45'" },
+      { tAddressType: 'p2wpkh', purpose: "84'" },
+      { tAddressType: 'p2tr', purpose: "86'" },
+    ] as { tAddressType: AddressType; purpose: string }[])(
+      'discovers an account of type: %s',
+      async ({ tAddressType, purpose }) => {
+        const derivationPath = [
+          discoverParams.entropySource,
+          purpose,
+          "0'",
+          `${discoverParams.index}'`,
+        ];
+
+        await useCases.discover({
+          ...discoverParams,
+          addressType: tAddressType,
+        });
+
+        expect(mockRepository.getByDerivationPath).toHaveBeenCalledWith(
+          derivationPath,
+        );
+        expect(mockRepository.create).toHaveBeenCalledWith(
+          derivationPath,
+          discoverParams.network,
+          tAddressType,
+        );
+        expect(mockChain.fullScan).toHaveBeenCalledWith(mockAccount);
+      },
+    );
+
+    it.each([
+      { tNetwork: 'bitcoin', coinType: "0'" },
+      { tNetwork: 'testnet', coinType: "1'" },
+      { tNetwork: 'testnet4', coinType: "1'" },
+      { tNetwork: 'signet', coinType: "1'" },
+      { tNetwork: 'regtest', coinType: "1'" },
+    ] as { tNetwork: Network; coinType: string }[])(
+      'should discover an account on network: %s',
+      async ({ tNetwork, coinType }) => {
+        const expectedDerivationPath = [
+          discoverParams.entropySource,
+          "84'",
+          coinType,
+          `${discoverParams.index}'`,
+        ];
+
+        await useCases.discover({
+          ...discoverParams,
+          network: tNetwork,
+        });
+
+        expect(mockRepository.getByDerivationPath).toHaveBeenCalledWith(
+          expectedDerivationPath,
+        );
+        expect(mockRepository.create).toHaveBeenCalledWith(
+          expectedDerivationPath,
+          tNetwork,
+          discoverParams.addressType,
+        );
+        expect(mockChain.fullScan).toHaveBeenCalledWith(mockAccount);
+      },
+    );
+
+    it('returns an existing account if one already exists on same network', async () => {
+      mockRepository.getByDerivationPath.mockResolvedValue(mockAccount);
+
+      const result = await useCases.discover(discoverParams);
+
+      expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
+      expect(mockRepository.create).not.toHaveBeenCalled();
+
+      expect(result).toBe(mockAccount);
+    });
+
+    it('propagates an error if getByDerivationPath throws', async () => {
+      const error = new Error('getByDerivationPath failed');
+      mockRepository.getByDerivationPath.mockRejectedValue(error);
+
+      await expect(useCases.discover(discoverParams)).rejects.toBe(error);
+
+      expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
+      expect(mockRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('propagates an error if create throws', async () => {
+      const error = new Error('create failed');
+      mockRepository.create.mockRejectedValue(error);
+
+      await expect(useCases.discover(discoverParams)).rejects.toBe(error);
+
+      expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
+      expect(mockRepository.create).toHaveBeenCalled();
+    });
+
+    it('propagates an error if fullScan throws', async () => {
+      const error = new Error('fullScan failed');
+      mockChain.fullScan.mockRejectedValue(error);
+
+      await expect(useCases.discover(discoverParams)).rejects.toBe(error);
+
+      expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
+      expect(mockRepository.create).toHaveBeenCalled();
+      expect(mockChain.fullScan).toHaveBeenCalled();
     });
   });
 
   describe('synchronize', () => {
     const mockAccount = mock<BitcoinAccount>({
       id: 'some-id',
-      isScanned: true,
       listTransactions: jest.fn(),
     });
 
     beforeEach(() => {
       mockAccount.listTransactions.mockReturnValue([]);
-    });
-
-    it('does not sync if account is not scanned', async () => {
-      mockAccount.listTransactions.mockReturnValue([]);
-
-      await useCases.synchronize({ ...mockAccount, isScanned: false });
-
-      expect(mockChain.sync).not.toHaveBeenCalled();
-      expect(mockAccount.listTransactions).not.toHaveBeenCalled();
     });
 
     it('synchronizes', async () => {
@@ -346,7 +486,6 @@ describe('AccountUseCases', () => {
         mockSnapClient,
         mockRepository,
         mockChain,
-        accountsConfig,
         undefined,
       );
       const mockTransaction = mock<WalletTx>();
@@ -363,7 +502,6 @@ describe('AccountUseCases', () => {
   describe('fullScan', () => {
     const mockAccount = mock<BitcoinAccount>({
       id: 'some-id',
-      isScanned: false,
     });
     const mockInscriptions = mock<Inscription[]>();
     const mockTransactions = mock<WalletTx[]>();
@@ -423,18 +561,16 @@ describe('AccountUseCases', () => {
       expect(mockRepository.update).toHaveBeenCalled();
     });
 
-    it('does not scans for assets if utxo protection is disabled', async () => {
+    it('does not scan for assets if utxo protection is disabled', async () => {
       const testUseCases = new AccountUseCases(
         mockLogger,
         mockSnapClient,
         mockRepository,
         mockChain,
-        accountsConfig,
         undefined,
       );
-      mockAccount.listTransactions.mockReturnValue(mockTransactions);
 
-      await testUseCases.synchronize(mockAccount);
+      await testUseCases.fullScan(mockAccount);
 
       expect(mockMetaProtocols.fetchInscriptions).not.toHaveBeenCalled();
     });
