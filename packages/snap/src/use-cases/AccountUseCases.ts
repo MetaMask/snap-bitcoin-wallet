@@ -77,7 +77,7 @@ export class AccountUseCases {
   }
 
   async discover(req: DiscoverAccountParams): Promise<BitcoinAccount> {
-    this.#logger.debug('Discovering Bitcoin account. Params: %o', req);
+    this.#logger.debug('Discovering Bitcoin account. Request: %o', req);
 
     const { addressType, index, network, entropySource } = req;
 
@@ -104,15 +104,14 @@ export class AccountUseCases {
     await this.#chain.fullScan(newAccount);
 
     this.#logger.info(
-      'Bitcoin account discovered successfully. addressType: %s. Network: %s',
-      req.addressType,
-      req.network,
+      'Bitcoin account discovered successfully. Request: %o',
+      req,
     );
     return newAccount;
   }
 
   async create(req: CreateAccountParams): Promise<BitcoinAccount> {
-    this.#logger.debug('Creating new Bitcoin account. Params: %o', req);
+    this.#logger.debug('Creating new Bitcoin account. Request: %o', req);
 
     const { addressType, index, network, entropySource } = req;
 
@@ -149,24 +148,15 @@ export class AccountUseCases {
     }
 
     this.#logger.info(
-      'Bitcoin account created successfully: %s. addressType: %s. Network: %s',
+      'Bitcoin account created successfully: %s. Request: %o',
       newAccount.id,
-      req.addressType,
-      req.network,
+      req,
     );
     return newAccount;
   }
 
   async synchronize(account: BitcoinAccount): Promise<void> {
     this.#logger.debug('Synchronizing account: %s', account.id);
-
-    if (!account.isScanned) {
-      this.#logger.debug(
-        'Account has not yet performed initial full scan, skipping synchronization: %s',
-        account.id,
-      );
-      return;
-    }
 
     const txsBeforeSync = account.listTransactions();
     await this.#chain.sync(account);
@@ -224,7 +214,7 @@ export class AccountUseCases {
       account.listTransactions(),
     );
 
-    this.#logger.debug(
+    this.#logger.info(
       'initial full scan performed successfully: %s',
       account.id,
     );

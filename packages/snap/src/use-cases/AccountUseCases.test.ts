@@ -386,21 +386,11 @@ describe('AccountUseCases', () => {
   describe('synchronize', () => {
     const mockAccount = mock<BitcoinAccount>({
       id: 'some-id',
-      isScanned: true,
       listTransactions: jest.fn(),
     });
 
     beforeEach(() => {
       mockAccount.listTransactions.mockReturnValue([]);
-    });
-
-    it('does not sync if account is not scanned', async () => {
-      mockAccount.listTransactions.mockReturnValue([]);
-
-      await useCases.synchronize({ ...mockAccount, isScanned: false });
-
-      expect(mockChain.sync).not.toHaveBeenCalled();
-      expect(mockAccount.listTransactions).not.toHaveBeenCalled();
     });
 
     it('synchronizes', async () => {
@@ -512,7 +502,6 @@ describe('AccountUseCases', () => {
   describe('fullScan', () => {
     const mockAccount = mock<BitcoinAccount>({
       id: 'some-id',
-      isScanned: false,
     });
     const mockInscriptions = mock<Inscription[]>();
     const mockTransactions = mock<WalletTx[]>();
@@ -572,7 +561,7 @@ describe('AccountUseCases', () => {
       expect(mockRepository.update).toHaveBeenCalled();
     });
 
-    it('does not scans for assets if utxo protection is disabled', async () => {
+    it('does not scan for assets if utxo protection is disabled', async () => {
       const testUseCases = new AccountUseCases(
         mockLogger,
         mockSnapClient,
@@ -580,9 +569,8 @@ describe('AccountUseCases', () => {
         mockChain,
         undefined,
       );
-      mockAccount.listTransactions.mockReturnValue(mockTransactions);
 
-      await testUseCases.synchronize(mockAccount);
+      await testUseCases.fullScan(mockAccount);
 
       expect(mockMetaProtocols.fetchInscriptions).not.toHaveBeenCalled();
     });
