@@ -9,13 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.14.0]
 
-### Uncategorized
+### Added
 
-- fix: discover accounts ([#464](https://github.com/MetaMask/snap-bitcoin-wallet/pull/464))
-- feat: use setState and getState ([#463](https://github.com/MetaMask/snap-bitcoin-wallet/pull/463))
-- feat: use new account types ([#461](https://github.com/MetaMask/snap-bitcoin-wallet/pull/461))
-- feat: discover accounts ([#460](https://github.com/MetaMask/snap-bitcoin-wallet/pull/460))
-- chore: monorepo cleanup ([#459](https://github.com/MetaMask/snap-bitcoin-wallet/pull/459))
+- Discover accounts ([#464](https://github.com/MetaMask/snap-bitcoin-wallet/pull/464), [#460](https://github.com/MetaMask/snap-bitcoin-wallet/pull/460))
+- Use address types from `keyring-api` ([#461](https://github.com/MetaMask/snap-bitcoin-wallet/pull/461))
+
+### Changed
+
+- Development environment cleanup ([#459](https://github.com/MetaMask/snap-bitcoin-wallet/pull/459))
+- Use `setState` and `getState` instead of `manageState` ([#463](https://github.com/MetaMask/snap-bitcoin-wallet/pull/463))
 
 ## [0.13.0]
 

@@ -9,10 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.14.0]
 
-### Uncategorized
+### Changed
 
-- feat: use new account types ([#461](https://github.com/MetaMask/snap-bitcoin-wallet/pull/461))
-- chore: monorepo cleanup ([#459](https://github.com/MetaMask/snap-bitcoin-wallet/pull/459))
+- Align latest dependencies ([#461](https://github.com/MetaMask/snap-bitcoin-wallet/pull/461))
+- Development environment cleanup ([#459](https://github.com/MetaMask/snap-bitcoin-wallet/pull/459))
 
 ## [0.13.0]
 
