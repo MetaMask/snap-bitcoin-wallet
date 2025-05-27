@@ -100,6 +100,7 @@ export class AccountUseCases {
       network,
       addressType,
     );
+    await this.#repository.insert(newAccount);
 
     await this.#chain.fullScan(newAccount);
 
