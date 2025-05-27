@@ -15,6 +15,8 @@ import type {
   BitcoinAccount,
   SnapClient,
   Inscription,
+  AccountState,
+  SnapState,
 } from '../entities';
 import { BdkAccountAdapter } from '../infra';
 
@@ -26,53 +28,73 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
   }
 
   async get(id: string): Promise<BitcoinAccount | null> {
-    const state = await this.#snapClient.get();
-    const walletData = state.accounts.wallets[id];
-    if (!walletData) {
+    const account = (await this.#snapClient.getState(
+      `accounts.${id}`,
+    )) as AccountState | null;
+    if (!account) {
       return null;
     }
 
-    return BdkAccountAdapter.load(id, ChangeSet.from_json(walletData));
+    return BdkAccountAdapter.load(
+      id,
+      account.derivationPath,
+      ChangeSet.from_json(account.wallet),
+    );
   }
 
-  async fetchInscriptions(id: string): Promise<Inscription[] | null> {
-    const state = await this.#snapClient.get();
-    const inscriptions = state.accounts.inscriptions[id];
-    if (!inscriptions) {
+  async getAll(): Promise<BitcoinAccount[]> {
+    const accounts = (await this.#snapClient.getState('accounts')) as
+      | SnapState['accounts']
+      | null;
+    if (!accounts) {
+      return [];
+    }
+
+    return Object.entries(accounts).map(([id, account]) =>
+      BdkAccountAdapter.load(
+        id,
+        account.derivationPath,
+        ChangeSet.from_json(account.wallet),
+      ),
+    );
+  }
+
+  async getByDerivationPath(
+    derivationPath: string[],
+  ): Promise<BitcoinAccount | null> {
+    const id = await this.#snapClient.getState(
+      `derivationPaths.${derivationPath.join('/')}`,
+    );
+    if (!id) {
       return null;
     }
 
-    return inscriptions;
+    return this.get(id as string);
   }
 
   async getWithSigner(id: string): Promise<BitcoinAccount | null> {
-    const state = await this.#snapClient.get();
-    const walletData = state.accounts.wallets[id];
-    if (!walletData) {
+    const accountState = (await this.#snapClient.getState(
+      `accounts.${id}`,
+    )) as AccountState | null;
+    if (!accountState) {
       return null;
     }
-    const account = BdkAccountAdapter.load(id, ChangeSet.from_json(walletData));
 
-    const derivationPath = Object.entries(state.accounts.derivationPaths).find(
-      ([, walletId]) => walletId === id,
-    );
+    const { derivationPath, wallet } = accountState;
 
-    // Should never occur by assertion. It is a critical inconsistent state error that should be caught in integration tests
-    if (!derivationPath) {
-      throw new Error(
-        `Inconsistent state. No derivation path found for account ${id}`,
-      );
-    }
-
-    const slip10 = await this.#snapClient.getPrivateEntropy(
-      derivationPath[0].split('/'),
-    );
+    const slip10 = await this.#snapClient.getPrivateEntropy(derivationPath);
     const fingerprint = (
       slip10.masterFingerprint ?? slip10.parentFingerprint
     ).toString(16);
-    const xpriv = slip10_to_extended(slip10, account.network);
-    const descriptors = xpriv_to_descriptor(
-      xpriv,
+
+    const account = BdkAccountAdapter.load(
+      id,
+      derivationPath,
+      ChangeSet.from_json(wallet),
+    );
+
+    const privDescriptors = xpriv_to_descriptor(
+      slip10_to_extended(slip10, account.network),
       fingerprint,
       account.network,
       account.addressType,
@@ -80,40 +102,13 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
 
     return BdkAccountAdapter.load(
       id,
-      ChangeSet.from_json(walletData),
-      descriptors,
+      derivationPath,
+      ChangeSet.from_json(wallet),
+      privDescriptors,
     );
   }
 
-  async getAll(): Promise<BitcoinAccount[]> {
-    const state = await this.#snapClient.get();
-    const walletsData = state.accounts.wallets;
-
-    return Object.entries(walletsData).map(([id, walletData]) =>
-      BdkAccountAdapter.load(id, ChangeSet.from_json(walletData)),
-    );
-  }
-
-  async getByDerivationPath(
-    derivationPath: string[],
-  ): Promise<BitcoinAccount | null> {
-    const derivationPathId = derivationPath.join('/');
-    const state = await this.#snapClient.get();
-
-    const id = state.accounts.derivationPaths[derivationPathId];
-    if (!id) {
-      return null;
-    }
-
-    const walletData = state.accounts.wallets[id];
-    if (!walletData) {
-      return null;
-    }
-
-    return BdkAccountAdapter.load(id, ChangeSet.from_json(walletData));
-  }
-
-  async insert(
+  async create(
     derivationPath: string[],
     network: Network,
     addressType: AddressType,
@@ -132,13 +127,30 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
       addressType,
     );
 
-    const account = BdkAccountAdapter.create(id, descriptors, network);
+    return BdkAccountAdapter.create(id, derivationPath, descriptors, network);
+  }
 
-    const state = await this.#snapClient.get();
-    state.accounts.derivationPaths[derivationPath.join('/')] = id;
-    state.accounts.wallets[id] = account.takeStaged()?.to_json() ?? '';
-    state.accounts.inscriptions[id] = [];
-    await this.#snapClient.set(state);
+  async insert(account: BitcoinAccount): Promise<BitcoinAccount> {
+    const { id, derivationPath } = account;
+
+    const walletData = account.takeStaged();
+    if (!walletData) {
+      throw new Error(
+        `Missing changeset data for account "${id}" for insertion.`,
+      );
+    }
+
+    await Promise.all([
+      this.#snapClient.setState(
+        `derivationPaths.${derivationPath.join('/')}`,
+        id,
+      ),
+      this.#snapClient.setState(`accounts.${id}`, {
+        wallet: walletData.to_json(),
+        inscriptions: [],
+        derivationPath,
+      }),
+    ]);
 
     return account;
   }
@@ -147,57 +159,72 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     account: BitcoinAccount,
     inscriptions?: Inscription[],
   ): Promise<void> {
+    const { id } = account;
+
     const newWalletData = account.takeStaged();
     if (!newWalletData) {
       // Nothing to update
       return;
     }
 
-    const state = await this.#snapClient.get();
-    const walletData = state.accounts.wallets[account.id];
+    const walletData = await this.#snapClient.getState(`accounts.${id}.wallet`);
     if (!walletData) {
-      throw new Error('Inconsistent state: account not found for update');
+      throw new Error(
+        `Inconsistent state: account "${id}" not found for update`,
+      );
     }
 
-    newWalletData.merge(ChangeSet.from_json(walletData));
-    state.accounts.wallets[account.id] = newWalletData.to_json();
+    newWalletData.merge(ChangeSet.from_json(walletData as string));
+    await this.#snapClient.setState(
+      `accounts.${id}.wallet`,
+      newWalletData.to_json(),
+    );
+
+    // Inscriptions are overwritten and not merged
     if (inscriptions) {
-      state.accounts.inscriptions[account.id] = inscriptions;
+      await this.#snapClient.setState(
+        `accounts.${id}.inscriptions`,
+        inscriptions,
+      );
     }
-    await this.#snapClient.set(state);
   }
 
   async delete(id: string): Promise<void> {
-    const state = await this.#snapClient.get();
-    const walletData = state.accounts.wallets[id];
-    if (!walletData) {
+    const accountState = (await this.#snapClient.getState(
+      `accounts.${id}`,
+    )) as AccountState | null;
+    if (!accountState) {
       return;
     }
 
-    delete state.accounts.wallets[id];
-    delete state.accounts.inscriptions[id];
+    await Promise.all([
+      this.#snapClient.removeState(`accounts.${id}`),
+      this.#snapClient.removeState(
+        `derivationPaths.${accountState.derivationPath.join('/')}`,
+      ),
+    ]);
+  }
 
-    // Find the path in derivationPaths that points to this id and remove it
-    for (const [path, existingId] of Object.entries(
-      state.accounts.derivationPaths,
-    )) {
-      if (existingId === id) {
-        delete state.accounts.derivationPaths[path];
-        break;
-      }
+  async fetchInscriptions(id: string): Promise<Inscription[] | null> {
+    const inscriptions = await this.#snapClient.getState(
+      `accounts.${id}.inscriptions`,
+    );
+    if (!inscriptions) {
+      return null;
     }
 
-    await this.#snapClient.set(state);
+    return inscriptions as Inscription[];
   }
 
   async getFrozenUTXOs(id: string): Promise<string[]> {
-    const state = await this.#snapClient.get();
-    const inscriptions = state.accounts.inscriptions[id];
+    const inscriptions = await this.#snapClient.getState(
+      `accounts.${id}.inscriptions`,
+    );
     if (!inscriptions) {
       return [];
     }
 
-    return inscriptions.map((inscription) => {
+    return (inscriptions as AccountState['inscriptions']).map((inscription) => {
       // format: <txid>:<vout>:<offset>
       const [txid, vout] = inscription.location.split(':');
       return `${txid}:${vout}`;

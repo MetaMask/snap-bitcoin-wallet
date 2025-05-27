@@ -10,11 +10,19 @@ import type { BitcoinAccount } from './account';
 import type { Inscription } from './meta-protocols';
 
 export type SnapState = {
-  accounts: {
-    derivationPaths: Record<string, string>;
-    wallets: Record<string, string>;
-    inscriptions: Record<string, Inscription[]>;
-  };
+  // accountId -> account state. This is the main state of the snap.
+  accounts: Record<string, AccountState>;
+  // derivationPath -> accountId. Only needed for fast lookup.
+  derivationPaths: Record<string, string>;
+};
+
+export type AccountState = {
+  // Split derivation path.
+  derivationPath: string[];
+  // Wallet data.
+  wallet: string;
+  // Wallet inscriptions for meta protocols (ordinals, etc.)
+  inscriptions: Inscription[];
 };
 
 /**
@@ -22,18 +30,27 @@ export type SnapState = {
  */
 export type SnapClient = {
   /**
-   * Get the Snap state.
+   * Get the Snap state for a given key.
    *
+   * @param key - The key to get the state for.
    * @returns The Snap state.
    */
-  get(): Promise<SnapState>;
+  getState(key: string): Promise<Json | null>;
 
   /**
-   * Set the Snap state.
+   * Set the Snap state for a given key.
    *
+   * @param key - The key to set the state for.
    * @param newState - The new state.
    */
-  set(newState: SnapState): Promise<void>;
+  setState(key: string, newState: Json | null): Promise<void>;
+
+  /**
+   * Set the Snap state for a given key to null, effectively removing it.
+   *
+   * @param key - The key to set the state for.
+   */
+  removeState(key: string): Promise<void>;
 
   /**
    * Get the private SLIP10 for a given derivation path from the Snap SRP.
