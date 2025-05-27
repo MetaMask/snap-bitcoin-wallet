@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0]
+
+### Added
+
+- Discover accounts ([#464](https://github.com/MetaMask/snap-bitcoin-wallet/pull/464), [#460](https://github.com/MetaMask/snap-bitcoin-wallet/pull/460))
+- Use address types from `keyring-api` ([#461](https://github.com/MetaMask/snap-bitcoin-wallet/pull/461))
+
+### Changed
+
+- Development environment cleanup ([#459](https://github.com/MetaMask/snap-bitcoin-wallet/pull/459))
+- Use `setState` and `getState` instead of `manageState` ([#463](https://github.com/MetaMask/snap-bitcoin-wallet/pull/463))
+
 ## [0.13.0]
 
 ### Added
@@ -330,7 +342,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add CI for lint and test ([#2](https://github.com/MetaMask/bitcoin/pull/2))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.12.1...v0.13.0
 [0.12.1]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.11.0...v0.12.0
