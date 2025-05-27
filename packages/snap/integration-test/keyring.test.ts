@@ -9,7 +9,6 @@ import {
   ORIGIN,
   TEST_ADDRESS_REGTEST,
   TEST_ADDRESS_MAINNET,
-  TEST_ADDRESS_TESTNET,
 } from './constants';
 import { CurrencyUnit } from '../src/entities';
 import { Caip19Asset } from '../src/handlers/caip';

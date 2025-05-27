@@ -9,8 +9,6 @@ export const TEST_ADDRESS_REGTEST =
   'bcrt1qjtgffm20l9vu6a7gacxvpu2ej4kdcsgcgnly6t';
 export const TEST_ADDRESS_MAINNET =
   'bc1q832zlt4tgnqy88vd20mazw77dlt0j0wf2naw8q';
-export const TEST_ADDRESS_TESTNET =
-  'tb1qjtgffm20l9vu6a7gacxvpu2ej4kdcsgc26xfdz';
 export const ORIGIN = 'metamask';
 export const FUNDING_TX = {
   account: expect.any(Number),
