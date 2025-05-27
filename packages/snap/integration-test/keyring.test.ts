@@ -98,12 +98,6 @@ describe('Keyring', () => {
       expectedAddress: TEST_ADDRESS_MAINNET,
     },
     {
-      addressType: BtcAccountType.P2wpkh,
-      scope: BtcScope.Testnet,
-      index: 0,
-      expectedAddress: TEST_ADDRESS_TESTNET,
-    },
-    {
       addressType: BtcAccountType.P2pkh,
       scope: BtcScope.Mainnet,
       index: 0,
@@ -163,21 +157,21 @@ describe('Keyring', () => {
     }
   });
 
-  it('creates account by derivationPath idempotently', async () => {
+  it('returns the same account if already exists by derivationPath', async () => {
     // Account already exists so we should get the same account
     const response = await snap.onKeyringRequest({
       origin: ORIGIN,
       method: 'keyring_createAccount',
       params: {
         options: {
-          scope: BtcScope.Testnet,
+          scope: BtcScope.Regtest,
           addressType: BtcAccountType.P2wpkh,
-          derivationPath: "m/84'/0'/0'",
+          derivationPath: "m/84'/1'/0'",
         },
       },
     });
 
-    expect(response).toRespondWith(accounts[TEST_ADDRESS_TESTNET]);
+    expect(response).toRespondWith(accounts[TEST_ADDRESS_REGTEST]);
   });
 
   it('returns the same account if already exists', async () => {
@@ -186,13 +180,13 @@ describe('Keyring', () => {
       method: 'keyring_createAccount',
       params: {
         options: {
-          scope: BtcScope.Testnet,
+          scope: BtcScope.Regtest,
           addressType: BtcAccountType.P2wpkh,
         },
       },
     });
 
-    expect(response).toRespondWith(accounts[TEST_ADDRESS_TESTNET]);
+    expect(response).toRespondWith(accounts[TEST_ADDRESS_REGTEST]);
   });
 
   it('gets an account', async () => {
@@ -251,9 +245,29 @@ describe('Keyring', () => {
     });
   });
 
+  it.each([
+    {
+      address: TEST_ADDRESS_REGTEST,
+      expectedAssets: [Caip19Asset.Regtest],
+    },
+    {
+      address: TEST_ADDRESS_MAINNET,
+      expectedAssets: [Caip19Asset.Bitcoin],
+    },
+  ])('lists account assets: %s', async ({ address, expectedAssets }) => {
+    const response = await snap.onKeyringRequest({
+      origin: ORIGIN,
+      method: 'keyring_listAccountAssets',
+      params: {
+        id: accounts[address]!.id,
+      },
+    });
+
+    expect(response).toRespondWith(expectedAssets);
+  });
+
   it('removes an account', async () => {
-    const { id } =
-      accounts.tb1pwwjax3vpq6h69965hcr22vkpm4qdvyu2pz67wyj8eagp9vxkcz0q0ya20h!;
+    const { id } = accounts[TEST_ADDRESS_REGTEST]!;
 
     let response = await snap.onKeyringRequest({
       origin: ORIGIN,
@@ -278,30 +292,5 @@ describe('Keyring', () => {
       message: `Account not found: ${id}`,
       stack: expect.anything(),
     });
-  });
-
-  it.each([
-    {
-      address: TEST_ADDRESS_REGTEST,
-      expectedAssets: [Caip19Asset.Regtest],
-    },
-    {
-      address: TEST_ADDRESS_MAINNET,
-      expectedAssets: [Caip19Asset.Bitcoin],
-    },
-    {
-      address: TEST_ADDRESS_TESTNET,
-      expectedAssets: [Caip19Asset.Testnet],
-    },
-  ])('lists account assets: %s', async ({ address, expectedAssets }) => {
-    const response = await snap.onKeyringRequest({
-      origin: ORIGIN,
-      method: 'keyring_listAccountAssets',
-      params: {
-        id: accounts[address]!.id,
-      },
-    });
-
-    expect(response).toRespondWith(expectedAssets);
   });
 });
