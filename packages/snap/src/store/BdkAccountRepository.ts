@@ -140,15 +140,17 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
       );
     }
 
-    await this.#snapClient.setState(
-      `derivationPaths.${derivationPath.join('/')}`,
-      id,
-    );
-    await this.#snapClient.setState(`accounts.${id}`, {
-      wallet: walletData.to_json(),
-      inscriptions: [],
-      derivationPath,
-    });
+    await Promise.all([
+      this.#snapClient.setState(
+        `derivationPaths.${derivationPath.join('/')}`,
+        id,
+      ),
+      this.#snapClient.setState(`accounts.${id}`, {
+        wallet: walletData.to_json(),
+        inscriptions: [],
+        derivationPath,
+      }),
+    ]);
 
     return account;
   }
@@ -195,11 +197,12 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
       return;
     }
 
-    await this.#snapClient.setState(`accounts.${id}`, null);
-    await this.#snapClient.setState(
-      `derivationPaths.${accountState.derivationPath.join('/')}`,
-      null,
-    );
+    await Promise.all([
+      this.#snapClient.removeState(`accounts.${id}`),
+      this.#snapClient.removeState(
+        `derivationPaths.${accountState.derivationPath.join('/')}`,
+      ),
+    ]);
   }
 
   async fetchInscriptions(id: string): Promise<Inscription[] | null> {

@@ -281,7 +281,7 @@ describe('BdkAccountRepository', () => {
 
       await repo.delete('non-existent-id');
 
-      expect(mockSnapClient.setState).not.toHaveBeenCalled();
+      expect(mockSnapClient.removeState).not.toHaveBeenCalled();
     });
 
     it('removes wallet data from store', async () => {
@@ -289,14 +289,12 @@ describe('BdkAccountRepository', () => {
 
       await repo.delete('some-id');
 
-      expect(mockSnapClient.setState).toHaveBeenNthCalledWith(
+      expect(mockSnapClient.removeState).toHaveBeenNthCalledWith(
         1,
         'accounts.some-id',
-        null,
       );
-      expect(mockSnapClient.setState).toHaveBeenLastCalledWith(
+      expect(mockSnapClient.removeState).toHaveBeenLastCalledWith(
         "derivationPaths.m/84'/0'/0'",
-        null,
       );
     });
   });
