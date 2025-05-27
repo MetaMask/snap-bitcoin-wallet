@@ -46,6 +46,13 @@ export type SnapClient = {
   setState(key: string, newState: Json | null): Promise<void>;
 
   /**
+   * Set the Snap state for a given key to null, effectively removing it.
+   *
+   * @param key - The key to set the state for.
+   */
+  removeState(key: string): Promise<void>;
+
+  /**
    * Get the private SLIP10 for a given derivation path from the Snap SRP.
    *
    * @param derivationPath - The derivation path.
