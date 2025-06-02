@@ -82,6 +82,7 @@ describe('KeyringHandler', () => {
         metamask: {
           correlationId,
         },
+        accountNameSuggestion: 'My account',
       };
       const expectedCreateParams: CreateAccountParams = {
         network: scopeToNetwork[BtcScope.Signet],
@@ -90,6 +91,7 @@ describe('KeyringHandler', () => {
         addressType: 'p2pkh',
         synchronize: false,
         correlationId,
+        accountName: 'My account',
       };
 
       await handler.createAccount(options);

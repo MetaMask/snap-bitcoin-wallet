@@ -15,6 +15,7 @@ import type {
   BitcoinAccount,
   Inscription,
   SnapClient,
+  SnapState,
 } from '../entities';
 import { BdkAccountAdapter } from '../infra';
 import { BdkAccountRepository } from './BdkAccountRepository';
@@ -120,8 +121,8 @@ describe('BdkAccountRepository', () => {
       const id1 = 'some-id-1';
       const id2 = 'some-id-2';
       const state = {
-        id1: { ...mockAccountState, id: id1 },
-        id2: { ...mockAccountState, id: id2 },
+        [id1]: { ...mockAccountState, id: id1 },
+        [id2]: { ...mockAccountState, id: id2 },
       };
       const mockAccount1 = { ...mockAccount, id: id1 };
       const mockAccount2 = { ...mockAccount, id: id2 };
@@ -281,21 +282,34 @@ describe('BdkAccountRepository', () => {
 
       await repo.delete('non-existent-id');
 
-      expect(mockSnapClient.removeState).not.toHaveBeenCalled();
+      expect(mockSnapClient.setState).not.toHaveBeenCalled();
     });
 
     it('removes wallet data from store', async () => {
-      mockSnapClient.getState.mockResolvedValue(mockAccountState);
+      const mockState: SnapState = {
+        accounts: {
+          'some-id-1': { ...mockAccountState, derivationPath: ["m/84'/0'/0'"] },
+          'some-id-2': { ...mockAccountState, derivationPath: ["m/86'/0'/0'"] },
+        },
+        derivationPaths: {
+          "m/84'/0'/0'": 'some-id-1',
+          "m/86'/0'/0'": 'some-id-2',
+        },
+      };
+      const expectedState = {
+        accounts: {
+          'some-id-2': { ...mockAccountState, derivationPath: ["m/86'/0'/0'"] },
+        },
+        derivationPaths: {
+          "m/86'/0'/0'": 'some-id-2',
+        },
+      };
 
-      await repo.delete('some-id');
+      mockSnapClient.getState.mockResolvedValue(mockState);
 
-      expect(mockSnapClient.removeState).toHaveBeenNthCalledWith(
-        1,
-        'accounts.some-id',
-      );
-      expect(mockSnapClient.removeState).toHaveBeenLastCalledWith(
-        "derivationPaths.m/84'/0'/0'",
-      );
+      await repo.delete('some-id-1');
+
+      expect(mockSnapClient.setState).toHaveBeenCalledWith('', expectedState);
     });
   });
 

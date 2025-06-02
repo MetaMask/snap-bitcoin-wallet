@@ -102,6 +102,7 @@ export class KeyringHandler implements Keyring {
       derivationPath,
       addressType,
       synchronize = false,
+      accountNameSuggestion,
     } = options;
 
     const resolvedIndex = derivationPath
@@ -122,6 +123,7 @@ export class KeyringHandler implements Keyring {
       addressType: resolvedAddressType ?? this.#defaultAddressType,
       correlationId: metamask?.correlationId,
       synchronize,
+      accountName: accountNameSuggestion,
     });
 
     return mapToKeyringAccount(account);

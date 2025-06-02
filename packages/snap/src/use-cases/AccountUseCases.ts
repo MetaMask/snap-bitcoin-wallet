@@ -28,6 +28,7 @@ export type DiscoverAccountParams = {
 export type CreateAccountParams = DiscoverAccountParams & {
   synchronize: boolean;
   correlationId?: string;
+  accountName?: string;
 };
 
 export class AccountUseCases {
@@ -113,7 +114,15 @@ export class AccountUseCases {
   async create(req: CreateAccountParams): Promise<BitcoinAccount> {
     this.#logger.debug('Creating new Bitcoin account. Request: %o', req);
 
-    const { addressType, index, network, entropySource } = req;
+    const {
+      addressType,
+      index,
+      network,
+      entropySource,
+      correlationId,
+      accountName,
+      synchronize,
+    } = req;
 
     const derivationPath = [
       entropySource,
@@ -126,6 +135,12 @@ export class AccountUseCases {
     const account = await this.#repository.getByDerivationPath(derivationPath);
     if (account && account.network === network) {
       this.#logger.debug('Account already exists: %s,', account.id);
+      await this.#snapClient.emitAccountCreatedEvent(
+        account,
+        correlationId,
+        accountName,
+      );
+
       return account;
     }
 
@@ -140,10 +155,11 @@ export class AccountUseCases {
     // First notify the event has been created, then full scan.
     await this.#snapClient.emitAccountCreatedEvent(
       newAccount,
-      req.correlationId,
+      correlationId,
+      accountName,
     );
 
-    if (req.synchronize) {
+    if (synchronize) {
       await this.fullScan(newAccount);
     }
 
