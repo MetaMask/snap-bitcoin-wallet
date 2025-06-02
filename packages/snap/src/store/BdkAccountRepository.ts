@@ -190,20 +190,15 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
   }
 
   async delete(id: string): Promise<void> {
-    const accounts = (await this.#snapClient.getState('accounts')) as
-      | SnapState['accounts']
-      | null;
-    if (!accounts?.[id]) {
+    const state = (await this.#snapClient.getState('')) as SnapState | null;
+    if (!state?.accounts[id]) {
       return;
     }
 
-    const derivationPath = accounts[id].derivationPath.join('/');
-    delete accounts[id];
+    delete state.derivationPaths[state.accounts[id].derivationPath.join('/')];
+    delete state.accounts[id];
 
-    await Promise.all([
-      this.#snapClient.setState('accounts', accounts),
-      this.#snapClient.removeState(`derivationPaths.${derivationPath}`),
-    ]);
+    await this.#snapClient.setState('', state);
   }
 
   async fetchInscriptions(id: string): Promise<Inscription[] | null> {

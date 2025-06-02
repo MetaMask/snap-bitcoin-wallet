@@ -44,10 +44,6 @@ export class SnapClientAdapter implements SnapClient {
     });
   }
 
-  async removeState(key: string): Promise<void> {
-    await this.setState(key, null);
-  }
-
   async getPrivateEntropy(derivationPath: string[]): Promise<JsonSLIP10Node> {
     const source = derivationPath[0] === 'm' ? undefined : derivationPath[0];
     const path = ['m', ...derivationPath.slice(1)];

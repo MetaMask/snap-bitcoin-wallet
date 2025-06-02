@@ -32,7 +32,7 @@ export type SnapClient = {
   /**
    * Get the Snap state for a given key.
    *
-   * @param key - The key to get the state for.
+   * @param key - The key to get the state for. Empty for the root.
    * @returns The Snap state.
    */
   getState(key: string): Promise<Json | null>;
@@ -40,17 +40,10 @@ export type SnapClient = {
   /**
    * Set the Snap state for a given key.
    *
-   * @param key - The key to set the state for.
+   * @param key - The key to set the state for. Empty for the root.
    * @param newState - The new state.
    */
   setState(key: string, newState: Json | null): Promise<void>;
-
-  /**
-   * Set the Snap state for a given key to null, effectively removing it.
-   *
-   * @param key - The key to set the state for.
-   */
-  removeState(key: string): Promise<void>;
 
   /**
    * Get the private SLIP10 for a given derivation path from the Snap SRP.
