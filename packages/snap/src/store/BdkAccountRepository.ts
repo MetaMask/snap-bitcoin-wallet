@@ -194,7 +194,6 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
       | SnapState['accounts']
       | null;
     if (!accounts?.[id]) {
-      console.log(accounts);
       return;
     }
 
