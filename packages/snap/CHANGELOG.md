@@ -9,9 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.14.1]
 
-### Uncategorized
+### Fixed
 
-- fix: account name passthrough ([#466](https://github.com/MetaMask/snap-bitcoin-wallet/pull/466))
+- Account name passthrough ([#466](https://github.com/MetaMask/snap-bitcoin-wallet/pull/466))
+- Prevent account deletion key residues ([#466](https://github.com/MetaMask/snap-bitcoin-wallet/pull/466))
 
 ## [0.14.0]
 
