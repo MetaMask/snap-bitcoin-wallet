@@ -44,22 +44,6 @@ type TransactionEvent = {
   timestamp: number | null;
 };
 
-export const addressTypeToName: Record<AddressType, string> = {
-  p2pkh: 'Legacy',
-  p2sh: 'Nested SegWit',
-  p2wpkh: 'Native SegWit',
-  p2tr: 'Taproot',
-  p2wsh: 'Multisig',
-};
-
-export const networkToName: Record<Network, string> = {
-  bitcoin: 'Bitcoin',
-  testnet: 'Bitcoin Testnet',
-  testnet4: 'Bitcoin Testnet4',
-  signet: 'Bitcoin Signet',
-  regtest: 'Bitcoin Regtest',
-};
-
 /**
  * Maps a Bitcoin Account to a Keyring Account.
  *

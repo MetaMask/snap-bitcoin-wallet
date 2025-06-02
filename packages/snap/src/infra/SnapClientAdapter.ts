@@ -14,12 +14,7 @@ import type {
 import type { BitcoinAccount, SnapClient } from '../entities';
 import { networkToCurrencyUnit } from '../entities';
 import { networkToCaip19 } from '../handlers';
-import {
-  mapToKeyringAccount,
-  mapToTransaction,
-  addressTypeToName,
-  networkToName,
-} from '../handlers/mappings';
+import { mapToKeyringAccount, mapToTransaction } from '../handlers/mappings';
 
 export class SnapClientAdapter implements SnapClient {
   readonly #encrypt: boolean;
@@ -75,12 +70,11 @@ export class SnapClientAdapter implements SnapClient {
   async emitAccountCreatedEvent(
     account: BitcoinAccount,
     correlationId?: string,
+    accountName?: string,
   ): Promise<void> {
     return emitSnapKeyringEvent(snap, KeyringEvent.AccountCreated, {
       account: mapToKeyringAccount(account),
-      accountNameSuggestion: `${networkToName[account.network]} ${
-        addressTypeToName[account.addressType]
-      }`,
+      accountNameSuggestion: accountName,
       displayConfirmation: false,
       displayAccountNameSuggestion: false,
       ...(correlationId ? { metamask: { correlationId } } : {}),

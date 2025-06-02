@@ -77,6 +77,7 @@ export type SnapClient = {
   emitAccountCreatedEvent(
     account: BitcoinAccount,
     correlationId?: string,
+    accountName?: string,
   ): Promise<void>;
 
   /**

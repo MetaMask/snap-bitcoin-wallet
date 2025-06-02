@@ -58,9 +58,8 @@ describe('Keyring', () => {
       method: 'keyring_createAccount',
       params: {
         options: {
-          addressType: BtcAccountType.P2wpkh,
+          derivationPath: "m/84'/1'/0'",
           scope: BtcScope.Regtest,
-          index: 0,
           synchronize: true,
         },
       },
