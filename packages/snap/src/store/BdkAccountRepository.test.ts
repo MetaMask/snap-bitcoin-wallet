@@ -120,8 +120,8 @@ describe('BdkAccountRepository', () => {
       const id1 = 'some-id-1';
       const id2 = 'some-id-2';
       const state = {
-        id1: { ...mockAccountState, id: id1 },
-        id2: { ...mockAccountState, id: id2 },
+        [id1]: { ...mockAccountState, id: id1 },
+        [id2]: { ...mockAccountState, id: id2 },
       };
       const mockAccount1 = { ...mockAccount, id: id1 };
       const mockAccount2 = { ...mockAccount, id: id2 };
@@ -285,15 +285,25 @@ describe('BdkAccountRepository', () => {
     });
 
     it('removes wallet data from store', async () => {
-      mockSnapClient.getState.mockResolvedValue(mockAccountState);
+      const id1 = 'some-id-1';
+      const id2 = 'some-id-2';
+      const mockState = {
+        [id1]: { ...mockAccountState, id: id1 },
+        [id2]: { ...mockAccountState, id: id2 },
+      };
+      const expectedState = {
+        [id2]: { ...mockAccountState, id: id2 },
+      };
 
-      await repo.delete('some-id');
+      mockSnapClient.getState.mockResolvedValue(mockState);
 
-      expect(mockSnapClient.removeState).toHaveBeenNthCalledWith(
-        1,
-        'accounts.some-id',
+      await repo.delete('some-id-1');
+
+      expect(mockSnapClient.setState).toHaveBeenCalledWith(
+        'accounts',
+        expectedState,
       );
-      expect(mockSnapClient.removeState).toHaveBeenLastCalledWith(
+      expect(mockSnapClient.removeState).toHaveBeenCalledWith(
         "derivationPaths.m/84'/0'/0'",
       );
     });

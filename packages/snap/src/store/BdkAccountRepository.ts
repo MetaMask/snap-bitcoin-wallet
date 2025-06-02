@@ -193,7 +193,8 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     const accounts = (await this.#snapClient.getState('accounts')) as
       | SnapState['accounts']
       | null;
-    if (!accounts || !accounts[id]) {
+    if (!accounts?.[id]) {
+      console.log(accounts);
       return;
     }
 

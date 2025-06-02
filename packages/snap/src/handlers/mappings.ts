@@ -1,6 +1,5 @@
 import { Address } from '@metamask/bitcoindevkit';
 import type {
-  AddressType,
   Amount,
   Network,
   TxOut,

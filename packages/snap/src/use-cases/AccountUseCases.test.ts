@@ -104,6 +104,7 @@ describe('AccountUseCases', () => {
       addressType: 'p2wpkh',
       synchronize: false,
       correlationId: 'correlation-id',
+      accountName: 'My account',
     };
     const mockAccount = mock<BitcoinAccount>({ network: createParams.network });
 
@@ -145,6 +146,7 @@ describe('AccountUseCases', () => {
         expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalledWith(
           mockAccount,
           createParams.correlationId,
+          createParams.accountName,
         );
         expect(mockChain.fullScan).toHaveBeenCalledWith(mockAccount);
       },
@@ -184,6 +186,7 @@ describe('AccountUseCases', () => {
         expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalledWith(
           mockAccount,
           createParams.correlationId,
+          createParams.accountName,
         );
         expect(mockChain.fullScan).toHaveBeenCalledWith(mockAccount);
       },
