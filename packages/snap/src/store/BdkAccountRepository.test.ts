@@ -309,7 +309,11 @@ describe('BdkAccountRepository', () => {
 
       await repo.delete('some-id-1');
 
-      expect(mockSnapClient.setState).toHaveBeenCalledWith('', expectedState);
+      expect(mockSnapClient.getState).toHaveBeenCalledWith(undefined);
+      expect(mockSnapClient.setState).toHaveBeenCalledWith(
+        undefined,
+        expectedState,
+      );
     });
   });
 
