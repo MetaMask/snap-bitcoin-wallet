@@ -178,12 +178,7 @@ export class KeyringHandler implements Keyring {
   }
 
   async deleteAccount(id: string): Promise<void> {
-    try {
-      await this.#accountsUseCases.delete(id);
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
+    await this.#accountsUseCases.delete(id);
   }
 
   async listAccountAssets(id: string): Promise<CaipAssetTypeOrId[]> {
