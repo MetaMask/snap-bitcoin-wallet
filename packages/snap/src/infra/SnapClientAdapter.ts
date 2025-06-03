@@ -23,7 +23,7 @@ export class SnapClientAdapter implements SnapClient {
     this.#encrypt = encrypt;
   }
 
-  async getState(key: string): Promise<Json | null> {
+  async getState(key?: string): Promise<Json | null> {
     return snap.request({
       method: 'snap_getState',
       params: {
@@ -33,7 +33,7 @@ export class SnapClientAdapter implements SnapClient {
     });
   }
 
-  async setState(key: string, newState: Json | null): Promise<void> {
+  async setState(key?: string, newState: Json = {}): Promise<void> {
     await snap.request({
       method: 'snap_setState',
       params: {

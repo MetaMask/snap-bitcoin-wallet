@@ -2,6 +2,12 @@
 
 set -e  
 
+cleanup() {
+  echo "Stopping Docker services..."
+  docker-compose -f integration-test/docker-compose.yml down
+}
+trap cleanup EXIT
+
 echo "Starting Docker services..."
 docker-compose -f integration-test/docker-compose.yml up -d
 
@@ -25,6 +31,6 @@ docker exec esplora bash /init-esplora.sh
 echo "Running integration tests..."
 set +e
 jest --config jest.integration.config.js
-
-echo "Stopping Docker services..."
-docker-compose -f integration-test/docker-compose.yml down
+TEST_EXIT_CODE=$?
+set -e
+exit $TEST_EXIT_CODE
