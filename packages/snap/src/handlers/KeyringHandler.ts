@@ -114,6 +114,8 @@ export class KeyringHandler implements Keyring {
       resolvedAddressType = caipToAddressType[addressType];
     } else if (derivationPath) {
       resolvedAddressType = this.#extractAddressType(derivationPath);
+    } else {
+      resolvedAddressType = this.#defaultAddressType;
     }
 
     if (resolvedIndex === undefined) {
@@ -124,9 +126,12 @@ export class KeyringHandler implements Keyring {
           acc.addressType === resolvedAddressType,
       );
 
-      resolvedIndex =
-        accounts.sort((a, b) => a.accountIndex - b.accountIndex)[0]
-          ?.accountIndex ?? 0;
+      if (accounts.length > 0) {
+        const sortedAccounts = accounts.sort(
+          (a, b) => b.accountIndex - a.accountIndex,
+        );
+        resolvedIndex = sortedAccounts[0]!.accountIndex + 1;
+      }
 
       console.log('accounts sorted', accounts);
     }
@@ -134,8 +139,8 @@ export class KeyringHandler implements Keyring {
     const account = await this.#accountsUseCases.create({
       network: scopeToNetwork[scope],
       entropySource,
-      index: resolvedIndex,
-      addressType: resolvedAddressType ?? this.#defaultAddressType,
+      index: resolvedIndex ?? 0,
+      addressType: resolvedAddressType,
       correlationId: metamask?.correlationId,
       synchronize,
       accountName: accountNameSuggestion,

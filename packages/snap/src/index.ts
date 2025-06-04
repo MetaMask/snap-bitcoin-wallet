@@ -1,3 +1,5 @@
+import './infra/fetch';
+
 import type {
   OnAssetsConversionHandler,
   OnAssetsLookupHandler,

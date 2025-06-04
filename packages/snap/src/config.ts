@@ -8,8 +8,8 @@ export const Config: SnapConfig = {
   logLevel: (process.env.LOG_LEVEL ?? LogLevel.INFO) as LogLevel,
   encrypt: false,
   chain: {
-    parallelRequests: 1,
-    stopGap: 2,
+    parallelRequests: 2,
+    stopGap: 5,
     url: {
       bitcoin: process.env.ESPLORA_BITCOIN ?? 'https://blockstream.info/api',
       testnet:
