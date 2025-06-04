@@ -33,6 +33,11 @@ export type BitcoinAccount = {
   derivationPath: string[];
 
   /**
+   * BIP44 Account index.
+   */
+  accountIndex: number;
+
+  /**
    * The balance of the account.
    */
   balance: Balance;
