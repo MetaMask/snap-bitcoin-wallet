@@ -5,15 +5,14 @@ import {
   Button,
   Container,
   Footer,
-  Row,
   Text as SnapText,
 } from '@metamask/snaps-sdk/jsx';
+import { isNullOrUndefined } from '@metamask/utils';
 
 import { HeadingWithReturn, SendForm } from './components';
 import { translate } from './format';
 import type { Messages, SendFormContext } from '../../entities';
 import { SendFormEvent } from '../../entities';
-import { isNullOrUndefined } from '@metamask/utils';
 
 export type SendFormViewProps = {
   context: SendFormContext;

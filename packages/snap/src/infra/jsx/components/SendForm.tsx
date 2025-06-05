@@ -10,12 +10,12 @@ import {
   Input,
   Text as SnapText,
 } from '@metamask/snaps-sdk/jsx';
+import type { CaipAccountId } from '@metamask/utils';
 
 import type { Messages, SendFormContext } from '../../../entities';
 import { SENDFORM_NAME, SendFormEvent } from '../../../entities';
-import { displayAmount, translate } from '../format';
 import { networkToCaip19, networkToScope } from '../../../handlers';
-import { CaipAccountId } from '@metamask/utils';
+import { displayAmount, translate } from '../format';
 
 type SendFormProps = SendFormContext & {
   messages: Messages;

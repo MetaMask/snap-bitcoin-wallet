@@ -191,6 +191,14 @@ export class SendFlowUseCases {
       case SendFormEvent.Amount: {
         return this.#handleSetAmount(id, context);
       }
+      case SendFormEvent.SetAccount: {
+        // TODO: Implement switching accounts
+        return undefined;
+      }
+      case SendFormEvent.SetAsset: {
+        // Do nothing as there are no other assets
+        return undefined;
+      }
       default:
         throw new Error('Unrecognized event');
     }
