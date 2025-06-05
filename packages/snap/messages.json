@@ -65,6 +65,9 @@
   "recipientPlaceholder": {
     "message": "Enter receiving address"
   },
+  "review": {
+    "message": "Review"
+  },
   "error": {
     "message": "Error"
   }

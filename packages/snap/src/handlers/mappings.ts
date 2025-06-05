@@ -55,7 +55,9 @@ export function mapToKeyringAccount(account: BitcoinAccount): KeyringAccount {
     scopes: [networkToScope[account.network]],
     id: account.id,
     address: account.peekAddress(0).address.toString(),
-    options: {},
+    options: {
+      entropySource: account.derivationPath[0] ?? null,
+    },
     methods: [BtcMethod.SendBitcoin],
   };
 }
