@@ -128,6 +128,16 @@ export class SendFlowUseCases {
 
         return this.#sendFlowRepository.updateForm(id, updatedContext);
       }
+      case SendFormEvent.ClearAmount: {
+        const updatedContext = { ...context };
+        delete updatedContext.amount;
+        delete updatedContext.errors.amount;
+        delete updatedContext.errors.tx;
+        delete updatedContext.fee;
+        delete updatedContext.drain;
+
+        return this.#sendFlowRepository.updateForm(id, updatedContext);
+      }
       case SendFormEvent.Confirm: {
         if (context.backgroundEventId) {
           await this.#snapClient.cancelBackgroundEvent(
