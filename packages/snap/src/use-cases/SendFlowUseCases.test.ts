@@ -339,7 +339,7 @@ describe('SendFlowUseCases', () => {
 
       await useCases.onChangeForm(
         'interface-id',
-        SendFormEvent.SetMax,
+        SendFormEvent.Max,
         testContext,
       );
       expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
@@ -446,7 +446,7 @@ describe('SendFlowUseCases', () => {
 
       await useCases.onChangeForm(
         'interface-id',
-        SendFormEvent.SetMax,
+        SendFormEvent.Max,
         mockContext,
       );
 

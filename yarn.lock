@@ -2710,7 +2710,7 @@ __metadata:
     "@metamask/keyring-snap-sdk": "npm:^4.0.0"
     "@metamask/slip44": "npm:^4.2.0"
     "@metamask/snaps-cli": "npm:^7.2.0"
-    "@metamask/snaps-jest": "npm:^8.16.0"
+    "@metamask/snaps-jest": "npm:8.15.0"
     "@metamask/snaps-sdk": "npm:^7.1.0"
     "@metamask/utils": "npm:^11.4.0"
     concurrently: "npm:^9.1.2"
@@ -3191,7 +3191,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/snaps-controllers@npm:^12.3.0":
+"@metamask/snaps-controllers@npm:^12.1.0, @metamask/snaps-controllers@npm:^12.3.0":
   version: 12.3.1
   resolution: "@metamask/snaps-controllers@npm:12.3.1"
   dependencies:
@@ -3250,23 +3250,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/snaps-jest@npm:^8.16.0":
-  version: 8.16.0
-  resolution: "@metamask/snaps-jest@npm:8.16.0"
+"@metamask/snaps-jest@npm:8.15.0":
+  version: 8.15.0
+  resolution: "@metamask/snaps-jest@npm:8.15.0"
   dependencies:
     "@jest/environment": "npm:^29.5.0"
     "@jest/expect": "npm:^29.5.0"
     "@jest/globals": "npm:^29.5.0"
-    "@metamask/snaps-controllers": "npm:^12.3.0"
-    "@metamask/snaps-sdk": "npm:^7.1.0"
-    "@metamask/snaps-simulation": "npm:^2.7.0"
+    "@metamask/snaps-controllers": "npm:^12.1.0"
+    "@metamask/snaps-sdk": "npm:^6.24.0"
+    "@metamask/snaps-simulation": "npm:^2.6.0"
     "@metamask/superstruct": "npm:^3.2.1"
     "@metamask/utils": "npm:^11.4.0"
     express: "npm:^5.1.0"
     jest-environment-node: "npm:^29.5.0"
     jest-matcher-utils: "npm:^29.5.0"
     redux: "npm:^4.2.1"
-  checksum: 10/4fca52bc9c6d7d033207cbe9efd1eb0fd91b3ed772eb7d869a0300afde542ddaf546b251cb965fabe92b403d31cf7ae68c78deb01bc8fde6b8f9ee2ea6164885
+  checksum: 10/205fc9e2dfd0433b70b56f471b9c6eca02463070de3e7290edc35dba691d0d444d3dfb9ea2c7e88c5692a5b1a3e8346587ae5dfe0d3400a2598ca2e04c0065d2
   languageName: node
   linkType: hard
 
@@ -3332,7 +3332,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/snaps-simulation@npm:^2.7.0":
+"@metamask/snaps-simulation@npm:^2.6.0":
   version: 2.7.0
   resolution: "@metamask/snaps-simulation@npm:2.7.0"
   dependencies:
@@ -19060,14 +19060,14 @@ __metadata:
   linkType: hard
 
 "tar-fs@npm:^2.0.0":
-  version: 2.1.2
-  resolution: "tar-fs@npm:2.1.2"
+  version: 2.1.3
+  resolution: "tar-fs@npm:2.1.3"
   dependencies:
     chownr: "npm:^1.1.1"
     mkdirp-classic: "npm:^0.5.2"
     pump: "npm:^3.0.0"
     tar-stream: "npm:^2.1.4"
-  checksum: 10/623f7e8e58a43578ba7368002c3cc7e321f6d170053ac0691d95172dbc7daf5dcf4347eb061277627340870ce6cfda89f5a5d633cc274c41ae6d69f54a2374e7
+  checksum: 10/37fdfd3aa73f4f49c0821ef75f67647ecafd5370d2e311d9ace6ff3825ff4355014055c3d43407c6a655adf6c5bfb0cbcf93412161dad5af7110eb7d7a0c2eae
   languageName: node
   linkType: hard
 

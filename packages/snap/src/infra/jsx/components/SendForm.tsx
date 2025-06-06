@@ -1,6 +1,5 @@
 import type { JSXElement } from '@metamask/snaps-sdk/jsx';
 import {
-  AccountSelector,
   AssetSelector,
   Box,
   Button,
@@ -82,7 +81,7 @@ export const SendForm = (props: SendFormProps): JSXElement => {
               <AssetSelector
                 chainIds={[chainId]}
                 value={networkToCaip19[network]}
-                name={SendFormEvent.SetAsset}
+                name={SendFormEvent.Asset}
                 addresses={[caip10Address]}
               />
             </Field>
@@ -114,7 +113,7 @@ export const SendForm = (props: SendFormProps): JSXElement => {
                 {t('clear')}
               </Button>
             ) : (
-              <Button size="sm" name={SendFormEvent.SetMax}>
+              <Button size="sm" name={SendFormEvent.Max}>
                 {t('max')}
               </Button>
             )}

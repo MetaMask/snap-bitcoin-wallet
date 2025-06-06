@@ -66,10 +66,7 @@ describe('Send flow', () => {
 
     // First the recipient.
     await ui.typeInField(SendFormEvent.Recipient, recipient);
-    ui = await response.getInterface();
-
-    // Then the amount.
-    await ui.clickElement(SendFormEvent.SetMax);
+    await ui.clickElement(SendFormEvent.Max);
     await ui.typeInField(SendFormEvent.Amount, sendAmount);
 
     const backgroundEventResponse = await snap.onBackgroundEvent({

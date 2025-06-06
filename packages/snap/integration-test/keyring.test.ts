@@ -15,7 +15,7 @@ import { Caip19Asset } from '../src/handlers/caip';
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
-describe.skip('Keyring', () => {
+describe('Keyring', () => {
   const accounts: Record<string, KeyringAccount> = {}; // accounts stored by address
   let snap: Snap;
 

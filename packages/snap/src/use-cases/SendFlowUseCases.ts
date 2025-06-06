@@ -182,7 +182,7 @@ export class SendFlowUseCases {
 
         throw new Error('Inconsistent Send form context');
       }
-      case SendFormEvent.SetMax: {
+      case SendFormEvent.Max: {
         return this.#handleSetMax(id, context);
       }
       case SendFormEvent.Recipient: {
@@ -191,11 +191,11 @@ export class SendFlowUseCases {
       case SendFormEvent.Amount: {
         return this.#handleSetAmount(id, context);
       }
-      case SendFormEvent.SetAccount: {
+      case SendFormEvent.Account: {
         // TODO: Implement switching accounts
         return undefined;
       }
-      case SendFormEvent.SetAsset: {
+      case SendFormEvent.Asset: {
         // Do nothing as there are no other assets
         return undefined;
       }

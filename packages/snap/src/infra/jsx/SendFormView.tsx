@@ -7,7 +7,6 @@ import {
   Footer,
   Text as SnapText,
 } from '@metamask/snaps-sdk/jsx';
-import { isNullOrUndefined } from '@metamask/utils';
 
 import { HeadingWithReturn, SendForm } from './components';
 import { translate } from './format';
