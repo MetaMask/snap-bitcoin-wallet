@@ -12,7 +12,9 @@ import {
 import { Caip19Asset } from '../src/handlers/caip';
 import { CronMethod } from '../src/handlers/CronHandler';
 
-describe('Send flow', () => {
+// TODO: Unskip when the snaps-jest package adds support for AccountSelector and AssetSelector
+// eslint-disable-next-line jest/no-disabled-tests
+describe.skip('Send flow', () => {
   const recipient = 'bcrt1qyvhf2epk9s659206lq3rdvtf07uq3t9e7xtjje';
   const sendAmount = '0.1';
 
@@ -64,9 +66,11 @@ describe('Send flow', () => {
     let ui = await response.getInterface();
     assertIsCustomDialog(ui);
 
-    // Perform user interactions.
-    await ui.clickElement(SendFormEvent.SetMax);
+    // First the recipient so the view is updated and the other fields become available.
     await ui.typeInField(SendFormEvent.Recipient, recipient);
+    ui = await response.getInterface();
+
+    await ui.clickElement(SendFormEvent.Max);
     await ui.typeInField(SendFormEvent.Amount, sendAmount);
 
     const backgroundEventResponse = await snap.onBackgroundEvent({

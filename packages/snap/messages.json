@@ -1,32 +1,21 @@
 {
-  "snapDescription": {
-    "message": "Manage Bitcoin using MetaMask",
-    "description": "This is the description located in the snap manifest."
-  },
-  "snapProposedName": {
-    "message": "Bitcoin",
-    "description": "This is the proposed name in the snap manifest."
-  },
   "reviewTransactionWarning": {
     "message": "Review the transaction before proceeding"
-  },
-  "loading": {
-    "message": "Loading"
   },
   "from": {
     "message": "From"
   },
   "toAddress": {
-    "message": "To Address"
+    "message": "To"
   },
-  "fromAccount": {
-    "message": "From Account"
-  },
-  "review": {
-    "message": "Review"
+  "continue": {
+    "message": "Continue"
   },
   "cancel": {
     "message": "Cancel"
+  },
+  "clear": {
+    "message": "Clear"
   },
   "amount": {
     "message": "Amount"
@@ -64,14 +53,11 @@
   "send": {
     "message": "Send"
   },
+  "currency": {
+    "message": "Currency"
+  },
   "sending": {
     "message": "Sending"
-  },
-  "sendAmount": {
-    "message": "Send Amount"
-  },
-  "amountPlaceholder": {
-    "message": "Enter amount to send"
   },
   "max": {
     "message": "Max"
@@ -79,16 +65,10 @@
   "recipientPlaceholder": {
     "message": "Enter receiving address"
   },
-  "validAddress": {
-    "message": "Valid bitcoin address"
-  },
-  "preparingTransaction": {
-    "message": "Preparing transaction"
+  "review": {
+    "message": "Review"
   },
   "error": {
     "message": "Error"
-  },
-  "satProtectionTooltip": {
-    "message": "MetaMask is protecting your Ordinals, Rare SATs, and Runes to be send in Bitcoin Transactions."
   }
 }

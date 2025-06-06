@@ -32,9 +32,12 @@ export enum SendFormEvent {
   Amount = 'amount',
   Recipient = 'recipient',
   ClearRecipient = 'clearRecipient',
+  ClearAmount = 'clearAmount',
   Confirm = 'confirm',
   Cancel = 'cancel',
-  SetMax = 'max',
+  Max = 'max',
+  Account = 'account',
+  Asset = 'asset',
 }
 
 export type SendFormState = {
