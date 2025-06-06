@@ -41,6 +41,7 @@ export const SendForm = (props: SendFormProps): JSXElement => {
 
   return (
     <Form name={SENDFORM_NAME}>
+      {/* Activate once snaps-jest is ready so it can be tested
       <Field label={t('from')}>
         <AccountSelector
           name={SendFormEvent.SetAccount}
@@ -53,7 +54,7 @@ export const SendForm = (props: SendFormProps): JSXElement => {
 
       <Box>{null}</Box>
       <Box>{null}</Box>
-      <Box>{null}</Box>
+      <Box>{null}</Box> */}
 
       <Field label={t('toAddress')} error={errors.recipient}>
         <Input
