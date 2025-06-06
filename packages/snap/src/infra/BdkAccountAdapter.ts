@@ -77,6 +77,10 @@ export class BdkAccountAdapter implements BitcoinAccount {
     return this.#derivationPath;
   }
 
+  get accountIndex(): number {
+    return Number(this.#derivationPath[3]?.charAt(0)); // Must be defined by assertion
+  }
+
   get balance(): Balance {
     return this.#wallet.balance;
   }

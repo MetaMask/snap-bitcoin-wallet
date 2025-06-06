@@ -47,11 +47,10 @@ export const ReviewTransactionView: SnapComponent<
 
         <Box alignment="center" center>
           <AssetIcon network={network} />
-          <Heading size="lg">{`${t('sending')} ${displayAmount(
-            BigInt(amount),
-            currency,
-          )}`}</Heading>
-          <SnapText color="muted">{t('reviewTransactionWarning')}</SnapText>
+          <Heading size="lg">{displayAmount(BigInt(amount), currency)}</Heading>
+          <SnapText color="muted">
+            {displayExchangeAmount(BigInt(amount), exchangeRate)}
+          </SnapText>
         </Box>
 
         <Section>
@@ -61,18 +60,12 @@ export const ReviewTransactionView: SnapComponent<
               displayName
             />
           </Row>
-          <Row label={t('amount')}>
-            <Value
-              value={displayAmount(BigInt(amount), currency)}
-              extra={displayExchangeAmount(BigInt(amount), exchangeRate)}
-            />
-          </Row>
           <Row label={t('recipient')}>
             <Address
               address={
                 `${networkToScope[network]}:${recipient}` as CaipAccountId
               }
-              avatar={false}
+              displayName
             />
           </Row>
         </Section>
@@ -95,7 +88,7 @@ export const ReviewTransactionView: SnapComponent<
             />
           </Row>
           <Row label={t('feeRate')}>
-            <SnapText>{`${feeRate ?? 'unknown'} sat/vB`}</SnapText>
+            <SnapText>{`${feeRate} sat/vB`}</SnapText>
           </Row>
           <Row label={t('total')}>
             <Value

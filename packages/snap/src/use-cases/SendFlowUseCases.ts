@@ -128,6 +128,16 @@ export class SendFlowUseCases {
 
         return this.#sendFlowRepository.updateForm(id, updatedContext);
       }
+      case SendFormEvent.ClearAmount: {
+        const updatedContext = { ...context };
+        delete updatedContext.amount;
+        delete updatedContext.errors.amount;
+        delete updatedContext.errors.tx;
+        delete updatedContext.fee;
+        delete updatedContext.drain;
+
+        return this.#sendFlowRepository.updateForm(id, updatedContext);
+      }
       case SendFormEvent.Confirm: {
         if (context.backgroundEventId) {
           await this.#snapClient.cancelBackgroundEvent(
@@ -180,6 +190,14 @@ export class SendFlowUseCases {
       }
       case SendFormEvent.Amount: {
         return this.#handleSetAmount(id, context);
+      }
+      case SendFormEvent.SetAccount: {
+        // TODO: Implement switching accounts
+        return undefined;
+      }
+      case SendFormEvent.SetAsset: {
+        // Do nothing as there are no other assets
+        return undefined;
       }
       default:
         throw new Error('Unrecognized event');
@@ -341,7 +359,7 @@ export class SendFlowUseCases {
   }
 
   async #computeFee(context: SendFormContext): Promise<SendFormContext> {
-    const { amount, recipient, drain } = context;
+    const { amount, recipient, drain, balance } = context;
     if (amount && recipient) {
       const account = await this.#accountRepository.get(context.account.id);
       if (!account) {
@@ -360,16 +378,17 @@ export class SendFlowUseCases {
         if (drain) {
           const psbt = builder.drainWallet().drainTo(recipient).finish();
           const fee = psbt.fee().to_sat();
-          const realAmount = BigInt(amount) - fee;
+          const realAmount = BigInt(balance) - fee;
           return {
             ...context,
             fee: fee.toString(),
             amount: realAmount.toString(),
+            balance,
           };
         }
 
         const psbt = builder.addRecipient(amount, recipient).finish();
-        return { ...context, fee: psbt.fee().to_sat().toString() };
+        return { ...context, fee: psbt.fee().to_sat().toString(), balance };
       } catch (error) {
         return {
           ...context,

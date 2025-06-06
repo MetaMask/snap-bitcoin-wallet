@@ -1,5 +1,7 @@
 import type { JSXElement } from '@metamask/snaps-sdk/jsx';
 import {
+  AccountSelector,
+  AssetSelector,
   Box,
   Button,
   Field,
@@ -8,45 +10,51 @@ import {
   Input,
   Text as SnapText,
 } from '@metamask/snaps-sdk/jsx';
+import type { CaipAccountId } from '@metamask/utils';
 
 import type { Messages, SendFormContext } from '../../../entities';
 import { SENDFORM_NAME, SendFormEvent } from '../../../entities';
+import { networkToCaip19, networkToScope } from '../../../handlers';
 import { displayAmount, translate } from '../format';
-import { AssetIcon } from './AssetIcon';
 
 type SendFormProps = SendFormContext & {
   messages: Messages;
 };
 
 export const SendForm = (props: SendFormProps): JSXElement => {
-  const { currency, balance, amount, recipient, errors, network, messages } =
-    props;
+  const {
+    currency,
+    balance,
+    amount,
+    recipient,
+    network,
+    account,
+    errors,
+    messages,
+    drain,
+  } = props;
   const t = translate(messages);
 
   const validAddress = Boolean(recipient && !errors.recipient);
+  const chainId = networkToScope[network];
+  const caip10Address = `${chainId}:${account.address}` as CaipAccountId;
 
   return (
     <Form name={SENDFORM_NAME}>
-      <Field label={t('sendAmount')} error={errors.amount}>
-        <AssetIcon network={network} />
-        <Input
-          name={SendFormEvent.Amount}
-          type="number"
-          min={0}
-          step={0.00000001}
-          placeholder={t('amountPlaceholder')}
-          value={amount ? displayAmount(BigInt(amount)) : undefined}
+      <Field label={t('from')}>
+        <AccountSelector
+          name={SendFormEvent.SetAccount}
+          chainIds={[chainId]}
+          hideExternalAccounts
+          switchGlobalAccount
+          value={caip10Address}
         />
       </Field>
-      <Box direction="horizontal" alignment={'space-between'}>
-        <Box direction="horizontal">
-          <SnapText color="alternative">
-            {`${t('balance')}: ${displayAmount(BigInt(balance), currency)}`}
-          </SnapText>
-        </Box>
 
-        <Button name={SendFormEvent.SetMax}>{t('max')}</Button>
-      </Box>
+      <Box>{null}</Box>
+      <Box>{null}</Box>
+      <Box>{null}</Box>
+
       <Field label={t('toAddress')} error={errors.recipient}>
         <Input
           name={SendFormEvent.Recipient}
@@ -61,7 +69,57 @@ export const SendForm = (props: SendFormProps): JSXElement => {
           </Box>
         )}
       </Field>
-      {validAddress && <Icon name="check" color="primary" />}
+
+      {validAddress && (
+        <Box>
+          <Box>{null}</Box>
+          <Box>{null}</Box>
+          <Box>{null}</Box>
+
+          <Box direction="horizontal">
+            <Field label={t('currency')}>
+              <AssetSelector
+                chainIds={[chainId]}
+                value={networkToCaip19[network]}
+                name={SendFormEvent.SetAsset}
+                addresses={[caip10Address]}
+              />
+            </Field>
+
+            <Field label={t('amount')} error={errors.amount}>
+              <Input
+                name={SendFormEvent.Amount}
+                type="number"
+                min={0}
+                step={0.00000001}
+                placeholder="0"
+                value={amount ? displayAmount(BigInt(amount)) : ''}
+              />
+              <Box direction="horizontal" center>
+                <Box direction="vertical" alignment="center">
+                  <SnapText size="sm">{currency}</SnapText>
+                </Box>
+              </Box>
+            </Field>
+          </Box>
+
+          <Box direction="horizontal" alignment={'space-between'}>
+            <SnapText size="sm" color="alternative">
+              {`${t('balance')}: ${displayAmount(BigInt(balance), currency)}`}
+            </SnapText>
+
+            {drain ? (
+              <Button size="sm" name={SendFormEvent.ClearAmount}>
+                {t('clear')}
+              </Button>
+            ) : (
+              <Button size="sm" name={SendFormEvent.SetMax}>
+                {t('max')}
+              </Button>
+            )}
+          </Box>
+        </Box>
+      )}
     </Form>
   );
 };

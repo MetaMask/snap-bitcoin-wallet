@@ -1,7 +1,5 @@
 import type { SnapComponent } from '@metamask/snaps-sdk/jsx';
-import { Box, Button, Heading, Icon, Image } from '@metamask/snaps-sdk/jsx';
-
-import emptySpace from '../images/empty-space.svg';
+import { Box, Button, Heading, Icon } from '@metamask/snaps-sdk/jsx';
 
 export type HeadingWithReturnProps = {
   heading: string;
@@ -21,6 +19,11 @@ export const HeadingWithReturn: SnapComponent<HeadingWithReturnProps> = ({
      * The Snap UI centers the text within its container, but the container
      * itself is misaligned in the header due to the back arrow.
      */}
-    <Image src={emptySpace} />
+    <Box direction="horizontal">
+      <Box>{null}</Box>
+      <Box>{null}</Box>
+      <Box>{null}</Box>
+      <Box>{null}</Box>
+    </Box>
   </Box>
 );

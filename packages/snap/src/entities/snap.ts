@@ -17,7 +17,7 @@ export type SnapState = {
 };
 
 export type AccountState = {
-  // Split derivation path.
+  // Derivation path.
   derivationPath: string[];
   // Wallet data.
   wallet: string;

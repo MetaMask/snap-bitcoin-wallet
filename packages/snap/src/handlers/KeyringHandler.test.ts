@@ -54,6 +54,7 @@ describe('KeyringHandler', () => {
     addressType: 'p2wpkh',
     balance: { trusted_spendable: { to_btc: () => 1 } },
     network: 'bitcoin',
+    derivationPath: ['myEntropy', "84'", "0'", "0'"],
   });
   const defaultAddressType: AddressType = 'p2wpkh';
 
@@ -303,7 +304,9 @@ describe('KeyringHandler', () => {
         type: BtcAccountType.P2wpkh,
         scopes: [BtcScope.Mainnet],
         address: 'bc1qaddress...',
-        options: {},
+        options: {
+          entropySource: 'myEntropy',
+        },
         methods: [BtcMethod.SendBitcoin],
       };
 
@@ -330,7 +333,9 @@ describe('KeyringHandler', () => {
           type: BtcAccountType.P2wpkh,
           scopes: [BtcScope.Mainnet],
           address: 'bc1qaddress...',
-          options: {},
+          options: {
+            entropySource: 'myEntropy',
+          },
           methods: [BtcMethod.SendBitcoin],
         },
       ];
