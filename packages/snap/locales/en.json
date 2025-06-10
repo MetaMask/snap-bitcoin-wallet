@@ -35,13 +35,13 @@
       "message": "min"
     },
     "transactionSpeed": {
-      "message": "Transaction Speed"
+      "message": "Transaction speed"
     },
     "transactionSpeedTooltip": {
       "message": "The estimated time of the transaction"
     },
     "networkFee": {
-      "message": "Network Fee"
+      "message": "Network fee"
     },
     "feeRate": {
       "message": "Fee rate"
@@ -55,8 +55,8 @@
     "send": {
       "message": "Send"
     },
-    "currency": {
-      "message": "Currency"
+    "asset": {
+      "message": "Asset"
     },
     "sending": {
       "message": "Sending"

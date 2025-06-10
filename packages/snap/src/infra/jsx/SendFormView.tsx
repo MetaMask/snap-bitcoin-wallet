@@ -24,11 +24,7 @@ export const SendFormView: SnapComponent<SendFormViewProps> = ({
   messages,
 }) => {
   const t = translate(messages);
-  const { amount, recipient, errors } = context;
-  const canReview =
-    (amount ? amount.length > 0 : false) &&
-    (recipient ? recipient.length > 0 : false) &&
-    Object.values(errors).every(isNullOrUndefined);
+  const { errors } = context;
 
   return (
     <Container>
@@ -44,14 +40,14 @@ export const SendFormView: SnapComponent<SendFormViewProps> = ({
           <Box>
             <Box>{null}</Box>
             <Banner title={t('error')} severity="warning">
-              <SnapText size="sm">{t(errors.tx)}</SnapText>
+              <SnapText size="sm">{errors.tx}</SnapText>
             </Banner>
           </Box>
         )}
       </Box>
 
       <Footer>
-        <Button name={SendFormEvent.Confirm} disabled={!canReview}>
+        <Button name={SendFormEvent.Confirm} disabled={!context.fee}>
           {t('continue')}
         </Button>
       </Footer>

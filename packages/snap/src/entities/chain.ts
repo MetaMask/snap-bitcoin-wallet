@@ -46,4 +46,12 @@ export type BlockchainClient = {
    * @returns the map of fee estimates
    */
   getFeeEstimates(network: Network): Promise<FeeEstimates>;
+
+  /**
+   * Returns the explorer url for the given network.
+   *
+   * @param network - Network.
+   * @returns the base url of the explorer
+   */
+  getExplorerUrl(network: Network): string;
 };

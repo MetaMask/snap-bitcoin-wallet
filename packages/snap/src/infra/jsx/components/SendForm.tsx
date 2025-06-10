@@ -43,7 +43,7 @@ export const SendForm = (props: SendFormProps): JSXElement => {
     <Form name={SENDFORM_NAME}>
       <Field label={t('from')}>
         <AccountSelector
-          name={SendFormEvent.SetAccount}
+          name={SendFormEvent.Account}
           chainIds={[chainId]}
           hideExternalAccounts
           switchGlobalAccount
@@ -77,11 +77,11 @@ export const SendForm = (props: SendFormProps): JSXElement => {
           <Box>{null}</Box>
 
           <Box direction="horizontal">
-            <Field label={t('currency')}>
+            <Field label={t('asset')}>
               <AssetSelector
                 chainIds={[chainId]}
                 value={networkToCaip19[network]}
-                name={SendFormEvent.SetAsset}
+                name={SendFormEvent.Asset}
                 addresses={[caip10Address]}
               />
             </Field>
@@ -113,7 +113,7 @@ export const SendForm = (props: SendFormProps): JSXElement => {
                 {t('clear')}
               </Button>
             ) : (
-              <Button size="sm" name={SendFormEvent.SetMax}>
+              <Button size="sm" name={SendFormEvent.Max}>
                 {t('max')}
               </Button>
             )}
