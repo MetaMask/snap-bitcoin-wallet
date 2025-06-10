@@ -47,6 +47,7 @@ export type SendFormState = {
 
 export type ReviewTransactionContext = {
   from: string;
+  explorerUrl: string;
   network: Network;
   currency: CurrencyUnit;
   exchangeRate?: CurrencyRate;

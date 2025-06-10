@@ -11,11 +11,17 @@ import {
   Text as SnapText,
   Value,
   Address,
+  Link,
 } from '@metamask/snaps-sdk/jsx';
 import type { CaipAccountId } from '@metamask/utils';
 
 import { AssetIcon, HeadingWithReturn } from './components';
-import { displayAmount, displayExchangeAmount, translate } from './format';
+import {
+  displayAmount,
+  displayExchangeAmount,
+  displayExplorerUrl,
+  translate,
+} from './format';
 import { Config } from '../../config';
 import type { Messages, ReviewTransactionContext } from '../../entities';
 import { BlockTime, ReviewTransactionEvent } from '../../entities';
@@ -30,7 +36,15 @@ export const ReviewTransactionView: SnapComponent<
   ReviewTransactionViewProps
 > = ({ context, messages }) => {
   const t = translate(messages);
-  const { amount, currency, exchangeRate, recipient, network, from } = context;
+  const {
+    amount,
+    currency,
+    exchangeRate,
+    recipient,
+    network,
+    from,
+    explorerUrl,
+  } = context;
 
   const psbt = Psbt.from_string(context.psbt);
   const fee = psbt.fee().to_sat();
@@ -55,18 +69,22 @@ export const ReviewTransactionView: SnapComponent<
 
         <Section>
           <Row label={t('from')}>
-            <Address
-              address={`${networkToScope[network]}:${from}` as CaipAccountId}
-              displayName
-            />
+            <Link href={displayExplorerUrl(explorerUrl, from)}>
+              <Address
+                address={`${networkToScope[network]}:${from}` as CaipAccountId}
+                displayName
+              />
+            </Link>
           </Row>
           <Row label={t('recipient')}>
-            <Address
-              address={
-                `${networkToScope[network]}:${recipient}` as CaipAccountId
-              }
-              displayName
-            />
+            <Link href={displayExplorerUrl(explorerUrl, recipient)}>
+              <Address
+                address={
+                  `${networkToScope[network]}:${recipient}` as CaipAccountId
+                }
+                displayName
+              />
+            </Link>
           </Row>
         </Section>
 

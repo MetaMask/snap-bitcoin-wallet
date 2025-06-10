@@ -20,6 +20,9 @@ export type ChainConfig = {
   url: {
     [network in Network]: string;
   };
+  explorerUrl: {
+    [network in Network]: string;
+  };
 };
 
 export type PriceApiConfig = {

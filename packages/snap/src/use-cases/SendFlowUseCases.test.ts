@@ -51,6 +51,7 @@ describe('SendFlowUseCases', () => {
   const targetBlocksConfirmation = 3;
   const fallbackFeeRate = 5.0;
   const ratesRefreshInterval = 'PT30S';
+  const explorerUrl = 'http://myeplorer.com';
   const mockAccount = mock<BitcoinAccount>({
     network: 'bitcoin',
     buildTx: jest.fn(),
@@ -169,6 +170,7 @@ describe('SendFlowUseCases', () => {
     };
 
     beforeEach(() => {
+      mockChain.getExplorerUrl.mockReturnValue(explorerUrl);
       mockAccount.buildTx.mockReturnValue(mockTxBuilder);
       mockTxBuilder.addRecipient.mockReturnThis();
       mockTxBuilder.feeRate.mockReturnThis();
@@ -248,6 +250,7 @@ describe('SendFlowUseCases', () => {
       mockPsbt.toString.mockReturnValue('psbtBase64');
       const expectedReviewContext: ReviewTransactionContext = {
         from: mockContext.account.address,
+        explorerUrl,
         network: mockContext.network,
         amount: '1000',
         recipient: 'recipientAddress',
@@ -284,6 +287,7 @@ describe('SendFlowUseCases', () => {
       mockPsbt.toString.mockReturnValue('psbtBase64');
       const expectedReviewContext: ReviewTransactionContext = {
         from: mockContext.account.address,
+        explorerUrl,
         network: mockContext.network,
         amount: '1000',
         recipient: 'recipientAddress',
@@ -510,6 +514,7 @@ describe('SendFlowUseCases', () => {
   describe('onChangeReview', () => {
     const mockContext: ReviewTransactionContext = {
       from: 'myAddress',
+      explorerUrl,
       network: 'bitcoin',
       amount: '10000',
       currency: CurrencyUnit.Bitcoin,

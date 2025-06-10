@@ -168,6 +168,7 @@ export class SendFlowUseCases {
 
           const reviewContext: ReviewTransactionContext = {
             from: context.account.address,
+            explorerUrl: this.#chainClient.getExplorerUrl(context.network),
             network: context.network,
             amount: context.amount,
             recipient: context.recipient,
