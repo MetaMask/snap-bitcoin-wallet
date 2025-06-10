@@ -56,4 +56,8 @@ export class EsploraClientAdapter implements BlockchainClient {
   async getFeeEstimates(network: Network): Promise<FeeEstimates> {
     return this.#clients[network].get_fee_estimates();
   }
+
+  getExplorerUrl(network: Network): string {
+    return this.#config.explorerUrl[network];
+  }
 }

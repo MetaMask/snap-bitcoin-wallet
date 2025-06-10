@@ -1,14 +1,14 @@
 import type { SnapComponent } from '@metamask/snaps-sdk/jsx';
 import {
+  Banner,
   Box,
   Button,
   Container,
   Footer,
-  Row,
   Text as SnapText,
 } from '@metamask/snaps-sdk/jsx';
 
-import { HeadingWithReturn, SendForm, TransactionSummary } from './components';
+import { HeadingWithReturn, SendForm } from './components';
 import { translate } from './format';
 import type { Messages, SendFormContext } from '../../entities';
 import { SendFormEvent } from '../../entities';
@@ -23,6 +23,7 @@ export const SendFormView: SnapComponent<SendFormViewProps> = ({
   messages,
 }) => {
   const t = translate(messages);
+  const { errors } = context;
 
   return (
     <Container>
@@ -34,28 +35,19 @@ export const SendFormView: SnapComponent<SendFormViewProps> = ({
 
         <SendForm {...context} messages={messages} />
 
-        {context.errors.tx !== undefined && (
-          <Row label={t('error')} variant="warning">
-            <SnapText>{context.errors.tx}</SnapText>
-          </Row>
-        )}
-
-        {context.fee !== undefined && context.amount !== undefined && (
-          <TransactionSummary
-            {...context}
-            fee={context.fee}
-            amount={context.amount}
-            messages={messages}
-          />
+        {errors.tx && (
+          <Box>
+            <Box>{null}</Box>
+            <Banner title={t('error')} severity="warning">
+              <SnapText size="sm">{errors.tx}</SnapText>
+            </Banner>
+          </Box>
         )}
       </Box>
 
       <Footer>
-        <Button
-          name={SendFormEvent.Confirm}
-          disabled={context.fee === undefined}
-        >
-          {t('review')}
+        <Button name={SendFormEvent.Confirm} disabled={!context.fee}>
+          {t('continue')}
         </Button>
       </Footer>
     </Container>

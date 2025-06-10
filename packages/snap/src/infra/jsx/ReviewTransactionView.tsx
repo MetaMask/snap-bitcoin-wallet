@@ -11,11 +11,17 @@ import {
   Text as SnapText,
   Value,
   Address,
+  Link,
 } from '@metamask/snaps-sdk/jsx';
 import type { CaipAccountId } from '@metamask/utils';
 
 import { AssetIcon, HeadingWithReturn } from './components';
-import { displayAmount, displayExchangeAmount, translate } from './format';
+import {
+  displayAmount,
+  displayExchangeAmount,
+  displayExplorerUrl,
+  translate,
+} from './format';
 import { Config } from '../../config';
 import type { Messages, ReviewTransactionContext } from '../../entities';
 import { BlockTime, ReviewTransactionEvent } from '../../entities';
@@ -30,7 +36,15 @@ export const ReviewTransactionView: SnapComponent<
   ReviewTransactionViewProps
 > = ({ context, messages }) => {
   const t = translate(messages);
-  const { amount, currency, exchangeRate, recipient, network, from } = context;
+  const {
+    amount,
+    currency,
+    exchangeRate,
+    recipient,
+    network,
+    from,
+    explorerUrl,
+  } = context;
 
   const psbt = Psbt.from_string(context.psbt);
   const fee = psbt.fee().to_sat();
@@ -47,33 +61,30 @@ export const ReviewTransactionView: SnapComponent<
 
         <Box alignment="center" center>
           <AssetIcon network={network} />
-          <Heading size="lg">{`${t('sending')} ${displayAmount(
-            BigInt(amount),
-            currency,
-          )}`}</Heading>
-          <SnapText color="muted">{t('reviewTransactionWarning')}</SnapText>
+          <Heading size="lg">{displayAmount(BigInt(amount), currency)}</Heading>
+          <SnapText color="muted">
+            {displayExchangeAmount(BigInt(amount), exchangeRate)}
+          </SnapText>
         </Box>
 
         <Section>
           <Row label={t('from')}>
-            <Address
-              address={`${networkToScope[network]}:${from}` as CaipAccountId}
-              displayName
-            />
-          </Row>
-          <Row label={t('amount')}>
-            <Value
-              value={displayAmount(BigInt(amount), currency)}
-              extra={displayExchangeAmount(BigInt(amount), exchangeRate)}
-            />
+            <Link href={displayExplorerUrl(explorerUrl, from)}>
+              <Address
+                address={`${networkToScope[network]}:${from}` as CaipAccountId}
+                displayName
+              />
+            </Link>
           </Row>
           <Row label={t('recipient')}>
-            <Address
-              address={
-                `${networkToScope[network]}:${recipient}` as CaipAccountId
-              }
-              avatar={false}
-            />
+            <Link href={displayExplorerUrl(explorerUrl, recipient)}>
+              <Address
+                address={
+                  `${networkToScope[network]}:${recipient}` as CaipAccountId
+                }
+                displayName
+              />
+            </Link>
           </Row>
         </Section>
 
@@ -95,7 +106,7 @@ export const ReviewTransactionView: SnapComponent<
             />
           </Row>
           <Row label={t('feeRate')}>
-            <SnapText>{`${feeRate ?? 'unknown'} sat/vB`}</SnapText>
+            <SnapText>{`${feeRate} sat/vB`}</SnapText>
           </Row>
           <Row label={t('total')}>
             <Value

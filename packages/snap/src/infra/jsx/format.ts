@@ -30,3 +30,6 @@ export const translate =
   (messages: Messages) =>
   (key: string): string =>
     messages[key]?.message ?? `{${key}}`;
+
+export const displayExplorerUrl = (url: string, address: string): string =>
+  `${url}/address/${address}`;
