@@ -22,11 +22,11 @@ export const Config: SnapConfig = {
     },
     explorerUrl: {
       bitcoin: process.env.BITCOIN_EXPLORER ?? 'https://mempool.space',
-      testnet: process.env.ESPLORA_TESTNET ?? 'https://mempool.space/testnet',
+      testnet: process.env.TESTNET_EXPLORER ?? 'https://mempool.space/testnet',
       testnet4:
-        process.env.ESPLORA_TESTNET4 ?? 'https://mempool.space/testnet4',
-      signet: process.env.ESPLORA_SIGNET ?? 'https://mutinynet.com',
-      regtest: process.env.ESPLORA_REGTEST ?? 'http://localhost:8094/regtest',
+        process.env.TESTNET4_EXPLORER ?? 'https://mempool.space/testnet4',
+      signet: process.env.SIGNET_EXPLORER ?? 'https://mutinynet.com',
+      regtest: process.env.REGTEST_EXPLORER ?? 'http://localhost:8094/regtest',
     },
   },
   targetBlocksConfirmation: 3,
