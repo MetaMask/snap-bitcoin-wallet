@@ -13,8 +13,8 @@ import { Caip19Asset } from '../src/handlers/caip';
 import { CronMethod } from '../src/handlers/CronHandler';
 
 // TODO: Unskip when the snaps-jest package adds support for AccountSelector and AssetSelector
-// eslint-disable-next-line jest/no-disabled-tests
-describe.skip('Send flow', () => {
+
+describe('Send flow', () => {
   const recipient = 'bcrt1qyvhf2epk9s659206lq3rdvtf07uq3t9e7xtjje';
   const sendAmount = '0.1';
 

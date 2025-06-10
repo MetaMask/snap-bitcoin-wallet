@@ -77,7 +77,7 @@ export const SendForm = (props: SendFormProps): JSXElement => {
           <Box>{null}</Box>
 
           <Box direction="horizontal">
-            <Field label={t('currency')}>
+            <Field label={t('asset')}>
               <AssetSelector
                 chainIds={[chainId]}
                 value={networkToCaip19[network]}
