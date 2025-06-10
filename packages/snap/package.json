@@ -51,7 +51,7 @@
     "jest-mock-extended": "^4.0.0-beta1",
     "jest-transform-stub": "2.0.0",
     "superstruct": "^2.0.2",
-    "ts-jest": "^29.3.4",
+    "ts-jest": "^29.3.3",
     "uuid": "^11.1.0"
   },
   "publishConfig": {

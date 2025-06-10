@@ -36,6 +36,7 @@ export class EsploraClientAdapter implements BlockchainClient {
       this.#config.stopGap,
       this.#config.parallelRequests,
     );
+
     account.applyUpdate(update);
   }
 

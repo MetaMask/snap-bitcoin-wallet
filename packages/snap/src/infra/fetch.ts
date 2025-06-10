@@ -1,10 +1,21 @@
+/**
+ *
+ * @param maxRetries
+ * @param baseDelay
+ */
 export function patchFetch(maxRetries = 3, baseDelay = 500) {
-  if ((globalThis as any).__fetchPatched) return;
+  if ((globalThis as any).__fetchPatched) {
+    return;
+  }
 
   const original = globalThis.fetch.bind(globalThis);
   console.debug('[patchFetch] installing fetch 429 retry wrapper');
 
-  /** Clone the input so we can retry even for POST requests with bodies. */
+  /**
+   * Clone the input so we can retry even for POST requests with bodies.
+   *
+   * @param input
+   */
   const cloneInput = (input: URL | RequestInfo): URL | RequestInfo =>
     input instanceof Request ? input.clone() : input;
 
@@ -33,7 +44,9 @@ export function patchFetch(maxRetries = 3, baseDelay = 500) {
 
         const isNetworkErr =
           err instanceof TypeError && /fetch/i.test(String(err));
-        if (!(thrown429 || isNetworkErr) || attempt >= maxRetries) throw err;
+        if (!(thrown429 || isNetworkErr) || attempt >= maxRetries) {
+          throw err;
+        }
 
         console.debug(
           `[fetch-retry] thrown 429 error (attempt ${attempt + 1})`,
