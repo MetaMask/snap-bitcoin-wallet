@@ -5,7 +5,7 @@ export enum CurrencyUnit {
   Testnet = 'tBTC',
   Signet = 'sBTC',
   Regtest = 'rBTC',
-  Fiat = '$',
+  Fiat = 'fiat', // Can also be cryptos like ETH, but will be fiat for 99% of users
 }
 
 export const networkToCurrencyUnit: Record<Network, CurrencyUnit> = {

@@ -16,6 +16,7 @@ import {
   SendFormEvent,
   ReviewTransactionEvent,
   networkToCurrencyUnit,
+  CurrencyUnit,
 } from '../entities';
 import { CronMethod } from '../handlers';
 
@@ -192,6 +193,19 @@ export class SendFlowUseCases {
       case SendFormEvent.Amount: {
         return this.#handleSetAmount(id, context);
       }
+      case SendFormEvent.SwitchCurrency: {
+        if (!context.exchangeRate) {
+          return undefined;
+        }
+
+        const updatedContext = { ...context };
+        updatedContext.currency =
+          context.currency === CurrencyUnit.Fiat
+            ? networkToCurrencyUnit[context.network]
+            : CurrencyUnit.Fiat;
+
+        return this.#sendFlowRepository.updateForm(id, updatedContext);
+      }
       case SendFormEvent.Account: {
         // TODO: Implement switching accounts
         return undefined;
@@ -289,8 +303,19 @@ export class SendFlowUseCases {
     delete updatedContext.drain;
 
     try {
-      // We expect amounts to be entered in Bitcoin
-      const amount = Amount.from_btc(Number(formState.amount));
+      let amount: Amount;
+      if (context.currency === CurrencyUnit.Fiat && context.exchangeRate) {
+        // keep everything in sats (integers) to avoid FP drift
+        const sats = Math.round(
+          (Number(formState.amount) * 1e8) /
+            context.exchangeRate.conversionRate,
+        );
+        amount = Amount.from_sat(BigInt(sats));
+      } else {
+        // expects values to be entered in BTC and not satoshis
+        amount = Amount.from_btc(Number(formState.amount));
+      }
+
       updatedContext.amount = amount.to_sat().toString();
       updatedContext = await this.#computeFee(updatedContext);
     } catch (error) {

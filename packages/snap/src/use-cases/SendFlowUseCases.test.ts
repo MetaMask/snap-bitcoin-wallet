@@ -36,6 +36,7 @@ jest.mock('@metamask/bitcoindevkit', () => {
     },
     Amount: {
       from_btc: jest.fn(),
+      from_sat: jest.fn(),
     },
     Psbt: { from_string: jest.fn() },
   };
@@ -411,6 +412,53 @@ describe('SendFlowUseCases', () => {
         drain: undefined,
         fee: undefined,
         amount: '1111',
+        errors: {
+          ...mockContext.errors,
+          tx: undefined,
+          amount: undefined,
+        },
+      };
+
+      await useCases.onChangeForm(
+        'interface-id',
+        SendFormEvent.Amount,
+        testContext,
+      );
+
+      expect(mockSendFlowRepository.getState).toHaveBeenCalledWith(
+        'interface-id',
+      );
+      expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
+        'interface-id',
+        expectedContext,
+      );
+    });
+
+    it('sets amount from state on Amount: switched currencies', async () => {
+      (Amount.from_sat as jest.Mock).mockReturnValue({
+        to_sat: () => BigInt('22222'),
+      });
+
+      const testContext = {
+        ...mockContext,
+        currency: CurrencyUnit.Fiat,
+        exchangeRate: {
+          currency: 'usd',
+          conversionRate: 11000,
+          conversionDate: 2025,
+        },
+        recipient: undefined, // avoid computing the fee in this test
+      };
+
+      mockSendFlowRepository.getState.mockResolvedValue({
+        recipient: '',
+        amount: '100', // this represents usd
+      });
+      const expectedContext = {
+        ...testContext,
+        drain: undefined,
+        fee: undefined,
+        amount: '22222',
         errors: {
           ...mockContext.errors,
           tx: undefined,
