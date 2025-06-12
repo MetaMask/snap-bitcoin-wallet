@@ -118,22 +118,24 @@ export class KeyringHandler implements Keyring {
       resolvedAddressType = this.#defaultAddressType;
     }
 
+    // FIXME: This if should be removed ASAP as the index should always be defined or be 0
+    // The Snap automatically increasing the index per request creates significant issues
+    // such as: concurrency, lack of idempotency, dangling state (if MM crashes before saving the account), etc.
     if (resolvedIndex === undefined) {
       const accounts = (await this.#accountsUseCases.list()).filter(
         (acc) =>
-          acc.derivationPath[0] === entropySource &&
+          acc.entropySource === entropySource &&
           acc.network === scopeToNetwork[scope] &&
           acc.addressType === resolvedAddressType,
       );
 
       if (accounts.length > 0) {
         const sortedAccounts = accounts.sort(
-          (a, b) => b.accountIndex - a.accountIndex,
+          (accA, accB) => accB.accountIndex - accA.accountIndex,
         );
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         resolvedIndex = sortedAccounts[0]!.accountIndex + 1;
       }
-
-      console.log('accounts sorted', accounts);
     }
 
     const account = await this.#accountsUseCases.create({

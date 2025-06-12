@@ -55,6 +55,8 @@ describe('KeyringHandler', () => {
     balance: { trusted_spendable: { to_btc: () => 1 } },
     network: 'bitcoin',
     derivationPath: ['myEntropy', "84'", "0'", "0'"],
+    entropySource: 'myEntropy',
+    accountIndex: 0,
   });
   const defaultAddressType: AddressType = 'p2wpkh';
 
@@ -183,7 +185,7 @@ describe('KeyringHandler', () => {
       mockAccounts.create.mockRejectedValue(error);
 
       await expect(
-        handler.createAccount({ scopes: [BtcScope.Mainnet] }),
+        handler.createAccount({ scopes: [BtcScope.Mainnet], index: 0 }),
       ).rejects.toThrow(error);
       expect(mockAccounts.create).toHaveBeenCalled();
     });

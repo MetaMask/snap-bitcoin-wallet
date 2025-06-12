@@ -33,6 +33,11 @@ export type BitcoinAccount = {
   derivationPath: string[];
 
   /**
+   * Account entropy source.
+   */
+  entropySource: string;
+
+  /**
    * BIP44 Account index.
    */
   accountIndex: number;
