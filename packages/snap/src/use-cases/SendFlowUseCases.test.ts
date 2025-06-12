@@ -36,6 +36,7 @@ jest.mock('@metamask/bitcoindevkit', () => {
     },
     Amount: {
       from_btc: jest.fn(),
+      from_sat: jest.fn(),
     },
     Psbt: { from_string: jest.fn() },
   };
@@ -366,6 +367,9 @@ describe('SendFlowUseCases', () => {
       mockSendFlowRepository.getState.mockResolvedValue({
         recipient: 'newAddress',
         amount: '',
+        account: {
+          accountId: 'myAccount',
+        },
       });
       const expectedContext = {
         ...testContext,
@@ -405,12 +409,65 @@ describe('SendFlowUseCases', () => {
       mockSendFlowRepository.getState.mockResolvedValue({
         recipient: '',
         amount: '21000',
+        account: {
+          accountId: 'myAccount',
+        },
       });
       const expectedContext = {
         ...testContext,
         drain: undefined,
         fee: undefined,
         amount: '1111',
+        errors: {
+          ...mockContext.errors,
+          tx: undefined,
+          amount: undefined,
+        },
+      };
+
+      await useCases.onChangeForm(
+        'interface-id',
+        SendFormEvent.Amount,
+        testContext,
+      );
+
+      expect(mockSendFlowRepository.getState).toHaveBeenCalledWith(
+        'interface-id',
+      );
+      expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
+        'interface-id',
+        expectedContext,
+      );
+    });
+
+    it('sets amount from state on Amount: switched currencies', async () => {
+      (Amount.from_sat as jest.Mock).mockReturnValue({
+        to_sat: () => BigInt('22222'),
+      });
+
+      const testContext = {
+        ...mockContext,
+        currency: CurrencyUnit.Fiat,
+        exchangeRate: {
+          currency: 'usd',
+          conversionRate: 11000,
+          conversionDate: 2025,
+        },
+        recipient: undefined, // avoid computing the fee in this test
+      };
+
+      mockSendFlowRepository.getState.mockResolvedValue({
+        recipient: '',
+        amount: '100', // this represents usd
+        account: {
+          accountId: 'myAccount',
+        },
+      });
+      const expectedContext = {
+        ...testContext,
+        drain: undefined,
+        fee: undefined,
+        amount: '22222',
         errors: {
           ...mockContext.errors,
           tx: undefined,
@@ -482,6 +539,9 @@ describe('SendFlowUseCases', () => {
       mockSendFlowRepository.getState.mockResolvedValue({
         recipient: 'newAddress',
         amount: '',
+        account: {
+          accountId: 'myAccount',
+        },
       });
 
       const expectedContext = {
@@ -504,6 +564,51 @@ describe('SendFlowUseCases', () => {
         mockContext.amount,
         'newAddressValidated',
       );
+      expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
+        'interface-id',
+        expectedContext,
+      );
+    });
+
+    it('sets account from state on Account', async () => {
+      const accountId = 'myAccount2';
+      mockAccount.peekAddress.mockReturnValue(
+        mock<AddressInfo>({
+          address: mock<Address>({ toString: () => 'myAddress2' }),
+        }),
+      );
+      mockSendFlowRepository.getState.mockResolvedValue({
+        recipient: '',
+        amount: '',
+        account: {
+          accountId,
+        },
+      });
+      mockAccountRepository.get.mockResolvedValue({
+        ...mockAccount,
+        id: accountId,
+      });
+
+      const expectedContext = {
+        account: { id: accountId, address: 'myAddress2' },
+        balance: '1234',
+        errors: {},
+        currency: CurrencyUnit.Bitcoin,
+        network: 'bitcoin',
+        feeRate: 2.4,
+        locale: 'en',
+      };
+
+      await useCases.onChangeForm(
+        'interface-id',
+        SendFormEvent.Account,
+        mockContext,
+      );
+
+      expect(mockSendFlowRepository.getState).toHaveBeenCalledWith(
+        'interface-id',
+      );
+      expect(mockAccountRepository.get).toHaveBeenCalledWith(accountId);
       expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
         'interface-id',
         expectedContext,
@@ -593,14 +698,14 @@ describe('SendFlowUseCases', () => {
       locale: 'en',
     };
     const mockExchangeRates = {
-      usd: { value: 200000 },
+      price: 200000,
     };
     const mockFeeRate = 4.4;
 
     beforeEach(() => {
       mockSendFlowRepository.getContext.mockResolvedValue(mockContext);
       mockChain.getFeeEstimates.mockResolvedValue(mockFeeEstimates);
-      mockRatesClient.exchangeRates.mockResolvedValue(mockExchangeRates);
+      mockRatesClient.spotPrices.mockResolvedValue(mockExchangeRates);
       mockSnapClient.scheduleBackgroundEvent.mockResolvedValue('event-id');
       mockSnapClient.getPreferences.mockResolvedValue(mockPreferences);
     });
@@ -639,7 +744,7 @@ describe('SendFlowUseCases', () => {
           ...mockContext,
           backgroundEventId: 'event-id',
           exchangeRate: {
-            conversionRate: mockExchangeRates.usd.value,
+            conversionRate: mockExchangeRates.price,
             conversionDate: expect.any(Number),
             currency: 'USD',
           },
@@ -675,6 +780,8 @@ describe('SendFlowUseCases', () => {
         ...mockPreferences,
         currency: 'unknown',
       });
+      const error = new Error('spotPrices failed');
+      mockRatesClient.spotPrices.mockRejectedValue(error);
 
       await useCases.refresh('interface-id');
 

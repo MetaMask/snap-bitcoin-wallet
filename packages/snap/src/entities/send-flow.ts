@@ -38,9 +38,13 @@ export enum SendFormEvent {
   Max = 'max',
   Account = 'account',
   Asset = 'asset',
+  SwitchCurrency = 'switchCurrency',
 }
 
 export type SendFormState = {
+  account: {
+    accountId: string;
+  };
   recipient: string;
   amount: string;
 };

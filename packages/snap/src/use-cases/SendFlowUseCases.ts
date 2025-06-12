@@ -16,6 +16,7 @@ import {
   SendFormEvent,
   ReviewTransactionEvent,
   networkToCurrencyUnit,
+  CurrencyUnit,
 } from '../entities';
 import { CronMethod } from '../handlers';
 
@@ -139,49 +140,7 @@ export class SendFlowUseCases {
         return this.#sendFlowRepository.updateForm(id, updatedContext);
       }
       case SendFormEvent.Confirm: {
-        if (context.backgroundEventId) {
-          await this.#snapClient.cancelBackgroundEvent(
-            context.backgroundEventId,
-          );
-        }
-
-        if (context.amount && context.recipient) {
-          const account = await this.#accountRepository.get(context.account.id);
-          if (!account) {
-            throw new Error('Account removed while confirming send flow');
-          }
-          const frozenUTXOs = await this.#accountRepository.getFrozenUTXOs(
-            context.account.id,
-          );
-
-          const builder = account
-            .buildTx()
-            .feeRate(context.feeRate)
-            .unspendable(frozenUTXOs);
-
-          if (context.drain) {
-            builder.drainWallet().drainTo(context.recipient);
-          } else {
-            builder.addRecipient(context.amount, context.recipient);
-          }
-          const psbt = builder.finish();
-
-          const reviewContext: ReviewTransactionContext = {
-            from: context.account.address,
-            explorerUrl: this.#chainClient.getExplorerUrl(context.network),
-            network: context.network,
-            amount: context.amount,
-            recipient: context.recipient,
-            exchangeRate: context.exchangeRate,
-            currency: context.currency,
-            psbt: psbt.toString(),
-            sendForm: context,
-            locale: context.locale,
-          };
-          return this.#sendFlowRepository.updateReview(id, reviewContext);
-        }
-
-        throw new Error('Inconsistent Send form context');
+        return this.#handleConfirm(id, context);
       }
       case SendFormEvent.Max: {
         return this.#handleSetMax(id, context);
@@ -192,9 +151,21 @@ export class SendFlowUseCases {
       case SendFormEvent.Amount: {
         return this.#handleSetAmount(id, context);
       }
+      case SendFormEvent.SwitchCurrency: {
+        if (!context.exchangeRate) {
+          return undefined;
+        }
+
+        const updatedContext = { ...context };
+        updatedContext.currency =
+          context.currency === CurrencyUnit.Fiat
+            ? networkToCurrencyUnit[context.network]
+            : CurrencyUnit.Fiat;
+
+        return this.#sendFlowRepository.updateForm(id, updatedContext);
+      }
       case SendFormEvent.Account: {
-        // TODO: Implement switching accounts
-        return undefined;
+        return this.#handleSetAccount(id, context);
       }
       case SendFormEvent.Asset: {
         // Do nothing as there are no other assets
@@ -289,8 +260,19 @@ export class SendFlowUseCases {
     delete updatedContext.drain;
 
     try {
-      // We expect amounts to be entered in Bitcoin
-      const amount = Amount.from_btc(Number(formState.amount));
+      let amount: Amount;
+      if (context.currency === CurrencyUnit.Fiat && context.exchangeRate) {
+        // keep everything in sats (integers) to avoid FP drift
+        const sats = Math.round(
+          (Number(formState.amount) * 1e8) /
+            context.exchangeRate.conversionRate,
+        );
+        amount = Amount.from_sat(BigInt(sats));
+      } else {
+        // expects values to be entered in BTC and not satoshis
+        amount = Amount.from_btc(Number(formState.amount));
+      }
+
       updatedContext.amount = amount.to_sat().toString();
       updatedContext = await this.#computeFee(updatedContext);
     } catch (error) {
@@ -301,6 +283,81 @@ export class SendFlowUseCases {
     }
 
     return await this.#sendFlowRepository.updateForm(id, updatedContext);
+  }
+
+  async #handleConfirm(id: string, context: SendFormContext): Promise<void> {
+    if (context.amount && context.recipient) {
+      if (context.backgroundEventId) {
+        await this.#snapClient.cancelBackgroundEvent(context.backgroundEventId);
+      }
+
+      const account = await this.#accountRepository.get(context.account.id);
+      if (!account) {
+        throw new Error('Account removed while confirming send flow');
+      }
+      const frozenUTXOs = await this.#accountRepository.getFrozenUTXOs(
+        context.account.id,
+      );
+
+      const builder = account
+        .buildTx()
+        .feeRate(context.feeRate)
+        .unspendable(frozenUTXOs);
+
+      if (context.drain) {
+        builder.drainWallet().drainTo(context.recipient);
+      } else {
+        builder.addRecipient(context.amount, context.recipient);
+      }
+      const psbt = builder.finish();
+
+      const reviewContext: ReviewTransactionContext = {
+        from: context.account.address,
+        explorerUrl: this.#chainClient.getExplorerUrl(context.network),
+        network: context.network,
+        amount: context.amount,
+        recipient: context.recipient,
+        exchangeRate: context.exchangeRate,
+        currency: context.currency,
+        psbt: psbt.toString(),
+        sendForm: context,
+        locale: context.locale,
+      };
+
+      return this.#sendFlowRepository.updateReview(id, reviewContext);
+    }
+
+    throw new Error('Inconsistent Send form context');
+  }
+
+  async #handleSetAccount(id: string, context: SendFormContext): Promise<void> {
+    const formState = await this.#sendFlowRepository.getState(id);
+    if (!formState) {
+      throw new Error(`Form state not found when switching accounts: ${id}`);
+    }
+
+    const account = await this.#accountRepository.get(
+      formState.account.accountId,
+    );
+    if (!account) {
+      throw new Error('Account not found when switching');
+    }
+
+    // We "reset" the context with the new account
+    const newContext: SendFormContext = {
+      balance: account.balance.trusted_spendable.to_sat().toString(),
+      account: {
+        id: account.id,
+        address: account.peekAddress(0).address.toString(), // FIXME: Address should not be needed in the send flow
+      },
+      errors: {},
+      currency: context.currency,
+      network: context.network,
+      feeRate: context.feeRate,
+      locale: context.locale,
+    };
+
+    return await this.#sendFlowRepository.updateForm(id, newContext);
   }
 
   async refresh(id: string): Promise<void> {
@@ -327,15 +384,12 @@ export class SendFlowUseCases {
 
       // Exchange rate is only relevant for Bitcoin
       if (network === 'bitcoin') {
-        const exchangeRates = await this.#ratesClient.exchangeRates();
-        const conversionRate = exchangeRates[currency];
-        if (conversionRate) {
-          updatedContext.exchangeRate = {
-            conversionRate: conversionRate.value,
-            conversionDate: getCurrentUnixTimestamp(),
-            currency: currency.toUpperCase(),
-          };
-        }
+        const spotPrice = await this.#ratesClient.spotPrices(currency);
+        updatedContext.exchangeRate = {
+          conversionRate: spotPrice.price,
+          conversionDate: getCurrentUnixTimestamp(),
+          currency: currency.toUpperCase(),
+        };
       }
 
       updatedContext = await this.#computeFee(updatedContext);

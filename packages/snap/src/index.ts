@@ -1,5 +1,3 @@
-import './infra/fetch';
-
 import type {
   OnAssetsConversionHandler,
   OnAssetsLookupHandler,
@@ -91,7 +89,8 @@ export const onAssetsLookup: OnAssetsLookupHandler = async () =>
 
 export const onAssetsConversion: OnAssetsConversionHandler = async ({
   conversions,
-}) => assetsHandler.conversion(conversions);
+  includeMarketData,
+}) => assetsHandler.conversion(conversions, includeMarketData);
 
 export const onAssetHistoricalPrice: OnAssetHistoricalPriceHandler = async ({
   from,

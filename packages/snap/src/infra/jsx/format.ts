@@ -15,14 +15,23 @@ export const displayAmount = (
   return amount.toString();
 };
 
+export const exchangeAmount = (
+  amount: bigint,
+  exchangeRate?: CurrencyRate,
+): string => {
+  if (!exchangeRate) {
+    return '';
+  }
+
+  return ((Number(amount) * exchangeRate.conversionRate) / 1e8).toFixed(2);
+};
+
 export const displayExchangeAmount = (
   amount: bigint,
   exchangeRate?: CurrencyRate,
 ): string => {
   return exchangeRate
-    ? `${((Number(amount) * exchangeRate.conversionRate) / 1e8).toFixed(2)} ${
-        exchangeRate.currency
-      }`
+    ? `${exchangeAmount(amount, exchangeRate)} ${exchangeRate.currency}`
     : '';
 };
 

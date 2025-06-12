@@ -1,10 +1,11 @@
-import type { HistoricalPriceIntervals } from '@metamask/snaps-sdk';
+import type { HistoricalPriceIntervals, MarketData } from '@metamask/snaps-sdk';
 import { SnapError } from '@metamask/snaps-sdk';
 import { mock } from 'jest-mock-extended';
 
 import type { AssetsUseCases } from '../use-cases';
 import { AssetsHandler } from './AssetsHandler';
 import { Caip19Asset } from './caip';
+import type { SpotPrice } from '../entities';
 
 describe('AssetsHandler', () => {
   const mockAssetsUseCases = mock<AssetsUseCases>();
@@ -32,9 +33,16 @@ describe('AssetsHandler', () => {
 
   describe('conversion', () => {
     it('returns rates for all networks successfully', async () => {
+      const mockMarketData = mock<MarketData>();
       mockAssetsUseCases.getRates.mockResolvedValue([
-        [Caip19Asset.Testnet, 0.1],
-        [Caip19Asset.Regtest, 0.2],
+        [
+          Caip19Asset.Testnet,
+          mock<SpotPrice>({ price: 0.1, marketData: mockMarketData }),
+        ],
+        [
+          Caip19Asset.Regtest,
+          mock<SpotPrice>({ price: 0.2, marketData: mockMarketData }),
+        ],
       ]);
 
       const conversions = [
@@ -45,7 +53,7 @@ describe('AssetsHandler', () => {
         { from: Caip19Asset.Signet, to: Caip19Asset.Bitcoin },
         { from: Caip19Asset.Regtest, to: Caip19Asset.Bitcoin },
       ];
-      const result = await handler.conversion(conversions);
+      const result = await handler.conversion(conversions, true);
 
       expect(mockAssetsUseCases.getRates).toHaveBeenCalledTimes(1);
       expect(mockAssetsUseCases.getRates).toHaveBeenCalledWith([
@@ -56,11 +64,13 @@ describe('AssetsHandler', () => {
         [Caip19Asset.Bitcoin]: {
           [Caip19Asset.Testnet]: {
             rate: '0.1',
+            marketData: mockMarketData,
             conversionTime: expect.any(Number),
             expirationTime: expect.any(Number),
           },
           [Caip19Asset.Regtest]: {
             rate: '0.2',
+            marketData: mockMarketData,
             conversionTime: expect.any(Number),
             expirationTime: expect.any(Number),
           },
