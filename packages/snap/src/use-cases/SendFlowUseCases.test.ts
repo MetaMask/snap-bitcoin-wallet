@@ -367,6 +367,9 @@ describe('SendFlowUseCases', () => {
       mockSendFlowRepository.getState.mockResolvedValue({
         recipient: 'newAddress',
         amount: '',
+        account: {
+          accountId: 'myAccount',
+        },
       });
       const expectedContext = {
         ...testContext,
@@ -406,6 +409,9 @@ describe('SendFlowUseCases', () => {
       mockSendFlowRepository.getState.mockResolvedValue({
         recipient: '',
         amount: '21000',
+        account: {
+          accountId: 'myAccount',
+        },
       });
       const expectedContext = {
         ...testContext,
@@ -453,6 +459,9 @@ describe('SendFlowUseCases', () => {
       mockSendFlowRepository.getState.mockResolvedValue({
         recipient: '',
         amount: '100', // this represents usd
+        account: {
+          accountId: 'myAccount',
+        },
       });
       const expectedContext = {
         ...testContext,
@@ -530,6 +539,9 @@ describe('SendFlowUseCases', () => {
       mockSendFlowRepository.getState.mockResolvedValue({
         recipient: 'newAddress',
         amount: '',
+        account: {
+          accountId: 'myAccount',
+        },
       });
 
       const expectedContext = {
@@ -552,6 +564,51 @@ describe('SendFlowUseCases', () => {
         mockContext.amount,
         'newAddressValidated',
       );
+      expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
+        'interface-id',
+        expectedContext,
+      );
+    });
+
+    it('sets account from state on Account', async () => {
+      const accountId = 'myAccount2';
+      mockAccount.peekAddress.mockReturnValue(
+        mock<AddressInfo>({
+          address: mock<Address>({ toString: () => 'myAddress2' }),
+        }),
+      );
+      mockSendFlowRepository.getState.mockResolvedValue({
+        recipient: '',
+        amount: '',
+        account: {
+          accountId,
+        },
+      });
+      mockAccountRepository.get.mockResolvedValue({
+        ...mockAccount,
+        id: accountId,
+      });
+
+      const expectedContext = {
+        account: { id: accountId, address: 'myAddress2' },
+        balance: '1234',
+        errors: {},
+        currency: CurrencyUnit.Bitcoin,
+        network: 'bitcoin',
+        feeRate: 2.4,
+        locale: 'en',
+      };
+
+      await useCases.onChangeForm(
+        'interface-id',
+        SendFormEvent.Account,
+        mockContext,
+      );
+
+      expect(mockSendFlowRepository.getState).toHaveBeenCalledWith(
+        'interface-id',
+      );
+      expect(mockAccountRepository.get).toHaveBeenCalledWith(accountId);
       expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
         'interface-id',
         expectedContext,
