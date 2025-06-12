@@ -22,17 +22,20 @@ export class AssetsUseCases {
 
   async getRates(assets: CaipAssetType[]): Promise<AssetRate[]> {
     this.#logger.debug('Fetching BTC rates for: %o', assets);
-    const exchangeRates = await this.#assetRates.exchangeRates();
+
+    const assetRates: AssetRate[] = [];
+    await Promise.all(
+      assets.map(async (asset) => {
+        const ticker = this.#assetToTicker(asset);
+        assetRates.push([
+          asset,
+          ticker ? await this.#assetRates.spotPrices(ticker) : null,
+        ]);
+      }),
+    );
+
     this.#logger.debug('BTC rates fetched successfully');
-
-    return assets.map((asset): AssetRate => {
-      const ticker = this.#assetToTicker(asset);
-      if (ticker && exchangeRates[ticker]) {
-        return [asset, exchangeRates[ticker].value];
-      }
-
-      return [asset, null];
-    });
+    return assetRates;
   }
 
   async getPriceIntervals(
@@ -52,19 +55,11 @@ export class AssetsUseCases {
     const historicalPrices: HistoricalPriceIntervals = {};
     await Promise.all(
       timePeriods.map(async (timePeriod) => {
-        try {
-          const prices = await this.#assetRates.historicalPrices(
-            timePeriod,
-            vsCurrency,
-          );
-          historicalPrices[timePeriod] = prices;
-        } catch (error) {
-          this.#logger.error(
-            `Failed to fetch historical prices. Time period: %s. Error: %s`,
-            timePeriod,
-            error,
-          );
-        }
+        const prices = await this.#assetRates.historicalPrices(
+          timePeriod,
+          vsCurrency,
+        );
+        historicalPrices[timePeriod] = prices;
       }),
     );
 

@@ -352,15 +352,12 @@ export class SendFlowUseCases {
 
       // Exchange rate is only relevant for Bitcoin
       if (network === 'bitcoin') {
-        const exchangeRates = await this.#ratesClient.exchangeRates();
-        const conversionRate = exchangeRates[currency];
-        if (conversionRate) {
-          updatedContext.exchangeRate = {
-            conversionRate: conversionRate.value,
-            conversionDate: getCurrentUnixTimestamp(),
-            currency: currency.toUpperCase(),
-          };
-        }
+        const spotPrice = await this.#ratesClient.spotPrices(currency);
+        updatedContext.exchangeRate = {
+          conversionRate: spotPrice.price,
+          conversionDate: getCurrentUnixTimestamp(),
+          currency: currency.toUpperCase(),
+        };
       }
 
       updatedContext = await this.#computeFee(updatedContext);

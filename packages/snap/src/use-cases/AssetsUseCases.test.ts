@@ -1,7 +1,7 @@
 import type { HistoricalPriceValue } from '@metamask/snaps-sdk';
 import { mock } from 'jest-mock-extended';
 
-import type { AssetRatesClient, ExchangeRates, Logger } from '../entities';
+import type { AssetRatesClient, Logger, SpotPrice } from '../entities';
 import { AssetsUseCases } from './AssetsUseCases';
 import { Caip19Asset } from '../handlers/caip';
 
@@ -13,13 +13,28 @@ describe('AssetsUseCases', () => {
 
   describe('getBtcRates', () => {
     it('returns rate for the known assets and null for unknown', async () => {
-      const mockExchangeRates = mock<ExchangeRates>({
-        usd: { value: 1 },
-        eth: { value: 2 },
-        btc: { value: 3 },
+      const mockExchangeRatesUSD = mock<SpotPrice>({
+        price: 1,
+        marketData: {
+          allTimeHigh: '110000',
+        },
+      });
+      const mockExchangeRatesETH = mock<SpotPrice>({
+        price: 1,
+        marketData: {
+          allTimeHigh: '0.1',
+        },
+      });
+      const mockExchangeRatesBTC = mock<SpotPrice>({
+        price: 1,
+        marketData: {
+          allTimeHigh: '1',
+        },
       });
 
-      mockAssetRates.exchangeRates.mockResolvedValue(mockExchangeRates);
+      mockAssetRates.spotPrices.mockResolvedValueOnce(mockExchangeRatesETH);
+      mockAssetRates.spotPrices.mockResolvedValueOnce(mockExchangeRatesBTC);
+      mockAssetRates.spotPrices.mockResolvedValueOnce(mockExchangeRatesUSD);
 
       const result = await useCases.getRates([
         'eip155:1/slip44:60',
@@ -28,18 +43,21 @@ describe('AssetsUseCases', () => {
         'swift:0/unknown:unknown',
       ]);
 
-      expect(mockAssetRates.exchangeRates).toHaveBeenCalled();
+      expect(mockAssetRates.spotPrices).toHaveBeenCalled();
       expect(result).toStrictEqual([
-        ['eip155:1/slip44:60', 2],
-        ['bip122:000000000019d6689c085ae165831e93/slip44:0', 3],
-        ['swift:0/iso4217:USD', 1],
         ['swift:0/unknown:unknown', null],
+        ['eip155:1/slip44:60', mockExchangeRatesETH],
+        [
+          'bip122:000000000019d6689c085ae165831e93/slip44:0',
+          mockExchangeRatesBTC,
+        ],
+        ['swift:0/iso4217:USD', mockExchangeRatesUSD],
       ]);
     });
 
-    it('propagates an error if exchangeRates fails', async () => {
+    it('propagates an error if spotPrices fails', async () => {
       const error = new Error('getRates failed');
-      mockAssetRates.exchangeRates.mockRejectedValue(error);
+      mockAssetRates.spotPrices.mockRejectedValue(error);
 
       await expect(useCases.getRates([Caip19Asset.Testnet])).rejects.toBe(
         error,
@@ -65,12 +83,13 @@ describe('AssetsUseCases', () => {
       });
     });
 
-    it('does not fail if historicalPrices returns an error', async () => {
+    it('propagates an error if historicalPrices fails', async () => {
       const error = new Error('historicalPrices failed');
       mockAssetRates.historicalPrices.mockRejectedValue(error);
 
-      const result = await useCases.getPriceIntervals('swift:0/iso4217:USD');
-      expect(result).toStrictEqual({});
+      await expect(
+        useCases.getPriceIntervals('swift:0/iso4217:USD'),
+      ).rejects.toBe(error);
     });
   });
 });
