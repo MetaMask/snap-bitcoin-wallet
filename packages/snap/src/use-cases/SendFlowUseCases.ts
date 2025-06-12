@@ -140,49 +140,7 @@ export class SendFlowUseCases {
         return this.#sendFlowRepository.updateForm(id, updatedContext);
       }
       case SendFormEvent.Confirm: {
-        if (context.backgroundEventId) {
-          await this.#snapClient.cancelBackgroundEvent(
-            context.backgroundEventId,
-          );
-        }
-
-        if (context.amount && context.recipient) {
-          const account = await this.#accountRepository.get(context.account.id);
-          if (!account) {
-            throw new Error('Account removed while confirming send flow');
-          }
-          const frozenUTXOs = await this.#accountRepository.getFrozenUTXOs(
-            context.account.id,
-          );
-
-          const builder = account
-            .buildTx()
-            .feeRate(context.feeRate)
-            .unspendable(frozenUTXOs);
-
-          if (context.drain) {
-            builder.drainWallet().drainTo(context.recipient);
-          } else {
-            builder.addRecipient(context.amount, context.recipient);
-          }
-          const psbt = builder.finish();
-
-          const reviewContext: ReviewTransactionContext = {
-            from: context.account.address,
-            explorerUrl: this.#chainClient.getExplorerUrl(context.network),
-            network: context.network,
-            amount: context.amount,
-            recipient: context.recipient,
-            exchangeRate: context.exchangeRate,
-            currency: context.currency,
-            psbt: psbt.toString(),
-            sendForm: context,
-            locale: context.locale,
-          };
-          return this.#sendFlowRepository.updateReview(id, reviewContext);
-        }
-
-        throw new Error('Inconsistent Send form context');
+        return this.#handleConfirm(id, context);
       }
       case SendFormEvent.Max: {
         return this.#handleSetMax(id, context);
@@ -207,8 +165,7 @@ export class SendFlowUseCases {
         return this.#sendFlowRepository.updateForm(id, updatedContext);
       }
       case SendFormEvent.Account: {
-        // TODO: Implement switching accounts
-        return undefined;
+        return this.#handleSetAccount(id, context);
       }
       case SendFormEvent.Asset: {
         // Do nothing as there are no other assets
@@ -326,6 +283,81 @@ export class SendFlowUseCases {
     }
 
     return await this.#sendFlowRepository.updateForm(id, updatedContext);
+  }
+
+  async #handleConfirm(id: string, context: SendFormContext): Promise<void> {
+    if (context.amount && context.recipient) {
+      if (context.backgroundEventId) {
+        await this.#snapClient.cancelBackgroundEvent(context.backgroundEventId);
+      }
+
+      const account = await this.#accountRepository.get(context.account.id);
+      if (!account) {
+        throw new Error('Account removed while confirming send flow');
+      }
+      const frozenUTXOs = await this.#accountRepository.getFrozenUTXOs(
+        context.account.id,
+      );
+
+      const builder = account
+        .buildTx()
+        .feeRate(context.feeRate)
+        .unspendable(frozenUTXOs);
+
+      if (context.drain) {
+        builder.drainWallet().drainTo(context.recipient);
+      } else {
+        builder.addRecipient(context.amount, context.recipient);
+      }
+      const psbt = builder.finish();
+
+      const reviewContext: ReviewTransactionContext = {
+        from: context.account.address,
+        explorerUrl: this.#chainClient.getExplorerUrl(context.network),
+        network: context.network,
+        amount: context.amount,
+        recipient: context.recipient,
+        exchangeRate: context.exchangeRate,
+        currency: context.currency,
+        psbt: psbt.toString(),
+        sendForm: context,
+        locale: context.locale,
+      };
+
+      return this.#sendFlowRepository.updateReview(id, reviewContext);
+    }
+
+    throw new Error('Inconsistent Send form context');
+  }
+
+  async #handleSetAccount(id: string, context: SendFormContext): Promise<void> {
+    const formState = await this.#sendFlowRepository.getState(id);
+    if (!formState) {
+      throw new Error(`Form state not found when switching accounts: ${id}`);
+    }
+
+    const account = await this.#accountRepository.get(
+      formState.account.accountId,
+    );
+    if (!account) {
+      throw new Error('Account not found when switching');
+    }
+
+    // We "reset" the context with the new account
+    const newContext: SendFormContext = {
+      balance: account.balance.trusted_spendable.to_sat().toString(),
+      account: {
+        id: account.id,
+        address: account.peekAddress(0).address.toString(), // FIXME: Address should not be needed in the send flow
+      },
+      errors: {},
+      currency: context.currency,
+      network: context.network,
+      feeRate: context.feeRate,
+      locale: context.locale,
+    };
+
+    return await this.#sendFlowRepository.updateForm(id, newContext);
   }
 
   async refresh(id: string): Promise<void> {

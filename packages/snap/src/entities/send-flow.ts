@@ -42,6 +42,9 @@ export enum SendFormEvent {
 }
 
 export type SendFormState = {
+  account: {
+    accountId: string;
+  };
   recipient: string;
   amount: string;
 };
