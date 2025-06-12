@@ -184,6 +184,7 @@ describe('Keyring', () => {
         options: {
           scope: BtcScope.Regtest,
           addressType: BtcAccountType.P2wpkh,
+          index: 0,
         },
       },
     });
