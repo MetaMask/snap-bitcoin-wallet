@@ -84,7 +84,9 @@ export class BdkAccountAdapter implements BitcoinAccount {
 
   get accountIndex(): number {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return Number(this.#derivationPath[3]!.charAt(0)); // Must be defined by assertion
+    const segment = this.#derivationPath[3]!;
+    const numericPart = segment.endsWith("'") ? segment.slice(0, -1) : segment;
+    return Number(numericPart);
   }
 
   get balance(): Balance {
