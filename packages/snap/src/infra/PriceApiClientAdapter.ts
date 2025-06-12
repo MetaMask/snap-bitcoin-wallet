@@ -2,13 +2,29 @@ import type { HistoricalPriceValue } from '@metamask/snaps-sdk';
 
 import type {
   AssetRatesClient,
-  ExchangeRates,
   PriceApiConfig,
+  SpotPrice,
   TimePeriod,
 } from '../entities';
 
-export type HistoricalPricesResponse = {
-  prices: [number, number][];
+type SpotPricesResponse = {
+  price: number;
+  marketCap: number;
+  allTimeHigh: number;
+  allTimeLow: number;
+  totalVolume: number;
+  circulatingSupply: number;
+  pricePercentChange1h: number;
+  pricePercentChange1d: number;
+  pricePercentChange7d: number;
+  pricePercentChange14d: number;
+  pricePercentChange30d: number;
+  pricePercentChange200d: number;
+  pricePercentChange1y: number;
+};
+
+type HistoricalPricesResponse = {
+  prices: [number, number | null][];
 };
 
 export class PriceApiClientAdapter implements AssetRatesClient {
@@ -18,17 +34,39 @@ export class PriceApiClientAdapter implements AssetRatesClient {
     this.#endpoint = config.url;
   }
 
-  async exchangeRates(baseCurrency = 'btc'): Promise<ExchangeRates> {
+  async spotPrices(
+    vsCurrency = 'usd',
+    baseCurrency = 'bitcoin',
+  ): Promise<SpotPrice> {
     const url = `${
       this.#endpoint
-    }/v1/exchange-rates?baseCurrency=${baseCurrency}`;
+    }/v1/spot-prices/${baseCurrency}?vsCurrency=${vsCurrency}`;
     const response = await fetch(url);
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch exchange rates: ${response.statusText}`);
+      throw new Error(`Failed to fetch spot prices: ${response.statusText}`);
     }
 
-    return await response.json();
+    const prices: SpotPricesResponse = await response.json();
+    return {
+      price: prices.price,
+      marketData: {
+        allTimeHigh: prices.allTimeHigh.toString(),
+        allTimeLow: prices.allTimeLow.toString(),
+        circulatingSupply: prices.circulatingSupply.toString(),
+        marketCap: prices.marketCap.toString(),
+        totalVolume: prices.totalVolume.toString(),
+        pricePercentChange: {
+          PT1H: prices.pricePercentChange1h,
+          P1D: prices.pricePercentChange1d,
+          P7D: prices.pricePercentChange7d,
+          P14D: prices.pricePercentChange14d,
+          P30D: prices.pricePercentChange30d,
+          P200D: prices.pricePercentChange200d,
+          P1Y: prices.pricePercentChange1y,
+        },
+      },
+    };
   }
 
   async historicalPrices(
@@ -50,9 +88,8 @@ export class PriceApiClientAdapter implements AssetRatesClient {
     }
 
     const prices: HistoricalPricesResponse = await response.json();
-    return prices.prices.map(([timestamp, price]) => [
-      timestamp,
-      price.toString(),
-    ]);
+    return prices.prices
+      .filter(([, price]) => price !== null) // keep only non-null prices
+      .map(([ts, price]) => [ts, (price as number).toString()]);
   }
 }

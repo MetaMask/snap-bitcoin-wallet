@@ -87,6 +87,7 @@ export class AssetsHandler {
 
   async conversion(
     conversions: OnAssetsConversionArguments['conversions'],
+    includeMarketData?: boolean,
   ): Promise<OnAssetsConversionResponse> {
     const conversionTime = getCurrentUnixTimestamp();
 
@@ -111,7 +112,8 @@ export class AssetsHandler {
           )) {
             conversionRates[fromKey][toAsset] = rate
               ? {
-                  rate: rate.toString(),
+                  rate: rate.price.toString(),
+                  marketData: includeMarketData ? rate.marketData : undefined,
                   conversionTime,
                   expirationTime: conversionTime + this.#expirationInterval,
                 }

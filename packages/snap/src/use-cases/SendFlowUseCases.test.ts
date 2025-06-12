@@ -641,14 +641,14 @@ describe('SendFlowUseCases', () => {
       locale: 'en',
     };
     const mockExchangeRates = {
-      usd: { value: 200000 },
+      price: 200000,
     };
     const mockFeeRate = 4.4;
 
     beforeEach(() => {
       mockSendFlowRepository.getContext.mockResolvedValue(mockContext);
       mockChain.getFeeEstimates.mockResolvedValue(mockFeeEstimates);
-      mockRatesClient.exchangeRates.mockResolvedValue(mockExchangeRates);
+      mockRatesClient.spotPrices.mockResolvedValue(mockExchangeRates);
       mockSnapClient.scheduleBackgroundEvent.mockResolvedValue('event-id');
       mockSnapClient.getPreferences.mockResolvedValue(mockPreferences);
     });
@@ -687,7 +687,7 @@ describe('SendFlowUseCases', () => {
           ...mockContext,
           backgroundEventId: 'event-id',
           exchangeRate: {
-            conversionRate: mockExchangeRates.usd.value,
+            conversionRate: mockExchangeRates.price,
             conversionDate: expect.any(Number),
             currency: 'USD',
           },
@@ -723,6 +723,8 @@ describe('SendFlowUseCases', () => {
         ...mockPreferences,
         currency: 'unknown',
       });
+      const error = new Error('spotPrices failed');
+      mockRatesClient.spotPrices.mockRejectedValue(error);
 
       await useCases.refresh('interface-id');
 
