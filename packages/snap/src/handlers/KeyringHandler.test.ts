@@ -131,6 +131,54 @@ describe('KeyringHandler', () => {
       });
     });
 
+    it('auto increment index', async () => {
+      // We should get index index 1
+      mockAccounts.list.mockResolvedValue([
+        mock<BitcoinAccount>({
+          entropySource: 'entropy1',
+          accountIndex: 1,
+          addressType: 'p2wpkh',
+          network: 'signet',
+        }),
+        mock<BitcoinAccount>({
+          entropySource: 'entropy2',
+          accountIndex: 2,
+          addressType: 'p2wpkh',
+          network: 'signet',
+        }),
+        mock<BitcoinAccount>({
+          entropySource: 'entropy2',
+          accountIndex: 0,
+          addressType: 'p2wpkh',
+          network: 'signet',
+        }),
+        mock<BitcoinAccount>({
+          entropySource: 'entropy2',
+          accountIndex: 3,
+          addressType: 'p2tr',
+          network: 'bitcoin',
+        }),
+      ]);
+
+      const options = {
+        scope: BtcScope.Signet,
+        index: null,
+        entropySource: 'entropy2',
+      };
+      const expectedCreateParams: CreateAccountParams = {
+        network: 'signet',
+        index: 1,
+        addressType: 'p2wpkh',
+        entropySource: 'entropy2',
+        synchronize: false,
+      };
+
+      await handler.createAccount(options);
+
+      expect(mockAccounts.list).toHaveBeenCalled();
+      expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
+    });
+
     it.each([
       { purpose: Purpose.Legacy, addressType: 'p2pkh' },
       { purpose: Purpose.Segwit, addressType: 'p2sh' },

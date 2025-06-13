@@ -29,6 +29,7 @@ import {
   string,
 } from 'superstruct';
 
+import type { BitcoinAccount } from '../entities';
 import {
   networkToCurrencyUnit,
   Purpose,
@@ -109,7 +110,7 @@ export class KeyringHandler implements Keyring {
       ? this.#extractAccountIndex(derivationPath)
       : index;
 
-    let resolvedAddressType: AddressType | undefined;
+    let resolvedAddressType: AddressType;
     if (addressType) {
       resolvedAddressType = caipToAddressType[addressType];
     } else if (derivationPath) {
@@ -121,27 +122,24 @@ export class KeyringHandler implements Keyring {
     // FIXME: This if should be removed ASAP as the index should always be defined or be 0
     // The Snap automatically increasing the index per request creates significant issues
     // such as: concurrency, lack of idempotency, dangling state (if MM crashes before saving the account), etc.
-    if (resolvedIndex === undefined) {
-      const accounts = (await this.#accountsUseCases.list()).filter(
+    if (resolvedIndex === undefined || resolvedIndex === null) {
+      const t = await this.#accountsUseCases.list();
+      console.log('t', t);
+      console.log('en', entropySource);
+      const accounts = t.filter(
         (acc) =>
           acc.entropySource === entropySource &&
           acc.network === scopeToNetwork[scope] &&
           acc.addressType === resolvedAddressType,
       );
 
-      if (accounts.length > 0) {
-        const sortedAccounts = accounts.sort(
-          (accA, accB) => accB.accountIndex - accA.accountIndex,
-        );
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        resolvedIndex = sortedAccounts[0]!.accountIndex + 1;
-      }
+      resolvedIndex = this.#getLowestUnusedIndex(accounts);
     }
 
     const account = await this.#accountsUseCases.create({
       network: scopeToNetwork[scope],
       entropySource,
-      index: resolvedIndex ?? 0,
+      index: resolvedIndex,
       addressType: resolvedAddressType,
       correlationId: metamask?.correlationId,
       synchronize,
@@ -289,5 +287,30 @@ export class KeyringHandler implements Keyring {
     }
 
     return index;
+  }
+
+  #getLowestUnusedIndex(accounts: BitcoinAccount[]): number {
+    if (accounts.length === 0) {
+      return 0;
+    }
+
+    const usedIndices = accounts
+      .map((acc) => acc.accountIndex)
+      .sort((idxA, idxB) => idxA - idxB);
+
+    let lowestUnusedIndex = 0;
+
+    for (const usedIndex of usedIndices) {
+      /**
+       * From lower to higher, the moment we find a gap, we can use it
+       */
+      if (usedIndex !== lowestUnusedIndex) {
+        break;
+      }
+
+      lowestUnusedIndex += 1;
+    }
+
+    return lowestUnusedIndex;
   }
 }
