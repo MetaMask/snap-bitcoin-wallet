@@ -123,10 +123,7 @@ export class KeyringHandler implements Keyring {
     // The Snap automatically increasing the index per request creates significant issues
     // such as: concurrency, lack of idempotency, dangling state (if MM crashes before saving the account), etc.
     if (resolvedIndex === undefined || resolvedIndex === null) {
-      const t = await this.#accountsUseCases.list();
-      console.log('t', t);
-      console.log('en', entropySource);
-      const accounts = t.filter(
+      const accounts = (await this.#accountsUseCases.list()).filter(
         (acc) =>
           acc.entropySource === entropySource &&
           acc.network === scopeToNetwork[scope] &&
