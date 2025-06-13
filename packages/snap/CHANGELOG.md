@@ -9,15 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.15.0]
 
-### Uncategorized
+### Added
 
-- feat: account index auto increment ([#471](https://github.com/MetaMask/snap-bitcoin-wallet/pull/471))
-- feat: account selector ([#479](https://github.com/MetaMask/snap-bitcoin-wallet/pull/479))
-- feat: Market data ([#478](https://github.com/MetaMask/snap-bitcoin-wallet/pull/478))
-- feat: switch currencies ([#477](https://github.com/MetaMask/snap-bitcoin-wallet/pull/477))
-- refactor: improve send flow ([#472](https://github.com/MetaMask/snap-bitcoin-wallet/pull/472))
-- fix: entropy source in options ([#473](https://github.com/MetaMask/snap-bitcoin-wallet/pull/473))
-- fix: delete account ([#469](https://github.com/MetaMask/snap-bitcoin-wallet/pull/469))
+- Account index auto increment on creation ([#471](https://github.com/MetaMask/snap-bitcoin-wallet/pull/471))
+- Account selector in send flow ([#479](https://github.com/MetaMask/snap-bitcoin-wallet/pull/479))
+- Market data ([#478](https://github.com/MetaMask/snap-bitcoin-wallet/pull/478))
+- Switch currencies in send flow ([#477](https://github.com/MetaMask/snap-bitcoin-wallet/pull/477))
+
+### Changed
+
+- Align Send flow ([#472](https://github.com/MetaMask/snap-bitcoin-wallet/pull/472))
+
+### Fixed
+
+- Entropy source as part of the `KeyringAccount` options ([#473](https://github.com/MetaMask/snap-bitcoin-wallet/pull/473))
+- Delete account keeping residue in state ([#469](https://github.com/MetaMask/snap-bitcoin-wallet/pull/469))
 
 ## [0.14.1]
 

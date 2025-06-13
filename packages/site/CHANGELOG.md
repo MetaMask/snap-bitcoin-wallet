@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.15.0]
 
-### Uncategorized
+### Changed
 
-- feat: account index auto increment ([#471](https://github.com/MetaMask/snap-bitcoin-wallet/pull/471))
+- Align latest dependencies ([#471](https://github.com/MetaMask/snap-bitcoin-wallet/pull/471))
 
 ## [0.14.1]
 
