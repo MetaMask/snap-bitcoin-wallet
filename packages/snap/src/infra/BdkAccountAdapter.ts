@@ -77,6 +77,18 @@ export class BdkAccountAdapter implements BitcoinAccount {
     return this.#derivationPath;
   }
 
+  get entropySource(): string {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return this.#derivationPath[0]!; // Must be defined by assertion
+  }
+
+  get accountIndex(): number {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const segment = this.#derivationPath[3]!;
+    const numericPart = segment.endsWith("'") ? segment.slice(0, -1) : segment;
+    return Number(numericPart);
+  }
+
   get balance(): Balance {
     return this.#wallet.balance;
   }
