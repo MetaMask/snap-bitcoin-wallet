@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0]
+
+### Added
+
+- Account index auto increment on creation ([#471](https://github.com/MetaMask/snap-bitcoin-wallet/pull/471))
+- Account selector in send flow ([#479](https://github.com/MetaMask/snap-bitcoin-wallet/pull/479))
+- Market data ([#478](https://github.com/MetaMask/snap-bitcoin-wallet/pull/478))
+- Switch currencies in send flow ([#477](https://github.com/MetaMask/snap-bitcoin-wallet/pull/477))
+
+### Changed
+
+- Align Send flow ([#472](https://github.com/MetaMask/snap-bitcoin-wallet/pull/472))
+
+### Fixed
+
+- Entropy source as part of the `KeyringAccount` options ([#473](https://github.com/MetaMask/snap-bitcoin-wallet/pull/473))
+- Delete account keeping residue in state ([#469](https://github.com/MetaMask/snap-bitcoin-wallet/pull/469))
+
 ## [0.14.1]
 
 ### Fixed
@@ -349,7 +367,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add CI for lint and test ([#2](https://github.com/MetaMask/bitcoin/pull/2))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.14.1...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.15.0...HEAD
+[0.15.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.14.1...v0.15.0
 [0.14.1]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.14.0...v0.14.1
 [0.14.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.12.1...v0.13.0
