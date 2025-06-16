@@ -1,17 +1,8 @@
 {
   "locale": "en",
   "messages": {
-    "snapDescription": {
-      "message": "MetaMaskでビットコインを管理"
-    },
-    "snapProposedName": {
-      "message": "ビットコイン"
-    },
     "reviewTransactionWarning": {
       "message": "進める前にトランザクションを確認してください"
-    },
-    "loading": {
-      "message": "読み込み中"
     },
     "from": {
       "message": "送金元"
@@ -19,14 +10,14 @@
     "toAddress": {
       "message": "To Address"
     },
-    "fromAccount": {
-      "message": "送金元アカウント"
-    },
-    "review": {
-      "message": "確認"
+    "continue": {
+      "message": "Continue"
     },
     "cancel": {
       "message": "キャンセル"
+    },
+    "clear": {
+      "message": "Clear"
     },
     "amount": {
       "message": "金額"
@@ -64,14 +55,11 @@
     "send": {
       "message": "送金"
     },
+    "asset": {
+      "message": "Asset"
+    },
     "sending": {
       "message": "送金中"
-    },
-    "sendAmount": {
-      "message": "送金額"
-    },
-    "amountPlaceholder": {
-      "message": "Enter amount to send"
     },
     "max": {
       "message": "最大"
@@ -79,17 +67,11 @@
     "recipientPlaceholder": {
       "message": "Enter receiving address"
     },
-    "validAddress": {
-      "message": "有効なビットコインアドレス"
-    },
-    "preparingTransaction": {
-      "message": "トランザクションを準備中"
+    "review": {
+      "message": "確認"
     },
     "error": {
       "message": "エラー"
-    },
-    "satProtectionTooltip": {
-      "message": "MetaMask is protecting your Ordinals, Rare SATs, and Runes to be send in Bitcoin Transactions."
     }
   }
 }
