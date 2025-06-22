@@ -1,17 +1,8 @@
 {
   "locale": "tr",
   "messages": {
-    "snapDescription": {
-      "message": "MetaMask'i kullanarak Bitcoin'i yönetin"
-    },
-    "snapProposedName": {
-      "message": "Bitcoin"
-    },
     "reviewTransactionWarning": {
       "message": "Devam etmeden önce işlemi inceleyin"
-    },
-    "loading": {
-      "message": "Yükleniyor"
     },
     "from": {
       "message": "Gönderen"
@@ -19,14 +10,14 @@
     "toAddress": {
       "message": "To Address"
     },
-    "fromAccount": {
-      "message": "Gönderen Hesap"
-    },
-    "review": {
-      "message": "İncele"
+    "continue": {
+      "message": "Continue"
     },
     "cancel": {
       "message": "İptal"
+    },
+    "clear": {
+      "message": "Clear"
     },
     "amount": {
       "message": "Miktar"
@@ -64,14 +55,11 @@
     "send": {
       "message": "Gönder"
     },
+    "asset": {
+      "message": "Asset"
+    },
     "sending": {
       "message": "Gönderiliyor"
-    },
-    "sendAmount": {
-      "message": "Gönderilecek Miktar"
-    },
-    "amountPlaceholder": {
-      "message": "Enter amount to send"
     },
     "max": {
       "message": "Maksimum"
@@ -79,17 +67,11 @@
     "recipientPlaceholder": {
       "message": "Enter receiving address"
     },
-    "validAddress": {
-      "message": "Geçerli bitcoin adresi"
-    },
-    "preparingTransaction": {
-      "message": "İşlem hazırlanıyor"
+    "review": {
+      "message": "İncele"
     },
     "error": {
       "message": "Hata"
-    },
-    "satProtectionTooltip": {
-      "message": "MetaMask is protecting your Ordinals, Rare SATs, and Runes to be send in Bitcoin Transactions."
     }
   }
 }
