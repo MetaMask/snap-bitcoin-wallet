@@ -2,7 +2,7 @@ import type { Network } from '@metamask/bitcoindevkit';
 import type { CurrencyRate } from '@metamask/snaps-sdk';
 
 import type { CurrencyUnit } from './currency';
-import { CreateTxError } from './error';
+import type { CodifiedError } from './error';
 
 export const SENDFORM_NAME = 'sendForm';
 
@@ -21,9 +21,9 @@ export type SendFormContext = {
   fee?: string;
   drain?: boolean;
   errors: {
-    tx?: CreateTxError;
-    recipient?: CreateTxError;
-    amount?: CreateTxError;
+    tx?: CodifiedError;
+    recipient?: CodifiedError;
+    amount?: CodifiedError;
   };
   backgroundEventId?: string;
   locale: string;

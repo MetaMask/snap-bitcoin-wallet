@@ -1,8 +1,7 @@
-import type { BdkErrorCode } from '@metamask/bitcoindevkit';
 import type { Json } from '@metamask/utils';
 
-export type CreateTxError = {
+export type CodifiedError = {
   message: string;
-  code: BdkErrorCode | 'unknown';
+  code: number;
   data: Json;
 };

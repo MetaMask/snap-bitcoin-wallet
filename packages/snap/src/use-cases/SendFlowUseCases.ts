@@ -1,10 +1,4 @@
-import {
-  Psbt,
-  Address,
-  Amount,
-  BdkErrorCode,
-  BdkError,
-} from '@metamask/bitcoindevkit';
+import { Psbt, Address, Amount } from '@metamask/bitcoindevkit';
 import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 import { UserRejectedRequestError } from '@metamask/snaps-sdk';
 
@@ -17,13 +11,13 @@ import type {
   ReviewTransactionContext,
   AssetRatesClient,
   Logger,
+  CodifiedError,
 } from '../entities';
 import {
   SendFormEvent,
   ReviewTransactionEvent,
   networkToCurrencyUnit,
   CurrencyUnit,
-  CreateTxError,
 } from '../entities';
 import { CronMethod } from '../handlers';
 
@@ -245,17 +239,14 @@ export class SendFlowUseCases {
       ).toString();
       updatedContext = await this.#computeFee(updatedContext);
     } catch (error) {
-      const { message, code, data } = error as CreateTxError;
-      console.log('error', error);
-      this.#logger.error(`Invalid recipient. Error: %s`, message);
+      this.#logger.error(
+        `Invalid recipient. Error: %s`,
+        (error as CodifiedError).message,
+      );
 
       updatedContext.errors = {
         ...updatedContext.errors,
-        recipient: {
-          message,
-          code,
-          data,
-        },
+        recipient: error as CodifiedError,
       };
     }
 
@@ -291,16 +282,14 @@ export class SendFlowUseCases {
       updatedContext.amount = amount.to_sat().toString();
       updatedContext = await this.#computeFee(updatedContext);
     } catch (error) {
-      const { message, code, data } = error as CreateTxError;
-      this.#logger.error(`Invalid amount. Error: %s`, message);
+      this.#logger.error(
+        `Invalid amount. Error: %s`,
+        (error as CodifiedError).message,
+      );
 
       updatedContext.errors = {
         ...updatedContext.errors,
-        amount: {
-          message,
-          code,
-          data,
-        },
+        amount: error as CodifiedError,
       };
     }
 
@@ -349,17 +338,16 @@ export class SendFlowUseCases {
 
         return this.#sendFlowRepository.updateReview(id, reviewContext);
       } catch (error) {
-        const { message, code, data } = error as CreateTxError;
         this.#logger.error(
           `Failed to build PSBT on Confirm. Error: %s`,
-          message,
+          (error as CodifiedError).message,
         );
 
         const errContext = {
           ...context,
           errors: {
             ...context.errors,
-            tx: { message, code, data },
+            tx: error as CodifiedError,
           },
         };
         return await this.#sendFlowRepository.updateForm(id, errContext);
@@ -484,14 +472,16 @@ export class SendFlowUseCases {
         const psbt = builder.addRecipient(amount, recipient).finish();
         return { ...context, fee: psbt.fee().to_sat().toString(), balance };
       } catch (error) {
-        const { message, code, data } = error as CreateTxError;
-        this.#logger.error(`Failed to build PSBT. Error: %s`, message);
+        this.#logger.error(
+          `Failed to build PSBT. Error: %s`,
+          (error as CodifiedError).message,
+        );
 
         return {
           ...context,
           errors: {
             ...context.errors,
-            tx: { message, code, data },
+            tx: error as CodifiedError,
           },
         };
       }

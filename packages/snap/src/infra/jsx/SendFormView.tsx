@@ -25,8 +25,6 @@ export const SendFormView: SnapComponent<SendFormViewProps> = ({
   const t = translate(messages);
   const { errors } = context;
 
-  console.log('context', context);
-
   return (
     <Container>
       <Box>
