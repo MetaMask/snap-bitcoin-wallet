@@ -1,7 +1,7 @@
-import { Amount } from '@metamask/bitcoindevkit';
+import { Amount, BdkErrorCode } from '@metamask/bitcoindevkit';
 import type { CurrencyRate } from '@metamask/snaps-sdk';
 
-import type { CurrencyUnit, Messages } from '../../entities';
+import type { CreateTxError, CurrencyUnit, Messages } from '../../entities';
 
 export const displayAmount = (
   amountSats: bigint,
@@ -42,3 +42,12 @@ export const translate =
 
 export const displayExplorerUrl = (url: string, address: string): string =>
   `${url}/address/${address}`;
+
+export const errorCodeToLabel = (code: CreateTxError['code']): string => {
+  if (code === 'unknown') return 'unknownError';
+
+  const raw = BdkErrorCode[code] as string | undefined;
+  if (!raw) return 'unknownError';
+
+  return raw.charAt(0).toLowerCase() + raw.slice(1);
+};

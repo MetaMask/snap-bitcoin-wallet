@@ -1,4 +1,10 @@
-import { Psbt, Address, Amount } from '@metamask/bitcoindevkit';
+import {
+  Psbt,
+  Address,
+  Amount,
+  BdkErrorCode,
+  BdkError,
+} from '@metamask/bitcoindevkit';
 import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 import { UserRejectedRequestError } from '@metamask/snaps-sdk';
 
@@ -17,6 +23,7 @@ import {
   ReviewTransactionEvent,
   networkToCurrencyUnit,
   CurrencyUnit,
+  CreateTxError,
 } from '../entities';
 import { CronMethod } from '../handlers';
 
@@ -238,9 +245,17 @@ export class SendFlowUseCases {
       ).toString();
       updatedContext = await this.#computeFee(updatedContext);
     } catch (error) {
+      const { message, code, data } = error as CreateTxError;
+      console.log('error', error);
+      this.#logger.error(`Invalid recipient. Error: %s`, message);
+
       updatedContext.errors = {
         ...updatedContext.errors,
-        recipient: error instanceof Error ? error.message : String(error),
+        recipient: {
+          message,
+          code,
+          data,
+        },
       };
     }
 
@@ -276,9 +291,16 @@ export class SendFlowUseCases {
       updatedContext.amount = amount.to_sat().toString();
       updatedContext = await this.#computeFee(updatedContext);
     } catch (error) {
+      const { message, code, data } = error as CreateTxError;
+      this.#logger.error(`Invalid amount. Error: %s`, message);
+
       updatedContext.errors = {
         ...updatedContext.errors,
-        amount: error instanceof Error ? error.message : String(error),
+        amount: {
+          message,
+          code,
+          data,
+        },
       };
     }
 
@@ -309,22 +331,39 @@ export class SendFlowUseCases {
       } else {
         builder.addRecipient(context.amount, context.recipient);
       }
-      const psbt = builder.finish();
 
-      const reviewContext: ReviewTransactionContext = {
-        from: context.account.address,
-        explorerUrl: this.#chainClient.getExplorerUrl(context.network),
-        network: context.network,
-        amount: context.amount,
-        recipient: context.recipient,
-        exchangeRate: context.exchangeRate,
-        currency: context.currency,
-        psbt: psbt.toString(),
-        sendForm: context,
-        locale: context.locale,
-      };
+      try {
+        const psbt = builder.finish();
+        const reviewContext: ReviewTransactionContext = {
+          from: context.account.address,
+          explorerUrl: this.#chainClient.getExplorerUrl(context.network),
+          network: context.network,
+          amount: context.amount,
+          recipient: context.recipient,
+          exchangeRate: context.exchangeRate,
+          currency: context.currency,
+          psbt: psbt.toString(),
+          sendForm: context,
+          locale: context.locale,
+        };
 
-      return this.#sendFlowRepository.updateReview(id, reviewContext);
+        return this.#sendFlowRepository.updateReview(id, reviewContext);
+      } catch (error) {
+        const { message, code, data } = error as CreateTxError;
+        this.#logger.error(
+          `Failed to build PSBT on Confirm. Error: %s`,
+          message,
+        );
+
+        const errContext = {
+          ...context,
+          errors: {
+            ...context.errors,
+            tx: { message, code, data },
+          },
+        };
+        return await this.#sendFlowRepository.updateForm(id, errContext);
+      }
     }
 
     throw new Error('Inconsistent Send form context');
@@ -445,11 +484,14 @@ export class SendFlowUseCases {
         const psbt = builder.addRecipient(amount, recipient).finish();
         return { ...context, fee: psbt.fee().to_sat().toString(), balance };
       } catch (error) {
+        const { message, code, data } = error as CreateTxError;
+        this.#logger.error(`Failed to build PSBT. Error: %s`, message);
+
         return {
           ...context,
           errors: {
             ...context.errors,
-            tx: error instanceof Error ? error.message : String(error),
+            tx: { message, code, data },
           },
         };
       }

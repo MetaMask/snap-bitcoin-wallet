@@ -5,9 +5,10 @@ import {
   Amount,
   FeeRate,
   Recipient,
+  BdkError,
 } from '@metamask/bitcoindevkit';
 
-import type { TransactionBuilder } from '../entities';
+import type { CreateTxError, TransactionBuilder } from '../entities';
 
 export class BdkTxBuilderAdapter implements TransactionBuilder {
   #builder: TxBuilder;
@@ -59,6 +60,26 @@ export class BdkTxBuilderAdapter implements TransactionBuilder {
   }
 
   finish(): Psbt {
-    return this.#builder.finish();
+    try {
+      return this.#builder.finish();
+    } catch (error) {
+      let txError: CreateTxError;
+      if (error instanceof BdkError) {
+        const { message, code, data } = error;
+        txError = {
+          message,
+          code,
+          data,
+        };
+      } else {
+        txError = {
+          message: error instanceof Error ? error.message : String(error),
+          code: 'unknown',
+          data: null,
+        };
+      }
+
+      throw txError;
+    }
   }
 }
