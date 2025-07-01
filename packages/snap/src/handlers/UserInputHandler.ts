@@ -34,7 +34,7 @@ export class UserInputHandler {
           interfaceId,
           event.name,
           context as SendFormContext,
-          'value' in (event as InputChangeEvent),
+          this.#hasValue(event) ? event.value : undefined,
         );
       } else if (this.#isReviewTransactionEvent(event.name)) {
         return this.#sendFlowUseCases.onChangeReview(
@@ -56,5 +56,9 @@ export class UserInputHandler {
     return Object.values(ReviewTransactionEvent).includes(
       name as ReviewTransactionEvent,
     );
+  }
+
+  #hasValue(event: UserInputEvent): event is InputChangeEvent {
+    return 'value' in event;
   }
 }
