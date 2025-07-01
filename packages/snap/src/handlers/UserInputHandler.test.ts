@@ -67,6 +67,7 @@ describe('UserInputHandler', () => {
         'interface-id',
         SendFormEvent.ClearRecipient,
         mockContext,
+        undefined,
       );
     });
 

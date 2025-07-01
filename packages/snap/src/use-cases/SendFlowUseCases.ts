@@ -1,5 +1,6 @@
 import { Psbt, Address, Amount } from '@metamask/bitcoindevkit';
 import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
+import type { InputChangeEvent } from '@metamask/snaps-sdk';
 import { UserRejectedRequestError } from '@metamask/snaps-sdk';
 
 import type {
@@ -20,6 +21,10 @@ import {
   CurrencyUnit,
 } from '../entities';
 import { CronMethod } from '../handlers';
+
+type SetAccountEventValue = {
+  accountId: string;
+};
 
 export class SendFlowUseCases {
   readonly #logger: Logger;
@@ -105,6 +110,7 @@ export class SendFlowUseCases {
     id: string,
     event: SendFormEvent,
     context: SendFormContext,
+    value?: InputChangeEvent['value'],
   ): Promise<void> {
     this.#logger.debug(
       'Event triggered on send form: %s. Event: %s',
@@ -147,10 +153,10 @@ export class SendFlowUseCases {
         return this.#handleSetMax(id, context);
       }
       case SendFormEvent.Recipient: {
-        return this.#handleSetRecipient(id, context);
+        return this.#handleSetRecipient(id, context, value as string);
       }
       case SendFormEvent.Amount: {
-        return this.#handleSetAmount(id, context);
+        return this.#handleSetAmount(id, context, value as string);
       }
       case SendFormEvent.SwitchCurrency: {
         if (!context.exchangeRate) {
@@ -166,7 +172,11 @@ export class SendFlowUseCases {
         return this.#sendFlowRepository.updateForm(id, updatedContext);
       }
       case SendFormEvent.Account: {
-        return this.#handleSetAccount(id, context);
+        return this.#handleSetAccount(
+          id,
+          context,
+          value as SetAccountEventValue,
+        );
       }
       case SendFormEvent.Asset: {
         // Do nothing as there are no other assets
@@ -222,19 +232,15 @@ export class SendFlowUseCases {
   async #handleSetRecipient(
     id: string,
     context: SendFormContext,
+    formState: string,
   ): Promise<void> {
-    const formState = await this.#sendFlowRepository.getState(id);
-    if (!formState) {
-      throw new Error(`Form state not found when setting recipient: ${id}`);
-    }
-
     let updatedContext = { ...context };
     delete updatedContext.errors.recipient;
     delete updatedContext.errors.tx;
 
     try {
       updatedContext.recipient = Address.from_string(
-        formState.recipient,
+        formState,
         context.network,
       ).toString();
       updatedContext = await this.#computeFee(updatedContext);
@@ -253,12 +259,11 @@ export class SendFlowUseCases {
     return await this.#sendFlowRepository.updateForm(id, updatedContext);
   }
 
-  async #handleSetAmount(id: string, context: SendFormContext): Promise<void> {
-    const formState = await this.#sendFlowRepository.getState(id);
-    if (!formState) {
-      throw new Error(`Form state not found when setting amount: ${id}`);
-    }
-
+  async #handleSetAmount(
+    id: string,
+    context: SendFormContext,
+    formState: string,
+  ): Promise<void> {
     let updatedContext = { ...context };
     delete updatedContext.errors.amount;
     delete updatedContext.errors.tx;
@@ -270,13 +275,12 @@ export class SendFlowUseCases {
       if (context.currency === CurrencyUnit.Fiat && context.exchangeRate) {
         // keep everything in sats (integers) to avoid FP drift
         const sats = Math.round(
-          (Number(formState.amount) * 1e8) /
-            context.exchangeRate.conversionRate,
+          (Number(formState) * 1e8) / context.exchangeRate.conversionRate,
         );
         amount = Amount.from_sat(BigInt(sats));
       } else {
         // expects values to be entered in BTC and not satoshis
-        amount = Amount.from_btc(Number(formState.amount));
+        amount = Amount.from_btc(Number(formState));
       }
 
       updatedContext.amount = amount.to_sat().toString();
@@ -357,15 +361,12 @@ export class SendFlowUseCases {
     throw new Error('Inconsistent Send form context');
   }
 
-  async #handleSetAccount(id: string, context: SendFormContext): Promise<void> {
-    const formState = await this.#sendFlowRepository.getState(id);
-    if (!formState) {
-      throw new Error(`Form state not found when switching accounts: ${id}`);
-    }
-
-    const account = await this.#accountRepository.get(
-      formState.account.accountId,
-    );
+  async #handleSetAccount(
+    id: string,
+    context: SendFormContext,
+    formState: SetAccountEventValue,
+  ): Promise<void> {
+    const account = await this.#accountRepository.get(formState.accountId);
     if (!account) {
       throw new Error('Account not found when switching');
     }

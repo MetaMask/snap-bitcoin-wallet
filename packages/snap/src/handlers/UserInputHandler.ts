@@ -1,4 +1,8 @@
-import type { Json, UserInputEvent } from '@metamask/snaps-sdk';
+import type {
+  InputChangeEvent,
+  Json,
+  UserInputEvent,
+} from '@metamask/snaps-sdk';
 
 import type { ReviewTransactionContext, SendFormContext } from '../entities';
 import { ReviewTransactionEvent, SendFormEvent } from '../entities';
@@ -21,7 +25,6 @@ export class UserInputHandler {
       if (!context) {
         throw new Error('Missing context');
       }
-
       if (!event.name) {
         throw new Error('Missing event name');
       }
@@ -31,6 +34,7 @@ export class UserInputHandler {
           interfaceId,
           event.name,
           context as SendFormContext,
+          this.#hasValue(event) ? event.value : undefined,
         );
       } else if (this.#isReviewTransactionEvent(event.name)) {
         return this.#sendFlowUseCases.onChangeReview(
@@ -52,5 +56,9 @@ export class UserInputHandler {
     return Object.values(ReviewTransactionEvent).includes(
       name as ReviewTransactionEvent,
     );
+  }
+
+  #hasValue(event: UserInputEvent): event is InputChangeEvent {
+    return 'value' in event;
   }
 }

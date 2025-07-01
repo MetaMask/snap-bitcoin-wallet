@@ -13,7 +13,7 @@ import {
 import type { CaipAccountId } from '@metamask/utils';
 
 import type { Messages, SendFormContext } from '../../../entities';
-import { CurrencyUnit, SENDFORM_NAME, SendFormEvent } from '../../../entities';
+import { CurrencyUnit, SendFormEvent } from '../../../entities';
 import { networkToCaip19, networkToScope } from '../../../handlers';
 import {
   displayAmount,
@@ -56,7 +56,7 @@ export const SendForm = (props: SendFormProps): JSXElement => {
   };
 
   return (
-    <Form name={SENDFORM_NAME}>
+    <Form name="sendForm">
       <Field label={t('from')}>
         <AccountSelector
           name={SendFormEvent.Account}

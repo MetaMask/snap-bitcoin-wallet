@@ -4,8 +4,6 @@ import type { CurrencyRate } from '@metamask/snaps-sdk';
 import type { CurrencyUnit } from './currency';
 import type { CodifiedError } from './error';
 
-export const SENDFORM_NAME = 'sendForm';
-
 export type SendFormContext = {
   account: {
     id: string;
@@ -42,14 +40,6 @@ export enum SendFormEvent {
   SwitchCurrency = 'switchCurrency',
 }
 
-export type SendFormState = {
-  account: {
-    accountId: string;
-  };
-  recipient: string;
-  amount: string;
-};
-
 export type ReviewTransactionContext = {
   from: string;
   explorerUrl: string;
@@ -78,14 +68,6 @@ export enum ReviewTransactionEvent {
  * SendFlowRepository is a repository that manages Bitcoin Send flow interfaces.
  */
 export type SendFlowRepository = {
-  /**
-   * Get the form state.
-   *
-   * @param id - the interface ID
-   * @returns the form state or null
-   */
-  getState(id: string): Promise<SendFormState | null>;
-
   /**
    * Get the form context.
    *
