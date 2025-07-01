@@ -197,13 +197,13 @@ describe('AssetsHandler', () => {
     });
 
     it('propagates errors from getRates', async () => {
-      const conversions = [
-        { from: Caip19Asset.Bitcoin, to: Caip19Asset.Testnet },
+      const assets = [
+        { asset: Caip19Asset.Bitcoin, unit: Caip19Asset.Testnet },
       ];
       const error = new Error();
       mockAssetsUseCases.getRates.mockRejectedValue(error);
 
-      await expect(handler.conversion(conversions)).rejects.toThrow(
+      await expect(handler.marketData(assets)).rejects.toThrow(
         new SnapError(error),
       );
     });
