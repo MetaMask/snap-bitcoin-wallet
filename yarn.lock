@@ -2969,7 +2969,7 @@ __metadata:
     "@metamask/slip44": "npm:^4.2.0"
     "@metamask/snaps-cli": "npm:^8.1.0"
     "@metamask/snaps-jest": "npm:^9.2.0"
-    "@metamask/snaps-sdk": "npm:^8.1.0"
+    "@metamask/snaps-sdk": "npm:^9.0.0"
     "@metamask/utils": "npm:^11.4.0"
     concurrently: "npm:^9.2.0"
     dotenv: "npm:^17.0.0"
@@ -3587,19 +3587,6 @@ __metadata:
     "@metamask/superstruct": "npm:^3.2.1"
     "@metamask/utils": "npm:^11.4.0"
   checksum: 10/917cacb0fe9ca568da0177303b3aa1bf759b7ad8b7682dde52e631a45038487ccabd25cdca7aff97230f08f211d71eb3767976d6dd51e986f9af812de31a4f4e
-  languageName: node
-  linkType: hard
-
-"@metamask/snaps-sdk@npm:^8.1.0":
-  version: 8.1.0
-  resolution: "@metamask/snaps-sdk@npm:8.1.0"
-  dependencies:
-    "@metamask/key-tree": "npm:^10.1.1"
-    "@metamask/providers": "npm:^22.1.0"
-    "@metamask/rpc-errors": "npm:^7.0.2"
-    "@metamask/superstruct": "npm:^3.2.1"
-    "@metamask/utils": "npm:^11.4.0"
-  checksum: 10/c461398b77e2a0e5d14ef60ff2e7d491d256cfe9daab83e944bd2ff2231c689b8738a36ebd566163adb136f180edc767cfea3cfb95e0383ee9664a9eafda8fc8
   languageName: node
   linkType: hard
 

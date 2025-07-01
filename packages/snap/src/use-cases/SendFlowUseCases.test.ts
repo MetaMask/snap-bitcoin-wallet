@@ -19,6 +19,7 @@ import type {
   AssetRatesClient,
   Logger,
   CodifiedError,
+  SpotPrice,
 } from '../entities';
 import {
   ReviewTransactionEvent,
@@ -702,7 +703,9 @@ describe('SendFlowUseCases', () => {
     beforeEach(() => {
       mockSendFlowRepository.getContext.mockResolvedValue(mockContext);
       mockChain.getFeeEstimates.mockResolvedValue(mockFeeEstimates);
-      mockRatesClient.spotPrices.mockResolvedValue(mockExchangeRates);
+      mockRatesClient.spotPrices.mockResolvedValue(
+        mockExchangeRates as SpotPrice,
+      );
       mockSnapClient.scheduleBackgroundEvent.mockResolvedValue('event-id');
       mockSnapClient.getPreferences.mockResolvedValue(mockPreferences);
     });

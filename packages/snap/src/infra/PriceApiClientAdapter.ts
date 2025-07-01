@@ -51,6 +51,7 @@ export class PriceApiClientAdapter implements AssetRatesClient {
     return {
       price: prices.price,
       marketData: {
+        fungible: true,
         allTimeHigh: prices.allTimeHigh.toString(),
         allTimeLow: prices.allTimeLow.toString(),
         circulatingSupply: prices.circulatingSupply.toString(),

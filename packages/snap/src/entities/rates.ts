@@ -1,4 +1,7 @@
-import type { HistoricalPriceValue, MarketData } from '@metamask/snaps-sdk';
+import type {
+  HistoricalPriceValue,
+  FungibleAssetMarketData,
+} from '@metamask/snaps-sdk';
 import type { CaipAssetType } from '@metamask/utils';
 
 export type TimePeriod = 'P1D' | 'P7D' | 'P1M' | 'P3M' | 'P1Y' | 'P1000Y';
@@ -7,7 +10,7 @@ export type AssetRate = [CaipAssetType, SpotPrice | null];
 
 export type SpotPrice = {
   price: number;
-  marketData?: MarketData;
+  marketData: FungibleAssetMarketData;
 };
 
 export type AssetRatesClient = {
