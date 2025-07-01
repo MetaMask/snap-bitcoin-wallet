@@ -49,5 +49,6 @@ export const errorCodeToLabel = (code: number): string => {
     return 'unknownError';
   }
 
+  // lowercase the first letter to respect camelCase convention
   return raw.charAt(0).toLowerCase() + raw.slice(1);
 };
