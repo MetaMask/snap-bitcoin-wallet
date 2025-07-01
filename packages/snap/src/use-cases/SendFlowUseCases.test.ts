@@ -18,6 +18,7 @@ import type {
   ReviewTransactionContext,
   AssetRatesClient,
   Logger,
+  CodifiedError,
 } from '../entities';
 import {
   ReviewTransactionEvent,
@@ -146,9 +147,9 @@ describe('SendFlowUseCases', () => {
       drain: false,
       recipient: 'recipientAddress',
       errors: {
-        recipient: 'invalid recipient',
-        tx: 'errors on tx',
-        amount: 'invalid amount',
+        recipient: mock<CodifiedError>(),
+        tx: mock<CodifiedError>(),
+        amount: mock<CodifiedError>(),
       },
       feeRate: 2.4,
       network: 'bitcoin',
