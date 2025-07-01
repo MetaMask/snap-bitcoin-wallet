@@ -7,6 +7,8 @@ import type {
   OnAssetsConversionArguments,
   OnAssetsConversionResponse,
   OnAssetsLookupResponse,
+  OnAssetsMarketDataArguments,
+  OnAssetsMarketDataResponse,
 } from '@metamask/snaps-sdk';
 import { CaipAssetTypeStruct } from '@metamask/utils';
 import { assert } from 'superstruct';
@@ -87,7 +89,6 @@ export class AssetsHandler {
 
   async conversion(
     conversions: OnAssetsConversionArguments['conversions'],
-    includeMarketData?: boolean,
   ): Promise<OnAssetsConversionResponse> {
     const conversionTime = getCurrentUnixTimestamp();
 
@@ -113,7 +114,6 @@ export class AssetsHandler {
             conversionRates[fromKey][toAsset] = rate
               ? {
                   rate: rate.price.toString(),
-                  marketData: includeMarketData ? rate.marketData : undefined,
                   conversionTime,
                   expirationTime: conversionTime + this.#expirationInterval,
                 }
@@ -157,6 +157,42 @@ export class AssetsHandler {
           expirationTime: updateTime + this.#expirationInterval,
         },
       };
+    });
+  }
+
+  async marketData(
+    assets: OnAssetsMarketDataArguments['assets'],
+  ): Promise<OnAssetsMarketDataResponse> {
+    // Group market data by "asset"
+    const assetMap: Record<CaipAssetType, CaipAssetType[]> = {};
+    for (const { asset, unit } of assets) {
+      assetMap[asset] ??= [];
+      assetMap[asset].push(unit);
+    }
+
+    const marketData: OnAssetsMarketDataResponse['marketData'] = {};
+
+    return handle(async () => {
+      for (const [fromAsset, toAssets] of Object.entries(assetMap)) {
+        const fromKey = fromAsset as keyof typeof marketData;
+        marketData[fromKey] = {};
+
+        if (fromKey === (Caip19Asset.Bitcoin as CaipAssetType)) {
+          // For Bitcoin, fetch market data.
+          for (const [toAsset, rate] of await this.#assetsUseCases.getRates(
+            toAssets,
+          )) {
+            marketData[fromKey][toAsset] = rate ? rate.marketData : null;
+          }
+        } else {
+          // For every other assets, there is no market data.
+          for (const toAsset of toAssets) {
+            marketData[fromKey][toAsset] = null;
+          }
+        }
+      }
+
+      return { marketData };
     });
   }
 }

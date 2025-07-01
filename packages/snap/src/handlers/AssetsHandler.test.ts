@@ -1,4 +1,7 @@
-import type { HistoricalPriceIntervals, MarketData } from '@metamask/snaps-sdk';
+import type {
+  HistoricalPriceIntervals,
+  FungibleAssetMarketData,
+} from '@metamask/snaps-sdk';
 import { SnapError } from '@metamask/snaps-sdk';
 import { mock } from 'jest-mock-extended';
 
@@ -33,16 +36,9 @@ describe('AssetsHandler', () => {
 
   describe('conversion', () => {
     it('returns rates for all networks successfully', async () => {
-      const mockMarketData = mock<MarketData>();
       mockAssetsUseCases.getRates.mockResolvedValue([
-        [
-          Caip19Asset.Testnet,
-          mock<SpotPrice>({ price: 0.1, marketData: mockMarketData }),
-        ],
-        [
-          Caip19Asset.Regtest,
-          mock<SpotPrice>({ price: 0.2, marketData: mockMarketData }),
-        ],
+        [Caip19Asset.Testnet, mock<SpotPrice>({ price: 0.1 })],
+        [Caip19Asset.Regtest, mock<SpotPrice>({ price: 0.2 })],
       ]);
 
       const conversions = [
@@ -53,7 +49,7 @@ describe('AssetsHandler', () => {
         { from: Caip19Asset.Signet, to: Caip19Asset.Bitcoin },
         { from: Caip19Asset.Regtest, to: Caip19Asset.Bitcoin },
       ];
-      const result = await handler.conversion(conversions, true);
+      const result = await handler.conversion(conversions);
 
       expect(mockAssetsUseCases.getRates).toHaveBeenCalledTimes(1);
       expect(mockAssetsUseCases.getRates).toHaveBeenCalledWith([
@@ -64,13 +60,11 @@ describe('AssetsHandler', () => {
         [Caip19Asset.Bitcoin]: {
           [Caip19Asset.Testnet]: {
             rate: '0.1',
-            marketData: mockMarketData,
             conversionTime: expect.any(Number),
             expirationTime: expect.any(Number),
           },
           [Caip19Asset.Regtest]: {
             rate: '0.2',
-            marketData: mockMarketData,
             conversionTime: expect.any(Number),
             expirationTime: expect.any(Number),
           },
@@ -150,6 +144,68 @@ describe('AssetsHandler', () => {
       await expect(
         handler.historicalPrice(Caip19Asset.Bitcoin, Caip19Asset.Testnet),
       ).rejects.toThrow(new SnapError(error));
+    });
+  });
+
+  describe('marketData', () => {
+    it('returns market data for all assets successfully', async () => {
+      const mockMarketData = mock<FungibleAssetMarketData>();
+      mockAssetsUseCases.getRates.mockResolvedValue([
+        [
+          Caip19Asset.Testnet,
+          mock<SpotPrice>({ price: 0.1, marketData: mockMarketData }),
+        ],
+        [
+          Caip19Asset.Regtest,
+          mock<SpotPrice>({ price: 0.2, marketData: mockMarketData }),
+        ],
+      ]);
+
+      const assets = [
+        { asset: Caip19Asset.Bitcoin, unit: Caip19Asset.Testnet },
+        { asset: Caip19Asset.Bitcoin, unit: Caip19Asset.Regtest },
+        { asset: Caip19Asset.Testnet, unit: Caip19Asset.Bitcoin },
+        { asset: Caip19Asset.Testnet4, unit: Caip19Asset.Bitcoin },
+        { asset: Caip19Asset.Signet, unit: Caip19Asset.Bitcoin },
+        { asset: Caip19Asset.Regtest, unit: Caip19Asset.Bitcoin },
+      ];
+      const result = await handler.marketData(assets);
+
+      expect(mockAssetsUseCases.getRates).toHaveBeenCalledTimes(1);
+      expect(mockAssetsUseCases.getRates).toHaveBeenCalledWith([
+        Caip19Asset.Testnet,
+        Caip19Asset.Regtest,
+      ]);
+      expect(result.marketData).toStrictEqual({
+        [Caip19Asset.Bitcoin]: {
+          [Caip19Asset.Testnet]: mockMarketData,
+          [Caip19Asset.Regtest]: mockMarketData,
+        },
+        [Caip19Asset.Testnet]: {
+          [Caip19Asset.Bitcoin]: null,
+        },
+        [Caip19Asset.Testnet4]: {
+          [Caip19Asset.Bitcoin]: null,
+        },
+        [Caip19Asset.Signet]: {
+          [Caip19Asset.Bitcoin]: null,
+        },
+        [Caip19Asset.Regtest]: {
+          [Caip19Asset.Bitcoin]: null,
+        },
+      });
+    });
+
+    it('propagates errors from getRates', async () => {
+      const conversions = [
+        { from: Caip19Asset.Bitcoin, to: Caip19Asset.Testnet },
+      ];
+      const error = new Error();
+      mockAssetsUseCases.getRates.mockRejectedValue(error);
+
+      await expect(handler.conversion(conversions)).rejects.toThrow(
+        new SnapError(error),
+      );
     });
   });
 });
