@@ -354,7 +354,7 @@ describe('SendFlowUseCases', () => {
       );
     });
 
-    it('sets recipient from state on Recipient', async () => {
+    it('sets recipient on Recipient event', async () => {
       (Address.from_string as jest.Mock).mockReturnValue({
         toString: () => 'newAddressValidated',
       });
@@ -365,13 +365,6 @@ describe('SendFlowUseCases', () => {
         amount: undefined,
       };
 
-      mockSendFlowRepository.getState.mockResolvedValue({
-        recipient: 'newAddress',
-        amount: '',
-        account: {
-          accountId: 'myAccount',
-        },
-      });
       const expectedContext = {
         ...testContext,
         recipient: 'newAddressValidated',
@@ -386,18 +379,16 @@ describe('SendFlowUseCases', () => {
         'interface-id',
         SendFormEvent.Recipient,
         testContext,
+        'newAddress',
       );
 
-      expect(mockSendFlowRepository.getState).toHaveBeenCalledWith(
-        'interface-id',
-      );
       expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
         'interface-id',
         expectedContext,
       );
     });
 
-    it('sets amount from state on Amount', async () => {
+    it('sets amount on Amount event', async () => {
       (Amount.from_btc as jest.Mock).mockReturnValue({
         to_sat: () => BigInt('1111'), // Use different amount than state to verify that we get the result from the toString of the bigint
       });
@@ -407,13 +398,6 @@ describe('SendFlowUseCases', () => {
         recipient: undefined, // avoid computing the fee in this test
       };
 
-      mockSendFlowRepository.getState.mockResolvedValue({
-        recipient: '',
-        amount: '21000',
-        account: {
-          accountId: 'myAccount',
-        },
-      });
       const expectedContext = {
         ...testContext,
         drain: undefined,
@@ -430,11 +414,9 @@ describe('SendFlowUseCases', () => {
         'interface-id',
         SendFormEvent.Amount,
         testContext,
+        '21000',
       );
 
-      expect(mockSendFlowRepository.getState).toHaveBeenCalledWith(
-        'interface-id',
-      );
       expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
         'interface-id',
         expectedContext,
@@ -455,14 +437,6 @@ describe('SendFlowUseCases', () => {
         amount: undefined, // avoid computing the fee in this test
       };
 
-      mockSendFlowRepository.getState.mockResolvedValue({
-        recipient: 'notAnAddress',
-        amount: '',
-        account: {
-          accountId: 'myAccount',
-        },
-      });
-
       const expectedContext = {
         ...testContext,
         errors: {
@@ -476,18 +450,16 @@ describe('SendFlowUseCases', () => {
         'interface-id',
         SendFormEvent.Recipient,
         testContext,
+        'notAnAddress',
       );
 
-      expect(mockSendFlowRepository.getState).toHaveBeenCalledWith(
-        'interface-id',
-      );
       expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
         'interface-id',
         expectedContext,
       );
     });
 
-    it('sets amount from state on Amount: switched currencies', async () => {
+    it('sets amount on Amount: switched currencies', async () => {
       (Amount.from_sat as jest.Mock).mockReturnValue({
         to_sat: () => BigInt('22222'),
       });
@@ -503,13 +475,6 @@ describe('SendFlowUseCases', () => {
         recipient: undefined, // avoid computing the fee in this test
       };
 
-      mockSendFlowRepository.getState.mockResolvedValue({
-        recipient: '',
-        amount: '100', // this represents usd
-        account: {
-          accountId: 'myAccount',
-        },
-      });
       const expectedContext = {
         ...testContext,
         drain: undefined,
@@ -526,11 +491,9 @@ describe('SendFlowUseCases', () => {
         'interface-id',
         SendFormEvent.Amount,
         testContext,
+        '100',
       );
 
-      expect(mockSendFlowRepository.getState).toHaveBeenCalledWith(
-        'interface-id',
-      );
       expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
         'interface-id',
         expectedContext,
@@ -583,13 +546,6 @@ describe('SendFlowUseCases', () => {
       } as unknown as Amount);
       mockAccountRepository.get.mockResolvedValue(mockAccount);
       mockAccountRepository.getFrozenUTXOs.mockResolvedValue([]);
-      mockSendFlowRepository.getState.mockResolvedValue({
-        recipient: 'newAddress',
-        amount: '',
-        account: {
-          accountId: 'myAccount',
-        },
-      });
 
       const expectedContext = {
         ...mockContext,
@@ -624,13 +580,6 @@ describe('SendFlowUseCases', () => {
           address: mock<Address>({ toString: () => 'myAddress2' }),
         }),
       );
-      mockSendFlowRepository.getState.mockResolvedValue({
-        recipient: '',
-        amount: '',
-        account: {
-          accountId,
-        },
-      });
       mockAccountRepository.get.mockResolvedValue({
         ...mockAccount,
         id: accountId,
@@ -650,11 +599,12 @@ describe('SendFlowUseCases', () => {
         'interface-id',
         SendFormEvent.Account,
         mockContext,
+        {
+          accountId,
+          addresses: [],
+        },
       );
 
-      expect(mockSendFlowRepository.getState).toHaveBeenCalledWith(
-        'interface-id',
-      );
       expect(mockAccountRepository.get).toHaveBeenCalledWith(accountId);
       expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
         'interface-id',

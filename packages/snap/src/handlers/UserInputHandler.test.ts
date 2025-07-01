@@ -57,16 +57,18 @@ describe('UserInputHandler', () => {
       await handler.route(
         'interface-id',
         {
-          type: UserInputEventType.ButtonClickEvent,
-          name: SendFormEvent.ClearRecipient,
+          type: UserInputEventType.InputChangeEvent,
+          name: SendFormEvent.Recipient,
+          value: 'recipient-address',
         },
         mockContext,
       );
 
       expect(mockSendFlowUseCases.onChangeForm).toHaveBeenCalledWith(
         'interface-id',
-        SendFormEvent.ClearRecipient,
+        SendFormEvent.Recipient,
         mockContext,
+        'recipient-address',
       );
     });
 

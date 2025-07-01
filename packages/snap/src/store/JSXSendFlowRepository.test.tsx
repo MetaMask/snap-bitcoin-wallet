@@ -6,7 +6,6 @@ import type {
   ReviewTransactionContext,
   Translator,
 } from '../entities';
-import { SENDFORM_NAME } from '../entities';
 import { JSXSendFlowRepository } from './JSXSendFlowRepository';
 import { ReviewTransactionView, SendFormView } from '../infra/jsx';
 
@@ -22,36 +21,6 @@ describe('JSXSendFlowRepository', () => {
   const mockTranslator = mock<Translator>();
 
   const repo = new JSXSendFlowRepository(mockSnapClient, mockTranslator);
-
-  describe('getState', () => {
-    it('returns send form state if found', async () => {
-      const id = 'test-id';
-      const state = { [SENDFORM_NAME]: 'bar' };
-      mockSnapClient.getInterfaceState.mockResolvedValue(state);
-
-      const result = await repo.getState(id);
-
-      expect(mockSnapClient.getInterfaceState).toHaveBeenCalledWith(id);
-      expect(result).toStrictEqual(state[SENDFORM_NAME]);
-    });
-
-    it('returns null if state is null', async () => {
-      mockSnapClient.getInterfaceState.mockResolvedValue(null);
-
-      const result = await repo.getState('test-id');
-
-      expect(result).toBeNull();
-    });
-
-    it('returns null if send form state is not present in interface state', async () => {
-      const state = { unknownField: 'bar' };
-      mockSnapClient.getInterfaceState.mockResolvedValue(state);
-
-      const result = await repo.getState('test-id');
-
-      expect(result).toBeNull();
-    });
-  });
 
   describe('getContext', () => {
     it('returns context if found', async () => {

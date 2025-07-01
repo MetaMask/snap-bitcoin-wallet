@@ -1,12 +1,10 @@
 import type {
   SendFormContext,
   SendFlowRepository,
-  SendFormState,
   SnapClient,
   ReviewTransactionContext,
   Translator,
 } from '../entities';
-import { SENDFORM_NAME } from '../entities';
 import { ReviewTransactionView, SendFormView } from '../infra/jsx';
 
 export class JSXSendFlowRepository implements SendFlowRepository {
@@ -17,15 +15,6 @@ export class JSXSendFlowRepository implements SendFlowRepository {
   constructor(snapClient: SnapClient, translator: Translator) {
     this.#snapClient = snapClient;
     this.#translator = translator;
-  }
-
-  async getState(id: string): Promise<SendFormState | null> {
-    const state = await this.#snapClient.getInterfaceState(id);
-    if (!state) {
-      return null;
-    }
-
-    return (state[SENDFORM_NAME] as SendFormState) ?? null;
   }
 
   async getContext(id: string): Promise<SendFormContext | null> {
