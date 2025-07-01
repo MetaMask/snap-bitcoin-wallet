@@ -2962,7 +2962,7 @@ __metadata:
   resolution: "@metamask/bitcoin-wallet-snap@workspace:packages/snap"
   dependencies:
     "@jest/globals": "npm:^30.0.3"
-    "@metamask/bitcoindevkit": ../../../bdk-wasm/pkg
+    "@metamask/bitcoindevkit": "npm:^0.1.10"
     "@metamask/key-tree": "npm:^10.1.1"
     "@metamask/keyring-api": "npm:^18.0.0"
     "@metamask/keyring-snap-sdk": "npm:^4.0.0"
@@ -3007,10 +3007,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@metamask/bitcoindevkit@file:../../../bdk-wasm/pkg::locator=%40metamask%2Fbitcoin-wallet-snap%40workspace%3Apackages%2Fsnap":
-  version: 0.1.9
-  resolution: "@metamask/bitcoindevkit@file:../../../bdk-wasm/pkg#../../../bdk-wasm/pkg::hash=98a65c&locator=%40metamask%2Fbitcoin-wallet-snap%40workspace%3Apackages%2Fsnap"
-  checksum: 10/47a9b9cff9ad6b91c167e040450f2cce6c57b135c17b79032bc079ab419d5e59b691b7479ba0180855969d731aff5eae4e51d5f5910813dbc6c8b98f614a8af6
+"@metamask/bitcoindevkit@npm:^0.1.10":
+  version: 0.1.10
+  resolution: "@metamask/bitcoindevkit@npm:0.1.10"
+  checksum: 10/595ea4313da9151051ded182b1d8afcbc4e33baeacf4cf0aa8bc613977d73290f1254dc6e4f371f494b589e4708e4e41feab2c198a7403a8f06b13a0d0397ca1
   languageName: node
   linkType: hard
 
