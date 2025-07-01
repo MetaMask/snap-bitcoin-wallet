@@ -1,17 +1,8 @@
 {
   "locale": "pt-BR",
   "messages": {
-    "snapDescription": {
-      "message": "Gerencie Bitcoins usando MetaMask"
-    },
-    "snapProposedName": {
-      "message": "Bitcoin"
-    },
     "reviewTransactionWarning": {
       "message": "Revise a transação antes de prosseguir"
-    },
-    "loading": {
-      "message": "Carregando"
     },
     "from": {
       "message": "De"
@@ -19,14 +10,14 @@
     "toAddress": {
       "message": "To Address"
     },
-    "fromAccount": {
-      "message": "Da conta"
-    },
-    "review": {
-      "message": "Revisar"
+    "continue": {
+      "message": "Continue"
     },
     "cancel": {
       "message": "Cancelar"
+    },
+    "clear": {
+      "message": "Clear"
     },
     "amount": {
       "message": "Valor"
@@ -64,14 +55,11 @@
     "send": {
       "message": "Enviar"
     },
+    "asset": {
+      "message": "Asset"
+    },
     "sending": {
       "message": "Enviando"
-    },
-    "sendAmount": {
-      "message": "Enviar valor"
-    },
-    "amountPlaceholder": {
-      "message": "Enter amount to send"
     },
     "max": {
       "message": "Máx."
@@ -79,17 +67,83 @@
     "recipientPlaceholder": {
       "message": "Enter receiving address"
     },
-    "validAddress": {
-      "message": "Endereço de bitcoin válido"
-    },
-    "preparingTransaction": {
-      "message": "Preparando transação"
+    "review": {
+      "message": "Revisar"
     },
     "error": {
       "message": "Erro"
     },
-    "satProtectionTooltip": {
-      "message": "MetaMask is protecting your Ordinals, Rare SATs, and Runes to be send in Bitcoin Transactions."
+    "unknownError": {
+      "message": "An unknown error occurred"
+    },
+    "feeTooLow": {
+      "message": "Fee too low"
+    },
+    "feeRateTooLow": {
+      "message": "Fee rate too low"
+    },
+    "noUtxosSelected": {
+      "message": "Failed to build transaction: missing UTXOs"
+    },
+    "outputBelowDustLimit": {
+      "message": "Amount below dust limit"
+    },
+    "insufficientFunds": {
+      "message": "Funds are insufficient to cover amount plus fee"
+    },
+    "noRecipients": {
+      "message": "Missing recipients"
+    },
+    "psbt": {
+      "message": "Invalid PSBT"
+    },
+    "unknownUtxo": {
+      "message": "Failed to build transaction: unknown UTXO"
+    },
+    "MmssingNonWitnessUtxo": {
+      "message": "Failed to build transaction: missing non-witness UTXO"
+    },
+    "base58": {
+      "message": "Invalid Bitcoin address"
+    },
+    "bech32": {
+      "message": "Invalid Bitcoin address"
+    },
+    "witnessVersion": {
+      "message": "Invalid Bitcoin address: witness version"
+    },
+    "witnessProgram": {
+      "message": "Invalid Bitcoin address: witness program"
+    },
+    "legacyAddressTooLong": {
+      "message": "Invalid Bitcoin address"
+    },
+    "invalidBase58PayloadLength": {
+      "message": "Invalid Bitcoin address: invalid length"
+    },
+    "invalidLegacyPrefix": {
+      "message": "Invalid Bitcoin address: invalid legacy prefix"
+    },
+    "networkValidation": {
+      "message": "Invalid Bitcoin address: wrong network"
+    },
+    "outOfRange": {
+      "message": "Invalid amount: out of range"
+    },
+    "tooPrecise": {
+      "message": "Invalid amount: too precise"
+    },
+    "missingDigits": {
+      "message": "Invalid amount: missing digits"
+    },
+    "inputTooLarge": {
+      "message": "Invalid amount: too large"
+    },
+    "invalidCharacter": {
+      "message": "Invalid amount: invalid character"
+    },
+    "unexpected": {
+      "message": "An unexpected error occurred"
     }
   }
 }
