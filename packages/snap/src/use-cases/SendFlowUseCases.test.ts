@@ -18,6 +18,7 @@ import type {
   ReviewTransactionContext,
   AssetRatesClient,
   Logger,
+  CodifiedError,
 } from '../entities';
 import {
   ReviewTransactionEvent,
@@ -146,9 +147,9 @@ describe('SendFlowUseCases', () => {
       drain: false,
       recipient: 'recipientAddress',
       errors: {
-        recipient: 'invalid recipient',
-        tx: 'errors on tx',
-        amount: 'invalid amount',
+        recipient: mock<CodifiedError>(),
+        tx: mock<CodifiedError>(),
+        amount: mock<CodifiedError>(),
       },
       feeRate: 2.4,
       network: 'bitcoin',
@@ -428,6 +429,52 @@ describe('SendFlowUseCases', () => {
       await useCases.onChangeForm(
         'interface-id',
         SendFormEvent.Amount,
+        testContext,
+      );
+
+      expect(mockSendFlowRepository.getState).toHaveBeenCalledWith(
+        'interface-id',
+      );
+      expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
+        'interface-id',
+        expectedContext,
+      );
+    });
+
+    it('populate errors successfully', async () => {
+      const mockError = mock<CodifiedError>({
+        code: 18,
+        message: 'base58 error',
+      });
+      (Address.from_string as jest.Mock).mockImplementation(() => {
+        throw mockError as unknown as Error;
+      });
+
+      const testContext = {
+        ...mockContext,
+        amount: undefined, // avoid computing the fee in this test
+      };
+
+      mockSendFlowRepository.getState.mockResolvedValue({
+        recipient: 'notAnAddress',
+        amount: '',
+        account: {
+          accountId: 'myAccount',
+        },
+      });
+
+      const expectedContext = {
+        ...testContext,
+        errors: {
+          ...testContext.errors,
+          tx: undefined,
+          recipient: mockError,
+        },
+      };
+
+      await useCases.onChangeForm(
+        'interface-id',
+        SendFormEvent.Recipient,
         testContext,
       );
 

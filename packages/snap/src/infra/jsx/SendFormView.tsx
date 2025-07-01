@@ -9,7 +9,7 @@ import {
 } from '@metamask/snaps-sdk/jsx';
 
 import { HeadingWithReturn, SendForm } from './components';
-import { translate } from './format';
+import { errorCodeToLabel, translate } from './format';
 import type { Messages, SendFormContext } from '../../entities';
 import { SendFormEvent } from '../../entities';
 
@@ -39,7 +39,9 @@ export const SendFormView: SnapComponent<SendFormViewProps> = ({
           <Box>
             <Box>{null}</Box>
             <Banner title={t('error')} severity="warning">
-              <SnapText size="sm">{errors.tx}</SnapText>
+              <SnapText size="sm">
+                {t(errorCodeToLabel(errors.tx.code))}
+              </SnapText>
             </Banner>
           </Box>
         )}

@@ -72,6 +72,78 @@
     },
     "error": {
       "message": "Error"
+    },
+    "unknownError": {
+      "message": "An unknown error occurred"
+    },
+    "feeTooLow": {
+      "message": "Fee too low"
+    },
+    "feeRateTooLow": {
+      "message": "Fee rate too low"
+    },
+    "noUtxosSelected": {
+      "message": "Failed to build transaction: missing UTXOs"
+    },
+    "outputBelowDustLimit": {
+      "message": "Amount below dust limit"
+    },
+    "insufficientFunds": {
+      "message": "Funds are insufficient to cover amount plus fee"
+    },
+    "noRecipients": {
+      "message": "Missing recipients"
+    },
+    "psbt": {
+      "message": "Invalid PSBT"
+    },
+    "unknownUtxo": {
+      "message": "Failed to build transaction: unknown UTXO"
+    },
+    "MmssingNonWitnessUtxo": {
+      "message": "Failed to build transaction: missing non-witness UTXO"
+    },
+    "base58": {
+      "message": "Invalid Bitcoin address"
+    },
+    "bech32": {
+      "message": "Invalid Bitcoin address"
+    },
+    "witnessVersion": {
+      "message": "Invalid Bitcoin address: witness version"
+    },
+    "witnessProgram": {
+      "message": "Invalid Bitcoin address: witness program"
+    },
+    "legacyAddressTooLong": {
+      "message": "Invalid Bitcoin address"
+    },
+    "invalidBase58PayloadLength": {
+      "message": "Invalid Bitcoin address: invalid length"
+    },
+    "invalidLegacyPrefix": {
+      "message": "Invalid Bitcoin address: invalid legacy prefix"
+    },
+    "networkValidation": {
+      "message": "Invalid Bitcoin address: wrong network"
+    },
+    "outOfRange": {
+      "message": "Invalid amount: out of range"
+    },
+    "tooPrecise": {
+      "message": "Invalid amount: too precise"
+    },
+    "missingDigits": {
+      "message": "Invalid amount: missing digits"
+    },
+    "inputTooLarge": {
+      "message": "Invalid amount: too large"
+    },
+    "invalidCharacter": {
+      "message": "Invalid amount: invalid character"
+    },
+    "unexpected": {
+      "message": "An unexpected error occurred"
     }
   }
 }

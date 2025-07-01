@@ -1,4 +1,4 @@
-import { Amount } from '@metamask/bitcoindevkit';
+import { Amount, BdkErrorCode } from '@metamask/bitcoindevkit';
 import type { CurrencyRate } from '@metamask/snaps-sdk';
 
 import type { CurrencyUnit, Messages } from '../../entities';
@@ -42,3 +42,13 @@ export const translate =
 
 export const displayExplorerUrl = (url: string, address: string): string =>
   `${url}/address/${address}`;
+
+export const errorCodeToLabel = (code: number): string => {
+  const raw = BdkErrorCode[code] as string | undefined;
+  if (!raw) {
+    return 'unknownError';
+  }
+
+  // lowercase the first letter to respect camelCase convention
+  return raw.charAt(0).toLowerCase() + raw.slice(1);
+};

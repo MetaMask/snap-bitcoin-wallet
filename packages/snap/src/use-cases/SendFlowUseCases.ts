@@ -11,6 +11,7 @@ import type {
   ReviewTransactionContext,
   AssetRatesClient,
   Logger,
+  CodifiedError,
 } from '../entities';
 import {
   SendFormEvent,
@@ -238,9 +239,14 @@ export class SendFlowUseCases {
       ).toString();
       updatedContext = await this.#computeFee(updatedContext);
     } catch (error) {
+      this.#logger.error(
+        `Invalid recipient. Error: %s`,
+        (error as CodifiedError).message,
+      );
+
       updatedContext.errors = {
         ...updatedContext.errors,
-        recipient: error instanceof Error ? error.message : String(error),
+        recipient: error as CodifiedError,
       };
     }
 
@@ -276,9 +282,14 @@ export class SendFlowUseCases {
       updatedContext.amount = amount.to_sat().toString();
       updatedContext = await this.#computeFee(updatedContext);
     } catch (error) {
+      this.#logger.error(
+        `Invalid amount. Error: %s`,
+        (error as CodifiedError).message,
+      );
+
       updatedContext.errors = {
         ...updatedContext.errors,
-        amount: error instanceof Error ? error.message : String(error),
+        amount: error as CodifiedError,
       };
     }
 
@@ -309,22 +320,38 @@ export class SendFlowUseCases {
       } else {
         builder.addRecipient(context.amount, context.recipient);
       }
-      const psbt = builder.finish();
 
-      const reviewContext: ReviewTransactionContext = {
-        from: context.account.address,
-        explorerUrl: this.#chainClient.getExplorerUrl(context.network),
-        network: context.network,
-        amount: context.amount,
-        recipient: context.recipient,
-        exchangeRate: context.exchangeRate,
-        currency: context.currency,
-        psbt: psbt.toString(),
-        sendForm: context,
-        locale: context.locale,
-      };
+      try {
+        const psbt = builder.finish();
+        const reviewContext: ReviewTransactionContext = {
+          from: context.account.address,
+          explorerUrl: this.#chainClient.getExplorerUrl(context.network),
+          network: context.network,
+          amount: context.amount,
+          recipient: context.recipient,
+          exchangeRate: context.exchangeRate,
+          currency: context.currency,
+          psbt: psbt.toString(),
+          sendForm: context,
+          locale: context.locale,
+        };
 
-      return this.#sendFlowRepository.updateReview(id, reviewContext);
+        return this.#sendFlowRepository.updateReview(id, reviewContext);
+      } catch (error) {
+        this.#logger.error(
+          `Failed to build PSBT on Confirm. Error: %s`,
+          (error as CodifiedError).message,
+        );
+
+        const errContext = {
+          ...context,
+          errors: {
+            ...context.errors,
+            tx: error as CodifiedError,
+          },
+        };
+        return await this.#sendFlowRepository.updateForm(id, errContext);
+      }
     }
 
     throw new Error('Inconsistent Send form context');
@@ -445,11 +472,16 @@ export class SendFlowUseCases {
         const psbt = builder.addRecipient(amount, recipient).finish();
         return { ...context, fee: psbt.fee().to_sat().toString(), balance };
       } catch (error) {
+        this.#logger.error(
+          `Failed to build PSBT. Error: %s`,
+          (error as CodifiedError).message,
+        );
+
         return {
           ...context,
           errors: {
             ...context.errors,
-            tx: error instanceof Error ? error.message : String(error),
+            tx: error as CodifiedError,
           },
         };
       }

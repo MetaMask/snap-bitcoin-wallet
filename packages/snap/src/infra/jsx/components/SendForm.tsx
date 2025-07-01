@@ -18,6 +18,7 @@ import { networkToCaip19, networkToScope } from '../../../handlers';
 import {
   displayAmount,
   displayExchangeAmount,
+  errorCodeToLabel,
   exchangeAmount,
   translate,
 } from '../format';
@@ -70,7 +71,14 @@ export const SendForm = (props: SendFormProps): JSXElement => {
       <Box>{null}</Box>
       <Box>{null}</Box>
 
-      <Field label={t('toAddress')} error={errors.recipient}>
+      <Field
+        label={t('toAddress')}
+        error={
+          errors.recipient
+            ? t(errorCodeToLabel(errors.recipient.code))
+            : undefined
+        }
+      >
         <Input
           name={SendFormEvent.Recipient}
           placeholder={t('recipientPlaceholder')}
@@ -101,7 +109,14 @@ export const SendForm = (props: SendFormProps): JSXElement => {
               />
             </Field>
 
-            <Field label={t('amount')} error={errors.amount}>
+            <Field
+              label={t('amount')}
+              error={
+                errors.amount
+                  ? t(errorCodeToLabel(errors.amount.code))
+                  : undefined
+              }
+            >
               <Input
                 name={SendFormEvent.Amount}
                 type="number"

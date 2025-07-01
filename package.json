@@ -60,7 +60,8 @@
   "lavamoat": {
     "allowScripts": {
       "@lavamoat/preinstall-always-fail": false,
-      "eslint-plugin-import-x>unrs-resolver": false
+      "eslint-plugin-import-x>unrs-resolver": false,
+      "eslint-plugin-jest>jest>@jest/core>jest-resolve>unrs-resolver": false
     }
   }
 }
