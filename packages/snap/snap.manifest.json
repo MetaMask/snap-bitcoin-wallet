@@ -7,7 +7,7 @@
     "url": "https://github.com/MetaMask/snap-bitcoin-wallet.git"
   },
   "source": {
-    "shasum": "W2T0F6Wrh90JoCGqbAc16oTrYiNyc+adj2wOi3e22/8=",
+    "shasum": "elteKlxR5AsODN+1DD4sZ2/KisPihVdXDKfXRlVtxAw=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
@@ -80,7 +80,7 @@
     "endowment:cronjob": {
       "jobs": [
         {
-          "duration": "PT30S",
+          "expression": "* * * * *",
           "request": {
             "method": "synchronizeAccounts"
           }
