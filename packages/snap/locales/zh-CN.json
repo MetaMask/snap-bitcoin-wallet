@@ -1,17 +1,8 @@
 {
   "locale": "中文",
   "messages": {
-    "snapDescription": {
-      "message": "使用 MetaMask 管理比特币"
-    },
-    "snapProposedName": {
-      "message": "比特币"
-    },
     "reviewTransactionWarning": {
       "message": "继续之前，请先审查交易"
-    },
-    "loading": {
-      "message": "加载中"
     },
     "from": {
       "message": "从"
@@ -19,14 +10,14 @@
     "toAddress": {
       "message": "To Address"
     },
-    "fromAccount": {
-      "message": "从账户"
-    },
-    "review": {
-      "message": "审查"
+    "continue": {
+      "message": "Continue"
     },
     "cancel": {
       "message": "取消"
+    },
+    "clear": {
+      "message": "Clear"
     },
     "amount": {
       "message": "金额"
@@ -64,14 +55,11 @@
     "send": {
       "message": "发送"
     },
+    "asset": {
+      "message": "Asset"
+    },
     "sending": {
       "message": "发送中"
-    },
-    "sendAmount": {
-      "message": "发送金额"
-    },
-    "amountPlaceholder": {
-      "message": "Enter amount to send"
     },
     "max": {
       "message": "最多"
@@ -79,17 +67,11 @@
     "recipientPlaceholder": {
       "message": "Enter receiving address"
     },
-    "validAddress": {
-      "message": "有效的比特币地址"
-    },
-    "preparingTransaction": {
-      "message": "准备交易"
+    "review": {
+      "message": "审查"
     },
     "error": {
       "message": "错误"
-    },
-    "satProtectionTooltip": {
-      "message": "MetaMask is protecting your Ordinals, Rare SATs, and Runes to be send in Bitcoin Transactions."
     }
   }
 }

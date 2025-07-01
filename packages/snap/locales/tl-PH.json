@@ -1,17 +1,8 @@
 {
   "locale": "tl",
   "messages": {
-    "snapDescription": {
-      "message": "Pamahalaan ang Bitcoin gamit ang MetaMask"
-    },
-    "snapProposedName": {
-      "message": "Bitcoin"
-    },
     "reviewTransactionWarning": {
       "message": "Suriin ang transaksyon bago magpatuloy"
-    },
-    "loading": {
-      "message": "Naglo-load"
     },
     "from": {
       "message": "Mula sa"
@@ -19,14 +10,14 @@
     "toAddress": {
       "message": "To Address"
     },
-    "fromAccount": {
-      "message": "Mula sa Account"
-    },
-    "review": {
-      "message": "Suriin"
+    "continue": {
+      "message": "Continue"
     },
     "cancel": {
       "message": "Kanselahin"
+    },
+    "clear": {
+      "message": "Clear"
     },
     "amount": {
       "message": "Halaga"
@@ -64,14 +55,11 @@
     "send": {
       "message": "Ipadala"
     },
+    "asset": {
+      "message": "Asset"
+    },
     "sending": {
       "message": "Ipinapadala"
-    },
-    "sendAmount": {
-      "message": "Ipadala ang Halaga"
-    },
-    "amountPlaceholder": {
-      "message": "Enter amount to send"
     },
     "max": {
       "message": "Max"
@@ -79,17 +67,11 @@
     "recipientPlaceholder": {
       "message": "Enter receiving address"
     },
-    "validAddress": {
-      "message": "Valid na address ng bitcoin"
-    },
-    "preparingTransaction": {
-      "message": "Inihahanda ang transaksyon"
+    "review": {
+      "message": "Suriin"
     },
     "error": {
       "message": "Error"
-    },
-    "satProtectionTooltip": {
-      "message": "MetaMask is protecting your Ordinals, Rare SATs, and Runes to be send in Bitcoin Transactions."
     }
   }
 }

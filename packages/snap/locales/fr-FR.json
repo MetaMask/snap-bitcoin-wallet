@@ -1,17 +1,8 @@
 {
   "locale": "fr",
   "messages": {
-    "snapDescription": {
-      "message": "Gérer les bitcoins avec MetaMask"
-    },
-    "snapProposedName": {
-      "message": "Bitcoin"
-    },
     "reviewTransactionWarning": {
       "message": "Vérifiez la transaction avant de continuer"
-    },
-    "loading": {
-      "message": "Chargement"
     },
     "from": {
       "message": "De"
@@ -19,14 +10,14 @@
     "toAddress": {
       "message": "To Address"
     },
-    "fromAccount": {
-      "message": "Depuis le compte"
-    },
-    "review": {
-      "message": "Vérifier"
+    "continue": {
+      "message": "Continue"
     },
     "cancel": {
       "message": "Annuler"
+    },
+    "clear": {
+      "message": "Clear"
     },
     "amount": {
       "message": "Montant"
@@ -64,14 +55,11 @@
     "send": {
       "message": "Envoyer"
     },
+    "asset": {
+      "message": "Asset"
+    },
     "sending": {
       "message": "Envoi"
-    },
-    "sendAmount": {
-      "message": "Montant à envoyer"
-    },
-    "amountPlaceholder": {
-      "message": "Enter amount to send"
     },
     "max": {
       "message": "Max."
@@ -79,17 +67,11 @@
     "recipientPlaceholder": {
       "message": "Enter receiving address"
     },
-    "validAddress": {
-      "message": "Adresse bitcoin valide"
-    },
-    "preparingTransaction": {
-      "message": "Préparation de la transaction"
+    "review": {
+      "message": "Vérifier"
     },
     "error": {
       "message": "Erreur"
-    },
-    "satProtectionTooltip": {
-      "message": "MetaMask is protecting your Ordinals, Rare SATs, and Runes to be send in Bitcoin Transactions."
     }
   }
 }
