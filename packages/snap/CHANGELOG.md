@@ -9,12 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.16.0]
 
-### Uncategorized
+### Added
 
-- feat: on asset market data ([#486](https://github.com/MetaMask/snap-bitcoin-wallet/pull/486))
-- feat: use event value ([#485](https://github.com/MetaMask/snap-bitcoin-wallet/pull/485))
-- New Crowdin translations by Github Action ([#483](https://github.com/MetaMask/snap-bitcoin-wallet/pull/483))
-- feat: send flow errors ([#482](https://github.com/MetaMask/snap-bitcoin-wallet/pull/482))
+- Asset market data on new handler ([#486](https://github.com/MetaMask/snap-bitcoin-wallet/pull/486))
+- Send flow error handling ([#482](https://github.com/MetaMask/snap-bitcoin-wallet/pull/482))
+- Translations ([#483](https://github.com/MetaMask/snap-bitcoin-wallet/pull/483))
+
+### Changed
+
+- Use event value on user input instead of fetching the form state ([#485](https://github.com/MetaMask/snap-bitcoin-wallet/pull/485))
 
 ## [0.15.0]
 
