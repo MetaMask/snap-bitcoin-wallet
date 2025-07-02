@@ -97,6 +97,6 @@ export const onAssetHistoricalPrice: OnAssetHistoricalPriceHandler = async ({
   to,
 }) => assetsHandler.historicalPrice(from, to);
 
-export const onAssetMarketData: OnAssetsMarketDataHandler = async ({
+export const onAssetsMarketData: OnAssetsMarketDataHandler = async ({
   assets,
 }) => assetsHandler.marketData(assets);
