@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.16.1]
 
-### Uncategorized
+### Fixed
 
-- fix: typo onAssetsMarketData ([#489](https://github.com/MetaMask/snap-bitcoin-wallet/pull/489))
+- Typo `onAssetsMarketData` ([#489](https://github.com/MetaMask/snap-bitcoin-wallet/pull/489))
 
 ## [0.16.0]
 
