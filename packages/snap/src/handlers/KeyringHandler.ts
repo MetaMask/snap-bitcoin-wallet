@@ -102,7 +102,7 @@ export class KeyringHandler implements Keyring {
       index,
       derivationPath,
       addressType,
-      synchronize = false,
+      synchronize = true,
       accountNameSuggestion,
     } = options;
 

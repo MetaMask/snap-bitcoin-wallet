@@ -81,6 +81,7 @@ describe('KeyringHandler', () => {
           correlationId,
         },
         accountNameSuggestion: 'My account',
+        synchronize: false,
       };
       const expectedCreateParams: CreateAccountParams = {
         network: scopeToNetwork[BtcScope.Signet],
@@ -109,7 +110,7 @@ describe('KeyringHandler', () => {
         index: 5,
         addressType: 'p2pkh',
         entropySource: 'm',
-        synchronize: false,
+        synchronize: true,
       };
 
       await handler.createAccount(options);
@@ -165,7 +166,7 @@ describe('KeyringHandler', () => {
         index: 1,
         addressType: 'p2wpkh',
         entropySource: 'entropy2',
-        synchronize: false,
+        synchronize: true,
       };
 
       await handler.createAccount(options);
@@ -192,7 +193,7 @@ describe('KeyringHandler', () => {
           index: 0,
           addressType,
           entropySource: 'm',
-          synchronize: false,
+          synchronize: true,
         };
 
         await handler.createAccount(options);
