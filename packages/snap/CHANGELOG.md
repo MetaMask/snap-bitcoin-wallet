@@ -9,10 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.17.0]
 
-### Uncategorized
+### Changed
 
-- feat: synchronize by default ([#492](https://github.com/MetaMask/snap-bitcoin-wallet/pull/492))
-- fix: synchronize empty accounts ([#491](https://github.com/MetaMask/snap-bitcoin-wallet/pull/491))
+- Synchronize by default ([#492](https://github.com/MetaMask/snap-bitcoin-wallet/pull/492))
+
+### Fixed
+
+- Synchronize accounts with no history ([#491](https://github.com/MetaMask/snap-bitcoin-wallet/pull/491))
 
 ## [0.16.1]
 
