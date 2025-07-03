@@ -24,7 +24,11 @@ import {
 } from './format';
 import { Config } from '../../config';
 import type { Messages, ReviewTransactionContext } from '../../entities';
-import { BlockTime, ReviewTransactionEvent } from '../../entities';
+import {
+  BlockTime,
+  networkToCurrencyUnit,
+  ReviewTransactionEvent,
+} from '../../entities';
 import { networkToScope } from '../../handlers';
 
 type ReviewTransactionViewProps = {
@@ -36,20 +40,14 @@ export const ReviewTransactionView: SnapComponent<
   ReviewTransactionViewProps
 > = ({ context, messages }) => {
   const t = translate(messages);
-  const {
-    amount,
-    currency,
-    exchangeRate,
-    recipient,
-    network,
-    from,
-    explorerUrl,
-  } = context;
+  const { amount, exchangeRate, recipient, network, from, explorerUrl } =
+    context;
 
   const psbt = Psbt.from_string(context.psbt);
   const fee = psbt.fee().to_sat();
   const feeRate = psbt.fee_rate()?.to_sat_per_vb_floor();
   const total = BigInt(amount) + fee;
+  const currency = networkToCurrencyUnit[network];
 
   return (
     <Container>
