@@ -139,7 +139,7 @@ describe('Keyring', () => {
     const response = await snap.onKeyringRequest({
       origin: ORIGIN,
       method: 'keyring_createAccount',
-      params: { options: { ...requestOpts } },
+      params: { options: { ...requestOpts, synchronize: false } },
     });
 
     expect(response).toRespondWith({
