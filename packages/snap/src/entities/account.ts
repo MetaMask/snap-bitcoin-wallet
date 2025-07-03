@@ -13,6 +13,7 @@ import type {
   WalletTx,
   Amount,
   ScriptBuf,
+  Address,
 } from '@metamask/bitcoindevkit';
 
 import type { Inscription } from './meta-protocols';
@@ -56,6 +57,11 @@ export type BitcoinAccount = {
    * The network in which the account operates.
    */
   network: Network;
+
+  /**
+   * The public address representing this account. Usually address at index 0.
+   */
+  publicAddress: Address;
 
   /**
    * Get an address at a given index.

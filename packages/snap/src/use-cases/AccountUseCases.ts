@@ -150,6 +150,8 @@ export class AccountUseCases {
       addressType,
     );
 
+    newAccount.revealNextAddress();
+
     await this.#repository.insert(newAccount);
 
     // First notify the event has been created, then full scan.
@@ -164,8 +166,9 @@ export class AccountUseCases {
     }
 
     this.#logger.info(
-      'Bitcoin account created successfully: %s. Request: %o',
+      'Bitcoin account created successfully: %s. Public address: %s, Request: %o',
       newAccount.id,
+      newAccount.publicAddress,
       req,
     );
     return newAccount;

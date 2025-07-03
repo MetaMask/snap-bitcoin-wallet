@@ -1,8 +1,4 @@
-import type {
-  FeeEstimates,
-  Network,
-  AddressInfo,
-} from '@metamask/bitcoindevkit';
+import type { FeeEstimates, Network } from '@metamask/bitcoindevkit';
 import { Psbt, Address, Amount } from '@metamask/bitcoindevkit';
 import type { GetPreferencesResult } from '@metamask/snaps-sdk';
 import { UserRejectedRequestError } from '@metamask/snaps-sdk';
@@ -63,7 +59,7 @@ describe('SendFlowUseCases', () => {
     // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
     /* eslint-disable @typescript-eslint/naming-convention */
     balance: { trusted_spendable: { to_sat: () => BigInt(1234) } },
-    peekAddress: jest.fn(),
+    publicAddress: mock<Address>({ toString: () => 'myAddress' }),
   });
   const mockPreferences = mock<GetPreferencesResult>({
     currency: 'usd',
@@ -88,11 +84,6 @@ describe('SendFlowUseCases', () => {
   describe('displayForm', () => {
     beforeEach(() => {
       mockAccountRepository.get.mockResolvedValue(mockAccount);
-      mockAccount.peekAddress.mockReturnValue(
-        mock<AddressInfo>({
-          address: mock<Address>({ toString: () => 'myAddress' }),
-        }),
-      );
       mockSendFlowRepository.insertForm.mockResolvedValue('interface-id');
       mockSnapClient.getPreferences.mockResolvedValue(mockPreferences);
     });
@@ -576,11 +567,7 @@ describe('SendFlowUseCases', () => {
 
     it('sets account from state on Account', async () => {
       const accountId = 'myAccount2';
-      mockAccount.peekAddress.mockReturnValue(
-        mock<AddressInfo>({
-          address: mock<Address>({ toString: () => 'myAddress2' }),
-        }),
-      );
+      mockAccount.publicAddress.toString = () => 'myAddress2';
       mockAccountRepository.get.mockResolvedValue({
         ...mockAccount,
         id: accountId,

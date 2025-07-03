@@ -1,5 +1,4 @@
 import type {
-  AddressInfo,
   Amount,
   Transaction,
   Txid,
@@ -57,6 +56,7 @@ describe('KeyringHandler', () => {
     derivationPath: ['myEntropy', "84'", "0'", "0'"],
     entropySource: 'myEntropy',
     accountIndex: 0,
+    publicAddress: mockAddress,
   });
   const defaultAddressType: AddressType = 'p2wpkh';
 
@@ -64,11 +64,6 @@ describe('KeyringHandler', () => {
 
   beforeEach(() => {
     mockAccounts.create.mockResolvedValue(mockAccount);
-    mockAccount.peekAddress.mockReturnValue(
-      mock<AddressInfo>({
-        address: mockAddress,
-      }),
-    );
   });
 
   describe('createAccount', () => {
