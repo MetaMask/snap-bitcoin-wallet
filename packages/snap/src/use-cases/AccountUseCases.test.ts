@@ -142,6 +142,7 @@ describe('AccountUseCases', () => {
           createParams.network,
           tAddressType,
         );
+        expect(mockAccount.revealNextAddress).toHaveBeenCalled();
         expect(mockRepository.insert).toHaveBeenCalledWith(mockAccount);
         expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalledWith(
           mockAccount,

@@ -14,6 +14,7 @@ import type {
   WalletTx,
   Amount,
   ScriptBuf,
+  Address,
 } from '@metamask/bitcoindevkit';
 import {
   UnconfirmedTx,
@@ -106,6 +107,10 @@ export class BdkAccountAdapter implements BitcoinAccount {
 
   get network(): Network {
     return this.#wallet.network;
+  }
+
+  get publicAddress(): Address {
+    return this.peekAddress(0).address;
   }
 
   peekAddress(index: number): AddressInfo {

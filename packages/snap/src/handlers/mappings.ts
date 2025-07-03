@@ -54,7 +54,7 @@ export function mapToKeyringAccount(account: BitcoinAccount): KeyringAccount {
     type: addressTypeToCaip[account.addressType] as KeyringAccount['type'],
     scopes: [networkToScope[account.network]],
     id: account.id,
-    address: account.peekAddress(0).address.toString(),
+    address: account.publicAddress.toString(),
     options: {
       entropySource: account.entropySource,
     },
