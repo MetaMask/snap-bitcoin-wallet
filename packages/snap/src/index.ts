@@ -1,3 +1,10 @@
+// First operation is monkey patching `fetch`. This is a temporary solution improving
+// rate limit errors. To be removed before prod release.
+/* eslint-disable import-x/first,import-x/order */
+import { patchFetchNetworkErrors } from './infra/fetch';
+
+patchFetchNetworkErrors();
+
 import type {
   OnAssetsConversionHandler,
   OnAssetsLookupHandler,
@@ -26,6 +33,8 @@ import {
 } from './infra';
 import { BdkAccountRepository, JSXSendFlowRepository } from './store';
 import { AccountUseCases, AssetsUseCases, SendFlowUseCases } from './use-cases';
+
+/* eslint-enable import-x/first,import-x/order */
 
 // Infra layer
 const logger = new ConsoleLoggerAdapter(Config.logLevel);
