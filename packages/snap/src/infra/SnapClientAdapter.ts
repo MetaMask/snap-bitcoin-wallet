@@ -9,6 +9,7 @@ import type {
   Json,
   ComponentOrElement,
   GetPreferencesResult,
+  TrackEventParams,
 } from '@metamask/snaps-sdk';
 
 import type { BitcoinAccount, SnapClient } from '../entities';
@@ -188,6 +189,13 @@ export class SnapClientAdapter implements SnapClient {
   async getPreferences(): Promise<GetPreferencesResult> {
     return snap.request({
       method: 'snap_getPreferences',
+    });
+  }
+
+  async emitTrackingEvent(params: TrackEventParams): Promise<void> {
+    await snap.request({
+      method: 'snap_trackEvent',
+      params,
     });
   }
 }

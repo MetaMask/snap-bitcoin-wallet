@@ -3,6 +3,7 @@ import type { JsonSLIP10Node, SLIP10Node } from '@metamask/key-tree';
 import type {
   ComponentOrElement,
   GetPreferencesResult,
+  TrackEventParams,
 } from '@metamask/snaps-sdk';
 import type { Json } from '@metamask/utils';
 
@@ -182,4 +183,11 @@ export type SnapClient = {
    * @returns the user's preferences.
    */
   getPreferences(): Promise<GetPreferencesResult>;
+
+  /**
+   * Track events tha comply with the SIP-32 spec
+   *
+   * @param params parameters for the event to track
+   */
+  emitTrackingEvent(params: TrackEventParams): Promise<void>;
 };
