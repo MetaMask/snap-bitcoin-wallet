@@ -4,15 +4,18 @@ import { SLIP10Node } from '@metamask/key-tree';
 import { KeyringEvent } from '@metamask/keyring-api';
 import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
 import type {
+  ComponentOrElement,
   GetInterfaceContextResult,
   GetInterfaceStateResult,
-  Json,
-  ComponentOrElement,
   GetPreferencesResult,
-  TrackEventParams,
+  Json,
 } from '@metamask/snaps-sdk';
 
-import type { BitcoinAccount, SnapClient } from '../entities';
+import type {
+  BitcoinAccount,
+  SnapClient,
+  TrackingSnapEvent,
+} from '../entities';
 import { networkToCurrencyUnit } from '../entities';
 import { networkToCaip19 } from '../handlers';
 import { mapToKeyringAccount, mapToTransaction } from '../handlers/mappings';
@@ -192,10 +195,20 @@ export class SnapClientAdapter implements SnapClient {
     });
   }
 
-  async emitTrackingEvent(params: TrackEventParams): Promise<void> {
+  async emitTrackingEvent(
+    event: TrackingSnapEvent,
+    properties?: Record<string, Json>,
+    sensitiveProperties?: Record<string, Json>,
+  ): Promise<void> {
     await snap.request({
       method: 'snap_trackEvent',
-      params,
+      params: {
+        event: {
+          event,
+          properties,
+          sensitiveProperties,
+        },
+      },
     });
   }
 }

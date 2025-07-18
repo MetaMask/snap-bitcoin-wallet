@@ -3,7 +3,6 @@ import type { JsonSLIP10Node, SLIP10Node } from '@metamask/key-tree';
 import type {
   ComponentOrElement,
   GetPreferencesResult,
-  TrackEventParams,
 } from '@metamask/snaps-sdk';
 import type { Json } from '@metamask/utils';
 
@@ -25,6 +24,11 @@ export type AccountState = {
   // Wallet inscriptions for meta protocols (ordinals, etc.)
   inscriptions: Inscription[];
 };
+
+export enum TrackingSnapEvent {
+  TransactionFinalized = 'Transaction Finalized',
+  TransactionSubmitted = 'Transaction Submitted',
+}
 
 /**
  * The SnapClient represents the MetaMask Snap state and manages the BIP-32 entropy from the Wallet SRP.
@@ -185,9 +189,15 @@ export type SnapClient = {
   getPreferences(): Promise<GetPreferencesResult>;
 
   /**
-   * Track events tha comply with the SIP-32 spec
+   * Track events that comply with the SIP-32 spec (https://metamask.github.io/SIPs/SIPS/sip-32)
    *
-   * @param params parameters for the event to track
+   * @param event The event type we want to track
+   * @param properties Custom values to track. The client MUST enforce that all keys in this object are in the snake_case format
+   * @param sensitiveProperties Sensitive values to track. The client MUST enforce that all keys in this object are in the snake_case format.
    */
-  emitTrackingEvent(params: TrackEventParams): Promise<void>;
+  emitTrackingEvent(
+    event: TrackingSnapEvent,
+    properties?: Record<string, Json>,
+    sensitiveProperties?: Record<string, Json>,
+  ): Promise<void>;
 };
