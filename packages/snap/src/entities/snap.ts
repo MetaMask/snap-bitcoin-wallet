@@ -25,6 +25,11 @@ export type AccountState = {
   inscriptions: Inscription[];
 };
 
+export enum TrackingSnapEvent {
+  TransactionFinalized = 'Transaction Finalized',
+  TransactionSubmitted = 'Transaction Submitted',
+}
+
 /**
  * The SnapClient represents the MetaMask Snap state and manages the BIP-32 entropy from the Wallet SRP.
  */
@@ -182,4 +187,17 @@ export type SnapClient = {
    * @returns the user's preferences.
    */
   getPreferences(): Promise<GetPreferencesResult>;
+
+  /**
+   * Track events that comply with the SIP-32 spec (https://metamask.github.io/SIPs/SIPS/sip-32)
+   *
+   * @param event The event type we want to track
+   * @param properties Custom values to track. The client MUST enforce that all keys in this object are in the snake_case format
+   * @param sensitiveProperties Sensitive values to track. The client MUST enforce that all keys in this object are in the snake_case format.
+   */
+  emitTrackingEvent(
+    event: TrackingSnapEvent,
+    properties?: Record<string, Json>,
+    sensitiveProperties?: Record<string, Json>,
+  ): Promise<void>;
 };
