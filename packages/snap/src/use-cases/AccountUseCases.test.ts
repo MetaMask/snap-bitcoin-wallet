@@ -539,6 +539,42 @@ describe('AccountUseCases', () => {
       expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledTimes(1);
     });
 
+    it('should only emit TransactionFinalized for confirmed transactions, not for reorged ones', async () => {
+      /* eslint-disable @typescript-eslint/naming-convention */
+      const mockTxPending = mock<WalletTx>({
+        chain_position: { is_confirmed: false },
+        txid: { toString: () => 'txid1' },
+      });
+      const mockTxConfirmed = mock<WalletTx>({
+        ...mockTxPending,
+        chain_position: { is_confirmed: true },
+      });
+
+      const mockTxPreviouslyConfirmed = mock<WalletTx>({
+        chain_position: { is_confirmed: true },
+        txid: { toString: () => 'txid2' },
+      });
+      const mockTxReorged = mock<WalletTx>({
+        ...mockTxPreviouslyConfirmed,
+        chain_position: { is_confirmed: false },
+      });
+
+      mockAccount.listTransactions
+        .mockReturnValueOnce([mockTxPending, mockTxPreviouslyConfirmed])
+        .mockReturnValueOnce([mockTxConfirmed, mockTxReorged]);
+
+      await useCases.synchronize(mockAccount);
+
+      expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledTimes(1);
+      expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledWith(
+        TrackingSnapEvent.TransactionFinalized,
+        expect.objectContaining({
+          tx_id: 'txid1',
+        }),
+      );
+      /* eslint-enable @typescript-eslint/naming-convention */
+    });
+
     it('propagates an error if the chain sync fails', async () => {
       const error = new Error('Sync failed');
       mockChain.sync.mockRejectedValue(error);

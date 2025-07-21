@@ -198,25 +198,33 @@ export class AccountUseCases {
       txMapBefore.set(tx.txid.toString(), tx);
     }
 
-    // Identify transactions that are either new or whose confirmation status changed
-    const [newTxs, confirmedTxs] = txsAfterSync.reduce<
-      [WalletTx[], WalletTx[]]
-    >(
-      ([newTransactions, confirmedTransactions], tx) => {
-        const prevTx = txMapBefore.get(tx.txid.toString());
-        if (!prevTx) {
-          newTransactions.push(tx);
-        } else if (
-          prevTx.chain_position.is_confirmed !== tx.chain_position.is_confirmed
-        ) {
-          confirmedTransactions.push(tx);
-        }
-        return [newTransactions, confirmedTransactions];
-      },
-      [[], []],
-    );
+    const newTxs: WalletTx[] = [];
+    const confirmedTxs: WalletTx[] = [];
+    const reorgedTxs: WalletTx[] = [];
 
-    const txsToNotify = [...newTxs, ...confirmedTxs];
+    for (const tx of txsAfterSync) {
+      const prevTx = txMapBefore.get(tx.txid.toString());
+
+      if (!prevTx) {
+        newTxs.push(tx);
+        continue;
+      }
+
+      const statusChanged =
+        prevTx.chain_position.is_confirmed !== tx.chain_position.is_confirmed;
+
+      if (statusChanged) {
+        if (tx.chain_position.is_confirmed) {
+          confirmedTxs.push(tx);
+        } else {
+          // if the status was changed, and now it's NOT confirmed
+          // it means the tx was reorged.
+          reorgedTxs.push(tx);
+        }
+      }
+    }
+
+    const txsToNotify = [...newTxs, ...confirmedTxs, ...reorgedTxs];
 
     if (txsToNotify.length > 0) {
       await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
