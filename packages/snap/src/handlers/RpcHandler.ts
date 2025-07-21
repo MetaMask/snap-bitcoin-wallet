@@ -43,7 +43,7 @@ export class RpcHandler {
       switch (method as RpcMethod) {
         case RpcMethod.StartSendTransactionFlow: {
           assert(params, CreateSendFormRequest);
-          return this.#executeSendFlow(params.account);
+          return this.#executeSendFlow(params.account, origin);
         }
 
         default:
@@ -52,9 +52,12 @@ export class RpcHandler {
     });
   }
 
-  async #executeSendFlow(account: string): Promise<SendTransactionResponse> {
+  async #executeSendFlow(
+    account: string,
+    origin: string,
+  ): Promise<SendTransactionResponse> {
     const psbt = await this.#sendFlowUseCases.display(account);
-    const txId = await this.#accountUseCases.sendPsbt(account, psbt);
+    const txId = await this.#accountUseCases.sendPsbt(account, psbt, origin);
     return { txId: txId.toString() };
   }
 }

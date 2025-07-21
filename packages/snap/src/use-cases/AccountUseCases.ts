@@ -8,14 +8,15 @@ import type {
 import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 
 import {
+  addressTypeToPurpose,
   type BitcoinAccount,
   type BitcoinAccountRepository,
   type BlockchainClient,
-  type SnapClient,
-  type MetaProtocolsClient,
   type Logger,
-  addressTypeToPurpose,
+  type MetaProtocolsClient,
   networkToCoinType,
+  type SnapClient,
+  TrackingSnapEvent,
 } from '../entities';
 
 export type DiscoverAccountParams = {
@@ -198,13 +199,24 @@ export class AccountUseCases {
     }
 
     // Identify transactions that are either new or whose confirmation status changed
-    const txsToNotify = txsAfterSync.filter((tx) => {
-      const prevTx = txMapBefore.get(tx.txid.toString());
-      return (
-        !prevTx ||
-        prevTx.chain_position.is_confirmed !== tx.chain_position.is_confirmed
-      );
-    });
+    const [newTxs, confirmedTxs] = txsAfterSync.reduce<
+      [WalletTx[], WalletTx[]]
+    >(
+      ([newTransactions, confirmedTransactions], tx) => {
+        const prevTx = txMapBefore.get(tx.txid.toString());
+        if (!prevTx) {
+          newTransactions.push(tx);
+        } else if (
+          prevTx.chain_position.is_confirmed !== tx.chain_position.is_confirmed
+        ) {
+          confirmedTransactions.push(tx);
+        }
+        return [newTransactions, confirmedTransactions];
+      },
+      [[], []],
+    );
+
+    const txsToNotify = [...newTxs, ...confirmedTxs];
 
     if (txsToNotify.length > 0) {
       await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
@@ -214,6 +226,22 @@ export class AccountUseCases {
       );
     }
 
+    for (const tx of confirmedTxs) {
+      /* eslint-disable @typescript-eslint/naming-convention */
+      await this.#snapClient.emitTrackingEvent(
+        TrackingSnapEvent.TransactionFinalized,
+        {
+          origin: 'CronHandler',
+          message: 'Snap transaction finalized',
+          network: account.network,
+          account_id: account.id,
+          account_public_address: account.publicAddress.toString(),
+          address_type: account.addressType.toString(),
+          tx_id: tx.txid.toString(),
+        },
+      );
+      /* eslint-enable @typescript-eslint/naming-convention */
+    }
     this.#logger.debug('Account synchronized successfully: %s', account.id);
   }
 
@@ -253,7 +281,7 @@ export class AccountUseCases {
     this.#logger.info('Account deleted successfully: %s', account.id);
   }
 
-  async sendPsbt(id: string, psbt: Psbt): Promise<Txid> {
+  async sendPsbt(id: string, psbt: Psbt, origin: string): Promise<Txid> {
     this.#logger.debug('Sending transaction: %s', id);
 
     const account = await this.#repository.getWithSigner(id);
@@ -276,6 +304,21 @@ export class AccountUseCases {
         walletTx,
       ]);
     }
+
+    /* eslint-disable @typescript-eslint/naming-convention */
+    await this.#snapClient.emitTrackingEvent(
+      TrackingSnapEvent.TransactionSubmitted,
+      {
+        origin,
+        message: 'Snap transaction submitted',
+        network: account.network,
+        account_id: account.id,
+        account_public_address: account.publicAddress.toString(),
+        address_type: account.addressType.toString(),
+        tx_id: txId.toString(),
+      },
+    );
+    /* eslint-enable @typescript-eslint/naming-convention */
 
     this.#logger.info(
       'Transaction sent successfully: %s. Account: %s, Network: %s',

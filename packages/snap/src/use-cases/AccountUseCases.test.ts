@@ -17,6 +17,7 @@ import type {
   MetaProtocolsClient,
   SnapClient,
 } from '../entities';
+import { TrackingSnapEvent } from '../entities';
 import type {
   CreateAccountParams,
   DiscoverAccountParams,
@@ -390,6 +391,9 @@ describe('AccountUseCases', () => {
   describe('synchronize', () => {
     const mockAccount = mock<BitcoinAccount>({
       id: 'some-id',
+      network: 'bitcoin',
+      publicAddress: { toString: () => 'bc1qtest' },
+      addressType: 'p2wpkh',
       listTransactions: jest.fn(),
     });
 
@@ -462,6 +466,77 @@ describe('AccountUseCases', () => {
       expect(
         mockSnapClient.emitAccountTransactionsUpdatedEvent,
       ).toHaveBeenCalledWith(mockAccount, [mockTxConfirmed]);
+      /* eslint-disable @typescript-eslint/naming-convention */
+      expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledWith(
+        TrackingSnapEvent.TransactionFinalized,
+        {
+          origin: 'CronHandler',
+          message: 'Snap transaction finalized',
+          network: 'bitcoin',
+          account_id: 'some-id',
+          account_public_address: 'bc1qtest',
+          address_type: 'p2wpkh',
+          tx_id: 'txid',
+        },
+      );
+      /* eslint-enable @typescript-eslint/naming-convention */
+    });
+
+    it('synchronizes with both new and confirmed transactions', async () => {
+      const mockTxPending = mock<WalletTx>({
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        chain_position: { is_confirmed: false },
+        txid: {
+          toString: () => 'txid1',
+        },
+      });
+      const mockTxNew = mock<WalletTx>({
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        chain_position: { is_confirmed: false },
+        txid: {
+          toString: () => 'txid2',
+        },
+      });
+      const mockTxConfirmed = mock<WalletTx>({
+        ...mockTxPending,
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        chain_position: { is_confirmed: true },
+      });
+
+      mockAccount.listTransactions
+        .mockReturnValueOnce([mockTxPending])
+        .mockReturnValueOnce([mockTxConfirmed, mockTxNew]);
+      const mockInscriptions = mock<Inscription[]>();
+      mockMetaProtocols.fetchInscriptions.mockResolvedValue(mockInscriptions);
+
+      await useCases.synchronize(mockAccount);
+
+      expect(mockChain.sync).toHaveBeenCalledWith(mockAccount);
+      expect(mockAccount.listTransactions).toHaveBeenCalledTimes(2);
+      expect(mockMetaProtocols.fetchInscriptions).toHaveBeenCalledWith(
+        mockAccount,
+      );
+      expect(mockRepository.update).toHaveBeenCalledWith(
+        mockAccount,
+        mockInscriptions,
+      );
+
+      // Check for TransactionFinalized event for confirmed transaction
+      expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledWith(
+        /* eslint-disable @typescript-eslint/naming-convention */
+        TrackingSnapEvent.TransactionFinalized,
+        {
+          origin: 'CronHandler',
+          message: 'Snap transaction finalized',
+          network: 'bitcoin',
+          account_id: 'some-id',
+          account_public_address: 'bc1qtest',
+          address_type: 'p2wpkh',
+          tx_id: 'txid1',
+        },
+      );
+      /* eslint-enable @typescript-eslint/naming-convention */
+      expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledTimes(1);
     });
 
     it('propagates an error if the chain sync fails', async () => {
@@ -640,7 +715,9 @@ describe('AccountUseCases', () => {
   });
 
   describe('sendPsbt', () => {
-    const mockTxid = mock<Txid>();
+    const mockTxid = mock<Txid>({
+      toString: () => 'sendtxid',
+    });
     const mockPsbt = mock<Psbt>();
     const mockTransaction = mock<Transaction>({
       // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
@@ -649,7 +726,10 @@ describe('AccountUseCases', () => {
       clone: jest.fn(),
     });
     const mockAccount = mock<BitcoinAccount>({
+      id: 'account-id',
       network: 'bitcoin',
+      publicAddress: { toString: () => 'bc1qsend' },
+      addressType: 'p2wpkh',
       sign: jest.fn(),
     });
     const mockWalletTx = mock<WalletTx>();
@@ -664,15 +744,16 @@ describe('AccountUseCases', () => {
       mockRepository.getWithSigner.mockResolvedValue(null);
 
       await expect(
-        useCases.sendPsbt('non-existent-id', mockPsbt),
+        useCases.sendPsbt('non-existent-id', mockPsbt, 'metamask'),
       ).rejects.toThrow('Account not found: non-existent-id');
     });
 
     it('sends transaction', async () => {
       mockAccount.sign.mockReturnValue(mockTransaction);
       mockAccount.getTransaction.mockReturnValue(mockWalletTx);
+      mockTransaction.compute_txid.mockReturnValue(mockTxid);
 
-      const txId = await useCases.sendPsbt('account-id', mockPsbt);
+      const txId = await useCases.sendPsbt('account-id', mockPsbt, 'metamask');
 
       expect(mockRepository.getWithSigner).toHaveBeenCalledWith('account-id');
       expect(mockAccount.sign).toHaveBeenCalledWith(mockPsbt);
@@ -688,6 +769,19 @@ describe('AccountUseCases', () => {
       expect(
         mockSnapClient.emitAccountTransactionsUpdatedEvent,
       ).toHaveBeenCalledWith(mockAccount, [mockWalletTx]);
+
+      expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledWith(
+        TrackingSnapEvent.TransactionSubmitted,
+        {
+          origin: 'metamask',
+          message: 'Snap transaction submitted',
+          network: 'bitcoin',
+          account_id: 'account-id',
+          account_public_address: 'bc1qsend',
+          address_type: 'p2wpkh',
+          tx_id: 'sendtxid',
+        },
+      );
       expect(txId).toBe(mockTxid);
     });
 
@@ -695,9 +789,9 @@ describe('AccountUseCases', () => {
       const error = new Error('getWithSigner failed');
       mockRepository.getWithSigner.mockRejectedValueOnce(error);
 
-      await expect(useCases.sendPsbt('account-id', mockPsbt)).rejects.toBe(
-        error,
-      );
+      await expect(
+        useCases.sendPsbt('account-id', mockPsbt, 'metamask'),
+      ).rejects.toBe(error);
     });
 
     it('propagates an error if broadcast fails', async () => {
@@ -705,9 +799,9 @@ describe('AccountUseCases', () => {
       mockAccount.sign.mockReturnValue(mockTransaction);
       mockChain.broadcast.mockRejectedValueOnce(error);
 
-      await expect(useCases.sendPsbt('account-id', mockPsbt)).rejects.toBe(
-        error,
-      );
+      await expect(
+        useCases.sendPsbt('account-id', mockPsbt, 'metamask'),
+      ).rejects.toBe(error);
     });
 
     it('propagates an error if update fails', async () => {
@@ -715,9 +809,9 @@ describe('AccountUseCases', () => {
       mockAccount.sign.mockReturnValue(mockTransaction);
       mockRepository.update.mockRejectedValue(error);
 
-      await expect(useCases.sendPsbt('account-id', mockPsbt)).rejects.toBe(
-        error,
-      );
+      await expect(
+        useCases.sendPsbt('account-id', mockPsbt, 'metamask'),
+      ).rejects.toBe(error);
     });
   });
 });
