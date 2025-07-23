@@ -466,20 +466,12 @@ describe('AccountUseCases', () => {
       expect(
         mockSnapClient.emitAccountTransactionsUpdatedEvent,
       ).toHaveBeenCalledWith(mockAccount, [mockTxConfirmed]);
-      /* eslint-disable @typescript-eslint/naming-convention */
       expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledWith(
         TrackingSnapEvent.TransactionFinalized,
-        {
-          origin: 'CronHandler',
-          message: 'Snap transaction finalized',
-          network: 'bitcoin',
-          account_id: 'some-id',
-          account_public_address: 'bc1qtest',
-          address_type: 'p2wpkh',
-          tx_id: 'txid',
-        },
+        mockAccount,
+        mockTxConfirmed,
+        undefined,
       );
-      /* eslint-enable @typescript-eslint/naming-convention */
     });
 
     it('synchronizes with both new and confirmed transactions', async () => {
@@ -503,13 +495,27 @@ describe('AccountUseCases', () => {
         chain_position: { is_confirmed: true },
       });
 
+      const mockTxPreviouslyConfirmed = mock<WalletTx>({
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        chain_position: { is_confirmed: true },
+        txid: {
+          toString: () => 'txid3',
+        },
+      });
+      const mockTxReorged = mock<WalletTx>({
+        ...mockTxPreviouslyConfirmed,
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        chain_position: { is_confirmed: false },
+      });
+
       mockAccount.listTransactions
-        .mockReturnValueOnce([mockTxPending])
-        .mockReturnValueOnce([mockTxConfirmed, mockTxNew]);
+        .mockReturnValueOnce([mockTxPending, mockTxPreviouslyConfirmed])
+        .mockReturnValueOnce([mockTxConfirmed, mockTxNew, mockTxReorged]);
       const mockInscriptions = mock<Inscription[]>();
       mockMetaProtocols.fetchInscriptions.mockResolvedValue(mockInscriptions);
+      const origin = 'CronHandler';
 
-      await useCases.synchronize(mockAccount);
+      await useCases.synchronize(mockAccount, origin);
 
       expect(mockChain.sync).toHaveBeenCalledWith(mockAccount);
       expect(mockAccount.listTransactions).toHaveBeenCalledTimes(2);
@@ -520,59 +526,62 @@ describe('AccountUseCases', () => {
         mockAccount,
         mockInscriptions,
       );
+      expect(
+        mockSnapClient.emitAccountBalancesUpdatedEvent,
+      ).toHaveBeenCalledWith(mockAccount);
+      expect(
+        mockSnapClient.emitAccountTransactionsUpdatedEvent,
+      ).toHaveBeenCalledWith(mockAccount, [
+        mockTxConfirmed,
+        mockTxNew,
+        mockTxReorged,
+      ]);
 
       // Check for TransactionFinalized event for confirmed transaction
       expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledWith(
-        /* eslint-disable @typescript-eslint/naming-convention */
         TrackingSnapEvent.TransactionFinalized,
-        {
-          origin: 'CronHandler',
-          message: 'Snap transaction finalized',
-          network: 'bitcoin',
-          account_id: 'some-id',
-          account_public_address: 'bc1qtest',
-          address_type: 'p2wpkh',
-          tx_id: 'txid1',
-        },
+        mockAccount,
+        mockTxConfirmed,
+        origin,
       );
-      /* eslint-enable @typescript-eslint/naming-convention */
-      expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledTimes(1);
+
+      // Check for TransactionReorged event for reorged transaction
+      expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledWith(
+        TrackingSnapEvent.TransactionReorged,
+        mockAccount,
+        mockTxReorged,
+        origin,
+      );
+
+      expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledTimes(2);
     });
 
-    it('should only emit TransactionFinalized for confirmed transactions, not for reorged ones', async () => {
+    it('should emit TransactionReorged when a confirmed transaction becomes unconfirmed', async () => {
       /* eslint-disable @typescript-eslint/naming-convention */
-      const mockTxPending = mock<WalletTx>({
-        chain_position: { is_confirmed: false },
+      const mockTxConfirmed = mock<WalletTx>({
+        chain_position: { is_confirmed: true },
         txid: { toString: () => 'txid1' },
       });
-      const mockTxConfirmed = mock<WalletTx>({
-        ...mockTxPending,
-        chain_position: { is_confirmed: true },
-      });
-
-      const mockTxPreviouslyConfirmed = mock<WalletTx>({
-        chain_position: { is_confirmed: true },
-        txid: { toString: () => 'txid2' },
-      });
       const mockTxReorged = mock<WalletTx>({
-        ...mockTxPreviouslyConfirmed,
+        ...mockTxConfirmed,
         chain_position: { is_confirmed: false },
       });
-
       mockAccount.listTransactions
-        .mockReturnValueOnce([mockTxPending, mockTxPreviouslyConfirmed])
-        .mockReturnValueOnce([mockTxConfirmed, mockTxReorged]);
+        .mockReturnValueOnce([mockTxConfirmed])
+        .mockReturnValueOnce([mockTxReorged]);
 
       await useCases.synchronize(mockAccount);
 
       expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledTimes(1);
       expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledWith(
-        TrackingSnapEvent.TransactionFinalized,
-        expect.objectContaining({
-          tx_id: 'txid1',
-        }),
+        TrackingSnapEvent.TransactionReorged,
+        mockAccount,
+        mockTxReorged,
+        undefined,
       );
-      /* eslint-enable @typescript-eslint/naming-convention */
+      expect(
+        mockSnapClient.emitAccountTransactionsUpdatedEvent,
+      ).toHaveBeenCalledWith(mockAccount, [mockTxReorged]);
     });
 
     it('propagates an error if the chain sync fails', async () => {
@@ -805,18 +814,11 @@ describe('AccountUseCases', () => {
       expect(
         mockSnapClient.emitAccountTransactionsUpdatedEvent,
       ).toHaveBeenCalledWith(mockAccount, [mockWalletTx]);
-
       expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledWith(
         TrackingSnapEvent.TransactionSubmitted,
-        {
-          origin: 'metamask',
-          message: 'Snap transaction submitted',
-          network: 'bitcoin',
-          account_id: 'account-id',
-          account_public_address: 'bc1qsend',
-          address_type: 'p2wpkh',
-          tx_id: 'sendtxid',
-        },
+        mockAccount,
+        mockWalletTx,
+        'metamask',
       );
       expect(txId).toBe(mockTxid);
     });

@@ -11,12 +11,8 @@ import type {
   Json,
 } from '@metamask/snaps-sdk';
 
-import type {
-  BitcoinAccount,
-  SnapClient,
-  TrackingSnapEvent,
-} from '../entities';
-import { networkToCurrencyUnit } from '../entities';
+import type { BitcoinAccount, SnapClient } from '../entities';
+import { TrackingSnapEvent, networkToCurrencyUnit } from '../entities';
 import { networkToCaip19 } from '../handlers';
 import { mapToKeyringAccount, mapToTransaction } from '../handlers/mappings';
 
@@ -196,19 +192,44 @@ export class SnapClientAdapter implements SnapClient {
   }
 
   async emitTrackingEvent(
-    event: TrackingSnapEvent,
-    properties?: Record<string, Json>,
-    sensitiveProperties?: Record<string, Json>,
+    eventType: TrackingSnapEvent,
+    account: BitcoinAccount,
+    tx: WalletTx,
+    origin: string,
   ): Promise<void> {
+    const createMessage = (): string => {
+      switch (eventType) {
+        case TrackingSnapEvent.TransactionFinalized:
+          return 'Snap transaction finalized';
+        case TrackingSnapEvent.TransactionSubmitted:
+          return 'Snap transaction submitted';
+        case TrackingSnapEvent.TransactionReorged:
+          return 'Snap transaction reorged';
+        default:
+          throw new Error(
+            `Unhandled tracking event type: ${eventType as string}`,
+          );
+      }
+    };
+
+    /* eslint-disable @typescript-eslint/naming-convention */
     await snap.request({
       method: 'snap_trackEvent',
       params: {
         event: {
-          event,
-          properties,
-          sensitiveProperties,
+          event: eventType,
+          properties: {
+            origin,
+            message: createMessage(),
+            network: account.network,
+            account_id: account.id,
+            account_public_address: account.publicAddress.toString(),
+            address_type: account.addressType.toString(),
+            tx_id: tx.txid.toString(),
+          },
         },
       },
     });
+    /* eslint-enable @typescript-eslint/naming-convention */
   }
 }

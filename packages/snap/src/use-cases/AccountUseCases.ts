@@ -175,7 +175,7 @@ export class AccountUseCases {
     return newAccount;
   }
 
-  async synchronize(account: BitcoinAccount): Promise<void> {
+  async synchronize(account: BitcoinAccount, origin?: string): Promise<void> {
     this.#logger.debug('Synchronizing account: %s', account.id);
 
     const txsBeforeSync = account.listTransactions();
@@ -198,15 +198,13 @@ export class AccountUseCases {
       txMapBefore.set(tx.txid.toString(), tx);
     }
 
-    const newTxs: WalletTx[] = [];
-    const confirmedTxs: WalletTx[] = [];
-    const reorgedTxs: WalletTx[] = [];
+    const txsToNotify: WalletTx[] = [];
 
     for (const tx of txsAfterSync) {
       const prevTx = txMapBefore.get(tx.txid.toString());
 
       if (!prevTx) {
-        newTxs.push(tx);
+        txsToNotify.push(tx);
         continue;
       }
 
@@ -215,16 +213,28 @@ export class AccountUseCases {
 
       if (statusChanged) {
         if (tx.chain_position.is_confirmed) {
-          confirmedTxs.push(tx);
+          txsToNotify.push(tx);
+
+          await this.#snapClient.emitTrackingEvent(
+            TrackingSnapEvent.TransactionFinalized,
+            account,
+            tx,
+            origin,
+          );
         } else {
           // if the status was changed, and now it's NOT confirmed
           // it means the tx was reorged.
-          reorgedTxs.push(tx);
+          txsToNotify.push(tx);
+
+          await this.#snapClient.emitTrackingEvent(
+            TrackingSnapEvent.TransactionReorged,
+            account,
+            tx,
+            origin,
+          );
         }
       }
     }
-
-    const txsToNotify = [...newTxs, ...confirmedTxs, ...reorgedTxs];
 
     if (txsToNotify.length > 0) {
       await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
@@ -234,22 +244,6 @@ export class AccountUseCases {
       );
     }
 
-    for (const tx of confirmedTxs) {
-      /* eslint-disable @typescript-eslint/naming-convention */
-      await this.#snapClient.emitTrackingEvent(
-        TrackingSnapEvent.TransactionFinalized,
-        {
-          origin: 'CronHandler',
-          message: 'Snap transaction finalized',
-          network: account.network,
-          account_id: account.id,
-          account_public_address: account.publicAddress.toString(),
-          address_type: account.addressType.toString(),
-          tx_id: tx.txid.toString(),
-        },
-      );
-      /* eslint-enable @typescript-eslint/naming-convention */
-    }
     this.#logger.debug('Account synchronized successfully: %s', account.id);
   }
 
@@ -311,22 +305,14 @@ export class AccountUseCases {
       await this.#snapClient.emitAccountTransactionsUpdatedEvent(account, [
         walletTx,
       ]);
-    }
 
-    /* eslint-disable @typescript-eslint/naming-convention */
-    await this.#snapClient.emitTrackingEvent(
-      TrackingSnapEvent.TransactionSubmitted,
-      {
+      await this.#snapClient.emitTrackingEvent(
+        TrackingSnapEvent.TransactionSubmitted,
+        account,
+        walletTx,
         origin,
-        message: 'Snap transaction submitted',
-        network: account.network,
-        account_id: account.id,
-        account_public_address: account.publicAddress.toString(),
-        address_type: account.addressType.toString(),
-        tx_id: txId.toString(),
-      },
-    );
-    /* eslint-enable @typescript-eslint/naming-convention */
+      );
+    }
 
     this.#logger.info(
       'Transaction sent successfully: %s. Account: %s, Network: %s',

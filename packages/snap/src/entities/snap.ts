@@ -28,6 +28,7 @@ export type AccountState = {
 export enum TrackingSnapEvent {
   TransactionFinalized = 'Transaction Finalized',
   TransactionSubmitted = 'Transaction Submitted',
+  TransactionReorged = 'Transaction Reorged',
 }
 
 /**
@@ -191,13 +192,15 @@ export type SnapClient = {
   /**
    * Track events that comply with the SIP-32 spec (https://metamask.github.io/SIPs/SIPS/sip-32)
    *
-   * @param event The event type we want to track
-   * @param properties Custom values to track. The client MUST enforce that all keys in this object are in the snake_case format
-   * @param sensitiveProperties Sensitive values to track. The client MUST enforce that all keys in this object are in the snake_case format.
+   * @param eventType The event type we want to track
+   * @param account The correlated bitcoin account
+   * @param tx The transaction we want to capture metrics for
+   * @param origin The origin/source that triggered this event
    */
   emitTrackingEvent(
-    event: TrackingSnapEvent,
-    properties?: Record<string, Json>,
-    sensitiveProperties?: Record<string, Json>,
+    eventType: TrackingSnapEvent,
+    account: BitcoinAccount,
+    tx: WalletTx,
+    origin?: string,
   ): Promise<void>;
 };
