@@ -773,8 +773,6 @@ describe('AccountUseCases', () => {
     const mockAccount = mock<BitcoinAccount>({
       id: 'account-id',
       network: 'bitcoin',
-      publicAddress: { toString: () => 'bc1qsend' },
-      addressType: 'p2wpkh',
       sign: jest.fn(),
     });
     const mockWalletTx = mock<WalletTx>();
