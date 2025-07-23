@@ -513,7 +513,7 @@ describe('AccountUseCases', () => {
         .mockReturnValueOnce([mockTxConfirmed, mockTxNew, mockTxReorged]);
       const mockInscriptions = mock<Inscription[]>();
       mockMetaProtocols.fetchInscriptions.mockResolvedValue(mockInscriptions);
-      const origin = 'CronHandler';
+      const origin = 'cron';
 
       await useCases.synchronize(mockAccount, origin);
 
@@ -760,9 +760,7 @@ describe('AccountUseCases', () => {
   });
 
   describe('sendPsbt', () => {
-    const mockTxid = mock<Txid>({
-      toString: () => 'sendtxid',
-    });
+    const mockTxid = mock<Txid>();
     const mockPsbt = mock<Psbt>();
     const mockTransaction = mock<Transaction>({
       // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818

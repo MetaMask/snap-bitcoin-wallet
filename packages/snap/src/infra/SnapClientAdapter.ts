@@ -13,7 +13,11 @@ import type {
 
 import type { BitcoinAccount, SnapClient } from '../entities';
 import { TrackingSnapEvent, networkToCurrencyUnit } from '../entities';
-import { networkToCaip19 } from '../handlers';
+import {
+  addressTypeToCaip,
+  networkToCaip19,
+  networkToScope,
+} from '../handlers';
 import { mapToKeyringAccount, mapToTransaction } from '../handlers/mappings';
 
 export class SnapClientAdapter implements SnapClient {
@@ -221,10 +225,10 @@ export class SnapClientAdapter implements SnapClient {
           properties: {
             origin,
             message: createMessage(),
-            network: account.network,
+            chain_id: networkToScope[account.network],
             account_id: account.id,
-            account_public_address: account.publicAddress.toString(),
-            address_type: account.addressType.toString(),
+            account_address: account.publicAddress.toString(),
+            account_type: addressTypeToCaip[account.addressType],
             tx_id: tx.txid.toString(),
           },
         },
