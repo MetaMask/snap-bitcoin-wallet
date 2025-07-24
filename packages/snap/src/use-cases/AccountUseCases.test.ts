@@ -391,9 +391,6 @@ describe('AccountUseCases', () => {
   describe('synchronize', () => {
     const mockAccount = mock<BitcoinAccount>({
       id: 'some-id',
-      network: 'bitcoin',
-      publicAddress: { toString: () => 'bc1qtest' },
-      addressType: 'p2wpkh',
       listTransactions: jest.fn(),
     });
 
@@ -505,9 +502,6 @@ describe('AccountUseCases', () => {
       const mockTxPreviouslyConfirmed = mock<WalletTx>({
         // eslint-disable-next-line @typescript-eslint/naming-convention
         chain_position: { is_confirmed: true },
-        txid: {
-          toString: () => 'txid3',
-        },
       });
       const mockTxReorged = mock<WalletTx>({
         ...mockTxPreviouslyConfirmed,
@@ -575,7 +569,6 @@ describe('AccountUseCases', () => {
       /* eslint-disable @typescript-eslint/naming-convention */
       const mockTxConfirmed = mock<WalletTx>({
         chain_position: { is_confirmed: true },
-        txid: { toString: () => 'txid1' },
       });
       const mockTxReorged = mock<WalletTx>({
         ...mockTxConfirmed,
@@ -788,7 +781,6 @@ describe('AccountUseCases', () => {
       clone: jest.fn(),
     });
     const mockAccount = mock<BitcoinAccount>({
-      id: 'account-id',
       network: 'bitcoin',
       sign: jest.fn(),
     });

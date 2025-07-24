@@ -216,8 +216,11 @@ export class AccountUseCases {
         continue;
       }
 
+      const prevConfirmed = prevTx.chain_position.is_confirmed;
+      const currConfirmed = tx.chain_position.is_confirmed;
+
       const statusChanged =
-        prevTx.chain_position.is_confirmed !== tx.chain_position.is_confirmed;
+        (prevConfirmed && !currConfirmed) || (!prevConfirmed && currConfirmed);
 
       if (statusChanged) {
         if (tx.chain_position.is_confirmed) {
