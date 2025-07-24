@@ -17,6 +17,7 @@ import type {
   MetaProtocolsClient,
   SnapClient,
 } from '../entities';
+import { TrackingSnapEvent } from '../entities';
 import type {
   CreateAccountParams,
   DiscoverAccountParams,
@@ -400,7 +401,7 @@ describe('AccountUseCases', () => {
     it('synchronizes', async () => {
       mockAccount.listTransactions.mockReturnValue([]);
 
-      await useCases.synchronize(mockAccount);
+      await useCases.synchronize(mockAccount, 'test');
 
       expect(mockChain.sync).toHaveBeenCalledWith(mockAccount);
       expect(mockAccount.listTransactions).toHaveBeenCalledTimes(2);
@@ -415,7 +416,7 @@ describe('AccountUseCases', () => {
         .mockReturnValueOnce([mockTransaction]);
       mockMetaProtocols.fetchInscriptions.mockResolvedValue(mockInscriptions);
 
-      await useCases.synchronize(mockAccount);
+      await useCases.synchronize(mockAccount, 'test');
 
       expect(mockChain.sync).toHaveBeenCalledWith(mockAccount);
       expect(mockAccount.listTransactions).toHaveBeenCalledTimes(2);
@@ -432,6 +433,13 @@ describe('AccountUseCases', () => {
       expect(
         mockSnapClient.emitAccountTransactionsUpdatedEvent,
       ).toHaveBeenCalledWith(mockAccount, [mockTransaction]);
+      expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledWith(
+        TrackingSnapEvent.TransactionReceived,
+        mockAccount,
+        mockTransaction,
+        'test',
+      );
+      expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledTimes(1);
     });
 
     it('synchronizes with confirmed transactions', async () => {
@@ -451,7 +459,7 @@ describe('AccountUseCases', () => {
         .mockReturnValueOnce([mockTxPending])
         .mockReturnValueOnce([mockTxConfirmed]);
 
-      await useCases.synchronize(mockAccount);
+      await useCases.synchronize(mockAccount, 'test');
 
       expect(mockChain.sync).toHaveBeenCalledWith(mockAccount);
       expect(mockAccount.listTransactions).toHaveBeenCalledTimes(2);
@@ -462,13 +470,135 @@ describe('AccountUseCases', () => {
       expect(
         mockSnapClient.emitAccountTransactionsUpdatedEvent,
       ).toHaveBeenCalledWith(mockAccount, [mockTxConfirmed]);
+      expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledWith(
+        TrackingSnapEvent.TransactionFinalized,
+        mockAccount,
+        mockTxConfirmed,
+        'test',
+      );
+    });
+
+    it('synchronizes with both new and confirmed transactions', async () => {
+      const mockTxPending = mock<WalletTx>({
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        chain_position: { is_confirmed: false },
+        txid: {
+          toString: () => 'txid1',
+        },
+      });
+      const mockTxNew = mock<WalletTx>({
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        chain_position: { is_confirmed: false },
+        txid: {
+          toString: () => 'txid2',
+        },
+      });
+      const mockTxConfirmed = mock<WalletTx>({
+        ...mockTxPending,
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        chain_position: { is_confirmed: true },
+      });
+
+      const mockTxPreviouslyConfirmed = mock<WalletTx>({
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        chain_position: { is_confirmed: true },
+      });
+      const mockTxReorged = mock<WalletTx>({
+        ...mockTxPreviouslyConfirmed,
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        chain_position: { is_confirmed: false },
+      });
+
+      mockAccount.listTransactions
+        .mockReturnValueOnce([mockTxPending, mockTxPreviouslyConfirmed])
+        .mockReturnValueOnce([mockTxConfirmed, mockTxNew, mockTxReorged]);
+      const mockInscriptions = mock<Inscription[]>();
+      mockMetaProtocols.fetchInscriptions.mockResolvedValue(mockInscriptions);
+      const origin = 'test';
+
+      await useCases.synchronize(mockAccount, origin);
+
+      expect(mockChain.sync).toHaveBeenCalledWith(mockAccount);
+      expect(mockAccount.listTransactions).toHaveBeenCalledTimes(2);
+      expect(mockMetaProtocols.fetchInscriptions).toHaveBeenCalledWith(
+        mockAccount,
+      );
+      expect(mockRepository.update).toHaveBeenCalledWith(
+        mockAccount,
+        mockInscriptions,
+      );
+      expect(
+        mockSnapClient.emitAccountBalancesUpdatedEvent,
+      ).toHaveBeenCalledWith(mockAccount);
+      expect(
+        mockSnapClient.emitAccountTransactionsUpdatedEvent,
+      ).toHaveBeenCalledWith(mockAccount, [
+        mockTxConfirmed,
+        mockTxNew,
+        mockTxReorged,
+      ]);
+
+      // Check for TransactionFinalized event for confirmed transaction
+      expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledWith(
+        TrackingSnapEvent.TransactionFinalized,
+        mockAccount,
+        mockTxConfirmed,
+        origin,
+      );
+
+      // Check for TransactionReceived event for new transaction
+      expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledWith(
+        TrackingSnapEvent.TransactionReceived,
+        mockAccount,
+        mockTxNew,
+        origin,
+      );
+
+      // Check for TransactionReorged event for reorged transaction
+      expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledWith(
+        TrackingSnapEvent.TransactionReorged,
+        mockAccount,
+        mockTxReorged,
+        origin,
+      );
+
+      expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledTimes(3);
+    });
+
+    it('should emit TransactionReorged when a confirmed transaction becomes unconfirmed', async () => {
+      /* eslint-disable @typescript-eslint/naming-convention */
+      const mockTxConfirmed = mock<WalletTx>({
+        chain_position: { is_confirmed: true },
+      });
+      const mockTxReorged = mock<WalletTx>({
+        ...mockTxConfirmed,
+        chain_position: { is_confirmed: false },
+      });
+      mockAccount.listTransactions
+        .mockReturnValueOnce([mockTxConfirmed])
+        .mockReturnValueOnce([mockTxReorged]);
+
+      await useCases.synchronize(mockAccount, 'test');
+
+      expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledTimes(1);
+      expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledWith(
+        TrackingSnapEvent.TransactionReorged,
+        mockAccount,
+        mockTxReorged,
+        'test',
+      );
+      expect(
+        mockSnapClient.emitAccountTransactionsUpdatedEvent,
+      ).toHaveBeenCalledWith(mockAccount, [mockTxReorged]);
     });
 
     it('propagates an error if the chain sync fails', async () => {
       const error = new Error('Sync failed');
       mockChain.sync.mockRejectedValue(error);
 
-      await expect(useCases.synchronize(mockAccount)).rejects.toBe(error);
+      await expect(useCases.synchronize(mockAccount, 'test')).rejects.toBe(
+        error,
+      );
 
       expect(mockChain.sync).toHaveBeenCalled();
     });
@@ -478,7 +608,9 @@ describe('AccountUseCases', () => {
       const error = new Error('Update failed');
       mockRepository.update.mockRejectedValue(error);
 
-      await expect(useCases.synchronize(mockAccount)).rejects.toBe(error);
+      await expect(useCases.synchronize(mockAccount, 'test')).rejects.toBe(
+        error,
+      );
 
       expect(mockChain.sync).toHaveBeenCalled();
       expect(mockRepository.update).toHaveBeenCalled();
@@ -497,7 +629,7 @@ describe('AccountUseCases', () => {
         .mockReturnValueOnce([])
         .mockReturnValueOnce([mockTransaction]);
 
-      await testUseCases.synchronize(mockAccount);
+      await testUseCases.synchronize(mockAccount, 'test');
 
       expect(mockMetaProtocols.fetchInscriptions).not.toHaveBeenCalled();
     });
@@ -664,15 +796,16 @@ describe('AccountUseCases', () => {
       mockRepository.getWithSigner.mockResolvedValue(null);
 
       await expect(
-        useCases.sendPsbt('non-existent-id', mockPsbt),
+        useCases.sendPsbt('non-existent-id', mockPsbt, 'metamask'),
       ).rejects.toThrow('Account not found: non-existent-id');
     });
 
     it('sends transaction', async () => {
       mockAccount.sign.mockReturnValue(mockTransaction);
       mockAccount.getTransaction.mockReturnValue(mockWalletTx);
+      mockTransaction.compute_txid.mockReturnValue(mockTxid);
 
-      const txId = await useCases.sendPsbt('account-id', mockPsbt);
+      const txId = await useCases.sendPsbt('account-id', mockPsbt, 'metamask');
 
       expect(mockRepository.getWithSigner).toHaveBeenCalledWith('account-id');
       expect(mockAccount.sign).toHaveBeenCalledWith(mockPsbt);
@@ -688,6 +821,12 @@ describe('AccountUseCases', () => {
       expect(
         mockSnapClient.emitAccountTransactionsUpdatedEvent,
       ).toHaveBeenCalledWith(mockAccount, [mockWalletTx]);
+      expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledWith(
+        TrackingSnapEvent.TransactionSubmitted,
+        mockAccount,
+        mockWalletTx,
+        'metamask',
+      );
       expect(txId).toBe(mockTxid);
     });
 
@@ -695,9 +834,9 @@ describe('AccountUseCases', () => {
       const error = new Error('getWithSigner failed');
       mockRepository.getWithSigner.mockRejectedValueOnce(error);
 
-      await expect(useCases.sendPsbt('account-id', mockPsbt)).rejects.toBe(
-        error,
-      );
+      await expect(
+        useCases.sendPsbt('account-id', mockPsbt, 'metamask'),
+      ).rejects.toBe(error);
     });
 
     it('propagates an error if broadcast fails', async () => {
@@ -705,9 +844,9 @@ describe('AccountUseCases', () => {
       mockAccount.sign.mockReturnValue(mockTransaction);
       mockChain.broadcast.mockRejectedValueOnce(error);
 
-      await expect(useCases.sendPsbt('account-id', mockPsbt)).rejects.toBe(
-        error,
-      );
+      await expect(
+        useCases.sendPsbt('account-id', mockPsbt, 'metamask'),
+      ).rejects.toBe(error);
     });
 
     it('propagates an error if update fails', async () => {
@@ -715,9 +854,9 @@ describe('AccountUseCases', () => {
       mockAccount.sign.mockReturnValue(mockTransaction);
       mockRepository.update.mockRejectedValue(error);
 
-      await expect(useCases.sendPsbt('account-id', mockPsbt)).rejects.toBe(
-        error,
-      );
+      await expect(
+        useCases.sendPsbt('account-id', mockPsbt, 'metamask'),
+      ).rejects.toBe(error);
     });
   });
 });

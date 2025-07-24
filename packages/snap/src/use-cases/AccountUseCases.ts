@@ -8,14 +8,15 @@ import type {
 import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 
 import {
+  addressTypeToPurpose,
   type BitcoinAccount,
   type BitcoinAccountRepository,
   type BlockchainClient,
-  type SnapClient,
-  type MetaProtocolsClient,
   type Logger,
-  addressTypeToPurpose,
+  type MetaProtocolsClient,
   networkToCoinType,
+  type SnapClient,
+  TrackingSnapEvent,
 } from '../entities';
 
 export type DiscoverAccountParams = {
@@ -174,7 +175,7 @@ export class AccountUseCases {
     return newAccount;
   }
 
-  async synchronize(account: BitcoinAccount): Promise<void> {
+  async synchronize(account: BitcoinAccount, origin: string): Promise<void> {
     this.#logger.debug('Synchronizing account: %s', account.id);
 
     const txsBeforeSync = account.listTransactions();
@@ -197,14 +198,54 @@ export class AccountUseCases {
       txMapBefore.set(tx.txid.toString(), tx);
     }
 
-    // Identify transactions that are either new or whose confirmation status changed
-    const txsToNotify = txsAfterSync.filter((tx) => {
+    const txsToNotify: WalletTx[] = [];
+
+    for (const tx of txsAfterSync) {
       const prevTx = txMapBefore.get(tx.txid.toString());
-      return (
-        !prevTx ||
-        prevTx.chain_position.is_confirmed !== tx.chain_position.is_confirmed
-      );
-    });
+
+      if (!prevTx) {
+        txsToNotify.push(tx);
+
+        await this.#snapClient.emitTrackingEvent(
+          TrackingSnapEvent.TransactionReceived,
+          account,
+          tx,
+          origin,
+        );
+
+        continue;
+      }
+
+      const prevConfirmed = prevTx.chain_position.is_confirmed;
+      const currConfirmed = tx.chain_position.is_confirmed;
+
+      const statusChanged =
+        (prevConfirmed && !currConfirmed) || (!prevConfirmed && currConfirmed);
+
+      if (statusChanged) {
+        if (tx.chain_position.is_confirmed) {
+          txsToNotify.push(tx);
+
+          await this.#snapClient.emitTrackingEvent(
+            TrackingSnapEvent.TransactionFinalized,
+            account,
+            tx,
+            origin,
+          );
+        } else {
+          // if the status was changed, and now it's NOT confirmed
+          // it means the tx was reorged.
+          txsToNotify.push(tx);
+
+          await this.#snapClient.emitTrackingEvent(
+            TrackingSnapEvent.TransactionReorged,
+            account,
+            tx,
+            origin,
+          );
+        }
+      }
+    }
 
     if (txsToNotify.length > 0) {
       await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
@@ -253,7 +294,7 @@ export class AccountUseCases {
     this.#logger.info('Account deleted successfully: %s', account.id);
   }
 
-  async sendPsbt(id: string, psbt: Psbt): Promise<Txid> {
+  async sendPsbt(id: string, psbt: Psbt, origin: string): Promise<Txid> {
     this.#logger.debug('Sending transaction: %s', id);
 
     const account = await this.#repository.getWithSigner(id);
@@ -275,6 +316,13 @@ export class AccountUseCases {
       await this.#snapClient.emitAccountTransactionsUpdatedEvent(account, [
         walletTx,
       ]);
+
+      await this.#snapClient.emitTrackingEvent(
+        TrackingSnapEvent.TransactionSubmitted,
+        account,
+        walletTx,
+        origin,
+      );
     }
 
     this.#logger.info(

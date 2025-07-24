@@ -25,6 +25,13 @@ export type AccountState = {
   inscriptions: Inscription[];
 };
 
+export enum TrackingSnapEvent {
+  TransactionFinalized = 'Transaction Finalized',
+  TransactionReceived = 'Transaction Received',
+  TransactionReorged = 'Transaction Reorged',
+  TransactionSubmitted = 'Transaction Submitted',
+}
+
 /**
  * The SnapClient represents the MetaMask Snap state and manages the BIP-32 entropy from the Wallet SRP.
  */
@@ -182,4 +189,19 @@ export type SnapClient = {
    * @returns the user's preferences.
    */
   getPreferences(): Promise<GetPreferencesResult>;
+
+  /**
+   * Track events that comply with the SIP-32 spec (https://metamask.github.io/SIPs/SIPS/sip-32)
+   *
+   * @param eventType The event type we want to track
+   * @param account The correlated bitcoin account
+   * @param tx The transaction we want to capture metrics for
+   * @param origin The origin/source that triggered this event
+   */
+  emitTrackingEvent(
+    eventType: TrackingSnapEvent,
+    account: BitcoinAccount,
+    tx: WalletTx,
+    origin: string,
+  ): Promise<void>;
 };

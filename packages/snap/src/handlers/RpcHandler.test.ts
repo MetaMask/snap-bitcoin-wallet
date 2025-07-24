@@ -66,6 +66,7 @@ describe('RpcHandler', () => {
       expect(mockAccountsUseCases.sendPsbt).toHaveBeenCalledWith(
         'account-id',
         mockPsbt,
+        'metamask',
       );
       expect(result).toStrictEqual({ txId: 'txId' });
     });
