@@ -202,6 +202,6 @@ export type SnapClient = {
     eventType: TrackingSnapEvent,
     account: BitcoinAccount,
     tx: WalletTx,
-    origin?: string,
+    origin: string,
   ): Promise<void>;
 };
