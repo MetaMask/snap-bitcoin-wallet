@@ -404,7 +404,7 @@ describe('AccountUseCases', () => {
     it('synchronizes', async () => {
       mockAccount.listTransactions.mockReturnValue([]);
 
-      await useCases.synchronize(mockAccount);
+      await useCases.synchronize(mockAccount, 'test');
 
       expect(mockChain.sync).toHaveBeenCalledWith(mockAccount);
       expect(mockAccount.listTransactions).toHaveBeenCalledTimes(2);
@@ -419,7 +419,7 @@ describe('AccountUseCases', () => {
         .mockReturnValueOnce([mockTransaction]);
       mockMetaProtocols.fetchInscriptions.mockResolvedValue(mockInscriptions);
 
-      await useCases.synchronize(mockAccount);
+      await useCases.synchronize(mockAccount, 'test');
 
       expect(mockChain.sync).toHaveBeenCalledWith(mockAccount);
       expect(mockAccount.listTransactions).toHaveBeenCalledTimes(2);
@@ -436,6 +436,13 @@ describe('AccountUseCases', () => {
       expect(
         mockSnapClient.emitAccountTransactionsUpdatedEvent,
       ).toHaveBeenCalledWith(mockAccount, [mockTransaction]);
+      expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledWith(
+        TrackingSnapEvent.TransactionReceived,
+        mockAccount,
+        mockTransaction,
+        'test',
+      );
+      expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledTimes(1);
     });
 
     it('synchronizes with confirmed transactions', async () => {
@@ -455,7 +462,7 @@ describe('AccountUseCases', () => {
         .mockReturnValueOnce([mockTxPending])
         .mockReturnValueOnce([mockTxConfirmed]);
 
-      await useCases.synchronize(mockAccount);
+      await useCases.synchronize(mockAccount, 'test');
 
       expect(mockChain.sync).toHaveBeenCalledWith(mockAccount);
       expect(mockAccount.listTransactions).toHaveBeenCalledTimes(2);
@@ -470,7 +477,7 @@ describe('AccountUseCases', () => {
         TrackingSnapEvent.TransactionFinalized,
         mockAccount,
         mockTxConfirmed,
-        undefined,
+        'test',
       );
     });
 
@@ -513,7 +520,7 @@ describe('AccountUseCases', () => {
         .mockReturnValueOnce([mockTxConfirmed, mockTxNew, mockTxReorged]);
       const mockInscriptions = mock<Inscription[]>();
       mockMetaProtocols.fetchInscriptions.mockResolvedValue(mockInscriptions);
-      const origin = 'cron';
+      const origin = 'test';
 
       await useCases.synchronize(mockAccount, origin);
 
@@ -545,6 +552,14 @@ describe('AccountUseCases', () => {
         origin,
       );
 
+      // Check for TransactionReceived event for new transaction
+      expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledWith(
+        TrackingSnapEvent.TransactionReceived,
+        mockAccount,
+        mockTxNew,
+        origin,
+      );
+
       // Check for TransactionReorged event for reorged transaction
       expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledWith(
         TrackingSnapEvent.TransactionReorged,
@@ -553,7 +568,7 @@ describe('AccountUseCases', () => {
         origin,
       );
 
-      expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledTimes(2);
+      expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledTimes(3);
     });
 
     it('should emit TransactionReorged when a confirmed transaction becomes unconfirmed', async () => {
@@ -570,14 +585,14 @@ describe('AccountUseCases', () => {
         .mockReturnValueOnce([mockTxConfirmed])
         .mockReturnValueOnce([mockTxReorged]);
 
-      await useCases.synchronize(mockAccount);
+      await useCases.synchronize(mockAccount, 'test');
 
       expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledTimes(1);
       expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledWith(
         TrackingSnapEvent.TransactionReorged,
         mockAccount,
         mockTxReorged,
-        undefined,
+        'test',
       );
       expect(
         mockSnapClient.emitAccountTransactionsUpdatedEvent,
@@ -588,7 +603,9 @@ describe('AccountUseCases', () => {
       const error = new Error('Sync failed');
       mockChain.sync.mockRejectedValue(error);
 
-      await expect(useCases.synchronize(mockAccount)).rejects.toBe(error);
+      await expect(useCases.synchronize(mockAccount, 'test')).rejects.toBe(
+        error,
+      );
 
       expect(mockChain.sync).toHaveBeenCalled();
     });
@@ -598,7 +615,9 @@ describe('AccountUseCases', () => {
       const error = new Error('Update failed');
       mockRepository.update.mockRejectedValue(error);
 
-      await expect(useCases.synchronize(mockAccount)).rejects.toBe(error);
+      await expect(useCases.synchronize(mockAccount, 'test')).rejects.toBe(
+        error,
+      );
 
       expect(mockChain.sync).toHaveBeenCalled();
       expect(mockRepository.update).toHaveBeenCalled();
@@ -617,7 +636,7 @@ describe('AccountUseCases', () => {
         .mockReturnValueOnce([])
         .mockReturnValueOnce([mockTransaction]);
 
-      await testUseCases.synchronize(mockAccount);
+      await testUseCases.synchronize(mockAccount, 'test');
 
       expect(mockMetaProtocols.fetchInscriptions).not.toHaveBeenCalled();
     });

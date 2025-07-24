@@ -53,7 +53,7 @@ export class CronHandler {
     const accounts = await this.#accountsUseCases.list();
     const results = await Promise.allSettled(
       accounts.map(async (account) => {
-        return this.#accountsUseCases.synchronize(account, 'CronHandler');
+        return this.#accountsUseCases.synchronize(account, 'cron');
       }),
     );
 

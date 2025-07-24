@@ -175,7 +175,7 @@ export class AccountUseCases {
     return newAccount;
   }
 
-  async synchronize(account: BitcoinAccount, origin?: string): Promise<void> {
+  async synchronize(account: BitcoinAccount, origin: string): Promise<void> {
     this.#logger.debug('Synchronizing account: %s', account.id);
 
     const txsBeforeSync = account.listTransactions();
@@ -205,6 +205,14 @@ export class AccountUseCases {
 
       if (!prevTx) {
         txsToNotify.push(tx);
+
+        await this.#snapClient.emitTrackingEvent(
+          TrackingSnapEvent.TransactionReceived,
+          account,
+          tx,
+          origin,
+        );
+
         continue;
       }
 
