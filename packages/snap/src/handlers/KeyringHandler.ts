@@ -41,13 +41,12 @@ import {
   scopeToNetwork,
   networkToScope,
 } from './caip';
-import { handle } from './errors';
+import type { HandlerMiddleware } from './HandlerMiddleware';
 import {
   mapToDiscoveredAccount,
   mapToKeyringAccount,
   mapToTransaction,
 } from './mappings';
-import { validateOrigin } from './permissions';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 
 export const CreateAccountRequest = object({
@@ -62,21 +61,27 @@ export const CreateAccountRequest = object({
 });
 
 export class KeyringHandler implements Keyring {
+  readonly #middleware: HandlerMiddleware;
+
   readonly #accountsUseCases: AccountUseCases;
 
   readonly #defaultAddressType: AddressType;
 
-  constructor(accounts: AccountUseCases, defaultAddressType: AddressType) {
+  constructor(
+    middleware: HandlerMiddleware,
+    accounts: AccountUseCases,
+    defaultAddressType: AddressType,
+  ) {
+    this.#middleware = middleware;
     this.#accountsUseCases = accounts;
     this.#defaultAddressType = defaultAddressType;
   }
 
   async route(origin: string, request: JsonRpcRequest): Promise<Json> {
-    validateOrigin(origin);
-
-    const result = await handle(async () =>
-      handleKeyringRequest(this, request),
-    );
+    const result = await this.#middleware.handle(async () => {
+      this.#middleware.validateOrigin(origin);
+      return handleKeyringRequest(this, request);
+    });
 
     return result ?? null; // Use `null` since `undefined` is not valid in JSON.
   }

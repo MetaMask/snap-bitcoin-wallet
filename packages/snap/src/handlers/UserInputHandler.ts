@@ -7,12 +7,15 @@ import type {
 import type { ReviewTransactionContext, SendFormContext } from '../entities';
 import { ReviewTransactionEvent, SendFormEvent } from '../entities';
 import type { SendFlowUseCases } from '../use-cases';
-import { handle } from './errors';
+import type { HandlerMiddleware } from './HandlerMiddleware';
 
 export class UserInputHandler {
+  readonly #middleware: HandlerMiddleware;
+
   readonly #sendFlowUseCases: SendFlowUseCases;
 
-  constructor(sendFlow: SendFlowUseCases) {
+  constructor(middleware: HandlerMiddleware, sendFlow: SendFlowUseCases) {
+    this.#middleware = middleware;
     this.#sendFlowUseCases = sendFlow;
   }
 
@@ -21,7 +24,7 @@ export class UserInputHandler {
     event: UserInputEvent,
     context: Record<string, Json> | null,
   ): Promise<void> {
-    return handle(async () => {
+    return this.#middleware.handle(async () => {
       if (!context) {
         throw new Error('Missing context');
       }

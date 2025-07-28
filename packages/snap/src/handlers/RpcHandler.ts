@@ -3,8 +3,7 @@ import type { Json, JsonRpcRequest } from '@metamask/utils';
 import { assert, enums, object, optional, string } from 'superstruct';
 
 import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
-import { handle } from './errors';
-import { validateOrigin } from './permissions';
+import type { HandlerMiddleware } from './HandlerMiddleware';
 
 export enum RpcMethod {
   StartSendTransactionFlow = 'startSendTransactionFlow',
@@ -21,21 +20,28 @@ type SendTransactionResponse = {
 };
 
 export class RpcHandler {
+  readonly #middleware: HandlerMiddleware;
+
   readonly #sendFlowUseCases: SendFlowUseCases;
 
   readonly #accountUseCases: AccountUseCases;
 
-  constructor(sendFlow: SendFlowUseCases, accounts: AccountUseCases) {
+  constructor(
+    middleware: HandlerMiddleware,
+    sendFlow: SendFlowUseCases,
+    accounts: AccountUseCases,
+  ) {
+    this.#middleware = middleware;
     this.#sendFlowUseCases = sendFlow;
     this.#accountUseCases = accounts;
   }
 
   async route(origin: string, request: JsonRpcRequest): Promise<Json> {
-    validateOrigin(origin);
+    return this.#middleware.handle(async () => {
+      this.#middleware.validateOrigin(origin);
 
-    const { method, params } = request;
+      const { method, params } = request;
 
-    return handle(async () => {
       if (!params) {
         throw new Error('Missing params');
       }

@@ -11,7 +11,7 @@ import type {
   Json,
 } from '@metamask/snaps-sdk';
 
-import type { BitcoinAccount, SnapClient } from '../entities';
+import type { BaseError, BitcoinAccount, SnapClient } from '../entities';
 import { TrackingSnapEvent, networkToCurrencyUnit } from '../entities';
 import {
   addressTypeToCaip,
@@ -237,5 +237,19 @@ export class SnapClientAdapter implements SnapClient {
       },
     });
     /* eslint-enable @typescript-eslint/naming-convention */
+  }
+
+  async emitTrackingError(error: BaseError): Promise<void> {
+    await snap.request({
+      method: 'snap_trackError',
+      params: {
+        error: {
+          message: error.message,
+          name: error.name,
+          stack: error.stack ?? null,
+          cause: null,
+        },
+      },
+    });
   }
 }

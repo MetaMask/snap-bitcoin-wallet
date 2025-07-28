@@ -15,15 +15,22 @@ import { assert } from 'superstruct';
 
 import type { AssetsUseCases } from '../use-cases';
 import { Caip19Asset } from './caip';
-import { handle } from './errors';
+import type { HandlerMiddleware } from './HandlerMiddleware';
 import { networkToIcon } from './icons';
 
 export class AssetsHandler {
+  readonly #middleware: HandlerMiddleware;
+
   readonly #assetsUseCases: AssetsUseCases;
 
   readonly #expirationInterval: number;
 
-  constructor(assets: AssetsUseCases, expirationInterval: number) {
+  constructor(
+    middleware: HandlerMiddleware,
+    assets: AssetsUseCases,
+    expirationInterval: number,
+  ) {
+    this.#middleware = middleware;
     this.#assetsUseCases = assets;
     this.#expirationInterval = expirationInterval;
   }
@@ -101,7 +108,7 @@ export class AssetsHandler {
 
     const conversionRates: OnAssetsConversionResponse['conversionRates'] = {};
 
-    return handle(async () => {
+    return this.#middleware.handle(async () => {
       for (const [fromAsset, toAssets] of Object.entries(assetMap)) {
         const fromKey = fromAsset as keyof typeof conversionRates;
         conversionRates[fromKey] = {};
@@ -147,7 +154,7 @@ export class AssetsHandler {
     }
 
     const updateTime = getCurrentUnixTimestamp();
-    return handle(async () => {
+    return this.#middleware.handle(async () => {
       const intervals = await this.#assetsUseCases.getPriceIntervals(to);
 
       return {
@@ -172,7 +179,7 @@ export class AssetsHandler {
 
     const marketData: OnAssetsMarketDataResponse['marketData'] = {};
 
-    return handle(async () => {
+    return this.#middleware.handle(async () => {
       for (const [fromAsset, toAssets] of Object.entries(assetMap)) {
         const fromKey = fromAsset as keyof typeof marketData;
         marketData[fromKey] = {};
