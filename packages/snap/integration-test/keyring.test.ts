@@ -292,7 +292,7 @@ describe('Keyring', () => {
 
     expect(response).toRespondWithError({
       code: -32603,
-      message: `Account not found: ${id}`,
+      message: `An unexpected error occurred`,
       stack: expect.anything(),
     });
   });
