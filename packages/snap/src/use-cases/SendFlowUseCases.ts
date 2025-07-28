@@ -1,7 +1,6 @@
 import { Psbt, Address, Amount } from '@metamask/bitcoindevkit';
 import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 import type { InputChangeEvent } from '@metamask/snaps-sdk';
-import { UserRejectedRequestError } from '@metamask/snaps-sdk';
 
 import type {
   BitcoinAccountRepository,
@@ -19,6 +18,7 @@ import {
   ReviewTransactionEvent,
   networkToCurrencyUnit,
   CurrencyUnit,
+  UserActionCanceledError,
 } from '../entities';
 import { CronMethod } from '../handlers';
 
@@ -99,7 +99,7 @@ export class SendFlowUseCases {
     // Blocks and waits for user actions
     const psbt = await this.#snapClient.displayInterface<string>(interfaceId);
     if (!psbt) {
-      throw new UserRejectedRequestError() as unknown as Error;
+      throw new UserActionCanceledError('User canceled the send flow');
     }
 
     this.#logger.info('PSBT generated successfully');
@@ -423,7 +423,7 @@ export class SendFlowUseCases {
       updatedContext = await this.#computeFee(updatedContext);
     } catch (error) {
       // We do not throw so we can reschedule. Previous fetched values or fallbacks will be used.
-      this.#logger.error(
+      this.#logger.warn(
         `Failed to fetch rates in send form: %s. Error: %s`,
         id,
         error,

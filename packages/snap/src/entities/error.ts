@@ -133,3 +133,15 @@ export class PermissionError extends BaseError {
     super(message, 7000, data);
   }
 }
+
+/**
+ * Error thrown when an operation is canceled by the user.
+ *
+ * @example
+ * throw new UserActionCanceledError('User canceled the send flow');
+ */
+export class UserActionCanceledError extends BaseError {
+  constructor(message: string, data?: Record<string, Json>) {
+    super(message, 8000, data);
+  }
+}

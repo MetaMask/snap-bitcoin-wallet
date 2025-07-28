@@ -6,6 +6,7 @@ import {
   MethodNotFoundError,
   ResourceNotFoundError,
   UnauthorizedError,
+  UserRejectedRequestError,
 } from '@metamask/snaps-sdk';
 
 import type { Translator, Logger, SnapClient } from '../entities';
@@ -17,6 +18,7 @@ import {
   NotFoundError,
   PermissionError,
   StorageError,
+  UserActionCanceledError,
   ValidationError,
   WalletError,
 } from '../entities';
@@ -50,8 +52,8 @@ export class HandlerMiddleware {
           messages['error.internal']?.message ??
           'Internal error';
 
-        // User errors that he can rectify: Equivalent to 4xx errors
         /* eslint-disable @typescript-eslint/only-throw-error */
+        // User errors that he can rectify: Equivalent to 4xx errors
         if (error instanceof FormatError) {
           throw new InvalidInputError(errMsg, error.data);
         } else if (error instanceof ValidationError) {
@@ -62,6 +64,8 @@ export class HandlerMiddleware {
           throw new MethodNotFoundError(errMsg, error.data);
         } else if (error instanceof PermissionError) {
           throw new UnauthorizedError(errMsg, error.data);
+        } else if (error instanceof UserActionCanceledError) {
+          throw new UserRejectedRequestError(errMsg);
 
           // Internal errors that we should not expose to the user: Equivalent to 5xx errors
         } else if (error instanceof ExternalServiceError) {
