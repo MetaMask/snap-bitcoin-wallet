@@ -1,4 +1,3 @@
-import { SnapError } from '@metamask/snaps-sdk';
 import type { JsonRpcRequest } from '@metamask/utils';
 import { mock } from 'jest-mock-extended';
 
@@ -36,9 +35,7 @@ describe('CronHandler', () => {
       const error = new Error();
       mockAccountUseCases.list.mockRejectedValue(error);
 
-      await expect(handler.route(request)).rejects.toThrow(
-        new SnapError(error),
-      );
+      await expect(handler.route(request)).rejects.toThrow(error);
     });
 
     it('does not propagate errors from synchronize', async () => {
@@ -76,9 +73,7 @@ describe('CronHandler', () => {
       const error = new Error();
       mockSendFlowUseCases.refresh.mockRejectedValue(error);
 
-      await expect(handler.route(request)).rejects.toThrow(
-        new SnapError(error),
-      );
+      await expect(handler.route(request)).rejects.toThrow(error);
     });
   });
 });

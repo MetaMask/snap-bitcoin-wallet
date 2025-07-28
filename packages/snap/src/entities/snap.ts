@@ -7,6 +7,7 @@ import type {
 import type { Json } from '@metamask/utils';
 
 import type { BitcoinAccount } from './account';
+import type { BaseError } from './error';
 import type { Inscription } from './meta-protocols';
 
 export type SnapState = {
@@ -204,4 +205,11 @@ export type SnapClient = {
     tx: WalletTx,
     origin: string,
   ): Promise<void>;
+
+  /**
+   * Track errors
+   *
+   * @param error The error to track
+   */
+  emitTrackingError(error: BaseError): Promise<void>;
 };

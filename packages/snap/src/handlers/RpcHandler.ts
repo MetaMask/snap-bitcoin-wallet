@@ -3,7 +3,6 @@ import type { Json, JsonRpcRequest } from '@metamask/utils';
 import { assert, enums, object, optional, string } from 'superstruct';
 
 import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
-import { handle } from './errors';
 import { validateOrigin } from './permissions';
 
 export enum RpcMethod {
@@ -35,21 +34,19 @@ export class RpcHandler {
 
     const { method, params } = request;
 
-    return handle(async () => {
-      if (!params) {
-        throw new Error('Missing params');
+    if (!params) {
+      throw new Error('Missing params');
+    }
+
+    switch (method as RpcMethod) {
+      case RpcMethod.StartSendTransactionFlow: {
+        assert(params, CreateSendFormRequest);
+        return this.#executeSendFlow(params.account, origin);
       }
 
-      switch (method as RpcMethod) {
-        case RpcMethod.StartSendTransactionFlow: {
-          assert(params, CreateSendFormRequest);
-          return this.#executeSendFlow(params.account, origin);
-        }
-
-        default:
-          throw new Error(`Method not found: ${method}`);
-      }
-    });
+      default:
+        throw new Error(`Method not found: ${method}`);
+    }
   }
 
   async #executeSendFlow(

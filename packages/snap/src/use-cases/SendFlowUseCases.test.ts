@@ -1,7 +1,6 @@
 import type { FeeEstimates, Network } from '@metamask/bitcoindevkit';
 import { Psbt, Address, Amount } from '@metamask/bitcoindevkit';
 import type { GetPreferencesResult } from '@metamask/snaps-sdk';
-import { UserRejectedRequestError } from '@metamask/snaps-sdk';
 import { mock } from 'jest-mock-extended';
 
 import type {
@@ -21,6 +20,7 @@ import {
   ReviewTransactionEvent,
   CurrencyUnit,
   SendFormEvent,
+  UserActionCanceledError,
 } from '../entities';
 import { SendFlowUseCases } from './SendFlowUseCases';
 import { CronMethod } from '../handlers';
@@ -95,11 +95,11 @@ describe('SendFlowUseCases', () => {
       );
     });
 
-    it('throws UserRejectedRequestError if displayInterface returns null', async () => {
+    it('throws UserActionCanceledError if displayInterface returns null', async () => {
       mockSnapClient.displayInterface.mockResolvedValue(null);
 
       await expect(useCases.display('account-id')).rejects.toThrow(
-        UserRejectedRequestError,
+        UserActionCanceledError,
       );
     });
 

@@ -41,7 +41,6 @@ import {
   scopeToNetwork,
   networkToScope,
 } from './caip';
-import { handle } from './errors';
 import {
   mapToDiscoveredAccount,
   mapToKeyringAccount,
@@ -73,12 +72,7 @@ export class KeyringHandler implements Keyring {
 
   async route(origin: string, request: JsonRpcRequest): Promise<Json> {
     validateOrigin(origin);
-
-    const result = await handle(async () =>
-      handleKeyringRequest(this, request),
-    );
-
-    return result ?? null; // Use `null` since `undefined` is not valid in JSON.
+    return (await handleKeyringRequest(this, request)) ?? null;
   }
 
   async listAccounts(): Promise<KeyringAccount[]> {
