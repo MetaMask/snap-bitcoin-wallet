@@ -30,7 +30,7 @@ describe('RpcHandler', () => {
   describe('route', () => {
     it('throws error if invalid origin', async () => {
       await expect(handler.route('invalidOrigin', mockRequest)).rejects.toThrow(
-        'Permission denied',
+        'Invalid origin',
       );
     });
 
@@ -75,9 +75,7 @@ describe('RpcHandler', () => {
       const error = new Error();
       mockSendFlowUseCases.display.mockRejectedValue(error);
 
-      await expect(handler.route(origin, mockRequest)).rejects.toThrow(
-        new SnapError(error),
-      );
+      await expect(handler.route(origin, mockRequest)).rejects.toThrow(error);
 
       expect(mockSendFlowUseCases.display).toHaveBeenCalled();
       expect(mockAccountsUseCases.sendPsbt).not.toHaveBeenCalled();
@@ -88,9 +86,7 @@ describe('RpcHandler', () => {
       mockSendFlowUseCases.display.mockResolvedValue(mockPsbt);
       mockAccountsUseCases.sendPsbt.mockRejectedValue(error);
 
-      await expect(handler.route(origin, mockRequest)).rejects.toThrow(
-        new SnapError(error),
-      );
+      await expect(handler.route(origin, mockRequest)).rejects.toThrow(error);
 
       expect(mockSendFlowUseCases.display).toHaveBeenCalled();
       expect(mockAccountsUseCases.sendPsbt).toHaveBeenCalled();

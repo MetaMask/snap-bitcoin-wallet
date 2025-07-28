@@ -107,9 +107,7 @@ describe('AssetsHandler', () => {
       const error = new Error();
       mockAssetsUseCases.getRates.mockRejectedValue(error);
 
-      await expect(handler.conversion(conversions)).rejects.toThrow(
-        new SnapError(error),
-      );
+      await expect(handler.conversion(conversions)).rejects.toThrow(error);
     });
   });
 
@@ -143,7 +141,7 @@ describe('AssetsHandler', () => {
 
       await expect(
         handler.historicalPrice(Caip19Asset.Bitcoin, Caip19Asset.Testnet),
-      ).rejects.toThrow(new SnapError(error));
+      ).rejects.toThrow(error);
     });
   });
 
@@ -203,9 +201,7 @@ describe('AssetsHandler', () => {
       const error = new Error();
       mockAssetsUseCases.getRates.mockRejectedValue(error);
 
-      await expect(handler.marketData(assets)).rejects.toThrow(
-        new SnapError(error),
-      );
+      await expect(handler.marketData(assets)).rejects.toThrow(error);
     });
   });
 });

@@ -85,7 +85,7 @@ describe('UserInputHandler', () => {
           },
           mockContext,
         ),
-      ).rejects.toThrow(new SnapError(error));
+      ).rejects.toThrow(error);
     });
   });
 
@@ -120,7 +120,7 @@ describe('UserInputHandler', () => {
           },
           mockContext,
         ),
-      ).rejects.toThrow(new SnapError(error));
+      ).rejects.toThrow(error);
     });
   });
 });
