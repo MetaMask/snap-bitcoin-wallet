@@ -1,5 +1,4 @@
 import type { Psbt, Txid } from '@metamask/bitcoindevkit';
-import { SnapError } from '@metamask/snaps-sdk';
 import type { JsonRpcRequest } from '@metamask/utils';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';

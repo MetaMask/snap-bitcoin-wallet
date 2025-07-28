@@ -1,5 +1,5 @@
 import type { UserInputEvent } from '@metamask/snaps-sdk';
-import { SnapError, UserInputEventType } from '@metamask/snaps-sdk';
+import { UserInputEventType } from '@metamask/snaps-sdk';
 import { mock } from 'jest-mock-extended';
 
 import type { SendFormContext } from '../entities';

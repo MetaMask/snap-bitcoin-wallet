@@ -2,7 +2,6 @@ import type {
   HistoricalPriceIntervals,
   FungibleAssetMarketData,
 } from '@metamask/snaps-sdk';
-import { SnapError } from '@metamask/snaps-sdk';
 import { mock } from 'jest-mock-extended';
 
 import type { AssetsUseCases } from '../use-cases';

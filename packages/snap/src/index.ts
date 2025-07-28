@@ -17,6 +17,7 @@ import {
   RpcHandler,
   AssetsHandler,
 } from './handlers';
+import { HandlerMiddleware } from './handlers/HandlerMiddleware';
 import {
   SnapClientAdapter,
   EsploraClientAdapter,
@@ -26,7 +27,6 @@ import {
 } from './infra';
 import { BdkAccountRepository, JSXSendFlowRepository } from './store';
 import { AccountUseCases, AssetsUseCases, SendFlowUseCases } from './use-cases';
-import { HandlerMiddleware } from './handlers/HandlerMiddleware';
 
 // Infra layer
 const logger = new ConsoleLoggerAdapter(Config.logLevel);
@@ -74,31 +74,31 @@ const assetsHandler = new AssetsHandler(
 );
 
 export const onCronjob: OnCronjobHandler = async ({ request }) =>
-  middleware.handle(() => cronHandler.route(request));
+  middleware.handle(async () => cronHandler.route(request));
 
 export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request }) =>
-  middleware.handle(() => rpcHandler.route(origin, request));
+  middleware.handle(async () => rpcHandler.route(origin, request));
 
 export const onKeyringRequest: OnKeyringRequestHandler = async ({
   origin,
   request,
-}) => middleware.handle(() => keyringHandler.route(origin, request));
+}) => middleware.handle(async () => keyringHandler.route(origin, request));
 
 export const onUserInput: OnUserInputHandler = async ({ id, event, context }) =>
-  middleware.handle(() => userInputHandler.route(id, event, context));
+  middleware.handle(async () => userInputHandler.route(id, event, context));
 
 export const onAssetsLookup: OnAssetsLookupHandler = async () =>
-  middleware.handle(() => assetsHandler.lookup());
+  middleware.handle(async () => assetsHandler.lookup());
 
 export const onAssetsConversion: OnAssetsConversionHandler = async ({
   conversions,
-}) => middleware.handle(() => assetsHandler.conversion(conversions));
+}) => middleware.handle(async () => assetsHandler.conversion(conversions));
 
 export const onAssetHistoricalPrice: OnAssetHistoricalPriceHandler = async ({
   from,
   to,
-}) => middleware.handle(() => assetsHandler.historicalPrice(from, to));
+}) => middleware.handle(async () => assetsHandler.historicalPrice(from, to));
 
 export const onAssetsMarketData: OnAssetsMarketDataHandler = async ({
   assets,
-}) => middleware.handle(() => assetsHandler.marketData(assets));
+}) => middleware.handle(async () => assetsHandler.marketData(assets));

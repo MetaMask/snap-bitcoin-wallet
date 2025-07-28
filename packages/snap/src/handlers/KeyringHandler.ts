@@ -46,8 +46,8 @@ import {
   mapToKeyringAccount,
   mapToTransaction,
 } from './mappings';
-import type { AccountUseCases } from '../use-cases/AccountUseCases';
 import { validateOrigin } from './permissions';
+import type { AccountUseCases } from '../use-cases/AccountUseCases';
 
 export const CreateAccountRequest = object({
   scope: enums(Object.values(BtcScope)),
