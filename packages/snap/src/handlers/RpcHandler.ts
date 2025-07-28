@@ -3,7 +3,7 @@ import type { Json, JsonRpcRequest } from '@metamask/utils';
 import { assert, enums, object, optional, string } from 'superstruct';
 
 import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
-import type { HandlerMiddleware } from './HandlerMiddleware';
+import { validateOrigin } from './permissions';
 
 export enum RpcMethod {
   StartSendTransactionFlow = 'startSendTransactionFlow',
@@ -20,42 +20,33 @@ type SendTransactionResponse = {
 };
 
 export class RpcHandler {
-  readonly #middleware: HandlerMiddleware;
-
   readonly #sendFlowUseCases: SendFlowUseCases;
 
   readonly #accountUseCases: AccountUseCases;
 
-  constructor(
-    middleware: HandlerMiddleware,
-    sendFlow: SendFlowUseCases,
-    accounts: AccountUseCases,
-  ) {
-    this.#middleware = middleware;
+  constructor(sendFlow: SendFlowUseCases, accounts: AccountUseCases) {
     this.#sendFlowUseCases = sendFlow;
     this.#accountUseCases = accounts;
   }
 
   async route(origin: string, request: JsonRpcRequest): Promise<Json> {
-    return this.#middleware.handle(async () => {
-      this.#middleware.validateOrigin(origin);
+    validateOrigin(origin);
 
-      const { method, params } = request;
+    const { method, params } = request;
 
-      if (!params) {
-        throw new Error('Missing params');
+    if (!params) {
+      throw new Error('Missing params');
+    }
+
+    switch (method as RpcMethod) {
+      case RpcMethod.StartSendTransactionFlow: {
+        assert(params, CreateSendFormRequest);
+        return this.#executeSendFlow(params.account, origin);
       }
 
-      switch (method as RpcMethod) {
-        case RpcMethod.StartSendTransactionFlow: {
-          assert(params, CreateSendFormRequest);
-          return this.#executeSendFlow(params.account, origin);
-        }
-
-        default:
-          throw new Error(`Method not found: ${method}`);
-      }
-    });
+      default:
+        throw new Error(`Method not found: ${method}`);
+    }
   }
 
   async #executeSendFlow(

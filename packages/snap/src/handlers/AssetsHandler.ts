@@ -15,22 +15,14 @@ import { assert } from 'superstruct';
 
 import type { AssetsUseCases } from '../use-cases';
 import { Caip19Asset } from './caip';
-import type { HandlerMiddleware } from './HandlerMiddleware';
 import { networkToIcon } from './icons';
 
 export class AssetsHandler {
-  readonly #middleware: HandlerMiddleware;
-
   readonly #assetsUseCases: AssetsUseCases;
 
   readonly #expirationInterval: number;
 
-  constructor(
-    middleware: HandlerMiddleware,
-    assets: AssetsUseCases,
-    expirationInterval: number,
-  ) {
-    this.#middleware = middleware;
+  constructor(assets: AssetsUseCases, expirationInterval: number) {
     this.#assetsUseCases = assets;
     this.#expirationInterval = expirationInterval;
   }
@@ -108,38 +100,36 @@ export class AssetsHandler {
 
     const conversionRates: OnAssetsConversionResponse['conversionRates'] = {};
 
-    return this.#middleware.handle(async () => {
-      for (const [fromAsset, toAssets] of Object.entries(assetMap)) {
-        const fromKey = fromAsset as keyof typeof conversionRates;
-        conversionRates[fromKey] = {};
+    for (const [fromAsset, toAssets] of Object.entries(assetMap)) {
+      const fromKey = fromAsset as keyof typeof conversionRates;
+      conversionRates[fromKey] = {};
 
-        if (fromKey === (Caip19Asset.Bitcoin as CaipAssetType)) {
-          // For Bitcoin, fetch rates.
-          for (const [toAsset, rate] of await this.#assetsUseCases.getRates(
-            toAssets,
-          )) {
-            conversionRates[fromKey][toAsset] = rate
-              ? {
-                  rate: rate.price.toString(),
-                  conversionTime,
-                  expirationTime: conversionTime + this.#expirationInterval,
-                }
-              : null;
-          }
-        } else {
-          // For every other conversions, we just use a rate of 0.
-          for (const toAsset of toAssets) {
-            conversionRates[fromKey][toAsset] = {
-              rate: '0',
-              conversionTime,
-              expirationTime: conversionTime + 60 * 60 * 24, // Long expiration time (1 day) to avoid unnecessary requests
-            };
-          }
+      if (fromKey === (Caip19Asset.Bitcoin as CaipAssetType)) {
+        // For Bitcoin, fetch rates.
+        for (const [toAsset, rate] of await this.#assetsUseCases.getRates(
+          toAssets,
+        )) {
+          conversionRates[fromKey][toAsset] = rate
+            ? {
+                rate: rate.price.toString(),
+                conversionTime,
+                expirationTime: conversionTime + this.#expirationInterval,
+              }
+            : null;
+        }
+      } else {
+        // For every other conversions, we just use a rate of 0.
+        for (const toAsset of toAssets) {
+          conversionRates[fromKey][toAsset] = {
+            rate: '0',
+            conversionTime,
+            expirationTime: conversionTime + 60 * 60 * 24, // Long expiration time (1 day) to avoid unnecessary requests
+          };
         }
       }
+    }
 
-      return { conversionRates };
-    });
+    return { conversionRates };
   }
 
   async historicalPrice(
@@ -154,17 +144,15 @@ export class AssetsHandler {
     }
 
     const updateTime = getCurrentUnixTimestamp();
-    return this.#middleware.handle(async () => {
-      const intervals = await this.#assetsUseCases.getPriceIntervals(to);
+    const intervals = await this.#assetsUseCases.getPriceIntervals(to);
 
-      return {
-        historicalPrice: {
-          intervals,
-          updateTime,
-          expirationTime: updateTime + this.#expirationInterval,
-        },
-      };
-    });
+    return {
+      historicalPrice: {
+        intervals,
+        updateTime,
+        expirationTime: updateTime + this.#expirationInterval,
+      },
+    };
   }
 
   async marketData(
@@ -179,27 +167,25 @@ export class AssetsHandler {
 
     const marketData: OnAssetsMarketDataResponse['marketData'] = {};
 
-    return this.#middleware.handle(async () => {
-      for (const [fromAsset, toAssets] of Object.entries(assetMap)) {
-        const fromKey = fromAsset as keyof typeof marketData;
-        marketData[fromKey] = {};
+    for (const [fromAsset, toAssets] of Object.entries(assetMap)) {
+      const fromKey = fromAsset as keyof typeof marketData;
+      marketData[fromKey] = {};
 
-        if (fromKey === (Caip19Asset.Bitcoin as CaipAssetType)) {
-          // For Bitcoin, fetch market data.
-          for (const [toAsset, rate] of await this.#assetsUseCases.getRates(
-            toAssets,
-          )) {
-            marketData[fromKey][toAsset] = rate ? rate.marketData : null;
-          }
-        } else {
-          // For every other assets, there is no market data.
-          for (const toAsset of toAssets) {
-            marketData[fromKey][toAsset] = null;
-          }
+      if (fromKey === (Caip19Asset.Bitcoin as CaipAssetType)) {
+        // For Bitcoin, fetch market data.
+        for (const [toAsset, rate] of await this.#assetsUseCases.getRates(
+          toAssets,
+        )) {
+          marketData[fromKey][toAsset] = rate ? rate.marketData : null;
+        }
+      } else {
+        // For every other assets, there is no market data.
+        for (const toAsset of toAssets) {
+          marketData[fromKey][toAsset] = null;
         }
       }
+    }
 
-      return { marketData };
-    });
+    return { marketData };
   }
 }

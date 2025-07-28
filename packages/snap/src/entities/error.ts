@@ -12,7 +12,23 @@ export class BaseError extends Error {
     this.data = data;
     Object.setPrototypeOf(this, new.target.prototype);
   }
+
+  toJSON(): CodifiedError {
+    return {
+      name: this.name,
+      message: this.message,
+      code: this.code,
+      data: this.data,
+    };
+  }
 }
+
+export type CodifiedError = {
+  name: string;
+  message: string;
+  code: number;
+  data?: Record<string, Json>;
+};
 
 /**
  * Error thrown when the format of input data is invalid. Should never be thrown outside handlers.

@@ -3,7 +3,6 @@ import { assert, object, string } from 'superstruct';
 
 import { InexistentMethodError, type Logger } from '../entities';
 import type { SendFlowUseCases, AccountUseCases } from '../use-cases';
-import type { HandlerMiddleware } from './HandlerMiddleware';
 
 export enum CronMethod {
   SynchronizeAccounts = 'synchronizeAccounts',
@@ -15,8 +14,6 @@ export const SendFormRefreshRatesRequest = object({
 });
 
 export class CronHandler {
-  readonly #middleware: HandlerMiddleware;
-
   readonly #logger: Logger;
 
   readonly #accountsUseCases: AccountUseCases;
@@ -24,12 +21,10 @@ export class CronHandler {
   readonly #sendFlowUseCases: SendFlowUseCases;
 
   constructor(
-    middleware: HandlerMiddleware,
     logger: Logger,
     accounts: AccountUseCases,
     sendFlow: SendFlowUseCases,
   ) {
-    this.#middleware = middleware;
     this.#logger = logger;
     this.#accountsUseCases = accounts;
     this.#sendFlowUseCases = sendFlow;
@@ -38,19 +33,17 @@ export class CronHandler {
   async route(request: JsonRpcRequest): Promise<void> {
     const { method, params } = request;
 
-    return this.#middleware.handle(async () => {
-      switch (method as CronMethod) {
-        case CronMethod.SynchronizeAccounts: {
-          return this.synchronizeAccounts();
-        }
-        case CronMethod.RefreshRates: {
-          assert(params, SendFormRefreshRatesRequest);
-          return this.#sendFlowUseCases.refresh(params.interfaceId);
-        }
-        default:
-          throw new InexistentMethodError(`Method not found: ${method}`);
+    switch (method as CronMethod) {
+      case CronMethod.SynchronizeAccounts: {
+        return this.synchronizeAccounts();
       }
-    });
+      case CronMethod.RefreshRates: {
+        assert(params, SendFormRefreshRatesRequest);
+        return this.#sendFlowUseCases.refresh(params.interfaceId);
+      }
+      default:
+        throw new InexistentMethodError(`Method not found: ${method}`);
+    }
   }
 
   async synchronizeAccounts(): Promise<void> {

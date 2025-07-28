@@ -82,10 +82,4 @@ export class HandlerMiddleware {
       }
     }
   }
-
-  validateOrigin(origin: string): void {
-    if (origin !== 'metamask') {
-      throw new PermissionError('Invalid origin', { origin });
-    }
-  }
 }

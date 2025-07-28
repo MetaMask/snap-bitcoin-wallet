@@ -1,5 +1,5 @@
 import type { Network } from '@metamask/bitcoindevkit';
-import type { CurrencyRate } from '@metamask/snaps-sdk';
+import type { CurrencyRate, Json } from '@metamask/snaps-sdk';
 
 import type { CurrencyUnit } from './currency';
 import type { CodifiedError } from './error';
