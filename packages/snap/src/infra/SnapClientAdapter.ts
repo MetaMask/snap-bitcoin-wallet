@@ -249,7 +249,9 @@ export class SnapClientAdapter implements SnapClient {
       method: 'snap_trackError',
       params: {
         error: {
-          ...error.toJSON(),
+          name: error.name,
+          message: error.message,
+          stack: error.stack ?? null,
           cause:
             error.cause && error.cause instanceof Error
               ? {

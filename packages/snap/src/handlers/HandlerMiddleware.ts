@@ -47,14 +47,9 @@ export class HandlerMiddleware {
 
       if (error instanceof BaseError) {
         if (error.cause) {
-          this.#logger.error(
-            error.message,
-            error.toJSON(),
-            'Caused by:',
-            error.cause,
-          );
+          this.#logger.error(error, error.data, 'Caused by:', error.cause);
         } else {
-          this.#logger.error(error.message, error.toJSON());
+          this.#logger.error(error, error.data);
         }
         await this.#snapClient.emitTrackingError(error);
 

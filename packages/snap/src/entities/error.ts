@@ -14,21 +14,10 @@ export class BaseError extends Error {
     cause?: unknown,
   ) {
     super(message);
-    this.name = this.constructor.name;
     this.code = code;
     this.data = data;
     this.cause = cause;
     Object.setPrototypeOf(this, new.target.prototype);
-  }
-
-  toJSON(): CodifiedError {
-    return {
-      name: this.name,
-      message: this.message,
-      code: this.code,
-      data: this.data,
-      stack: this.stack ?? null,
-    };
   }
 }
 
@@ -50,6 +39,7 @@ export type CodifiedError = {
 export class FormatError extends BaseError {
   constructor(message: string, data?: Record<string, Json>, cause?: unknown) {
     super(message, 0, data, cause);
+    this.name = 'FormatError';
   }
 }
 
@@ -63,6 +53,7 @@ export class FormatError extends BaseError {
 export class ValidationError extends BaseError {
   constructor(message: string, data?: Record<string, Json>, cause?: unknown) {
     super(message, 1000, data, cause);
+    this.name = 'ValidationError';
   }
 }
 
@@ -76,6 +67,7 @@ export class ValidationError extends BaseError {
 export class NotFoundError extends BaseError {
   constructor(message: string, data?: Record<string, Json>, cause?: unknown) {
     super(message, 2000, data, cause);
+    this.name = 'NotFoundError';
   }
 }
 
@@ -89,6 +81,7 @@ export class NotFoundError extends BaseError {
 export class ExternalServiceError extends BaseError {
   constructor(message: string, data?: Record<string, Json>, cause?: unknown) {
     super(message, 3000, data, cause);
+    this.name = 'ExternalServiceError';
   }
 }
 
@@ -102,6 +95,7 @@ export class ExternalServiceError extends BaseError {
 export class WalletError extends BaseError {
   constructor(message: string, data?: Record<string, Json>, cause?: unknown) {
     super(message, 4000, data, cause);
+    this.name = 'WalletError';
   }
 }
 
@@ -115,6 +109,7 @@ export class WalletError extends BaseError {
 export class StorageError extends BaseError {
   constructor(message: string, data?: Record<string, Json>, cause?: unknown) {
     super(message, 5000, data, cause);
+    this.name = 'StorageError';
   }
 }
 
@@ -128,6 +123,7 @@ export class StorageError extends BaseError {
 export class InexistentMethodError extends BaseError {
   constructor(message: string, data?: Record<string, Json>, cause?: unknown) {
     super(message, 6000, data, cause);
+    this.name = 'InexistentMethodError';
   }
 }
 
@@ -141,6 +137,7 @@ export class InexistentMethodError extends BaseError {
 export class PermissionError extends BaseError {
   constructor(message: string, data?: Record<string, Json>, cause?: unknown) {
     super(message, 7000, data, cause);
+    this.name = 'PermissionError';
   }
 }
 
@@ -153,6 +150,7 @@ export class PermissionError extends BaseError {
 export class UserActionError extends BaseError {
   constructor(message: string, data?: Record<string, Json>, cause?: unknown) {
     super(message, 8000, data, cause);
+    this.name = 'UserActionError';
   }
 }
 
@@ -166,5 +164,6 @@ export class UserActionError extends BaseError {
 export class AssertionError extends BaseError {
   constructor(message: string, data?: Record<string, Json>, cause?: unknown) {
     super(message, 9000, data, cause);
+    this.name = 'AssertionError';
   }
 }
