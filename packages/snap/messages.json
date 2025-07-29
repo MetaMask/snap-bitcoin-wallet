@@ -142,5 +142,32 @@
   },
   "unexpected": {
     "message": "An unexpected error occurred"
+  },
+  "error.0": {
+    "message": "Invalid format"
+  },
+  "error.1000": {
+    "message": "Validation failed"
+  },
+  "error.2000": {
+    "message": "Resource not found"
+  },
+  "error.3000": {
+    "message": "Connection error"
+  },
+  "error.4000": {
+    "message": "Wallet state corrupted"
+  },
+  "error.5000": {
+    "message": "Storage error"
+  },
+  "error.6000": {
+    "message": "Method not implemented or not supported"
+  },
+  "error.7000": {
+    "message": "Permission denied or insufficient authorization"
+  },
+  "error.internal": {
+    "message": "Internal error. Please try again later or contact support"
   }
 }

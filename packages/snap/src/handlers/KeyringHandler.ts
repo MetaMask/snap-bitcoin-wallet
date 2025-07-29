@@ -2,6 +2,16 @@ import type { AddressType } from '@metamask/bitcoindevkit';
 import {
   BtcAccountType,
   BtcScope,
+  CreateAccountRequestStruct,
+  DeleteAccountRequestStruct,
+  DiscoverAccountsRequestStruct,
+  FilterAccountChainsStruct,
+  GetAccountBalancesRequestStruct,
+  GetAccountRequestStruct,
+  KeyringRpcMethod,
+  ListAccountAssetsRequestStruct,
+  ListAccountsRequestStruct,
+  ListAccountTransactionsRequestStruct,
   MetaMaskOptionsStruct,
 } from '@metamask/keyring-api';
 import type {
@@ -17,7 +27,6 @@ import type {
   MetaMaskOptions,
   DiscoveredAccount,
 } from '@metamask/keyring-api';
-import { handleKeyringRequest } from '@metamask/keyring-snap-sdk';
 import type { Json, JsonRpcRequest } from '@metamask/utils';
 import {
   assert,
@@ -31,6 +40,8 @@ import {
 
 import type { BitcoinAccount } from '../entities';
 import {
+  FormatError,
+  InexistentMethodError,
   networkToCurrencyUnit,
   Purpose,
   purposeToAddressType,
@@ -72,7 +83,62 @@ export class KeyringHandler implements Keyring {
 
   async route(origin: string, request: JsonRpcRequest): Promise<Json> {
     validateOrigin(origin);
-    return (await handleKeyringRequest(this, request)) ?? null;
+
+    switch (request.method) {
+      case `${KeyringRpcMethod.ListAccounts}`: {
+        assert(request, ListAccountsRequestStruct);
+        return this.listAccounts();
+      }
+      case `${KeyringRpcMethod.GetAccount}`: {
+        assert(request, GetAccountRequestStruct);
+        return this.getAccount(request.params.id);
+      }
+      case `${KeyringRpcMethod.CreateAccount}`: {
+        assert(request, CreateAccountRequestStruct);
+        return this.createAccount(request.params.options);
+      }
+      case `${KeyringRpcMethod.DiscoverAccounts}`: {
+        assert(request, DiscoverAccountsRequestStruct);
+        return this.discoverAccounts(
+          request.params.scopes as BtcScope[],
+          request.params.entropySource,
+          request.params.groupIndex,
+        );
+      }
+      case `${KeyringRpcMethod.ListAccountTransactions}`: {
+        assert(request, ListAccountTransactionsRequestStruct);
+        return this.listAccountTransactions(
+          request.params.id,
+          request.params.pagination,
+        );
+      }
+      case `${KeyringRpcMethod.ListAccountAssets}`: {
+        assert(request, ListAccountAssetsRequestStruct);
+        return this.listAccountAssets(request.params.id);
+      }
+      case `${KeyringRpcMethod.GetAccountBalances}`: {
+        assert(request, GetAccountBalancesRequestStruct);
+        return this.getAccountBalances(request.params.id);
+      }
+      case `${KeyringRpcMethod.FilterAccountChains}`: {
+        assert(request, FilterAccountChainsStruct);
+        return this.filterAccountChains(
+          request.params.id,
+          request.params.chains,
+        );
+      }
+      case `${KeyringRpcMethod.DeleteAccount}`: {
+        assert(request, DeleteAccountRequestStruct);
+        await this.deleteAccount(request.params.id);
+        return null;
+      }
+
+      default: {
+        throw new InexistentMethodError('Keyring method not supported', {
+          method: request.method,
+        });
+      }
+    }
   }
 
   async listAccounts(): Promise<KeyringAccount[]> {
@@ -80,7 +146,7 @@ export class KeyringHandler implements Keyring {
     return accounts.map(mapToKeyringAccount);
   }
 
-  async getAccount(id: string): Promise<KeyringAccount | undefined> {
+  async getAccount(id: string): Promise<KeyringAccount> {
     const account = await this.#accountsUseCases.get(id);
     return mapToKeyringAccount(account);
   }
@@ -89,6 +155,7 @@ export class KeyringHandler implements Keyring {
     options: Record<string, Json> & MetaMaskOptions,
   ): Promise<KeyringAccount> {
     assert(options, CreateAccountRequest);
+
     const {
       metamask,
       scope,
@@ -185,7 +252,7 @@ export class KeyringHandler implements Keyring {
   }
 
   async updateAccount(): Promise<void> {
-    throw new Error('Method not supported.');
+    throw new InexistentMethodError('Method not supported.');
   }
 
   async deleteAccount(id: string): Promise<void> {
@@ -228,30 +295,30 @@ export class KeyringHandler implements Keyring {
   }
 
   async submitRequest(): Promise<KeyringResponse> {
-    throw new Error('Method not implemented.');
+    throw new InexistentMethodError('Method not supported.');
   }
 
   #extractAddressType(path: string): AddressType {
     const segments = path.split('/');
     if (segments.length < 4) {
-      throw new Error(`Invalid derivation path: ${path}`);
+      throw new FormatError(`Invalid derivation path: ${path}`);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const purposePart = segments[1]!;
     const match = purposePart.match(/^(\d+)/u);
     if (!match) {
-      throw new Error(`Invalid purpose segment: ${purposePart}`);
+      throw new FormatError(`Invalid purpose segment: ${purposePart}`);
     }
 
     const purpose = Number(match[1]);
     if (!Object.values(Purpose).includes(purpose)) {
-      throw new Error(`Invalid BIP-purpose: ${purpose}`);
+      throw new FormatError(`Invalid BIP-purpose: ${purpose}`);
     }
 
     const addressType = purposeToAddressType[purpose as Purpose];
     if (!addressType) {
-      throw new Error(`No address-type mapping for purpose: ${purpose}`);
+      throw new FormatError(`No address-type mapping for purpose: ${purpose}`);
     }
 
     return addressType;
@@ -260,19 +327,19 @@ export class KeyringHandler implements Keyring {
   #extractAccountIndex(path: string): number {
     const segments = path.split('/');
     if (segments.length < 4) {
-      throw new Error(`Invalid derivation path: ${path}`);
+      throw new FormatError(`Invalid derivation path: ${path}`);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const accountPart = segments[3]!;
     const match = accountPart.match(/^(\d+)/u);
     if (!match) {
-      throw new Error(`Invalid account index: ${accountPart}`);
+      throw new FormatError(`Invalid account index: ${accountPart}`);
     }
 
     const index = Number(match[1]);
     if (!Number.isInteger(index) || index < 0) {
-      throw new Error(
+      throw new FormatError(
         `Account index must be a non-negative integer, got: ${index}`,
       );
     }

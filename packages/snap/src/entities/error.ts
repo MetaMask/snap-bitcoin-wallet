@@ -5,11 +5,19 @@ export class BaseError extends Error {
 
   data?: Record<string, Json>;
 
-  constructor(message: string, code: number, data?: Record<string, Json>) {
+  cause?: unknown;
+
+  constructor(
+    message: string,
+    code: number,
+    data?: Record<string, Json>,
+    cause?: unknown,
+  ) {
     super(message);
     this.name = this.constructor.name;
     this.code = code;
     this.data = data;
+    this.cause = cause;
     Object.setPrototypeOf(this, new.target.prototype);
   }
 
@@ -19,6 +27,7 @@ export class BaseError extends Error {
       message: this.message,
       code: this.code,
       data: this.data,
+      stack: this.stack ?? null,
     };
   }
 }
@@ -28,6 +37,7 @@ export type CodifiedError = {
   message: string;
   code: number;
   data?: Record<string, Json>;
+  stack: string | null;
 };
 
 /**
@@ -38,8 +48,8 @@ export type CodifiedError = {
  * throw new FormatError('Invalid address format');
  */
 export class FormatError extends BaseError {
-  constructor(message: string, data?: Record<string, Json>) {
-    super(message, 0, data);
+  constructor(message: string, data?: Record<string, Json>, cause?: unknown) {
+    super(message, 0, data, cause);
   }
 }
 
@@ -51,8 +61,8 @@ export class FormatError extends BaseError {
  * throw new ValidationError('Amount must be positive');
  */
 export class ValidationError extends BaseError {
-  constructor(message: string, data?: Record<string, Json>) {
-    super(message, 1000, data);
+  constructor(message: string, data?: Record<string, Json>, cause?: unknown) {
+    super(message, 1000, data, cause);
   }
 }
 
@@ -64,8 +74,8 @@ export class ValidationError extends BaseError {
  * throw new NotFoundError('Account not found');
  */
 export class NotFoundError extends BaseError {
-  constructor(message: string, data?: Record<string, Json>) {
-    super(message, 2000, data);
+  constructor(message: string, data?: Record<string, Json>, cause?: unknown) {
+    super(message, 2000, data, cause);
   }
 }
 
@@ -77,8 +87,8 @@ export class NotFoundError extends BaseError {
  * throw new ExternalServiceError('Price API unavailable');
  */
 export class ExternalServiceError extends BaseError {
-  constructor(message: string, data?: Record<string, Json>) {
-    super(message, 3000, data);
+  constructor(message: string, data?: Record<string, Json>, cause?: unknown) {
+    super(message, 3000, data, cause);
   }
 }
 
@@ -90,8 +100,8 @@ export class ExternalServiceError extends BaseError {
  * throw new WalletError('Insufficient funds');
  */
 export class WalletError extends BaseError {
-  constructor(message: string, data?: Record<string, Json>) {
-    super(message, 4000, data);
+  constructor(message: string, data?: Record<string, Json>, cause?: unknown) {
+    super(message, 4000, data, cause);
   }
 }
 
@@ -103,8 +113,8 @@ export class WalletError extends BaseError {
  * throw new StorageError('Failed to insert account');
  */
 export class StorageError extends BaseError {
-  constructor(message: string, data?: Record<string, Json>) {
-    super(message, 5000, data);
+  constructor(message: string, data?: Record<string, Json>, cause?: unknown) {
+    super(message, 5000, data, cause);
   }
 }
 
@@ -116,8 +126,8 @@ export class StorageError extends BaseError {
  * throw new InexistentError('Method not implemented');
  */
 export class InexistentMethodError extends BaseError {
-  constructor(message: string, data?: Record<string, Json>) {
-    super(message, 6000, data);
+  constructor(message: string, data?: Record<string, Json>, cause?: unknown) {
+    super(message, 6000, data, cause);
   }
 }
 
@@ -129,19 +139,32 @@ export class InexistentMethodError extends BaseError {
  * throw new PermissionError('Invalid origin');
  */
 export class PermissionError extends BaseError {
-  constructor(message: string, data?: Record<string, Json>) {
-    super(message, 7000, data);
+  constructor(message: string, data?: Record<string, Json>, cause?: unknown) {
+    super(message, 7000, data, cause);
   }
 }
 
 /**
- * Error thrown when an operation is canceled by the user.
+ * Error thrown when an operation is failing in a user interface, such as forms, prompts, or confirmations.
  *
  * @example
- * throw new UserActionCanceledError('User canceled the send flow');
+ * throw new UserActionError('User canceled the send flow');
  */
-export class UserActionCanceledError extends BaseError {
-  constructor(message: string, data?: Record<string, Json>) {
-    super(message, 8000, data);
+export class UserActionError extends BaseError {
+  constructor(message: string, data?: Record<string, Json>, cause?: unknown) {
+    super(message, 8000, data, cause);
+  }
+}
+
+/**
+ * Error thrown when an assertion fails. These are errors that should never happen outside of developer errors or bugs.
+ * Useful for signaling unexpected conditions that should be fixed in the code.
+ *
+ * @example
+ * throw new AssertionError('Inconsistent state detected. Expected X, got Y', { state });
+ */
+export class AssertionError extends BaseError {
+  constructor(message: string, data?: Record<string, Json>, cause?: unknown) {
+    super(message, 9000, data, cause);
   }
 }

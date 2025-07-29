@@ -18,7 +18,9 @@ import {
   ReviewTransactionEvent,
   networkToCurrencyUnit,
   CurrencyUnit,
-  UserActionCanceledError,
+  UserActionError,
+  NotFoundError,
+  AssertionError,
 } from '../entities';
 import { CronMethod } from '../handlers';
 
@@ -72,7 +74,7 @@ export class SendFlowUseCases {
 
     const account = await this.#accountRepository.get(accountId);
     if (!account) {
-      throw new Error('Account not found');
+      throw new NotFoundError('Account not found');
     }
 
     const { locale } = await this.#snapClient.getPreferences();
@@ -99,7 +101,7 @@ export class SendFlowUseCases {
     // Blocks and waits for user actions
     const psbt = await this.#snapClient.displayInterface<string>(interfaceId);
     if (!psbt) {
-      throw new UserActionCanceledError('User canceled the send flow');
+      throw new UserActionError('User canceled the send flow');
     }
 
     this.#logger.info('PSBT generated successfully');
@@ -183,7 +185,7 @@ export class SendFlowUseCases {
         return undefined;
       }
       default:
-        throw new Error('Unrecognized event');
+        throw new UserActionError('Unrecognized event');
     }
   }
 
@@ -211,7 +213,7 @@ export class SendFlowUseCases {
         return this.#snapClient.resolveInterface(id, context.psbt);
       }
       default:
-        throw new Error('Unrecognized event');
+        throw new UserActionError('Unrecognized event');
     }
   }
 
@@ -308,7 +310,7 @@ export class SendFlowUseCases {
 
       const account = await this.#accountRepository.get(context.account.id);
       if (!account) {
-        throw new Error('Account removed while confirming send flow');
+        throw new NotFoundError('Account removed while confirming send flow');
       }
       const frozenUTXOs = await this.#accountRepository.getFrozenUTXOs(
         context.account.id,
@@ -358,7 +360,7 @@ export class SendFlowUseCases {
       }
     }
 
-    throw new Error('Inconsistent Send form context');
+    throw new AssertionError('Inconsistent Send form context');
   }
 
   async #handleSetAccount(
@@ -368,7 +370,7 @@ export class SendFlowUseCases {
   ): Promise<void> {
     const account = await this.#accountRepository.get(formState.accountId);
     if (!account) {
-      throw new Error('Account not found when switching');
+      throw new NotFoundError('Account not found when switching');
     }
 
     // We "reset" the context with the new account
@@ -391,7 +393,7 @@ export class SendFlowUseCases {
   async refresh(id: string): Promise<void> {
     const context = await this.#sendFlowRepository.getContext(id);
     if (!context) {
-      throw new Error(`Context not found in send form: ${id}`);
+      throw new NotFoundError(`Context not found in send form: ${id}`);
     }
 
     return this.#refreshRates(id, context);
@@ -446,7 +448,7 @@ export class SendFlowUseCases {
     if (amount && recipient) {
       const account = await this.#accountRepository.get(context.account.id);
       if (!account) {
-        throw new Error('Account removed while sending');
+        throw new NotFoundError('Account removed while sending');
       }
       const frozenUTXOs = await this.#accountRepository.getFrozenUTXOs(
         context.account.id,

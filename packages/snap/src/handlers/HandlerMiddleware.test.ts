@@ -60,7 +60,10 @@ describe('HandlerMiddleware', () => {
       await expect(middleware.handle(mockFn)).rejects.toThrow('Test error');
       expect(mockSnapClient.getPreferences).toHaveBeenCalled();
       expect(mockTranslator.load).toHaveBeenCalledWith('en');
-      expect(mockLogger.error).toHaveBeenCalledWith(error);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        error.message,
+        error.toJSON(),
+      );
       expect(mockSnapClient.emitTrackingError).toHaveBeenCalledWith(error);
     });
   });

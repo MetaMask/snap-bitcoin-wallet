@@ -8,6 +8,7 @@ import {
   UnauthorizedError,
   UserRejectedRequestError,
 } from '@metamask/snaps-sdk';
+import { StructError } from 'superstruct';
 
 import type { Translator, Logger, SnapClient } from '../entities';
 import {
@@ -18,9 +19,10 @@ import {
   NotFoundError,
   PermissionError,
   StorageError,
-  UserActionCanceledError,
+  UserActionError,
   ValidationError,
   WalletError,
+  AssertionError,
 } from '../entities';
 
 export class HandlerMiddleware {
@@ -44,7 +46,16 @@ export class HandlerMiddleware {
       const messages = await this.#translator.load(locale);
 
       if (error instanceof BaseError) {
-        this.#logger.error(error);
+        if (error.cause) {
+          this.#logger.error(
+            error.message,
+            error.toJSON(),
+            'Caused by:',
+            error.cause,
+          );
+        } else {
+          this.#logger.error(error.message, error.toJSON());
+        }
         await this.#snapClient.emitTrackingError(error);
 
         const errMsg =
@@ -54,34 +65,53 @@ export class HandlerMiddleware {
 
         /* eslint-disable @typescript-eslint/only-throw-error */
         // User errors that he can rectify: Equivalent to 4xx errors
-        if (error instanceof FormatError) {
-          throw new InvalidInputError(errMsg, error.data);
+        if (error instanceof FormatError || error instanceof StructError) {
+          throw new InvalidInputError(
+            `${errMsg}: ${error.message}`,
+            error.data,
+          );
         } else if (error instanceof ValidationError) {
-          throw new InvalidParamsError(errMsg, error.data);
+          throw new InvalidParamsError(
+            `${errMsg}: ${error.message}`,
+            error.data,
+          );
         } else if (error instanceof NotFoundError) {
-          throw new ResourceNotFoundError(errMsg, error.data);
+          throw new ResourceNotFoundError(
+            `${errMsg}: ${error.message}`,
+            error.data,
+          );
         } else if (error instanceof InexistentMethodError) {
-          throw new MethodNotFoundError(errMsg, error.data);
+          throw new MethodNotFoundError(
+            `${errMsg}: ${error.message}`,
+            error.data,
+          );
         } else if (error instanceof PermissionError) {
-          throw new UnauthorizedError(errMsg, error.data);
-        } else if (error instanceof UserActionCanceledError) {
-          throw new UserRejectedRequestError(errMsg);
+          throw new UnauthorizedError(
+            `${errMsg}: ${error.message}`,
+            error.data,
+          );
+        } else if (error instanceof UserActionError) {
+          throw new UserRejectedRequestError(
+            `${errMsg}: ${error.message}`,
+            error.data,
+          );
 
           // Internal errors that we should not expose to the user: Equivalent to 5xx errors
         } else if (error instanceof ExternalServiceError) {
-          throw new DisconnectedError(errMsg);
+          throw new DisconnectedError(errMsg, error.data);
         } else if (
           error instanceof WalletError ||
-          error instanceof StorageError
+          error instanceof StorageError ||
+          error instanceof AssertionError
         ) {
-          throw new InternalError(errMsg);
+          throw new InternalError(errMsg, error.data);
         } else {
-          throw new InternalError(errMsg);
+          throw new InternalError(errMsg, error.data);
         }
       } else {
         // this should never happen unless a BaseError is not thrown
         const errMsg = messages.unexpected?.message ?? 'Unexpected error';
-        this.#logger.error(errMsg, error);
+        this.#logger.error(error);
         throw new InternalError(errMsg);
       }
     }

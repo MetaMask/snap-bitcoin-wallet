@@ -20,7 +20,7 @@ import {
   ReviewTransactionEvent,
   CurrencyUnit,
   SendFormEvent,
-  UserActionCanceledError,
+  UserActionError,
 } from '../entities';
 import { SendFlowUseCases } from './SendFlowUseCases';
 import { CronMethod } from '../handlers';
@@ -99,7 +99,7 @@ describe('SendFlowUseCases', () => {
       mockSnapClient.displayInterface.mockResolvedValue(null);
 
       await expect(useCases.display('account-id')).rejects.toThrow(
-        UserActionCanceledError,
+        UserActionError,
       );
     });
 
