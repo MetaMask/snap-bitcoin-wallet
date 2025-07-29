@@ -370,7 +370,9 @@ export class SendFlowUseCases {
   ): Promise<void> {
     const account = await this.#accountRepository.get(formState.accountId);
     if (!account) {
-      throw new NotFoundError('Account not found when switching');
+      throw new NotFoundError('Account not found when switching', {
+        id: formState.accountId,
+      });
     }
 
     // We "reset" the context with the new account
@@ -393,7 +395,7 @@ export class SendFlowUseCases {
   async refresh(id: string): Promise<void> {
     const context = await this.#sendFlowRepository.getContext(id);
     if (!context) {
-      throw new NotFoundError(`Context not found in send form: ${id}`);
+      throw new NotFoundError('Context not found in send form', { id });
     }
 
     return this.#refreshRates(id, context);
@@ -446,13 +448,12 @@ export class SendFlowUseCases {
   async #computeFee(context: SendFormContext): Promise<SendFormContext> {
     const { amount, recipient, drain, balance } = context;
     if (amount && recipient) {
-      const account = await this.#accountRepository.get(context.account.id);
+      const { id } = context.account;
+      const account = await this.#accountRepository.get(id);
       if (!account) {
-        throw new NotFoundError('Account removed while sending');
+        throw new NotFoundError('Account removed while sending', { id });
       }
-      const frozenUTXOs = await this.#accountRepository.getFrozenUTXOs(
-        context.account.id,
-      );
+      const frozenUTXOs = await this.#accountRepository.getFrozenUTXOs(id);
 
       try {
         const builder = account
