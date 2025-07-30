@@ -398,7 +398,7 @@ export class SendFlowUseCases {
       return this.#refreshRates(id, context);
     } catch (error) {
       // We do not throw as this is probably due to a scheduled event executing after the interface has been removed.
-      this.#logger.warn('Context not found in send flow:', id, error);
+      this.#logger.debug('Context not found in send flow:', id, error);
       return undefined;
     }
   }
