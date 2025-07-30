@@ -20,7 +20,6 @@ import {
   ReviewTransactionEvent,
   CurrencyUnit,
   SendFormEvent,
-  UserActionError,
 } from '../entities';
 import { SendFlowUseCases } from './SendFlowUseCases';
 import { CronMethod } from '../handlers';
@@ -95,12 +94,11 @@ describe('SendFlowUseCases', () => {
       );
     });
 
-    it('throws UserActionCanceledError if displayInterface returns null', async () => {
+    it('returns undefined if displayInterface returns null', async () => {
       mockSnapClient.displayInterface.mockResolvedValue(null);
 
-      await expect(useCases.display('account-id')).rejects.toThrow(
-        UserActionError,
-      );
+      const result = await useCases.display('account-id');
+      expect(result).toBeUndefined();
     });
 
     it('displays Send form and returns PSBT when resolved', async () => {

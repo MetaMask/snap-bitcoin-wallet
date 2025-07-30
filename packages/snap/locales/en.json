@@ -169,6 +169,12 @@
     "error.7000": {
       "message": "Permission denied or insufficient authorization"
     },
+    "error.8000": {
+      "message": "User action error"
+    },
+    "error.9000": {
+      "message": "Corrupted state, invariant not respected or failed assertion."
+    },
     "error.internal": {
       "message": "Internal error. Please try again later or contact support"
     }

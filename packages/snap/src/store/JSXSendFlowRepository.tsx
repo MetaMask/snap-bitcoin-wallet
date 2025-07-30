@@ -17,10 +17,8 @@ export class JSXSendFlowRepository implements SendFlowRepository {
     this.#translator = translator;
   }
 
-  async getContext(id: string): Promise<SendFormContext | null> {
-    return (await this.#snapClient.getInterfaceContext(
-      id,
-    )) as SendFormContext | null;
+  async getContext(id: string): Promise<SendFormContext> {
+    return (await this.#snapClient.getInterfaceContext(id)) as SendFormContext;
   }
 
   async insertForm(context: SendFormContext): Promise<string> {

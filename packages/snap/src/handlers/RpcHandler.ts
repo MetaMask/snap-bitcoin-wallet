@@ -53,8 +53,11 @@ export class RpcHandler {
   async #executeSendFlow(
     account: string,
     origin: string,
-  ): Promise<SendTransactionResponse> {
+  ): Promise<SendTransactionResponse | null> {
     const psbt = await this.#sendFlowUseCases.display(account);
+    if (!psbt) {
+      return null;
+    }
     const txId = await this.#accountUseCases.sendPsbt(account, psbt, origin);
     return { txId: txId.toString() };
   }

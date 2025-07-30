@@ -38,7 +38,7 @@ export class EsploraClientAdapter implements BlockchainClient {
         this.#config.stopGap,
         this.#config.parallelRequests,
       );
-      return account.applyUpdate(update);
+      account.applyUpdate(update);
     } catch (error) {
       throw new ExternalServiceError(
         `Failed to perform initial full scan`,
@@ -55,7 +55,7 @@ export class EsploraClientAdapter implements BlockchainClient {
         request,
         this.#config.parallelRequests,
       );
-      return account.applyUpdate(update);
+      account.applyUpdate(update);
     } catch (error) {
       throw new ExternalServiceError(
         `Failed to synchronize account`,
@@ -67,7 +67,7 @@ export class EsploraClientAdapter implements BlockchainClient {
 
   async broadcast(network: Network, transaction: Transaction): Promise<void> {
     try {
-      return this.#clients[network].broadcast(transaction);
+      await this.#clients[network].broadcast(transaction);
     } catch (error) {
       throw new ExternalServiceError(
         `Failed to broadcast transaction`,
@@ -79,7 +79,7 @@ export class EsploraClientAdapter implements BlockchainClient {
 
   async getFeeEstimates(network: Network): Promise<FeeEstimates> {
     try {
-      return this.#clients[network].get_fee_estimates();
+      return await this.#clients[network].get_fee_estimates();
     } catch (error) {
       throw new ExternalServiceError(
         `Failed to fetch fee estimates`,

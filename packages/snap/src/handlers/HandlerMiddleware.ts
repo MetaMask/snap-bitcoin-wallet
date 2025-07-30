@@ -46,11 +46,8 @@ export class HandlerMiddleware {
       const messages = await this.#translator.load(locale);
 
       if (error instanceof BaseError) {
-        if (error.cause) {
-          this.#logger.error(error, error.data, 'Caused by:', error.cause);
-        } else {
-          this.#logger.error(error, error.data);
-        }
+        this.#logger.error(error, error.data);
+
         await this.#snapClient.emitTrackingError(error);
 
         const errMsg =
@@ -60,7 +57,7 @@ export class HandlerMiddleware {
 
         /* eslint-disable @typescript-eslint/only-throw-error */
         // User errors that he can rectify: Equivalent to 4xx errors
-        if (error instanceof FormatError || error instanceof StructError) {
+        if (error instanceof FormatError) {
           throw new InvalidInputError(
             `${errMsg}: ${error.message}`,
             error.data,
@@ -104,6 +101,13 @@ export class HandlerMiddleware {
           throw new InternalError(errMsg, error.data);
         }
       } else {
+        if (error instanceof StructError) {
+          const errMsg = messages['error.0']?.message ?? 'Invalid format';
+          throw new InvalidInputError(
+            `${errMsg}: ${error.message}`,
+            error.data,
+          );
+        }
         // this should never happen unless a BaseError is not thrown
         const errMsg = messages.unexpected?.message ?? 'Unexpected error';
         this.#logger.error(error);

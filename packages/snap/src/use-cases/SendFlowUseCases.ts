@@ -69,7 +69,7 @@ export class SendFlowUseCases {
     this.#ratesRefreshInterval = ratesRefreshInterval;
   }
 
-  async display(accountId: string): Promise<Psbt> {
+  async display(accountId: string): Promise<Psbt | undefined> {
     this.#logger.debug('Displaying Send form. Account: %s', accountId);
 
     const account = await this.#accountRepository.get(accountId);
@@ -101,7 +101,7 @@ export class SendFlowUseCases {
     // Blocks and waits for user actions
     const psbt = await this.#snapClient.displayInterface<string>(interfaceId);
     if (!psbt) {
-      throw new UserActionError('User canceled the send flow');
+      return undefined;
     }
 
     this.#logger.info('PSBT generated successfully');
@@ -393,12 +393,14 @@ export class SendFlowUseCases {
   }
 
   async refresh(id: string): Promise<void> {
-    const context = await this.#sendFlowRepository.getContext(id);
-    if (!context) {
-      throw new NotFoundError('Context not found in send form', { id });
+    try {
+      const context = await this.#sendFlowRepository.getContext(id);
+      return this.#refreshRates(id, context);
+    } catch (error) {
+      // We do not throw as this is probably due to a scheduled event executing after the interface has been removed.
+      this.#logger.warn('Context not found in send flow:', id, error);
+      return undefined;
     }
-
-    return this.#refreshRates(id, context);
   }
 
   async #refreshRates(id: string, context: SendFormContext): Promise<void> {
