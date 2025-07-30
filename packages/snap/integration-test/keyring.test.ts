@@ -29,6 +29,7 @@ describe('Keyring', () => {
 
   beforeEach(() => {
     snap.mockJsonRpc({ method: 'snap_manageAccounts', result: {} });
+    snap.mockJsonRpc({ method: 'snap_trackError', result: {} });
   });
 
   it('discover accounts successfully', async () => {
@@ -291,8 +292,9 @@ describe('Keyring', () => {
     });
 
     expect(response).toRespondWithError({
-      code: -32603,
-      message: `An unexpected error occurred`,
+      code: -32001,
+      message: `Resource not found: Account not found`,
+      data: { id, cause: null },
       stack: expect.anything(),
     });
   });

@@ -4,6 +4,7 @@ import { assert, enums, object, optional, string } from 'superstruct';
 
 import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
 import { validateOrigin } from './permissions';
+import { FormatError, InexistentMethodError } from '../entities';
 
 export enum RpcMethod {
   StartSendTransactionFlow = 'startSendTransactionFlow',
@@ -35,7 +36,7 @@ export class RpcHandler {
     const { method, params } = request;
 
     if (!params) {
-      throw new Error('Missing params');
+      throw new FormatError('Missing params');
     }
 
     switch (method as RpcMethod) {
@@ -45,15 +46,18 @@ export class RpcHandler {
       }
 
       default:
-        throw new Error(`Method not found: ${method}`);
+        throw new InexistentMethodError(`Method not found: ${method}`);
     }
   }
 
   async #executeSendFlow(
     account: string,
     origin: string,
-  ): Promise<SendTransactionResponse> {
+  ): Promise<SendTransactionResponse | null> {
     const psbt = await this.#sendFlowUseCases.display(account);
+    if (!psbt) {
+      return null;
+    }
     const txId = await this.#accountUseCases.sendPsbt(account, psbt, origin);
     return { txId: txId.toString() };
   }

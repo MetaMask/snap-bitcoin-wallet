@@ -15,6 +15,7 @@ import {
   type Logger,
   type MetaProtocolsClient,
   networkToCoinType,
+  NotFoundError,
   type SnapClient,
   TrackingSnapEvent,
 } from '../entities';
@@ -71,7 +72,7 @@ export class AccountUseCases {
 
     const account = await this.#repository.get(id);
     if (!account) {
-      throw new Error(`Account not found: ${id}`);
+      throw new NotFoundError('Account not found', { id });
     }
 
     this.#logger.debug('Account found: %s', account.id);
@@ -285,7 +286,7 @@ export class AccountUseCases {
 
     const account = await this.#repository.get(id);
     if (!account) {
-      throw new Error(`Account not found: ${id}`);
+      throw new NotFoundError('Account not found', { id });
     }
 
     await this.#snapClient.emitAccountDeletedEvent(id);
@@ -299,7 +300,7 @@ export class AccountUseCases {
 
     const account = await this.#repository.getWithSigner(id);
     if (!account) {
-      throw new Error(`Account not found: ${id}`);
+      throw new NotFoundError('Account not found', { id });
     }
 
     const tx = account.sign(psbt);

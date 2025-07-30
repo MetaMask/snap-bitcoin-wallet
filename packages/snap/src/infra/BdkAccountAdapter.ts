@@ -23,7 +23,11 @@ import {
   Wallet,
 } from '@metamask/bitcoindevkit';
 
-import type { BitcoinAccount, TransactionBuilder } from '../entities';
+import {
+  WalletError,
+  type BitcoinAccount,
+  type TransactionBuilder,
+} from '../entities';
 import { BdkTxBuilderAdapter } from './BdkTxBuilderAdapter';
 
 export class BdkAccountAdapter implements BitcoinAccount {
@@ -97,7 +101,7 @@ export class BdkAccountAdapter implements BitcoinAccount {
   get addressType(): AddressType {
     const addressType = this.peekAddress(0).address_type;
     if (!addressType) {
-      throw new Error(
+      throw new WalletError(
         'unknown, non-standard or related to the future witness version.',
       );
     }
@@ -148,7 +152,7 @@ export class BdkAccountAdapter implements BitcoinAccount {
   sign(psbt: Psbt): Transaction {
     const success = this.#wallet.sign(psbt, new SignOptions());
     if (!success) {
-      throw new Error('failed to sign PSBT');
+      throw new WalletError('failed to sign PSBT');
     }
 
     return psbt.extract_tx();

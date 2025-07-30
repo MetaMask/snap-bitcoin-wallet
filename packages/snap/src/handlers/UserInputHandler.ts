@@ -5,7 +5,12 @@ import type {
 } from '@metamask/snaps-sdk';
 
 import type { ReviewTransactionContext, SendFormContext } from '../entities';
-import { ReviewTransactionEvent, SendFormEvent } from '../entities';
+import {
+  FormatError,
+  InexistentMethodError,
+  ReviewTransactionEvent,
+  SendFormEvent,
+} from '../entities';
 import type { SendFlowUseCases } from '../use-cases';
 
 export class UserInputHandler {
@@ -21,10 +26,10 @@ export class UserInputHandler {
     context: Record<string, Json> | null,
   ): Promise<void> {
     if (!context) {
-      throw new Error('Missing context');
+      throw new FormatError('Missing context');
     }
     if (!event.name) {
-      throw new Error('Missing event name');
+      throw new FormatError('Missing event name');
     }
 
     if (this.#isSendFormEvent(event.name)) {
@@ -42,7 +47,7 @@ export class UserInputHandler {
       );
     }
 
-    throw new Error(`Unsupported event: ${event.name}`);
+    throw new InexistentMethodError(`Unsupported event: ${event.name}`);
   }
 
   #isSendFormEvent(name: string): name is SendFormEvent {
