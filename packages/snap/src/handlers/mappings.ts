@@ -17,12 +17,7 @@ import {
   DiscoveredAccountType,
 } from '@metamask/keyring-api';
 
-import {
-  addressTypeToPurpose,
-  networkToCoinType,
-  networkToCurrencyUnit,
-  type BitcoinAccount,
-} from '../entities';
+import { networkToCurrencyUnit, type BitcoinAccount } from '../entities';
 import type { Caip19Asset } from './caip';
 import { addressTypeToCaip, networkToCaip19, networkToScope } from './caip';
 
@@ -56,7 +51,14 @@ export function mapToKeyringAccount(account: BitcoinAccount): KeyringAccount {
     id: account.id,
     address: account.publicAddress.toString(),
     options: {
-      entropySource: account.entropySource,
+      entropySource: account.entropySource, // TODO: Legacy field. To be removed once multichain accounts are out.
+      exportable: false,
+      entropy: {
+        type: 'mnemonic',
+        id: account.entropySource,
+        derivationPath: `m/${account.derivationPath.slice(1).join('/')}`,
+        groupIndex: account.accountIndex,
+      },
     },
     methods: [BtcMethod.SendBitcoin],
   };
@@ -170,16 +172,14 @@ export function mapToTransaction(
  * Maps a Bitcoin Account to a Discovered Account.
  *
  * @param account - The Bitcoin account.
- * @param groupIndex - The group index.
  * @returns The Discovered account.
  */
 export function mapToDiscoveredAccount(
   account: BitcoinAccount,
-  groupIndex: number,
 ): DiscoveredAccount {
   return {
     type: DiscoveredAccountType.Bip44,
     scopes: [networkToScope[account.network]],
-    derivationPath: `m/${addressTypeToPurpose[account.addressType]}'/${networkToCoinType[account.network]}'/${groupIndex}'`,
+    derivationPath: `m/${account.derivationPath.slice(1).join('/')}`,
   };
 }

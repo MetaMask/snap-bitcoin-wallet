@@ -1,4 +1,4 @@
-import { BtcScope } from '@metamask/keyring-api';
+import { BtcAccountType, BtcScope } from '@metamask/keyring-api';
 
 import { CurrencyUnit } from '../src/entities';
 import { Caip19Asset } from '../src/handlers/caip';
@@ -34,4 +34,19 @@ export const FUNDING_TX = {
     },
   ],
   type: 'receive',
+};
+
+export const accountTypeToPurpose: Record<BtcAccountType, string> = {
+  [BtcAccountType.P2pkh]: "44'",
+  [BtcAccountType.P2sh]: "49'",
+  [BtcAccountType.P2wpkh]: "84'",
+  [BtcAccountType.P2tr]: "86'",
+};
+
+export const scopeToCoinType: Record<BtcScope, string> = {
+  [BtcScope.Mainnet]: "0'",
+  [BtcScope.Testnet]: "1'",
+  [BtcScope.Testnet4]: "1'",
+  [BtcScope.Signet]: "1'",
+  [BtcScope.Regtest]: "1'",
 };
