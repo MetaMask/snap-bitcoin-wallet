@@ -10,13 +10,14 @@ import {
 } from '@metamask/bitcoindevkit';
 import { v4 } from 'uuid';
 
-import type {
-  BitcoinAccountRepository,
-  BitcoinAccount,
-  SnapClient,
-  Inscription,
-  AccountState,
-  SnapState,
+import {
+  type BitcoinAccountRepository,
+  type BitcoinAccount,
+  type SnapClient,
+  type Inscription,
+  type AccountState,
+  type SnapState,
+  StorageError,
 } from '../entities';
 import { BdkAccountAdapter } from '../infra';
 
@@ -135,7 +136,7 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
 
     const walletData = account.takeStaged();
     if (!walletData) {
-      throw new Error(
+      throw new StorageError(
         `Missing changeset data for account "${id}" for insertion.`,
       );
     }
@@ -169,7 +170,7 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
 
     const walletData = await this.#snapClient.getState(`accounts.${id}.wallet`);
     if (!walletData) {
-      throw new Error(
+      throw new StorageError(
         `Inconsistent state: account "${id}" not found for update`,
       );
     }

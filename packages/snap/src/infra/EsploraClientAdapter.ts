@@ -5,10 +5,11 @@ import type {
 } from '@metamask/bitcoindevkit';
 import { EsploraClient } from '@metamask/bitcoindevkit';
 
-import type {
-  BitcoinAccount,
-  ChainConfig,
-  BlockchainClient,
+import {
+  type BitcoinAccount,
+  type ChainConfig,
+  type BlockchainClient,
+  ExternalServiceError,
 } from '../entities';
 
 export class EsploraClientAdapter implements BlockchainClient {
@@ -30,31 +31,62 @@ export class EsploraClientAdapter implements BlockchainClient {
   }
 
   async fullScan(account: BitcoinAccount): Promise<void> {
-    const request = account.startFullScan();
-    const update = await this.#clients[account.network].full_scan(
-      request,
-      this.#config.stopGap,
-      this.#config.parallelRequests,
-    );
-
-    account.applyUpdate(update);
+    try {
+      const request = account.startFullScan();
+      const update = await this.#clients[account.network].full_scan(
+        request,
+        this.#config.stopGap,
+        this.#config.parallelRequests,
+      );
+      account.applyUpdate(update);
+    } catch (error) {
+      throw new ExternalServiceError(
+        `Failed to perform initial full scan`,
+        { account: account.id },
+        error,
+      );
+    }
   }
 
   async sync(account: BitcoinAccount): Promise<void> {
-    const request = account.startSync();
-    const update = await this.#clients[account.network].sync(
-      request,
-      this.#config.parallelRequests,
-    );
-    account.applyUpdate(update);
+    try {
+      const request = account.startSync();
+      const update = await this.#clients[account.network].sync(
+        request,
+        this.#config.parallelRequests,
+      );
+      account.applyUpdate(update);
+    } catch (error) {
+      throw new ExternalServiceError(
+        `Failed to synchronize account`,
+        { account: account.id },
+        error,
+      );
+    }
   }
 
   async broadcast(network: Network, transaction: Transaction): Promise<void> {
-    await this.#clients[network].broadcast(transaction);
+    try {
+      await this.#clients[network].broadcast(transaction);
+    } catch (error) {
+      throw new ExternalServiceError(
+        `Failed to broadcast transaction`,
+        { network, txid: transaction.compute_txid().toString() },
+        error,
+      );
+    }
   }
 
   async getFeeEstimates(network: Network): Promise<FeeEstimates> {
-    return this.#clients[network].get_fee_estimates();
+    try {
+      return await this.#clients[network].get_fee_estimates();
+    } catch (error) {
+      throw new ExternalServiceError(
+        `Failed to fetch fee estimates`,
+        { network },
+        error,
+      );
+    }
   }
 
   getExplorerUrl(network: Network): string {

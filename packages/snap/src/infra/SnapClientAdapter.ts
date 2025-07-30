@@ -12,7 +12,11 @@ import type {
 } from '@metamask/snaps-sdk';
 
 import type { BaseError, BitcoinAccount, SnapClient } from '../entities';
-import { TrackingSnapEvent, networkToCurrencyUnit } from '../entities';
+import {
+  TrackingSnapEvent,
+  networkToCurrencyUnit,
+  AssertionError,
+} from '../entities';
 import {
   addressTypeToCaip,
   networkToCaip19,
@@ -212,9 +216,10 @@ export class SnapClientAdapter implements SnapClient {
         case TrackingSnapEvent.TransactionReceived:
           return 'Snap transaction received';
         default:
-          throw new Error(
-            `Unhandled tracking event type: ${eventType as string}`,
-          );
+          throw new AssertionError(`Unhandled tracking event type`, {
+            eventType,
+            origin,
+          });
       }
     };
 
@@ -244,10 +249,18 @@ export class SnapClientAdapter implements SnapClient {
       method: 'snap_trackError',
       params: {
         error: {
-          message: error.message,
           name: error.name,
+          message: error.message,
           stack: error.stack ?? null,
-          cause: null,
+          cause:
+            error.cause && error.cause instanceof Error
+              ? {
+                  cause: null,
+                  message: error.cause.message,
+                  name: error.cause.name,
+                  stack: error.cause.stack ?? null,
+                }
+              : null,
         },
       },
     });

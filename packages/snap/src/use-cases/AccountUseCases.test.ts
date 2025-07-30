@@ -56,7 +56,7 @@ describe('AccountUseCases', () => {
       mockRepository.get.mockResolvedValue(null);
 
       await expect(useCases.get('some-id')).rejects.toThrow(
-        'Account not found: some-id',
+        'Account not found',
       );
 
       expect(mockRepository.get).toHaveBeenCalledWith('some-id');
@@ -717,7 +717,7 @@ describe('AccountUseCases', () => {
       mockRepository.get.mockResolvedValue(null);
 
       await expect(useCases.delete('non-existent-id')).rejects.toThrow(
-        'Account not found: non-existent-id',
+        'Account not found',
       );
 
       expect(mockRepository.get).toHaveBeenCalledWith('non-existent-id');
@@ -797,7 +797,7 @@ describe('AccountUseCases', () => {
 
       await expect(
         useCases.sendPsbt('non-existent-id', mockPsbt, 'metamask'),
-      ).rejects.toThrow('Account not found: non-existent-id');
+      ).rejects.toThrow('Account not found');
     });
 
     it('sends transaction', async () => {

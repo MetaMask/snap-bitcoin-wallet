@@ -1,9 +1,10 @@
-import type {
-  SendFormContext,
-  SendFlowRepository,
-  SnapClient,
-  ReviewTransactionContext,
-  Translator,
+import {
+  type SendFormContext,
+  type SendFlowRepository,
+  type SnapClient,
+  type ReviewTransactionContext,
+  type Translator,
+  AssertionError,
 } from '../entities';
 import { ReviewTransactionView, SendFormView } from '../infra/jsx';
 
@@ -17,10 +18,13 @@ export class JSXSendFlowRepository implements SendFlowRepository {
     this.#translator = translator;
   }
 
-  async getContext(id: string): Promise<SendFormContext | null> {
-    return (await this.#snapClient.getInterfaceContext(
-      id,
-    )) as SendFormContext | null;
+  async getContext(id: string): Promise<SendFormContext> {
+    const context = await this.#snapClient.getInterfaceContext(id);
+    if (!context) {
+      throw new AssertionError('Missing context in send flow interface');
+    }
+
+    return context as SendFormContext;
   }
 
   async insertForm(context: SendFormContext): Promise<string> {

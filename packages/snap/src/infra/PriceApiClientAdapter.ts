@@ -1,10 +1,11 @@
 import type { HistoricalPriceValue } from '@metamask/snaps-sdk';
 
-import type {
-  AssetRatesClient,
-  PriceApiConfig,
-  SpotPrice,
-  TimePeriod,
+import {
+  ExternalServiceError,
+  type AssetRatesClient,
+  type PriceApiConfig,
+  type SpotPrice,
+  type TimePeriod,
 } from '../entities';
 
 type SpotPricesResponse = {
@@ -41,33 +42,49 @@ export class PriceApiClientAdapter implements AssetRatesClient {
     const url = `${
       this.#endpoint
     }/v1/spot-prices/${baseCurrency}?vsCurrency=${vsCurrency}`;
-    const response = await fetch(url);
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch spot prices: ${response.statusText}`);
-    }
+    try {
+      const response = await fetch(url);
 
-    const prices: SpotPricesResponse = await response.json();
-    return {
-      price: prices.price,
-      marketData: {
-        fungible: true,
-        allTimeHigh: prices.allTimeHigh.toString(),
-        allTimeLow: prices.allTimeLow.toString(),
-        circulatingSupply: prices.circulatingSupply.toString(),
-        marketCap: prices.marketCap.toString(),
-        totalVolume: prices.totalVolume.toString(),
-        pricePercentChange: {
-          PT1H: prices.pricePercentChange1h,
-          P1D: prices.pricePercentChange1d,
-          P7D: prices.pricePercentChange7d,
-          P14D: prices.pricePercentChange14d,
-          P30D: prices.pricePercentChange30d,
-          P200D: prices.pricePercentChange200d,
-          P1Y: prices.pricePercentChange1y,
+      if (!response.ok) {
+        throw new ExternalServiceError(`Failed to fetch spot prices`, {
+          vsCurrency,
+          baseCurrency,
+          response: response.statusText,
+        });
+      }
+
+      const prices: SpotPricesResponse = await response.json();
+      return {
+        price: prices.price,
+        marketData: {
+          fungible: true,
+          allTimeHigh: prices.allTimeHigh.toString(),
+          allTimeLow: prices.allTimeLow.toString(),
+          circulatingSupply: prices.circulatingSupply.toString(),
+          marketCap: prices.marketCap.toString(),
+          totalVolume: prices.totalVolume.toString(),
+          pricePercentChange: {
+            PT1H: prices.pricePercentChange1h,
+            P1D: prices.pricePercentChange1d,
+            P7D: prices.pricePercentChange7d,
+            P14D: prices.pricePercentChange14d,
+            P30D: prices.pricePercentChange30d,
+            P200D: prices.pricePercentChange200d,
+            P1Y: prices.pricePercentChange1y,
+          },
         },
-      },
-    };
+      };
+    } catch (error) {
+      throw new ExternalServiceError(
+        `Network failure while fetching spot prices`,
+        {
+          vsCurrency,
+          baseCurrency,
+        },
+        error,
+      );
+    }
   }
 
   async historicalPrices(
@@ -80,17 +97,33 @@ export class PriceApiClientAdapter implements AssetRatesClient {
     }/v1/historical-prices/${baseCurrency}?timePeriod=${timePeriod.slice(
       1,
     )}&vsCurrency=${vsCurrency}`;
-    const response = await fetch(url);
 
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch historical rates: ${response.statusText}`,
+    try {
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new ExternalServiceError(`Failed to fetch historical rates`, {
+          timePeriod,
+          vsCurrency,
+          baseCurrency,
+          response: response.statusText,
+        });
+      }
+
+      const prices: HistoricalPricesResponse = await response.json();
+      return prices.prices
+        .filter(([, price]) => price !== null) // keep only non-null prices
+        .map(([ts, price]) => [ts, (price as number).toString()]);
+    } catch (error) {
+      throw new ExternalServiceError(
+        `Network failure while fetching historical prices`,
+        {
+          timePeriod,
+          vsCurrency,
+          baseCurrency,
+        },
+        error,
       );
     }
-
-    const prices: HistoricalPricesResponse = await response.json();
-    return prices.prices
-      .filter(([, price]) => price !== null) // keep only non-null prices
-      .map(([ts, price]) => [ts, (price as number).toString()]);
   }
 }
