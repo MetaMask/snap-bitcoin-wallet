@@ -34,12 +34,11 @@ describe('JSXSendFlowRepository', () => {
       expect(result).toStrictEqual(context);
     });
 
-    it('returns null if context is null', async () => {
+    it('throws AssertionError if context is null', async () => {
       mockSnapClient.getInterfaceContext.mockResolvedValue(null);
-
-      const result = await repo.getContext('test-id');
-
-      expect(result).toBeNull();
+      await expect(repo.getContext('test-id')).rejects.toThrow(
+        'Missing context in send flow interface',
+      );
     });
 
     it('propagates error from getInterfaceContext', async () => {
