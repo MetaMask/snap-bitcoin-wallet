@@ -20,11 +20,11 @@ export class EsploraClientAdapter implements BlockchainClient {
 
   constructor(config: ChainConfig) {
     this.#clients = {
-      bitcoin: new EsploraClient(config.url.bitcoin),
-      testnet: new EsploraClient(config.url.testnet),
-      testnet4: new EsploraClient(config.url.testnet4),
-      signet: new EsploraClient(config.url.signet),
-      regtest: new EsploraClient(config.url.regtest),
+      bitcoin: new EsploraClient(config.url.bitcoin, config.maxRetries),
+      testnet: new EsploraClient(config.url.testnet, config.maxRetries),
+      testnet4: new EsploraClient(config.url.testnet4, config.maxRetries),
+      signet: new EsploraClient(config.url.signet, config.maxRetries),
+      regtest: new EsploraClient(config.url.regtest, config.maxRetries),
     };
 
     this.#config = config;
