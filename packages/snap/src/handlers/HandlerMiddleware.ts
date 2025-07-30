@@ -48,7 +48,10 @@ export class HandlerMiddleware {
       if (error instanceof BaseError) {
         this.#logger.error(error, error.data);
 
-        await this.#snapClient.emitTrackingError(error);
+        await this.#snapClient.emitTrackingError(error).catch((reason) => {
+          // The tracking pipeline is non‑critical; log and proceed so we don’t mask the original failure.
+          this.#logger.error('Failed to track error', reason);
+        });
 
         const errMsg =
           messages[`error.${error.code}`]?.message ??
