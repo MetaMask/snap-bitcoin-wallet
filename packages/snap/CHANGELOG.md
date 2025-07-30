@@ -9,13 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.18.0]
 
-### Uncategorized
+### Added
 
-- fix: retry mechanism esplora ([#500](https://github.com/MetaMask/snap-bitcoin-wallet/pull/500))
-- feat: add account options ([#499](https://github.com/MetaMask/snap-bitcoin-wallet/pull/499))
-- feat: error handling ([#498](https://github.com/MetaMask/snap-bitcoin-wallet/pull/498))
-- feat: error handling ([#496](https://github.com/MetaMask/snap-bitcoin-wallet/pull/496))
-- feat: track transaction events on snap ([#495](https://github.com/MetaMask/snap-bitcoin-wallet/pull/495))
+- Fine-grained error handling with tracking and translations ([#496](https://github.com/MetaMask/snap-bitcoin-wallet/pull/496), [#498](https://github.com/MetaMask/snap-bitcoin-wallet/pull/498))
+- Track transaction events ([#495](https://github.com/MetaMask/snap-bitcoin-wallet/pull/495))
+- Add account options in `KeyringAccount` ([#499](https://github.com/MetaMask/snap-bitcoin-wallet/pull/499))
+
+### Fixed
+
+- Retry mechanism for Esplora indexer ([#500](https://github.com/MetaMask/snap-bitcoin-wallet/pull/500))
 
 ## [0.17.0]
 
