@@ -9,6 +9,8 @@ import {
   ORIGIN,
   TEST_ADDRESS_REGTEST,
   TEST_ADDRESS_MAINNET,
+  scopeToCoinType,
+  accountTypeToPurpose,
 } from './constants';
 import { CurrencyUnit } from '../src/entities';
 import { Caip19Asset } from '../src/handlers/caip';
@@ -72,6 +74,13 @@ describe('Keyring', () => {
       address: TEST_ADDRESS_REGTEST,
       options: {
         entropySource: 'm',
+        entropy: {
+          type: 'mnemonic',
+          id: 'm',
+          groupIndex: 0,
+          derivationPath: "m/84'/1'/0'",
+        },
+        exportable: false,
       },
       scopes: [BtcScope.Regtest],
       methods: [BtcMethod.SendBitcoin],
@@ -149,6 +158,13 @@ describe('Keyring', () => {
       address: expectedAddress,
       options: {
         entropySource: 'm',
+        entropy: {
+          type: 'mnemonic',
+          id: 'm',
+          groupIndex: requestOpts.index,
+          derivationPath: `m/${accountTypeToPurpose[requestOpts.addressType]}/${scopeToCoinType[requestOpts.scope]}/${requestOpts.index}'`,
+        },
+        exportable: false,
       },
       scopes: [requestOpts.scope],
       methods: [BtcMethod.SendBitcoin],
