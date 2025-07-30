@@ -17,12 +17,7 @@ import {
   DiscoveredAccountType,
 } from '@metamask/keyring-api';
 
-import {
-  addressTypeToPurpose,
-  networkToCoinType,
-  networkToCurrencyUnit,
-  type BitcoinAccount,
-} from '../entities';
+import { networkToCurrencyUnit, type BitcoinAccount } from '../entities';
 import type { Caip19Asset } from './caip';
 import { addressTypeToCaip, networkToCaip19, networkToScope } from './caip';
 
@@ -177,12 +172,10 @@ export function mapToTransaction(
  * Maps a Bitcoin Account to a Discovered Account.
  *
  * @param account - The Bitcoin account.
- * @param groupIndex - The group index.
  * @returns The Discovered account.
  */
 export function mapToDiscoveredAccount(
   account: BitcoinAccount,
-  groupIndex: number,
 ): DiscoveredAccount {
   return {
     type: DiscoveredAccountType.Bip44,

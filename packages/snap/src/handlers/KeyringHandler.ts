@@ -228,7 +228,7 @@ export class KeyringHandler implements Keyring {
     // Return only accounts with history.
     return accounts
       .filter((account) => account.listTransactions().length > 0)
-      .map((account) => mapToDiscoveredAccount(account, groupIndex));
+      .map(mapToDiscoveredAccount);
   }
 
   async getAccountBalances(

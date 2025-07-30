@@ -251,9 +251,10 @@ describe('KeyringHandler', () => {
             addressType: caipToAddressType[addrType],
             network: scopeToNetwork[scope],
             listTransactions: jest.fn().mockReturnValue([{}]), // has history
+            derivationPath: ['m', "84'", "0'", "0'"],
           });
 
-          expected.push(mapToDiscoveredAccount(acc, groupIndex));
+          expected.push(mapToDiscoveredAccount(acc));
           mockAccounts.discover.mockResolvedValueOnce(acc);
         });
       });
@@ -352,6 +353,13 @@ describe('KeyringHandler', () => {
         address: 'bc1qaddress...',
         options: {
           entropySource: 'myEntropy',
+          entropy: {
+            derivationPath: "m/84'/0'/0'",
+            groupIndex: 0,
+            id: 'myEntropy',
+            type: 'mnemonic',
+          },
+          exportable: false,
         },
         methods: [BtcMethod.SendBitcoin],
       };
@@ -381,6 +389,13 @@ describe('KeyringHandler', () => {
           address: 'bc1qaddress...',
           options: {
             entropySource: 'myEntropy',
+            entropy: {
+              derivationPath: "m/84'/0'/0'",
+              groupIndex: 0,
+              id: 'myEntropy',
+              type: 'mnemonic',
+            },
+            exportable: false,
           },
           methods: [BtcMethod.SendBitcoin],
         },
