@@ -36,7 +36,7 @@
   },
   "devDependencies": {
     "@jest/globals": "^30.0.3",
-    "@metamask/bitcoindevkit": "^0.1.11",
+    "@metamask/bitcoindevkit": "^0.1.12",
     "@metamask/key-tree": "^10.1.1",
     "@metamask/keyring-api": "^19.1.0",
     "@metamask/keyring-snap-sdk": "^5.0.0",
