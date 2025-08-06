@@ -35,13 +35,10 @@ export class BdkTxBuilderAdapter implements TransactionBuilder {
   }
 
   addRecipientByScript(
-    amount: string,
+    amount: Amount,
     recipientScriptPubkey: ScriptBuf,
   ): TransactionBuilder {
-    const recipient = new Recipient(
-      recipientScriptPubkey,
-      Amount.from_sat(BigInt(amount)),
-    );
+    const recipient = new Recipient(recipientScriptPubkey, amount);
     this.#builder = this.#builder.add_recipient(recipient);
     return this;
   }

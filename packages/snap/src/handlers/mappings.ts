@@ -13,7 +13,6 @@ import type {
 } from '@metamask/keyring-api';
 import {
   TransactionStatus,
-  BtcMethod,
   DiscoveredAccountType,
 } from '@metamask/keyring-api';
 
@@ -60,7 +59,7 @@ export function mapToKeyringAccount(account: BitcoinAccount): KeyringAccount {
         groupIndex: account.accountIndex,
       },
     },
-    methods: [BtcMethod.SendBitcoin],
+    methods: [],
   };
 }
 

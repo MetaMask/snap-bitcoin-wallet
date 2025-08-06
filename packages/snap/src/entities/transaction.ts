@@ -1,4 +1,9 @@
-import type { Psbt, ScriptBuf, TxOrdering } from '@metamask/bitcoindevkit';
+import type {
+  Amount,
+  Psbt,
+  ScriptBuf,
+  TxOrdering,
+} from '@metamask/bitcoindevkit';
 
 /**
  * A Bitcoin transaction builder.
@@ -19,7 +24,7 @@ export type TransactionBuilder = {
    * @param recipientScriptPubkey - The recipient script public key
    */
   addRecipientByScript(
-    amount: string,
+    amount: Amount,
     recipientScriptPubkey: ScriptBuf,
   ): TransactionBuilder;
 

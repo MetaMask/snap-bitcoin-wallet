@@ -327,6 +327,7 @@ export class AccountUseCases {
 
     const frozenUTXOs = await this.#repository.getFrozenUTXOs(id);
 
+    let psbt: Psbt;
     try {
       let builder = account
         .buildTx()
@@ -339,14 +340,15 @@ export class AccountUseCases {
           builder = builder.drainToByScript(txout.script_pubkey);
         } else {
           builder = builder.addRecipientByScript(
-            txout.value.to_sat().toString(),
+            txout.value,
             txout.script_pubkey,
           );
         }
       }
+      psbt = builder.finish();
     } catch (error) {
       throw new ValidationError(
-        'Failed to generate PSBT from template',
+        'Failed to build PSBT from template',
         {
           id,
           templatePsbt: templatePsbt.toString(),
@@ -356,7 +358,7 @@ export class AccountUseCases {
       );
     }
 
-    return this.#signAndSendPsbt(account, templatePsbt, origin);
+    return this.#signAndSendPsbt(account, psbt, origin);
   }
 
   async #signAndSendPsbt(
@@ -364,6 +366,7 @@ export class AccountUseCases {
     psbt: Psbt,
     origin: string,
   ): Promise<Txid> {
+    console.log('new psbt', psbt.toString());
     const tx = account.sign(psbt);
     const txId = tx.compute_txid();
     await this.#chain.broadcast(account.network, tx.clone());

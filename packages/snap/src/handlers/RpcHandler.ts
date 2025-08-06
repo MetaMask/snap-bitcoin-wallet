@@ -9,7 +9,7 @@ import { FormatError, InexistentMethodError } from '../entities';
 
 export enum RpcMethod {
   StartSendTransactionFlow = 'startSendTransactionFlow',
-  FillAndSendPsbt = 'fillAndSend',
+  FillAndSendPsbt = 'fillAndSendPsbt',
 }
 
 export const CreateSendFormRequest = object({
@@ -25,7 +25,7 @@ export const SendPsbtRequest = object({
 });
 
 type SendTransactionResponse = {
-  txId: string;
+  txid: string;
 };
 
 export class RpcHandler {
@@ -76,7 +76,7 @@ export class RpcHandler {
       return null;
     }
     const txId = await this.#accountUseCases.sendPsbt(account, psbt, origin);
-    return { txId: txId.toString() };
+    return { txid: txId.toString() };
   }
 
   async #fillAndSend(
@@ -98,6 +98,6 @@ export class RpcHandler {
       feeRate,
       origin,
     );
-    return { txId: txId.toString() };
+    return { txid: txId.toString() };
   }
 }

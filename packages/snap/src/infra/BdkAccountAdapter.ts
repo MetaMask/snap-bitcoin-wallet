@@ -24,6 +24,7 @@ import {
 } from '@metamask/bitcoindevkit';
 
 import {
+  ValidationError,
   WalletError,
   type BitcoinAccount,
   type TransactionBuilder,
@@ -155,7 +156,15 @@ export class BdkAccountAdapter implements BitcoinAccount {
       throw new WalletError('failed to sign PSBT');
     }
 
-    return psbt.extract_tx();
+    try {
+      return psbt.extract_tx();
+    } catch (error) {
+      throw new ValidationError(
+        'failed to extract transaction from PSBT',
+        { id: this.#id },
+        error,
+      );
+    }
   }
 
   listUnspent(): LocalOutput[] {
