@@ -1,9 +1,10 @@
-import type {
-  AddressType,
-  Network,
-  Psbt,
-  Txid,
-  WalletTx,
+import {
+  TxOrdering,
+  type AddressType,
+  type Network,
+  type Psbt,
+  type Txid,
+  type WalletTx,
 } from '@metamask/bitcoindevkit';
 import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 
@@ -18,6 +19,7 @@ import {
   NotFoundError,
   type SnapClient,
   TrackingSnapEvent,
+  ValidationError,
 } from '../entities';
 
 export type DiscoverAccountParams = {
@@ -44,17 +46,21 @@ export class AccountUseCases {
 
   readonly #metaProtocols: MetaProtocolsClient | undefined;
 
+  readonly #fallbackFeeRate: number;
+
   constructor(
     logger: Logger,
     snapClient: SnapClient,
     repository: BitcoinAccountRepository,
     chain: BlockchainClient,
+    fallbackFeeRate: number,
     metaProtocols?: MetaProtocolsClient,
   ) {
     this.#logger = logger;
     this.#snapClient = snapClient;
     this.#repository = repository;
     this.#chain = chain;
+    this.#fallbackFeeRate = fallbackFeeRate;
     this.#metaProtocols = metaProtocols;
   }
 
@@ -303,6 +309,61 @@ export class AccountUseCases {
       throw new NotFoundError('Account not found', { id });
     }
 
+    return this.#signAndSendPsbt(account, psbt, origin);
+  }
+
+  async fillAndSendPsbt(
+    id: string,
+    templatePsbt: Psbt,
+    feeRate: number,
+    origin: string,
+  ): Promise<Txid> {
+    this.#logger.debug('Filling and sending transaction: %s', id);
+
+    const account = await this.#repository.getWithSigner(id);
+    if (!account) {
+      throw new NotFoundError('Account not found', { id });
+    }
+
+    const frozenUTXOs = await this.#repository.getFrozenUTXOs(id);
+
+    try {
+      let builder = account
+        .buildTx()
+        .feeRate(feeRate ?? this.#fallbackFeeRate)
+        .unspendable(frozenUTXOs)
+        .ordering(TxOrdering.Untouched);
+
+      for (const txout of templatePsbt.unsigned_tx.output) {
+        if (account.isMine(txout.script_pubkey)) {
+          builder = builder.drainToByScript(txout.script_pubkey);
+        } else {
+          builder = builder.addRecipientByScript(
+            txout.value.to_sat().toString(),
+            txout.script_pubkey,
+          );
+        }
+      }
+    } catch (error) {
+      throw new ValidationError(
+        'Failed to generate PSBT from template',
+        {
+          id,
+          templatePsbt: templatePsbt.toString(),
+          feeRate,
+        },
+        error,
+      );
+    }
+
+    return this.#signAndSendPsbt(account, templatePsbt, origin);
+  }
+
+  async #signAndSendPsbt(
+    account: BitcoinAccount,
+    psbt: Psbt,
+    origin: string,
+  ): Promise<Txid> {
     const tx = account.sign(psbt);
     const txId = tx.compute_txid();
     await this.#chain.broadcast(account.network, tx.clone());
@@ -329,7 +390,7 @@ export class AccountUseCases {
     this.#logger.info(
       'Transaction sent successfully: %s. Account: %s, Network: %s',
       txId,
-      id,
+      account.id,
       account.network,
     );
 

@@ -1,6 +1,7 @@
+import { Psbt } from '@metamask/bitcoindevkit';
 import { BtcScope } from '@metamask/keyring-api';
 import type { Json, JsonRpcRequest } from '@metamask/utils';
-import { assert, enums, object, optional, string } from 'superstruct';
+import { assert, enums, number, object, optional, string } from 'superstruct';
 
 import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
 import { validateOrigin } from './permissions';
@@ -8,12 +9,19 @@ import { FormatError, InexistentMethodError } from '../entities';
 
 export enum RpcMethod {
   StartSendTransactionFlow = 'startSendTransactionFlow',
+  FillAndSendPsbt = 'fillAndSend',
 }
 
 export const CreateSendFormRequest = object({
   account: string(),
   scope: optional(enums(Object.values(BtcScope))), // We don't use the scope but need to define it for validation
   assetId: optional(string()), // We don't use the Caip19 but need to define it for validation
+});
+
+export const SendPsbtRequest = object({
+  account: string(),
+  psbt: string(),
+  feeRate: number(),
 });
 
 type SendTransactionResponse = {
@@ -44,6 +52,15 @@ export class RpcHandler {
         assert(params, CreateSendFormRequest);
         return this.#executeSendFlow(params.account, origin);
       }
+      case RpcMethod.FillAndSendPsbt: {
+        assert(params, SendPsbtRequest);
+        return this.#fillAndSend(
+          params.account,
+          params.psbt,
+          params.feeRate,
+          origin,
+        );
+      }
 
       default:
         throw new InexistentMethodError(`Method not found: ${method}`);
@@ -59,6 +76,28 @@ export class RpcHandler {
       return null;
     }
     const txId = await this.#accountUseCases.sendPsbt(account, psbt, origin);
+    return { txId: txId.toString() };
+  }
+
+  async #fillAndSend(
+    account: string,
+    psbtBase64: string,
+    feeRate: number,
+    origin: string,
+  ): Promise<SendTransactionResponse | null> {
+    let psbt: Psbt;
+    try {
+      psbt = Psbt.from_string(psbtBase64);
+    } catch (error) {
+      throw new FormatError('Invalid PSBT', { account, psbtBase64 }, error);
+    }
+
+    const txId = await this.#accountUseCases.fillAndSendPsbt(
+      account,
+      psbt,
+      feeRate,
+      origin,
+    );
     return { txId: txId.toString() };
   }
 }

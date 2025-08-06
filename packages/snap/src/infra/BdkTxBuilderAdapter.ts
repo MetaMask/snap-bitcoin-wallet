@@ -1,4 +1,10 @@
-import type { Network, Psbt, TxBuilder } from '@metamask/bitcoindevkit';
+import type {
+  Network,
+  Psbt,
+  ScriptBuf,
+  TxBuilder,
+  TxOrdering,
+} from '@metamask/bitcoindevkit';
 import {
   OutPoint,
   Address,
@@ -21,7 +27,19 @@ export class BdkTxBuilderAdapter implements TransactionBuilder {
 
   addRecipient(amount: string, recipientAddress: string): TransactionBuilder {
     const recipient = new Recipient(
-      Address.from_string(recipientAddress, this.#network),
+      Address.from_string(recipientAddress, this.#network).script_pubkey,
+      Amount.from_sat(BigInt(amount)),
+    );
+    this.#builder = this.#builder.add_recipient(recipient);
+    return this;
+  }
+
+  addRecipientByScript(
+    amount: string,
+    recipientScriptPubkey: ScriptBuf,
+  ): TransactionBuilder {
+    const recipient = new Recipient(
+      recipientScriptPubkey,
       Amount.from_sat(BigInt(amount)),
     );
     this.#builder = this.#builder.add_recipient(recipient);
@@ -42,7 +60,12 @@ export class BdkTxBuilderAdapter implements TransactionBuilder {
 
   drainTo(address: string): BdkTxBuilderAdapter {
     const to = Address.from_string(address, this.#network);
-    this.#builder = this.#builder.drain_to(to);
+    this.#builder = this.#builder.drain_to(to.script_pubkey);
+    return this;
+  }
+
+  drainToByScript(scriptPubKey: ScriptBuf): BdkTxBuilderAdapter {
+    this.#builder = this.#builder.drain_to(scriptPubKey);
     return this;
   }
 
@@ -55,6 +78,11 @@ export class BdkTxBuilderAdapter implements TransactionBuilder {
       this.#builder = this.#builder.unspendable(outpoints);
     }
 
+    return this;
+  }
+
+  ordering(ordering: TxOrdering): BdkTxBuilderAdapter {
+    this.#builder = this.#builder.ordering(ordering);
     return this;
   }
 
