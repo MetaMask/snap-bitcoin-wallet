@@ -4,7 +4,7 @@ import type { Snap } from '@metamask/snaps-jest';
 import { installSnap } from '@metamask/snaps-jest';
 
 import { BlockchainTestUtils } from './blockchain-utils';
-import { MNEMONIC, ORIGIN, TEST_ADDRESS_REGTEST } from './constants';
+import { MNEMONIC, ORIGIN } from './constants';
 
 describe('CronHandler Synchronization', () => {
   let snap: Snap;
@@ -54,7 +54,7 @@ describe('CronHandler Synchronization', () => {
       .result;
 
     // send a new transaction to the new account
-    const txid = await blockchain.sendToAddress(TEST_ADDRESS_REGTEST, 10);
+    const txid = await blockchain.sendToAddress(account.address, 10);
     expect(txid).toBeDefined();
 
     // run cron sync to discover the unconfirmed transaction
@@ -71,7 +71,7 @@ describe('CronHandler Synchronization', () => {
         message: 'Snap transaction received',
         chain_id: BtcScope.Regtest,
         account_id: account.id,
-        account_address: TEST_ADDRESS_REGTEST,
+        account_address: account.address,
         account_type: BtcAccountType.P2wpkh,
         tx_id: txid,
       },
