@@ -42,7 +42,7 @@
     "@metamask/keyring-snap-sdk": "^5.0.0",
     "@metamask/slip44": "^4.2.0",
     "@metamask/snaps-cli": "^8.1.1",
-    "@metamask/snaps-jest": "^9.3.0",
+    "@metamask/snaps-jest": "^9.4.0",
     "@metamask/snaps-sdk": "^9.3.0",
     "@metamask/utils": "^11.4.2",
     "concurrently": "^9.2.0",
