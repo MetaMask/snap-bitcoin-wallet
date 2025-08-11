@@ -1,5 +1,5 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
-import { BtcAccountType, BtcMethod, BtcScope } from '@metamask/keyring-api';
+import { BtcAccountType, BtcScope } from '@metamask/keyring-api';
 import type { Snap } from '@metamask/snaps-jest';
 import { installSnap } from '@metamask/snaps-jest';
 
@@ -83,7 +83,7 @@ describe('Keyring', () => {
         exportable: false,
       },
       scopes: [BtcScope.Regtest],
-      methods: [BtcMethod.SendBitcoin],
+      methods: [],
     });
 
     // eslint-disable-next-line jest/no-conditional-in-test
@@ -167,7 +167,7 @@ describe('Keyring', () => {
         exportable: false,
       },
       scopes: [requestOpts.scope],
-      methods: [BtcMethod.SendBitcoin],
+      methods: [],
     });
 
     // eslint-disable-next-line jest/no-conditional-in-test

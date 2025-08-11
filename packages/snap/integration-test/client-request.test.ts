@@ -78,7 +78,7 @@ describe('Client requests', () => {
 
     /* eslint-disable @typescript-eslint/naming-convention */
     expect(response).toTrackEvent({
-      event: TrackingSnapEvent.TransactionFinalized,
+      event: TrackingSnapEvent.TransactionSubmitted,
       properties: {
         account_address: TEST_ADDRESS_REGTEST,
         account_id: account.id,
