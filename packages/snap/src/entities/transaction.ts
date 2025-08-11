@@ -1,9 +1,4 @@
-import type {
-  Amount,
-  Psbt,
-  ScriptBuf,
-  TxOrdering,
-} from '@metamask/bitcoindevkit';
+import type { Amount, Psbt, ScriptBuf } from '@metamask/bitcoindevkit';
 
 /**
  * A Bitcoin transaction builder.
@@ -70,11 +65,9 @@ export type TransactionBuilder = {
   unspendable(unspendable: string[]): TransactionBuilder;
 
   /**
-   * Choose the ordering for inputs and outputs of the transaction
-   *
-   * @param ordering - The ordering
+   * Set the ordering for inputs and outputs of the transaction to untouched.
    */
-  ordering(ordering: TxOrdering): TransactionBuilder;
+  untouchedOrdering(): TransactionBuilder;
 
   /**
    * Creates the PSBT.

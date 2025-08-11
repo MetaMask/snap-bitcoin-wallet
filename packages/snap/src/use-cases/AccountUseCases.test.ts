@@ -30,12 +30,14 @@ describe('AccountUseCases', () => {
   const mockRepository = mock<BitcoinAccountRepository>();
   const mockChain = mock<BlockchainClient>();
   const mockMetaProtocols = mock<MetaProtocolsClient>();
+  const fallbackFeeRate = 5.0;
 
   const useCases = new AccountUseCases(
     mockLogger,
     mockSnapClient,
     mockRepository,
     mockChain,
+    fallbackFeeRate,
     mockMetaProtocols,
   );
 
@@ -622,6 +624,7 @@ describe('AccountUseCases', () => {
         mockSnapClient,
         mockRepository,
         mockChain,
+        fallbackFeeRate,
         undefined,
       );
       const mockTransaction = mock<WalletTx>();
@@ -703,6 +706,7 @@ describe('AccountUseCases', () => {
         mockSnapClient,
         mockRepository,
         mockChain,
+        fallbackFeeRate,
         undefined,
       );
 

@@ -12,6 +12,12 @@ jest.mock('superstruct', () => ({
   assert: jest.fn(),
 }));
 
+// TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
+/* eslint-disable @typescript-eslint/naming-convention */
+jest.mock('@metamask/bitcoindevkit', () => ({
+  Psbt: { from_string: () => mock<Psbt>() },
+}));
+
 describe('RpcHandler', () => {
   const mockSendFlowUseCases = mock<SendFlowUseCases>();
   const mockAccountsUseCases = mock<AccountUseCases>();
@@ -67,7 +73,7 @@ describe('RpcHandler', () => {
         mockPsbt,
         'metamask',
       );
-      expect(result).toStrictEqual({ txId: 'txId' });
+      expect(result).toStrictEqual({ txid: 'txId' });
     });
 
     it('propagates errors from display', async () => {

@@ -3,9 +3,9 @@ import type {
   Psbt,
   ScriptBuf,
   TxBuilder,
-  TxOrdering,
 } from '@metamask/bitcoindevkit';
 import {
+  TxOrdering,
   OutPoint,
   Address,
   Amount,
@@ -78,8 +78,8 @@ export class BdkTxBuilderAdapter implements TransactionBuilder {
     return this;
   }
 
-  ordering(ordering: TxOrdering): BdkTxBuilderAdapter {
-    this.#builder = this.#builder.ordering(ordering);
+  untouchedOrdering(): BdkTxBuilderAdapter {
+    this.#builder = this.#builder.ordering(TxOrdering.Untouched);
     return this;
   }
 

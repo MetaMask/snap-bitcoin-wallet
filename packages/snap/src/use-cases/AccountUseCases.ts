@@ -1,10 +1,9 @@
-import {
-  TxOrdering,
-  type AddressType,
-  type Network,
-  type Psbt,
-  type Txid,
-  type WalletTx,
+import type {
+  AddressType,
+  Network,
+  Psbt,
+  Txid,
+  WalletTx,
 } from '@metamask/bitcoindevkit';
 import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 
@@ -333,7 +332,7 @@ export class AccountUseCases {
         .buildTx()
         .feeRate(feeRate ?? this.#fallbackFeeRate)
         .unspendable(frozenUTXOs)
-        .ordering(TxOrdering.Untouched);
+        .untouchedOrdering();
 
       for (const txout of templatePsbt.unsigned_tx.output) {
         if (account.isMine(txout.script_pubkey)) {

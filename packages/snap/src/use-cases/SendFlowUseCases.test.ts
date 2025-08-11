@@ -15,6 +15,7 @@ import type {
   Logger,
   CodifiedError,
   SpotPrice,
+  TransactionBuilder,
 } from '../entities';
 import {
   ReviewTransactionEvent,
@@ -152,14 +153,14 @@ describe('SendFlowUseCases', () => {
       backgroundEventId: 'backgroundEventId',
       locale: 'en',
     };
-    const mockTxBuilder = {
+    const mockTxBuilder = mock<TransactionBuilder>({
       addRecipient: jest.fn(),
       feeRate: jest.fn(),
       drainTo: jest.fn(),
       drainWallet: jest.fn(),
       finish: jest.fn(),
       unspendable: jest.fn(),
-    };
+    });
 
     beforeEach(() => {
       mockChain.getExplorerUrl.mockReturnValue(explorerUrl);
