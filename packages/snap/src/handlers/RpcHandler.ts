@@ -24,7 +24,7 @@ export const SendPsbtRequest = object({
   feeRate: number(),
 });
 
-type SendTransactionResponse = {
+export type SendTransactionResponse = {
   txid: string;
 };
 

@@ -1,10 +1,10 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
-import { BtcScope } from '@metamask/keyring-api';
+import { BtcAccountType, BtcScope } from '@metamask/keyring-api';
 import type { Snap } from '@metamask/snaps-jest';
 import { installSnap } from '@metamask/snaps-jest';
 
-import { MNEMONIC, ORIGIN } from './constants';
-import { CurrencyUnit } from '../src/entities';
+import { MNEMONIC, ORIGIN, TEST_ADDRESS_REGTEST } from './constants';
+import { CurrencyUnit, TrackingSnapEvent } from '../src/entities';
 import { Caip19Asset } from '../src/handlers/caip';
 
 describe('Client requests', () => {
@@ -61,7 +61,7 @@ describe('Client requests', () => {
     });
   });
 
-  it('fills, signs and sends a PSBT', async () => {
+  it('fills inputs, signs and sends an output-only PSBT', async () => {
     const response = await snap.onClientRequest({
       method: 'fillAndSendPsbt',
       params: {
@@ -71,10 +71,63 @@ describe('Client requests', () => {
       },
     });
 
-    console.log(response.response);
-
     expect(response).toRespondWith({
       txid: expect.any(String),
+    });
+    const { txid } = (response.response as { result: { txid: string } }).result;
+
+    /* eslint-disable @typescript-eslint/naming-convention */
+    expect(response).toTrackEvent({
+      event: TrackingSnapEvent.TransactionFinalized,
+      properties: {
+        account_address: TEST_ADDRESS_REGTEST,
+        account_id: account.id,
+        account_type: BtcAccountType.P2wpkh,
+        chain_id: BtcScope.Regtest,
+        message: 'Snap transaction submitted',
+        origin: 'metamask',
+        tx_id: txid,
+      },
+    });
+    /* eslint-enable @typescript-eslint/naming-convention */
+  });
+
+  it('fails if incorrect PSBT', async () => {
+    const response = await snap.onClientRequest({
+      method: 'fillAndSendPsbt',
+      params: {
+        account: account.id,
+        psbt: 'notAPsbt',
+        feeRate: 5,
+      },
+    });
+
+    expect(response).toRespondWithError({
+      code: -32000,
+      message: 'Invalid format: Invalid PSBT',
+      data: {
+        account: account.id,
+        cause: null,
+        psbtBase64: 'notAPsbt',
+      },
+      stack: expect.anything(),
+    });
+  });
+
+  it('fails if missing params', async () => {
+    const response = await snap.onClientRequest({
+      method: 'fillAndSendPsbt',
+      params: {
+        account: null,
+        feeRate: 5,
+      },
+    });
+
+    expect(response).toRespondWithError({
+      code: -32000,
+      message:
+        'Invalid format: At path: account -- Expected a string, but received: null',
+      stack: expect.anything(),
     });
   });
 });

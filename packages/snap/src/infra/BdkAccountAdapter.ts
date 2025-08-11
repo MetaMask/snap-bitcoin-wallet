@@ -151,9 +151,23 @@ export class BdkAccountAdapter implements BitcoinAccount {
   }
 
   sign(psbt: Psbt): Transaction {
-    const success = this.#wallet.sign(psbt, new SignOptions());
-    if (!success) {
-      throw new WalletError('failed to sign PSBT');
+    try {
+      const finalized = this.#wallet.sign(psbt, new SignOptions());
+      if (!finalized) {
+        throw new WalletError('PSBT not finalized', {
+          psbt: psbt.toString(),
+          id: this.#id,
+        });
+      }
+    } catch (error) {
+      throw new WalletError(
+        'failed to sign PSBT',
+        {
+          psbt: psbt.toString(),
+          id: this.#id,
+        },
+        error,
+      );
     }
 
     try {

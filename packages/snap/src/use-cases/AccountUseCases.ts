@@ -366,7 +366,6 @@ export class AccountUseCases {
     psbt: Psbt,
     origin: string,
   ): Promise<Txid> {
-    console.log('new psbt', psbt.toString());
     const tx = account.sign(psbt);
     const txId = tx.compute_txid();
     await this.#chain.broadcast(account.network, tx.clone());
