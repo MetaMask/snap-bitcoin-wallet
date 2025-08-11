@@ -30,8 +30,7 @@ export class BdkTxBuilderAdapter implements TransactionBuilder {
       Address.from_string(recipientAddress, this.#network).script_pubkey,
       Amount.from_sat(BigInt(amount)),
     );
-    this.#builder = this.#builder.add_recipient(recipient);
-    return this;
+    return this.addRecipientByScript(recipient.amount, recipient.script_pubkey);
   }
 
   addRecipientByScript(
@@ -57,8 +56,7 @@ export class BdkTxBuilderAdapter implements TransactionBuilder {
 
   drainTo(address: string): BdkTxBuilderAdapter {
     const to = Address.from_string(address, this.#network);
-    this.#builder = this.#builder.drain_to(to.script_pubkey);
-    return this;
+    return this.drainToByScript(to.script_pubkey);
   }
 
   drainToByScript(scriptPubKey: ScriptBuf): BdkTxBuilderAdapter {
