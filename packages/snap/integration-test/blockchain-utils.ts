@@ -5,7 +5,24 @@ import { execSync } from 'child_process';
  * Minimal utility for Bitcoin regtest operations in integration tests
  */
 export class BlockchainTestUtils {
-  readonly #container: string = 'esplora';
+  readonly #containerName: string;
+
+  readonly #esploraHost: string;
+
+  readonly #esploraPort: number;
+
+  readonly #esploraBaseUrl: string;
+
+  constructor(options?: {
+    containerName?: string;
+    esploraHost?: string;
+    esploraPort?: number;
+  }) {
+    this.#containerName = options?.containerName ?? 'esplora';
+    this.#esploraHost = options?.esploraHost ?? 'localhost';
+    this.#esploraPort = options?.esploraPort ?? 8094;
+    this.#esploraBaseUrl = `http://${this.#esploraHost}:${this.#esploraPort}/regtest/api`;
+  }
 
   /**
    * Execute a bitcoin-cli command in the Docker container
@@ -14,7 +31,7 @@ export class BlockchainTestUtils {
    * @returns The command output as a string
    */
   #execCli(command: string): string {
-    const fullCommand = `docker exec ${this.#container} cli -regtest ${command}`;
+    const fullCommand = `docker exec ${this.#containerName} cli -regtest ${command}`;
     try {
       return execSync(fullCommand, { encoding: 'utf8' }).trim();
     } catch (error) {
@@ -37,7 +54,7 @@ export class BlockchainTestUtils {
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
         const response = await fetch(
-          'http://localhost:8094/regtest/api/blocks/tip/height',
+          `${this.#esploraBaseUrl}/blocks/tip/height`,
         );
         if (response.ok) {
           const height = parseInt(await response.text(), 10);
@@ -64,9 +81,7 @@ export class BlockchainTestUtils {
   async #waitForEsploraTx(txid: string, maxRetries = 20): Promise<void> {
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        const response = await fetch(
-          `http://localhost:8094/regtest/api/tx/${txid}`,
-        );
+        const response = await fetch(`${this.#esploraBaseUrl}/tx/${txid}`);
         if (response.ok) {
           return;
         }
