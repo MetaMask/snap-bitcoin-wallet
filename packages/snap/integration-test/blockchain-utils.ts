@@ -1,5 +1,7 @@
-// eslint-disable-next-line import-x/no-nodejs-modules
+/* eslint-disable import-x/no-nodejs-modules */
 import { execSync } from 'child_process';
+import process from 'process';
+/* eslint-enable import-x/no-nodejs-modules */
 
 /**
  * Minimal utility for Bitcoin regtest operations in integration tests
@@ -18,9 +20,18 @@ export class BlockchainTestUtils {
     esploraHost?: string;
     esploraPort?: number;
   }) {
-    this.#containerName = options?.containerName ?? 'esplora';
-    this.#esploraHost = options?.esploraHost ?? 'localhost';
-    this.#esploraPort = options?.esploraPort ?? 8094;
+    this.#containerName =
+      options?.containerName ?? process.env.ESPLORA_CONTAINER ?? 'esplora';
+
+    this.#esploraHost =
+      options?.esploraHost ?? process.env.ESPLORA_HOST ?? 'localhost';
+
+    this.#esploraPort =
+      options?.esploraPort ??
+      (process.env.ESPLORA_PORT
+        ? parseInt(process.env.ESPLORA_PORT, 10)
+        : 8094);
+
     this.#esploraBaseUrl = `http://${this.#esploraHost}:${this.#esploraPort}/regtest/api`;
   }
 
