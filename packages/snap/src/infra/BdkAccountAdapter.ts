@@ -17,6 +17,7 @@ import type {
   Address,
 } from '@metamask/bitcoindevkit';
 import {
+  FeeRate,
   UnconfirmedTx,
   SignOptions,
   Txid,
@@ -150,7 +151,7 @@ export class BdkAccountAdapter implements BitcoinAccount {
     return new BdkTxBuilderAdapter(this.#wallet.build_tx(), this.network);
   }
 
-  sign(psbt: Psbt): Transaction {
+  sign(psbt: Psbt, maxFeeRate?: number): Transaction {
     try {
       const finalized = this.#wallet.sign(psbt, new SignOptions());
       if (!finalized) {
@@ -171,7 +172,11 @@ export class BdkAccountAdapter implements BitcoinAccount {
     }
 
     try {
-      return psbt.extract_tx();
+      return maxFeeRate
+        ? psbt.extract_tx_with_fee_rate_limit(
+            new FeeRate(BigInt(Math.floor(maxFeeRate))),
+          )
+        : psbt.extract_tx();
     } catch (error) {
       throw new ValidationError(
         'failed to extract transaction from PSBT',
