@@ -6,12 +6,15 @@ import { installSnap } from '@metamask/snaps-jest';
 import { MNEMONIC, ORIGIN, TEST_ADDRESS_REGTEST } from './constants';
 import { CurrencyUnit, TrackingSnapEvent } from '../src/entities';
 import { Caip19Asset } from '../src/handlers/caip';
+import { BlockchainTestUtils } from './blockchain-utils';
 
 describe('Client requests', () => {
   let account: KeyringAccount;
   let snap: Snap;
+  let blockchain: BlockchainTestUtils;
 
   beforeAll(async () => {
+    blockchain = new BlockchainTestUtils();
     snap = await installSnap({
       options: {
         secretRecoveryPhrase: MNEMONIC,
@@ -30,7 +33,6 @@ describe('Client requests', () => {
       method: 'keyring_createAccount',
       params: {
         options: {
-          index: 0,
           scope: BtcScope.Regtest,
           synchronize: true,
         },
@@ -43,6 +45,16 @@ describe('Client requests', () => {
     if ('result' in response.response) {
       account = response.response.result as KeyringAccount;
     }
+
+    // send a new transaction to the new account
+    const txid = await blockchain.sendToAddress(account.address, 10);
+    expect(txid).toBeDefined();
+
+    // run cron sync to discover the unconfirmed transaction
+    const syncResponse = await snap.onCronjob({
+      method: 'synchronizeAccounts',
+    });
+    expect(syncResponse).toRespondWith(null);
 
     response = await snap.onKeyringRequest({
       origin: ORIGIN,
