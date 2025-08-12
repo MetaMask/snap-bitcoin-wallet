@@ -87,7 +87,6 @@ describe('CronHandler Synchronization', () => {
         options: {
           scope: BtcScope.Regtest,
           addressType: BtcAccountType.P2wpkh,
-          index: 2,
           synchronize: false,
         },
       },
