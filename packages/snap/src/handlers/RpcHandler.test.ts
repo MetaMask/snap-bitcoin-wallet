@@ -118,7 +118,7 @@ describe('RpcHandler', () => {
       method: RpcMethod.FillAndSendPsbt,
       params: {
         account: 'account-id',
-        psbt: psbt,
+        psbt,
       },
     });
 
