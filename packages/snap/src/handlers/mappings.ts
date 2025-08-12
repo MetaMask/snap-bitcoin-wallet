@@ -13,7 +13,6 @@ import type {
 } from '@metamask/keyring-api';
 import {
   TransactionStatus,
-  BtcMethod,
   DiscoveredAccountType,
 } from '@metamask/keyring-api';
 
@@ -60,7 +59,7 @@ export function mapToKeyringAccount(account: BitcoinAccount): KeyringAccount {
         groupIndex: account.accountIndex,
       },
     },
-    methods: [BtcMethod.SendBitcoin],
+    methods: [],
   };
 }
 
@@ -76,11 +75,19 @@ const mapToAmount = (amount: Amount, network: Network): TransactionAmount => {
 const mapToAssetMovement = (
   output: TxOut,
   network: Network,
-): TransactionRecipient => {
-  return {
-    address: Address.from_script(output.script_pubkey, network).toString(),
-    asset: mapToAmount(output.value, network),
-  };
+): TransactionRecipient | null => {
+  if (output.script_pubkey.is_op_return()) {
+    return null;
+  }
+
+  try {
+    return {
+      address: Address.from_script(output.script_pubkey, network).toString(),
+      asset: mapToAmount(output.value, network),
+    };
+  } catch {
+    return null;
+  }
 };
 
 const mapToEvents = (
@@ -154,13 +161,19 @@ export function mapToTransaction(
   if (isSend) {
     for (const txout of tx.output) {
       if (!account.isMine(txout.script_pubkey)) {
-        transaction.to.push(mapToAssetMovement(txout, network));
+        const recipient = mapToAssetMovement(txout, network);
+        if (recipient) {
+          transaction.to.push(recipient);
+        }
       }
     }
   } else {
     for (const txout of tx.output) {
       if (account.isMine(txout.script_pubkey)) {
-        transaction.to.push(mapToAssetMovement(txout, network));
+        const recipient = mapToAssetMovement(txout, network);
+        if (recipient) {
+          transaction.to.push(recipient);
+        }
       }
     }
   }

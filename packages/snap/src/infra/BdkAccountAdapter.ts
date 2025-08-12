@@ -17,6 +17,7 @@ import type {
   Address,
 } from '@metamask/bitcoindevkit';
 import {
+  FeeRate,
   UnconfirmedTx,
   SignOptions,
   Txid,
@@ -24,6 +25,7 @@ import {
 } from '@metamask/bitcoindevkit';
 
 import {
+  ValidationError,
   WalletError,
   type BitcoinAccount,
   type TransactionBuilder,
@@ -149,13 +151,41 @@ export class BdkAccountAdapter implements BitcoinAccount {
     return new BdkTxBuilderAdapter(this.#wallet.build_tx(), this.network);
   }
 
-  sign(psbt: Psbt): Transaction {
-    const success = this.#wallet.sign(psbt, new SignOptions());
-    if (!success) {
-      throw new WalletError('failed to sign PSBT');
+  sign(psbt: Psbt, maxFeeRate?: number): Transaction {
+    try {
+      const finalized = this.#wallet.sign(psbt, new SignOptions());
+      // Signing a PSBT does not mean that the tx/psbt is final, like in a multi-sig setup.
+      // This ensures we only support signing where the psbt is final after. Will add comment.
+      if (!finalized) {
+        throw new WalletError('PSBT not finalized', {
+          psbt: psbt.toString(),
+          id: this.#id,
+        });
+      }
+    } catch (error) {
+      throw new WalletError(
+        'failed to sign PSBT',
+        {
+          psbt: psbt.toString(),
+          id: this.#id,
+        },
+        error,
+      );
     }
 
-    return psbt.extract_tx();
+    try {
+      return maxFeeRate
+        ? psbt.extract_tx_with_fee_rate_limit(
+            new FeeRate(BigInt(Math.floor(maxFeeRate))),
+          )
+        : psbt.extract_tx();
+    } catch (error) {
+      throw new ValidationError(
+        'failed to extract transaction from PSBT',
+        { id: this.#id },
+        error,
+      );
+    }
   }
 
   listUnspent(): LocalOutput[] {

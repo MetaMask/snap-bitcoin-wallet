@@ -6,13 +6,14 @@ import type {
   Network,
   WalletTx,
   AddressType,
+  ScriptBuf,
 } from '@metamask/bitcoindevkit';
 import { Address } from '@metamask/bitcoindevkit';
 import type {
   DiscoveredAccount,
   Transaction as KeyringTransaction,
 } from '@metamask/keyring-api';
-import { BtcAccountType, BtcMethod, BtcScope } from '@metamask/keyring-api';
+import { BtcAccountType, BtcScope } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
@@ -361,7 +362,7 @@ describe('KeyringHandler', () => {
           },
           exportable: false,
         },
-        methods: [BtcMethod.SendBitcoin],
+        methods: [],
       };
 
       const result = await handler.getAccount('some-id');
@@ -397,7 +398,7 @@ describe('KeyringHandler', () => {
             },
             exportable: false,
           },
-          methods: [BtcMethod.SendBitcoin],
+          methods: [],
         },
       ];
 
@@ -498,8 +499,12 @@ describe('KeyringHandler', () => {
     const mockAmount = mock<Amount>({
       to_btc: () => 21,
     });
+    const mockScriptPubkey = mock<ScriptBuf>({
+      is_op_return: () => false,
+    });
     const mockOutput = mock<TxOut>({
       value: mockAmount,
+      script_pubkey: mockScriptPubkey,
     });
     const mockTxid = mock<Txid>({
       toString: () => 'txid',

@@ -29,7 +29,7 @@
     ]
   },
   "dependencies": {
-    "@metamask/keyring-api": "^19.1.0",
+    "@metamask/keyring-api": "^20.0.0",
     "@metamask/providers": "^22.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

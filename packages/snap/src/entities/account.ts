@@ -126,7 +126,7 @@ export type BitcoinAccount = {
    * @param psbt - The PSBT to be signed.
    * @returns the signed transaction
    */
-  sign(psbt: Psbt): Transaction;
+  sign(psbt: Psbt, maxFeeRate?: number): Transaction;
 
   /**
    * Get the list of UTXOs

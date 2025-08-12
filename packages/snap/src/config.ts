@@ -8,8 +8,8 @@ export const Config: SnapConfig = {
   logLevel: (process.env.LOG_LEVEL ?? LogLevel.INFO) as LogLevel,
   encrypt: false,
   chain: {
-    parallelRequests: 1,
-    stopGap: 2,
+    parallelRequests: 5,
+    stopGap: 10,
     maxRetries: 3,
     url: {
       bitcoin: process.env.ESPLORA_BITCOIN ?? 'https://blockstream.info/api',
@@ -32,7 +32,7 @@ export const Config: SnapConfig = {
   },
   targetBlocksConfirmation: 3,
   fallbackFeeRate: 5.0,
-  ratesRefreshInterval: 'PT30S',
+  ratesRefreshInterval: 'PT20S',
   priceApi: {
     url: process.env.PRICE_API_URL ?? 'https://price.api.cx.metamask.io',
   },

@@ -1,5 +1,5 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
-import { BtcAccountType, BtcMethod, BtcScope } from '@metamask/keyring-api';
+import { BtcAccountType, BtcScope } from '@metamask/keyring-api';
 import type { Snap } from '@metamask/snaps-jest';
 import { installSnap } from '@metamask/snaps-jest';
 
@@ -14,6 +14,8 @@ import {
 } from './constants';
 import { CurrencyUnit } from '../src/entities';
 import { Caip19Asset } from '../src/handlers/caip';
+
+const ACCOUNT_INDEX = 0;
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
@@ -50,7 +52,7 @@ describe('Keyring', () => {
       {
         type: 'bip44',
         scopes: [BtcScope.Regtest],
-        derivationPath: "m/84'/1'/0'",
+        derivationPath: `m/84'/1'/${ACCOUNT_INDEX}'`,
       },
     ]);
   });
@@ -61,7 +63,7 @@ describe('Keyring', () => {
       method: 'keyring_createAccount',
       params: {
         options: {
-          derivationPath: "m/84'/1'/0'",
+          derivationPath: `m/84'/1'/${ACCOUNT_INDEX}'`,
           scope: BtcScope.Regtest,
           synchronize: true,
         },
@@ -77,13 +79,13 @@ describe('Keyring', () => {
         entropy: {
           type: 'mnemonic',
           id: 'm',
-          groupIndex: 0,
-          derivationPath: "m/84'/1'/0'",
+          groupIndex: ACCOUNT_INDEX,
+          derivationPath: `m/84'/1'/${ACCOUNT_INDEX}'`,
         },
         exportable: false,
       },
       scopes: [BtcScope.Regtest],
-      methods: [BtcMethod.SendBitcoin],
+      methods: [],
     });
 
     // eslint-disable-next-line jest/no-conditional-in-test
@@ -98,7 +100,7 @@ describe('Keyring', () => {
       // tests creation of multiple accounts of same address type and network
       addressType: BtcAccountType.P2wpkh,
       scope: BtcScope.Regtest,
-      index: 1, // index incremented by 1
+      index: ACCOUNT_INDEX + 1, // index incremented by 1
       expectedAddress: 'bcrt1qstku2y3pfh9av50lxj55arm8r5gj8tf2yv5nxz',
     },
     {
@@ -167,7 +169,7 @@ describe('Keyring', () => {
         exportable: false,
       },
       scopes: [requestOpts.scope],
-      methods: [BtcMethod.SendBitcoin],
+      methods: [],
     });
 
     // eslint-disable-next-line jest/no-conditional-in-test
@@ -201,7 +203,7 @@ describe('Keyring', () => {
         options: {
           scope: BtcScope.Regtest,
           addressType: BtcAccountType.P2wpkh,
-          index: 0,
+          index: ACCOUNT_INDEX,
         },
       },
     });

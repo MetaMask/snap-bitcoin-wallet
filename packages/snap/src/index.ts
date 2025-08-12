@@ -7,6 +7,7 @@ import type {
   OnUserInputHandler,
   OnAssetHistoricalPriceHandler,
   OnAssetsMarketDataHandler,
+  OnClientRequestHandler,
 } from '@metamask/snaps-sdk';
 
 import { Config } from './config';
@@ -46,6 +47,8 @@ const accountsUseCases = new AccountUseCases(
   snapClient,
   accountRepository,
   chainClient,
+  Config.fallbackFeeRate,
+  Config.targetBlocksConfirmation,
 );
 const sendFlowUseCases = new SendFlowUseCases(
   logger,
@@ -78,6 +81,9 @@ export const onCronjob: OnCronjobHandler = async ({ request }) =>
 
 export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request }) =>
   middleware.handle(async () => rpcHandler.route(origin, request));
+
+export const onClientRequest: OnClientRequestHandler = async ({ request }) =>
+  middleware.handle(async () => rpcHandler.route('metamask', request));
 
 export const onKeyringRequest: OnKeyringRequestHandler = async ({
   origin,

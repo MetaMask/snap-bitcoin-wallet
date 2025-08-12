@@ -18,6 +18,7 @@ import {
   NotFoundError,
   type SnapClient,
   TrackingSnapEvent,
+  ValidationError,
 } from '../entities';
 
 export type DiscoverAccountParams = {
@@ -44,17 +45,25 @@ export class AccountUseCases {
 
   readonly #metaProtocols: MetaProtocolsClient | undefined;
 
+  readonly #fallbackFeeRate: number;
+
+  readonly #targetBlocksConfirmation: number;
+
   constructor(
     logger: Logger,
     snapClient: SnapClient,
     repository: BitcoinAccountRepository,
     chain: BlockchainClient,
+    fallbackFeeRate: number,
+    targetBlocksConfirmation: number,
     metaProtocols?: MetaProtocolsClient,
   ) {
     this.#logger = logger;
     this.#snapClient = snapClient;
     this.#repository = repository;
     this.#chain = chain;
+    this.#fallbackFeeRate = fallbackFeeRate;
+    this.#targetBlocksConfirmation = targetBlocksConfirmation;
     this.#metaProtocols = metaProtocols;
   }
 
@@ -303,15 +312,95 @@ export class AccountUseCases {
       throw new NotFoundError('Account not found', { id });
     }
 
+    const txid = await this.#signAndSendPsbt(account, psbt, origin);
+
+    this.#logger.info(
+      'Transaction sent successfully: %s. Account: %s, Network: %s',
+      txid,
+      account.id,
+      account.network,
+    );
+
+    return txid;
+  }
+
+  async fillAndSendPsbt(
+    id: string,
+    templatePsbt: Psbt,
+    origin: string,
+  ): Promise<Txid> {
+    this.#logger.debug('Filling and sending transaction: %s', id);
+
+    const account = await this.#repository.getWithSigner(id);
+    if (!account) {
+      throw new NotFoundError('Account not found', { id });
+    }
+
+    const psbt = await this.#fillPsbt(account, templatePsbt);
+    const txid = await this.#signAndSendPsbt(account, psbt, origin);
+
+    this.#logger.info(
+      'Transaction filled and sent successfully: %s. Account: %s, Network: %s',
+      txid,
+      account.id,
+      account.network,
+    );
+
+    return txid;
+  }
+
+  async #fillPsbt(account: BitcoinAccount, templatePsbt: Psbt): Promise<Psbt> {
+    const frozenUTXOs = await this.#repository.getFrozenUTXOs(account.id);
+    const feeEstimates = await this.#chain.getFeeEstimates(account.network);
+    const feeRate =
+      feeEstimates.get(this.#targetBlocksConfirmation) ?? this.#fallbackFeeRate;
+
+    try {
+      let builder = account
+        .buildTx()
+        .feeRate(feeRate)
+        .unspendable(frozenUTXOs)
+        .untouchedOrdering(); // we need to strictly adhere to the template output order. Many protocols use the order (e.g: 1: deposit, 2: OP_RETURN, 3: change)
+
+      for (const txout of templatePsbt.unsigned_tx.output) {
+        // if the PSBT contains an output that is sending to ourselves, we change its value. If the PSBT contains no change outputs, one will automatically be added.
+        if (account.isMine(txout.script_pubkey)) {
+          builder = builder.drainToByScript(txout.script_pubkey);
+        } else {
+          builder = builder.addRecipientByScript(
+            txout.value,
+            txout.script_pubkey,
+          );
+        }
+      }
+      return builder.finish();
+    } catch (error) {
+      throw new ValidationError(
+        'Failed to build PSBT from template',
+        {
+          id: account.id,
+          templatePsbt: templatePsbt.toString(),
+          feeRate,
+        },
+        error,
+      );
+    }
+  }
+
+  async #signAndSendPsbt(
+    account: BitcoinAccount,
+    psbt: Psbt,
+    origin: string,
+  ): Promise<Txid> {
     const tx = account.sign(psbt);
-    const txId = tx.compute_txid();
+    const txid = tx.compute_txid();
     await this.#chain.broadcast(account.network, tx.clone());
     account.applyUnconfirmedTx(tx, getCurrentUnixTimestamp());
     await this.#repository.update(account);
 
     await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
 
-    const walletTx = account.getTransaction(txId.toString());
+    const walletTx = account.getTransaction(txid.toString());
     if (walletTx) {
       // should always be true by assertion but needed for type checking
       await this.#snapClient.emitAccountTransactionsUpdatedEvent(account, [
@@ -326,13 +415,6 @@ export class AccountUseCases {
       );
     }
 
-    this.#logger.info(
-      'Transaction sent successfully: %s. Account: %s, Network: %s',
-      txId,
-      id,
-      account.network,
-    );
-
-    return txId;
+    return txid;
   }
 }

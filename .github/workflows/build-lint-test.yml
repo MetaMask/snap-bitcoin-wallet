@@ -117,7 +117,7 @@ jobs:
     needs:
       - prepare
     env:
-      LOG_LEVEL: 0
+      LOG_LEVEL: silent
     steps:
       - uses: actions/checkout@v4
       - name: Enable Corepack

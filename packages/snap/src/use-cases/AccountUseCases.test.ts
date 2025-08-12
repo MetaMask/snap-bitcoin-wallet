@@ -1,4 +1,8 @@
 import type {
+  FeeEstimates,
+  TxOut,
+  ScriptBuf,
+  Amount,
   Transaction,
   Txid,
   WalletTx,
@@ -16,8 +20,9 @@ import type {
   Logger,
   MetaProtocolsClient,
   SnapClient,
+  TransactionBuilder,
 } from '../entities';
-import { TrackingSnapEvent } from '../entities';
+import { TrackingSnapEvent, ValidationError } from '../entities';
 import type {
   CreateAccountParams,
   DiscoverAccountParams,
@@ -30,12 +35,16 @@ describe('AccountUseCases', () => {
   const mockRepository = mock<BitcoinAccountRepository>();
   const mockChain = mock<BlockchainClient>();
   const mockMetaProtocols = mock<MetaProtocolsClient>();
+  const fallbackFeeRate = 5.0;
+  const targetBlocksConfirmation = 3;
 
   const useCases = new AccountUseCases(
     mockLogger,
     mockSnapClient,
     mockRepository,
     mockChain,
+    fallbackFeeRate,
+    targetBlocksConfirmation,
     mockMetaProtocols,
   );
 
@@ -622,6 +631,8 @@ describe('AccountUseCases', () => {
         mockSnapClient,
         mockRepository,
         mockChain,
+        fallbackFeeRate,
+        targetBlocksConfirmation,
         undefined,
       );
       const mockTransaction = mock<WalletTx>();
@@ -703,6 +714,8 @@ describe('AccountUseCases', () => {
         mockSnapClient,
         mockRepository,
         mockChain,
+        fallbackFeeRate,
+        targetBlocksConfirmation,
         undefined,
       );
 
@@ -856,6 +869,194 @@ describe('AccountUseCases', () => {
 
       await expect(
         useCases.sendPsbt('account-id', mockPsbt, 'metamask'),
+      ).rejects.toBe(error);
+    });
+  });
+
+  describe('fillAndSendPsbt', () => {
+    const mockTxid = mock<Txid>();
+    const mockOutput = mock<TxOut>({
+      script_pubkey: mock<ScriptBuf>(),
+      value: mock<Amount>(),
+    });
+    const mockTemplatePsbt = mock<Psbt>({
+      unsigned_tx: {
+        output: [mockOutput],
+      },
+      toString: () => 'base64Psbt',
+    });
+    const mockTransaction = mock<Transaction>({
+      // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
+      /* eslint-disable @typescript-eslint/naming-convention */
+      compute_txid: jest.fn(),
+      clone: jest.fn(),
+    });
+    const mockAccount = mock<BitcoinAccount>({
+      id: 'account-id',
+      network: 'bitcoin',
+      sign: jest.fn(),
+      isMine: () => false,
+    });
+    const mockWalletTx = mock<WalletTx>();
+    const mockFeeRate = 3;
+    const mockFeeEstimates = mock<FeeEstimates>({
+      get: () => mockFeeRate,
+    });
+    const mockFrozenUTXOs = ['utxo1', 'utxo2'];
+    const mockFilledPsbt = mock<Psbt>();
+    const mockTxBuilder = mock<TransactionBuilder>({
+      addRecipientByScript: jest.fn(),
+      feeRate: jest.fn(),
+      drainToByScript: jest.fn(),
+      drainWallet: jest.fn(),
+      finish: jest.fn(),
+      unspendable: jest.fn(),
+    });
+
+    beforeEach(() => {
+      mockRepository.getWithSigner.mockResolvedValue(mockAccount);
+      mockRepository.getFrozenUTXOs.mockResolvedValue(mockFrozenUTXOs);
+      mockTransaction.compute_txid.mockReturnValue(mockTxid);
+      mockTransaction.clone.mockReturnThis();
+      mockAccount.buildTx.mockReturnValue(mockTxBuilder);
+      mockTxBuilder.addRecipientByScript.mockReturnThis();
+      mockTxBuilder.feeRate.mockReturnThis();
+      mockTxBuilder.drainToByScript.mockReturnThis();
+      mockTxBuilder.untouchedOrdering.mockReturnThis();
+      mockTxBuilder.finish.mockReturnValue(mockFilledPsbt);
+      mockTxBuilder.unspendable.mockReturnThis();
+      mockChain.getFeeEstimates.mockResolvedValue(mockFeeEstimates);
+    });
+
+    it('throws error if account is not found', async () => {
+      mockRepository.getWithSigner.mockResolvedValue(null);
+
+      await expect(
+        useCases.fillAndSendPsbt(
+          'non-existent-id',
+          mockTemplatePsbt,
+          'metamask',
+        ),
+      ).rejects.toThrow('Account not found');
+    });
+
+    it('fills PSBT without change output, signs and sends transaction', async () => {
+      mockAccount.sign.mockReturnValue(mockTransaction);
+      mockAccount.getTransaction.mockReturnValue(mockWalletTx);
+      mockTransaction.compute_txid.mockReturnValue(mockTxid);
+
+      const txid = await useCases.fillAndSendPsbt(
+        'account-id',
+        mockTemplatePsbt,
+        'metamask',
+      );
+
+      expect(mockRepository.getWithSigner).toHaveBeenCalledWith('account-id');
+      expect(mockRepository.getFrozenUTXOs).toHaveBeenCalledWith(
+        mockAccount.id,
+      );
+      expect(mockChain.getFeeEstimates).toHaveBeenCalledWith(
+        mockAccount.network,
+      );
+      expect(mockTxBuilder.unspendable).toHaveBeenCalledWith(mockFrozenUTXOs);
+      expect(mockTxBuilder.addRecipientByScript).toHaveBeenCalledWith(
+        mockOutput.value,
+        mockOutput.script_pubkey,
+      );
+      expect(mockTxBuilder.feeRate).toHaveBeenCalledWith(mockFeeRate);
+      expect(mockTxBuilder.untouchedOrdering).toHaveBeenCalled();
+      expect(mockTxBuilder.finish).toHaveBeenCalled();
+
+      expect(mockAccount.sign).toHaveBeenCalledWith(mockFilledPsbt);
+      expect(mockChain.broadcast).toHaveBeenCalledWith(
+        mockAccount.network,
+        mockTransaction,
+      );
+      expect(mockRepository.update).toHaveBeenCalledWith(mockAccount);
+      expect(mockTransaction.compute_txid).toHaveBeenCalled();
+      expect(
+        mockSnapClient.emitAccountBalancesUpdatedEvent,
+      ).toHaveBeenCalledWith(mockAccount);
+      expect(
+        mockSnapClient.emitAccountTransactionsUpdatedEvent,
+      ).toHaveBeenCalledWith(mockAccount, [mockWalletTx]);
+      expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledWith(
+        TrackingSnapEvent.TransactionSubmitted,
+        mockAccount,
+        mockWalletTx,
+        'metamask',
+      );
+      expect(txid).toBe(mockTxid);
+    });
+
+    it('fills PSBT with change output, signs and sends transaction', async () => {
+      mockRepository.getWithSigner.mockResolvedValueOnce({
+        ...mockAccount,
+        isMine: () => true,
+      });
+      mockAccount.sign.mockReturnValue(mockTransaction);
+      mockAccount.getTransaction.mockReturnValue(mockWalletTx);
+      mockTransaction.compute_txid.mockReturnValue(mockTxid);
+
+      const txId = await useCases.fillAndSendPsbt(
+        'account-id',
+        mockTemplatePsbt,
+        'metamask',
+      );
+
+      expect(mockTxBuilder.drainToByScript).toHaveBeenCalledWith(
+        mockOutput.script_pubkey,
+      );
+      expect(txId).toBe(mockTxid);
+    });
+
+    it('propagates an error if getWithSigner fails', async () => {
+      const error = new Error('getWithSigner failed');
+      mockRepository.getWithSigner.mockRejectedValueOnce(error);
+
+      await expect(
+        useCases.fillAndSendPsbt('account-id', mockTemplatePsbt, 'metamask'),
+      ).rejects.toBe(error);
+    });
+
+    it('throws ValidationError if tx building fails', async () => {
+      const error = new Error('builder error');
+      mockTxBuilder.finish.mockImplementation(() => {
+        throw error;
+      });
+
+      await expect(
+        useCases.fillAndSendPsbt('account-id', mockTemplatePsbt, 'metamask'),
+      ).rejects.toThrow(
+        new ValidationError(
+          'Failed to build PSBT from template',
+          {
+            id: 'account-id',
+            templatePsbt: 'base64Psbt',
+            feeRate: mockFeeRate,
+          },
+          error,
+        ),
+      );
+    });
+
+    it('propagates an error if broadcast fails', async () => {
+      const error = new Error('broadcast failed');
+      mockAccount.sign.mockReturnValue(mockTransaction);
+      mockChain.broadcast.mockRejectedValueOnce(error);
+
+      await expect(
+        useCases.fillAndSendPsbt('account-id', mockTemplatePsbt, 'metamask'),
+      ).rejects.toBe(error);
+    });
+
+    it('propagates an error if update fails', async () => {
+      const error = new Error('update failed');
+      mockAccount.sign.mockReturnValue(mockTransaction);
+      mockRepository.update.mockRejectedValue(error);
+
+      await expect(
+        useCases.fillAndSendPsbt('account-id', mockTemplatePsbt, 'metamask'),
       ).rejects.toBe(error);
     });
   });

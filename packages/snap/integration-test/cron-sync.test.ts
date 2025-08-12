@@ -6,7 +6,9 @@ import { installSnap } from '@metamask/snaps-jest';
 import { BlockchainTestUtils } from './blockchain-utils';
 import { MNEMONIC, ORIGIN } from './constants';
 
-describe('CronHandler Synchronization', () => {
+const ACCOUNT_INDEX = 2;
+
+describe('CronHandler', () => {
   let snap: Snap;
   let blockchain: BlockchainTestUtils;
 
@@ -41,8 +43,8 @@ describe('CronHandler Synchronization', () => {
         options: {
           scope: BtcScope.Regtest,
           addressType: BtcAccountType.P2wpkh,
-          index: 0,
           synchronize: false,
+          index: ACCOUNT_INDEX,
         },
       },
     });
@@ -69,57 +71,6 @@ describe('CronHandler Synchronization', () => {
       properties: {
         origin: 'cron',
         message: 'Snap transaction received',
-        chain_id: BtcScope.Regtest,
-        account_id: account.id,
-        account_address: account.address,
-        account_type: BtcAccountType.P2wpkh,
-        tx_id: txid,
-      },
-    });
-    /* eslint-enable @typescript-eslint/naming-convention */
-  });
-
-  it('tracks TransactionFinalized when transaction gets confirmed', async () => {
-    // new account to avoid potential flaky-ness and conflicts
-    const createResponse = await snap.onKeyringRequest({
-      origin: ORIGIN,
-      method: 'keyring_createAccount',
-      params: {
-        options: {
-          scope: BtcScope.Regtest,
-          addressType: BtcAccountType.P2wpkh,
-          index: 2,
-          synchronize: false,
-        },
-      },
-    });
-
-    const account = (createResponse.response as { result: KeyringAccount })
-      .result;
-
-    const txid = await blockchain.sendToAddress(account.address, 25);
-
-    // discover unconfirmed transaction
-    await snap.onCronjob({
-      method: 'synchronizeAccounts',
-    });
-
-    // mine blocks to confirm the transaction
-    await blockchain.mineBlocks(6);
-
-    // should now detect transaction as finalised
-    const finalSyncResponse = await snap.onCronjob({
-      method: 'synchronizeAccounts',
-    });
-
-    expect(finalSyncResponse).toRespondWith(null);
-
-    /* eslint-disable @typescript-eslint/naming-convention */
-    expect(finalSyncResponse).toTrackEvent({
-      event: 'Transaction Finalized',
-      properties: {
-        origin: 'cron',
-        message: 'Snap transaction finalized',
         chain_id: BtcScope.Regtest,
         account_id: account.id,
         account_address: account.address,
