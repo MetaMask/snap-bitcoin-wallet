@@ -312,7 +312,7 @@ export class AccountUseCases {
       throw new NotFoundError('Account not found', { id });
     }
 
-    const txid = this.#signAndSendPsbt(account, psbt, origin);
+    const txid = await this.#signAndSendPsbt(account, psbt, origin);
 
     this.#logger.info(
       'Transaction sent successfully: %s. Account: %s, Network: %s',
@@ -337,7 +337,7 @@ export class AccountUseCases {
     }
 
     const psbt = await this.#fillPsbt(account, templatePsbt);
-    const txid = this.#signAndSendPsbt(account, psbt, origin);
+    const txid = await this.#signAndSendPsbt(account, psbt, origin);
 
     this.#logger.info(
       'Transaction filled and sent successfully: %s. Account: %s, Network: %s',
@@ -393,14 +393,14 @@ export class AccountUseCases {
     origin: string,
   ): Promise<Txid> {
     const tx = account.sign(psbt);
-    const txId = tx.compute_txid();
+    const txid = tx.compute_txid();
     await this.#chain.broadcast(account.network, tx.clone());
     account.applyUnconfirmedTx(tx, getCurrentUnixTimestamp());
     await this.#repository.update(account);
 
     await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
 
-    const walletTx = account.getTransaction(txId.toString());
+    const walletTx = account.getTransaction(txid.toString());
     if (walletTx) {
       // should always be true by assertion but needed for type checking
       await this.#snapClient.emitAccountTransactionsUpdatedEvent(account, [
@@ -415,6 +415,6 @@ export class AccountUseCases {
       );
     }
 
-    return txId;
+    return txid;
   }
 }
