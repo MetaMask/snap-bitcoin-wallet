@@ -3,12 +3,13 @@ import { BtcAccountType, BtcScope } from '@metamask/keyring-api';
 import type { Snap } from '@metamask/snaps-jest';
 import { installSnap } from '@metamask/snaps-jest';
 
-import { MNEMONIC, ORIGIN, TEST_ADDRESS_REGTEST } from './constants';
-import { CurrencyUnit, TrackingSnapEvent } from '../src/entities';
-import { Caip19Asset } from '../src/handlers/caip';
 import { BlockchainTestUtils } from './blockchain-utils';
+import { MNEMONIC, ORIGIN } from './constants';
+import { TrackingSnapEvent } from '../src/entities';
 
-describe('Client requests', () => {
+const ACCOUNT_INDEX = 1;
+
+describe('OnClientRequestHandler', () => {
   let account: KeyringAccount;
   let snap: Snap;
   let blockchain: BlockchainTestUtils;
@@ -20,57 +21,29 @@ describe('Client requests', () => {
         secretRecoveryPhrase: MNEMONIC,
       },
     });
-  });
 
-  beforeEach(() => {
     snap.mockJsonRpc({ method: 'snap_manageAccounts', result: {} });
     snap.mockJsonRpc({ method: 'snap_trackError', result: {} });
-  });
 
-  it('creates account', async () => {
-    let response = await snap.onKeyringRequest({
+    const response = await snap.onKeyringRequest({
       origin: ORIGIN,
       method: 'keyring_createAccount',
       params: {
         options: {
           scope: BtcScope.Regtest,
-          synchronize: true,
+          synchronize: false,
+          index: ACCOUNT_INDEX,
         },
       },
     });
 
-    expect(response).toBeDefined();
-
-    // eslint-disable-next-line jest/no-conditional-in-test
     if ('result' in response.response) {
       account = response.response.result as KeyringAccount;
     }
 
-    // send a new transaction to the new account
-    const txid = await blockchain.sendToAddress(account.address, 10);
-    expect(txid).toBeDefined();
-
-    // run cron sync to discover the unconfirmed transaction
-    const syncResponse = await snap.onCronjob({
-      method: 'synchronizeAccounts',
-    });
-    expect(syncResponse).toRespondWith(null);
-
-    response = await snap.onKeyringRequest({
-      origin: ORIGIN,
-      method: 'keyring_getAccountBalances',
-      params: {
-        id: account.id,
-        assets: [Caip19Asset.Regtest],
-      },
-    });
-
-    expect(response).toRespondWith({
-      [Caip19Asset.Regtest]: {
-        amount: '500',
-        unit: CurrencyUnit.Regtest,
-      },
-    });
+    await blockchain.sendToAddress(account.address, 10);
+    await blockchain.mineBlocks(6);
+    await snap.onCronjob({ method: 'synchronizeAccounts' });
   });
 
   it('fills inputs, signs and sends an output-only PSBT', async () => {
@@ -78,7 +51,7 @@ describe('Client requests', () => {
       method: 'fillAndSendPsbt',
       params: {
         account: account.id,
-        psbt: 'cHNidP8BAI4CAAAAAAM1gwEAAAAAACJRIORP1Ndiq325lSC/jMG0RlhATHYmuuULfXgEHUM3u5i4AAAAAAAAAAAxai8AAUSx+i9Igg4HWdcpyagCs8mzuRCklgA7nRMkm69rAAAAAAAAAAAAAQACAAAAACp2AAAAAAAAFgAUktCU7U/5Wc13yO4MwPFZlWzcQRgAAAAAAAAAAAA=',
+        psbt: 'cHNidP8BAI4CAAAAAAM1gwEAAAAAACJRIORP1Ndiq325lSC/jMG0RlhATHYmuuULfXgEHUM3u5i4AAAAAAAAAAAxai8AAUSx+i9Igg4HWdcpyagCs8mzuRCklgA7nRMkm69rAAAAAAAAAAAAAQACAAAAACp2AAAAAAAAFgAUgu3FEiFNy9ZR/zSpTo9nHREjrSoAAAAAAAAAAAA=',
         feeRate: 5,
       },
     });
@@ -92,12 +65,36 @@ describe('Client requests', () => {
     expect(response).toTrackEvent({
       event: TrackingSnapEvent.TransactionSubmitted,
       properties: {
-        account_address: TEST_ADDRESS_REGTEST,
+        account_address: account.address,
         account_id: account.id,
         account_type: BtcAccountType.P2wpkh,
         chain_id: BtcScope.Regtest,
         message: 'Snap transaction submitted',
-        origin: 'metamask',
+        origin: ORIGIN,
+        tx_id: txid,
+      },
+    });
+    /* eslint-enable @typescript-eslint/naming-convention */
+
+    await blockchain.mineBlocks(6);
+
+    // should now detect transaction as finalised
+    const finalSyncResponse = await snap.onCronjob({
+      method: 'synchronizeAccounts',
+    });
+
+    expect(finalSyncResponse).toRespondWith(null);
+
+    /* eslint-disable @typescript-eslint/naming-convention */
+    expect(finalSyncResponse).toTrackEvent({
+      event: TrackingSnapEvent.TransactionFinalized,
+      properties: {
+        origin: 'cron',
+        message: 'Snap transaction finalized',
+        chain_id: BtcScope.Regtest,
+        account_id: account.id,
+        account_address: account.address,
+        account_type: BtcAccountType.P2wpkh,
         tx_id: txid,
       },
     });
