@@ -52,7 +52,6 @@ describe('OnClientRequestHandler', () => {
       params: {
         account: account.id,
         psbt: 'cHNidP8BAI4CAAAAAAM1gwEAAAAAACJRIORP1Ndiq325lSC/jMG0RlhATHYmuuULfXgEHUM3u5i4AAAAAAAAAAAxai8AAUSx+i9Igg4HWdcpyagCs8mzuRCklgA7nRMkm69rAAAAAAAAAAAAAQACAAAAACp2AAAAAAAAFgAUgu3FEiFNy9ZR/zSpTo9nHREjrSoAAAAAAAAAAAA=',
-        feeRate: 5,
       },
     });
 
@@ -107,7 +106,6 @@ describe('OnClientRequestHandler', () => {
       params: {
         account: account.id,
         psbt: 'notAPsbt',
-        feeRate: 5,
       },
     });
 
@@ -128,7 +126,6 @@ describe('OnClientRequestHandler', () => {
       method: 'fillAndSendPsbt',
       params: {
         account: null,
-        feeRate: 5,
       },
     });
 

@@ -48,6 +48,7 @@ const accountsUseCases = new AccountUseCases(
   accountRepository,
   chainClient,
   Config.fallbackFeeRate,
+  Config.targetBlocksConfirmation,
 );
 const sendFlowUseCases = new SendFlowUseCases(
   logger,

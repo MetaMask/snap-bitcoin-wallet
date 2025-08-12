@@ -1,4 +1,5 @@
 import type {
+  FeeEstimates,
   TxOut,
   ScriptBuf,
   Amount,
@@ -35,6 +36,7 @@ describe('AccountUseCases', () => {
   const mockChain = mock<BlockchainClient>();
   const mockMetaProtocols = mock<MetaProtocolsClient>();
   const fallbackFeeRate = 5.0;
+  const targetBlocksConfirmation = 3;
 
   const useCases = new AccountUseCases(
     mockLogger,
@@ -42,6 +44,7 @@ describe('AccountUseCases', () => {
     mockRepository,
     mockChain,
     fallbackFeeRate,
+    targetBlocksConfirmation,
     mockMetaProtocols,
   );
 
@@ -629,6 +632,7 @@ describe('AccountUseCases', () => {
         mockRepository,
         mockChain,
         fallbackFeeRate,
+        targetBlocksConfirmation,
         undefined,
       );
       const mockTransaction = mock<WalletTx>();
@@ -711,6 +715,7 @@ describe('AccountUseCases', () => {
         mockRepository,
         mockChain,
         fallbackFeeRate,
+        targetBlocksConfirmation,
         undefined,
       );
 
@@ -887,12 +892,16 @@ describe('AccountUseCases', () => {
       clone: jest.fn(),
     });
     const mockAccount = mock<BitcoinAccount>({
+      id: 'account-id',
       network: 'bitcoin',
       sign: jest.fn(),
       isMine: () => false,
     });
     const mockWalletTx = mock<WalletTx>();
     const mockFeeRate = 3;
+    const mockFeeEstimates = mock<FeeEstimates>({
+      get: () => mockFeeRate,
+    });
     const mockFrozenUTXOs = ['utxo1', 'utxo2'];
     const mockFilledPsbt = mock<Psbt>();
     const mockTxBuilder = mock<TransactionBuilder>({
@@ -916,6 +925,7 @@ describe('AccountUseCases', () => {
       mockTxBuilder.untouchedOrdering.mockReturnThis();
       mockTxBuilder.finish.mockReturnValue(mockFilledPsbt);
       mockTxBuilder.unspendable.mockReturnThis();
+      mockChain.getFeeEstimates.mockResolvedValue(mockFeeEstimates);
     });
 
     it('throws error if account is not found', async () => {
@@ -925,7 +935,6 @@ describe('AccountUseCases', () => {
         useCases.fillAndSendPsbt(
           'non-existent-id',
           mockTemplatePsbt,
-          mockFeeRate,
           'metamask',
         ),
       ).rejects.toThrow('Account not found');
@@ -936,15 +945,19 @@ describe('AccountUseCases', () => {
       mockAccount.getTransaction.mockReturnValue(mockWalletTx);
       mockTransaction.compute_txid.mockReturnValue(mockTxid);
 
-      const txId = await useCases.fillAndSendPsbt(
+      const txid = await useCases.fillAndSendPsbt(
         'account-id',
         mockTemplatePsbt,
-        mockFeeRate,
         'metamask',
       );
 
       expect(mockRepository.getWithSigner).toHaveBeenCalledWith('account-id');
-
+      expect(mockRepository.getFrozenUTXOs).toHaveBeenCalledWith(
+        mockAccount.id,
+      );
+      expect(mockChain.getFeeEstimates).toHaveBeenCalledWith(
+        mockAccount.network,
+      );
       expect(mockTxBuilder.unspendable).toHaveBeenCalledWith(mockFrozenUTXOs);
       expect(mockTxBuilder.addRecipientByScript).toHaveBeenCalledWith(
         mockOutput.value,
@@ -973,7 +986,7 @@ describe('AccountUseCases', () => {
         mockWalletTx,
         'metamask',
       );
-      expect(txId).toBe(mockTxid);
+      expect(txid).toBe(mockTxid);
     });
 
     it('fills PSBT with change output, signs and sends transaction', async () => {
@@ -988,7 +1001,6 @@ describe('AccountUseCases', () => {
       const txId = await useCases.fillAndSendPsbt(
         'account-id',
         mockTemplatePsbt,
-        mockFeeRate,
         'metamask',
       );
 
@@ -1003,12 +1015,7 @@ describe('AccountUseCases', () => {
       mockRepository.getWithSigner.mockRejectedValueOnce(error);
 
       await expect(
-        useCases.fillAndSendPsbt(
-          'account-id',
-          mockTemplatePsbt,
-          mockFeeRate,
-          'metamask',
-        ),
+        useCases.fillAndSendPsbt('account-id', mockTemplatePsbt, 'metamask'),
       ).rejects.toBe(error);
     });
 
@@ -1019,12 +1026,7 @@ describe('AccountUseCases', () => {
       });
 
       await expect(
-        useCases.fillAndSendPsbt(
-          'account-id',
-          mockTemplatePsbt,
-          mockFeeRate,
-          'metamask',
-        ),
+        useCases.fillAndSendPsbt('account-id', mockTemplatePsbt, 'metamask'),
       ).rejects.toThrow(
         new ValidationError(
           'Failed to build PSBT from template',
@@ -1044,12 +1046,7 @@ describe('AccountUseCases', () => {
       mockChain.broadcast.mockRejectedValueOnce(error);
 
       await expect(
-        useCases.fillAndSendPsbt(
-          'account-id',
-          mockTemplatePsbt,
-          mockFeeRate,
-          'metamask',
-        ),
+        useCases.fillAndSendPsbt('account-id', mockTemplatePsbt, 'metamask'),
       ).rejects.toBe(error);
     });
 
@@ -1059,12 +1056,7 @@ describe('AccountUseCases', () => {
       mockRepository.update.mockRejectedValue(error);
 
       await expect(
-        useCases.fillAndSendPsbt(
-          'account-id',
-          mockTemplatePsbt,
-          mockFeeRate,
-          'metamask',
-        ),
+        useCases.fillAndSendPsbt('account-id', mockTemplatePsbt, 'metamask'),
       ).rejects.toBe(error);
     });
   });

@@ -47,12 +47,15 @@ export class AccountUseCases {
 
   readonly #fallbackFeeRate: number;
 
+  readonly #targetBlocksConfirmation: number;
+
   constructor(
     logger: Logger,
     snapClient: SnapClient,
     repository: BitcoinAccountRepository,
     chain: BlockchainClient,
     fallbackFeeRate: number,
+    targetBlocksConfirmation: number,
     metaProtocols?: MetaProtocolsClient,
   ) {
     this.#logger = logger;
@@ -60,6 +63,7 @@ export class AccountUseCases {
     this.#repository = repository;
     this.#chain = chain;
     this.#fallbackFeeRate = fallbackFeeRate;
+    this.#targetBlocksConfirmation = targetBlocksConfirmation;
     this.#metaProtocols = metaProtocols;
   }
 
@@ -308,13 +312,21 @@ export class AccountUseCases {
       throw new NotFoundError('Account not found', { id });
     }
 
-    return this.#signAndSendPsbt(account, psbt, origin);
+    const txid = this.#signAndSendPsbt(account, psbt, origin);
+
+    this.#logger.info(
+      'Transaction sent successfully: %s. Account: %s, Network: %s',
+      txid,
+      account.id,
+      account.network,
+    );
+
+    return txid;
   }
 
   async fillAndSendPsbt(
     id: string,
     templatePsbt: Psbt,
-    feeRate: number,
     origin: string,
   ): Promise<Txid> {
     this.#logger.debug('Filling and sending transaction: %s', id);
@@ -324,17 +336,34 @@ export class AccountUseCases {
       throw new NotFoundError('Account not found', { id });
     }
 
-    const frozenUTXOs = await this.#repository.getFrozenUTXOs(id);
+    const psbt = await this.#fillPsbt(account, templatePsbt);
+    const txid = this.#signAndSendPsbt(account, psbt, origin);
 
-    let psbt: Psbt;
+    this.#logger.info(
+      'Transaction filled and sent successfully: %s. Account: %s, Network: %s',
+      txid,
+      account.id,
+      account.network,
+    );
+
+    return txid;
+  }
+
+  async #fillPsbt(account: BitcoinAccount, templatePsbt: Psbt): Promise<Psbt> {
+    const frozenUTXOs = await this.#repository.getFrozenUTXOs(account.id);
+    const feeEstimates = await this.#chain.getFeeEstimates(account.network);
+    const feeRate =
+      feeEstimates.get(this.#targetBlocksConfirmation) ?? this.#fallbackFeeRate;
+
     try {
       let builder = account
         .buildTx()
-        .feeRate(feeRate ?? this.#fallbackFeeRate)
+        .feeRate(feeRate)
         .unspendable(frozenUTXOs)
-        .untouchedOrdering();
+        .untouchedOrdering(); // we need to strictly adhere to the template output order. Many protocols use the order (e.g: 1: deposit, 2: OP_RETURN, 3: change)
 
       for (const txout of templatePsbt.unsigned_tx.output) {
+        // if the PSBT contains an output that is sending to ourselves, we change its value. If the PSBT contains no change outputs, one will automatically be added.
         if (account.isMine(txout.script_pubkey)) {
           builder = builder.drainToByScript(txout.script_pubkey);
         } else {
@@ -344,20 +373,18 @@ export class AccountUseCases {
           );
         }
       }
-      psbt = builder.finish();
+      return builder.finish();
     } catch (error) {
       throw new ValidationError(
         'Failed to build PSBT from template',
         {
-          id,
+          id: account.id,
           templatePsbt: templatePsbt.toString(),
           feeRate,
         },
         error,
       );
     }
-
-    return this.#signAndSendPsbt(account, psbt, origin);
   }
 
   async #signAndSendPsbt(
@@ -387,13 +414,6 @@ export class AccountUseCases {
         origin,
       );
     }
-
-    this.#logger.info(
-      'Transaction sent successfully: %s. Account: %s, Network: %s',
-      txId,
-      account.id,
-      account.network,
-    );
 
     return txId;
   }
