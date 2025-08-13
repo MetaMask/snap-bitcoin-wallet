@@ -136,4 +136,60 @@ describe('OnClientRequestHandler', () => {
       stack: expect.anything(),
     });
   });
+
+  it('computes fee for valid PSBT', async () => {
+    const response = await snap.onClientRequest({
+      method: 'getFeeForTransaction',
+      params: {
+        account: account.id,
+        psbt: 'cHNidP8BAI4CAAAAAAM1gwEAAAAAACJRIORP1Ndiq325lSC/jMG0RlhATHYmuuULfXgEHUM3u5i4AAAAAAAAAAAxai8AAUSx+i9Igg4HWdcpyagCs8mzuRCklgA7nRMkm69rAAAAAAAAAAAAAQACAAAAACp2AAAAAAAAFgAUgu3FEiFNy9ZR/zSpTo9nHREjrSoAAAAAAAAAAAA=',
+      },
+    });
+
+    expect(response).toRespondWith({
+      feeInSats: expect.any(String),
+    });
+
+    const { feeInSats } = (
+      response.response as { result: { feeInSats: string } }
+    ).result;
+    expect(parseInt(feeInSats, 10)).toBeGreaterThan(0);
+  });
+
+  it('fails to compute fee for invalid PSBT', async () => {
+    const response = await snap.onClientRequest({
+      method: 'getFeeForTransaction',
+      params: {
+        account: account.id,
+        psbt: 'notAPsbt',
+      },
+    });
+
+    expect(response).toRespondWithError({
+      code: -32000,
+      message: 'Invalid format: Invalid PSBT',
+      data: {
+        account: account.id,
+        cause: null,
+        psbtBase64: 'notAPsbt',
+      },
+      stack: expect.anything(),
+    });
+  });
+
+  it('fails to compute fee if missing params', async () => {
+    const response = await snap.onClientRequest({
+      method: 'getFeeForTransaction',
+      params: {
+        account: null,
+      },
+    });
+
+    expect(response).toRespondWithError({
+      code: -32000,
+      message:
+        'Invalid format: At path: account -- Expected a string, but received: null',
+      stack: expect.anything(),
+    });
+  });
 });
