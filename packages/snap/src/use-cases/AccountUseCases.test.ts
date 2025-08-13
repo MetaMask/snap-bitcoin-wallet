@@ -1060,4 +1060,101 @@ describe('AccountUseCases', () => {
       ).rejects.toBe(error);
     });
   });
+
+  describe('getFeeForPsbt', () => {
+    const mockFee = mock<Amount>();
+    const mockOutput = mock<TxOut>({
+      script_pubkey: mock<ScriptBuf>(),
+      value: mock<Amount>(),
+    });
+    const mockTemplatePsbt = mock<Psbt>({
+      unsigned_tx: {
+        output: [mockOutput],
+      },
+      toString: () => 'base64Psbt',
+    });
+    const mockAccount = mock<BitcoinAccount>({
+      id: 'account-id',
+      network: 'bitcoin',
+      isMine: () => false,
+    });
+    const mockFeeRate = 3;
+    const mockFeeEstimates = mock<FeeEstimates>({
+      get: () => mockFeeRate,
+    });
+    const mockFrozenUTXOs = ['utxo1', 'utxo2'];
+    const mockFilledPsbt = mock<Psbt>();
+    const mockTxBuilder = mock<TransactionBuilder>({
+      addRecipientByScript: jest.fn(),
+      feeRate: jest.fn(),
+      drainToByScript: jest.fn(),
+      finish: jest.fn(),
+      unspendable: jest.fn(),
+    });
+
+    beforeEach(() => {
+      mockRepository.getWithSigner.mockResolvedValue(mockAccount);
+      mockRepository.getFrozenUTXOs.mockResolvedValue(mockFrozenUTXOs);
+      mockAccount.buildTx.mockReturnValue(mockTxBuilder);
+      mockTxBuilder.addRecipientByScript.mockReturnThis();
+      mockTxBuilder.feeRate.mockReturnThis();
+      mockTxBuilder.drainToByScript.mockReturnThis();
+      mockTxBuilder.untouchedOrdering.mockReturnThis();
+      mockTxBuilder.finish.mockReturnValue(mockFilledPsbt);
+      mockTxBuilder.unspendable.mockReturnThis();
+      mockFilledPsbt.fee.mockReturnValue(mockFee);
+      mockChain.getFeeEstimates.mockResolvedValue(mockFeeEstimates);
+    });
+
+    it('throws error if account is not found', async () => {
+      mockRepository.getWithSigner.mockResolvedValue(null);
+
+      await expect(
+        useCases.getFeeForPsbt('account-id', mockTemplatePsbt),
+      ).rejects.toThrow('Account not found');
+    });
+
+    it('computes fee for PSBT without change output', async () => {
+      const fee = await useCases.getFeeForPsbt('account-id', mockTemplatePsbt);
+
+      expect(mockRepository.getWithSigner).toHaveBeenCalledWith('account-id');
+      expect(mockRepository.getFrozenUTXOs).toHaveBeenCalledWith('account-id');
+      expect(mockChain.getFeeEstimates).toHaveBeenCalledWith('bitcoin');
+      expect(mockTxBuilder.unspendable).toHaveBeenCalledWith(mockFrozenUTXOs);
+      expect(mockTxBuilder.addRecipientByScript).toHaveBeenCalledWith(
+        mockOutput.value,
+        mockOutput.script_pubkey,
+      );
+      expect(mockTxBuilder.feeRate).toHaveBeenCalledWith(mockFeeRate);
+      expect(mockTxBuilder.untouchedOrdering).toHaveBeenCalled();
+      expect(mockTxBuilder.finish).toHaveBeenCalled();
+      expect(fee).toBe(mockFee);
+    });
+
+    it('computes fee for PSBT with change output', async () => {
+      mockRepository.getWithSigner.mockResolvedValueOnce({
+        ...mockAccount,
+        isMine: () => true,
+      });
+
+      const fee = await useCases.getFeeForPsbt('account-id', mockTemplatePsbt);
+
+      expect(mockTxBuilder.drainToByScript).toHaveBeenCalledWith(
+        mockOutput.script_pubkey,
+      );
+      expect(mockTxBuilder.addRecipientByScript).not.toHaveBeenCalled();
+      expect(fee).toBe(mockFee);
+    });
+
+    it('uses fallback fee rate when estimate is not available', async () => {
+      mockChain.getFeeEstimates.mockResolvedValueOnce({
+        ...mockFeeEstimates,
+        get: () => undefined,
+      });
+
+      await useCases.getFeeForPsbt('account-id', mockTemplatePsbt);
+
+      expect(mockTxBuilder.feeRate).toHaveBeenCalledWith(fallbackFeeRate);
+    });
+  });
 });

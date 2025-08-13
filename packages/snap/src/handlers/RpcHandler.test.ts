@@ -1,16 +1,17 @@
-import type { Psbt, Txid } from '@metamask/bitcoindevkit';
+import { Psbt } from '@metamask/bitcoindevkit';
+import type { Amount, Txid } from '@metamask/bitcoindevkit';
 import type { JsonRpcRequest } from '@metamask/utils';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
-import type { SendFlowUseCases } from '../use-cases';
+import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
 import {
   CreateSendFormRequest,
+  GetFeeForTransactionRequest,
   RpcHandler,
   RpcMethod,
   SendPsbtRequest,
 } from './RpcHandler';
-import type { AccountUseCases } from '../use-cases/AccountUseCases';
 
 jest.mock('superstruct', () => ({
   ...jest.requireActual('superstruct'),
@@ -21,7 +22,7 @@ const mockPsbt = mock<Psbt>();
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
 /* eslint-disable @typescript-eslint/naming-convention */
 jest.mock('@metamask/bitcoindevkit', () => ({
-  Psbt: { from_string: () => mockPsbt },
+  Psbt: { from_string: jest.fn() },
 }));
 
 describe('RpcHandler', () => {
@@ -30,6 +31,10 @@ describe('RpcHandler', () => {
   const origin = 'metamask';
 
   const handler = new RpcHandler(mockSendFlowUseCases, mockAccountsUseCases);
+
+  beforeEach(() => {
+    jest.mocked(Psbt.from_string).mockReturnValue(mockPsbt);
+  });
 
   describe('route', () => {
     const mockRequest = mock<JsonRpcRequest>({
@@ -147,6 +152,66 @@ describe('RpcHandler', () => {
       await expect(handler.route(origin, mockRequest)).rejects.toThrow(error);
 
       expect(mockAccountsUseCases.fillAndSendPsbt).toHaveBeenCalled();
+    });
+  });
+
+  describe('getFeeForTransaction', () => {
+    const psbt = 'someEncodedPsbt';
+    const mockRequest = mock<JsonRpcRequest>({
+      method: RpcMethod.GetFeeForTransaction,
+      params: {
+        account: 'account-id',
+        psbt,
+      },
+    });
+
+    it('executes getFeeForTransaction', async () => {
+      const mockAmount = mock<Amount>({
+        to_sat: jest.fn().mockReturnValue(1000n),
+      });
+      mockAccountsUseCases.getFeeForPsbt.mockResolvedValue(mockAmount);
+
+      const result = await handler.route(origin, mockRequest);
+
+      expect(assert).toHaveBeenCalledWith(
+        mockRequest.params,
+        GetFeeForTransactionRequest,
+      );
+      expect(Psbt.from_string).toHaveBeenCalledWith(psbt);
+      expect(mockAccountsUseCases.getFeeForPsbt).toHaveBeenCalledWith(
+        'account-id',
+        mockPsbt,
+      );
+      expect(result).toStrictEqual({ feeInSats: '1000' });
+    });
+
+    it('propagates errors from getFeeForPsbt', async () => {
+      const error = new Error('Insufficient funds');
+      mockAccountsUseCases.getFeeForPsbt.mockRejectedValue(error);
+
+      await expect(handler.route(origin, mockRequest)).rejects.toThrow(error);
+
+      expect(mockAccountsUseCases.getFeeForPsbt).toHaveBeenCalled();
+    });
+
+    it('throws FormatError for invalid PSBT', async () => {
+      const invalidRequest = mock<JsonRpcRequest>({
+        method: RpcMethod.GetFeeForTransaction,
+        params: {
+          account: 'account-id',
+          psbt: 'invalid-psbt-base64',
+        },
+      });
+
+      jest.mocked(Psbt.from_string).mockImplementationOnce(() => {
+        throw new Error('Invalid PSBT');
+      });
+
+      await expect(handler.route(origin, invalidRequest)).rejects.toThrow(
+        'Invalid PSBT',
+      );
+
+      expect(mockAccountsUseCases.getFeeForPsbt).not.toHaveBeenCalled();
     });
   });
 });
