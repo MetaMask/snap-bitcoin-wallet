@@ -1,63 +1,45 @@
-# Bitcoin Snap Monorepo
+# Bitcoin Wallet Snap Monorepo
 
-<img src="./packages/snap/images/icon.svg" width="200" style="display: block; margin: 0 auto;" alt="Bitcoin Logo" />
+![Hero Illustration](docs/hero.png)
 
-## Getting Started
+Bringing official Bitcoin support to MetaMask. Create accounts, check balances, and perform Bitcoin transactions right from your MetaMask wallet. Simple, secure, and seamless.
 
-The Bitcoin Snap allows MetaMask and dapps to support all Bitcoin-related networks and address types.
+## Installation
 
-- [@metamask/bitcoin-wallet-snap](packages/snap/README.md)
-- [@metamask/bitcoin-wallet-test-dapp](packages/site/README.md)
+This repository contains the Bitcoin Wallet Snap, a MetaMask plugin for the browser extension and mobile app. To use it, you'll need to:
 
-### Prerequisites
-
-- [MetaMask Flask](https://metamask.io/flask/)
-- Nodejs `20`. We **strongly** recommend you install via [NVM](https://github.com/creationix/nvm) to avoid incompatibility issues between different node projects.
-  - Once installed, you should also install [Yarn](http://yarnpkg.com/) with `npm i -g yarn` to make working with this repository easiest.
-
-## Installing
+1. First, clone and set up the [MetaMask Extension repository](https://github.com/MetaMask/metamask-extension)
+2. Then install this snap in your local MetaMask extension development environment:
 
 ```bash
-nvm use 20
-yarn install
+# In your metamask-extension directory
+npm i @metamask/bitcoin-wallet-snap
+# or
+yarn add @metamask/bitcoin-wallet-snap
 ```
 
-## Configuration
+This dual repository setup allows you to develop and test the Bitcoin Wallet Snap alongside the main MetaMask extension. The snap is installed as a dependency in the MetaMask extension repository, where it can be tested and integrated.
 
-please see `./src/packages/.env.example` for reference
+## API Documentation
 
-## Running
+MetaMask interacts with the Bitcoin Wallet Snap via its [JSON-RPC API](packages/snap/openrpc.json). The complete API specification is documented in the OpenRPC format.
 
-### Quick Start
+### Viewing the API Documentation
 
-```bash
-yarn start
-```
+The API documentation is located in [`packages/snap/openrpc.json`](packages/snap/openrpc.json). To view it in a user-friendly format:
 
-- Snap server and debug page: http://localhost:8080/
-- Example UI dapp: http://localhost:3000/
+1. Go to the [OpenRPC Playground](https://playground.open-rpc.org/), or any other OpenRPC viewer of your liking
+2. Copy the contents of [`packages/snap/openrpc.json`](packages/snap/openrpc.json)
+3. Paste it into the playground's editor
+4. Explore the interactive documentation with method details, parameters, examples, and error specifications
 
-### Snap
+### Available Methods
 
-⚠️ When snap updates you will need to still reconnect from the dapp to see changes
+The API includes methods for:
 
-```bash
-# Running Snap via watch mode
-yarn workspace @metamask/bitcoin-wallet-snap start
-```
+- **Wallet operations** - Account management, transaction signing and broadcasting, PSBT signing, coin selection and more.
+- **Client-only requests** (as defined in [SIP-31](https://github.com/MetaMask/SIPs/blob/main/SIPS/sip-31.md)) - For operations like Swap/Bridge without user confirmation
 
-Alternatively you can build and serve the snap manually. This can sometimes be more stable than watch mode but requires
-a manual rebuild and serve anytime there is a change on the snap.
+## Contributing
 
-```bash
-# Building and serving snap manually
-yarn workspace @metamask/bitcoin-wallet-snap build
-yarn workspace @metamask/bitcoin-wallet-snap serve
-```
-
-### Example UI
-
-```bash
-# Running example UI
-yarn workspace example start
-```
+We welcome contributions to the Bitcoin Wallet Snap! Please read our [Contributing](docs/contributing.md) guidelines to get started.
