@@ -10,6 +10,7 @@ import { FormatError, InexistentMethodError } from '../entities';
 export enum RpcMethod {
   StartSendTransactionFlow = 'startSendTransactionFlow',
   FillAndSendPsbt = 'fillAndSendPsbt',
+  GetFeeForTransaction = 'getFeeForTransaction',
 }
 
 export const CreateSendFormRequest = object({
@@ -23,8 +24,17 @@ export const SendPsbtRequest = object({
   psbt: string(),
 });
 
+export const GetFeeForTransactionRequest = object({
+  account: string(),
+  psbt: string(),
+});
+
 export type SendTransactionResponse = {
   txid: string;
+};
+
+export type GetTransactionFeesResponse = {
+  feeInSats: string;
 };
 
 export class RpcHandler {
@@ -55,6 +65,10 @@ export class RpcHandler {
         assert(params, SendPsbtRequest);
         return this.#fillAndSend(params.account, params.psbt, origin);
       }
+      case RpcMethod.GetFeeForTransaction: {
+        assert(params, GetFeeForTransactionRequest);
+        return this.#computeFeesForTransaction(params.account, params.psbt);
+      }
 
       default:
         throw new InexistentMethodError(`Method not found: ${method}`);
@@ -78,12 +92,7 @@ export class RpcHandler {
     psbtBase64: string,
     origin: string,
   ): Promise<SendTransactionResponse | null> {
-    let psbt: Psbt;
-    try {
-      psbt = Psbt.from_string(psbtBase64);
-    } catch (error) {
-      throw new FormatError('Invalid PSBT', { account, psbtBase64 }, error);
-    }
+    const psbt: Psbt = this.#parsePsbt(psbtBase64, account);
 
     const txid = await this.#accountUseCases.fillAndSendPsbt(
       account,
@@ -92,5 +101,22 @@ export class RpcHandler {
     );
 
     return { txid: txid.toString() };
+  }
+
+  async #computeFeesForTransaction(
+    account: string,
+    psbtBase64: string,
+  ): Promise<GetTransactionFeesResponse | null> {
+    const psbt: Psbt = this.#parsePsbt(psbtBase64, account);
+    const amount = await this.#accountUseCases.getFeeForPsbt(account, psbt);
+    return { feeInSats: amount.to_sat().toString() };
+  }
+
+  #parsePsbt(psbtBase64: string, account: string): Psbt {
+    try {
+      return Psbt.from_string(psbtBase64);
+    } catch (error) {
+      throw new FormatError('Invalid PSBT', { account, psbtBase64 }, error);
+    }
   }
 }
