@@ -54,7 +54,7 @@ export class RpcHandler {
       }
       case RpcMethod.SignAndSendTransaction: {
         assert(params, SendPsbtRequest);
-        return this.signAndSend(params.accountId, params.transaction, origin);
+        return this.#signAndSend(params.accountId, params.transaction, origin);
       }
 
       default:
@@ -74,20 +74,20 @@ export class RpcHandler {
     return { transactionId: txid.toString() };
   }
 
-  async signAndSend(
-    account: string,
-    psbtBase64: string,
+  async #signAndSend(
+    accountId: string,
+    transaction: string,
     origin: string,
   ): Promise<SendTransactionResponse | null> {
     let psbt: Psbt;
     try {
-      psbt = Psbt.from_string(psbtBase64);
+      psbt = Psbt.from_string(transaction);
     } catch (error) {
-      throw new FormatError('Invalid PSBT', { account, psbtBase64 }, error);
+      throw new FormatError('Invalid PSBT', { accountId, transaction }, error);
     }
 
     const txid = await this.#accountUseCases.fillAndSendPsbt(
-      account,
+      accountId,
       psbt,
       origin,
     );
