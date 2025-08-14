@@ -116,9 +116,9 @@ describe('OnClientRequestHandler', () => {
       code: -32000,
       message: 'Invalid format: Invalid PSBT',
       data: {
-        account: account.id,
+        accountId: account.id,
         cause: null,
-        psbtBase64: 'notAPsbt',
+        transaction: 'notAPsbt',
       },
       stack: expect.anything(),
     });
