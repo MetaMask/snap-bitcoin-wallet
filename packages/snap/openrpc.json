@@ -1,0 +1,124 @@
+{
+  "openrpc": "1.2.6",
+  "info": {
+    "title": "Bitcoin Snap Client RPC API",
+    "description": "RPC methods exposed via the onClientRequest handler in the Bitcoin Wallet Snap.",
+    "version": "1.0.0"
+  },
+  "methods": [
+    {
+      "name": "startSendTransactionFlow",
+      "description": "Initiates the send transaction flow for the specified account, potentially displaying UI and returning the transaction ID if successful.",
+      "paramStructure": "by-name",
+      "params": [
+        {
+          "name": "account",
+          "description": "The account ID to use for the transaction.",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "scope",
+          "description": "The Bitcoin scope (network). Not used internally but validated.",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "bip122:000000000019d6689c085ae165831e93",
+              "bip122:000000000933ea01ad0ee984209779ba",
+              "bip122:00000000da84f2bafbbc53dee25a72ae",
+              "bip122:00000008819873e925422c1ff0f99f7c",
+              "bip122:regtest"
+            ]
+          }
+        },
+        {
+          "name": "assetId",
+          "description": "The asset ID. Not used internally but validated.",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "result": {
+        "name": "sendTransactionResponse",
+        "description": "The result of the send operation, or null if cancelled.",
+        "schema": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "required": ["transactionId"],
+              "properties": {
+                "transactionId": {
+                  "type": "string",
+                  "description": "The transaction ID."
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "signAndSendTransaction",
+      "description": "Signs and sends a partially signed Bitcoin transaction (PSBT) for the specified account.",
+      "paramStructure": "by-name",
+      "params": [
+        {
+          "name": "accountId",
+          "description": "The account ID to use for signing and sending.",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "scope",
+          "description": "The Bitcoin scope (network). Not used internally but validated.",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "bip122:000000000019d6689c085ae165831e93",
+              "bip122:000000000933ea01ad0ee984209779ba",
+              "bip122:00000000da84f2bafbbc53dee25a72ae",
+              "bip122:00000008819873e925422c1ff0f99f7c",
+              "bip122:regtest"
+            ]
+          }
+        },
+        {
+          "name": "transaction",
+          "description": "The base64-encoded PSBT string.",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "result": {
+        "name": "sendTransactionResponse",
+        "description": "The result of the send operation, or null if failed.",
+        "schema": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "required": ["transactionId"],
+              "properties": {
+                "transactionId": {
+                  "type": "string",
+                  "description": "The transaction ID."
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
