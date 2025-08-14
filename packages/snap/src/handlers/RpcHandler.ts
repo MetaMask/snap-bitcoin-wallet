@@ -121,11 +121,11 @@ export class RpcHandler {
 
   async #computeFee(
     account: string,
-    psbtBase64: string,
+    transaction: string,
     scope: BtcScope,
   ): Promise<ComputeFeeResponse | null> {
-    const psbt: Psbt = this.#parsePsbt(psbtBase64, account);
-    const amount = await this.#accountUseCases.getFeeForPsbt(account, psbt);
+    const psbt: Psbt = this.#parsePsbt(transaction, account);
+    const amount = await this.#accountUseCases.computeFee(account, psbt);
     const caip19 = networkToCaip19[scopeToNetwork[scope]];
 
     return {
@@ -143,11 +143,11 @@ export class RpcHandler {
     };
   }
 
-  #parsePsbt(psbtBase64: string, account: string): Psbt {
+  #parsePsbt(transaction: string, account: string): Psbt {
     try {
-      return Psbt.from_string(psbtBase64);
+      return Psbt.from_string(transaction);
     } catch (error) {
-      throw new FormatError('Invalid PSBT', { account, psbtBase64 }, error);
+      throw new FormatError('Invalid PSBT', { account, transaction }, error);
     }
   }
 }

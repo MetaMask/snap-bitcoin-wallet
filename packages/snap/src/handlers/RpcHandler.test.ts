@@ -171,7 +171,7 @@ describe('RpcHandler', () => {
       const mockAmount = mock<Amount>({
         to_btc: jest.fn().mockReturnValue('0.00001'),
       });
-      mockAccountsUseCases.getFeeForPsbt.mockResolvedValue(mockAmount);
+      mockAccountsUseCases.computeFee.mockResolvedValue(mockAmount);
 
       const result = await handler.route(origin, mockRequest);
 
@@ -180,7 +180,7 @@ describe('RpcHandler', () => {
         ComputeFeeRequest,
       );
       expect(Psbt.from_string).toHaveBeenCalledWith(psbt);
-      expect(mockAccountsUseCases.getFeeForPsbt).toHaveBeenCalledWith(
+      expect(mockAccountsUseCases.computeFee).toHaveBeenCalledWith(
         'account-id',
         mockPsbt,
       );
@@ -201,11 +201,11 @@ describe('RpcHandler', () => {
 
     it('propagates errors from getFeeForPsbt', async () => {
       const error = new Error('Insufficient funds');
-      mockAccountsUseCases.getFeeForPsbt.mockRejectedValue(error);
+      mockAccountsUseCases.computeFee.mockRejectedValue(error);
 
       await expect(handler.route(origin, mockRequest)).rejects.toThrow(error);
 
-      expect(mockAccountsUseCases.getFeeForPsbt).toHaveBeenCalled();
+      expect(mockAccountsUseCases.computeFee).toHaveBeenCalled();
     });
 
     it('throws FormatError for invalid PSBT', async () => {
@@ -226,7 +226,7 @@ describe('RpcHandler', () => {
         'Invalid PSBT',
       );
 
-      expect(mockAccountsUseCases.getFeeForPsbt).not.toHaveBeenCalled();
+      expect(mockAccountsUseCases.computeFee).not.toHaveBeenCalled();
     });
   });
 });

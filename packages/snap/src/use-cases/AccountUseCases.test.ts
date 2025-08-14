@@ -1110,12 +1110,12 @@ describe('AccountUseCases', () => {
       mockRepository.getWithSigner.mockResolvedValue(null);
 
       await expect(
-        useCases.getFeeForPsbt('account-id', mockTemplatePsbt),
+        useCases.computeFee('account-id', mockTemplatePsbt),
       ).rejects.toThrow('Account not found');
     });
 
     it('computes fee for PSBT without change output', async () => {
-      const fee = await useCases.getFeeForPsbt('account-id', mockTemplatePsbt);
+      const fee = await useCases.computeFee('account-id', mockTemplatePsbt);
 
       expect(mockRepository.getWithSigner).toHaveBeenCalledWith('account-id');
       expect(mockRepository.getFrozenUTXOs).toHaveBeenCalledWith('account-id');
@@ -1137,7 +1137,7 @@ describe('AccountUseCases', () => {
         isMine: () => true,
       });
 
-      const fee = await useCases.getFeeForPsbt('account-id', mockTemplatePsbt);
+      const fee = await useCases.computeFee('account-id', mockTemplatePsbt);
 
       expect(mockTxBuilder.drainToByScript).toHaveBeenCalledWith(
         mockOutput.script_pubkey,
@@ -1152,7 +1152,7 @@ describe('AccountUseCases', () => {
         get: () => undefined,
       });
 
-      await useCases.getFeeForPsbt('account-id', mockTemplatePsbt);
+      await useCases.computeFee('account-id', mockTemplatePsbt);
 
       expect(mockTxBuilder.feeRate).toHaveBeenCalledWith(fallbackFeeRate);
     });

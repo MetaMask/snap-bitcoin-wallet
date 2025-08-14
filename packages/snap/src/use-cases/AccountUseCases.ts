@@ -354,7 +354,7 @@ export class AccountUseCases {
     return txid;
   }
 
-  async getFeeForPsbt(id: string, templatePsbt: Psbt): Promise<Amount> {
+  async computeFee(id: string, templatePsbt: Psbt): Promise<Amount> {
     this.#logger.debug('Getting fee amount for Psbt for account id: %s', id);
 
     const account = await this.#repository.getWithSigner(id);
