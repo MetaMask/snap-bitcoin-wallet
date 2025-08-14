@@ -51,9 +51,9 @@
             { "type": "null" },
             {
               "type": "object",
-              "required": ["txid"],
+              "required": ["transactionId"],
               "properties": {
-                "txid": {
+                "transactionId": {
                   "type": "string",
                   "description": "The transaction ID."
                 }
@@ -64,12 +64,12 @@
       }
     },
     {
-      "name": "fillAndSendPsbt",
-      "description": "Fills and sends a partially signed Bitcoin transaction (PSBT) for the specified account.",
+      "name": "signAndSendTransaction",
+      "description": "Signs and sends a partially signed Bitcoin transaction (PSBT) for the specified account.",
       "paramStructure": "by-name",
       "params": [
         {
-          "name": "account",
+          "name": "accountId",
           "description": "The account ID to use for signing and sending.",
           "required": true,
           "schema": {
@@ -77,7 +77,22 @@
           }
         },
         {
-          "name": "psbt",
+          "name": "scope",
+          "description": "The Bitcoin scope (network). Not used internally but validated.",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "bip122:000000000019d6689c085ae165831e93",
+              "bip122:000000000933ea01ad0ee984209779ba",
+              "bip122:00000000da84f2bafbbc53dee25a72ae",
+              "bip122:00000008819873e925422c1ff0f99f7c",
+              "bip122:regtest"
+            ]
+          }
+        },
+        {
+          "name": "transaction",
           "description": "The base64-encoded PSBT string.",
           "required": true,
           "schema": {
@@ -93,9 +108,9 @@
             { "type": "null" },
             {
               "type": "object",
-              "required": ["txid"],
+              "required": ["transactionId"],
               "properties": {
-                "txid": {
+                "transactionId": {
                   "type": "string",
                   "description": "The transaction ID."
                 }

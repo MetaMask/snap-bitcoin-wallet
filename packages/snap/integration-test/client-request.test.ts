@@ -48,7 +48,7 @@ describe('OnClientRequestHandler', () => {
 
   it('fills inputs, signs and sends an output-only PSBT', async () => {
     const response = await snap.onClientRequest({
-      method: 'fillAndSendPsbt',
+      method: 'signAndSendTransaction',
       params: {
         account: account.id,
         psbt: 'cHNidP8BAI4CAAAAAAM1gwEAAAAAACJRIORP1Ndiq325lSC/jMG0RlhATHYmuuULfXgEHUM3u5i4AAAAAAAAAAAxai8AAUSx+i9Igg4HWdcpyagCs8mzuRCklgA7nRMkm69rAAAAAAAAAAAAAQACAAAAACp2AAAAAAAAFgAUgu3FEiFNy9ZR/zSpTo9nHREjrSoAAAAAAAAAAAA=',
@@ -102,7 +102,7 @@ describe('OnClientRequestHandler', () => {
 
   it('fails if incorrect PSBT', async () => {
     const response = await snap.onClientRequest({
-      method: 'fillAndSendPsbt',
+      method: 'signAndSendTransaction',
       params: {
         account: account.id,
         psbt: 'notAPsbt',
@@ -123,7 +123,7 @@ describe('OnClientRequestHandler', () => {
 
   it('fails if missing params', async () => {
     const response = await snap.onClientRequest({
-      method: 'fillAndSendPsbt',
+      method: 'signAndSendTransaction',
       params: {
         account: null,
       },
