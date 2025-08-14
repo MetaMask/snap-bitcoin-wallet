@@ -26,7 +26,7 @@ The codebase is organized under `packages/snap/src/` with directories mirroring 
 
 ### 1. Entities (`src/entities/`)
 
-- **Purpose**: Defines the core domain models and types that represent Bitcoin concepts, independent of any external implementation.
+- **Purpose**: Defines the core domain models and types that represent core concepts, independent of any external implementation.
 - **Key Files**:
   - `account.ts`: Defines `BitcoinAccount` interface (e.g., methods like `peekAddress()`, `startSync()`, balance handling).
   - `transaction.ts`: Defines `TransactionBuilder` for building PSBTs (Partially Signed Bitcoin Transactions).
@@ -101,7 +101,7 @@ The codebase is organized under `packages/snap/src/` with directories mirroring 
 - **BDK (Bitcoin Dev Kit)**: Core for wallet crypto (addresses, signing, balances). Wrapped in infra to abstract its Rust/Wasm API.
 - **Esplora**: Blockchain backend for queries and broadcasts. Configurable per network, with fallbacks.
 - **MetaMask Snap SDK**: For state, dialogs, and events. Wrapped in `SnapClientAdapter`.
-  BUIL- Others: Price API for rates, i18n for locales.
+- Others: Price API for rates, i18n for locales.
 
 ## Getting Started for New Devs
 
