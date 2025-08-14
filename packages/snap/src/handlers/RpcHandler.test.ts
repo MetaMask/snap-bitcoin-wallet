@@ -86,7 +86,7 @@ describe('RpcHandler', () => {
         mockPsbt,
         'metamask',
       );
-      expect(result).toStrictEqual({ txid: 'txId' });
+      expect(result).toStrictEqual({ transactionId: 'txId' });
     });
 
     it('propagates errors from display', async () => {
@@ -117,8 +117,8 @@ describe('RpcHandler', () => {
     const mockRequest = mock<JsonRpcRequest>({
       method: RpcMethod.SignAndSendTransaction,
       params: {
-        account: 'account-id',
-        psbt,
+        accountId: 'account-id',
+        transaction: psbt,
       },
     });
 
@@ -137,7 +137,7 @@ describe('RpcHandler', () => {
         mockPsbt,
         'metamask',
       );
-      expect(result).toStrictEqual({ txid: 'txId' });
+      expect(result).toStrictEqual({ transactionId: 'txId' });
     });
 
     it('propagates errors from signAndSendTransaction', async () => {

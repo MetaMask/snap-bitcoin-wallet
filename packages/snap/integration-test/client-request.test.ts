@@ -50,15 +50,18 @@ describe('OnClientRequestHandler', () => {
     const response = await snap.onClientRequest({
       method: 'signAndSendTransaction',
       params: {
-        account: account.id,
-        psbt: 'cHNidP8BAI4CAAAAAAM1gwEAAAAAACJRIORP1Ndiq325lSC/jMG0RlhATHYmuuULfXgEHUM3u5i4AAAAAAAAAAAxai8AAUSx+i9Igg4HWdcpyagCs8mzuRCklgA7nRMkm69rAAAAAAAAAAAAAQACAAAAACp2AAAAAAAAFgAUgu3FEiFNy9ZR/zSpTo9nHREjrSoAAAAAAAAAAAA=',
+        accountId: account.id,
+        transaction:
+          'cHNidP8BAI4CAAAAAAM1gwEAAAAAACJRIORP1Ndiq325lSC/jMG0RlhATHYmuuULfXgEHUM3u5i4AAAAAAAAAAAxai8AAUSx+i9Igg4HWdcpyagCs8mzuRCklgA7nRMkm69rAAAAAAAAAAAAAQACAAAAACp2AAAAAAAAFgAUgu3FEiFNy9ZR/zSpTo9nHREjrSoAAAAAAAAAAAA=',
       },
     });
 
     expect(response).toRespondWith({
-      txid: expect.any(String),
+      transactionId: expect.any(String),
     });
-    const { txid } = (response.response as { result: { txid: string } }).result;
+    const { transactionId } = (
+      response.response as { result: { transactionId: string } }
+    ).result;
 
     /* eslint-disable @typescript-eslint/naming-convention */
     expect(response).toTrackEvent({
@@ -70,7 +73,7 @@ describe('OnClientRequestHandler', () => {
         chain_id: BtcScope.Regtest,
         message: 'Snap transaction submitted',
         origin: ORIGIN,
-        tx_id: txid,
+        tx_id: transactionId,
       },
     });
     /* eslint-enable @typescript-eslint/naming-convention */
@@ -94,7 +97,7 @@ describe('OnClientRequestHandler', () => {
         account_id: account.id,
         account_address: account.address,
         account_type: BtcAccountType.P2wpkh,
-        tx_id: txid,
+        tx_id: transactionId,
       },
     });
     /* eslint-enable @typescript-eslint/naming-convention */
@@ -104,8 +107,8 @@ describe('OnClientRequestHandler', () => {
     const response = await snap.onClientRequest({
       method: 'signAndSendTransaction',
       params: {
-        account: account.id,
-        psbt: 'notAPsbt',
+        accountId: account.id,
+        transaction: 'notAPsbt',
       },
     });
 
@@ -125,14 +128,14 @@ describe('OnClientRequestHandler', () => {
     const response = await snap.onClientRequest({
       method: 'signAndSendTransaction',
       params: {
-        account: null,
+        accountId: null,
       },
     });
 
     expect(response).toRespondWithError({
       code: -32000,
       message:
-        'Invalid format: At path: account -- Expected a string, but received: null',
+        'Invalid format: At path: accountId -- Expected a string, but received: null',
       stack: expect.anything(),
     });
   });
