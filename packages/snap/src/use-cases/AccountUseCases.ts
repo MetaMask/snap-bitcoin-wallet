@@ -77,25 +77,14 @@ export class AccountUseCases {
     return accounts;
   }
 
-  async #getAccountById(
-    id: string,
-    withSigner: boolean,
-  ): Promise<BitcoinAccount> {
-    const account = withSigner
-      ? await this.#repository.getWithSigner(id)
-      : await this.#repository.get(id);
+  async get(id: string): Promise<BitcoinAccount> {
+    this.#logger.debug('Fetching account: %s', id);
+
+    const account = await this.#repository.get(id);
 
     if (!account) {
       throw new NotFoundError('Account not found', { id });
     }
-
-    return account;
-  }
-
-  async get(id: string): Promise<BitcoinAccount> {
-    this.#logger.debug('Fetching account: %s', id);
-
-    const account = await this.#getAccountById(id, false);
 
     this.#logger.debug('Account found: %s', account.id);
     return account;
@@ -306,7 +295,11 @@ export class AccountUseCases {
   async delete(id: string): Promise<void> {
     this.#logger.debug('Deleting account: %s', id);
 
-    const account = await this.#getAccountById(id, false);
+    const account = await this.#repository.get(id);
+
+    if (!account) {
+      throw new NotFoundError('Account not found', { id });
+    }
 
     await this.#snapClient.emitAccountDeletedEvent(id);
     await this.#repository.delete(id);
@@ -317,7 +310,12 @@ export class AccountUseCases {
   async sendPsbt(id: string, psbt: Psbt, origin: string): Promise<Txid> {
     this.#logger.debug('Sending transaction: %s', id);
 
-    const account = await this.#getAccountById(id, true);
+    const account = await this.#repository.getWithSigner(id);
+
+    if (!account) {
+      throw new NotFoundError('Account not found', { id });
+    }
+
     const txid = await this.#signAndSendPsbt(account, psbt, origin);
 
     this.#logger.info(
@@ -337,7 +335,12 @@ export class AccountUseCases {
   ): Promise<Txid> {
     this.#logger.debug('Filling and sending transaction: %s', id);
 
-    const account = await this.#getAccountById(id, true);
+    const account = await this.#repository.getWithSigner(id);
+
+    if (!account) {
+      throw new NotFoundError('Account not found', { id });
+    }
+
     const psbt = await this.#fillPsbt(account, templatePsbt);
     const txid = await this.#signAndSendPsbt(account, psbt, origin);
 
@@ -354,7 +357,12 @@ export class AccountUseCases {
   async getFeeForPsbt(id: string, templatePsbt: Psbt): Promise<Amount> {
     this.#logger.debug('Getting fee amount for Psbt for account id: %s', id);
 
-    const account = await this.#getAccountById(id, true);
+    const account = await this.#repository.getWithSigner(id);
+
+    if (!account) {
+      throw new NotFoundError('Account not found', { id });
+    }
+
     const psbt = await this.#fillPsbt(account, templatePsbt);
     return psbt.fee();
   }
