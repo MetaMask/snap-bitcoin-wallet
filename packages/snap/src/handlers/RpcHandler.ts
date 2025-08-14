@@ -11,7 +11,7 @@ import { networkToCaip19, scopeToNetwork } from './caip';
 
 export enum RpcMethod {
   StartSendTransactionFlow = 'startSendTransactionFlow',
-  FillAndSendPsbt = 'fillAndSendPsbt',
+  SignAndSendTransaction = 'signAndSendTransaction',
   ComputeFee = 'computeFee',
 }
 
@@ -22,8 +22,9 @@ export const CreateSendFormRequest = object({
 });
 
 export const SendPsbtRequest = object({
-  account: string(),
-  psbt: string(),
+  accountId: string(),
+  transaction: string(),
+  scope: optional(enums(Object.values(BtcScope))), // We don't use the scope but need to define it for validation
 });
 
 export const ComputeFeeRequest = object({
@@ -33,7 +34,7 @@ export const ComputeFeeRequest = object({
 });
 
 export type SendTransactionResponse = {
-  txid: string;
+  transactionId: string;
 };
 
 export type ComputeFeeResponse = {
@@ -72,9 +73,9 @@ export class RpcHandler {
         assert(params, CreateSendFormRequest);
         return this.#executeSendFlow(params.account, origin);
       }
-      case RpcMethod.FillAndSendPsbt: {
+      case RpcMethod.SignAndSendTransaction: {
         assert(params, SendPsbtRequest);
-        return this.#fillAndSend(params.account, params.psbt, origin);
+        return this.#signAndSend(params.accountId, params.transaction, origin);
       }
       case RpcMethod.ComputeFee: {
         assert(params, ComputeFeeRequest);
@@ -99,23 +100,23 @@ export class RpcHandler {
       return null;
     }
     const txid = await this.#accountUseCases.sendPsbt(account, psbt, origin);
-    return { txid: txid.toString() };
+    return { transactionId: txid.toString() };
   }
 
-  async #fillAndSend(
-    account: string,
-    psbtBase64: string,
+  async #signAndSend(
+    accountId: string,
+    transaction: string,
     origin: string,
   ): Promise<SendTransactionResponse | null> {
-    const psbt: Psbt = this.#parsePsbt(psbtBase64, account);
+    const psbt: Psbt = this.#parsePsbt(transaction, accountId);
 
     const txid = await this.#accountUseCases.fillAndSendPsbt(
-      account,
+      accountId,
       psbt,
       origin,
     );
 
-    return { txid: txid.toString() };
+    return { transactionId: txid.toString() };
   }
 
   async #computeFee(

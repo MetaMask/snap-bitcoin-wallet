@@ -92,7 +92,7 @@ describe('RpcHandler', () => {
         mockPsbt,
         'metamask',
       );
-      expect(result).toStrictEqual({ txid: 'txId' });
+      expect(result).toStrictEqual({ transactionId: 'txId' });
     });
 
     it('propagates errors from display', async () => {
@@ -117,18 +117,18 @@ describe('RpcHandler', () => {
     });
   });
 
-  describe('fillAndSendPsbt', () => {
+  describe('signAndSendTransaction', () => {
     const psbt =
       'cHNidP8BAI4CAAAAAAM1gwEAAAAAACJRIORP1Ndiq325lSC/jMG0RlhATHYmuuULfXgEHUM3u5i4AAAAAAAAAAAxai8AAUSx+i9Igg4HWdcpyagCs8mzuRCklgA7nRMkm69rAAAAAAAAAAAAAQACAAAAACp2AAAAAAAAFgAUgu3FEiFNy9ZR/zSpTo9nHREjrSoAAAAAAAAAAAA=';
     const mockRequest = mock<JsonRpcRequest>({
-      method: RpcMethod.FillAndSendPsbt,
+      method: RpcMethod.SignAndSendTransaction,
       params: {
-        account: 'account-id',
-        psbt,
+        accountId: 'account-id',
+        transaction: psbt,
       },
     });
 
-    it('executes fillAndSendPsbt', async () => {
+    it('executes signAndSendTransaction', async () => {
       mockAccountsUseCases.fillAndSendPsbt.mockResolvedValue(
         mock<Txid>({
           toString: jest.fn().mockReturnValue('txId'),
@@ -143,10 +143,10 @@ describe('RpcHandler', () => {
         mockPsbt,
         'metamask',
       );
-      expect(result).toStrictEqual({ txid: 'txId' });
+      expect(result).toStrictEqual({ transactionId: 'txId' });
     });
 
-    it('propagates errors from fillAndSendPsbt', async () => {
+    it('propagates errors from signAndSendTransaction', async () => {
       const error = new Error();
       mockAccountsUseCases.fillAndSendPsbt.mockRejectedValue(error);
 
