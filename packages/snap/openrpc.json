@@ -119,6 +119,91 @@
           ]
         }
       }
+    },
+    {
+      "name": "computeFee",
+      "description": "Computes the fee for a partially signed Bitcoin transaction (PSBT) for the specified account.",
+      "paramStructure": "by-name",
+      "params": [
+        {
+          "name": "account",
+          "description": "The account ID to use for fee computation.",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "transaction",
+          "description": "The base64-encoded PSBT string.",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "scope",
+          "description": "The Bitcoin scope (network) for CAIP-19 asset identification.",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "bip122:000000000019d6689c085ae165831e93",
+              "bip122:000000000933ea01ad0ee984209779ba",
+              "bip122:00000000da84f2bafbbc53dee25a72ae",
+              "bip122:00000008819873e925422c1ff0f99f7c",
+              "bip122:regtest"
+            ]
+          }
+        }
+      ],
+      "result": {
+        "name": "computeFeeResponse",
+        "description": "The computed fee information.",
+        "schema": {
+          "type": "object",
+          "required": ["fee"],
+          "properties": {
+            "fee": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["type", "asset"],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["base", "priority"],
+                    "description": "The fee type."
+                  },
+                  "asset": {
+                    "type": "object",
+                    "required": ["unit", "type", "amount", "fungible"],
+                    "properties": {
+                      "unit": {
+                        "type": "string",
+                        "enum": ["sat", "btc"],
+                        "description": "The unit of the fee amount."
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "The CAIP-19 asset identifier."
+                      },
+                      "amount": {
+                        "type": "string",
+                        "description": "The fee amount as a string."
+                      },
+                      "fungible": {
+                        "type": "boolean",
+                        "description": "Whether the asset is fungible."
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   ]
 }
