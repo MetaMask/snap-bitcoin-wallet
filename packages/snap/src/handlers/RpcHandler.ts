@@ -9,7 +9,7 @@ import { FormatError, InexistentMethodError } from '../entities';
 
 export enum RpcMethod {
   StartSendTransactionFlow = 'startSendTransactionFlow',
-  FillAndSendPsbt = 'fillAndSendPsbt',
+  SignAndSendTransaction = 'signAndSendTransaction',
 }
 
 export const CreateSendFormRequest = object({
@@ -19,12 +19,13 @@ export const CreateSendFormRequest = object({
 });
 
 export const SendPsbtRequest = object({
-  account: string(),
-  psbt: string(),
+  accountId: string(),
+  transaction: string(),
+  scope: optional(enums(Object.values(BtcScope))), // We don't use the scope but need to define it for validation
 });
 
 export type SendTransactionResponse = {
-  txid: string;
+  transactionId: string;
 };
 
 export class RpcHandler {
@@ -51,9 +52,9 @@ export class RpcHandler {
         assert(params, CreateSendFormRequest);
         return this.#executeSendFlow(params.account, origin);
       }
-      case RpcMethod.FillAndSendPsbt: {
+      case RpcMethod.SignAndSendTransaction: {
         assert(params, SendPsbtRequest);
-        return this.#fillAndSend(params.account, params.psbt, origin);
+        return this.#signAndSend(params.accountId, params.transaction, origin);
       }
 
       default:
@@ -70,27 +71,27 @@ export class RpcHandler {
       return null;
     }
     const txid = await this.#accountUseCases.sendPsbt(account, psbt, origin);
-    return { txid: txid.toString() };
+    return { transactionId: txid.toString() };
   }
 
-  async #fillAndSend(
-    account: string,
-    psbtBase64: string,
+  async #signAndSend(
+    accountId: string,
+    transaction: string,
     origin: string,
   ): Promise<SendTransactionResponse | null> {
     let psbt: Psbt;
     try {
-      psbt = Psbt.from_string(psbtBase64);
+      psbt = Psbt.from_string(transaction);
     } catch (error) {
-      throw new FormatError('Invalid PSBT', { account, psbtBase64 }, error);
+      throw new FormatError('Invalid PSBT', { accountId, transaction }, error);
     }
 
     const txid = await this.#accountUseCases.fillAndSendPsbt(
-      account,
+      accountId,
       psbt,
       origin,
     );
 
-    return { txid: txid.toString() };
+    return { transactionId: txid.toString() };
   }
 }
