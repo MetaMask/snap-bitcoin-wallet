@@ -139,29 +139,51 @@ describe('OnClientRequestHandler', () => {
 
   it('computes fee for valid PSBT', async () => {
     const response = await snap.onClientRequest({
-      method: 'getFeeForTransaction',
+      method: 'computeFee',
       params: {
         account: account.id,
-        psbt: 'cHNidP8BAI4CAAAAAAM1gwEAAAAAACJRIORP1Ndiq325lSC/jMG0RlhATHYmuuULfXgEHUM3u5i4AAAAAAAAAAAxai8AAUSx+i9Igg4HWdcpyagCs8mzuRCklgA7nRMkm69rAAAAAAAAAAAAAQACAAAAACp2AAAAAAAAFgAUgu3FEiFNy9ZR/zSpTo9nHREjrSoAAAAAAAAAAAA=',
+        transaction:
+          'cHNidP8BAI4CAAAAAAM1gwEAAAAAACJRIORP1Ndiq325lSC/jMG0RlhATHYmuuULfXgEHUM3u5i4AAAAAAAAAAAxai8AAUSx+i9Igg4HWdcpyagCs8mzuRCklgA7nRMkm69rAAAAAAAAAAAAAQACAAAAACp2AAAAAAAAFgAUgu3FEiFNy9ZR/zSpTo9nHREjrSoAAAAAAAAAAAA=',
+        scope: BtcScope.Regtest,
       },
     });
 
     expect(response).toRespondWith({
-      feeInSats: expect.any(String),
+      fee: expect.arrayContaining([
+        expect.objectContaining({
+          type: 'base',
+          asset: expect.objectContaining({
+            unit: 'btc',
+            type: expect.any(String),
+            amount: expect.any(String),
+            fungible: true,
+          }),
+        }),
+      ]),
     });
 
-    const { feeInSats } = (
-      response.response as { result: { feeInSats: string } }
+    const { fee } = (
+      response.response as {
+        result: { fee: { asset: { amount: string } }[] };
+      }
     ).result;
-    expect(parseInt(feeInSats, 10)).toBeGreaterThan(0);
+
+    expect(fee).toHaveLength(1);
+    expect(fee[0]).toBeDefined();
+    const firstFee = fee[0];
+    expect(firstFee?.asset?.amount).not.toBeNull();
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    expect(parseFloat(firstFee!.asset.amount)).toBeGreaterThan(0);
   });
 
   it('fails to compute fee for invalid PSBT', async () => {
     const response = await snap.onClientRequest({
-      method: 'getFeeForTransaction',
+      method: 'computeFee',
       params: {
         account: account.id,
-        psbt: 'notAPsbt',
+        transaction: 'notAPsbt',
+        scope: BtcScope.Regtest,
       },
     });
 
@@ -179,7 +201,7 @@ describe('OnClientRequestHandler', () => {
 
   it('fails to compute fee if missing params', async () => {
     const response = await snap.onClientRequest({
-      method: 'getFeeForTransaction',
+      method: 'computeFee',
       params: {
         account: null,
       },

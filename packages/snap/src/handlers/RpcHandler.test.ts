@@ -1,5 +1,6 @@
 import { Psbt } from '@metamask/bitcoindevkit';
 import type { Amount, Txid } from '@metamask/bitcoindevkit';
+import { BtcScope } from '@metamask/keyring-api';
 import type { JsonRpcRequest } from '@metamask/utils';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
@@ -7,7 +8,7 @@ import { assert } from 'superstruct';
 import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
 import {
   CreateSendFormRequest,
-  GetFeeForTransactionRequest,
+  ComputeFeeRequest,
   RpcHandler,
   RpcMethod,
   SendPsbtRequest,
@@ -158,16 +159,17 @@ describe('RpcHandler', () => {
   describe('getFeeForTransaction', () => {
     const psbt = 'someEncodedPsbt';
     const mockRequest = mock<JsonRpcRequest>({
-      method: RpcMethod.GetFeeForTransaction,
+      method: RpcMethod.ComputeFee,
       params: {
         account: 'account-id',
-        psbt,
+        transaction: psbt,
+        scope: BtcScope.Mainnet,
       },
     });
 
     it('executes getFeeForTransaction', async () => {
       const mockAmount = mock<Amount>({
-        to_sat: jest.fn().mockReturnValue(1000n),
+        to_btc: jest.fn().mockReturnValue('0.00001'),
       });
       mockAccountsUseCases.getFeeForPsbt.mockResolvedValue(mockAmount);
 
@@ -175,14 +177,26 @@ describe('RpcHandler', () => {
 
       expect(assert).toHaveBeenCalledWith(
         mockRequest.params,
-        GetFeeForTransactionRequest,
+        ComputeFeeRequest,
       );
       expect(Psbt.from_string).toHaveBeenCalledWith(psbt);
       expect(mockAccountsUseCases.getFeeForPsbt).toHaveBeenCalledWith(
         'account-id',
         mockPsbt,
       );
-      expect(result).toStrictEqual({ feeInSats: '1000' });
+      expect(result).toStrictEqual({
+        fee: [
+          {
+            type: 'base',
+            asset: {
+              unit: 'btc',
+              type: 'bip122:000000000019d6689c085ae165831e93/slip44:0',
+              amount: '0.00001',
+              fungible: true,
+            },
+          },
+        ],
+      });
     });
 
     it('propagates errors from getFeeForPsbt', async () => {
@@ -196,10 +210,11 @@ describe('RpcHandler', () => {
 
     it('throws FormatError for invalid PSBT', async () => {
       const invalidRequest = mock<JsonRpcRequest>({
-        method: RpcMethod.GetFeeForTransaction,
+        method: RpcMethod.ComputeFee,
         params: {
           account: 'account-id',
-          psbt: 'invalid-psbt-base64',
+          transaction: 'invalid-psbt-base64',
+          scope: BtcScope.Mainnet,
         },
       });
 

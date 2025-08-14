@@ -6,11 +6,13 @@ import { assert, enums, object, optional, string } from 'superstruct';
 import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
 import { validateOrigin } from './permissions';
 import { FormatError, InexistentMethodError } from '../entities';
+import type { Caip19Asset } from './caip';
+import { networkToCaip19, scopeToNetwork } from './caip';
 
 export enum RpcMethod {
   StartSendTransactionFlow = 'startSendTransactionFlow',
   FillAndSendPsbt = 'fillAndSendPsbt',
-  GetFeeForTransaction = 'getFeeForTransaction',
+  ComputeFee = 'computeFee',
 }
 
 export const CreateSendFormRequest = object({
@@ -24,17 +26,26 @@ export const SendPsbtRequest = object({
   psbt: string(),
 });
 
-export const GetFeeForTransactionRequest = object({
+export const ComputeFeeRequest = object({
   account: string(),
-  psbt: string(),
+  transaction: string(),
+  scope: enums(Object.values(BtcScope)),
 });
 
 export type SendTransactionResponse = {
   txid: string;
 };
 
-export type GetTransactionFeesResponse = {
-  feeInSats: string;
+export type ComputeFeeResponse = {
+  fee: {
+    type: 'base' | 'priority';
+    asset: {
+      unit: 'sat' | 'btc';
+      type: Caip19Asset;
+      amount: string;
+      fungible: boolean;
+    };
+  }[];
 };
 
 export class RpcHandler {
@@ -65,9 +76,13 @@ export class RpcHandler {
         assert(params, SendPsbtRequest);
         return this.#fillAndSend(params.account, params.psbt, origin);
       }
-      case RpcMethod.GetFeeForTransaction: {
-        assert(params, GetFeeForTransactionRequest);
-        return this.#computeFeesForTransaction(params.account, params.psbt);
+      case RpcMethod.ComputeFee: {
+        assert(params, ComputeFeeRequest);
+        return this.#computeFee(
+          params.account,
+          params.transaction,
+          params.scope,
+        );
       }
 
       default:
@@ -103,13 +118,28 @@ export class RpcHandler {
     return { txid: txid.toString() };
   }
 
-  async #computeFeesForTransaction(
+  async #computeFee(
     account: string,
     psbtBase64: string,
-  ): Promise<GetTransactionFeesResponse | null> {
+    scope: BtcScope,
+  ): Promise<ComputeFeeResponse | null> {
     const psbt: Psbt = this.#parsePsbt(psbtBase64, account);
     const amount = await this.#accountUseCases.getFeeForPsbt(account, psbt);
-    return { feeInSats: amount.to_sat().toString() };
+    const caip19 = networkToCaip19[scopeToNetwork[scope]];
+
+    return {
+      fee: [
+        {
+          type: 'base',
+          asset: {
+            unit: 'btc',
+            type: caip19,
+            amount: amount.to_btc().toString(),
+            fungible: true,
+          },
+        },
+      ],
+    };
   }
 
   #parsePsbt(psbtBase64: string, account: string): Psbt {
