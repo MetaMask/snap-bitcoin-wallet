@@ -143,11 +143,11 @@ export class RpcHandler {
     };
   }
 
-  #parsePsbt(transaction: string, account: string): Psbt {
+  #parsePsbt(transaction: string, accountId: string): Psbt {
     try {
       return Psbt.from_string(transaction);
     } catch (error) {
-      throw new FormatError('Invalid PSBT', { account, transaction }, error);
+      throw new FormatError('Invalid PSBT', { accountId, transaction }, error);
     }
   }
 }
