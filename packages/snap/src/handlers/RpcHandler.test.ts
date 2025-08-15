@@ -156,7 +156,7 @@ describe('RpcHandler', () => {
     });
   });
 
-  describe('getFeeForTransaction', () => {
+  describe('computeFee', () => {
     const psbt = 'someEncodedPsbt';
     const mockRequest = mock<JsonRpcRequest>({
       method: RpcMethod.ComputeFee,
@@ -167,7 +167,7 @@ describe('RpcHandler', () => {
       },
     });
 
-    it('executes getFeeForTransaction', async () => {
+    it('executes computeFee', async () => {
       const mockAmount = mock<Amount>({
         to_btc: jest.fn().mockReturnValue('0.00001'),
       });
@@ -199,7 +199,7 @@ describe('RpcHandler', () => {
       });
     });
 
-    it('propagates errors from getFeeForPsbt', async () => {
+    it('propagates errors from computeFee', async () => {
       const error = new Error('Insufficient funds');
       mockAccountsUseCases.computeFee.mockRejectedValue(error);
 

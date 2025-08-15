@@ -81,7 +81,6 @@ export class AccountUseCases {
     this.#logger.debug('Fetching account: %s', id);
 
     const account = await this.#repository.get(id);
-
     if (!account) {
       throw new NotFoundError('Account not found', { id });
     }
@@ -296,7 +295,6 @@ export class AccountUseCases {
     this.#logger.debug('Deleting account: %s', id);
 
     const account = await this.#repository.get(id);
-
     if (!account) {
       throw new NotFoundError('Account not found', { id });
     }
@@ -311,7 +309,6 @@ export class AccountUseCases {
     this.#logger.debug('Sending transaction: %s', id);
 
     const account = await this.#repository.getWithSigner(id);
-
     if (!account) {
       throw new NotFoundError('Account not found', { id });
     }
@@ -336,7 +333,6 @@ export class AccountUseCases {
     this.#logger.debug('Filling and sending transaction: %s', id);
 
     const account = await this.#repository.getWithSigner(id);
-
     if (!account) {
       throw new NotFoundError('Account not found', { id });
     }
@@ -358,7 +354,6 @@ export class AccountUseCases {
     this.#logger.debug('Getting fee amount for Psbt for account id: %s', id);
 
     const account = await this.#repository.getWithSigner(id);
-
     if (!account) {
       throw new NotFoundError('Account not found', { id });
     }

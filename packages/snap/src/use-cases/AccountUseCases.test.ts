@@ -1061,7 +1061,7 @@ describe('AccountUseCases', () => {
     });
   });
 
-  describe('getFeeForPsbt', () => {
+  describe('computeFee', () => {
     const mockFee = mock<Amount>();
     const mockOutput = mock<TxOut>({
       script_pubkey: mock<ScriptBuf>(),
