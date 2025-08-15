@@ -809,7 +809,7 @@ describe('AccountUseCases', () => {
       mockRepository.getWithSigner.mockResolvedValue(null);
 
       await expect(
-        useCases.sendPsbt('non-existent-id', mockPsbt, 'metamask'),
+        useCases.signPsbt('non-existent-id', mockPsbt, 'metamask'),
       ).rejects.toThrow('Account not found');
     });
 
@@ -818,7 +818,7 @@ describe('AccountUseCases', () => {
       mockAccount.getTransaction.mockReturnValue(mockWalletTx);
       mockTransaction.compute_txid.mockReturnValue(mockTxid);
 
-      const txId = await useCases.sendPsbt('account-id', mockPsbt, 'metamask');
+      const txId = await useCases.signPsbt('account-id', mockPsbt, 'metamask');
 
       expect(mockRepository.getWithSigner).toHaveBeenCalledWith('account-id');
       expect(mockAccount.sign).toHaveBeenCalledWith(mockPsbt);
@@ -848,7 +848,7 @@ describe('AccountUseCases', () => {
       mockRepository.getWithSigner.mockRejectedValueOnce(error);
 
       await expect(
-        useCases.sendPsbt('account-id', mockPsbt, 'metamask'),
+        useCases.signPsbt('account-id', mockPsbt, 'metamask'),
       ).rejects.toBe(error);
     });
 
@@ -858,7 +858,7 @@ describe('AccountUseCases', () => {
       mockChain.broadcast.mockRejectedValueOnce(error);
 
       await expect(
-        useCases.sendPsbt('account-id', mockPsbt, 'metamask'),
+        useCases.signPsbt('account-id', mockPsbt, 'metamask'),
       ).rejects.toBe(error);
     });
 
@@ -868,7 +868,7 @@ describe('AccountUseCases', () => {
       mockRepository.update.mockRejectedValue(error);
 
       await expect(
-        useCases.sendPsbt('account-id', mockPsbt, 'metamask'),
+        useCases.signPsbt('account-id', mockPsbt, 'metamask'),
       ).rejects.toBe(error);
     });
   });

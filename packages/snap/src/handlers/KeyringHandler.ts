@@ -13,6 +13,7 @@ import {
   ListAccountsRequestStruct,
   ListAccountTransactionsRequestStruct,
   MetaMaskOptionsStruct,
+  SubmitRequestRequestStruct,
 } from '@metamask/keyring-api';
 import type {
   Keyring,
@@ -26,6 +27,7 @@ import type {
   Pagination,
   MetaMaskOptions,
   DiscoveredAccount,
+  KeyringRequest,
 } from '@metamask/keyring-api';
 import type { Json, JsonRpcRequest } from '@metamask/utils';
 import {
@@ -52,6 +54,7 @@ import {
   scopeToNetwork,
   networkToScope,
 } from './caip';
+import { KeyringRequestHandler } from './KeyringRequestHandler';
 import {
   mapToDiscoveredAccount,
   mapToKeyringAccount,
@@ -74,11 +77,16 @@ export const CreateAccountRequest = object({
 export class KeyringHandler implements Keyring {
   readonly #accountsUseCases: AccountUseCases;
 
+  readonly #keyringRequest: KeyringRequestHandler;
+
   readonly #defaultAddressType: AddressType;
 
   constructor(accounts: AccountUseCases, defaultAddressType: AddressType) {
     this.#accountsUseCases = accounts;
     this.#defaultAddressType = defaultAddressType;
+
+    // Not a dependency, used to separate the logic and concerns.
+    this.#keyringRequest = new KeyringRequestHandler(accounts);
   }
 
   async route(origin: string, request: JsonRpcRequest): Promise<Json> {
@@ -130,6 +138,11 @@ export class KeyringHandler implements Keyring {
       case `${KeyringRpcMethod.DeleteAccount}`: {
         assert(request, DeleteAccountRequestStruct);
         await this.deleteAccount(request.params.id);
+        return null;
+      }
+      case `${KeyringRpcMethod.SubmitRequest}`: {
+        assert(request, SubmitRequestRequestStruct);
+        await this.submitRequest(request.params);
         return null;
       }
 
@@ -294,8 +307,8 @@ export class KeyringHandler implements Keyring {
     };
   }
 
-  async submitRequest(): Promise<KeyringResponse> {
-    throw new InexistentMethodError('Method not supported.');
+  async submitRequest(request: KeyringRequest): Promise<KeyringResponse> {
+    return await this.#keyringRequest.route(request);
   }
 
   #extractAddressType(path: string): AddressType {

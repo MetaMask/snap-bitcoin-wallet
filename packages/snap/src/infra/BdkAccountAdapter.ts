@@ -25,6 +25,7 @@ import {
 } from '@metamask/bitcoindevkit';
 
 import {
+  AccountCapability,
   ValidationError,
   WalletError,
   type BitcoinAccount,
@@ -39,10 +40,13 @@ export class BdkAccountAdapter implements BitcoinAccount {
 
   readonly #wallet: Wallet;
 
+  readonly #capabilities: AccountCapability[];
+
   constructor(id: string, derivationPath: string[], wallet: Wallet) {
     this.#id = id;
     this.#derivationPath = derivationPath;
     this.#wallet = wallet;
+    this.#capabilities = Object.values(AccountCapability);
   }
 
   static create(
@@ -119,6 +123,10 @@ export class BdkAccountAdapter implements BitcoinAccount {
     return this.peekAddress(0).address;
   }
 
+  get capabilities(): AccountCapability[] {
+    return this.#capabilities;
+  }
+
   peekAddress(index: number): AddressInfo {
     return this.#wallet.peek_address('external', index);
   }
@@ -151,7 +159,7 @@ export class BdkAccountAdapter implements BitcoinAccount {
     return new BdkTxBuilderAdapter(this.#wallet.build_tx(), this.network);
   }
 
-  sign(psbt: Psbt, maxFeeRate?: number): Transaction {
+  sign(psbt: Psbt): Psbt {
     try {
       const finalized = this.#wallet.sign(psbt, new SignOptions());
       // Signing a PSBT does not mean that the tx/psbt is final, like in a multi-sig setup.
@@ -162,6 +170,8 @@ export class BdkAccountAdapter implements BitcoinAccount {
           id: this.#id,
         });
       }
+
+      return psbt;
     } catch (error) {
       throw new WalletError(
         'failed to sign PSBT',
@@ -172,7 +182,9 @@ export class BdkAccountAdapter implements BitcoinAccount {
         error,
       );
     }
+  }
 
+  extractTransaction(psbt: Psbt, maxFeeRate?: number): Transaction {
     try {
       return maxFeeRate
         ? psbt.extract_tx_with_fee_rate_limit(

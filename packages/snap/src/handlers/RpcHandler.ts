@@ -5,7 +5,11 @@ import { assert, enums, object, optional, string } from 'superstruct';
 
 import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
 import { validateOrigin } from './permissions';
-import { FormatError, InexistentMethodError } from '../entities';
+import {
+  AssertionError,
+  FormatError,
+  InexistentMethodError,
+} from '../entities';
 
 export enum RpcMethod {
   StartSendTransactionFlow = 'startSendTransactionFlow',
@@ -70,7 +74,16 @@ export class RpcHandler {
     if (!psbt) {
       return null;
     }
-    const txid = await this.#accountUseCases.sendPsbt(account, psbt, origin);
+    const { txid } = await this.#accountUseCases.signPsbt(
+      account,
+      psbt,
+      origin,
+      { fill: false, broadcast: true },
+    );
+    if (!txid) {
+      throw new AssertionError('Missing transaction ID ');
+    }
+
     return { transactionId: txid.toString() };
   }
 
@@ -86,11 +99,18 @@ export class RpcHandler {
       throw new FormatError('Invalid PSBT', { accountId, transaction }, error);
     }
 
-    const txid = await this.#accountUseCases.fillAndSendPsbt(
+    const { txid } = await this.#accountUseCases.signPsbt(
       accountId,
       psbt,
       origin,
+      {
+        fill: true,
+        broadcast: true,
+      },
     );
+    if (!txid) {
+      throw new AssertionError('Missing transaction ID ');
+    }
 
     return { transactionId: txid.toString() };
   }

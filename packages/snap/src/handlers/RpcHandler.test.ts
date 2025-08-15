@@ -68,7 +68,7 @@ describe('RpcHandler', () => {
 
     it('executes startSendTransactionFlow', async () => {
       mockSendFlowUseCases.display.mockResolvedValue(mockPsbt);
-      mockAccountsUseCases.sendPsbt.mockResolvedValue(
+      mockAccountsUseCases.signPsbt.mockResolvedValue(
         mock<Txid>({
           toString: jest.fn().mockReturnValue('txId'),
         }),
@@ -81,7 +81,7 @@ describe('RpcHandler', () => {
         CreateSendFormRequest,
       );
       expect(mockSendFlowUseCases.display).toHaveBeenCalledWith('account-id');
-      expect(mockAccountsUseCases.sendPsbt).toHaveBeenCalledWith(
+      expect(mockAccountsUseCases.signPsbt).toHaveBeenCalledWith(
         'account-id',
         mockPsbt,
         'metamask',
@@ -96,18 +96,18 @@ describe('RpcHandler', () => {
       await expect(handler.route(origin, mockRequest)).rejects.toThrow(error);
 
       expect(mockSendFlowUseCases.display).toHaveBeenCalled();
-      expect(mockAccountsUseCases.sendPsbt).not.toHaveBeenCalled();
+      expect(mockAccountsUseCases.signPsbt).not.toHaveBeenCalled();
     });
 
     it('propagates errors from send', async () => {
       const error = new Error();
       mockSendFlowUseCases.display.mockResolvedValue(mockPsbt);
-      mockAccountsUseCases.sendPsbt.mockRejectedValue(error);
+      mockAccountsUseCases.signPsbt.mockRejectedValue(error);
 
       await expect(handler.route(origin, mockRequest)).rejects.toThrow(error);
 
       expect(mockSendFlowUseCases.display).toHaveBeenCalled();
-      expect(mockAccountsUseCases.sendPsbt).toHaveBeenCalled();
+      expect(mockAccountsUseCases.signPsbt).toHaveBeenCalled();
     });
   });
 
