@@ -1,26 +1,32 @@
-import { Address } from '@metamask/bitcoindevkit';
 import type {
   Amount,
+  ChainPosition,
   Network,
   TxOut,
-  ChainPosition,
   WalletTx,
 } from '@metamask/bitcoindevkit';
+import { Address } from '@metamask/bitcoindevkit';
 import type {
   DiscoveredAccount,
   KeyringAccount,
   Transaction as KeyringTransaction,
 } from '@metamask/keyring-api';
 import {
-  TransactionStatus,
   DiscoveredAccountType,
+  FeeType,
+  TransactionStatus,
 } from '@metamask/keyring-api';
 
-import { networkToCurrencyUnit, type BitcoinAccount } from '../entities';
+import { type BitcoinAccount, networkToCurrencyUnit } from '../entities';
 import type { Caip19Asset } from './caip';
 import { addressTypeToCaip, networkToCaip19, networkToScope } from './caip';
 
-type TransactionAmount = {
+export type TransactionFee = {
+  type: FeeType;
+  asset: TransactionAmount;
+};
+
+export type TransactionAmount = {
   amount: string;
   fungible: true;
   unit: string;
@@ -115,6 +121,24 @@ const mapToEvents = (
 };
 
 /**
+ * Maps an amount & network to a Fee struct
+ *
+ * @param amount The fee amount
+ * @param network The network relevant to the fee amount
+ *
+ * @returns The transaction fee object
+ */
+export function mapToTransactionFees(
+  amount: Amount,
+  network: Network,
+): TransactionFee {
+  return {
+    type: FeeType.Priority,
+    asset: mapToAmount(amount, network),
+  };
+}
+
+/**
  * Maps a Bitcoin Transaction to a Keyring Transaction.
  *
  * @param account - The account account.
@@ -143,12 +167,7 @@ export function mapToTransaction(
     to: [],
     from: [],
     fees: isSend
-      ? [
-          {
-            type: 'priority',
-            asset: mapToAmount(account.calculateFee(tx), network),
-          },
-        ]
+      ? [mapToTransactionFees(account.calculateFee(tx), network)]
       : [],
   };
 

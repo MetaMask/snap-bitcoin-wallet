@@ -1,11 +1,11 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
-import { BtcAccountType, BtcScope } from '@metamask/keyring-api';
+import { FeeType, BtcAccountType, BtcScope } from '@metamask/keyring-api';
 import type { Snap } from '@metamask/snaps-jest';
 import { installSnap } from '@metamask/snaps-jest';
 
 import { BlockchainTestUtils } from './blockchain-utils';
 import { MNEMONIC, ORIGIN } from './constants';
-import { TrackingSnapEvent } from '../src/entities';
+import { CurrencyUnit, TrackingSnapEvent } from '../src/entities';
 
 const ACCOUNT_INDEX = 1;
 
@@ -136,6 +136,73 @@ describe('OnClientRequestHandler', () => {
       code: -32000,
       message:
         'Invalid format: At path: accountId -- Expected a string, but received: null',
+      stack: expect.anything(),
+    });
+  });
+
+  it('computes fee for valid PSBT', async () => {
+    const response = await snap.onClientRequest({
+      method: 'computeFee',
+      params: {
+        account: account.id,
+        transaction:
+          'cHNidP8BAI4CAAAAAAM1gwEAAAAAACJRIORP1Ndiq325lSC/jMG0RlhATHYmuuULfXgEHUM3u5i4AAAAAAAAAAAxai8AAUSx+i9Igg4HWdcpyagCs8mzuRCklgA7nRMkm69rAAAAAAAAAAAAAQACAAAAACp2AAAAAAAAFgAUgu3FEiFNy9ZR/zSpTo9nHREjrSoAAAAAAAAAAAA=',
+        scope: BtcScope.Regtest,
+      },
+    });
+
+    expect(response).toRespondWith([
+      {
+        type: FeeType.Priority,
+        asset: {
+          unit: CurrencyUnit.Regtest,
+          type: expect.any(String),
+          amount: expect.any(String),
+          fungible: true,
+        },
+      },
+    ]);
+
+    const fee = (
+      response.response as { result: [{ asset: { amount: string } }] }
+    ).result;
+    expect(parseFloat(fee[0].asset.amount)).toBeGreaterThan(0);
+  });
+
+  it('fails to compute fee for invalid PSBT', async () => {
+    const response = await snap.onClientRequest({
+      method: 'computeFee',
+      params: {
+        account: account.id,
+        transaction: 'notAPsbt',
+        scope: BtcScope.Regtest,
+      },
+    });
+
+    expect(response).toRespondWithError({
+      code: -32000,
+      message: 'Invalid format: Invalid PSBT',
+      data: {
+        accountId: account.id,
+        cause: null,
+        transaction: 'notAPsbt',
+      },
+      stack: expect.anything(),
+    });
+  });
+
+  it('fails to compute fee if missing params', async () => {
+    const response = await snap.onClientRequest({
+      method: 'computeFee',
+      params: {
+        account: null,
+      },
+    });
+
+    expect(response).toRespondWithError({
+      code: -32000,
+      message:
+        'Invalid format: At path: account -- Expected a string, but received: null',
       stack: expect.anything(),
     });
   });
