@@ -109,12 +109,12 @@ export class RpcHandler {
   }
 
   async #computeFee(
-    account: string,
+    accountId: string,
     transaction: string,
     scope: BtcScope,
-  ): Promise<TransactionFee[] | null> {
-    const psbt: Psbt = this.#parsePsbt(transaction, account);
-    const amount = await this.#accountUseCases.computeFee(account, psbt);
+  ): Promise<TransactionFee[]> {
+    const psbt: Psbt = this.#parsePsbt(transaction, accountId);
+    const amount = await this.#accountUseCases.computeFee(accountId, psbt);
 
     return [mapToTransactionFees(amount, scopeToNetwork[scope])];
   }

@@ -161,45 +161,40 @@
         "name": "computeFeeResponse",
         "description": "Array of computed fee information.",
         "schema": {
-          "oneOf": [
-            { "type": "null" },
-            {
-              "type": "array",
-              "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["type", "asset"],
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["base", "priority"],
+                "description": "The fee type."
+              },
+              "asset": {
                 "type": "object",
-                "required": ["type", "asset"],
+                "required": ["unit", "type", "amount", "fungible"],
                 "properties": {
+                  "unit": {
+                    "type": "string",
+                    "description": "The currency unit for the account's network."
+                  },
                   "type": {
                     "type": "string",
-                    "enum": ["base", "priority"],
-                    "description": "The fee type."
+                    "description": "The CAIP-19 asset identifier for the account's network."
                   },
-                  "asset": {
-                    "type": "object",
-                    "required": ["unit", "type", "amount", "fungible"],
-                    "properties": {
-                      "unit": {
-                        "type": "string",
-                        "description": "The currency unit for the network."
-                      },
-                      "type": {
-                        "type": "string",
-                        "description": "The CAIP-19 asset identifier."
-                      },
-                      "amount": {
-                        "type": "string",
-                        "description": "The fee amount as a string."
-                      },
-                      "fungible": {
-                        "type": "boolean",
-                        "description": "Whether the asset is fungible."
-                      }
-                    }
+                  "amount": {
+                    "type": "string",
+                    "description": "The fee amount as a string."
+                  },
+                  "fungible": {
+                    "type": "boolean",
+                    "description": "Whether the asset is fungible."
                   }
                 }
               }
             }
-          ]
+          }
         }
       }
     }
