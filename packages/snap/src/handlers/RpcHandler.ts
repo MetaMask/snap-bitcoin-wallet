@@ -6,8 +6,9 @@ import { assert, enums, object, optional, string } from 'superstruct';
 import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
 import { validateOrigin } from './permissions';
 import { FormatError, InexistentMethodError } from '../entities';
-import type { Caip19Asset } from './caip';
-import { networkToCaip19, scopeToNetwork } from './caip';
+import { scopeToNetwork } from './caip';
+import type { TransactionFee } from './mappings';
+import { mapToTransactionFees } from './mappings';
 
 export enum RpcMethod {
   StartSendTransactionFlow = 'startSendTransactionFlow',
@@ -35,18 +36,6 @@ export const ComputeFeeRequest = object({
 
 export type SendTransactionResponse = {
   transactionId: string;
-};
-
-export type ComputeFeeResponse = {
-  fee: {
-    type: 'base' | 'priority';
-    asset: {
-      unit: 'sat' | 'btc';
-      type: Caip19Asset;
-      amount: string;
-      fungible: boolean;
-    };
-  }[];
 };
 
 export class RpcHandler {
@@ -123,24 +112,11 @@ export class RpcHandler {
     account: string,
     transaction: string,
     scope: BtcScope,
-  ): Promise<ComputeFeeResponse | null> {
+  ): Promise<TransactionFee[] | null> {
     const psbt: Psbt = this.#parsePsbt(transaction, account);
     const amount = await this.#accountUseCases.computeFee(account, psbt);
-    const caip19 = networkToCaip19[scopeToNetwork[scope]];
 
-    return {
-      fee: [
-        {
-          type: 'base',
-          asset: {
-            unit: 'btc',
-            type: caip19,
-            amount: amount.to_btc().toString(),
-            fungible: true,
-          },
-        },
-      ],
-    };
+    return [mapToTransactionFees(amount, scopeToNetwork[scope])];
   }
 
   #parsePsbt(transaction: string, accountId: string): Psbt {

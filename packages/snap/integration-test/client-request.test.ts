@@ -1,11 +1,11 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
-import { BtcAccountType, BtcScope } from '@metamask/keyring-api';
+import { FeeType, BtcAccountType, BtcScope } from '@metamask/keyring-api';
 import type { Snap } from '@metamask/snaps-jest';
 import { installSnap } from '@metamask/snaps-jest';
 
 import { BlockchainTestUtils } from './blockchain-utils';
 import { MNEMONIC, ORIGIN } from './constants';
-import { TrackingSnapEvent } from '../src/entities';
+import { CurrencyUnit, TrackingSnapEvent } from '../src/entities';
 
 const ACCOUNT_INDEX = 1;
 
@@ -151,23 +151,23 @@ describe('OnClientRequestHandler', () => {
       },
     });
 
-    expect(response).toRespondWith({
-      fee: expect.arrayContaining([
+    expect(response).toRespondWith(
+      expect.arrayContaining([
         expect.objectContaining({
-          type: 'base',
+          type: 'priority',
           asset: expect.objectContaining({
-            unit: 'btc',
+            unit: CurrencyUnit.Regtest,
             type: expect.any(String),
             amount: expect.any(String),
             fungible: true,
           }),
         }),
       ]),
-    });
+    );
 
-    const { fee } = (
+    const fee = (
       response.response as {
-        result: { fee: { asset: { amount: string } }[] };
+        result: [{ asset: { amount: string }; type: string }];
       }
     ).result;
 
@@ -175,9 +175,9 @@ describe('OnClientRequestHandler', () => {
     expect(fee[0]).toBeDefined();
     const firstFee = fee[0];
     expect(firstFee?.asset?.amount).not.toBeNull();
+    expect(firstFee?.type).toBe(FeeType.Priority);
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    expect(parseFloat(firstFee!.asset.amount)).toBeGreaterThan(0);
+    expect(parseFloat(firstFee.asset.amount)).toBeGreaterThan(0);
   });
 
   it('fails to compute fee for invalid PSBT', async () => {
