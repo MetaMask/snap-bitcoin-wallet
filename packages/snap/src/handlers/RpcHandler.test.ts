@@ -1,6 +1,6 @@
 import { Psbt } from '@metamask/bitcoindevkit';
 import type { Amount, Txid } from '@metamask/bitcoindevkit';
-import { BtcScope } from '@metamask/keyring-api';
+import { BtcScope, FeeType } from '@metamask/keyring-api';
 import type { JsonRpcRequest } from '@metamask/utils';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
@@ -184,19 +184,17 @@ describe('RpcHandler', () => {
         'account-id',
         mockPsbt,
       );
-      expect(result).toStrictEqual({
-        fee: [
-          {
-            type: 'base',
-            asset: {
-              unit: 'btc',
-              type: 'bip122:000000000019d6689c085ae165831e93/slip44:0',
-              amount: '0.00001',
-              fungible: true,
-            },
+      expect(result).toStrictEqual([
+        {
+          type: FeeType.Priority,
+          asset: {
+            unit: 'BTC',
+            type: 'bip122:000000000019d6689c085ae165831e93/slip44:0',
+            amount: '0.00001',
+            fungible: true,
           },
-        ],
-      });
+        },
+      ]);
     });
 
     it('propagates errors from computeFee', async () => {
