@@ -151,33 +151,22 @@ describe('OnClientRequestHandler', () => {
       },
     });
 
-    expect(response).toRespondWith(
-      expect.arrayContaining([
-        expect.objectContaining({
-          type: 'priority',
-          asset: expect.objectContaining({
-            unit: CurrencyUnit.Regtest,
-            type: expect.any(String),
-            amount: expect.any(String),
-            fungible: true,
-          }),
-        }),
-      ]),
-    );
+    expect(response).toRespondWith([
+      {
+        type: FeeType.Priority,
+        asset: {
+          unit: CurrencyUnit.Regtest,
+          type: expect.any(String),
+          amount: expect.any(String),
+          fungible: true,
+        },
+      },
+    ]);
 
     const fee = (
-      response.response as {
-        result: [{ asset: { amount: string }; type: string }];
-      }
+      response.response as { result: [{ asset: { amount: string } }] }
     ).result;
-
-    expect(fee).toHaveLength(1);
-    expect(fee[0]).toBeDefined();
-    const firstFee = fee[0];
-    expect(firstFee?.asset?.amount).not.toBeNull();
-    expect(firstFee?.type).toBe(FeeType.Priority);
-
-    expect(parseFloat(firstFee.asset.amount)).toBeGreaterThan(0);
+    expect(parseFloat(fee[0].asset.amount)).toBeGreaterThan(0);
   });
 
   it('fails to compute fee for invalid PSBT', async () => {

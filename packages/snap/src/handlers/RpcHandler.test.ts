@@ -6,6 +6,7 @@ import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
 import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
+import { Caip19Asset } from './caip';
 import {
   CreateSendFormRequest,
   ComputeFeeRequest,
@@ -189,7 +190,7 @@ describe('RpcHandler', () => {
           type: FeeType.Priority,
           asset: {
             unit: 'BTC',
-            type: 'bip122:000000000019d6689c085ae165831e93/slip44:0',
+            type: Caip19Asset.Bitcoin,
             amount: '0.00001',
             fungible: true,
           },
