@@ -159,12 +159,11 @@
       ],
       "result": {
         "name": "computeFeeResponse",
-        "description": "The computed fee information.",
+        "description": "Array of computed fee information.",
         "schema": {
-          "type": "object",
-          "required": ["fee"],
-          "properties": {
-            "fee": {
+          "oneOf": [
+            { "type": "null" },
+            {
               "type": "array",
               "items": {
                 "type": "object",
@@ -181,8 +180,7 @@
                     "properties": {
                       "unit": {
                         "type": "string",
-                        "enum": ["sat", "btc"],
-                        "description": "The unit of the fee amount."
+                        "description": "The currency unit for the network."
                       },
                       "type": {
                         "type": "string",
@@ -201,7 +199,7 @@
                 }
               }
             }
-          }
+          ]
         }
       }
     }
