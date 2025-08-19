@@ -1,16 +1,19 @@
-import type { Psbt, Txid } from '@metamask/bitcoindevkit';
+import { Psbt } from '@metamask/bitcoindevkit';
+import type { Amount, Txid } from '@metamask/bitcoindevkit';
+import { BtcScope, FeeType } from '@metamask/keyring-api';
 import type { JsonRpcRequest } from '@metamask/utils';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
-import type { SendFlowUseCases } from '../use-cases';
+import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
+import { Caip19Asset } from './caip';
 import {
   CreateSendFormRequest,
+  ComputeFeeRequest,
   RpcHandler,
   RpcMethod,
   SendPsbtRequest,
 } from './RpcHandler';
-import type { AccountUseCases } from '../use-cases/AccountUseCases';
 
 jest.mock('superstruct', () => ({
   ...jest.requireActual('superstruct'),
@@ -21,7 +24,7 @@ const mockPsbt = mock<Psbt>();
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
 /* eslint-disable @typescript-eslint/naming-convention */
 jest.mock('@metamask/bitcoindevkit', () => ({
-  Psbt: { from_string: () => mockPsbt },
+  Psbt: { from_string: jest.fn() },
 }));
 
 describe('RpcHandler', () => {
@@ -30,6 +33,10 @@ describe('RpcHandler', () => {
   const origin = 'metamask';
 
   const handler = new RpcHandler(mockSendFlowUseCases, mockAccountsUseCases);
+
+  beforeEach(() => {
+    jest.mocked(Psbt.from_string).mockReturnValue(mockPsbt);
+  });
 
   describe('route', () => {
     const mockRequest = mock<JsonRpcRequest>({
@@ -147,6 +154,78 @@ describe('RpcHandler', () => {
       await expect(handler.route(origin, mockRequest)).rejects.toThrow(error);
 
       expect(mockAccountsUseCases.fillAndSendPsbt).toHaveBeenCalled();
+    });
+  });
+
+  describe('computeFee', () => {
+    const psbt = 'someEncodedPsbt';
+    const mockRequest = mock<JsonRpcRequest>({
+      method: RpcMethod.ComputeFee,
+      params: {
+        accountId: 'account-id',
+        transaction: psbt,
+        scope: BtcScope.Mainnet,
+      },
+    });
+
+    it('executes computeFee', async () => {
+      const mockAmount = mock<Amount>({
+        to_btc: jest.fn().mockReturnValue('0.00001'),
+      });
+      mockAccountsUseCases.computeFee.mockResolvedValue(mockAmount);
+
+      const result = await handler.route(origin, mockRequest);
+
+      expect(assert).toHaveBeenCalledWith(
+        mockRequest.params,
+        ComputeFeeRequest,
+      );
+      expect(Psbt.from_string).toHaveBeenCalledWith(psbt);
+      expect(mockAccountsUseCases.computeFee).toHaveBeenCalledWith(
+        'account-id',
+        mockPsbt,
+      );
+      expect(result).toStrictEqual([
+        {
+          type: FeeType.Priority,
+          asset: {
+            unit: 'BTC',
+            type: Caip19Asset.Bitcoin,
+            amount: '0.00001',
+            fungible: true,
+          },
+        },
+      ]);
+    });
+
+    it('propagates errors from computeFee', async () => {
+      const error = new Error('Insufficient funds');
+      mockAccountsUseCases.computeFee.mockRejectedValue(error);
+
+      await expect(handler.route(origin, mockRequest)).rejects.toThrow(error);
+
+      expect(mockAccountsUseCases.computeFee).toHaveBeenCalled();
+    });
+
+    it('throws FormatError for invalid PSBT', async () => {
+      const invalidRequest = mock<JsonRpcRequest>({
+        method: RpcMethod.ComputeFee,
+        params: {
+          accountId: 'account-id',
+          transaction: 'invalid-psbt-base64',
+          scope: BtcScope.Mainnet,
+        },
+      });
+
+      jest.mocked(Psbt.from_string).mockImplementationOnce(() => {
+        throw new Error('Invalid PSBT');
+      });
+
+      await expect(handler.route(origin, invalidRequest)).rejects.toThrow(
+        'Invalid PSBT',
+      );
+
+      expect(mockAccountsUseCases.computeFee).not.toHaveBeenCalled();
     });
   });
 });

@@ -1,5 +1,6 @@
 import type {
   AddressType,
+  Amount,
   Network,
   Psbt,
   Txid,
@@ -347,6 +348,18 @@ export class AccountUseCases {
     );
 
     return txid;
+  }
+
+  async computeFee(id: string, templatePsbt: Psbt): Promise<Amount> {
+    this.#logger.debug('Getting fee amount for Psbt for account id: %s', id);
+
+    const account = await this.#repository.getWithSigner(id);
+    if (!account) {
+      throw new NotFoundError('Account not found', { id });
+    }
+
+    const psbt = await this.#fillPsbt(account, templatePsbt);
+    return psbt.fee();
   }
 
   async #fillPsbt(account: BitcoinAccount, templatePsbt: Psbt): Promise<Psbt> {
