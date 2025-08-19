@@ -117,7 +117,6 @@ describe('OnClientRequestHandler', () => {
       code: -32000,
       message: 'Invalid format: Invalid PSBT',
       data: {
-        accountId: account.id,
         cause: null,
         transaction: 'notAPsbt',
       },
@@ -184,7 +183,6 @@ describe('OnClientRequestHandler', () => {
       code: -32000,
       message: 'Invalid format: Invalid PSBT',
       data: {
-        accountId: account.id,
         cause: null,
         transaction: 'notAPsbt',
       },

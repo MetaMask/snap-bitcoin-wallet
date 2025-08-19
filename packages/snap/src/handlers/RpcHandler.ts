@@ -97,7 +97,7 @@ export class RpcHandler {
     transaction: string,
     origin: string,
   ): Promise<SendTransactionResponse | null> {
-    const psbt: Psbt = this.#parsePsbt(transaction, accountId);
+    const psbt: Psbt = this.#parsePsbt(transaction);
 
     const txid = await this.#accountUseCases.fillAndSendPsbt(
       accountId,
@@ -113,17 +113,17 @@ export class RpcHandler {
     transaction: string,
     scope: BtcScope,
   ): Promise<TransactionFee[]> {
-    const psbt = this.#parsePsbt(transaction, accountId);
+    const psbt = this.#parsePsbt(transaction);
     const amount = await this.#accountUseCases.computeFee(accountId, psbt);
 
     return [mapToTransactionFees(amount, scopeToNetwork[scope])];
   }
 
-  #parsePsbt(transaction: string, accountId: string): Psbt {
+  #parsePsbt(transaction: string): Psbt {
     try {
       return Psbt.from_string(transaction);
     } catch (error) {
-      throw new FormatError('Invalid PSBT', { accountId, transaction }, error);
+      throw new FormatError('Invalid PSBT', { transaction }, error);
     }
   }
 }
