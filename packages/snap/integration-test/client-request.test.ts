@@ -6,6 +6,7 @@ import { installSnap } from '@metamask/snaps-jest';
 import { BlockchainTestUtils } from './blockchain-utils';
 import { MNEMONIC, ORIGIN } from './constants';
 import { CurrencyUnit, TrackingSnapEvent } from '../src/entities';
+import { Caip19Asset } from '../src/handlers/caip';
 
 const ACCOUNT_INDEX = 1;
 
@@ -156,8 +157,8 @@ describe('OnClientRequestHandler', () => {
         type: FeeType.Priority,
         asset: {
           unit: CurrencyUnit.Regtest,
-          type: expect.any(String),
-          amount: expect.any(String),
+          type: Caip19Asset.Regtest,
+          amount: '0.00001053',
           fungible: true,
         },
       },
