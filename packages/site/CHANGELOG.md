@@ -9,10 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.19.0]
 
-### Uncategorized
+### Changed
 
-- docs: complete docs refactor ([#505](https://github.com/MetaMask/snap-bitcoin-wallet/pull/505))
-- feat: fill, sign and send PSBT ([#504](https://github.com/MetaMask/snap-bitcoin-wallet/pull/504))
+- Complete docs refactor ([#505](https://github.com/MetaMask/snap-bitcoin-wallet/pull/505))
 
 ## [0.18.0]
 

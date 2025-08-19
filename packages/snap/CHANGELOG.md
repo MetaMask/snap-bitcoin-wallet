@@ -9,13 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.19.0]
 
-### Uncategorized
+### Added
 
-- feat: compute transaction fees for PSBTs ([#507](https://github.com/MetaMask/snap-bitcoin-wallet/pull/507))
-- docs: openrpc onclientrequest ([#506](https://github.com/MetaMask/snap-bitcoin-wallet/pull/506))
-- docs: complete docs refactor ([#505](https://github.com/MetaMask/snap-bitcoin-wallet/pull/505))
-- feat: fill, sign and send PSBT ([#504](https://github.com/MetaMask/snap-bitcoin-wallet/pull/504))
-- test: verify snap track events on account syncing ([#503](https://github.com/MetaMask/snap-bitcoin-wallet/pull/503))
+- PSBT transaction fee computation ([#507](https://github.com/MetaMask/snap-bitcoin-wallet/pull/507))
+- Fill, sign and send PSBT functionality ([#504](https://github.com/MetaMask/snap-bitcoin-wallet/pull/504))
+- OpenRPC documentation for onClientRequest ([#506](https://github.com/MetaMask/snap-bitcoin-wallet/pull/506))
+- Event tracking verification for account synchronization ([#503](https://github.com/MetaMask/snap-bitcoin-wallet/pull/503))
+
+### Changed
+
+- Complete documentation refactor ([#505](https://github.com/MetaMask/snap-bitcoin-wallet/pull/505))
 
 ## [0.18.0]
 
