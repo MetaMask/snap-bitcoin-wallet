@@ -162,7 +162,7 @@ describe('RpcHandler', () => {
     const mockRequest = mock<JsonRpcRequest>({
       method: RpcMethod.ComputeFee,
       params: {
-        account: 'account-id',
+        accountId: 'account-id',
         transaction: psbt,
         scope: BtcScope.Mainnet,
       },
@@ -211,7 +211,7 @@ describe('RpcHandler', () => {
       const invalidRequest = mock<JsonRpcRequest>({
         method: RpcMethod.ComputeFee,
         params: {
-          account: 'account-id',
+          accountId: 'account-id',
           transaction: 'invalid-psbt-base64',
           scope: BtcScope.Mainnet,
         },

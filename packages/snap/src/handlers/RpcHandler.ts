@@ -29,7 +29,7 @@ export const SendPsbtRequest = object({
 });
 
 export const ComputeFeeRequest = object({
-  account: string(),
+  accountId: string(),
   transaction: string(),
   scope: enums(Object.values(BtcScope)),
 });
@@ -69,7 +69,7 @@ export class RpcHandler {
       case RpcMethod.ComputeFee: {
         assert(params, ComputeFeeRequest);
         return this.#computeFee(
-          params.account,
+          params.accountId,
           params.transaction,
           params.scope,
         );

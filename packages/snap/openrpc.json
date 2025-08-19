@@ -126,7 +126,7 @@
       "paramStructure": "by-name",
       "params": [
         {
-          "name": "account",
+          "name": "accountId",
           "description": "The account ID to use for fee computation.",
           "required": true,
           "schema": {
