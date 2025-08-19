@@ -144,7 +144,7 @@ describe('OnClientRequestHandler', () => {
     const response = await snap.onClientRequest({
       method: 'computeFee',
       params: {
-        account: account.id,
+        accountId: account.id,
         transaction:
           'cHNidP8BAI4CAAAAAAM1gwEAAAAAACJRIORP1Ndiq325lSC/jMG0RlhATHYmuuULfXgEHUM3u5i4AAAAAAAAAAAxai8AAUSx+i9Igg4HWdcpyagCs8mzuRCklgA7nRMkm69rAAAAAAAAAAAAAQACAAAAACp2AAAAAAAAFgAUgu3FEiFNy9ZR/zSpTo9nHREjrSoAAAAAAAAAAAA=',
         scope: BtcScope.Regtest,
@@ -173,7 +173,7 @@ describe('OnClientRequestHandler', () => {
     const response = await snap.onClientRequest({
       method: 'computeFee',
       params: {
-        account: account.id,
+        accountId: account.id,
         transaction: 'notAPsbt',
         scope: BtcScope.Regtest,
       },
@@ -195,14 +195,14 @@ describe('OnClientRequestHandler', () => {
     const response = await snap.onClientRequest({
       method: 'computeFee',
       params: {
-        account: null,
+        accountId: null,
       },
     });
 
     expect(response).toRespondWithError({
       code: -32000,
       message:
-        'Invalid format: At path: account -- Expected a string, but received: null',
+        'Invalid format: At path: accountId -- Expected a string, but received: null',
       stack: expect.anything(),
     });
   });
