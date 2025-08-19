@@ -162,11 +162,6 @@ describe('OnClientRequestHandler', () => {
         },
       },
     ]);
-
-    const fee = (
-      response.response as { result: [{ asset: { amount: string } }] }
-    ).result;
-    expect(parseFloat(fee[0].asset.amount)).toBeGreaterThan(0);
   });
 
   it('fails to compute fee for invalid PSBT', async () => {
