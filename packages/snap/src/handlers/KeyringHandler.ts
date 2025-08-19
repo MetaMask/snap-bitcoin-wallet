@@ -54,7 +54,7 @@ import {
   scopeToNetwork,
   networkToScope,
 } from './caip';
-import { KeyringRequestHandler } from './KeyringRequestHandler';
+import type { KeyringRequestHandler } from './KeyringRequestHandler';
 import {
   mapToDiscoveredAccount,
   mapToKeyringAccount,

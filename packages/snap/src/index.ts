@@ -19,6 +19,7 @@ import {
   AssetsHandler,
 } from './handlers';
 import { HandlerMiddleware } from './handlers/HandlerMiddleware';
+import { KeyringRequestHandler } from './handlers/KeyringRequestHandler';
 import {
   SnapClientAdapter,
   EsploraClientAdapter,
@@ -28,7 +29,6 @@ import {
 } from './infra';
 import { BdkAccountRepository, JSXSendFlowRepository } from './store';
 import { AccountUseCases, AssetsUseCases, SendFlowUseCases } from './use-cases';
-import { KeyringRequestHandler } from './handlers/KeyringRequestHandler';
 
 // Infra layer
 const logger = new ConsoleLoggerAdapter(Config.logLevel);

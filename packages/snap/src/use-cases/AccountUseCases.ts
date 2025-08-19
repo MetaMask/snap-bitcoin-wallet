@@ -1,5 +1,6 @@
 import type {
   AddressType,
+  Amount,
   Network,
   Psbt,
   Transaction,
@@ -378,6 +379,22 @@ export class AccountUseCases {
     return txid;
   }
 
+  async computeFee(
+    id: string,
+    templatePsbt: Psbt,
+    feeRate?: number,
+  ): Promise<Amount> {
+    this.#logger.debug('Getting fee amount for Psbt for account id: %s', id);
+
+    const account = await this.#repository.getWithSigner(id);
+    if (!account) {
+      throw new NotFoundError('Account not found', { id });
+    }
+
+    const psbt = await this.#fillPsbt(account, templatePsbt, feeRate);
+    return psbt.fee();
+  }
+
   async #fillPsbt(
     account: BitcoinAccount,
     templatePsbt: Psbt,
@@ -386,10 +403,10 @@ export class AccountUseCases {
     const frozenUTXOs = await this.#repository.getFrozenUTXOs(account.id);
     const feeEstimates = await this.#chain.getFeeEstimates(account.network);
 
-    const feeRateToUse = feeRate
-      ? feeRate
-      : (feeEstimates.get(this.#targetBlocksConfirmation) ??
-        this.#fallbackFeeRate);
+    const feeRateToUse =
+      feeRate ??
+      feeEstimates.get(this.#targetBlocksConfirmation) ??
+      this.#fallbackFeeRate;
 
     try {
       let builder = account

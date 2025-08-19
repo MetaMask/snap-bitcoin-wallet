@@ -1,4 +1,4 @@
-import { Amount, Psbt } from '@metamask/bitcoindevkit';
+import { Psbt } from '@metamask/bitcoindevkit';
 import type { KeyringRequest, KeyringResponse } from '@metamask/keyring-api';
 import type { Json } from '@metamask/utils';
 import { assert, boolean, number, object, optional, string } from 'superstruct';
@@ -85,8 +85,7 @@ export class KeyringRequestHandler {
         assert(params, ComputeFeeRequest);
         const { feeRate } = params;
         const psbt = Psbt.from_string(params.psbt);
-        const fee = Amount.from_sat(BigInt(10000));
-        // const fee = await this.#accountsUseCases.computeFee(id, psbt, feeRate);
+        const fee = await this.#accountsUseCases.computeFee(id, psbt, feeRate);
         return this.#toKeyringResponse({
           fee: fee.to_sat().toString(),
         });

@@ -13,12 +13,9 @@ import type {
   DiscoveredAccount,
   KeyringResponse,
   Transaction as KeyringTransaction,
-} from '@metamask/keyring-api';
-import {
-  BtcAccountType,
-  BtcScope,
   KeyringRequest,
 } from '@metamask/keyring-api';
+import { BtcAccountType, BtcScope } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
@@ -26,12 +23,12 @@ import type { BitcoinAccount } from '../entities';
 import { AccountCapability, CurrencyUnit, Purpose } from '../entities';
 import { scopeToNetwork, caipToAddressType, Caip19Asset } from './caip';
 import { KeyringHandler, CreateAccountRequest } from './KeyringHandler';
+import type { KeyringRequestHandler } from './KeyringRequestHandler';
 import { mapToDiscoveredAccount } from './mappings';
 import type {
   AccountUseCases,
   CreateAccountParams,
 } from '../use-cases/AccountUseCases';
-import { KeyringRequestHandler } from './KeyringRequestHandler';
 
 jest.mock('superstruct', () => ({
   ...jest.requireActual('superstruct'),

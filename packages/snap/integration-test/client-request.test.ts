@@ -1,11 +1,12 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
-import { BtcAccountType, BtcScope } from '@metamask/keyring-api';
+import { FeeType, BtcAccountType, BtcScope } from '@metamask/keyring-api';
 import type { Snap } from '@metamask/snaps-jest';
 import { installSnap } from '@metamask/snaps-jest';
 
 import { BlockchainTestUtils } from './blockchain-utils';
 import { MNEMONIC, ORIGIN } from './constants';
-import { TrackingSnapEvent } from '../src/entities';
+import { CurrencyUnit, TrackingSnapEvent } from '../src/entities';
+import { Caip19Asset } from '../src/handlers/caip';
 
 const ACCOUNT_INDEX = 1;
 
@@ -116,7 +117,6 @@ describe('OnClientRequestHandler', () => {
       code: -32000,
       message: 'Invalid format: Invalid PSBT',
       data: {
-        accountId: account.id,
         cause: null,
         transaction: 'notAPsbt',
       },
@@ -127,6 +127,67 @@ describe('OnClientRequestHandler', () => {
   it('fails if missing params', async () => {
     const response = await snap.onClientRequest({
       method: 'signAndSendTransaction',
+      params: {
+        accountId: null,
+      },
+    });
+
+    expect(response).toRespondWithError({
+      code: -32000,
+      message:
+        'Invalid format: At path: accountId -- Expected a string, but received: null',
+      stack: expect.anything(),
+    });
+  });
+
+  it('computes fee for valid PSBT', async () => {
+    const response = await snap.onClientRequest({
+      method: 'computeFee',
+      params: {
+        accountId: account.id,
+        transaction:
+          'cHNidP8BAI4CAAAAAAM1gwEAAAAAACJRIORP1Ndiq325lSC/jMG0RlhATHYmuuULfXgEHUM3u5i4AAAAAAAAAAAxai8AAUSx+i9Igg4HWdcpyagCs8mzuRCklgA7nRMkm69rAAAAAAAAAAAAAQACAAAAACp2AAAAAAAAFgAUgu3FEiFNy9ZR/zSpTo9nHREjrSoAAAAAAAAAAAA=',
+        scope: BtcScope.Regtest,
+      },
+    });
+
+    expect(response).toRespondWith([
+      {
+        type: FeeType.Priority,
+        asset: {
+          unit: CurrencyUnit.Regtest,
+          type: Caip19Asset.Regtest,
+          amount: '0.00001053',
+          fungible: true,
+        },
+      },
+    ]);
+  });
+
+  it('fails to compute fee for invalid PSBT', async () => {
+    const response = await snap.onClientRequest({
+      method: 'computeFee',
+      params: {
+        accountId: account.id,
+        transaction: 'notAPsbt',
+        scope: BtcScope.Regtest,
+      },
+    });
+
+    expect(response).toRespondWithError({
+      code: -32000,
+      message: 'Invalid format: Invalid PSBT',
+      data: {
+        cause: null,
+        transaction: 'notAPsbt',
+      },
+      stack: expect.anything(),
+    });
+  });
+
+  it('fails to compute fee if missing params', async () => {
+    const response = await snap.onClientRequest({
+      method: 'computeFee',
       params: {
         accountId: null,
       },

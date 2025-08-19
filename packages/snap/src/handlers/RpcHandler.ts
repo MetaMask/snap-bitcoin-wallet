@@ -10,10 +10,14 @@ import {
   FormatError,
   InexistentMethodError,
 } from '../entities';
+import { scopeToNetwork } from './caip';
+import type { TransactionFee } from './mappings';
+import { mapToTransactionFees } from './mappings';
 
 export enum RpcMethod {
   StartSendTransactionFlow = 'startSendTransactionFlow',
   SignAndSendTransaction = 'signAndSendTransaction',
+  ComputeFee = 'computeFee',
 }
 
 export const CreateSendFormRequest = object({
@@ -26,6 +30,12 @@ export const SendPsbtRequest = object({
   accountId: string(),
   transaction: string(),
   scope: optional(enums(Object.values(BtcScope))), // We don't use the scope but need to define it for validation
+});
+
+export const ComputeFeeRequest = object({
+  accountId: string(),
+  transaction: string(),
+  scope: enums(Object.values(BtcScope)),
 });
 
 export type SendTransactionResponse = {
@@ -60,6 +70,14 @@ export class RpcHandler {
         assert(params, SendPsbtRequest);
         return this.#signAndSend(params.accountId, params.transaction, origin);
       }
+      case RpcMethod.ComputeFee: {
+        assert(params, ComputeFeeRequest);
+        return this.#computeFee(
+          params.accountId,
+          params.transaction,
+          params.scope,
+        );
+      }
 
       default:
         throw new InexistentMethodError(`Method not found: ${method}`);
@@ -92,12 +110,7 @@ export class RpcHandler {
     transaction: string,
     origin: string,
   ): Promise<SendTransactionResponse | null> {
-    let psbt: Psbt;
-    try {
-      psbt = Psbt.from_string(transaction);
-    } catch (error) {
-      throw new FormatError('Invalid PSBT', { accountId, transaction }, error);
-    }
+    const psbt: Psbt = this.#parsePsbt(transaction);
 
     const { txid } = await this.#accountUseCases.signPsbt(
       accountId,
@@ -113,5 +126,24 @@ export class RpcHandler {
     }
 
     return { transactionId: txid.toString() };
+  }
+
+  async #computeFee(
+    accountId: string,
+    transaction: string,
+    scope: BtcScope,
+  ): Promise<TransactionFee[]> {
+    const psbt = this.#parsePsbt(transaction);
+    const amount = await this.#accountUseCases.computeFee(accountId, psbt);
+
+    return [mapToTransactionFees(amount, scopeToNetwork[scope])];
+  }
+
+  #parsePsbt(transaction: string): Psbt {
+    try {
+      return Psbt.from_string(transaction);
+    } catch (error) {
+      throw new FormatError('Invalid PSBT', { transaction }, error);
+    }
   }
 }
