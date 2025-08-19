@@ -28,6 +28,7 @@ import {
 } from './infra';
 import { BdkAccountRepository, JSXSendFlowRepository } from './store';
 import { AccountUseCases, AssetsUseCases, SendFlowUseCases } from './use-cases';
+import { KeyringRequestHandler } from './handlers/KeyringRequestHandler';
 
 // Infra layer
 const logger = new ConsoleLoggerAdapter(Config.logLevel);
@@ -64,7 +65,9 @@ const sendFlowUseCases = new SendFlowUseCases(
 const assetsUseCases = new AssetsUseCases(logger, assetRatesClient);
 
 // Application layer
+const keyringRequestHandler = new KeyringRequestHandler(accountsUseCases);
 const keyringHandler = new KeyringHandler(
+  keyringRequestHandler,
   accountsUseCases,
   Config.defaultAddressType,
 );

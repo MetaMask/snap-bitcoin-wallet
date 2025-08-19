@@ -329,6 +329,7 @@ export class AccountUseCases {
     psbt: Psbt,
     origin: string,
     options: { fill: boolean; broadcast: boolean },
+    feeRate?: number,
   ): Promise<{ psbt: Psbt; txid?: Txid }> {
     this.#logger.debug('Signing PSBT: %s', id, options);
 
@@ -338,7 +339,7 @@ export class AccountUseCases {
     }
 
     const signedPsbt = account.sign(
-      options.fill ? await this.#fillPsbt(account, psbt) : psbt,
+      options.fill ? await this.#fillPsbt(account, psbt, feeRate) : psbt,
     );
 
     if (options.broadcast) {
@@ -377,16 +378,23 @@ export class AccountUseCases {
     return txid;
   }
 
-  async #fillPsbt(account: BitcoinAccount, templatePsbt: Psbt): Promise<Psbt> {
+  async #fillPsbt(
+    account: BitcoinAccount,
+    templatePsbt: Psbt,
+    feeRate?: number,
+  ): Promise<Psbt> {
     const frozenUTXOs = await this.#repository.getFrozenUTXOs(account.id);
     const feeEstimates = await this.#chain.getFeeEstimates(account.network);
-    const feeRate =
-      feeEstimates.get(this.#targetBlocksConfirmation) ?? this.#fallbackFeeRate;
+
+    const feeRateToUse = feeRate
+      ? feeRate
+      : (feeEstimates.get(this.#targetBlocksConfirmation) ??
+        this.#fallbackFeeRate);
 
     try {
       let builder = account
         .buildTx()
-        .feeRate(feeRate)
+        .feeRate(feeRateToUse)
         .unspendable(frozenUTXOs)
         .untouchedOrdering(); // we need to strictly adhere to the template output order. Many protocols use the order (e.g: 1: deposit, 2: OP_RETURN, 3: change)
 
@@ -408,7 +416,7 @@ export class AccountUseCases {
         {
           id: account.id,
           templatePsbt: templatePsbt.toString(),
-          feeRate,
+          feeRate: feeRateToUse,
         },
         error,
       );

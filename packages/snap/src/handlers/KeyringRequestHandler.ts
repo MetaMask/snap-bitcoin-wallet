@@ -1,4 +1,4 @@
-import { Psbt } from '@metamask/bitcoindevkit';
+import { Amount, Psbt } from '@metamask/bitcoindevkit';
 import type { KeyringRequest, KeyringResponse } from '@metamask/keyring-api';
 import type { Json } from '@metamask/utils';
 import { assert, boolean, number, object, optional, string } from 'superstruct';
@@ -25,6 +25,15 @@ export type SignPsbtResponse = {
 };
 
 export const ComputeFeeRequest = object({
+  psbt: string(),
+  feeRate: optional(number()),
+});
+
+export const BroadcastPsbtRequest = object({
+  psbt: string(),
+});
+
+export const FillPsbtRequest = object({
   psbt: string(),
   feeRate: optional(number()),
 });
@@ -57,13 +66,30 @@ export class KeyringRequestHandler {
     switch (method as AccountCapability) {
       case AccountCapability.SignPsbt: {
         assert(params, SignPsbtRequest);
+        const { feeRate, options } = params;
         const psbt = Psbt.from_string(params.psbt);
-        return this.#signPsbt(id, psbt, origin, params.options);
+        const { psbt: signedPsbt, txid } =
+          await this.#accountsUseCases.signPsbt(
+            id,
+            psbt,
+            origin,
+            options,
+            feeRate,
+          );
+        return this.#toKeyringResponse({
+          psbt: signedPsbt.toString(),
+          txid: txid?.toString() ?? null,
+        });
       }
       case AccountCapability.ComputeFee: {
         assert(params, ComputeFeeRequest);
+        const { feeRate } = params;
         const psbt = Psbt.from_string(params.psbt);
-        return this.#computeFee(id, psbt);
+        const fee = Amount.from_sat(BigInt(10000));
+        // const fee = await this.#accountsUseCases.computeFee(id, psbt, feeRate);
+        return this.#toKeyringResponse({
+          fee: fee.to_sat().toString(),
+        });
       }
       default: {
         throw new InexistentMethodError(
@@ -75,31 +101,6 @@ export class KeyringRequestHandler {
         );
       }
     }
-  }
-
-  async #signPsbt(
-    id: string,
-    psbt: Psbt,
-    origin: string,
-    options: { fill: boolean; broadcast: boolean },
-  ): Promise<KeyringResponse> {
-    const finalizedPsbt = await this.#accountsUseCases.signPsbt(
-      id,
-      psbt,
-      origin,
-      options,
-    );
-    return this.#toKeyringResponse({
-      psbt: finalizedPsbt.psbt.toString(),
-      txid: finalizedPsbt.txid?.toString() ?? null,
-    });
-  }
-
-  async #computeFee(id: string, psbt: Psbt): Promise<KeyringResponse> {
-    const fee = await this.#accountsUseCases.computeFee(id, psbt);
-    return this.#toKeyringResponse({
-      fee: fee.to_sat().toString(),
-    });
   }
 
   #toKeyringResponse(result: Json): KeyringResponse {

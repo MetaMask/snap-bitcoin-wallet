@@ -81,12 +81,14 @@ export class KeyringHandler implements Keyring {
 
   readonly #defaultAddressType: AddressType;
 
-  constructor(accounts: AccountUseCases, defaultAddressType: AddressType) {
+  constructor(
+    keyringRequest: KeyringRequestHandler,
+    accounts: AccountUseCases,
+    defaultAddressType: AddressType,
+  ) {
+    this.#keyringRequest = keyringRequest;
     this.#accountsUseCases = accounts;
     this.#defaultAddressType = defaultAddressType;
-
-    // Not a dependency, used to separate the logic and concerns.
-    this.#keyringRequest = new KeyringRequestHandler(accounts);
   }
 
   async route(origin: string, request: JsonRpcRequest): Promise<Json> {

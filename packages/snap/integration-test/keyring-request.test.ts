@@ -1,16 +1,11 @@
-import type {
-  KeyringAccount,
-  KeyringRequest,
-  SubmitRequestRequest,
-} from '@metamask/keyring-api';
+import type { KeyringAccount, KeyringRequest } from '@metamask/keyring-api';
 import { BtcScope } from '@metamask/keyring-api';
 import type { Snap } from '@metamask/snaps-jest';
 import { installSnap } from '@metamask/snaps-jest';
 
-import { MNEMONIC, ORIGIN, TEST_ADDRESS_REGTEST } from './constants';
-import { AccountCapability, CurrencyUnit } from '../src/entities';
-import { Caip19Asset } from '../src/handlers/caip';
 import { BlockchainTestUtils } from './blockchain-utils';
+import { MNEMONIC, ORIGIN } from './constants';
+import { AccountCapability } from '../src/entities';
 
 const ACCOUNT_INDEX = 3;
 const submitRequestMethod = 'keyring_submitRequest';
@@ -58,7 +53,7 @@ describe('KeyringRequestHandler', () => {
     snap.mockJsonRpc({ method: 'snap_trackError', result: {} });
   });
 
-  it('signPsbt', async () => {
+  it('signs a PSBT successfully', async () => {
     const response = await snap.onKeyringRequest({
       origin: ORIGIN,
       method: submitRequestMethod,

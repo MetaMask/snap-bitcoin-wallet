@@ -68,11 +68,12 @@ describe('RpcHandler', () => {
 
     it('executes startSendTransactionFlow', async () => {
       mockSendFlowUseCases.display.mockResolvedValue(mockPsbt);
-      mockAccountsUseCases.signPsbt.mockResolvedValue(
-        mock<Txid>({
+      mockAccountsUseCases.signPsbt.mockResolvedValue({
+        psbt: mockPsbt,
+        txid: mock<Txid>({
           toString: jest.fn().mockReturnValue('txId'),
         }),
-      );
+      });
 
       const result = await handler.route(origin, mockRequest);
 
@@ -85,6 +86,7 @@ describe('RpcHandler', () => {
         'account-id',
         mockPsbt,
         'metamask',
+        { broadcast: true, fill: false },
       );
       expect(result).toStrictEqual({ transactionId: 'txId' });
     });
@@ -123,30 +125,32 @@ describe('RpcHandler', () => {
     });
 
     it('executes signAndSendTransaction', async () => {
-      mockAccountsUseCases.fillAndSendPsbt.mockResolvedValue(
-        mock<Txid>({
+      mockAccountsUseCases.signPsbt.mockResolvedValue({
+        psbt: mockPsbt,
+        txid: mock<Txid>({
           toString: jest.fn().mockReturnValue('txId'),
         }),
-      );
+      });
 
       const result = await handler.route(origin, mockRequest);
 
       expect(assert).toHaveBeenCalledWith(mockRequest.params, SendPsbtRequest);
-      expect(mockAccountsUseCases.fillAndSendPsbt).toHaveBeenCalledWith(
+      expect(mockAccountsUseCases.signPsbt).toHaveBeenCalledWith(
         'account-id',
         mockPsbt,
         'metamask',
+        { broadcast: true, fill: true },
       );
       expect(result).toStrictEqual({ transactionId: 'txId' });
     });
 
     it('propagates errors from signAndSendTransaction', async () => {
       const error = new Error();
-      mockAccountsUseCases.fillAndSendPsbt.mockRejectedValue(error);
+      mockAccountsUseCases.signPsbt.mockRejectedValue(error);
 
       await expect(handler.route(origin, mockRequest)).rejects.toThrow(error);
 
-      expect(mockAccountsUseCases.fillAndSendPsbt).toHaveBeenCalled();
+      expect(mockAccountsUseCases.signPsbt).toHaveBeenCalled();
     });
   });
 });
