@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0]
+
+### Uncategorized
+
+- docs: complete docs refactor ([#505](https://github.com/MetaMask/snap-bitcoin-wallet/pull/505))
+- feat: fill, sign and send PSBT ([#504](https://github.com/MetaMask/snap-bitcoin-wallet/pull/504))
+
 ## [0.18.0]
 
 ### Changed
@@ -158,7 +165,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - build(deps): bump @metamask/keyring-api from 5.1.0 to 6.0.0 ([#6](https://github.com/MetaMask/bitcoin/pull/6))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.18.0...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.19.0...HEAD
+[0.19.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.18.0...v0.19.0
 [0.18.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.16.1...v0.17.0
 [0.16.1]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.16.0...v0.16.1
