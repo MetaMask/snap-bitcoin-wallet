@@ -306,7 +306,11 @@ export class AccountUseCases {
     this.#logger.info('Account deleted successfully: %s', account.id);
   }
 
-  async fillPsbt(id: string, templatePsbt: Psbt): Promise<Psbt> {
+  async fillPsbt(
+    id: string,
+    templatePsbt: Psbt,
+    feeRate?: number,
+  ): Promise<Psbt> {
     this.#logger.debug('Filling PSBT inputs: %s', id);
 
     const account = await this.#repository.get(id);
@@ -314,7 +318,7 @@ export class AccountUseCases {
       throw new NotFoundError('Account not found', { id });
     }
 
-    const psbt = await this.#fillPsbt(account, templatePsbt);
+    const psbt = await this.#fillPsbt(account, templatePsbt, feeRate);
 
     this.#logger.info(
       'PSBT filled successfully: %s. Account: %s, Network: %s',
@@ -344,7 +348,8 @@ export class AccountUseCases {
     );
 
     if (options.broadcast) {
-      const txid = await this.broadcastPsbt(id, signedPsbt, origin);
+      const tx = signedPsbt.extract_tx();
+      const txid = await this.#broadcast(account, tx, origin);
       return { psbt: signedPsbt, txid };
     }
 
@@ -356,6 +361,22 @@ export class AccountUseCases {
     );
 
     return { psbt: signedPsbt };
+  }
+
+  async computeFee(
+    id: string,
+    templatePsbt: Psbt,
+    feeRate?: number,
+  ): Promise<Amount> {
+    this.#logger.debug('Getting fee amount for Psbt for account id: %s', id);
+
+    const account = await this.#repository.get(id);
+    if (!account) {
+      throw new NotFoundError('Account not found', { id });
+    }
+
+    const psbt = await this.#fillPsbt(account, templatePsbt, feeRate);
+    return psbt.fee();
   }
 
   async broadcastPsbt(id: string, psbt: Psbt, origin: string): Promise<Txid> {
@@ -377,22 +398,6 @@ export class AccountUseCases {
     );
 
     return txid;
-  }
-
-  async computeFee(
-    id: string,
-    templatePsbt: Psbt,
-    feeRate?: number,
-  ): Promise<Amount> {
-    this.#logger.debug('Getting fee amount for Psbt for account id: %s', id);
-
-    const account = await this.#repository.getWithSigner(id);
-    if (!account) {
-      throw new NotFoundError('Account not found', { id });
-    }
-
-    const psbt = await this.#fillPsbt(account, templatePsbt, feeRate);
-    return psbt.fee();
   }
 
   async #fillPsbt(

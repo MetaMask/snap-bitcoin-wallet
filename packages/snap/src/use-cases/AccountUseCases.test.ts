@@ -784,41 +784,105 @@ describe('AccountUseCases', () => {
     });
   });
 
-  describe('sendPsbt', () => {
+  describe('signPsbt', () => {
     const mockTxid = mock<Txid>();
-    const mockPsbt = mock<Psbt>();
+    const mockOutput = mock<TxOut>({
+      script_pubkey: mock<ScriptBuf>(),
+      value: mock<Amount>(),
+    });
+    const mockPsbt = mock<Psbt>({
+      unsigned_tx: {
+        output: [mockOutput],
+      },
+      toString,
+    });
     const mockTransaction = mock<Transaction>({
       // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
       /* eslint-disable @typescript-eslint/naming-convention */
       compute_txid: jest.fn(),
       clone: jest.fn(),
     });
+    const mockSignedPsbt = mock<Psbt>({
+      extract_tx: () => mockTransaction,
+    });
     const mockAccount = mock<BitcoinAccount>({
       network: 'bitcoin',
       sign: jest.fn(),
     });
     const mockWalletTx = mock<WalletTx>();
+    const mockFeeRate = 3;
+    const mockFeeEstimates = mock<FeeEstimates>({
+      get: () => mockFeeRate,
+    });
+    const mockFilledPsbt = mock<Psbt>();
+    const mockTxBuilder = mock<TransactionBuilder>({
+      addRecipientByScript: jest.fn(),
+      feeRate: jest.fn(),
+      drainToByScript: jest.fn(),
+      drainWallet: jest.fn(),
+      finish: jest.fn(),
+      unspendable: jest.fn(),
+    });
 
     beforeEach(() => {
       mockRepository.getWithSigner.mockResolvedValue(mockAccount);
       mockTransaction.compute_txid.mockReturnValue(mockTxid);
       mockTransaction.clone.mockReturnThis();
+      mockAccount.buildTx.mockReturnValue(mockTxBuilder);
+      mockAccount.sign.mockReturnValue(mockSignedPsbt);
+      mockTxBuilder.addRecipientByScript.mockReturnThis();
+      mockTxBuilder.feeRate.mockReturnThis();
+      mockTxBuilder.drainToByScript.mockReturnThis();
+      mockTxBuilder.untouchedOrdering.mockReturnThis();
+      mockTxBuilder.finish.mockReturnValue(mockFilledPsbt);
+      mockTxBuilder.unspendable.mockReturnThis();
+      mockChain.getFeeEstimates.mockResolvedValue(mockFeeEstimates);
     });
 
     it('throws error if account is not found', async () => {
       mockRepository.getWithSigner.mockResolvedValue(null);
 
       await expect(
-        useCases.signPsbt('non-existent-id', mockPsbt, 'metamask'),
+        useCases.signPsbt('non-existent-id', mockPsbt, 'metamask', {
+          fill: false,
+          broadcast: false,
+        }),
       ).rejects.toThrow('Account not found');
     });
 
-    it('sends transaction', async () => {
-      mockAccount.sign.mockReturnValue(mockTransaction);
+    it('signs a PSBT', async () => {
       mockAccount.getTransaction.mockReturnValue(mockWalletTx);
       mockTransaction.compute_txid.mockReturnValue(mockTxid);
 
-      const txId = await useCases.signPsbt('account-id', mockPsbt, 'metamask');
+      const { txid, psbt } = await useCases.signPsbt(
+        'account-id',
+        mockPsbt,
+        'metamask',
+        {
+          fill: false,
+          broadcast: false,
+        },
+      );
+
+      expect(mockRepository.getWithSigner).toHaveBeenCalledWith('account-id');
+      expect(mockAccount.sign).toHaveBeenCalledWith(mockPsbt);
+      expect(txid).toBeUndefined();
+      expect(psbt).toBe(mockSignedPsbt);
+    });
+
+    it('signs and broadcasts a PSBT', async () => {
+      mockAccount.getTransaction.mockReturnValue(mockWalletTx);
+      mockTransaction.compute_txid.mockReturnValue(mockTxid);
+
+      const { txid, psbt } = await useCases.signPsbt(
+        'account-id',
+        mockPsbt,
+        'metamask',
+        {
+          fill: false,
+          broadcast: true,
+        },
+      );
 
       expect(mockRepository.getWithSigner).toHaveBeenCalledWith('account-id');
       expect(mockAccount.sign).toHaveBeenCalledWith(mockPsbt);
@@ -840,133 +904,28 @@ describe('AccountUseCases', () => {
         mockWalletTx,
         'metamask',
       );
-      expect(txId).toBe(mockTxid);
+      expect(txid).toBe(mockTxid);
+      expect(psbt).toBe(mockSignedPsbt);
     });
 
-    it('propagates an error if getWithSigner fails', async () => {
-      const error = new Error('getWithSigner failed');
-      mockRepository.getWithSigner.mockRejectedValueOnce(error);
-
-      await expect(
-        useCases.signPsbt('account-id', mockPsbt, 'metamask'),
-      ).rejects.toBe(error);
-    });
-
-    it('propagates an error if broadcast fails', async () => {
-      const error = new Error('broadcast failed');
-      mockAccount.sign.mockReturnValue(mockTransaction);
-      mockChain.broadcast.mockRejectedValueOnce(error);
-
-      await expect(
-        useCases.signPsbt('account-id', mockPsbt, 'metamask'),
-      ).rejects.toBe(error);
-    });
-
-    it('propagates an error if update fails', async () => {
-      const error = new Error('update failed');
-      mockAccount.sign.mockReturnValue(mockTransaction);
-      mockRepository.update.mockRejectedValue(error);
-
-      await expect(
-        useCases.signPsbt('account-id', mockPsbt, 'metamask'),
-      ).rejects.toBe(error);
-    });
-  });
-
-  describe('fillAndSendPsbt', () => {
-    const mockTxid = mock<Txid>();
-    const mockOutput = mock<TxOut>({
-      script_pubkey: mock<ScriptBuf>(),
-      value: mock<Amount>(),
-    });
-    const mockTemplatePsbt = mock<Psbt>({
-      unsigned_tx: {
-        output: [mockOutput],
-      },
-      toString: () => 'base64Psbt',
-    });
-    const mockTransaction = mock<Transaction>({
-      // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
-      /* eslint-disable @typescript-eslint/naming-convention */
-      compute_txid: jest.fn(),
-      clone: jest.fn(),
-    });
-    const mockAccount = mock<BitcoinAccount>({
-      id: 'account-id',
-      network: 'bitcoin',
-      sign: jest.fn(),
-      isMine: () => false,
-    });
-    const mockWalletTx = mock<WalletTx>();
-    const mockFeeRate = 3;
-    const mockFeeEstimates = mock<FeeEstimates>({
-      get: () => mockFeeRate,
-    });
-    const mockFrozenUTXOs = ['utxo1', 'utxo2'];
-    const mockFilledPsbt = mock<Psbt>();
-    const mockTxBuilder = mock<TransactionBuilder>({
-      addRecipientByScript: jest.fn(),
-      feeRate: jest.fn(),
-      drainToByScript: jest.fn(),
-      drainWallet: jest.fn(),
-      finish: jest.fn(),
-      unspendable: jest.fn(),
-    });
-
-    beforeEach(() => {
-      mockRepository.getWithSigner.mockResolvedValue(mockAccount);
-      mockRepository.getFrozenUTXOs.mockResolvedValue(mockFrozenUTXOs);
-      mockTransaction.compute_txid.mockReturnValue(mockTxid);
-      mockTransaction.clone.mockReturnThis();
-      mockAccount.buildTx.mockReturnValue(mockTxBuilder);
-      mockTxBuilder.addRecipientByScript.mockReturnThis();
-      mockTxBuilder.feeRate.mockReturnThis();
-      mockTxBuilder.drainToByScript.mockReturnThis();
-      mockTxBuilder.untouchedOrdering.mockReturnThis();
-      mockTxBuilder.finish.mockReturnValue(mockFilledPsbt);
-      mockTxBuilder.unspendable.mockReturnThis();
-      mockChain.getFeeEstimates.mockResolvedValue(mockFeeEstimates);
-    });
-
-    it('throws error if account is not found', async () => {
-      mockRepository.getWithSigner.mockResolvedValue(null);
-
-      await expect(
-        useCases.fillAndSendPsbt(
-          'non-existent-id',
-          mockTemplatePsbt,
-          'metamask',
-        ),
-      ).rejects.toThrow('Account not found');
-    });
-
-    it('fills PSBT without change output, signs and sends transaction', async () => {
-      mockAccount.sign.mockReturnValue(mockTransaction);
+    it('fills, signs and broadcasts a PSBT', async () => {
       mockAccount.getTransaction.mockReturnValue(mockWalletTx);
       mockTransaction.compute_txid.mockReturnValue(mockTxid);
 
-      const txid = await useCases.fillAndSendPsbt(
+      const { psbt, txid } = await useCases.signPsbt(
         'account-id',
-        mockTemplatePsbt,
+        mockPsbt,
         'metamask',
+        {
+          fill: true,
+          broadcast: true,
+        },
       );
 
       expect(mockRepository.getWithSigner).toHaveBeenCalledWith('account-id');
-      expect(mockRepository.getFrozenUTXOs).toHaveBeenCalledWith(
-        mockAccount.id,
-      );
       expect(mockChain.getFeeEstimates).toHaveBeenCalledWith(
         mockAccount.network,
       );
-      expect(mockTxBuilder.unspendable).toHaveBeenCalledWith(mockFrozenUTXOs);
-      expect(mockTxBuilder.addRecipientByScript).toHaveBeenCalledWith(
-        mockOutput.value,
-        mockOutput.script_pubkey,
-      );
-      expect(mockTxBuilder.feeRate).toHaveBeenCalledWith(mockFeeRate);
-      expect(mockTxBuilder.untouchedOrdering).toHaveBeenCalled();
-      expect(mockTxBuilder.finish).toHaveBeenCalled();
-
       expect(mockAccount.sign).toHaveBeenCalledWith(mockFilledPsbt);
       expect(mockChain.broadcast).toHaveBeenCalledWith(
         mockAccount.network,
@@ -987,27 +946,7 @@ describe('AccountUseCases', () => {
         'metamask',
       );
       expect(txid).toBe(mockTxid);
-    });
-
-    it('fills PSBT with change output, signs and sends transaction', async () => {
-      mockRepository.getWithSigner.mockResolvedValueOnce({
-        ...mockAccount,
-        isMine: () => true,
-      });
-      mockAccount.sign.mockReturnValue(mockTransaction);
-      mockAccount.getTransaction.mockReturnValue(mockWalletTx);
-      mockTransaction.compute_txid.mockReturnValue(mockTxid);
-
-      const txId = await useCases.fillAndSendPsbt(
-        'account-id',
-        mockTemplatePsbt,
-        'metamask',
-      );
-
-      expect(mockTxBuilder.drainToByScript).toHaveBeenCalledWith(
-        mockOutput.script_pubkey,
-      );
-      expect(txId).toBe(mockTxid);
+      expect(psbt).toBe(mockSignedPsbt);
     });
 
     it('propagates an error if getWithSigner fails', async () => {
@@ -1015,7 +954,133 @@ describe('AccountUseCases', () => {
       mockRepository.getWithSigner.mockRejectedValueOnce(error);
 
       await expect(
-        useCases.fillAndSendPsbt('account-id', mockTemplatePsbt, 'metamask'),
+        useCases.signPsbt('account-id', mockPsbt, 'metamask', {
+          fill: false,
+          broadcast: false,
+        }),
+      ).rejects.toBe(error);
+    });
+
+    it('propagates an error if broadcast fails', async () => {
+      const error = new Error('broadcast failed');
+      mockChain.broadcast.mockRejectedValueOnce(error);
+
+      await expect(
+        useCases.signPsbt('account-id', mockPsbt, 'metamask', {
+          fill: false,
+          broadcast: true,
+        }),
+      ).rejects.toBe(error);
+    });
+
+    it('propagates an error if update fails', async () => {
+      const error = new Error('update failed');
+      mockRepository.update.mockRejectedValue(error);
+
+      await expect(
+        useCases.signPsbt('account-id', mockPsbt, 'metamask', {
+          fill: false,
+          broadcast: true,
+        }),
+      ).rejects.toBe(error);
+    });
+  });
+
+  describe('fillPsbt', () => {
+    const mockOutput = mock<TxOut>({
+      script_pubkey: mock<ScriptBuf>(),
+      value: mock<Amount>(),
+    });
+    const mockTemplatePsbt = mock<Psbt>({
+      unsigned_tx: {
+        output: [mockOutput],
+      },
+      toString: () => 'base64Psbt',
+    });
+    const mockAccount = mock<BitcoinAccount>({
+      id: 'account-id',
+      network: 'bitcoin',
+      sign: jest.fn(),
+      isMine: () => false,
+    });
+    const mockFeeRate = 3;
+    const mockFeeEstimates = mock<FeeEstimates>({
+      get: () => mockFeeRate,
+    });
+    const mockFrozenUTXOs = ['utxo1', 'utxo2'];
+    const mockFilledPsbt = mock<Psbt>();
+    const mockTxBuilder = mock<TransactionBuilder>({
+      addRecipientByScript: jest.fn(),
+      feeRate: jest.fn(),
+      drainToByScript: jest.fn(),
+      drainWallet: jest.fn(),
+      finish: jest.fn(),
+      unspendable: jest.fn(),
+    });
+
+    beforeEach(() => {
+      mockRepository.get.mockResolvedValue(mockAccount);
+      mockRepository.getFrozenUTXOs.mockResolvedValue(mockFrozenUTXOs);
+      mockAccount.buildTx.mockReturnValue(mockTxBuilder);
+      mockTxBuilder.addRecipientByScript.mockReturnThis();
+      mockTxBuilder.feeRate.mockReturnThis();
+      mockTxBuilder.drainToByScript.mockReturnThis();
+      mockTxBuilder.untouchedOrdering.mockReturnThis();
+      mockTxBuilder.finish.mockReturnValue(mockFilledPsbt);
+      mockTxBuilder.unspendable.mockReturnThis();
+      mockChain.getFeeEstimates.mockResolvedValue(mockFeeEstimates);
+    });
+
+    it('throws error if account is not found', async () => {
+      mockRepository.get.mockResolvedValue(null);
+
+      await expect(
+        useCases.fillPsbt('non-existent-id', mockTemplatePsbt),
+      ).rejects.toThrow('Account not found');
+    });
+
+    it('fills PSBT without change output', async () => {
+      const psbt = await useCases.fillPsbt('account-id', mockTemplatePsbt);
+
+      expect(mockRepository.get).toHaveBeenCalledWith('account-id');
+      expect(mockRepository.getFrozenUTXOs).toHaveBeenCalledWith(
+        mockAccount.id,
+      );
+      expect(mockChain.getFeeEstimates).toHaveBeenCalledWith(
+        mockAccount.network,
+      );
+      expect(mockTxBuilder.unspendable).toHaveBeenCalledWith(mockFrozenUTXOs);
+      expect(mockTxBuilder.addRecipientByScript).toHaveBeenCalledWith(
+        mockOutput.value,
+        mockOutput.script_pubkey,
+      );
+      expect(mockTxBuilder.feeRate).toHaveBeenCalledWith(mockFeeRate);
+      expect(mockTxBuilder.untouchedOrdering).toHaveBeenCalled();
+      expect(mockTxBuilder.finish).toHaveBeenCalled();
+
+      expect(psbt).toBe(mockFilledPsbt);
+    });
+
+    it('fills PSBT with change output', async () => {
+      mockRepository.get.mockResolvedValueOnce({
+        ...mockAccount,
+        isMine: () => true,
+      });
+
+      const psbt = await useCases.fillPsbt('account-id', mockTemplatePsbt);
+
+      expect(mockTxBuilder.drainToByScript).toHaveBeenCalledWith(
+        mockOutput.script_pubkey,
+      );
+      expect(psbt).toBe(mockFilledPsbt);
+    });
+
+    it('propagates an error if get fails', async () => {
+      const error = new Error('get failed');
+      mockRepository.get.mockRejectedValueOnce(error);
+
+      await expect(
+        useCases.fillPsbt('account-id', mockTemplatePsbt),
       ).rejects.toBe(error);
     });
 
@@ -1026,7 +1091,7 @@ describe('AccountUseCases', () => {
       });
 
       await expect(
-        useCases.fillAndSendPsbt('account-id', mockTemplatePsbt, 'metamask'),
+        useCases.fillPsbt('account-id', mockTemplatePsbt),
       ).rejects.toThrow(
         new ValidationError(
           'Failed to build PSBT from template',
@@ -1038,26 +1103,6 @@ describe('AccountUseCases', () => {
           error,
         ),
       );
-    });
-
-    it('propagates an error if broadcast fails', async () => {
-      const error = new Error('broadcast failed');
-      mockAccount.sign.mockReturnValue(mockTransaction);
-      mockChain.broadcast.mockRejectedValueOnce(error);
-
-      await expect(
-        useCases.fillAndSendPsbt('account-id', mockTemplatePsbt, 'metamask'),
-      ).rejects.toBe(error);
-    });
-
-    it('propagates an error if update fails', async () => {
-      const error = new Error('update failed');
-      mockAccount.sign.mockReturnValue(mockTransaction);
-      mockRepository.update.mockRejectedValue(error);
-
-      await expect(
-        useCases.fillAndSendPsbt('account-id', mockTemplatePsbt, 'metamask'),
-      ).rejects.toBe(error);
     });
   });
 
@@ -1093,7 +1138,7 @@ describe('AccountUseCases', () => {
     });
 
     beforeEach(() => {
-      mockRepository.getWithSigner.mockResolvedValue(mockAccount);
+      mockRepository.get.mockResolvedValue(mockAccount);
       mockRepository.getFrozenUTXOs.mockResolvedValue(mockFrozenUTXOs);
       mockAccount.buildTx.mockReturnValue(mockTxBuilder);
       mockTxBuilder.addRecipientByScript.mockReturnThis();
@@ -1107,7 +1152,7 @@ describe('AccountUseCases', () => {
     });
 
     it('throws error if account is not found', async () => {
-      mockRepository.getWithSigner.mockResolvedValue(null);
+      mockRepository.get.mockResolvedValue(null);
 
       await expect(
         useCases.computeFee('account-id', mockTemplatePsbt),
@@ -1117,7 +1162,7 @@ describe('AccountUseCases', () => {
     it('computes fee for PSBT without change output', async () => {
       const fee = await useCases.computeFee('account-id', mockTemplatePsbt);
 
-      expect(mockRepository.getWithSigner).toHaveBeenCalledWith('account-id');
+      expect(mockRepository.get).toHaveBeenCalledWith('account-id');
       expect(mockRepository.getFrozenUTXOs).toHaveBeenCalledWith('account-id');
       expect(mockChain.getFeeEstimates).toHaveBeenCalledWith('bitcoin');
       expect(mockTxBuilder.unspendable).toHaveBeenCalledWith(mockFrozenUTXOs);
@@ -1132,7 +1177,7 @@ describe('AccountUseCases', () => {
     });
 
     it('computes fee for PSBT with change output', async () => {
-      mockRepository.getWithSigner.mockResolvedValueOnce({
+      mockRepository.get.mockResolvedValueOnce({
         ...mockAccount,
         isMine: () => true,
       });
