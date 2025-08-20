@@ -19,7 +19,7 @@ const ACCOUNT_INDEX = 0;
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
-describe.skip('Keyring', () => {
+describe('Keyring', () => {
   const accounts: Record<string, KeyringAccount> = {}; // accounts stored by address
   let snap: Snap;
 

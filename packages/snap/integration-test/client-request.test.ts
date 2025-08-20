@@ -10,7 +10,7 @@ import { Caip19Asset } from '../src/handlers/caip';
 
 const ACCOUNT_INDEX = 1;
 
-describe.skip('OnClientRequestHandler', () => {
+describe('OnClientRequestHandler', () => {
   let account: KeyringAccount;
   let snap: Snap;
   let blockchain: BlockchainTestUtils;

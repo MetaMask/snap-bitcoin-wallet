@@ -6,7 +6,7 @@ import { installSnap } from '@metamask/snaps-jest';
 import { BlockchainTestUtils } from './blockchain-utils';
 import { MNEMONIC, ORIGIN } from './constants';
 import { AccountCapability } from '../src/entities';
-import { FillPsbtResponse } from '../src/handlers/KeyringRequestHandler';
+import type { FillPsbtResponse } from '../src/handlers/KeyringRequestHandler';
 
 const ACCOUNT_INDEX = 3;
 const submitRequestMethod = 'keyring_submitRequest';
@@ -67,7 +67,7 @@ describe('KeyringRequestHandler', () => {
     expect(response).toRespondWithError({
       code: -32000,
       message:
-        'Invalid format: At path: params.account -- Expected a value of type `UuidV4`, but received: `\"notAUUID\"`',
+        'Invalid format: At path: params.account -- Expected a value of type `UuidV4`, but received: `"notAUUID"`',
       stack: expect.anything(),
     });
   });
@@ -91,7 +91,7 @@ describe('KeyringRequestHandler', () => {
       code: -32601,
       data: {
         cause: null,
-        id: '7c5c5fbe-d952-46c3-b6ba-49953a0996fc',
+        id: expect.any(String),
         method: 'invalidMethod',
       },
       message:
@@ -106,8 +106,6 @@ describe('KeyringRequestHandler', () => {
       'cHNidP8BAI4CAAAAAAM1gwEAAAAAACJRIORP1Ndiq325lSC/jMG0RlhATHYmuuULfXgEHUM3u5i4AAAAAAAAAAAxai8AAUSx+i9Igg4HWdcpyagCs8mzuRCklgA7nRMkm69rAAAAAAAAAAAAAQACAAAAACp2AAAAAAAAFgAUgpMvYEJ/dp36svRJyRtNnpSo7bQAAAAAAAAAAAA=';
     const SIGNED_PSBT =
       'cHNidP8BAI4CAAAAAAM1gwEAAAAAACJRIORP1Ndiq325lSC/jMG0RlhATHYmuuULfXgEHUM3u5i4AAAAAAAAAAAxai8AAUSx+i9Igg4HWdcpyagCs8mzuRCklgA7nRMkm69rAAAAAAAAAAAAAQACAAAAACp2AAAAAAAAFgAUgpMvYEJ/dp36svRJyRtNnpSo7bQAAAAAAAAAAA==';
-    const FILLED_SIGNED_PSBT =
-      'cHNidP8BALcCAAAAAZ5nWOH0vBxWPypyxG/94PhXZuJG03MZfxDyLe39lOx6AQAAAAD9////AzWDAQAAAAAAIlEg5E/U12KrfbmVIL+MwbRGWEBMdia65Qt9eAQdQze7mLgAAAAAAAAAADFqLwABRLH6L0iCDgdZ1ynJqAKzybO5EKSWADudEySbr2sAAAAAAAAAAAABAAIAAAAAU0SZOwAAAAAWABSCky9gQn92nfqy9EnJG02elKjttNgAAAAAAQDeAgAAAAABAd/1FS3FOxmNWE3dK+x+RZIofZ5Snh0GL4XGeI21K8RSAQAAAAD9////AkEka+4AAAAAFgAUiRc/AkxhTvmWMHzL8Lw02MP5TIkAypo7AAAAABYAFIKTL2BCf3ad+rL0SckbTZ6UqO20AkcwRAIgH4TWmM8ZBoOwFNWnCpUucAlyCLsa7AjGsw/v4V/uAWICICqkoTH7wDvnA9IE73DQI8APuRwiuVhRXuvwzz6s2x1PASECAahok/17/mrIXmYpPlhLfgYdIf288ODaZGSRURzOJL/SAAAAAQEfAMqaOwAAAAAWABSCky9gQn92nfqy9EnJG02elKjttAEIawJHMEQCIHfTCmqIPYkLj3cBJGTjROFFIwYX8ze+3gcUeYoKpx8WAiBz28G8UQLQPFuZuQZL9TQ3PWBOzoEcSbVMV1j/anJROQEhAsAysqV5vxJZlU8Uyye52qOl+Zgf4hm1NkNqraLdEES+AAAAAA==';
 
     it('signs a PSBT successfully: sign', async () => {
       const response = await snap.onKeyringRequest({
@@ -167,7 +165,7 @@ describe('KeyringRequestHandler', () => {
       expect(response).toRespondWith({
         pending: false,
         result: {
-          psbt: FILLED_SIGNED_PSBT,
+          psbt: expect.any(String), // non deterministic
           txid: null,
         },
       });
@@ -199,7 +197,7 @@ describe('KeyringRequestHandler', () => {
       expect(response).toRespondWith({
         pending: false,
         result: {
-          psbt: FILLED_SIGNED_PSBT,
+          psbt: expect.any(String), // non deterministic
           txid: expect.any(String),
         },
       });
@@ -269,8 +267,6 @@ describe('KeyringRequestHandler', () => {
     // PSBTs can be decoded here: https://bitcoincore.tech/apps/bitcoinjs-ui/index.html
     const TEMPLATE_PSBT =
       'cHNidP8BAI4CAAAAAAM1gwEAAAAAACJRIORP1Ndiq325lSC/jMG0RlhATHYmuuULfXgEHUM3u5i4AAAAAAAAAAAxai8AAUSx+i9Igg4HWdcpyagCs8mzuRCklgA7nRMkm69rAAAAAAAAAAAAAQACAAAAACp2AAAAAAAAFgAUgpMvYEJ/dp36svRJyRtNnpSo7bQAAAAAAAAAAAA=';
-    const FILLED_PSBT =
-      'cHNidP8BALcCAAAAAXTckYZCO+HE3Ub1I4Z2dGU6/QvwvuATS+PWhmXbtWVmAgAAAAD9////AzWDAQAAAAAAIlEg5E/U12KrfbmVIL+MwbRGWEBMdia65Qt9eAQdQze7mLgAAAAAAAAAADFqLwABRLH6L0iCDgdZ1ynJqAKzybO5EKSWADudEySbr2sAAAAAAAAAAAABAAIAAAAApr6XOwAAAAAWABSCky9gQn92nfqy9EnJG02elKjttNgAAAAAAQD9JAECAAAAAAEBnmdY4fS8HFY/KnLEb/3g+Fdm4kbTcxl/EPIt7f2U7HoBAAAAAP3///8DNYMBAAAAAAAiUSDkT9TXYqt9uZUgv4zBtEZYQEx2JrrlC314BB1DN7uYuAAAAAAAAAAAMWovAAFEsfovSIIOB1nXKcmoArPJs7kQpJYAO50TJJuvawAAAAAAAAAAAAEAAgAAAABTRJk7AAAAABYAFIKTL2BCf3ad+rL0SckbTZ6UqO20AkcwRAIgd9MKaog9iQuPdwEkZONE4UUjBhfzN77eBxR5igqnHxYCIHPbwbxRAtA8W5m5Bkv1NDc9YE7OgRxJtUxXWP9qclE5ASECwDKypXm/ElmVTxTLJ7nao6X5mB/iGbU2Q2qtot0QRL7YAAAAAQEfU0SZOwAAAAAWABSCky9gQn92nfqy9EnJG02elKjttCIGAsAysqV5vxJZlU8Uyye52qOl+Zgf4hm1NkNqraLdEES+GCf5A19UAACAAQAAgAAAAIAAAAAAAAAAAAAAACICAsAysqV5vxJZlU8Uyye52qOl+Zgf4hm1NkNqraLdEES+GCf5A19UAACAAQAAgAAAAIAAAAAAAAAAAAA=';
 
     it('fills a PSBT successfully', async () => {
       const response = await snap.onKeyringRequest({
@@ -294,8 +290,7 @@ describe('KeyringRequestHandler', () => {
       expect(response).toRespondWith({
         pending: false,
         result: {
-          psbt: FILLED_PSBT,
-          txid: null,
+          psbt: expect.any(String), // non deterministic
         },
       });
     });
@@ -357,7 +352,7 @@ describe('KeyringRequestHandler', () => {
       expect(response).toRespondWith({
         pending: false,
         result: {
-          fee: 632,
+          fee: '632',
         },
       });
     });
@@ -392,7 +387,7 @@ describe('KeyringRequestHandler', () => {
     });
   });
 
-  describe.only('broadcastPsbt', () => {
+  describe('broadcastPsbt', () => {
     // PSBTs can be decoded here: https://bitcoincore.tech/apps/bitcoinjs-ui/index.html
     const TEMPLATE_PSBT =
       'cHNidP8BAI4CAAAAAAM1gwEAAAAAACJRIORP1Ndiq325lSC/jMG0RlhATHYmuuULfXgEHUM3u5i4AAAAAAAAAAAxai8AAUSx+i9Igg4HWdcpyagCs8mzuRCklgA7nRMkm69rAAAAAAAAAAAAAQACAAAAACp2AAAAAAAAFgAUgpMvYEJ/dp36svRJyRtNnpSo7bQAAAAAAAAAAAA=';
@@ -408,17 +403,22 @@ describe('KeyringRequestHandler', () => {
           scope: BtcScope.Regtest,
           account: account.id,
           request: {
-            method: AccountCapability.FillPsbt,
+            method: AccountCapability.SignPsbt,
             params: {
               psbt: TEMPLATE_PSBT,
               feeRate: 3,
+              options: {
+                fill: true,
+                broadcast: false,
+              },
             },
           },
         } as KeyringRequest,
       });
 
-      const { psbt } = (response.response as { result: { psbt: string } })
-        .result;
+      const { result } = (
+        response.response as { result: { result: FillPsbtResponse } }
+      ).result;
 
       response = await snap.onKeyringRequest({
         origin: ORIGIN,
@@ -431,7 +431,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.BroadcastPsbt,
             params: {
-              psbt,
+              psbt: result.psbt,
             },
           },
         } as KeyringRequest,
@@ -440,7 +440,7 @@ describe('KeyringRequestHandler', () => {
       expect(response).toRespondWith({
         pending: false,
         result: {
-          txid: 'txid',
+          txid: expect.any(String),
         },
       });
     });

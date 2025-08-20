@@ -338,7 +338,7 @@ export class AccountUseCases {
     origin: string,
     options: { fill: boolean; broadcast: boolean },
     feeRate?: number,
-  ): Promise<{ psbt: Psbt; txid?: Txid }> {
+  ): Promise<{ psbt: string; txid?: Txid }> {
     this.#logger.debug('Signing PSBT: %s', id, options);
 
     const account = await this.#repository.getWithSigner(id);
@@ -353,6 +353,7 @@ export class AccountUseCases {
     const signedPsbt = account.sign(psbtToSign);
 
     if (options.broadcast) {
+      const psbtString = signedPsbt.toString();
       const tx = signedPsbt.extract_tx();
       const txid = await this.#broadcast(account, tx, origin);
 
@@ -363,7 +364,7 @@ export class AccountUseCases {
         account.network,
         options,
       );
-      return { psbt: signedPsbt, txid };
+      return { psbt: psbtString, txid };
     }
 
     this.#logger.info(
@@ -372,7 +373,7 @@ export class AccountUseCases {
       account.network,
       options,
     );
-    return { psbt: signedPsbt };
+    return { psbt: signedPsbt.toString() };
   }
 
   async computeFee(
