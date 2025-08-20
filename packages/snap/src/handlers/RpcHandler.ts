@@ -1,4 +1,3 @@
-import { Psbt } from '@metamask/bitcoindevkit';
 import { BtcScope } from '@metamask/keyring-api';
 import type { Json, JsonRpcRequest } from '@metamask/utils';
 import { assert, enums, object, optional, string } from 'superstruct';
@@ -13,6 +12,7 @@ import {
 import { scopeToNetwork } from './caip';
 import type { TransactionFee } from './mappings';
 import { mapToTransactionFees } from './mappings';
+import { parsePsbt } from './parsers';
 
 export enum RpcMethod {
   StartSendTransactionFlow = 'startSendTransactionFlow',
@@ -110,7 +110,7 @@ export class RpcHandler {
     transaction: string,
     origin: string,
   ): Promise<SendTransactionResponse | null> {
-    const psbt: Psbt = this.#parsePsbt(transaction);
+    const psbt = parsePsbt(transaction);
 
     const { txid } = await this.#accountUseCases.signPsbt(
       accountId,
@@ -133,17 +133,9 @@ export class RpcHandler {
     transaction: string,
     scope: BtcScope,
   ): Promise<TransactionFee[]> {
-    const psbt = this.#parsePsbt(transaction);
+    const psbt = parsePsbt(transaction);
     const amount = await this.#accountUseCases.computeFee(accountId, psbt);
 
     return [mapToTransactionFees(amount, scopeToNetwork[scope])];
-  }
-
-  #parsePsbt(transaction: string): Psbt {
-    try {
-      return Psbt.from_string(transaction);
-    } catch (error) {
-      throw new FormatError('Invalid PSBT', { transaction }, error);
-    }
   }
 }

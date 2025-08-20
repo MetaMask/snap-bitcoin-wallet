@@ -205,6 +205,8 @@ export type BitcoinAccount = {
 export enum AccountCapability {
   SignPsbt = 'signPsbt',
   ComputeFee = 'computeFee',
+  FillPsbt = 'fillPsbt',
+  BroadcastPsbt = 'broadcastPsbt',
 }
 
 /**

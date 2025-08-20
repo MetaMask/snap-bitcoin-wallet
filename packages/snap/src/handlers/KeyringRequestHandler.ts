@@ -1,13 +1,9 @@
-import { Psbt } from '@metamask/bitcoindevkit';
 import type { KeyringRequest, KeyringResponse } from '@metamask/keyring-api';
 import type { Json } from '@metamask/utils';
 import { assert, boolean, number, object, optional, string } from 'superstruct';
 
-import {
-  AccountCapability,
-  InexistentMethodError,
-  ValidationError,
-} from '../entities';
+import { AccountCapability, InexistentMethodError } from '../entities';
+import { parsePsbt } from './parsers';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 
 export const SignPsbtRequest = object({
@@ -50,45 +46,26 @@ export class KeyringRequestHandler {
   }
 
   async route(request: KeyringRequest): Promise<KeyringResponse> {
-    console.log('request', request);
     const { id, request: requestData, origin } = request;
     const { method, params } = requestData;
-
-    const account = await this.#accountsUseCases.get(id);
-    if (!account.capabilities.includes(method as AccountCapability)) {
-      throw new ValidationError('Account does not have given capability', {
-        id,
-        capability: method,
-        capabilities: account.capabilities,
-      });
-    }
 
     switch (method as AccountCapability) {
       case AccountCapability.SignPsbt: {
         assert(params, SignPsbtRequest);
-        const { feeRate, options } = params;
-        const psbt = Psbt.from_string(params.psbt);
-        const { psbt: signedPsbt, txid } =
-          await this.#accountsUseCases.signPsbt(
-            id,
-            psbt,
-            origin,
-            options,
-            feeRate,
-          );
-        return this.#toKeyringResponse({
-          psbt: signedPsbt.toString(),
-          txid: txid?.toString() ?? null,
-        });
+        const { psbt, feeRate, options } = params;
+        return this.#signPsbt(id, psbt, origin, options, feeRate);
+      }
+      case AccountCapability.FillPsbt: {
+        assert(params, ComputeFeeRequest);
+        return this.#fillPsbt(id, params.psbt, params.feeRate);
       }
       case AccountCapability.ComputeFee: {
         assert(params, ComputeFeeRequest);
-        const { feeRate } = params;
-        const psbt = Psbt.from_string(params.psbt);
-        const fee = await this.#accountsUseCases.computeFee(id, psbt, feeRate);
-        return this.#toKeyringResponse({
-          fee: fee.to_sat().toString(),
-        });
+        return this.#computeFee(id, params.psbt, params.feeRate);
+      }
+      case AccountCapability.BroadcastPsbt: {
+        assert(params, BroadcastPsbtRequest);
+        return this.#broadcastPsbt(id, params.psbt, origin);
       }
       default: {
         throw new InexistentMethodError(
@@ -100,6 +77,71 @@ export class KeyringRequestHandler {
         );
       }
     }
+  }
+
+  async #signPsbt(
+    id: string,
+    psbtBase64: string,
+    origin: string,
+    options: { fill: boolean; broadcast: boolean },
+    feeRate?: number,
+  ): Promise<KeyringResponse> {
+    const { psbt, txid } = await this.#accountsUseCases.signPsbt(
+      id,
+      parsePsbt(psbtBase64),
+      origin,
+      options,
+      feeRate,
+    );
+    return this.#toKeyringResponse({
+      psbt: psbt.toString(),
+      txid: txid?.toString() ?? null,
+    });
+  }
+
+  async #fillPsbt(
+    id: string,
+    psbtBase64: string,
+    feeRate?: number,
+  ): Promise<KeyringResponse> {
+    const psbt = await this.#accountsUseCases.fillPsbt(
+      id,
+      parsePsbt(psbtBase64),
+      feeRate,
+    );
+    return this.#toKeyringResponse({
+      psbt: psbt.toString(),
+    });
+  }
+
+  async #computeFee(
+    id: string,
+    psbtBase64: string,
+    feeRate?: number,
+  ): Promise<KeyringResponse> {
+    const fee = await this.#accountsUseCases.computeFee(
+      id,
+      parsePsbt(psbtBase64),
+      feeRate,
+    );
+    return this.#toKeyringResponse({
+      fee: fee.to_sat().toString(),
+    });
+  }
+
+  async #broadcastPsbt(
+    id: string,
+    psbtBase64: string,
+    origin: string,
+  ): Promise<KeyringResponse> {
+    const txid = await this.#accountsUseCases.broadcastPsbt(
+      id,
+      parsePsbt(psbtBase64),
+      origin,
+    );
+    return this.#toKeyringResponse({
+      txid: txid.toString(),
+    });
   }
 
   #toKeyringResponse(result: Json): KeyringResponse {

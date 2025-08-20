@@ -10,6 +10,7 @@ import type {
 import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 
 import {
+  AccountCapability,
   addressTypeToPurpose,
   type BitcoinAccount,
   type BitcoinAccountRepository,
@@ -18,6 +19,7 @@ import {
   type MetaProtocolsClient,
   networkToCoinType,
   NotFoundError,
+  PermissionError,
   type SnapClient,
   TrackingSnapEvent,
   ValidationError,
@@ -317,6 +319,7 @@ export class AccountUseCases {
     if (!account) {
       throw new NotFoundError('Account not found', { id });
     }
+    this.#checkCapability(account, AccountCapability.FillPsbt);
 
     const psbt = await this.#fillPsbt(account, templatePsbt, feeRate);
 
@@ -342,24 +345,33 @@ export class AccountUseCases {
     if (!account) {
       throw new NotFoundError('Account not found', { id });
     }
+    this.#checkCapability(account, AccountCapability.SignPsbt);
 
-    const signedPsbt = account.sign(
-      options.fill ? await this.#fillPsbt(account, psbt, feeRate) : psbt,
-    );
+    const psbtToSign = options.fill
+      ? await this.#fillPsbt(account, psbt, feeRate)
+      : psbt;
+    const signedPsbt = account.sign(psbtToSign);
 
     if (options.broadcast) {
       const tx = signedPsbt.extract_tx();
       const txid = await this.#broadcast(account, tx, origin);
+
+      this.#logger.info(
+        'Transaction sent successfully: %s. Account: %s, Network: %s',
+        txid.toString(),
+        account.id,
+        account.network,
+        options,
+      );
       return { psbt: signedPsbt, txid };
     }
 
     this.#logger.info(
-      'PSBT signed successfully: %s. Account: %s, Network: %s',
+      'PSBT signed successfully. Account: %s, Network: %s',
       account.id,
       account.network,
       options,
     );
-
     return { psbt: signedPsbt };
   }
 
@@ -374,6 +386,7 @@ export class AccountUseCases {
     if (!account) {
       throw new NotFoundError('Account not found', { id });
     }
+    this.#checkCapability(account, AccountCapability.ComputeFee);
 
     const psbt = await this.#fillPsbt(account, templatePsbt, feeRate);
     return psbt.fee();
@@ -386,6 +399,7 @@ export class AccountUseCases {
     if (!account) {
       throw new NotFoundError('Account not found', { id });
     }
+    this.#checkCapability(account, AccountCapability.BroadcastPsbt);
 
     const tx = account.extractTransaction(psbt);
     const txid = await this.#broadcast(account, tx, origin);
@@ -473,5 +487,18 @@ export class AccountUseCases {
     }
 
     return txid;
+  }
+
+  #checkCapability(
+    account: BitcoinAccount,
+    capability: AccountCapability,
+  ): void {
+    if (!account.capabilities.includes(capability)) {
+      throw new PermissionError('Account missing given capability', {
+        id: account.id,
+        capability,
+        capabilities: account.capabilities,
+      });
+    }
   }
 }

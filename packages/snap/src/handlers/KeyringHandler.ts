@@ -144,8 +144,7 @@ export class KeyringHandler implements Keyring {
       }
       case `${KeyringRpcMethod.SubmitRequest}`: {
         assert(request, SubmitRequestRequestStruct);
-        await this.submitRequest(request.params);
-        return null;
+        return this.submitRequest(request.params);
       }
 
       default: {
@@ -310,7 +309,7 @@ export class KeyringHandler implements Keyring {
   }
 
   async submitRequest(request: KeyringRequest): Promise<KeyringResponse> {
-    return await this.#keyringRequest.route(request);
+    return this.#keyringRequest.route(request);
   }
 
   #extractAddressType(path: string): AddressType {

@@ -22,7 +22,11 @@ import type {
   SnapClient,
   TransactionBuilder,
 } from '../entities';
-import { TrackingSnapEvent, ValidationError } from '../entities';
+import {
+  AccountCapability,
+  TrackingSnapEvent,
+  ValidationError,
+} from '../entities';
 import type {
   CreateAccountParams,
   DiscoverAccountParams,
@@ -808,6 +812,7 @@ describe('AccountUseCases', () => {
     const mockAccount = mock<BitcoinAccount>({
       network: 'bitcoin',
       sign: jest.fn(),
+      capabilities: [AccountCapability.SignPsbt],
     });
     const mockWalletTx = mock<WalletTx>();
     const mockFeeRate = 3;
@@ -1002,6 +1007,7 @@ describe('AccountUseCases', () => {
       network: 'bitcoin',
       sign: jest.fn(),
       isMine: () => false,
+      capabilities: [AccountCapability.FillPsbt],
     });
     const mockFeeRate = 3;
     const mockFeeEstimates = mock<FeeEstimates>({
@@ -1122,6 +1128,7 @@ describe('AccountUseCases', () => {
       id: 'account-id',
       network: 'bitcoin',
       isMine: () => false,
+      capabilities: [AccountCapability.ComputeFee],
     });
     const mockFeeRate = 3;
     const mockFeeEstimates = mock<FeeEstimates>({

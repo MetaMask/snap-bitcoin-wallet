@@ -163,7 +163,7 @@ export class BdkAccountAdapter implements BitcoinAccount {
     try {
       const finalized = this.#wallet.sign(psbt, new SignOptions());
       // Signing a PSBT does not mean that the tx/psbt is final, like in a multi-sig setup.
-      // This ensures we only support signing where the psbt is final after. Will add comment.
+      // This ensures we only support signing where the psbt is final after.
       if (!finalized) {
         throw new WalletError('PSBT not finalized', {
           psbt: psbt.toString(),
