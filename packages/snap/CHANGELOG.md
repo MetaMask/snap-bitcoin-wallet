@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.19.2]
 
+### Fixed
+
+- Fix issue where DIN endpoints where not used in `v0.19.1`
+
 ## [0.19.1]
 
 ### Changed
