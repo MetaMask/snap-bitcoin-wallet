@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.19.1]
 
+- Uses the new DIN endpoints for Bitcoin and Bitcoin Testnet (no PR, change done in CI secrets).
+
 ## [0.19.0]
 
 ### Changed
