@@ -72,6 +72,15 @@ jobs:
     permissions:
       contents: write
     uses: ./.github/workflows/publish-release.yml
+    with:
+      LOG_LEVEL: ${{ vars.LOG_LEVEL }}
+      DEFAULT_ADDRESS_TYPE: ${{ vars.DEFAULT_ADDRESS_TYPE }}
     secrets:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      ESPLORA_BITCOIN: ${{ secrets.ESPLORA_BITCOIN }}
+      ESPLORA_TESTNET: ${{ secrets.ESPLORA_TESTNET }}
+      ESPLORA_TESTNET4: ${{ secrets.ESPLORA_TESTNET4 }}
+      ESPLORA_SIGNET: ${{ secrets.ESPLORA_SIGNET }}
+      ESPLORA_REGTEST: ${{ secrets.ESPLORA_REGTEST }}
+      PRICE_API_URL: ${{ secrets.PRICE_API_URL }}
