@@ -354,7 +354,7 @@ export class AccountUseCases {
 
     if (options.broadcast) {
       const psbtString = signedPsbt.toString();
-      const tx = signedPsbt.extract_tx();
+      const tx = account.extractTransaction(signedPsbt);
       const txid = await this.#broadcast(account, tx, origin);
 
       this.#logger.info(

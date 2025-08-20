@@ -54,32 +54,32 @@ export class KeyringRequestHandler {
   }
 
   async route(request: KeyringRequest): Promise<KeyringResponse> {
-    const { id, request: requestData, origin } = request;
+    const { account, request: requestData, origin } = request;
     const { method, params } = requestData;
 
     switch (method as AccountCapability) {
       case AccountCapability.SignPsbt: {
         assert(params, SignPsbtRequest);
         const { psbt, feeRate, options } = params;
-        return this.#signPsbt(id, psbt, origin, options, feeRate);
+        return this.#signPsbt(account, psbt, origin, options, feeRate);
       }
       case AccountCapability.FillPsbt: {
-        assert(params, ComputeFeeRequest);
-        return this.#fillPsbt(id, params.psbt, params.feeRate);
+        assert(params, FillPsbtRequest);
+        return this.#fillPsbt(account, params.psbt, params.feeRate);
       }
       case AccountCapability.ComputeFee: {
         assert(params, ComputeFeeRequest);
-        return this.#computeFee(id, params.psbt, params.feeRate);
+        return this.#computeFee(account, params.psbt, params.feeRate);
       }
       case AccountCapability.BroadcastPsbt: {
         assert(params, BroadcastPsbtRequest);
-        return this.#broadcastPsbt(id, params.psbt, origin);
+        return this.#broadcastPsbt(account, params.psbt, origin);
       }
       default: {
         throw new InexistentMethodError(
           'Unrecognized Bitcoin account capability',
           {
-            id,
+            account,
             method,
           },
         );
