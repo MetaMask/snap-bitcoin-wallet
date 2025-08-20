@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.2]
+
 ## [0.19.1]
 
 ### Changed
@@ -426,7 +428,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add CI for lint and test ([#2](https://github.com/MetaMask/bitcoin/pull/2))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.19.1...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.19.2...HEAD
+[0.19.2]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.19.1...v0.19.2
 [0.19.1]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.19.0...v0.19.1
 [0.19.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.18.0...v0.19.0
 [0.18.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.17.0...v0.18.0
