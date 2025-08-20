@@ -6,6 +6,7 @@ import { installSnap } from '@metamask/snaps-jest';
 import { BlockchainTestUtils } from './blockchain-utils';
 import { MNEMONIC, ORIGIN } from './constants';
 import { AccountCapability } from '../src/entities';
+import { FillPsbtResponse } from '../src/handlers/KeyringRequestHandler';
 
 const ACCOUNT_INDEX = 3;
 const submitRequestMethod = 'keyring_submitRequest';
@@ -393,11 +394,33 @@ describe('KeyringRequestHandler', () => {
 
   describe.only('broadcastPsbt', () => {
     // PSBTs can be decoded here: https://bitcoincore.tech/apps/bitcoinjs-ui/index.html
-    const FILLED_SIGNED_PSBT =
-      'cHNidP8BALcCAAAAARfw/oa746JpyuFVgph6sl24ALLQdq+ZLOi+78lQWVyrAQAAAAD9////AzWDAQAAAAAAIlEg5E/U12KrfbmVIL+MwbRGWEBMdia65Qt9eAQdQze7mLgAAAAAAAAAADFqLwABRLH6L0iCDgdZ1ynJqAKzybO5EKSWADudEySbr2sAAAAAAAAAAAABAAIAAAAAU0SZOwAAAAAWABSCky9gQn92nfqy9EnJG02elKjttNgAAAAAAQDeAgAAAAABARbi9PHrzpuGqW9QkB0+7BbKMBYGUhNNEWi7Q4gHaU/MAAAAAAD9////AkEka+4AAAAAFgAUyOKDvSXiMienI279TDB+Va+yBYIAypo7AAAAABYAFIKTL2BCf3ad+rL0SckbTZ6UqO20AkcwRAIgRwpLLy3Qh6Dmpn6NK1oaRTI1aDGgyqU+OKFvE8uX8U0CICyFjM19u+3YM3XxYUCIaOc+ZT9W0hg1DWCS1ZnWDxLEASECWKUIwQrUyd91wlvpqefRzZgFo+eus+41HSd1J+nBcGecAAAAAQEfAMqaOwAAAAAWABSCky9gQn92nfqy9EnJG02elKjttAEIawJHMEQCICXIhfwxOBCEUMQK26K2a2tz+HwH60Vos+RGAL6w53GWAiBJhgi/Q7ohz6iOsc25ljps8XrUk7hurH83p5/FAyOoDQEhAsAysqV5vxJZlU8Uyye52qOl+Zgf4hm1NkNqraLdEES+AAAAAA==';
+    const TEMPLATE_PSBT =
+      'cHNidP8BAI4CAAAAAAM1gwEAAAAAACJRIORP1Ndiq325lSC/jMG0RlhATHYmuuULfXgEHUM3u5i4AAAAAAAAAAAxai8AAUSx+i9Igg4HWdcpyagCs8mzuRCklgA7nRMkm69rAAAAAAAAAAAAAQACAAAAACp2AAAAAAAAFgAUgpMvYEJ/dp36svRJyRtNnpSo7bQAAAAAAAAAAAA=';
 
     it('broadcasts a PSBT successfully', async () => {
-      const response = await snap.onKeyringRequest({
+      // Prepare the PSBT to broadcast so we have a valid PSBT to broadcast
+      let response = await snap.onKeyringRequest({
+        origin: ORIGIN,
+        method: submitRequestMethod,
+        params: {
+          id: account.id,
+          origin,
+          scope: BtcScope.Regtest,
+          account: account.id,
+          request: {
+            method: AccountCapability.FillPsbt,
+            params: {
+              psbt: TEMPLATE_PSBT,
+              feeRate: 3,
+            },
+          },
+        } as KeyringRequest,
+      });
+
+      const { psbt } = (response.response as { result: { psbt: string } })
+        .result;
+
+      response = await snap.onKeyringRequest({
         origin: ORIGIN,
         method: submitRequestMethod,
         params: {
@@ -408,7 +431,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.BroadcastPsbt,
             params: {
-              psbt: FILLED_SIGNED_PSBT,
+              psbt,
             },
           },
         } as KeyringRequest,

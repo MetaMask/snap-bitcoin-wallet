@@ -25,17 +25,25 @@ export const ComputeFeeRequest = object({
   feeRate: optional(number()),
 });
 
+export type ComputeFeeResponse = {
+  fee: number;
+};
+
 export const BroadcastPsbtRequest = object({
   psbt: string(),
 });
+
+export type BroadcastPsbtResponse = {
+  txid: string;
+};
 
 export const FillPsbtRequest = object({
   psbt: string(),
   feeRate: optional(number()),
 });
 
-export type ComputeFeeResponse = {
-  fee: number;
+export type FillPsbtResponse = {
+  psbt: string;
 };
 
 export class KeyringRequestHandler {
