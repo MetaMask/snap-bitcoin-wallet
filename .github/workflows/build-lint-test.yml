@@ -42,7 +42,6 @@ jobs:
     needs:
       - prepare
     env:
-      ENVIRONMENT: production
       LOG_LEVEL: ${{ secrets.LOG_LEVEL }}
       DEFAULT_ADDRESS_TYPE: ${{ secrets.DEFAULT_ADDRESS_TYPE }}
       ESPLORA_BITCOIN: ${{ secrets.ESPLORA_BITCOIN }}

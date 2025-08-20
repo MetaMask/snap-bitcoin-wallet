@@ -7,6 +7,22 @@ on:
         required: true
       SLACK_WEBHOOK_URL:
         required: true
+      LOG_LEVEL:
+        required: false
+      DEFAULT_ADDRESS_TYPE:
+        required: false
+      ESPLORA_BITCOIN:
+        required: false
+      ESPLORA_TESTNET:
+        required: false
+      ESPLORA_TESTNET4:
+        required: false
+      ESPLORA_SIGNET:
+        required: false
+      ESPLORA_REGTEST:
+        required: false
+      PRICE_API_URL:
+        required: false
 
 jobs:
   publish-release:
@@ -31,7 +47,14 @@ jobs:
           yarn install
           yarn build
         env:
-          LOG_LEVEL: silent
+          LOG_LEVEL: ${{ secrets.LOG_LEVEL }}
+          DEFAULT_ADDRESS_TYPE: ${{ secrets.DEFAULT_ADDRESS_TYPE }}
+          ESPLORA_BITCOIN: ${{ secrets.ESPLORA_BITCOIN }}
+          ESPLORA_TESTNET: ${{ secrets.ESPLORA_TESTNET }}
+          ESPLORA_TESTNET4: ${{ secrets.ESPLORA_TESTNET4 }}
+          ESPLORA_SIGNET: ${{ secrets.ESPLORA_SIGNET }}
+          ESPLORA_REGTEST: ${{ secrets.ESPLORA_REGTEST }}
+          PRICE_API_URL: ${{ secrets.PRICE_API_URL }}
       - uses: actions/cache@v4
         id: restore-build
         with:
