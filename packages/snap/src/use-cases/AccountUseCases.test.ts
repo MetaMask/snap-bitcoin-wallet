@@ -808,6 +808,7 @@ describe('AccountUseCases', () => {
     });
     const mockSignedPsbt = mock<Psbt>({
       extract_tx: () => mockTransaction,
+      toString: () => 'mockSignedPsbt',
     });
     const mockAccount = mock<BitcoinAccount>({
       network: 'bitcoin',
@@ -872,7 +873,7 @@ describe('AccountUseCases', () => {
       expect(mockRepository.getWithSigner).toHaveBeenCalledWith('account-id');
       expect(mockAccount.sign).toHaveBeenCalledWith(mockPsbt);
       expect(txid).toBeUndefined();
-      expect(psbt).toBe(mockSignedPsbt);
+      expect(psbt).toBe('mockSignedPsbt');
     });
 
     it('signs and broadcasts a PSBT', async () => {
@@ -910,7 +911,7 @@ describe('AccountUseCases', () => {
         'metamask',
       );
       expect(txid).toBe(mockTxid);
-      expect(psbt).toBe(mockSignedPsbt);
+      expect(psbt).toBe('mockSignedPsbt');
     });
 
     it('fills, signs and broadcasts a PSBT', async () => {
@@ -951,7 +952,7 @@ describe('AccountUseCases', () => {
         'metamask',
       );
       expect(txid).toBe(mockTxid);
-      expect(psbt).toBe(mockSignedPsbt);
+      expect(psbt).toBe('mockSignedPsbt');
     });
 
     it('propagates an error if getWithSigner fails', async () => {

@@ -76,7 +76,7 @@ describe('RpcHandler', () => {
     it('executes startSendTransactionFlow', async () => {
       mockSendFlowUseCases.display.mockResolvedValue(mockPsbt);
       mockAccountsUseCases.signPsbt.mockResolvedValue({
-        psbt: mockPsbt,
+        psbt: 'psbtBase64',
         txid: mock<Txid>({
           toString: jest.fn().mockReturnValue('txId'),
         }),
@@ -133,7 +133,7 @@ describe('RpcHandler', () => {
 
     it('executes signAndSendTransaction', async () => {
       mockAccountsUseCases.signPsbt.mockResolvedValue({
-        psbt: mockPsbt,
+        psbt: 'psbtBase64',
         txid: mock<Txid>({
           toString: jest.fn().mockReturnValue('txId'),
         }),
