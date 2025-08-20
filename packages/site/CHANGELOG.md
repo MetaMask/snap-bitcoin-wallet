@@ -9,11 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.19.1]
 
-### Uncategorized
-
-- Revert "0.19.1 (#511)" ([#511](https://github.com/MetaMask/snap-bitcoin-wallet/pull/511))
-- 0.19.1 ([#511](https://github.com/MetaMask/snap-bitcoin-wallet/pull/511))
-
 ## [0.19.0]
 
 ### Changed
