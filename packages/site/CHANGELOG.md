@@ -7,10 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.19.1]
-
-- Uses the new DIN endpoints for Bitcoin and Bitcoin Testnet (no PR, change done in CI secrets).
-
 ## [0.19.0]
 
 ### Changed
@@ -168,8 +164,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - build(deps): bump @metamask/keyring-api from 5.1.0 to 6.0.0 ([#6](https://github.com/MetaMask/bitcoin/pull/6))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.19.1...HEAD
-[0.19.1]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.19.0...v0.19.1
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.19.0...HEAD
 [0.19.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.18.0...v0.19.0
 [0.18.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.16.1...v0.17.0
