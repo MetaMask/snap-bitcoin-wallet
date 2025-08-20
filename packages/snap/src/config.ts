@@ -20,10 +20,10 @@ const ENV = {
   REGTEST_EXPLORER: process.env.REGTEST_EXPLORER,
 } as const;
 
-function fromEnv<K extends keyof typeof ENV>(k: K, fallback: string): string {
-  const v = ENV[k];
-  return v && v.trim() !== '' ? v : fallback;
-}
+const fromEnv = (key: string, fallback: string): string => {
+  const value = ENV[key as keyof typeof ENV];
+  return value && value.trim() !== '' ? value : fallback;
+};
 
 export const Config: SnapConfig = {
   logLevel: fromEnv('LOG_LEVEL', LogLevel.INFO) as LogLevel,
