@@ -2,26 +2,6 @@ name: Build, Lint, and Test
 
 on:
   workflow_call:
-    secrets:
-      ESPLORA_BITCOIN:
-        required: false
-      ESPLORA_TESTNET:
-        required: false
-      ESPLORA_TESTNET4:
-        required: false
-      ESPLORA_SIGNET:
-        required: false
-      ESPLORA_REGTEST:
-        required: false
-      PRICE_API_URL:
-        required: false
-    inputs:
-      LOG_LEVEL:
-        required: false
-        type: string
-      DEFAULT_ADDRESS_TYPE:
-        required: false
-        type: string
 
 jobs:
   prepare:
@@ -44,15 +24,6 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - prepare
-    env:
-      LOG_LEVEL: ${{ inputs.LOG_LEVEL || vars.LOG_LEVEL }}
-      DEFAULT_ADDRESS_TYPE: ${{ inputs.DEFAULT_ADDRESS_TYPE || vars.DEFAULT_ADDRESS_TYPE }}
-      ESPLORA_BITCOIN: ${{ secrets.ESPLORA_BITCOIN }}
-      ESPLORA_TESTNET: ${{ secrets.ESPLORA_TESTNET }}
-      ESPLORA_TESTNET4: ${{ secrets.ESPLORA_TESTNET4 }}
-      ESPLORA_SIGNET: ${{ secrets.ESPLORA_SIGNET }}
-      ESPLORA_REGTEST: ${{ secrets.ESPLORA_REGTEST }}
-      PRICE_API_URL: ${{ secrets.PRICE_API_URL }}
     strategy:
       matrix:
         node-version: [20.x, 22.x]
