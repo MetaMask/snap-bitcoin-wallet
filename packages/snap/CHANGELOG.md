@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.19.3]
 
-### Uncategorized
+### Fixed
 
-- fix: treat empty strings as unset in config ([#517](https://github.com/MetaMask/snap-bitcoin-wallet/pull/517))
+- Treat empty strings as unset in config ([#517](https://github.com/MetaMask/snap-bitcoin-wallet/pull/517))
 
 ## [0.19.2]
 
