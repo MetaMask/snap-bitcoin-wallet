@@ -26,7 +26,8 @@ export const ComputeFeeRequest = object({
 });
 
 export type ComputeFeeResponse = {
-  fee: number;
+  // Fee in satoshis
+  fee: string;
 };
 
 export const BroadcastPsbtRequest = object({
@@ -104,7 +105,7 @@ export class KeyringRequestHandler {
     return this.#toKeyringResponse({
       psbt: psbt.toString(),
       txid: txid?.toString() ?? null,
-    });
+    } as SignPsbtResponse);
   }
 
   async #fillPsbt(
@@ -119,7 +120,7 @@ export class KeyringRequestHandler {
     );
     return this.#toKeyringResponse({
       psbt: psbt.toString(),
-    });
+    } as FillPsbtResponse);
   }
 
   async #computeFee(
@@ -134,7 +135,7 @@ export class KeyringRequestHandler {
     );
     return this.#toKeyringResponse({
       fee: fee.to_sat().toString(),
-    });
+    } as ComputeFeeResponse);
   }
 
   async #broadcastPsbt(
@@ -149,7 +150,7 @@ export class KeyringRequestHandler {
     );
     return this.#toKeyringResponse({
       txid: txid.toString(),
-    });
+    } as BroadcastPsbtResponse);
   }
 
   #toKeyringResponse(result: Json): KeyringResponse {
