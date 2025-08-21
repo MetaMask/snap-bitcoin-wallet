@@ -415,6 +415,46 @@ export class AccountUseCases {
     return txid;
   }
 
+  async sendTransfer(
+    id: string,
+    recipients: { address: string; amount: string }[],
+    origin: string,
+    feeRate?: number,
+  ): Promise<Txid> {
+    this.#logger.debug(
+      'Transferring funds: %s. Recipients: %o',
+      id,
+      recipients,
+    );
+
+    const account = await this.#repository.getWithSigner(id);
+    if (!account) {
+      throw new NotFoundError('Account not found', { id });
+    }
+    this.#checkCapability(account, AccountCapability.SendTransfer);
+
+    // Create a template PSBT with the recipients as outputs
+    let builder = account.buildTx();
+    for (const { address, amount } of recipients) {
+      builder = builder.addRecipient(amount, address);
+    }
+    const templatePsbt = builder.finish();
+
+    // Complete the PSBT with the necessary inputs, fee rate, etc.
+    const psbt = await this.#fillPsbt(account, templatePsbt, feeRate);
+    const signedPsbt = account.sign(psbt);
+    const tx = account.extractTransaction(signedPsbt);
+    const txid = await this.#broadcast(account, tx, origin);
+
+    this.#logger.info(
+      'Funds transferred successfully: %s. Account: %s, Network: %s, Options: %o',
+      txid.toString(),
+      account.id,
+      account.network,
+    );
+    return txid;
+  }
+
   async #fillPsbt(
     account: BitcoinAccount,
     templatePsbt: Psbt,

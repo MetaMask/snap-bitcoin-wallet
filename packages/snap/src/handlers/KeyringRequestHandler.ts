@@ -1,6 +1,14 @@
 import type { KeyringRequest, KeyringResponse } from '@metamask/keyring-api';
 import type { Json } from '@metamask/utils';
-import { assert, boolean, number, object, optional, string } from 'superstruct';
+import {
+  array,
+  assert,
+  boolean,
+  number,
+  object,
+  optional,
+  string,
+} from 'superstruct';
 
 import { AccountCapability, InexistentMethodError } from '../entities';
 import { parsePsbt } from './parsers';
@@ -47,6 +55,16 @@ export type FillPsbtResponse = {
   psbt: string;
 };
 
+export const SendTransferRequest = object({
+  recipients: array(
+    object({
+      address: string(),
+      amount: string(),
+    }),
+  ),
+  feeRate: optional(number()),
+});
+
 export class KeyringRequestHandler {
   readonly #accountsUseCases: AccountUseCases;
 
@@ -75,6 +93,15 @@ export class KeyringRequestHandler {
       case AccountCapability.BroadcastPsbt: {
         assert(params, BroadcastPsbtRequest);
         return this.#broadcastPsbt(account, params.psbt, origin);
+      }
+      case AccountCapability.SendTransfer: {
+        assert(params, SendTransferRequest);
+        return this.#sendTransfer(
+          account,
+          params.recipients,
+          origin,
+          params.feeRate,
+        );
       }
       default: {
         throw new InexistentMethodError(
@@ -147,6 +174,23 @@ export class KeyringRequestHandler {
       id,
       parsePsbt(psbtBase64),
       origin,
+    );
+    return this.#toKeyringResponse({
+      txid: txid.toString(),
+    } as BroadcastPsbtResponse);
+  }
+
+  async #sendTransfer(
+    id: string,
+    recipients: { address: string; amount: string }[],
+    origin: string,
+    feeRate?: number,
+  ): Promise<KeyringResponse> {
+    const txid = await this.#accountsUseCases.sendTransfer(
+      id,
+      recipients,
+      origin,
+      feeRate,
     );
     return this.#toKeyringResponse({
       txid: txid.toString(),
