@@ -90,8 +90,8 @@ describe('KeyringRequestHandler', () => {
     expect(response).toRespondWithError({
       code: -32601,
       data: {
+        account: account.id,
         cause: null,
-        id: expect.any(String),
         method: 'invalidMethod',
       },
       message:
