@@ -75,11 +75,12 @@ describe('RpcHandler', () => {
 
     it('executes startSendTransactionFlow', async () => {
       mockSendFlowUseCases.display.mockResolvedValue(mockPsbt);
-      mockAccountsUseCases.sendPsbt.mockResolvedValue(
-        mock<Txid>({
+      mockAccountsUseCases.signPsbt.mockResolvedValue({
+        psbt: 'psbtBase64',
+        txid: mock<Txid>({
           toString: jest.fn().mockReturnValue('txId'),
         }),
-      );
+      });
 
       const result = await handler.route(origin, mockRequest);
 
@@ -88,10 +89,11 @@ describe('RpcHandler', () => {
         CreateSendFormRequest,
       );
       expect(mockSendFlowUseCases.display).toHaveBeenCalledWith('account-id');
-      expect(mockAccountsUseCases.sendPsbt).toHaveBeenCalledWith(
+      expect(mockAccountsUseCases.signPsbt).toHaveBeenCalledWith(
         'account-id',
         mockPsbt,
         'metamask',
+        { broadcast: true, fill: false },
       );
       expect(result).toStrictEqual({ transactionId: 'txId' });
     });
@@ -103,18 +105,18 @@ describe('RpcHandler', () => {
       await expect(handler.route(origin, mockRequest)).rejects.toThrow(error);
 
       expect(mockSendFlowUseCases.display).toHaveBeenCalled();
-      expect(mockAccountsUseCases.sendPsbt).not.toHaveBeenCalled();
+      expect(mockAccountsUseCases.signPsbt).not.toHaveBeenCalled();
     });
 
     it('propagates errors from send', async () => {
       const error = new Error();
       mockSendFlowUseCases.display.mockResolvedValue(mockPsbt);
-      mockAccountsUseCases.sendPsbt.mockRejectedValue(error);
+      mockAccountsUseCases.signPsbt.mockRejectedValue(error);
 
       await expect(handler.route(origin, mockRequest)).rejects.toThrow(error);
 
       expect(mockSendFlowUseCases.display).toHaveBeenCalled();
-      expect(mockAccountsUseCases.sendPsbt).toHaveBeenCalled();
+      expect(mockAccountsUseCases.signPsbt).toHaveBeenCalled();
     });
   });
 
@@ -130,30 +132,32 @@ describe('RpcHandler', () => {
     });
 
     it('executes signAndSendTransaction', async () => {
-      mockAccountsUseCases.fillAndSendPsbt.mockResolvedValue(
-        mock<Txid>({
+      mockAccountsUseCases.signPsbt.mockResolvedValue({
+        psbt: 'psbtBase64',
+        txid: mock<Txid>({
           toString: jest.fn().mockReturnValue('txId'),
         }),
-      );
+      });
 
       const result = await handler.route(origin, mockRequest);
 
       expect(assert).toHaveBeenCalledWith(mockRequest.params, SendPsbtRequest);
-      expect(mockAccountsUseCases.fillAndSendPsbt).toHaveBeenCalledWith(
+      expect(mockAccountsUseCases.signPsbt).toHaveBeenCalledWith(
         'account-id',
         mockPsbt,
         'metamask',
+        { broadcast: true, fill: true },
       );
       expect(result).toStrictEqual({ transactionId: 'txId' });
     });
 
     it('propagates errors from signAndSendTransaction', async () => {
       const error = new Error();
-      mockAccountsUseCases.fillAndSendPsbt.mockRejectedValue(error);
+      mockAccountsUseCases.signPsbt.mockRejectedValue(error);
 
       await expect(handler.route(origin, mockRequest)).rejects.toThrow(error);
 
-      expect(mockAccountsUseCases.fillAndSendPsbt).toHaveBeenCalled();
+      expect(mockAccountsUseCases.signPsbt).toHaveBeenCalled();
     });
   });
 

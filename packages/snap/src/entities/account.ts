@@ -64,6 +64,11 @@ export type BitcoinAccount = {
   publicAddress: Address;
 
   /**
+   * The capabilities of the account.
+   */
+  capabilities: AccountCapability[];
+
+  /**
    * Get an address at a given index.
    *
    * @param index - derivation index.
@@ -124,9 +129,18 @@ export type BitcoinAccount = {
    * Sign a PSBT with all the registered signers
    *
    * @param psbt - The PSBT to be signed.
-   * @returns the signed transaction
+   * @returns the signed PSBT
    */
-  sign(psbt: Psbt, maxFeeRate?: number): Transaction;
+  sign(psbt: Psbt): Psbt;
+
+  /**
+   * Extract the transaction from a PSBT.
+   *
+   * @param psbt - The PSBT.
+   * @param maxFeeRate - The maximum fee rate to use for the transaction.
+   * @returns the transaction
+   */
+  extractTransaction(psbt: Psbt, maxFeeRate?: number): Transaction;
 
   /**
    * Get the list of UTXOs
@@ -187,6 +201,13 @@ export type BitcoinAccount = {
    */
   applyUnconfirmedTx(tx: Transaction, lastSeen: number): void;
 };
+
+export enum AccountCapability {
+  SignPsbt = 'signPsbt',
+  ComputeFee = 'computeFee',
+  FillPsbt = 'fillPsbt',
+  BroadcastPsbt = 'broadcastPsbt',
+}
 
 /**
  * BitcoinAccountRepository is a repository that manages Bitcoin accounts.

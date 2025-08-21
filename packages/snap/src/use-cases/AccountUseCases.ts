@@ -3,12 +3,14 @@ import type {
   Amount,
   Network,
   Psbt,
+  Transaction,
   Txid,
   WalletTx,
 } from '@metamask/bitcoindevkit';
 import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 
 import {
+  AccountCapability,
   addressTypeToPurpose,
   type BitcoinAccount,
   type BitcoinAccountRepository,
@@ -17,6 +19,7 @@ import {
   type MetaProtocolsClient,
   networkToCoinType,
   NotFoundError,
+  PermissionError,
   type SnapClient,
   TrackingSnapEvent,
   ValidationError,
@@ -305,15 +308,102 @@ export class AccountUseCases {
     this.#logger.info('Account deleted successfully: %s', account.id);
   }
 
-  async sendPsbt(id: string, psbt: Psbt, origin: string): Promise<Txid> {
-    this.#logger.debug('Sending transaction: %s', id);
+  async fillPsbt(
+    id: string,
+    templatePsbt: Psbt,
+    feeRate?: number,
+  ): Promise<Psbt> {
+    this.#logger.debug('Filling PSBT inputs: %s', id);
+
+    const account = await this.#repository.get(id);
+    if (!account) {
+      throw new NotFoundError('Account not found', { id });
+    }
+    this.#checkCapability(account, AccountCapability.FillPsbt);
+
+    const psbt = await this.#fillPsbt(account, templatePsbt, feeRate);
+
+    this.#logger.info(
+      'PSBT filled successfully: %s. Account: %s, Network: %s',
+      account.id,
+      account.network,
+    );
+
+    return psbt;
+  }
+
+  async signPsbt(
+    id: string,
+    psbt: Psbt,
+    origin: string,
+    options: { fill: boolean; broadcast: boolean },
+    feeRate?: number,
+  ): Promise<{ psbt: string; txid?: Txid }> {
+    this.#logger.debug('Signing PSBT: %s', id, options);
 
     const account = await this.#repository.getWithSigner(id);
     if (!account) {
       throw new NotFoundError('Account not found', { id });
     }
+    this.#checkCapability(account, AccountCapability.SignPsbt);
 
-    const txid = await this.#signAndSendPsbt(account, psbt, origin);
+    const psbtToSign = options.fill
+      ? await this.#fillPsbt(account, psbt, feeRate)
+      : psbt;
+    const signedPsbt = account.sign(psbtToSign);
+
+    if (options.broadcast) {
+      const psbtString = signedPsbt.toString();
+      const tx = account.extractTransaction(signedPsbt);
+      const txid = await this.#broadcast(account, tx, origin);
+
+      this.#logger.info(
+        'Transaction sent successfully: %s. Account: %s, Network: %s, Options: %o',
+        txid.toString(),
+        account.id,
+        account.network,
+        options,
+      );
+      return { psbt: psbtString, txid };
+    }
+
+    this.#logger.info(
+      'PSBT signed successfully. Account: %s, Network: %s, Options: %o',
+      account.id,
+      account.network,
+      options,
+    );
+    return { psbt: signedPsbt.toString() };
+  }
+
+  async computeFee(
+    id: string,
+    templatePsbt: Psbt,
+    feeRate?: number,
+  ): Promise<Amount> {
+    this.#logger.debug('Getting fee amount for Psbt for account id: %s', id);
+
+    const account = await this.#repository.get(id);
+    if (!account) {
+      throw new NotFoundError('Account not found', { id });
+    }
+    this.#checkCapability(account, AccountCapability.ComputeFee);
+
+    const psbt = await this.#fillPsbt(account, templatePsbt, feeRate);
+    return psbt.fee();
+  }
+
+  async broadcastPsbt(id: string, psbt: Psbt, origin: string): Promise<Txid> {
+    this.#logger.debug('Sending transaction: %s', id);
+
+    const account = await this.#repository.get(id);
+    if (!account) {
+      throw new NotFoundError('Account not found', { id });
+    }
+    this.#checkCapability(account, AccountCapability.BroadcastPsbt);
+
+    const tx = account.extractTransaction(psbt);
+    const txid = await this.#broadcast(account, tx, origin);
 
     this.#logger.info(
       'Transaction sent successfully: %s. Account: %s, Network: %s',
@@ -325,53 +415,23 @@ export class AccountUseCases {
     return txid;
   }
 
-  async fillAndSendPsbt(
-    id: string,
+  async #fillPsbt(
+    account: BitcoinAccount,
     templatePsbt: Psbt,
-    origin: string,
-  ): Promise<Txid> {
-    this.#logger.debug('Filling and sending transaction: %s', id);
-
-    const account = await this.#repository.getWithSigner(id);
-    if (!account) {
-      throw new NotFoundError('Account not found', { id });
-    }
-
-    const psbt = await this.#fillPsbt(account, templatePsbt);
-    const txid = await this.#signAndSendPsbt(account, psbt, origin);
-
-    this.#logger.info(
-      'Transaction filled and sent successfully: %s. Account: %s, Network: %s',
-      txid,
-      account.id,
-      account.network,
-    );
-
-    return txid;
-  }
-
-  async computeFee(id: string, templatePsbt: Psbt): Promise<Amount> {
-    this.#logger.debug('Getting fee amount for Psbt for account id: %s', id);
-
-    const account = await this.#repository.getWithSigner(id);
-    if (!account) {
-      throw new NotFoundError('Account not found', { id });
-    }
-
-    const psbt = await this.#fillPsbt(account, templatePsbt);
-    return psbt.fee();
-  }
-
-  async #fillPsbt(account: BitcoinAccount, templatePsbt: Psbt): Promise<Psbt> {
+    feeRate?: number,
+  ): Promise<Psbt> {
     const frozenUTXOs = await this.#repository.getFrozenUTXOs(account.id);
     const feeEstimates = await this.#chain.getFeeEstimates(account.network);
-    const feeRate =
-      feeEstimates.get(this.#targetBlocksConfirmation) ?? this.#fallbackFeeRate;
+
+    const feeRateToUse =
+      feeRate ??
+      feeEstimates.get(this.#targetBlocksConfirmation) ??
+      this.#fallbackFeeRate;
 
     try {
       let builder = account
         .buildTx()
-        .feeRate(feeRate)
+        .feeRate(feeRateToUse)
         .unspendable(frozenUTXOs)
         .untouchedOrdering(); // we need to strictly adhere to the template output order. Many protocols use the order (e.g: 1: deposit, 2: OP_RETURN, 3: change)
 
@@ -393,19 +453,18 @@ export class AccountUseCases {
         {
           id: account.id,
           templatePsbt: templatePsbt.toString(),
-          feeRate,
+          feeRate: feeRateToUse,
         },
         error,
       );
     }
   }
 
-  async #signAndSendPsbt(
+  async #broadcast(
     account: BitcoinAccount,
-    psbt: Psbt,
+    tx: Transaction,
     origin: string,
   ): Promise<Txid> {
-    const tx = account.sign(psbt);
     const txid = tx.compute_txid();
     await this.#chain.broadcast(account.network, tx.clone());
     account.applyUnconfirmedTx(tx, getCurrentUnixTimestamp());
@@ -429,5 +488,18 @@ export class AccountUseCases {
     }
 
     return txid;
+  }
+
+  #checkCapability(
+    account: BitcoinAccount,
+    capability: AccountCapability,
+  ): void {
+    if (!account.capabilities.includes(capability)) {
+      throw new PermissionError('Account missing given capability', {
+        id: account.id,
+        capability,
+        capabilities: account.capabilities,
+      });
+    }
   }
 }

@@ -11,16 +11,19 @@ import type {
 import { Address } from '@metamask/bitcoindevkit';
 import type {
   DiscoveredAccount,
+  KeyringResponse,
   Transaction as KeyringTransaction,
+  KeyringRequest,
 } from '@metamask/keyring-api';
 import { BtcAccountType, BtcScope } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
 import type { BitcoinAccount } from '../entities';
-import { CurrencyUnit, Purpose } from '../entities';
+import { AccountCapability, CurrencyUnit, Purpose } from '../entities';
 import { scopeToNetwork, caipToAddressType, Caip19Asset } from './caip';
 import { KeyringHandler, CreateAccountRequest } from './KeyringHandler';
+import type { KeyringRequestHandler } from './KeyringRequestHandler';
 import { mapToDiscoveredAccount } from './mappings';
 import type {
   AccountUseCases,
@@ -43,6 +46,7 @@ jest.mock('@metamask/bitcoindevkit', () => {
 });
 
 describe('KeyringHandler', () => {
+  const mockKeyringRequest = mock<KeyringRequestHandler>();
   const mockAccounts = mock<AccountUseCases>();
   const mockAddress = mock<Address>({
     toString: () => 'bc1qaddress...',
@@ -58,10 +62,15 @@ describe('KeyringHandler', () => {
     entropySource: 'myEntropy',
     accountIndex: 0,
     publicAddress: mockAddress,
+    capabilities: [AccountCapability.SignPsbt, AccountCapability.ComputeFee],
   });
   const defaultAddressType: AddressType = 'p2wpkh';
 
-  const handler = new KeyringHandler(mockAccounts, defaultAddressType);
+  const handler = new KeyringHandler(
+    mockKeyringRequest,
+    mockAccounts,
+    defaultAddressType,
+  );
 
   beforeEach(() => {
     mockAccounts.create.mockResolvedValue(mockAccount);
@@ -362,7 +371,7 @@ describe('KeyringHandler', () => {
           },
           exportable: false,
         },
-        methods: [],
+        methods: mockAccount.capabilities,
       };
 
       const result = await handler.getAccount('some-id');
@@ -398,7 +407,7 @@ describe('KeyringHandler', () => {
             },
             exportable: false,
           },
-          methods: [],
+          methods: mockAccount.capabilities,
         },
       ];
 
@@ -654,6 +663,19 @@ describe('KeyringHandler', () => {
       await expect(handler.updateAccount()).rejects.toThrow(
         'Method not supported.',
       );
+    });
+  });
+
+  describe('submitRequest', () => {
+    it('calls KeyringRequestHandler', async () => {
+      const mockRequest = mock<KeyringRequest>();
+      const expectedResponse = mock<KeyringResponse>();
+      mockKeyringRequest.route.mockResolvedValue(expectedResponse);
+
+      const result = await handler.submitRequest(mockRequest);
+
+      expect(mockKeyringRequest.route).toHaveBeenCalledWith(mockRequest);
+      expect(result).toStrictEqual(expectedResponse);
     });
   });
 });

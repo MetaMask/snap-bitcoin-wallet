@@ -1,14 +1,18 @@
-import { Psbt } from '@metamask/bitcoindevkit';
 import { BtcScope } from '@metamask/keyring-api';
 import type { Json, JsonRpcRequest } from '@metamask/utils';
 import { assert, enums, object, optional, string } from 'superstruct';
 
 import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
 import { validateOrigin } from './permissions';
-import { FormatError, InexistentMethodError } from '../entities';
+import {
+  AssertionError,
+  FormatError,
+  InexistentMethodError,
+} from '../entities';
 import { scopeToNetwork } from './caip';
 import type { TransactionFee } from './mappings';
 import { mapToTransactionFees } from './mappings';
+import { parsePsbt } from './parsers';
 
 export enum RpcMethod {
   StartSendTransactionFlow = 'startSendTransactionFlow',
@@ -88,7 +92,16 @@ export class RpcHandler {
     if (!psbt) {
       return null;
     }
-    const txid = await this.#accountUseCases.sendPsbt(account, psbt, origin);
+    const { txid } = await this.#accountUseCases.signPsbt(
+      account,
+      psbt,
+      origin,
+      { fill: false, broadcast: true },
+    );
+    if (!txid) {
+      throw new AssertionError('Missing transaction ID ');
+    }
+
     return { transactionId: txid.toString() };
   }
 
@@ -97,13 +110,20 @@ export class RpcHandler {
     transaction: string,
     origin: string,
   ): Promise<SendTransactionResponse | null> {
-    const psbt: Psbt = this.#parsePsbt(transaction);
+    const psbt = parsePsbt(transaction);
 
-    const txid = await this.#accountUseCases.fillAndSendPsbt(
+    const { txid } = await this.#accountUseCases.signPsbt(
       accountId,
       psbt,
       origin,
+      {
+        fill: true,
+        broadcast: true,
+      },
     );
+    if (!txid) {
+      throw new AssertionError('Missing transaction ID ');
+    }
 
     return { transactionId: txid.toString() };
   }
@@ -113,17 +133,9 @@ export class RpcHandler {
     transaction: string,
     scope: BtcScope,
   ): Promise<TransactionFee[]> {
-    const psbt = this.#parsePsbt(transaction);
+    const psbt = parsePsbt(transaction);
     const amount = await this.#accountUseCases.computeFee(accountId, psbt);
 
     return [mapToTransactionFees(amount, scopeToNetwork[scope])];
-  }
-
-  #parsePsbt(transaction: string): Psbt {
-    try {
-      return Psbt.from_string(transaction);
-    } catch (error) {
-      throw new FormatError('Invalid PSBT', { transaction }, error);
-    }
   }
 }

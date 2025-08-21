@@ -12,7 +12,7 @@ import {
   scopeToCoinType,
   accountTypeToPurpose,
 } from './constants';
-import { CurrencyUnit } from '../src/entities';
+import { AccountCapability, CurrencyUnit } from '../src/entities';
 import { Caip19Asset } from '../src/handlers/caip';
 
 const ACCOUNT_INDEX = 0;
@@ -85,7 +85,7 @@ describe('Keyring', () => {
         exportable: false,
       },
       scopes: [BtcScope.Regtest],
-      methods: [],
+      methods: Object.values(AccountCapability),
     });
 
     // eslint-disable-next-line jest/no-conditional-in-test
@@ -169,7 +169,7 @@ describe('Keyring', () => {
         exportable: false,
       },
       scopes: [requestOpts.scope],
-      methods: [],
+      methods: Object.values(AccountCapability),
     });
 
     // eslint-disable-next-line jest/no-conditional-in-test

@@ -65,7 +65,7 @@ export function mapToKeyringAccount(account: BitcoinAccount): KeyringAccount {
         groupIndex: account.accountIndex,
       },
     },
-    methods: [],
+    methods: account.capabilities,
   };
 }
 

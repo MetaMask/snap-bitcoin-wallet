@@ -19,6 +19,7 @@ import {
   AssetsHandler,
 } from './handlers';
 import { HandlerMiddleware } from './handlers/HandlerMiddleware';
+import { KeyringRequestHandler } from './handlers/KeyringRequestHandler';
 import {
   SnapClientAdapter,
   EsploraClientAdapter,
@@ -64,7 +65,9 @@ const sendFlowUseCases = new SendFlowUseCases(
 const assetsUseCases = new AssetsUseCases(logger, assetRatesClient);
 
 // Application layer
+const keyringRequestHandler = new KeyringRequestHandler(accountsUseCases);
 const keyringHandler = new KeyringHandler(
+  keyringRequestHandler,
   accountsUseCases,
   Config.defaultAddressType,
 );
