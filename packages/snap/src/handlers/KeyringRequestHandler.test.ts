@@ -1,5 +1,5 @@
 import type { Txid, Psbt, Amount } from '@metamask/bitcoindevkit';
-import { KeyringRequest } from '@metamask/keyring-api';
+import type { KeyringRequest } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
@@ -133,6 +133,7 @@ describe('KeyringRequestHandler', () => {
     it('executes computeFee', async () => {
       mockAccountsUseCases.computeFee.mockResolvedValue(
         mock<Amount>({
+          // eslint-disable-next-line @typescript-eslint/naming-convention
           to_sat: () => BigInt(1000),
         }),
       );

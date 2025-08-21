@@ -358,7 +358,7 @@ export class AccountUseCases {
       const txid = await this.#broadcast(account, tx, origin);
 
       this.#logger.info(
-        'Transaction sent successfully: %s. Account: %s, Network: %s',
+        'Transaction sent successfully: %s. Account: %s, Network: %s, Options: %o',
         txid.toString(),
         account.id,
         account.network,
@@ -368,7 +368,7 @@ export class AccountUseCases {
     }
 
     this.#logger.info(
-      'PSBT signed successfully. Account: %s, Network: %s',
+      'PSBT signed successfully. Account: %s, Network: %s, Options: %o',
       account.id,
       account.network,
       options,

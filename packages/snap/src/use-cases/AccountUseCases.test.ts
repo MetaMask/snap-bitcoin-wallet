@@ -807,7 +807,6 @@ describe('AccountUseCases', () => {
       clone: jest.fn(),
     });
     const mockSignedPsbt = mock<Psbt>({
-      extract_tx: () => mockTransaction,
       toString: () => 'mockSignedPsbt',
     });
     const mockAccount = mock<BitcoinAccount>({
@@ -836,6 +835,7 @@ describe('AccountUseCases', () => {
       mockTransaction.clone.mockReturnThis();
       mockAccount.buildTx.mockReturnValue(mockTxBuilder);
       mockAccount.sign.mockReturnValue(mockSignedPsbt);
+      mockAccount.extractTransaction.mockReturnValue(mockTransaction);
       mockTxBuilder.addRecipientByScript.mockReturnThis();
       mockTxBuilder.feeRate.mockReturnThis();
       mockTxBuilder.drainToByScript.mockReturnThis();
