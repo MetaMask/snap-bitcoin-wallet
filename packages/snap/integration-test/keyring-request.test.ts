@@ -475,7 +475,7 @@ describe('KeyringRequestHandler', () => {
     });
   });
 
-  describe.only('sendTransfer', () => {
+  describe('sendTransfer', () => {
     it('sends funds successfully', async () => {
       const response = await snap.onKeyringRequest({
         origin: ORIGIN,

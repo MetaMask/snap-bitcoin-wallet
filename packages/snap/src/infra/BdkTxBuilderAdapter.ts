@@ -14,7 +14,7 @@ import {
 } from '@metamask/bitcoindevkit';
 
 import {
-  CodifiedError,
+  type CodifiedError,
   ValidationError,
   type TransactionBuilder,
 } from '../entities';
