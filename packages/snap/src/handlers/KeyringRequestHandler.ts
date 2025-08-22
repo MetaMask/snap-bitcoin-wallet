@@ -10,7 +10,12 @@ import {
   string,
 } from 'superstruct';
 
-import { AccountCapability, InexistentMethodError } from '../entities';
+import {
+  AccountCapability,
+  InexistentMethodError,
+  NotFoundError,
+} from '../entities';
+import { mapToUtxo } from './mappings';
 import { parsePsbt } from './parsers';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 
@@ -65,6 +70,10 @@ export const SendTransferRequest = object({
   feeRate: optional(number()),
 });
 
+export const GetUtxoRequest = object({
+  outpoint: string(),
+});
+
 export class KeyringRequestHandler {
   readonly #accountsUseCases: AccountUseCases;
 
@@ -102,6 +111,16 @@ export class KeyringRequestHandler {
           origin,
           params.feeRate,
         );
+      }
+      case AccountCapability.GetUtxo: {
+        assert(params, GetUtxoRequest);
+        return this.#getUtxo(account, params.outpoint);
+      }
+      case AccountCapability.ListUtxos: {
+        return this.#listUtxos(account);
+      }
+      case AccountCapability.PublicDescriptor: {
+        return this.#publicDescriptor(account);
       }
       default: {
         throw new InexistentMethodError(
@@ -195,6 +214,27 @@ export class KeyringRequestHandler {
     return this.#toKeyringResponse({
       txid: txid.toString(),
     } as BroadcastPsbtResponse);
+  }
+
+  async #getUtxo(id: string, outpoint: string): Promise<KeyringResponse> {
+    const account = await this.#accountsUseCases.get(id);
+    const utxo = account.getUtxo(outpoint);
+    if (!utxo) {
+      throw new NotFoundError('UTXO not found', { id });
+    }
+    return this.#toKeyringResponse(mapToUtxo(utxo, account.network));
+  }
+
+  async #listUtxos(id: string): Promise<KeyringResponse> {
+    const account = await this.#accountsUseCases.get(id);
+    return this.#toKeyringResponse(
+      account.listUnspent().map((utxo) => mapToUtxo(utxo, account.network)),
+    );
+  }
+
+  async #publicDescriptor(id: string): Promise<KeyringResponse> {
+    const account = await this.#accountsUseCases.get(id);
+    return this.#toKeyringResponse(account.publicDescriptor);
   }
 
   #toKeyringResponse(result: Json): KeyringResponse {

@@ -1,6 +1,7 @@
 import type {
   Amount,
   ChainPosition,
+  LocalOutput,
   Network,
   TxOut,
   WalletTx,
@@ -41,6 +42,19 @@ type TransactionRecipient = {
 type TransactionEvent = {
   status: TransactionStatus;
   timestamp: number | null;
+};
+
+export type Utxo = {
+  // Outpoint of the utxo in the format <txid>:<vout>
+  outpoint: string;
+  // Value of output in satoshis
+  value: string;
+  derivationIndex: number;
+  // scriptPubley in ASM format
+  scriptPubkey: string;
+  scriptPubkeyHex: string;
+  // If the script can be represented as an address, omitted otherwise
+  address?: string;
 };
 
 /**
@@ -213,5 +227,30 @@ export function mapToDiscoveredAccount(
     type: DiscoveredAccountType.Bip44,
     scopes: [networkToScope[account.network]],
     derivationPath: `m/${account.derivationPath.slice(1).join('/')}`,
+  };
+}
+
+/**
+ * Maps a Bitcoin UTXO to a Keyring UTXO.
+ *
+ * @param utxo - The wallet UTXO.
+ * @param network - The network of the UTXO.
+ * @returns The Keyring UTXO.
+ */
+export function mapToUtxo(utxo: LocalOutput, network: Network): Utxo {
+  let address: Address | undefined;
+  try {
+    address = Address.from_script(utxo.txout.script_pubkey, network);
+  } catch {
+    address = undefined;
+  }
+
+  return {
+    derivationIndex: utxo.derivation_index,
+    outpoint: utxo.outpoint.toString(),
+    value: utxo.txout.value.to_sat().toString(),
+    scriptPubkey: utxo.txout.script_pubkey.to_asm_string(),
+    scriptPubkeyHex: utxo.txout.script_pubkey.to_hex_string(),
+    address: address?.toString(),
   };
 }
