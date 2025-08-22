@@ -7,7 +7,6 @@ import { BlockchainTestUtils } from './blockchain-utils';
 import { MNEMONIC, ORIGIN } from './constants';
 import { AccountCapability } from '../src/entities';
 import type { FillPsbtResponse } from '../src/handlers/KeyringRequestHandler';
-import { Utxo } from '../src/handlers/mappings';
 
 const ACCOUNT_INDEX = 3;
 const submitRequestMethod = 'keyring_submitRequest';
