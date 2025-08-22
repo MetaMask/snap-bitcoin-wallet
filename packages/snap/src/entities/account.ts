@@ -207,6 +207,7 @@ export enum AccountCapability {
   ComputeFee = 'computeFee',
   FillPsbt = 'fillPsbt',
   BroadcastPsbt = 'broadcastPsbt',
+  SendTransfer = 'sendTransfer',
 }
 
 /**

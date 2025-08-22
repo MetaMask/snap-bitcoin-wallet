@@ -474,4 +474,68 @@ describe('KeyringRequestHandler', () => {
       });
     });
   });
+
+  describe('sendTransfer', () => {
+    it('sends funds successfully', async () => {
+      const response = await snap.onKeyringRequest({
+        origin: ORIGIN,
+        method: submitRequestMethod,
+        params: {
+          id: account.id,
+          origin,
+          scope: BtcScope.Regtest,
+          account: account.id,
+          request: {
+            method: AccountCapability.SendTransfer,
+            params: {
+              recipients: [
+                {
+                  address: 'bcrt1qstku2y3pfh9av50lxj55arm8r5gj8tf2yv5nxz',
+                  amount: '1000',
+                },
+                {
+                  address: 'bcrt1q4gfcga7jfjmm02zpvrh4ttc5k7lmnq2re52z2y',
+                  amount: '1000',
+                },
+              ],
+              feeRate: 3,
+            },
+          },
+        } as KeyringRequest,
+      });
+
+      expect(response).toRespondWith({
+        pending: false,
+        result: {
+          txid: expect.any(String),
+        },
+      });
+    });
+
+    it('fails if invalid recipients', async () => {
+      const response = await snap.onKeyringRequest({
+        origin: ORIGIN,
+        method: submitRequestMethod,
+        params: {
+          id: account.id,
+          origin,
+          scope: BtcScope.Regtest,
+          account: account.id,
+          request: {
+            method: AccountCapability.SendTransfer,
+            params: {
+              recipients: [{ address: 'notAnAddress', amount: '1000' }],
+            },
+          },
+        } as KeyringRequest,
+      });
+
+      expect(response).toRespondWithError({
+        code: -32602,
+        data: { address: 'notAnAddress', amount: '1000', cause: null },
+        message: 'Validation failed: Invalid recipient',
+        stack: expect.anything(),
+      });
+    });
+  });
 });

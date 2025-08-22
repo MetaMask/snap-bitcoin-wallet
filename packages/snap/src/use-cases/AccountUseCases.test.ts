@@ -1210,4 +1210,156 @@ describe('AccountUseCases', () => {
       expect(mockTxBuilder.feeRate).toHaveBeenCalledWith(fallbackFeeRate);
     });
   });
+
+  describe('sendTransfer', () => {
+    const recipients = [
+      {
+        address: 'bcrt1qstku2y3pfh9av50lxj55arm8r5gj8tf2yv5nxz',
+        amount: '1000',
+      },
+      {
+        address: 'bcrt1q4gfcga7jfjmm02zpvrh4ttc5k7lmnq2re52z2y',
+        amount: '2000',
+      },
+    ];
+    const mockTxid = mock<Txid>();
+    const mockOutput = mock<TxOut>({
+      script_pubkey: mock<ScriptBuf>(),
+      value: mock<Amount>(),
+    });
+    const mockPsbt = mock<Psbt>({
+      unsigned_tx: {
+        output: [mockOutput],
+      },
+      toString,
+    });
+    const mockTransaction = mock<Transaction>({
+      // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
+      /* eslint-disable @typescript-eslint/naming-convention */
+      compute_txid: jest.fn(),
+      clone: jest.fn(),
+    });
+    const mockSignedPsbt = mock<Psbt>({
+      toString: () => 'mockSignedPsbt',
+    });
+    const mockAccount = mock<BitcoinAccount>({
+      network: 'bitcoin',
+      sign: jest.fn(),
+      capabilities: [AccountCapability.SendTransfer],
+    });
+    const mockWalletTx = mock<WalletTx>();
+    const mockFeeRate = 3;
+    const mockFeeEstimates = mock<FeeEstimates>({
+      get: () => mockFeeRate,
+    });
+    const mockFilledPsbt = mock<Psbt>();
+    const mockTxBuilder = mock<TransactionBuilder>({
+      addRecipient: jest.fn(),
+      addRecipientByScript: jest.fn(),
+      feeRate: jest.fn(),
+      drainToByScript: jest.fn(),
+      drainWallet: jest.fn(),
+      finish: jest.fn(),
+      unspendable: jest.fn(),
+    });
+
+    beforeEach(() => {
+      mockRepository.getWithSigner.mockResolvedValue(mockAccount);
+      mockTransaction.compute_txid.mockReturnValue(mockTxid);
+      mockTransaction.clone.mockReturnThis();
+      mockAccount.buildTx.mockReturnValue(mockTxBuilder);
+      mockAccount.sign.mockReturnValue(mockSignedPsbt);
+      mockAccount.extractTransaction.mockReturnValue(mockTransaction);
+      mockTxBuilder.addRecipient.mockReturnThis();
+      mockTxBuilder.addRecipientByScript.mockReturnThis();
+      mockTxBuilder.feeRate.mockReturnThis();
+      mockTxBuilder.drainToByScript.mockReturnThis();
+      mockTxBuilder.untouchedOrdering.mockReturnThis();
+      mockTxBuilder.finish.mockReturnValue(mockFilledPsbt);
+      mockTxBuilder.unspendable.mockReturnThis();
+      mockChain.getFeeEstimates.mockResolvedValue(mockFeeEstimates);
+    });
+
+    it('throws error if account is not found', async () => {
+      mockRepository.getWithSigner.mockResolvedValue(null);
+
+      await expect(
+        useCases.sendTransfer('non-existent-id', recipients, 'metamask'),
+      ).rejects.toThrow('Account not found');
+    });
+
+    it('sends funds', async () => {
+      mockAccount.getTransaction.mockReturnValue(mockWalletTx);
+      mockTransaction.compute_txid.mockReturnValue(mockTxid);
+      mockTxBuilder.finish.mockReturnValueOnce(mockPsbt);
+
+      const txid = await useCases.sendTransfer(
+        'account-id',
+        recipients,
+        'metamask',
+      );
+
+      expect(mockRepository.getWithSigner).toHaveBeenCalledWith('account-id');
+      expect(mockTxBuilder.addRecipient).toHaveBeenCalledWith(
+        '1000',
+        'bcrt1qstku2y3pfh9av50lxj55arm8r5gj8tf2yv5nxz',
+      );
+      expect(mockTxBuilder.addRecipient).toHaveBeenCalledWith(
+        '2000',
+        'bcrt1q4gfcga7jfjmm02zpvrh4ttc5k7lmnq2re52z2y',
+      );
+      expect(mockChain.getFeeEstimates).toHaveBeenCalledWith(
+        mockAccount.network,
+      );
+      expect(mockAccount.sign).toHaveBeenCalledWith(mockFilledPsbt);
+      expect(mockChain.broadcast).toHaveBeenCalledWith(
+        mockAccount.network,
+        mockTransaction,
+      );
+      expect(mockRepository.update).toHaveBeenCalledWith(mockAccount);
+      expect(mockTransaction.compute_txid).toHaveBeenCalled();
+      expect(
+        mockSnapClient.emitAccountBalancesUpdatedEvent,
+      ).toHaveBeenCalledWith(mockAccount);
+      expect(
+        mockSnapClient.emitAccountTransactionsUpdatedEvent,
+      ).toHaveBeenCalledWith(mockAccount, [mockWalletTx]);
+      expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledWith(
+        TrackingSnapEvent.TransactionSubmitted,
+        mockAccount,
+        mockWalletTx,
+        'metamask',
+      );
+      expect(txid).toBe(mockTxid);
+    });
+
+    it('propagates an error if getWithSigner fails', async () => {
+      const error = new Error('getWithSigner failed');
+      mockRepository.getWithSigner.mockRejectedValueOnce(error);
+
+      await expect(
+        useCases.sendTransfer('account-id', recipients, 'metamask'),
+      ).rejects.toBe(error);
+    });
+
+    it('propagates an error if broadcast fails', async () => {
+      const error = new Error('broadcast failed');
+      mockChain.broadcast.mockRejectedValueOnce(error);
+      mockTxBuilder.finish.mockReturnValueOnce(mockPsbt);
+
+      await expect(
+        useCases.sendTransfer('account-id', recipients, 'metamask'),
+      ).rejects.toBe(error);
+    });
+
+    it('propagates an error if update fails', async () => {
+      const error = new Error('update failed');
+      mockRepository.update.mockRejectedValue(error);
+      mockTxBuilder.finish.mockReturnValueOnce(mockPsbt);
+
+      await expect(
+        useCases.sendTransfer('account-id', recipients, 'metamask'),
+      ).rejects.toBe(error);
+    });
+  });
 });
