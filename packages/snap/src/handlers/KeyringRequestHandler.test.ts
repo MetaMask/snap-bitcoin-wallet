@@ -9,6 +9,7 @@ import {
   ComputeFeeRequest,
   FillPsbtRequest,
   KeyringRequestHandler,
+  SendTransferRequest,
   SignPsbtRequest,
 } from './KeyringRequestHandler';
 import { AccountCapability } from '../entities';
@@ -301,6 +302,59 @@ describe('KeyringRequestHandler', () => {
       await expect(handler.route(mockRequest)).rejects.toThrow(error);
 
       expect(mockAccountsUseCases.broadcastPsbt).toHaveBeenCalled();
+    });
+  });
+
+  describe('sendTransfer', () => {
+    const recipients = [
+      {
+        address: 'bcrt1qstku2y3pfh9av50lxj55arm8r5gj8tf2yv5nxz',
+        amount: '1000',
+      },
+    ];
+    const mockRequest = mock<KeyringRequest>({
+      origin,
+      request: {
+        method: AccountCapability.SendTransfer,
+        params: {
+          recipients,
+          feeRate: 3,
+        },
+      },
+      account: 'account-id',
+    });
+
+    it('executes sendTransferq', async () => {
+      const mockTxid = mock<Txid>({
+        toString: jest.fn().mockReturnValue('txid'),
+      });
+      mockAccountsUseCases.sendTransfer.mockResolvedValue(mockTxid);
+
+      const result = await handler.route(mockRequest);
+
+      expect(assert).toHaveBeenCalledWith(
+        mockRequest.request.params,
+        SendTransferRequest,
+      );
+      expect(mockAccountsUseCases.sendTransfer).toHaveBeenCalledWith(
+        'account-id',
+        recipients,
+        origin,
+        3,
+      );
+      expect(result).toStrictEqual({
+        pending: false,
+        result: { txid: 'txid' },
+      });
+    });
+
+    it('propagates errors from sendTransfer', async () => {
+      const error = new Error();
+      mockAccountsUseCases.sendTransfer.mockRejectedValue(error);
+
+      await expect(handler.route(mockRequest)).rejects.toThrow(error);
+
+      expect(mockAccountsUseCases.sendTransfer).toHaveBeenCalled();
     });
   });
 });

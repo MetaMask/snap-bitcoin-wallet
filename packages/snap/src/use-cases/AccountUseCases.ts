@@ -447,7 +447,7 @@ export class AccountUseCases {
     const txid = await this.#broadcast(account, tx, origin);
 
     this.#logger.info(
-      'Funds transferred successfully: %s. Account: %s, Network: %s, Options: %o',
+      'Funds transferred successfully: %s. Account: %s, Network: %s',
       txid.toString(),
       account.id,
       account.network,

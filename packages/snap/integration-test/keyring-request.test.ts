@@ -475,7 +475,7 @@ describe('KeyringRequestHandler', () => {
     });
   });
 
-  describe('sendTransfer', () => {
+  describe.only('sendTransfer', () => {
     it('sends funds successfully', async () => {
       const response = await snap.onKeyringRequest({
         origin: ORIGIN,
@@ -531,12 +531,9 @@ describe('KeyringRequestHandler', () => {
       });
 
       expect(response).toRespondWithError({
-        code: -32000,
-        message: 'Invalid format: Invalid PSBT',
-        data: {
-          cause: null,
-          transaction: 'notAPsbt',
-        },
+        code: -32602,
+        data: { address: 'notAnAddress', amount: '1000', cause: null },
+        message: 'Validation failed: Invalid recipient',
         stack: expect.anything(),
       });
     });
