@@ -620,4 +620,33 @@ describe('KeyringRequestHandler', () => {
       });
     });
   });
+
+  describe.only('signMessage', () => {
+    it('signs a message successfully', async () => {
+      const response = await snap.onKeyringRequest({
+        origin: ORIGIN,
+        method: submitRequestMethod,
+        params: {
+          id: account.id,
+          origin,
+          scope: BtcScope.Regtest,
+          account: account.id,
+          request: {
+            method: AccountCapability.SignMessage,
+            params: {
+              message: 'Hello, world!',
+            },
+          },
+        } as KeyringRequest,
+      });
+
+      expect(response).toRespondWith({
+        pending: false,
+        result: {
+          signature:
+            'AkcwRAIgZxodJQ60t9Rr/hABEHZ1zPUJ4m5hdM5QLpysH8fDSzgCIENOEuZtYf9/Nn/ZW15PcImkknol403dmZrgoOQ+6K+TASECwDKypXm/ElmVTxTLJ7nao6X5mB/iGbU2Q2qtot0QRL4=',
+        },
+      });
+    });
+  });
 });

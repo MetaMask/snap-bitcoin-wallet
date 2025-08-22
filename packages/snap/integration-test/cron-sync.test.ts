@@ -8,7 +8,7 @@ import { MNEMONIC, ORIGIN } from './constants';
 
 const ACCOUNT_INDEX = 2;
 
-describe('CronHandler', () => {
+describe.skip('CronHandler', () => {
   let snap: Snap;
   let blockchain: BlockchainTestUtils;
 

@@ -8,10 +8,13 @@ import type {
   WalletTx,
 } from '@metamask/bitcoindevkit';
 import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
+import { Signer } from 'bip322-js';
+import { encode } from 'wif';
 
 import {
   AccountCapability,
   addressTypeToPurpose,
+  AssertionError,
   type BitcoinAccount,
   type BitcoinAccountRepository,
   type BlockchainClient,
@@ -453,6 +456,58 @@ export class AccountUseCases {
       account.network,
     );
     return txid;
+  }
+
+  async signMessage(id: string, message: string): Promise<string> {
+    this.#logger.debug('Signing message: %s. Message: %s', id, message);
+
+    const account = await this.#repository.get(id);
+    if (!account) {
+      throw new NotFoundError('Account not found', { id });
+    }
+    this.#checkCapability(account, AccountCapability.SignMessage);
+
+    const entropy = await this.#snapClient.getPrivateEntropy(
+      account.derivationPath.concat(['0', '0']), // We sign with address index 0, which is the public address
+    );
+    if (!entropy.privateKey) {
+      // Should never happen when getting the private entropy from the snap.
+      throw new AssertionError('Failed to get private entropy', {
+        id,
+      });
+    }
+
+    // Private key is returned in "0x..." format, transform into WIF:
+    const wifPrivateKey = encode({
+      version: 128,
+      privateKey: Buffer.from(entropy.privateKey.slice(2), 'hex'),
+      compressed: true,
+    });
+
+    try {
+      const signature = Signer.sign(
+        wifPrivateKey,
+        account.publicAddress.toString(),
+        message,
+      );
+
+      this.#logger.info(
+        'Message signed successfully: %s. Message: %s, Signature: %s.',
+        id,
+        message,
+        signature,
+      );
+      return signature;
+    } catch (error) {
+      throw new ValidationError(
+        'Failed to sign message',
+        {
+          id,
+          message,
+        },
+        error,
+      );
+    }
   }
 
   async #fillPsbt(
