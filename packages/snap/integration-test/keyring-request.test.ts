@@ -7,6 +7,7 @@ import { BlockchainTestUtils } from './blockchain-utils';
 import { MNEMONIC, ORIGIN } from './constants';
 import { AccountCapability } from '../src/entities';
 import type { FillPsbtResponse } from '../src/handlers/KeyringRequestHandler';
+import { Utxo } from '../src/handlers/mappings';
 
 const ACCOUNT_INDEX = 3;
 const submitRequestMethod = 'keyring_submitRequest';
@@ -97,6 +98,88 @@ describe('KeyringRequestHandler', () => {
       message:
         'Method not implemented or not supported: Unrecognized Bitcoin account capability',
       stack: expect.anything(),
+    });
+  });
+
+  // Keep order of tests as UTXOs are modified by other tests
+  describe('UTXO management', () => {
+    it('listUtxos', async () => {
+      let response = await snap.onKeyringRequest({
+        origin: ORIGIN,
+        method: submitRequestMethod,
+        params: {
+          id: account.id,
+          origin,
+          scope: BtcScope.Regtest,
+          account: account.id,
+          request: {
+            method: AccountCapability.ListUtxos,
+          },
+        } as KeyringRequest,
+      });
+
+      expect(response).toRespondWith({
+        pending: false,
+        result: [
+          {
+            address: 'bcrt1qs2fj7czz0amfm74j73yujx6dn6223md56gkkuy',
+            derivationIndex: 0,
+            outpoint: expect.any(String),
+            scriptPubkey:
+              'OP_0 OP_PUSHBYTES_20 82932f60427f769dfab2f449c91b4d9e94a8edb4',
+            scriptPubkeyHex: '001482932f60427f769dfab2f449c91b4d9e94a8edb4',
+            value: '1000000000',
+          },
+        ],
+      });
+
+      const utxos = (
+        response.response as { result: { result: { outpoint: string }[] } }
+      ).result.result;
+
+      response = await snap.onKeyringRequest({
+        origin: ORIGIN,
+        method: submitRequestMethod,
+        params: {
+          id: account.id,
+          origin,
+          scope: BtcScope.Regtest,
+          account: account.id,
+          request: {
+            method: AccountCapability.GetUtxo,
+            params: {
+              outpoint: utxos[0]?.outpoint,
+            },
+          },
+        } as KeyringRequest,
+      });
+
+      expect(response).toRespondWith({
+        pending: false,
+        result: utxos[0],
+      });
+    });
+
+    it('publicDescriptor', async () => {
+      const response = await snap.onKeyringRequest({
+        origin: ORIGIN,
+        method: submitRequestMethod,
+        params: {
+          id: account.id,
+          origin,
+          scope: BtcScope.Regtest,
+          account: account.id,
+          request: {
+            method: AccountCapability.PublicDescriptor,
+          },
+        } as KeyringRequest,
+      });
+
+      expect(response).toRespondWith({
+        pending: false,
+        result:
+          "wpkh([27f9035f/84'/1'/0']tpubDCkv2fHDfPg5ok9EPv6CDozH72rvY2jgEPm79szMeBwCBwUf2T6n5nLrWFfhuuD48SgzrELezoiyDM9KbZaVen4wuuGwrqQANDhzB7E8yDh/0/*)#sx899xk6",
+      });
     });
   });
 
