@@ -22,23 +22,30 @@ This dual repository setup allows you to develop and test the Bitcoin Wallet Sna
 
 ## API Documentation
 
-MetaMask interacts with the Bitcoin Wallet Snap via its [JSON-RPC API](packages/snap/openrpc.json). The complete API specification is documented in the OpenRPC format.
+### For MetaMask Developers (`onClientRequest`)
+
+MetaMask interacts with the Bitcoin Wallet Snap via its [JSON-RPC API](packages/snap/openrpc.json) for client-only requests (as defined in [SIP-31](https://github.com/MetaMask/SIPs/blob/main/SIPS/sip-31.md)). The complete API specification is documented in the OpenRPC format.
+
+### For dApp Developers (`submitRequest`)
+
+dApp developers can interact with the wallet capabilities via the `submitRequest` endpoint. See the [keyring.openrpc.json](packages/snap/keyring.openrpc.json) for details.
 
 ### Viewing the API Documentation
 
-The API documentation is located in [`packages/snap/openrpc.json`](packages/snap/openrpc.json). To view it in a user-friendly format:
+To view either specification in a user-friendly format:
 
 1. Go to the [OpenRPC Playground](https://playground.open-rpc.org/), or any other OpenRPC viewer of your liking
-2. Copy the contents of [`packages/snap/openrpc.json`](packages/snap/openrpc.json)
+2. Copy the contents of the respective OpenRPC JSON file
 3. Paste it into the playground's editor
 4. Explore the interactive documentation with method details, parameters, examples, and error specifications
 
 ### Available Methods
 
-The API includes methods for:
+The `onClientRequest` API includes methods for client-only operations like transaction flows without user confirmation.
 
-- **Wallet operations** - Account management, transaction signing and broadcasting, PSBT signing, coin selection and more.
-- **Client-only requests** (as defined in [SIP-31](https://github.com/MetaMask/SIPs/blob/main/SIPS/sip-31.md)) - For operations like Swap/Bridge without user confirmation
+The `submitRequest` API includes methods for:
+
+- Wallet operations - Account management, transaction signing and broadcasting, PSBT/message signing, coin selection and more.
 
 ## Contributing
 
