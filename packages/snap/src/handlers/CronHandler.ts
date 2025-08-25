@@ -1,7 +1,11 @@
 import type { JsonRpcRequest } from '@metamask/utils';
 import { assert, object, string } from 'superstruct';
 
-import { InexistentMethodError, type Logger } from '../entities';
+import {
+  InexistentMethodError,
+  type SnapClient,
+  type Logger,
+} from '../entities';
 import type { SendFlowUseCases, AccountUseCases } from '../use-cases';
 
 export enum CronMethod {
@@ -20,18 +24,27 @@ export class CronHandler {
 
   readonly #sendFlowUseCases: SendFlowUseCases;
 
+  readonly #snapClient: SnapClient;
+
   constructor(
     logger: Logger,
     accounts: AccountUseCases,
     sendFlow: SendFlowUseCases,
+    snapClient: SnapClient,
   ) {
     this.#logger = logger;
     this.#accountsUseCases = accounts;
     this.#sendFlowUseCases = sendFlow;
+    this.#snapClient = snapClient;
   }
 
   async route(request: JsonRpcRequest): Promise<void> {
     const { method, params } = request;
+
+    const { active } = await this.#snapClient.getClientStatus();
+    if (!active) {
+      return undefined;
+    }
 
     switch (method as CronMethod) {
       case CronMethod.SynchronizeAccounts: {

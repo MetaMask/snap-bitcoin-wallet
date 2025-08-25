@@ -2,6 +2,7 @@ import type { WalletTx } from '@metamask/bitcoindevkit';
 import type { JsonSLIP10Node, SLIP10Node } from '@metamask/key-tree';
 import type {
   ComponentOrElement,
+  GetClientStatusResult,
   GetPreferencesResult,
 } from '@metamask/snaps-sdk';
 import type { Json } from '@metamask/utils';
@@ -198,6 +199,13 @@ export type SnapClient = {
    * @returns the user's preferences.
    */
   getPreferences(): Promise<GetPreferencesResult>;
+
+  /**
+   * Get user's client status.
+   *
+   * @returns the user's client status.
+   */
+  getClientStatus(): Promise<GetClientStatusResult>;
 
   /**
    * Track events that comply with the SIP-32 spec (https://metamask.github.io/SIPs/SIPS/sip-32)
