@@ -1415,6 +1415,11 @@ describe('AccountUseCases', () => {
         '0',
         '0',
       ]);
+      expect(mockConfirmationRepository.insertSignMessage).toHaveBeenCalledWith(
+        mockAccount,
+        mockMessage,
+        mockOrigin,
+      );
       expect(signature).toBe(expectedSignature);
     });
 

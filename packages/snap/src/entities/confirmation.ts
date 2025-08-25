@@ -13,8 +13,8 @@ export type SignMessageConfirmationContext = {
 };
 
 export enum ConfirmationEvent {
-  Confirm = 'confirm',
-  Cancel = 'cancel',
+  Confirm = 'confirmation-confirm',
+  Cancel = 'confirmation-cancel',
 }
 
 /**

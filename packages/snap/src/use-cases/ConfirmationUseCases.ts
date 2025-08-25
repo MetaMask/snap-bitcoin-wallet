@@ -11,19 +11,19 @@ export class ConfirmationUseCases {
     this.#snapClient = snapClient;
   }
 
-  async onChange(id: string, event: ConfirmationEvent): Promise<void> {
+  async onChange(interfaceId: string, event: ConfirmationEvent): Promise<void> {
     this.#logger.debug(
       'Event triggered on confirmation: %s. Event: %s',
-      id,
+      interfaceId,
       event,
     );
 
     switch (event) {
       case ConfirmationEvent.Cancel: {
-        return this.#snapClient.resolveInterface(id, false);
+        return this.#snapClient.resolveInterface(interfaceId, false);
       }
       case ConfirmationEvent.Confirm: {
-        return this.#snapClient.resolveInterface(id, true);
+        return this.#snapClient.resolveInterface(interfaceId, true);
       }
       default:
         throw new UserActionError('Unrecognized confirmation event');
