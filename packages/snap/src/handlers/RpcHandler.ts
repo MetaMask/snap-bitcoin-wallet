@@ -1,5 +1,6 @@
 import { BtcScope } from '@metamask/keyring-api';
 import type { Json, JsonRpcRequest } from '@metamask/utils';
+import { Verifier } from 'bip322-js';
 import { assert, enums, object, optional, string } from 'superstruct';
 
 import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
@@ -8,6 +9,7 @@ import {
   AssertionError,
   FormatError,
   InexistentMethodError,
+  ValidationError,
 } from '../entities';
 import { scopeToNetwork } from './caip';
 import type { TransactionFee } from './mappings';
@@ -18,6 +20,7 @@ export enum RpcMethod {
   StartSendTransactionFlow = 'startSendTransactionFlow',
   SignAndSendTransaction = 'signAndSendTransaction',
   ComputeFee = 'computeFee',
+  VerifyMessage = 'verifyMessage',
 }
 
 export const CreateSendFormRequest = object({
@@ -41,6 +44,12 @@ export const ComputeFeeRequest = object({
 export type SendTransactionResponse = {
   transactionId: string;
 };
+
+export const VerifyMessageRequest = object({
+  address: string(),
+  message: string(),
+  signature: string(),
+});
 
 export class RpcHandler {
   readonly #sendFlowUseCases: SendFlowUseCases;
@@ -76,6 +85,14 @@ export class RpcHandler {
           params.accountId,
           params.transaction,
           params.scope,
+        );
+      }
+      case RpcMethod.VerifyMessage: {
+        assert(params, VerifyMessageRequest);
+        return this.#verifyMessage(
+          params.address,
+          params.message,
+          params.signature,
         );
       }
 
@@ -137,5 +154,22 @@ export class RpcHandler {
     const amount = await this.#accountUseCases.computeFee(accountId, psbt);
 
     return [mapToTransactionFees(amount, scopeToNetwork[scope])];
+  }
+
+  #verifyMessage(
+    address: string,
+    message: string,
+    signature: string,
+  ): { valid: boolean } {
+    try {
+      const valid = Verifier.verifySignature(address, message, signature);
+      return { valid };
+    } catch (error) {
+      throw new ValidationError(
+        'Failed to verify signature',
+        { address, message, signature },
+        error,
+      );
+    }
   }
 }

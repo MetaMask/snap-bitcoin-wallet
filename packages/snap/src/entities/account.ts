@@ -224,6 +224,7 @@ export enum AccountCapability {
   GetUtxo = 'getUtxo',
   ListUtxos = 'listUtxos',
   PublicDescriptor = 'publicDescriptor',
+  SignMessage = 'signMessage',
 }
 
 /**

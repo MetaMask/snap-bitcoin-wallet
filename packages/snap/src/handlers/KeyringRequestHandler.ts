@@ -74,6 +74,14 @@ export const GetUtxoRequest = object({
   outpoint: string(),
 });
 
+export const SignMessageRequest = object({
+  message: string(),
+});
+
+export type SignMessageResponse = {
+  signature: string;
+};
+
 export class KeyringRequestHandler {
   readonly #accountsUseCases: AccountUseCases;
 
@@ -121,6 +129,10 @@ export class KeyringRequestHandler {
       }
       case AccountCapability.PublicDescriptor: {
         return this.#publicDescriptor(account);
+      }
+      case AccountCapability.SignMessage: {
+        assert(params, SignMessageRequest);
+        return this.#signMessage(account, params.message);
       }
       default: {
         throw new InexistentMethodError(
@@ -235,6 +247,13 @@ export class KeyringRequestHandler {
   async #publicDescriptor(id: string): Promise<KeyringResponse> {
     const account = await this.#accountsUseCases.get(id);
     return this.#toKeyringResponse(account.publicDescriptor);
+  }
+
+  async #signMessage(id: string, message: string): Promise<KeyringResponse> {
+    const signature = await this.#accountsUseCases.signMessage(id, message);
+    return this.#toKeyringResponse({
+      signature,
+    } as SignMessageResponse);
   }
 
   #toKeyringResponse(result: Json): KeyringResponse {
