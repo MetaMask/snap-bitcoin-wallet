@@ -481,7 +481,7 @@ export class AccountUseCases {
     try {
       // Private key is returned in "0x..." format, transform into WIF:
       const wifPrivateKey = encode({
-        version: 128,
+        version: account.network === 'bitcoin' ? 128 : 239, // 128 for mainnet, 239 for testnets
         // eslint-disable-next-line no-restricted-globals
         privateKey: Buffer.from(entropy.privateKey.slice(2), 'hex'),
         compressed: true,
