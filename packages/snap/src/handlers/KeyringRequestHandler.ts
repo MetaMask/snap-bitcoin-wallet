@@ -132,7 +132,7 @@ export class KeyringRequestHandler {
       }
       case AccountCapability.SignMessage: {
         assert(params, SignMessageRequest);
-        return this.#signMessage(account, params.message);
+        return this.#signMessage(account, params.message, origin);
       }
       default: {
         throw new InexistentMethodError(
@@ -249,8 +249,16 @@ export class KeyringRequestHandler {
     return this.#toKeyringResponse(account.publicDescriptor);
   }
 
-  async #signMessage(id: string, message: string): Promise<KeyringResponse> {
-    const signature = await this.#accountsUseCases.signMessage(id, message);
+  async #signMessage(
+    id: string,
+    message: string,
+    origin: string,
+  ): Promise<KeyringResponse> {
+    const signature = await this.#accountsUseCases.signMessage(
+      id,
+      message,
+      origin,
+    );
     return this.#toKeyringResponse({
       signature,
     } as SignMessageResponse);

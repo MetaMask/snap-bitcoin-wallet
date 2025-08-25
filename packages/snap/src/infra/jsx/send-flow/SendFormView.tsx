@@ -8,10 +8,10 @@ import {
   Text as SnapText,
 } from '@metamask/snaps-sdk/jsx';
 
-import { HeadingWithReturn, SendForm } from './components';
-import { errorCodeToLabel, translate } from './format';
-import type { Messages, SendFormContext } from '../../entities';
-import { SendFormEvent } from '../../entities';
+import type { Messages, SendFormContext } from '../../../entities';
+import { SendFormEvent } from '../../../entities';
+import { HeadingWithReturn, SendForm } from '../components';
+import { errorCodeToLabel, translate } from '../format';
 
 export type SendFormViewProps = {
   context: SendFormContext;

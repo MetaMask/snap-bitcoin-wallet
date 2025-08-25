@@ -18,6 +18,7 @@ import type {
   BitcoinAccount,
   BitcoinAccountRepository,
   BlockchainClient,
+  ConfirmationRepository,
   Inscription,
   Logger,
   MetaProtocolsClient,
@@ -39,6 +40,7 @@ describe('AccountUseCases', () => {
   const mockLogger = mock<Logger>();
   const mockSnapClient = mock<SnapClient>();
   const mockRepository = mock<BitcoinAccountRepository>();
+  const mockConfirmationRepository = mock<ConfirmationRepository>();
   const mockChain = mock<BlockchainClient>();
   const mockMetaProtocols = mock<MetaProtocolsClient>();
   const fallbackFeeRate = 5.0;
@@ -48,6 +50,7 @@ describe('AccountUseCases', () => {
     mockLogger,
     mockSnapClient,
     mockRepository,
+    mockConfirmationRepository,
     mockChain,
     fallbackFeeRate,
     targetBlocksConfirmation,
@@ -636,6 +639,7 @@ describe('AccountUseCases', () => {
         mockLogger,
         mockSnapClient,
         mockRepository,
+        mockConfirmationRepository,
         mockChain,
         fallbackFeeRate,
         targetBlocksConfirmation,
@@ -719,6 +723,7 @@ describe('AccountUseCases', () => {
         mockLogger,
         mockSnapClient,
         mockRepository,
+        mockConfirmationRepository,
         mockChain,
         fallbackFeeRate,
         targetBlocksConfirmation,
@@ -1374,6 +1379,7 @@ describe('AccountUseCases', () => {
       derivationPath: ['m', "84'", "0'"],
     });
     const mockMessage = 'Hello, world!';
+    const mockOrigin = 'metamask';
 
     beforeEach(() => {
       mockRepository.get.mockResolvedValue(mockAccount);
@@ -1387,7 +1393,7 @@ describe('AccountUseCases', () => {
       mockRepository.get.mockResolvedValue(null);
 
       await expect(
-        useCases.signMessage('non-existent-id', mockMessage),
+        useCases.signMessage('non-existent-id', mockMessage, mockOrigin),
       ).rejects.toThrow('Account not found');
     });
 
@@ -1395,7 +1401,11 @@ describe('AccountUseCases', () => {
       const expectedSignature =
         'AkcwRAIgZxodJQ60t9Rr/hABEHZ1zPUJ4m5hdM5QLpysH8fDSzgCIENOEuZtYf9/Nn/ZW15PcImkknol403dmZrgoOQ+6K+TASECwDKypXm/ElmVTxTLJ7nao6X5mB/iGbU2Q2qtot0QRL4=';
 
-      const signature = await useCases.signMessage('account-id', mockMessage);
+      const signature = await useCases.signMessage(
+        'account-id',
+        mockMessage,
+        mockOrigin,
+      );
 
       expect(mockRepository.get).toHaveBeenCalledWith('account-id');
       expect(mockSnapClient.getPrivateEntropy).toHaveBeenCalledWith([
@@ -1405,6 +1415,11 @@ describe('AccountUseCases', () => {
         '0',
         '0',
       ]);
+      expect(mockConfirmationRepository.insertSignMessage).toHaveBeenCalledWith(
+        mockAccount,
+        mockMessage,
+        mockOrigin,
+      );
       expect(signature).toBe(expectedSignature);
     });
 
@@ -1414,7 +1429,7 @@ describe('AccountUseCases', () => {
       } as JsonSLIP10Node);
 
       await expect(
-        useCases.signMessage('account-id', mockMessage),
+        useCases.signMessage('account-id', mockMessage, mockOrigin),
       ).rejects.toThrow('Failed to sign message');
     });
 
@@ -1423,7 +1438,7 @@ describe('AccountUseCases', () => {
       mockRepository.get.mockRejectedValueOnce(error);
 
       await expect(
-        useCases.signMessage('account-id', mockMessage),
+        useCases.signMessage('account-id', mockMessage, mockOrigin),
       ).rejects.toBe(error);
     });
 
@@ -1432,7 +1447,7 @@ describe('AccountUseCases', () => {
       mockSnapClient.getPrivateEntropy.mockRejectedValue(error);
 
       await expect(
-        useCases.signMessage('account-id', mockMessage),
+        useCases.signMessage('account-id', mockMessage, mockOrigin),
       ).rejects.toBe(error);
     });
   });

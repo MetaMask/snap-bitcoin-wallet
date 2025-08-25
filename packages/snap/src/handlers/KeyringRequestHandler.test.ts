@@ -463,4 +463,32 @@ describe('KeyringRequestHandler', () => {
       });
     });
   });
+
+  describe('signMessage', () => {
+    const mockRequest = mock<KeyringRequest>({
+      origin,
+      request: {
+        method: AccountCapability.SignMessage,
+        params: {
+          message: 'message',
+        },
+      },
+      account: 'account-id',
+    });
+
+    it('executes signMessage', async () => {
+      mockAccountsUseCases.signMessage.mockResolvedValue('signature');
+      const result = await handler.route(mockRequest);
+
+      expect(mockAccountsUseCases.signMessage).toHaveBeenCalledWith(
+        'account-id',
+        'message',
+        'metamask',
+      );
+      expect(result).toStrictEqual({
+        pending: false,
+        result: { signature: 'signature' },
+      });
+    });
+  });
 });

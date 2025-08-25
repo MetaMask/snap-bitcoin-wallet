@@ -1,2 +1,2 @@
-export * from './SendFormView';
-export * from './ReviewTransactionView';
+export * from './send-flow';
+export * from './confirmations';

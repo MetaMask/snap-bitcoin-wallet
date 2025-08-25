@@ -6,18 +6,22 @@ import type {
 
 import type { ReviewTransactionContext, SendFormContext } from '../entities';
 import {
+  ConfirmationEvent,
   FormatError,
   InexistentMethodError,
   ReviewTransactionEvent,
   SendFormEvent,
 } from '../entities';
-import type { SendFlowUseCases } from '../use-cases';
+import type { ConfirmationUseCases, SendFlowUseCases } from '../use-cases';
 
 export class UserInputHandler {
   readonly #sendFlowUseCases: SendFlowUseCases;
 
-  constructor(sendFlow: SendFlowUseCases) {
+  readonly #confirmationUseCases: ConfirmationUseCases;
+
+  constructor(sendFlow: SendFlowUseCases, confirmation: ConfirmationUseCases) {
     this.#sendFlowUseCases = sendFlow;
+    this.#confirmationUseCases = confirmation;
   }
 
   async route(
@@ -45,6 +49,8 @@ export class UserInputHandler {
         event.name,
         context as ReviewTransactionContext,
       );
+    } else if (this.#isConfirmationEvent(event.name)) {
+      return this.#confirmationUseCases.onChange(interfaceId, event.name);
     }
 
     throw new InexistentMethodError(`Unsupported event: ${event.name}`);
@@ -58,6 +64,10 @@ export class UserInputHandler {
     return Object.values(ReviewTransactionEvent).includes(
       name as ReviewTransactionEvent,
     );
+  }
+
+  #isConfirmationEvent(name: string): name is ConfirmationEvent {
+    return Object.values(ConfirmationEvent).includes(name as ConfirmationEvent);
   }
 
   #hasValue(event: UserInputEvent): event is InputChangeEvent {
