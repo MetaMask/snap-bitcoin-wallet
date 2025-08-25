@@ -15,7 +15,7 @@ describe('KeyringRequestHandler', () => {
   let account: KeyringAccount;
   let snap: Snap;
   let blockchain: BlockchainTestUtils;
-  const origin = 'integration-tests';
+  const origin = 'http://my-dapp.com';
 
   beforeAll(async () => {
     blockchain = new BlockchainTestUtils();

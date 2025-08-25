@@ -162,7 +162,7 @@ const Index = () => {
       method: 'keyring_listAccounts',
     })) as KeyringAccount[];
 
-    if (accounts && accounts.length) {
+    if (accounts.length) {
       setBtcAccount(
         accounts.find((account) => account.options.scope === scope),
       );
