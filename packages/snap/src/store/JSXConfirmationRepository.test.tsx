@@ -36,7 +36,7 @@ describe('JSXConfirmationRepository', () => {
 
     beforeEach(() => {
       mockSnapClient.createInterface.mockResolvedValue('interface-id');
-      mockSnapClient.displayInterface.mockResolvedValue(true);
+      mockSnapClient.displayConfirmation.mockResolvedValue(true);
       mockTranslator.load.mockResolvedValue(mockMessages);
       mockSnapClient.getPreferences.mockResolvedValue({
         locale: 'en',
@@ -55,13 +55,13 @@ describe('JSXConfirmationRepository', () => {
         expectedContext,
       );
       expect(mockTranslator.load).toHaveBeenCalledWith('en');
-      expect(mockSnapClient.displayInterface).toHaveBeenCalledWith(
+      expect(mockSnapClient.displayConfirmation).toHaveBeenCalledWith(
         'interface-id',
       );
     });
 
     it('throws UserActionError if the interface returns false', async () => {
-      mockSnapClient.displayInterface.mockResolvedValue(false);
+      mockSnapClient.displayConfirmation.mockResolvedValue(false);
       await expect(
         repo.insertSignMessage(mockAccount, message, origin),
       ).rejects.toThrow('User canceled the confirmation');

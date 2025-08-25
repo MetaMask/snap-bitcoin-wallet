@@ -19,7 +19,7 @@ import type {
 import { ConfirmationEvent } from '../../../entities';
 import { networkToScope } from '../../../handlers';
 import { AssetIcon } from '../components';
-import { displayCaip10, parseOrigin, translate } from '../format';
+import { displayCaip10, displayOrigin, translate } from '../format';
 
 type SignMessageConfirmationViewProps = {
   context: SignMessageConfirmationContext;
@@ -31,7 +31,7 @@ export const SignMessageConfirmationView: SnapComponent<
 > = ({ context, messages }) => {
   const t = translate(messages);
   const { account, network, origin, message } = context;
-  const originHostname = origin ? parseOrigin(origin) : null;
+  const originHostname = origin ? displayOrigin(origin) : null;
 
   return (
     <Container>

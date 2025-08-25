@@ -140,6 +140,14 @@ export type SnapClient = {
   displayInterface<ResolveType>(id: string): Promise<ResolveType | null>;
 
   /**
+   * Display a Confirmation Dialog.
+   *
+   * @param id - The interface id.
+   * @returns the resolved value or null.
+   */
+  displayConfirmation<ResolveType>(id: string): Promise<ResolveType | null>;
+
+  /**
    * Resolve a User Interface.
    *
    * @param id - The interface id.

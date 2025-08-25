@@ -1,7 +1,7 @@
 import type { KeyringAccount, KeyringRequest } from '@metamask/keyring-api';
 import { BtcScope } from '@metamask/keyring-api';
 import type { Snap } from '@metamask/snaps-jest';
-import { installSnap } from '@metamask/snaps-jest';
+import { assertIsConfirmationDialog, installSnap } from '@metamask/snaps-jest';
 
 import { BlockchainTestUtils } from './blockchain-utils';
 import { MNEMONIC, ORIGIN } from './constants';
@@ -623,7 +623,7 @@ describe('KeyringRequestHandler', () => {
 
   describe('signMessage', () => {
     it('signs a message successfully', async () => {
-      const response = await snap.onKeyringRequest({
+      const response = snap.onKeyringRequest({
         origin: ORIGIN,
         method: submitRequestMethod,
         params: {
@@ -640,7 +640,13 @@ describe('KeyringRequestHandler', () => {
         } as KeyringRequest,
       });
 
-      expect(response).toRespondWith({
+      const ui = await response.getInterface();
+      assertIsConfirmationDialog(ui);
+      await ui.ok();
+
+      const result = await response;
+
+      expect(result).toRespondWith({
         pending: false,
         result: {
           signature:

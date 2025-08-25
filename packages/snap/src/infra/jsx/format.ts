@@ -60,16 +60,12 @@ export const errorCodeToLabel = (code: number): string => {
   return raw.charAt(0).toLowerCase() + raw.slice(1);
 };
 
-export const parseOrigin = (origin: string): string => {
+export const displayOrigin = (origin: string): string => {
   if (origin === METAMASK_ORIGIN) {
     return 'MetaMask';
   }
 
-  try {
-    return new URL(origin).hostname;
-  } catch (error) {
-    throw new ValidationError('Invalid URL', { origin }, error);
-  }
+  return new URL(origin).hostname;
 };
 
 export const displayCaip10 = (

@@ -476,7 +476,7 @@ describe('KeyringRequestHandler', () => {
       account: 'account-id',
     });
 
-    it('executes publicDescriptor', async () => {
+    it('executes signMessage', async () => {
       mockAccountsUseCases.signMessage.mockResolvedValue('signature');
       const result = await handler.route(mockRequest);
 
