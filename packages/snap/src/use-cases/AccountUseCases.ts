@@ -15,18 +15,21 @@ import {
   AccountCapability,
   addressTypeToPurpose,
   AssertionError,
-  type BitcoinAccount,
-  type BitcoinAccountRepository,
-  type BlockchainClient,
-  type Logger,
-  type MetaProtocolsClient,
   networkToCoinType,
   NotFoundError,
   PermissionError,
-  type SnapClient,
   TrackingSnapEvent,
   ValidationError,
   WalletError,
+} from '../entities';
+import type {
+  BitcoinAccount,
+  BitcoinAccountRepository,
+  BlockchainClient,
+  Logger,
+  MetaProtocolsClient,
+  SnapClient,
+  ConfirmationRepository,
 } from '../entities';
 
 export type DiscoverAccountParams = {
@@ -49,6 +52,8 @@ export class AccountUseCases {
 
   readonly #repository: BitcoinAccountRepository;
 
+  readonly #confirmationRepository: ConfirmationRepository;
+
   readonly #chain: BlockchainClient;
 
   readonly #metaProtocols: MetaProtocolsClient | undefined;
@@ -61,6 +66,7 @@ export class AccountUseCases {
     logger: Logger,
     snapClient: SnapClient,
     repository: BitcoinAccountRepository,
+    confirmationRepository: ConfirmationRepository,
     chain: BlockchainClient,
     fallbackFeeRate: number,
     targetBlocksConfirmation: number,
@@ -69,6 +75,7 @@ export class AccountUseCases {
     this.#logger = logger;
     this.#snapClient = snapClient;
     this.#repository = repository;
+    this.#confirmationRepository = confirmationRepository;
     this.#chain = chain;
     this.#fallbackFeeRate = fallbackFeeRate;
     this.#targetBlocksConfirmation = targetBlocksConfirmation;
@@ -459,7 +466,11 @@ export class AccountUseCases {
     return txid;
   }
 
-  async signMessage(id: string, message: string): Promise<string> {
+  async signMessage(
+    id: string,
+    message: string,
+    origin: string,
+  ): Promise<string> {
     this.#logger.debug('Signing message: %s. Message: %s', id, message);
 
     const account = await this.#repository.get(id);
@@ -467,6 +478,12 @@ export class AccountUseCases {
       throw new NotFoundError('Account not found', { id });
     }
     this.#checkCapability(account, AccountCapability.SignMessage);
+
+    await this.#confirmationRepository.insertSignMessage(
+      account,
+      message,
+      origin,
+    );
 
     const entropy = await this.#snapClient.getPrivateEntropy(
       account.derivationPath.concat(['0', '0']), // We sign with address index 0, which is the public address

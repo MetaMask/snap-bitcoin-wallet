@@ -13,23 +13,22 @@ import {
   Address,
   Link,
 } from '@metamask/snaps-sdk/jsx';
-import type { CaipAccountId } from '@metamask/utils';
 
-import { AssetIcon, HeadingWithReturn } from './components';
-import {
-  displayAmount,
-  displayExchangeAmount,
-  displayExplorerUrl,
-  translate,
-} from './format';
-import { Config } from '../../config';
-import type { Messages, ReviewTransactionContext } from '../../entities';
+import { Config } from '../../../config';
+import type { Messages, ReviewTransactionContext } from '../../../entities';
 import {
   BlockTime,
   networkToCurrencyUnit,
   ReviewTransactionEvent,
-} from '../../entities';
-import { networkToScope } from '../../handlers';
+} from '../../../entities';
+import { AssetIcon, HeadingWithReturn } from '../components';
+import {
+  displayAmount,
+  displayCaip10,
+  displayExchangeAmount,
+  displayExplorerUrl,
+  translate,
+} from '../format';
 
 type ReviewTransactionViewProps = {
   context: ReviewTransactionContext;
@@ -68,18 +67,13 @@ export const ReviewTransactionView: SnapComponent<
         <Section>
           <Row label={t('from')}>
             <Link href={displayExplorerUrl(explorerUrl, from)}>
-              <Address
-                address={`${networkToScope[network]}:${from}` as CaipAccountId}
-                displayName
-              />
+              <Address address={displayCaip10(network, from)} displayName />
             </Link>
           </Row>
           <Row label={t('recipient')}>
             <Link href={displayExplorerUrl(explorerUrl, recipient)}>
               <Address
-                address={
-                  `${networkToScope[network]}:${recipient}` as CaipAccountId
-                }
+                address={displayCaip10(network, recipient)}
                 displayName
               />
             </Link>

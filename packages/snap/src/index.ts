@@ -28,7 +28,13 @@ import {
   LocalTranslatorAdapter,
 } from './infra';
 import { BdkAccountRepository, JSXSendFlowRepository } from './store';
-import { AccountUseCases, AssetsUseCases, SendFlowUseCases } from './use-cases';
+import { JSXConfirmationRepository } from './store/JSXConfirmationRepository';
+import {
+  AccountUseCases,
+  AssetsUseCases,
+  ConfirmationUseCases,
+  SendFlowUseCases,
+} from './use-cases';
 
 // Infra layer
 const logger = new ConsoleLoggerAdapter(Config.logLevel);
@@ -41,12 +47,17 @@ const middleware = new HandlerMiddleware(logger, snapClient, translator);
 // Data layer
 const accountRepository = new BdkAccountRepository(snapClient);
 const sendFlowRepository = new JSXSendFlowRepository(snapClient, translator);
+const confirmationRepository = new JSXConfirmationRepository(
+  snapClient,
+  translator,
+);
 
 // Business layer
 const accountsUseCases = new AccountUseCases(
   logger,
   snapClient,
   accountRepository,
+  confirmationRepository,
   chainClient,
   Config.fallbackFeeRate,
   Config.targetBlocksConfirmation,
@@ -63,6 +74,7 @@ const sendFlowUseCases = new SendFlowUseCases(
   Config.ratesRefreshInterval,
 );
 const assetsUseCases = new AssetsUseCases(logger, assetRatesClient);
+const confirmationUseCases = new ConfirmationUseCases(logger, snapClient);
 
 // Application layer
 const keyringRequestHandler = new KeyringRequestHandler(accountsUseCases);
@@ -73,7 +85,10 @@ const keyringHandler = new KeyringHandler(
 );
 const cronHandler = new CronHandler(logger, accountsUseCases, sendFlowUseCases);
 const rpcHandler = new RpcHandler(sendFlowUseCases, accountsUseCases);
-const userInputHandler = new UserInputHandler(sendFlowUseCases);
+const userInputHandler = new UserInputHandler(
+  sendFlowUseCases,
+  confirmationUseCases,
+);
 const assetsHandler = new AssetsHandler(
   assetsUseCases,
   Config.conversionsExpirationInterval,

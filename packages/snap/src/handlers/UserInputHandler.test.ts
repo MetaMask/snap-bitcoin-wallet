@@ -4,17 +4,21 @@ import { mock } from 'jest-mock-extended';
 
 import type { SendFormContext } from '../entities';
 import { ReviewTransactionEvent, SendFormEvent } from '../entities';
-import type { SendFlowUseCases } from '../use-cases';
+import type { ConfirmationUseCases, SendFlowUseCases } from '../use-cases';
 import { UserInputHandler } from './UserInputHandler';
 
 describe('UserInputHandler', () => {
   const mockSendFlowUseCases = mock<SendFlowUseCases>();
+  const mockConfirmationUseCases = mock<ConfirmationUseCases>();
   const mockContext = mock<SendFormContext>();
 
   let handler: UserInputHandler;
 
   beforeEach(() => {
-    handler = new UserInputHandler(mockSendFlowUseCases);
+    handler = new UserInputHandler(
+      mockSendFlowUseCases,
+      mockConfirmationUseCases,
+    );
   });
 
   describe('route', () => {
