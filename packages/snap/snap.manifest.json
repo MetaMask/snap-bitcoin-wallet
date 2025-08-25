@@ -22,8 +22,7 @@
     "https://portfolio.metamask.io": {},
     "https://portfolio-builds.metafi-dev.codefi.network": {},
     "https://dev.portfolio.metamask.io": {},
-    "https://ramps-dev.portfolio.metamask.io": {},
-    "https://localhost:3000": {}
+    "https://ramps-dev.portfolio.metamask.io": {}
   },
   "initialPermissions": {
     "endowment:webassembly": {},
@@ -36,8 +35,7 @@
         "https://portfolio.metamask.io",
         "https://portfolio-builds.metafi-dev.codefi.network",
         "https://dev.portfolio.metamask.io",
-        "https://ramps-dev.portfolio.metamask.io",
-        "https://localhost:3000"
+        "https://ramps-dev.portfolio.metamask.io"
       ]
     },
     "snap_getBip32Entropy": [
