@@ -22,13 +22,13 @@ This dual repository setup allows you to develop and test the Bitcoin Wallet Sna
 
 ## API Documentation
 
-### For MetaMask Developers (onClientRequest)
+### For MetaMask Developers (`onClientRequest`)
 
 MetaMask interacts with the Bitcoin Wallet Snap via its [JSON-RPC API](packages/snap/openrpc.json) for client-only requests (as defined in [SIP-31](https://github.com/MetaMask/SIPs/blob/main/SIPS/sip-31.md)). The complete API specification is documented in the OpenRPC format.
 
-### For dApp Developers (submitRequest)
+### For dApp Developers (`submitRequest`)
 
-dApp developers can interact with the keyring capabilities via the submitRequest endpoint. See the [keyring.openrpc.json](packages/snap/keyring.openrpc.json) for details.
+dApp developers can interact with the wallet capabilities via the `submitRequest` endpoint. See the [keyring.openrpc.json](packages/snap/keyring.openrpc.json) for details.
 
 ### Viewing the API Documentation
 
@@ -41,11 +41,11 @@ To view either specification in a user-friendly format:
 
 ### Available Methods
 
-The onClientRequest API includes methods for client-only operations like transaction flows without user confirmation.
+The `onClientRequest` API includes methods for client-only operations like transaction flows without user confirmation.
 
-The submitRequest API includes methods for:
+The `submitRequest` API includes methods for:
 
-- Wallet operations - Account management, transaction signing and broadcasting, PSBT signing, coin selection and more.
+- Wallet operations - Account management, transaction signing and broadcasting, PSBT/message signing, coin selection and more.
 
 ## Contributing
 
