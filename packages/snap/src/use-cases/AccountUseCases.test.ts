@@ -9,7 +9,9 @@ import type {
   AddressType,
   Network,
   Psbt,
+  Address,
 } from '@metamask/bitcoindevkit';
+import type { JsonSLIP10Node } from '@metamask/key-tree';
 import { mock } from 'jest-mock-extended';
 
 import type {
@@ -1359,6 +1361,78 @@ describe('AccountUseCases', () => {
 
       await expect(
         useCases.sendTransfer('account-id', recipients, 'metamask'),
+      ).rejects.toBe(error);
+    });
+  });
+
+  describe('signMessage', () => {
+    const mockAccount = mock<BitcoinAccount>({
+      publicAddress: mock<Address>({
+        toString: () => 'bcrt1qs2fj7czz0amfm74j73yujx6dn6223md56gkkuy',
+      }),
+      capabilities: [AccountCapability.SignMessage],
+      derivationPath: ['m', "84'", "0'"],
+    });
+    const mockMessage = 'Hello, world!';
+
+    beforeEach(() => {
+      mockRepository.get.mockResolvedValue(mockAccount);
+      mockSnapClient.getPrivateEntropy.mockResolvedValue({
+        privateKey:
+          '0xdf23b869a1395aec3bf878797daac998ed4acf404fa26ff622eef7f30dc46791',
+      } as JsonSLIP10Node);
+    });
+
+    it('throws error if account is not found', async () => {
+      mockRepository.get.mockResolvedValue(null);
+
+      await expect(
+        useCases.signMessage('non-existent-id', mockMessage),
+      ).rejects.toThrow('Account not found');
+    });
+
+    it('signs a message', async () => {
+      const expectedSignature =
+        'AkcwRAIgZxodJQ60t9Rr/hABEHZ1zPUJ4m5hdM5QLpysH8fDSzgCIENOEuZtYf9/Nn/ZW15PcImkknol403dmZrgoOQ+6K+TASECwDKypXm/ElmVTxTLJ7nao6X5mB/iGbU2Q2qtot0QRL4=';
+
+      const signature = await useCases.signMessage('account-id', mockMessage);
+
+      expect(mockRepository.get).toHaveBeenCalledWith('account-id');
+      expect(mockSnapClient.getPrivateEntropy).toHaveBeenCalledWith([
+        'm',
+        "84'",
+        "0'",
+        '0',
+        '0',
+      ]);
+      expect(signature).toBe(expectedSignature);
+    });
+
+    it('throws WalletError if fails to sign message', async () => {
+      mockSnapClient.getPrivateEntropy.mockResolvedValue({
+        privateKey: '0x1234567890abcdef', // wrong private key returned
+      } as JsonSLIP10Node);
+
+      await expect(
+        useCases.signMessage('account-id', mockMessage),
+      ).rejects.toThrow('Failed to sign message');
+    });
+
+    it('propagates an error if get fails', async () => {
+      const error = new Error('get failed');
+      mockRepository.get.mockRejectedValueOnce(error);
+
+      await expect(
+        useCases.signMessage('account-id', mockMessage),
+      ).rejects.toBe(error);
+    });
+
+    it('propagates an error if getPrivateEntropy fails', async () => {
+      const error = new Error('getPrivateEntropy failed');
+      mockSnapClient.getPrivateEntropy.mockRejectedValue(error);
+
+      await expect(
+        useCases.signMessage('account-id', mockMessage),
       ).rejects.toBe(error);
     });
   });

@@ -621,7 +621,7 @@ describe('KeyringRequestHandler', () => {
     });
   });
 
-  describe.only('signMessage', () => {
+  describe('signMessage', () => {
     it('signs a message successfully', async () => {
       const response = await snap.onKeyringRequest({
         origin: ORIGIN,

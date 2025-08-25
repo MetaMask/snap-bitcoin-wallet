@@ -26,6 +26,7 @@ import {
   type SnapClient,
   TrackingSnapEvent,
   ValidationError,
+  WalletError,
 } from '../entities';
 
 export type DiscoverAccountParams = {
@@ -471,20 +472,20 @@ export class AccountUseCases {
       account.derivationPath.concat(['0', '0']), // We sign with address index 0, which is the public address
     );
     if (!entropy.privateKey) {
-      // Should never happen when getting the private entropy from the snap.
+      // Should never happen when getting the private entropy
       throw new AssertionError('Failed to get private entropy', {
         id,
       });
     }
 
-    // Private key is returned in "0x..." format, transform into WIF:
-    const wifPrivateKey = encode({
-      version: 128,
-      privateKey: Buffer.from(entropy.privateKey.slice(2), 'hex'),
-      compressed: true,
-    });
-
     try {
+      // Private key is returned in "0x..." format, transform into WIF:
+      const wifPrivateKey = encode({
+        version: 128,
+        // eslint-disable-next-line no-restricted-globals
+        privateKey: Buffer.from(entropy.privateKey.slice(2), 'hex'),
+        compressed: true,
+      });
       const signature = Signer.sign(
         wifPrivateKey,
         account.publicAddress.toString(),
@@ -499,7 +500,7 @@ export class AccountUseCases {
       );
       return signature;
     } catch (error) {
-      throw new ValidationError(
+      throw new WalletError(
         'Failed to sign message',
         {
           id,
