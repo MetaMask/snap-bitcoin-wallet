@@ -18,17 +18,11 @@
     },
     "locales": ["locales/en.json"]
   },
-  "initialConnections": {
-    "http://localhost:3000": {}
-  },
   "initialPermissions": {
     "endowment:webassembly": {},
     "endowment:rpc": {
       "dapps": true,
       "snaps": false
-    },
-    "endowment:keyring": {
-      "allowedOrigins": ["http://localhost:3000"]
     },
     "snap_getBip32Entropy": [
       {
