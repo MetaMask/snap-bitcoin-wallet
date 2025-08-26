@@ -2,7 +2,7 @@ import type { Network } from '@metamask/bitcoindevkit';
 import { Amount, BdkErrorCode } from '@metamask/bitcoindevkit';
 import type { CaipAccountId, CurrencyRate } from '@metamask/snaps-sdk';
 
-import { type CurrencyUnit, type Messages } from '../../entities';
+import type { CurrencyUnit, Messages } from '../../entities';
 import { networkToScope } from '../../handlers';
 
 export const displayAmount = (
