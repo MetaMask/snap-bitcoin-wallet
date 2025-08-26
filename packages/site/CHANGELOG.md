@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0]
+
+### Uncategorized
+
+- feat: v1 alignment ([#525](https://github.com/MetaMask/snap-bitcoin-wallet/pull/525))
+
 ## [0.19.3]
 
 ## [0.19.2]
@@ -170,7 +176,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - build(deps): bump @metamask/keyring-api from 5.1.0 to 6.0.0 ([#6](https://github.com/MetaMask/bitcoin/pull/6))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.19.3...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.19.3...v1.0.0
 [0.19.3]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.19.2...v0.19.3
 [0.19.2]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.19.1...v0.19.2
 [0.19.1]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.19.0...v0.19.1
