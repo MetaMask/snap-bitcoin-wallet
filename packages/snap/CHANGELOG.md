@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Translations updated in all languages ([#525](https://github.com/MetaMask/snap-bitcoin-wallet/pull/525))
 
+### Fixed
+
+- Translations aligned with locales ([#528](https://github.com/MetaMask/snap-bitcoin-wallet/pull/528))
+
 ## [0.19.3]
 
 ### Fixed

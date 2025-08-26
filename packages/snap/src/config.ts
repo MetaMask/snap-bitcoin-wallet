@@ -53,7 +53,7 @@ export const Config: SnapConfig = {
       regtest: fromEnv('REGTEST_EXPLORER', 'http://localhost:8094/regtest'),
     },
   },
-  targetBlocksConfirmation: 3,
+  targetBlocksConfirmation: 1,
   fallbackFeeRate: 5.0,
   ratesRefreshInterval: 'PT20S',
   priceApi: {
