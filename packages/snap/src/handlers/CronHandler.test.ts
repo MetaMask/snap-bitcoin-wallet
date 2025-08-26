@@ -1,18 +1,16 @@
 import type { JsonRpcRequest } from '@metamask/utils';
 import { mock } from 'jest-mock-extended';
 
-import type { Logger, BitcoinAccount, SnapClient } from '../entities';
+import type { BitcoinAccount, SnapClient } from '../entities';
 import type { SendFlowUseCases, AccountUseCases } from '../use-cases';
 import { CronHandler, CronMethod } from './CronHandler';
 
 describe('CronHandler', () => {
-  const mockLogger = mock<Logger>();
   const mockSendFlowUseCases = mock<SendFlowUseCases>();
   const mockAccountUseCases = mock<AccountUseCases>();
   const mockSnapClient = mock<SnapClient>();
 
   const handler = new CronHandler(
-    mockLogger,
     mockAccountUseCases,
     mockSendFlowUseCases,
     mockSnapClient,
@@ -58,12 +56,13 @@ describe('CronHandler', () => {
       expect(mockAccountUseCases.synchronize).not.toHaveBeenCalled();
     });
 
-    it('does not propagate errors from synchronize', async () => {
+    it('throws error if some account fails to synchronize', async () => {
       mockAccountUseCases.list.mockResolvedValue(mockAccounts);
-      const error = new Error();
-      mockAccountUseCases.synchronize.mockRejectedValue(error);
+      mockAccountUseCases.synchronize.mockRejectedValue(new Error('error'));
 
-      await handler.route(request);
+      await expect(handler.route(request)).rejects.toThrow(
+        'Account synchronization failures',
+      );
 
       expect(mockAccountUseCases.synchronize).toHaveBeenCalledTimes(
         mockAccounts.length,

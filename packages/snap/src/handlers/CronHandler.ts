@@ -4,7 +4,7 @@ import { assert, object, string } from 'superstruct';
 import {
   InexistentMethodError,
   type SnapClient,
-  type Logger,
+  WalletError,
 } from '../entities';
 import type { SendFlowUseCases, AccountUseCases } from '../use-cases';
 
@@ -18,8 +18,6 @@ export const SendFormRefreshRatesRequest = object({
 });
 
 export class CronHandler {
-  readonly #logger: Logger;
-
   readonly #accountsUseCases: AccountUseCases;
 
   readonly #sendFlowUseCases: SendFlowUseCases;
@@ -27,12 +25,10 @@ export class CronHandler {
   readonly #snapClient: SnapClient;
 
   constructor(
-    logger: Logger,
     accounts: AccountUseCases,
     sendFlow: SendFlowUseCases,
     snapClient: SnapClient,
   ) {
-    this.#logger = logger;
     this.#accountsUseCases = accounts;
     this.#sendFlowUseCases = sendFlow;
     this.#snapClient = snapClient;
@@ -67,14 +63,18 @@ export class CronHandler {
       }),
     );
 
+    const errors: Record<string, any> = {};
     results.forEach((result, index) => {
       if (result.status === 'rejected') {
-        this.#logger.error(
-          `Account failed to sync. ID: %s. Error: %s`,
-          accounts[index]?.id,
-          result.reason,
-        );
+        const id = accounts[index]?.id;
+        if (id) {
+          errors[id] = result.reason;
+        }
       }
     });
+
+    if (Object.keys(errors).length > 0) {
+      throw new WalletError('Account synchronization failures', errors);
+    }
   }
 }
