@@ -2,9 +2,8 @@ import type { Network } from '@metamask/bitcoindevkit';
 import { Amount, BdkErrorCode } from '@metamask/bitcoindevkit';
 import type { CaipAccountId, CurrencyRate } from '@metamask/snaps-sdk';
 
-import type { CurrencyUnit, Messages } from '../../entities';
+import { type CurrencyUnit, type Messages } from '../../entities';
 import { networkToScope } from '../../handlers';
-import { METAMASK_ORIGIN } from '../../handlers/permissions';
 
 export const displayAmount = (
   amountSats: bigint,
@@ -57,10 +56,6 @@ export const errorCodeToLabel = (code: number): string => {
 };
 
 export const displayOrigin = (origin: string): string => {
-  if (origin === METAMASK_ORIGIN) {
-    return 'MetaMask';
-  }
-
   return new URL(origin).hostname;
 };
 

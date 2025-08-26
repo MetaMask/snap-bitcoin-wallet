@@ -109,10 +109,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request }) =>
 export const onClientRequest: OnClientRequestHandler = async ({ request }) =>
   middleware.handle(async () => rpcHandler.route('metamask', request));
 
-export const onKeyringRequest: OnKeyringRequestHandler = async ({
-  origin,
-  request,
-}) => middleware.handle(async () => keyringHandler.route(origin, request));
+export const onKeyringRequest: OnKeyringRequestHandler = async ({ request }) =>
+  middleware.handle(async () => keyringHandler.route(request));
 
 export const onUserInput: OnUserInputHandler = async ({ id, event, context }) =>
   middleware.handle(async () => userInputHandler.route(id, event, context));

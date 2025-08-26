@@ -3,14 +3,13 @@ import type { Json, JsonRpcRequest } from '@metamask/utils';
 import { Verifier } from 'bip322-js';
 import { assert, enums, object, optional, string } from 'superstruct';
 
-import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
-import { validateOrigin } from './permissions';
 import {
   AssertionError,
   FormatError,
   InexistentMethodError,
   ValidationError,
 } from '../entities';
+import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
 import { scopeToNetwork } from './caip';
 import type { TransactionFee } from './mappings';
 import { mapToTransactionFees } from './mappings';
@@ -62,10 +61,7 @@ export class RpcHandler {
   }
 
   async route(origin: string, request: JsonRpcRequest): Promise<Json> {
-    validateOrigin(origin);
-
     const { method, params } = request;
-
     if (!params) {
       throw new FormatError('Missing params');
     }
