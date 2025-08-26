@@ -8,16 +8,16 @@
       "message": "Από"
     },
     "toAddress": {
-      "message": "To Address"
+      "message": "Προς"
     },
     "continue": {
-      "message": "Continue"
+      "message": "Συνέχεια"
     },
     "cancel": {
-      "message": "Άκυρο"
+      "message": "Ακύρωση"
     },
     "clear": {
-      "message": "Clear"
+      "message": "Καθαρισμός"
     },
     "amount": {
       "message": "Ποσό"
@@ -32,7 +32,7 @@
       "message": "Δίκτυο"
     },
     "minutes": {
-      "message": "min"
+      "message": "λεπτά"
     },
     "transactionSpeed": {
       "message": "Ταχύτητα συναλλαγής"
@@ -41,109 +41,166 @@
       "message": "Ο εκτιμώμενος χρόνος της συναλλαγής"
     },
     "networkFee": {
-      "message": "Network Fee"
+      "message": "Χρέωση δικτύου"
     },
     "feeRate": {
-      "message": "Fee rate"
+      "message": "Ρυθμός χρέωσης"
     },
     "networkFeeTooltip": {
-      "message": "The total network fee"
+      "message": "Η συνολική χρέωση δικτύου"
     },
     "total": {
       "message": "Σύνολο"
     },
     "send": {
-      "message": "Εστάλη"
+      "message": "Αποστολή"
     },
     "asset": {
-      "message": "Asset"
+      "message": "Περιουσιακό στοιχείο"
     },
     "sending": {
       "message": "Αποστολή"
     },
     "max": {
-      "message": "Μεγ"
+      "message": "Μέγ"
     },
     "recipientPlaceholder": {
-      "message": "Enter receiving address"
+      "message": "Εισαγάγετε διεύθυνση παραλήπτη"
     },
     "review": {
-      "message": "Έλεγχος"
+      "message": "Επανεξέταση"
     },
     "error": {
       "message": "Σφάλμα"
     },
     "unknownError": {
-      "message": "An unknown error occurred"
+      "message": "Προέκυψε ένα άγνωστο σφάλμα"
     },
     "feeTooLow": {
-      "message": "Fee too low"
+      "message": "Χρέωση πολύ χαμηλή"
     },
     "feeRateTooLow": {
-      "message": "Fee rate too low"
+      "message": "Ρυθμός χρέωσης πολύ χαμηλός"
     },
     "noUtxosSelected": {
-      "message": "Failed to build transaction: missing UTXOs"
+      "message": "Αποτυχία κατασκευής συναλλαγής: λείπουν UTXOs"
     },
     "outputBelowDustLimit": {
-      "message": "Amount below dust limit"
+      "message": "Ποσό κάτω από το όριο dust"
     },
     "insufficientFunds": {
-      "message": "Funds are insufficient to cover amount plus fee"
+      "message": "Ανεπαρκή κεφάλαια για κάλυψη ποσού συν χρέωση"
     },
     "noRecipients": {
-      "message": "Missing recipients"
+      "message": "Λείπουν παραλήπτες"
     },
     "psbt": {
-      "message": "Invalid PSBT"
+      "message": "Άκυρο PSBT"
     },
     "unknownUtxo": {
-      "message": "Failed to build transaction: unknown UTXO"
+      "message": "Αποτυχία κατασκευής συναλλαγής: άγνωστο UTXO"
     },
     "MmssingNonWitnessUtxo": {
-      "message": "Failed to build transaction: missing non-witness UTXO"
+      "message": "Αποτυχία κατασκευής συναλλαγής: λείπει non-witness UTXO"
     },
     "base58": {
-      "message": "Invalid Bitcoin address"
+      "message": "Άκυρη διεύθυνση Bitcoin"
     },
     "bech32": {
-      "message": "Invalid Bitcoin address"
+      "message": "Άκυρη διεύθυνση Bitcoin"
     },
     "witnessVersion": {
-      "message": "Invalid Bitcoin address: witness version"
+      "message": "Άκυρη διεύθυνση Bitcoin: έκδοση witness"
     },
     "witnessProgram": {
-      "message": "Invalid Bitcoin address: witness program"
+      "message": "Άκυρη διεύθυνση Bitcoin: πρόγραμμα witness"
     },
     "legacyAddressTooLong": {
-      "message": "Invalid Bitcoin address"
+      "message": "Άκυρη διεύθυνση Bitcoin"
     },
     "invalidBase58PayloadLength": {
-      "message": "Invalid Bitcoin address: invalid length"
+      "message": "Άκυρη διεύθυνση Bitcoin: άκυρο μήκος"
     },
     "invalidLegacyPrefix": {
-      "message": "Invalid Bitcoin address: invalid legacy prefix"
+      "message": "Άκυρη διεύθυνση Bitcoin: άκυρο legacy prefix"
     },
     "networkValidation": {
-      "message": "Invalid Bitcoin address: wrong network"
+      "message": "Άκυρη διεύθυνση Bitcoin: λάθος δίκτυο"
     },
     "outOfRange": {
-      "message": "Invalid amount: out of range"
+      "message": "Άκυρο ποσό: εκτός εμβέλειας"
     },
     "tooPrecise": {
-      "message": "Invalid amount: too precise"
+      "message": "Άκυρο ποσό: πολύ ακριβές"
     },
     "missingDigits": {
-      "message": "Invalid amount: missing digits"
+      "message": "Άκυρο ποσό: λείπουν ψηφία"
     },
     "inputTooLarge": {
-      "message": "Invalid amount: too large"
+      "message": "Άκυρο ποσό: πολύ μεγάλο"
     },
     "invalidCharacter": {
-      "message": "Invalid amount: invalid character"
+      "message": "Άκυρο ποσό: άκυρος χαρακτήρας"
     },
     "unexpected": {
-      "message": "An unexpected error occurred"
+      "message": "Προέκυψε ένα απροσδόκητο σφάλμα"
+    },
+    "error.0": {
+      "message": "Άκυρη μορφή"
+    },
+    "error.1000": {
+      "message": "Η επικύρωση απέτυχε"
+    },
+    "error.2000": {
+      "message": "Ο πόρος δεν βρέθηκε"
+    },
+    "error.3000": {
+      "message": "Σφάλμα σύνδεσης"
+    },
+    "error.4000": {
+      "message": "Η κατάσταση πορτοφολιού είναι κατεστραμμένη"
+    },
+    "error.5000": {
+      "message": "Σφάλμα αποθήκευσης"
+    },
+    "error.6000": {
+      "message": "Η μέθοδος δεν έχει υλοποιηθεί ή δεν υποστηρίζεται"
+    },
+    "error.7000": {
+      "message": "Άρνηση άδειας ή ανεπαρκής εξουσιοδότηση"
+    },
+    "error.8000": {
+      "message": "Σφάλμα ενέργειας χρήστη"
+    },
+    "error.9000": {
+      "message": "Κατεστραμμένη κατάσταση, η αμετάβλητη δεν τηρήθηκε ή απέτυχε η επιβεβαίωση."
+    },
+    "error.internal": {
+      "message": "Εσωτερικό σφάλμα. Παρακαλώ δοκιμάστε ξανά αργότερα ή επικοινωνήστε με την υποστήριξη"
+    },
+    "confirmation.signMessage.title": {
+      "message": "Υπογραφή μηνύματος"
+    },
+    "confirmation.signMessage.message": {
+      "message": "Μήνυμα"
+    },
+    "confirmation.origin": {
+      "message": "Προέλευση"
+    },
+    "confirmation.origin.tooltip": {
+      "message": "Η dApp που ζητά την υπογραφή"
+    },
+    "confirmation.account": {
+      "message": "Λογαριασμός"
+    },
+    "confirmation.network": {
+      "message": "Δίκτυο"
+    },
+    "confirmation.cancelButton": {
+      "message": "Ακύρωση"
+    },
+    "confirmation.confirmButton": {
+      "message": "Υπογραφή"
     }
   }
 }

@@ -8,16 +8,16 @@
       "message": "De"
     },
     "toAddress": {
-      "message": "To Address"
+      "message": "A"
     },
     "continue": {
-      "message": "Continue"
+      "message": "Continuar"
     },
     "cancel": {
       "message": "Cancelar"
     },
     "clear": {
-      "message": "Clear"
+      "message": "Borrar"
     },
     "amount": {
       "message": "Monto"
@@ -41,13 +41,13 @@
       "message": "El tiempo estimado de la transacción"
     },
     "networkFee": {
-      "message": "Network Fee"
+      "message": "Tarifa de red"
     },
     "feeRate": {
-      "message": "Fee rate"
+      "message": "Tasa de tarifa"
     },
     "networkFeeTooltip": {
-      "message": "The total network fee"
+      "message": "La tarifa total de red"
     },
     "total": {
       "message": "Total"
@@ -56,16 +56,16 @@
       "message": "Enviar"
     },
     "asset": {
-      "message": "Asset"
+      "message": "Activo"
     },
     "sending": {
       "message": "Enviando"
     },
     "max": {
-      "message": "Máx."
+      "message": "Máx"
     },
     "recipientPlaceholder": {
-      "message": "Enter receiving address"
+      "message": "Ingrese la dirección de recepción"
     },
     "review": {
       "message": "Revisar"
@@ -74,76 +74,133 @@
       "message": "Error"
     },
     "unknownError": {
-      "message": "An unknown error occurred"
+      "message": "Se produjo un error desconocido"
     },
     "feeTooLow": {
-      "message": "Fee too low"
+      "message": "Tarifa demasiado baja"
     },
     "feeRateTooLow": {
-      "message": "Fee rate too low"
+      "message": "Tasa de tarifa demasiado baja"
     },
     "noUtxosSelected": {
-      "message": "Failed to build transaction: missing UTXOs"
+      "message": "No se pudo construir la transacción: faltan UTXOs"
     },
     "outputBelowDustLimit": {
-      "message": "Amount below dust limit"
+      "message": "Monto por debajo del límite de dust"
     },
     "insufficientFunds": {
-      "message": "Funds are insufficient to cover amount plus fee"
+      "message": "Fondos insuficientes para cubrir el monto más la tarifa"
     },
     "noRecipients": {
-      "message": "Missing recipients"
+      "message": "Faltan destinatarios"
     },
     "psbt": {
-      "message": "Invalid PSBT"
+      "message": "PSBT inválido"
     },
     "unknownUtxo": {
-      "message": "Failed to build transaction: unknown UTXO"
+      "message": "No se pudo construir la transacción: UTXO desconocido"
     },
     "MmssingNonWitnessUtxo": {
-      "message": "Failed to build transaction: missing non-witness UTXO"
+      "message": "No se pudo construir la transacción: falta UTXO non-witness"
     },
     "base58": {
-      "message": "Invalid Bitcoin address"
+      "message": "Dirección de Bitcoin inválida"
     },
     "bech32": {
-      "message": "Invalid Bitcoin address"
+      "message": "Dirección de Bitcoin inválida"
     },
     "witnessVersion": {
-      "message": "Invalid Bitcoin address: witness version"
+      "message": "Dirección de Bitcoin inválida: versión witness"
     },
     "witnessProgram": {
-      "message": "Invalid Bitcoin address: witness program"
+      "message": "Dirección de Bitcoin inválida: programa witness"
     },
     "legacyAddressTooLong": {
-      "message": "Invalid Bitcoin address"
+      "message": "Dirección de Bitcoin inválida"
     },
     "invalidBase58PayloadLength": {
-      "message": "Invalid Bitcoin address: invalid length"
+      "message": "Dirección de Bitcoin inválida: longitud inválida"
     },
     "invalidLegacyPrefix": {
-      "message": "Invalid Bitcoin address: invalid legacy prefix"
+      "message": "Dirección de Bitcoin inválida: prefijo legacy inválido"
     },
     "networkValidation": {
-      "message": "Invalid Bitcoin address: wrong network"
+      "message": "Dirección de Bitcoin inválida: red incorrecta"
     },
     "outOfRange": {
-      "message": "Invalid amount: out of range"
+      "message": "Monto inválido: fuera de rango"
     },
     "tooPrecise": {
-      "message": "Invalid amount: too precise"
+      "message": "Monto inválido: demasiado preciso"
     },
     "missingDigits": {
-      "message": "Invalid amount: missing digits"
+      "message": "Monto inválido: faltan dígitos"
     },
     "inputTooLarge": {
-      "message": "Invalid amount: too large"
+      "message": "Monto inválido: demasiado grande"
     },
     "invalidCharacter": {
-      "message": "Invalid amount: invalid character"
+      "message": "Monto inválido: carácter inválido"
     },
     "unexpected": {
-      "message": "An unexpected error occurred"
+      "message": "Se produjo un error inesperado"
+    },
+    "error.0": {
+      "message": "Formato inválido"
+    },
+    "error.1000": {
+      "message": "Validación fallida"
+    },
+    "error.2000": {
+      "message": "Recurso no encontrado"
+    },
+    "error.3000": {
+      "message": "Error de conexión"
+    },
+    "error.4000": {
+      "message": "Estado de la billetera corrompido"
+    },
+    "error.5000": {
+      "message": "Error de almacenamiento"
+    },
+    "error.6000": {
+      "message": "Método no implementado o no soportado"
+    },
+    "error.7000": {
+      "message": "Permiso denegado o autorización insuficiente"
+    },
+    "error.8000": {
+      "message": "Error de acción del usuario"
+    },
+    "error.9000": {
+      "message": "Estado corrompido, invariante no respetada o aserción fallida."
+    },
+    "error.internal": {
+      "message": "Error interno. Por favor intente de nuevo más tarde o contacte al soporte"
+    },
+    "confirmation.signMessage.title": {
+      "message": "Firmar mensaje"
+    },
+    "confirmation.signMessage.message": {
+      "message": "Mensaje"
+    },
+    "confirmation.origin": {
+      "message": "Origen"
+    },
+    "confirmation.origin.tooltip": {
+      "message": "La dApp solicitando la firma"
+    },
+    "confirmation.account": {
+      "message": "Cuenta"
+    },
+    "confirmation.network": {
+      "message": "Red"
+    },
+    "confirmation.cancelButton": {
+      "message": "Cancelar"
+    },
+    "confirmation.confirmButton": {
+      "message": "Firmar"
     }
   }
 }

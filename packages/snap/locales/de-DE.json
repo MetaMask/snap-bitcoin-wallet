@@ -8,16 +8,16 @@
       "message": "Von"
     },
     "toAddress": {
-      "message": "To"
+      "message": "An"
     },
     "continue": {
-      "message": "Continue"
+      "message": "Fortfahren"
     },
     "cancel": {
       "message": "Abbrechen"
     },
     "clear": {
-      "message": "Clear"
+      "message": "Löschen"
     },
     "amount": {
       "message": "Betrag"
@@ -38,19 +38,19 @@
       "message": "Transaktionsgeschwindigkeit"
     },
     "transactionSpeedTooltip": {
-      "message": "Die geschätzte Transaktionsdauer"
+      "message": "Die geschätzte Zeit der Transaktion"
     },
     "networkFee": {
-      "message": "Network Fee"
+      "message": "Netzwerkgebühr"
     },
     "feeRate": {
-      "message": "Fee rate"
+      "message": "Gebührenrate"
     },
     "networkFeeTooltip": {
-      "message": "The total network fee"
+      "message": "Die gesamte Netzwerkgebühr"
     },
     "total": {
-      "message": "Insgesamt"
+      "message": "Gesamt"
     },
     "send": {
       "message": "Senden"
@@ -62,88 +62,145 @@
       "message": "Wird gesendet"
     },
     "max": {
-      "message": "Max."
+      "message": "Max"
     },
     "recipientPlaceholder": {
-      "message": "Enter receiving address"
+      "message": "Empfängeradresse eingeben"
     },
     "review": {
-      "message": "Überprüfung"
+      "message": "Überprüfen"
     },
     "error": {
       "message": "Fehler"
     },
     "unknownError": {
-      "message": "An unknown error occurred"
+      "message": "Ein unbekannter Fehler ist aufgetreten"
     },
     "feeTooLow": {
-      "message": "Fee too low"
+      "message": "Gebühr zu niedrig"
     },
     "feeRateTooLow": {
-      "message": "Fee rate too low"
+      "message": "Gebührenrate zu niedrig"
     },
     "noUtxosSelected": {
-      "message": "Failed to build transaction: missing UTXOs"
+      "message": "Transaktion konnte nicht erstellt werden: fehlende UTXOs"
     },
     "outputBelowDustLimit": {
-      "message": "Amount below dust limit"
+      "message": "Betrag unter Dust-Limit"
     },
     "insufficientFunds": {
-      "message": "Funds are insufficient to cover amount plus fee"
+      "message": "Unzureichende Mittel, um Betrag plus Gebühr zu decken"
     },
     "noRecipients": {
-      "message": "Missing recipients"
+      "message": "Fehlende Empfänger"
     },
     "psbt": {
-      "message": "Invalid PSBT"
+      "message": "Ungültiges PSBT"
     },
     "unknownUtxo": {
-      "message": "Failed to build transaction: unknown UTXO"
+      "message": "Transaktion konnte nicht erstellt werden: unbekannter UTXO"
     },
     "MmssingNonWitnessUtxo": {
-      "message": "Failed to build transaction: missing non-witness UTXO"
+      "message": "Transaktion konnte nicht erstellt werden: fehlender Non-Witness UTXO"
     },
     "base58": {
-      "message": "Invalid Bitcoin address"
+      "message": "Ungültige Bitcoin-Adresse"
     },
     "bech32": {
-      "message": "Invalid Bitcoin address"
+      "message": "Ungültige Bitcoin-Adresse"
     },
     "witnessVersion": {
-      "message": "Invalid Bitcoin address: witness version"
+      "message": "Ungültige Bitcoin-Adresse: Witness-Version"
     },
     "witnessProgram": {
-      "message": "Invalid Bitcoin address: witness program"
+      "message": "Ungültige Bitcoin-Adresse: Witness-Programm"
     },
     "legacyAddressTooLong": {
-      "message": "Invalid Bitcoin address"
+      "message": "Ungültige Bitcoin-Adresse"
     },
     "invalidBase58PayloadLength": {
-      "message": "Invalid Bitcoin address: invalid length"
+      "message": "Ungültige Bitcoin-Adresse: ungültige Länge"
     },
     "invalidLegacyPrefix": {
-      "message": "Invalid Bitcoin address: invalid legacy prefix"
+      "message": "Ungültige Bitcoin-Adresse: ungültiges Legacy-Prefix"
     },
     "networkValidation": {
-      "message": "Invalid Bitcoin address: wrong network"
+      "message": "Ungültige Bitcoin-Adresse: falsches Netzwerk"
     },
     "outOfRange": {
-      "message": "Invalid amount: out of range"
+      "message": "Ungültiger Betrag: außerhalb des Bereichs"
     },
     "tooPrecise": {
-      "message": "Invalid amount: too precise"
+      "message": "Ungültiger Betrag: zu präzise"
     },
     "missingDigits": {
-      "message": "Invalid amount: missing digits"
+      "message": "Ungültiger Betrag: fehlende Ziffern"
     },
     "inputTooLarge": {
-      "message": "Invalid amount: too large"
+      "message": "Ungültiger Betrag: zu groß"
     },
     "invalidCharacter": {
-      "message": "Invalid amount: invalid character"
+      "message": "Ungültiger Betrag: ungültiges Zeichen"
     },
     "unexpected": {
-      "message": "An unexpected error occurred"
+      "message": "Ein unerwarteter Fehler ist aufgetreten"
+    },
+    "error.0": {
+      "message": "Ungültiges Format"
+    },
+    "error.1000": {
+      "message": "Validierung fehlgeschlagen"
+    },
+    "error.2000": {
+      "message": "Ressource nicht gefunden"
+    },
+    "error.3000": {
+      "message": "Verbindungsfehler"
+    },
+    "error.4000": {
+      "message": "Wallet-Zustand beschädigt"
+    },
+    "error.5000": {
+      "message": "Speicherfehler"
+    },
+    "error.6000": {
+      "message": "Methode nicht implementiert oder nicht unterstützt"
+    },
+    "error.7000": {
+      "message": "Zugriff verweigert oder unzureichende Berechtigung"
+    },
+    "error.8000": {
+      "message": "Benutzeraktionsfehler"
+    },
+    "error.9000": {
+      "message": "Beschädigter Zustand, Invariante nicht eingehalten oder fehlgeschlagene Assertion"
+    },
+    "error.internal": {
+      "message": "Interner Fehler. Bitte versuchen Sie es später erneut oder kontaktieren Sie den Support"
+    },
+    "confirmation.signMessage.title": {
+      "message": "Nachricht signieren"
+    },
+    "confirmation.signMessage.message": {
+      "message": "Nachricht"
+    },
+    "confirmation.origin": {
+      "message": "Ursprung"
+    },
+    "confirmation.origin.tooltip": {
+      "message": "Die dApp, die die Signatur anfordert"
+    },
+    "confirmation.account": {
+      "message": "Konto"
+    },
+    "confirmation.network": {
+      "message": "Netzwerk"
+    },
+    "confirmation.cancelButton": {
+      "message": "Abbrechen"
+    },
+    "confirmation.confirmButton": {
+      "message": "Signieren"
     }
   }
 }

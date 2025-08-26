@@ -1,5 +1,5 @@
 {
-  "locale": "en",
+  "locale": "ja",
   "messages": {
     "reviewTransactionWarning": {
       "message": "進める前にトランザクションを確認してください"
@@ -8,22 +8,22 @@
       "message": "送金元"
     },
     "toAddress": {
-      "message": "To Address"
+      "message": "宛先"
     },
     "continue": {
-      "message": "Continue"
+      "message": "続ける"
     },
     "cancel": {
       "message": "キャンセル"
     },
     "clear": {
-      "message": "Clear"
+      "message": "クリア"
     },
     "amount": {
       "message": "金額"
     },
     "balance": {
-      "message": "残額"
+      "message": "残高"
     },
     "recipient": {
       "message": "受取人"
@@ -32,118 +32,175 @@
       "message": "ネットワーク"
     },
     "minutes": {
-      "message": "min"
+      "message": "分"
     },
     "transactionSpeed": {
-      "message": "トランザクションの速度"
+      "message": "トランザクション速度"
     },
     "transactionSpeedTooltip": {
       "message": "トランザクションの予想時間"
     },
     "networkFee": {
-      "message": "Network Fee"
+      "message": "ネットワーク手数料"
     },
     "feeRate": {
-      "message": "Fee rate"
+      "message": "手数料率"
     },
     "networkFeeTooltip": {
-      "message": "The total network fee"
+      "message": "総ネットワーク手数料"
     },
     "total": {
       "message": "合計"
     },
     "send": {
-      "message": "送金"
+      "message": "送信"
     },
     "asset": {
-      "message": "Asset"
+      "message": "資産"
     },
     "sending": {
-      "message": "送金中"
+      "message": "送信中"
     },
     "max": {
       "message": "最大"
     },
     "recipientPlaceholder": {
-      "message": "Enter receiving address"
+      "message": "受信アドレスを入力"
     },
     "review": {
-      "message": "確認"
+      "message": "レビュー"
     },
     "error": {
       "message": "エラー"
     },
     "unknownError": {
-      "message": "An unknown error occurred"
+      "message": "不明なエラーが発生しました"
     },
     "feeTooLow": {
-      "message": "Fee too low"
+      "message": "手数料が低すぎます"
     },
     "feeRateTooLow": {
-      "message": "Fee rate too low"
+      "message": "手数料率が低すぎます"
     },
     "noUtxosSelected": {
-      "message": "Failed to build transaction: missing UTXOs"
+      "message": "トランザクションの構築に失敗: UTXO が不足しています"
     },
     "outputBelowDustLimit": {
-      "message": "Amount below dust limit"
+      "message": "金額がダスト制限以下です"
     },
     "insufficientFunds": {
-      "message": "Funds are insufficient to cover amount plus fee"
+      "message": "金額プラス手数料をカバーするのに資金が不足しています"
     },
     "noRecipients": {
-      "message": "Missing recipients"
+      "message": "受取人が不足しています"
     },
     "psbt": {
-      "message": "Invalid PSBT"
+      "message": "無効な PSBT"
     },
     "unknownUtxo": {
-      "message": "Failed to build transaction: unknown UTXO"
+      "message": "トランザクションの構築に失敗: 不明な UTXO"
     },
     "MmssingNonWitnessUtxo": {
-      "message": "Failed to build transaction: missing non-witness UTXO"
+      "message": "トランザクションの構築に失敗: non-witness UTXO が不足しています"
     },
     "base58": {
-      "message": "Invalid Bitcoin address"
+      "message": "無効な Bitcoin アドレス"
     },
     "bech32": {
-      "message": "Invalid Bitcoin address"
+      "message": "無効な Bitcoin アドレス"
     },
     "witnessVersion": {
-      "message": "Invalid Bitcoin address: witness version"
+      "message": "無効な Bitcoin アドレス: witness バージョン"
     },
     "witnessProgram": {
-      "message": "Invalid Bitcoin address: witness program"
+      "message": "無効な Bitcoin アドレス: witness プログラム"
     },
     "legacyAddressTooLong": {
-      "message": "Invalid Bitcoin address"
+      "message": "無効な Bitcoin アドレス"
     },
     "invalidBase58PayloadLength": {
-      "message": "Invalid Bitcoin address: invalid length"
+      "message": "無効な Bitcoin アドレス: 無効な長さ"
     },
     "invalidLegacyPrefix": {
-      "message": "Invalid Bitcoin address: invalid legacy prefix"
+      "message": "無効な Bitcoin アドレス: 無効な legacy プレフィックス"
     },
     "networkValidation": {
-      "message": "Invalid Bitcoin address: wrong network"
+      "message": "無効な Bitcoin アドレス: 間違ったネットワーク"
     },
     "outOfRange": {
-      "message": "Invalid amount: out of range"
+      "message": "無効な金額: 範囲外"
     },
     "tooPrecise": {
-      "message": "Invalid amount: too precise"
+      "message": "無効な金額: 精度が高すぎる"
     },
     "missingDigits": {
-      "message": "Invalid amount: missing digits"
+      "message": "無効な金額: 桁が不足"
     },
     "inputTooLarge": {
-      "message": "Invalid amount: too large"
+      "message": "無効な金額: 大きすぎる"
     },
     "invalidCharacter": {
-      "message": "Invalid amount: invalid character"
+      "message": "無効な金額: 無効な文字"
     },
     "unexpected": {
-      "message": "An unexpected error occurred"
+      "message": "予期せぬエラーが発生しました"
+    },
+    "error.0": {
+      "message": "無効な形式"
+    },
+    "error.1000": {
+      "message": "検証に失敗しました"
+    },
+    "error.2000": {
+      "message": "リソースが見つかりません"
+    },
+    "error.3000": {
+      "message": "接続エラー"
+    },
+    "error.4000": {
+      "message": "ウォレット状態が破損しています"
+    },
+    "error.5000": {
+      "message": "ストレージエラー"
+    },
+    "error.6000": {
+      "message": "メソッドが実装されていないかサポートされていません"
+    },
+    "error.7000": {
+      "message": "権限が拒否されたか十分な認証がありません"
+    },
+    "error.8000": {
+      "message": "ユーザーアクションエラー"
+    },
+    "error.9000": {
+      "message": "破損した状態、不変条件が守られていないかアサーションに失敗しました。"
+    },
+    "error.internal": {
+      "message": "内部エラー。後ほどお試しくださいまたはサポートにご連絡ください"
+    },
+    "confirmation.signMessage.title": {
+      "message": "メッセージに署名"
+    },
+    "confirmation.signMessage.message": {
+      "message": "メッセージ"
+    },
+    "confirmation.origin": {
+      "message": "オリジン"
+    },
+    "confirmation.origin.tooltip": {
+      "message": "署名をリクエストしている dApp"
+    },
+    "confirmation.account": {
+      "message": "アカウント"
+    },
+    "confirmation.network": {
+      "message": "ネットワーク"
+    },
+    "confirmation.cancelButton": {
+      "message": "キャンセル"
+    },
+    "confirmation.confirmButton": {
+      "message": "署名"
     }
   }
 }

@@ -92,7 +92,7 @@ export class KeyringHandler implements Keyring {
   }
 
   async route(origin: string, request: JsonRpcRequest): Promise<Json> {
-    validateOrigin(origin);
+    // validateOrigin(origin);
 
     switch (request.method) {
       case `${KeyringRpcMethod.ListAccounts}`: {

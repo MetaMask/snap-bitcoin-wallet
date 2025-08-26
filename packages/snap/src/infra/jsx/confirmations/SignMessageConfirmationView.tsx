@@ -77,7 +77,7 @@ export const SignMessageConfirmationView: SnapComponent<
           </Box>
           <Box alignment="space-between" direction="horizontal">
             <SnapText fontWeight="medium" color="alternative">
-              {t('confirmation.network')}
+              {t('network')}
             </SnapText>
             <Box direction="horizontal" alignment="center">
               <Box alignment="center" center>
@@ -89,11 +89,9 @@ export const SignMessageConfirmationView: SnapComponent<
         </Section>
       </Box>
       <Footer>
-        <Button name={ConfirmationEvent.Cancel}>
-          {t('confirmation.cancelButton')}
-        </Button>
+        <Button name={ConfirmationEvent.Cancel}>{t('cancel')}</Button>
         <Button name={ConfirmationEvent.Confirm}>
-          {t('confirmation.confirmButton')}
+          {t('confirmation.signMessage.confirmButton')}
         </Button>
       </Footer>
     </Container>
