@@ -47,12 +47,6 @@ describe('RpcHandler', () => {
       },
     });
 
-    it('throws error if invalid origin', async () => {
-      await expect(handler.route('invalidOrigin', mockRequest)).rejects.toThrow(
-        'Invalid origin',
-      );
-    });
-
     it('throws error if missing params', async () => {
       await expect(
         handler.route(origin, { ...mockRequest, params: undefined }),

@@ -8,6 +8,7 @@ import type {
   OnAssetHistoricalPriceHandler,
   OnAssetsMarketDataHandler,
   OnClientRequestHandler,
+  OnActiveHandler,
 } from '@metamask/snaps-sdk';
 
 import { Config } from './config';
@@ -83,7 +84,11 @@ const keyringHandler = new KeyringHandler(
   accountsUseCases,
   Config.defaultAddressType,
 );
-const cronHandler = new CronHandler(logger, accountsUseCases, sendFlowUseCases);
+const cronHandler = new CronHandler(
+  accountsUseCases,
+  sendFlowUseCases,
+  snapClient,
+);
 const rpcHandler = new RpcHandler(sendFlowUseCases, accountsUseCases);
 const userInputHandler = new UserInputHandler(
   sendFlowUseCases,
@@ -103,10 +108,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request }) =>
 export const onClientRequest: OnClientRequestHandler = async ({ request }) =>
   middleware.handle(async () => rpcHandler.route('metamask', request));
 
-export const onKeyringRequest: OnKeyringRequestHandler = async ({
-  origin,
-  request,
-}) => middleware.handle(async () => keyringHandler.route(origin, request));
+export const onKeyringRequest: OnKeyringRequestHandler = async ({ request }) =>
+  middleware.handle(async () => keyringHandler.route(request));
 
 export const onUserInput: OnUserInputHandler = async ({ id, event, context }) =>
   middleware.handle(async () => userInputHandler.route(id, event, context));
@@ -126,3 +129,6 @@ export const onAssetHistoricalPrice: OnAssetHistoricalPriceHandler = async ({
 export const onAssetsMarketData: OnAssetsMarketDataHandler = async ({
   assets,
 }) => middleware.handle(async () => assetsHandler.marketData(assets));
+
+export const onActive: OnActiveHandler = async () =>
+  middleware.handle(async () => cronHandler.synchronizeAccounts());
