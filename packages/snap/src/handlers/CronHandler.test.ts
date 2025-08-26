@@ -1,20 +1,27 @@
 import type { JsonRpcRequest } from '@metamask/utils';
 import { mock } from 'jest-mock-extended';
 
-import type { Logger, BitcoinAccount } from '../entities';
+import type { BitcoinAccount, SnapClient } from '../entities';
 import type { SendFlowUseCases, AccountUseCases } from '../use-cases';
 import { CronHandler, CronMethod } from './CronHandler';
 
 describe('CronHandler', () => {
-  const mockLogger = mock<Logger>();
   const mockSendFlowUseCases = mock<SendFlowUseCases>();
   const mockAccountUseCases = mock<AccountUseCases>();
+  const mockSnapClient = mock<SnapClient>();
 
   const handler = new CronHandler(
-    mockLogger,
     mockAccountUseCases,
     mockSendFlowUseCases,
+    mockSnapClient,
   );
+
+  beforeEach(() => {
+    mockSnapClient.getClientStatus.mockResolvedValue({
+      active: true,
+      locked: false,
+    });
+  });
 
   describe('synchronizeAccounts', () => {
     const mockAccounts = [mock<BitcoinAccount>(), mock<BitcoinAccount>()];
@@ -25,6 +32,7 @@ describe('CronHandler', () => {
 
       await handler.route(request);
 
+      expect(mockSnapClient.getClientStatus).toHaveBeenCalled();
       expect(mockAccountUseCases.list).toHaveBeenCalled();
       expect(mockAccountUseCases.synchronize).toHaveBeenCalledTimes(
         mockAccounts.length,
@@ -38,12 +46,23 @@ describe('CronHandler', () => {
       await expect(handler.route(request)).rejects.toThrow(error);
     });
 
-    it('does not propagate errors from synchronize', async () => {
-      mockAccountUseCases.list.mockResolvedValue(mockAccounts);
-      const error = new Error();
-      mockAccountUseCases.synchronize.mockRejectedValue(error);
-
+    it('returns early if the client is not active', async () => {
+      mockSnapClient.getClientStatus.mockResolvedValue({
+        active: false,
+        locked: true,
+      });
       await handler.route(request);
+
+      expect(mockAccountUseCases.synchronize).not.toHaveBeenCalled();
+    });
+
+    it('throws error if some account fails to synchronize', async () => {
+      mockAccountUseCases.list.mockResolvedValue(mockAccounts);
+      mockAccountUseCases.synchronize.mockRejectedValue(new Error('error'));
+
+      await expect(handler.route(request)).rejects.toThrow(
+        'Account synchronization failures',
+      );
 
       expect(mockAccountUseCases.synchronize).toHaveBeenCalledTimes(
         mockAccounts.length,
@@ -67,6 +86,16 @@ describe('CronHandler', () => {
       await handler.route(request);
 
       expect(mockSendFlowUseCases.refresh).toHaveBeenCalledWith('id');
+    });
+
+    it('returns early if the client is not active', async () => {
+      mockSnapClient.getClientStatus.mockResolvedValue({
+        active: false,
+        locked: true,
+      });
+      await handler.route(request);
+
+      expect(mockSendFlowUseCases.refresh).not.toHaveBeenCalled();
     });
 
     it('propagates errors from refresh', async () => {

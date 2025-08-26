@@ -60,7 +60,6 @@ import {
   mapToKeyringAccount,
   mapToTransaction,
 } from './mappings';
-import { validateOrigin } from './permissions';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 
 export const CreateAccountRequest = object({
@@ -91,9 +90,7 @@ export class KeyringHandler implements Keyring {
     this.#defaultAddressType = defaultAddressType;
   }
 
-  async route(origin: string, request: JsonRpcRequest): Promise<Json> {
-    // validateOrigin(origin);
-
+  async route(request: JsonRpcRequest): Promise<Json> {
     switch (request.method) {
       case `${KeyringRpcMethod.ListAccounts}`: {
         assert(request, ListAccountsRequestStruct);

@@ -7,7 +7,7 @@
     "url": "https://github.com/MetaMask/snap-bitcoin-wallet.git"
   },
   "source": {
-    "shasum": "C2DDFSYvbsGwQYfe81zcgTnYG0kUhGK66IJr7Vx+XW4=",
+    "shasum": "ZQif6XorIIX1p5KFAO3K+Ju0xecutTtgzWBpBcVJpok=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
@@ -18,28 +18,13 @@
     },
     "locales": ["locales/en.json"]
   },
-  "initialConnections": {
-    "https://portfolio.metamask.io": {},
-    "https://portfolio-builds.metafi-dev.codefi.network": {},
-    "https://dev.portfolio.metamask.io": {},
-    "https://ramps-dev.portfolio.metamask.io": {},
-    "http://localhost:3000": {}
-  },
   "initialPermissions": {
     "endowment:webassembly": {},
     "endowment:rpc": {
       "dapps": true,
       "snaps": false
     },
-    "endowment:keyring": {
-      "allowedOrigins": [
-        "https://portfolio.metamask.io",
-        "https://portfolio-builds.metafi-dev.codefi.network",
-        "https://dev.portfolio.metamask.io",
-        "https://ramps-dev.portfolio.metamask.io",
-        "http://localhost:3000"
-      ]
-    },
+    "endowment:keyring": {},
     "snap_getBip32Entropy": [
       {
         "path": ["m", "44'", "0'"],
@@ -74,6 +59,7 @@
         "curve": "secp256k1"
       }
     ],
+    "endowment:lifecycle-hooks": {},
     "endowment:network-access": {},
     "snap_manageAccounts": {},
     "snap_manageState": {},
