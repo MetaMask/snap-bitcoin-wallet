@@ -144,6 +144,27 @@
     },
     "unexpected": {
       "message": "An unexpected error occurred"
+    },
+    "error.internal": {
+      "message": "Lỗi nội bộ. Vui lòng thử lại sau hoặc liên hệ hỗ trợ"
+    },
+    "confirmation.origin": {
+      "message": "Nguồn gốc"
+    },
+    "confirmation.origin.tooltip": {
+      "message": "DApp yêu cầu chữ ký"
+    },
+    "confirmation.account": {
+      "message": "Tài khoản"
+    },
+    "confirmation.signMessage.confirmButton": {
+      "message": "Ký"
+    },
+    "confirmation.signMessage.title": {
+      "message": "Ký Tin nhắn"
+    },
+    "confirmation.signMessage.message": {
+      "message": "Tin nhắn"
     }
   }
 }

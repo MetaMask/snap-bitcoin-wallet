@@ -178,12 +178,6 @@
     "error.internal": {
       "message": "Εσωτερικό σφάλμα. Παρακαλώ δοκιμάστε ξανά αργότερα ή επικοινωνήστε με την υποστήριξη"
     },
-    "confirmation.signMessage.title": {
-      "message": "Υπογραφή μηνύματος"
-    },
-    "confirmation.signMessage.message": {
-      "message": "Μήνυμα"
-    },
     "confirmation.origin": {
       "message": "Προέλευση"
     },
@@ -193,14 +187,14 @@
     "confirmation.account": {
       "message": "Λογαριασμός"
     },
-    "confirmation.network": {
-      "message": "Δίκτυο"
-    },
-    "confirmation.cancelButton": {
-      "message": "Ακύρωση"
-    },
-    "confirmation.confirmButton": {
+    "confirmation.signMessage.confirmButton": {
       "message": "Υπογραφή"
+    },
+    "confirmation.signMessage.title": {
+      "message": "Υπογραφή μηνύματος"
+    },
+    "confirmation.signMessage.message": {
+      "message": "Μήνυμα"
     }
   }
 }

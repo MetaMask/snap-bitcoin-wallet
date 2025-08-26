@@ -178,12 +178,6 @@
     "error.internal": {
       "message": "Interner Fehler. Bitte versuchen Sie es später erneut oder kontaktieren Sie den Support"
     },
-    "confirmation.signMessage.title": {
-      "message": "Nachricht signieren"
-    },
-    "confirmation.signMessage.message": {
-      "message": "Nachricht"
-    },
     "confirmation.origin": {
       "message": "Ursprung"
     },
@@ -193,14 +187,14 @@
     "confirmation.account": {
       "message": "Konto"
     },
-    "confirmation.network": {
-      "message": "Netzwerk"
-    },
-    "confirmation.cancelButton": {
-      "message": "Abbrechen"
-    },
-    "confirmation.confirmButton": {
+    "confirmation.signMessage.confirmButton": {
       "message": "Signieren"
+    },
+    "confirmation.signMessage.title": {
+      "message": "Nachricht signieren"
+    },
+    "confirmation.signMessage.message": {
+      "message": "Nachricht"
     }
   }
 }

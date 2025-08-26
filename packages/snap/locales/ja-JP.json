@@ -178,12 +178,6 @@
     "error.internal": {
       "message": "内部エラー。後ほどお試しくださいまたはサポートにご連絡ください"
     },
-    "confirmation.signMessage.title": {
-      "message": "メッセージに署名"
-    },
-    "confirmation.signMessage.message": {
-      "message": "メッセージ"
-    },
     "confirmation.origin": {
       "message": "オリジン"
     },
@@ -193,14 +187,14 @@
     "confirmation.account": {
       "message": "アカウント"
     },
-    "confirmation.network": {
-      "message": "ネットワーク"
-    },
-    "confirmation.cancelButton": {
-      "message": "キャンセル"
-    },
-    "confirmation.confirmButton": {
+    "confirmation.signMessage.confirmButton": {
       "message": "署名"
+    },
+    "confirmation.signMessage.title": {
+      "message": "メッセージに署名"
+    },
+    "confirmation.signMessage.message": {
+      "message": "メッセージ"
     }
   }
 }

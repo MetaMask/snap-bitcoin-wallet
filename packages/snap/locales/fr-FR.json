@@ -178,12 +178,6 @@
     "error.internal": {
       "message": "Erreur interne. Veuillez réessayer plus tard ou contacter le support"
     },
-    "confirmation.signMessage.title": {
-      "message": "Signer le message"
-    },
-    "confirmation.signMessage.message": {
-      "message": "Message"
-    },
     "confirmation.origin": {
       "message": "Origine"
     },
@@ -193,14 +187,14 @@
     "confirmation.account": {
       "message": "Compte"
     },
-    "confirmation.network": {
-      "message": "Réseau"
-    },
-    "confirmation.cancelButton": {
-      "message": "Annuler"
-    },
-    "confirmation.confirmButton": {
+    "confirmation.signMessage.confirmButton": {
       "message": "Signer"
+    },
+    "confirmation.signMessage.title": {
+      "message": "Signer le message"
+    },
+    "confirmation.signMessage.message": {
+      "message": "Message"
     }
   }
 }

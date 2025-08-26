@@ -178,12 +178,6 @@
     "error.internal": {
       "message": "Error interno. Por favor intente de nuevo más tarde o contacte al soporte"
     },
-    "confirmation.signMessage.title": {
-      "message": "Firmar mensaje"
-    },
-    "confirmation.signMessage.message": {
-      "message": "Mensaje"
-    },
     "confirmation.origin": {
       "message": "Origen"
     },
@@ -193,14 +187,14 @@
     "confirmation.account": {
       "message": "Cuenta"
     },
-    "confirmation.network": {
-      "message": "Red"
-    },
-    "confirmation.cancelButton": {
-      "message": "Cancelar"
-    },
-    "confirmation.confirmButton": {
+    "confirmation.signMessage.confirmButton": {
       "message": "Firmar"
+    },
+    "confirmation.signMessage.title": {
+      "message": "Firmar mensaje"
+    },
+    "confirmation.signMessage.message": {
+      "message": "Mensaje"
     }
   }
 }

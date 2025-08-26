@@ -35,8 +35,8 @@
     "test:integration": "./integration-test/run-integration.sh"
   },
   "devDependencies": {
-    "@bitcoindevkit/bdk-wallet-web": "^0.2.0",
     "@jest/globals": "^30.0.5",
+    "@metamask/bitcoindevkit": "^0.1.13",
     "@metamask/key-tree": "^10.1.1",
     "@metamask/keyring-api": "^20.1.1",
     "@metamask/keyring-snap-sdk": "^6.0.0",

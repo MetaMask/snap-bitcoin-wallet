@@ -178,12 +178,6 @@
     "error.internal": {
       "message": "Internal error. Please try again later or contact support"
     },
-    "confirmation.signMessage.title": {
-      "message": "Sign Message"
-    },
-    "confirmation.signMessage.message": {
-      "message": "Message"
-    },
     "confirmation.origin": {
       "message": "Origin"
     },
@@ -193,14 +187,14 @@
     "confirmation.account": {
       "message": "Account"
     },
-    "confirmation.network": {
-      "message": "Network"
-    },
-    "confirmation.cancelButton": {
-      "message": "Cancel"
-    },
-    "confirmation.confirmButton": {
+    "confirmation.signMessage.confirmButton": {
       "message": "Sign"
+    },
+    "confirmation.signMessage.title": {
+      "message": "Sign Message"
+    },
+    "confirmation.signMessage.message": {
+      "message": "Message"
     }
   }
 }

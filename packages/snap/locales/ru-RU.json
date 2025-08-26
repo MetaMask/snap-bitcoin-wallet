@@ -144,6 +144,27 @@
     },
     "unexpected": {
       "message": "An unexpected error occurred"
+    },
+    "error.internal": {
+      "message": "Внутренняя ошибка. Пожалуйста, попробуйте позже или обратитесь в поддержку"
+    },
+    "confirmation.origin": {
+      "message": "Источник"
+    },
+    "confirmation.origin.tooltip": {
+      "message": "dApp, запрашивающий подпись"
+    },
+    "confirmation.account": {
+      "message": "Аккаунт"
+    },
+    "confirmation.signMessage.confirmButton": {
+      "message": "Подписать"
+    },
+    "confirmation.signMessage.title": {
+      "message": "Подписать сообщение"
+    },
+    "confirmation.signMessage.message": {
+      "message": "Сообщение"
     }
   }
 }

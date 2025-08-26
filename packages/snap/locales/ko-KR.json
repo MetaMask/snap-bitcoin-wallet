@@ -144,6 +144,27 @@
     },
     "unexpected": {
       "message": "An unexpected error occurred"
+    },
+    "error.internal": {
+      "message": "내부 오류. 나중에 다시 시도하거나 지원팀에 문의하세요"
+    },
+    "confirmation.origin": {
+      "message": "출처"
+    },
+    "confirmation.origin.tooltip": {
+      "message": "서명을 요청하는 dApp"
+    },
+    "confirmation.account": {
+      "message": "계정"
+    },
+    "confirmation.signMessage.confirmButton": {
+      "message": "서명"
+    },
+    "confirmation.signMessage.title": {
+      "message": "메시지 서명"
+    },
+    "confirmation.signMessage.message": {
+      "message": "메시지"
     }
   }
 }

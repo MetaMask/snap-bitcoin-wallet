@@ -178,12 +178,6 @@
     "error.internal": {
       "message": "Kesalahan internal. Silakan coba lagi nanti atau hubungi dukungan"
     },
-    "confirmation.signMessage.title": {
-      "message": "Tanda tangani Pesan"
-    },
-    "confirmation.signMessage.message": {
-      "message": "Pesan"
-    },
     "confirmation.origin": {
       "message": "Asal"
     },
@@ -193,14 +187,14 @@
     "confirmation.account": {
       "message": "Akun"
     },
-    "confirmation.network": {
-      "message": "Jaringan"
-    },
-    "confirmation.cancelButton": {
-      "message": "Batal"
-    },
-    "confirmation.confirmButton": {
+    "confirmation.signMessage.confirmButton": {
       "message": "Tanda tangani"
+    },
+    "confirmation.signMessage.title": {
+      "message": "Tanda tangani Pesan"
+    },
+    "confirmation.signMessage.message": {
+      "message": "Pesan"
     }
   }
 }

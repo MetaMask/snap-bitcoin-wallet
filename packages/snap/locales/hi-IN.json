@@ -178,12 +178,6 @@
     "error.internal": {
       "message": "आंतरिक त्रुटि. कृपया बाद में प्रयास करें या समर्थन से संपर्क करें"
     },
-    "confirmation.signMessage.title": {
-      "message": "संदेश पर हस्ताक्षर करें"
-    },
-    "confirmation.signMessage.message": {
-      "message": "संदेश"
-    },
     "confirmation.origin": {
       "message": "उत्पत्ति"
     },
@@ -193,14 +187,14 @@
     "confirmation.account": {
       "message": "खाता"
     },
-    "confirmation.network": {
-      "message": "नेटवर्क"
-    },
-    "confirmation.cancelButton": {
-      "message": "रद्द करें"
-    },
-    "confirmation.confirmButton": {
+    "confirmation.signMessage.confirmButton": {
       "message": "हस्ताक्षर"
+    },
+    "confirmation.signMessage.title": {
+      "message": "संदेश पर हस्ताक्षर करें"
+    },
+    "confirmation.signMessage.message": {
+      "message": "संदेश"
     }
   }
 }
