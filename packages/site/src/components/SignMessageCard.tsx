@@ -11,12 +11,13 @@ export const SignMessageCard = ({ account }: { account: KeyringAccount }) => {
   const [message, setMessage] = useState('Hello, world!');
 
   const handleClick = async () => {
-    await invokeKeyring({
+    const response = (await invokeKeyring({
       method: 'keyring_submitRequest',
       params: {
         account: account.id,
         id: uuidV4(),
         scope: account.scopes[0],
+        origin: 'http://localhost:3000',
         request: {
           method: BtcMethod.SignMessage,
           params: {
@@ -24,7 +25,9 @@ export const SignMessageCard = ({ account }: { account: KeyringAccount }) => {
           },
         },
       },
-    });
+    })) as { result: { signature: string } };
+
+    console.log(response.result.signature);
   };
 
   return (

@@ -14,12 +14,13 @@ export const SendBitcoinCard = ({ account }: { account: KeyringAccount }) => {
   const [amount, setAmount] = useState('0.00000500');
 
   const handleClick = async () => {
-    await invokeKeyring({
+    const response = (await invokeKeyring({
       method: 'keyring_submitRequest',
       params: {
         account: account.id,
         id: uuidV4(),
         scope: account.scopes[0],
+        origin: 'http://localhost:3000',
         request: {
           method: `${BtcMethod.SendTransfer}`,
           params: {
@@ -32,7 +33,9 @@ export const SendBitcoinCard = ({ account }: { account: KeyringAccount }) => {
           },
         },
       },
-    });
+    })) as { result: { txid: string } };
+
+    console.log(response.result.txid);
   };
 
   return (
