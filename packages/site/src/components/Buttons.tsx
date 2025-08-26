@@ -123,6 +123,12 @@ export const SendBitcoinButton = (
   return <Button {...props}>Send txn</Button>;
 };
 
+export const SignMessageButton = (
+  props: ComponentPropsWithoutRef<'button'>,
+) => {
+  return <Button {...props}>Sign message</Button>;
+};
+
 export const EstimateFeeButton = (
   props: ComponentPropsWithoutRef<'button'>,
 ) => {
