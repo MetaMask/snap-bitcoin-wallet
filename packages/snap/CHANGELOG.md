@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0]
+
+### Added
+
+- Background events executed only when client is active ([#524](https://github.com/MetaMask/snap-bitcoin-wallet/pull/524))
+- Confirmation displayed on `signMessage` ([#523](https://github.com/MetaMask/snap-bitcoin-wallet/pull/523))
+- OpenRPC for dApp connectivity ([#522](https://github.com/MetaMask/snap-bitcoin-wallet/pull/522))
+- Sign message on `submitRequest` ([#521](https://github.com/MetaMask/snap-bitcoin-wallet/pull/521))
+- UTXO management on `submitRequest` ([#520](https://github.com/MetaMask/snap-bitcoin-wallet/pull/520))
+- Send transfer on `submitRequest` ([#519](https://github.com/MetaMask/snap-bitcoin-wallet/pull/519))
+- PSBT management on `submitRequest` ([#514](https://github.com/MetaMask/snap-bitcoin-wallet/pull/514))
+
+### Changed
+
+- Translations updated in all languages ([#525](https://github.com/MetaMask/snap-bitcoin-wallet/pull/525))
+
+### Fixed
+
+- Translations aligned with locales ([#528](https://github.com/MetaMask/snap-bitcoin-wallet/pull/528))
+
 ## [0.19.3]
 
 ### Fixed
@@ -438,7 +458,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add CI for lint and test ([#2](https://github.com/MetaMask/bitcoin/pull/2))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.19.3...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.19.3...v1.0.0
 [0.19.3]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.19.2...v0.19.3
 [0.19.2]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.19.1...v0.19.2
 [0.19.1]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.19.0...v0.19.1
