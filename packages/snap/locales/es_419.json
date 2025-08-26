@@ -1,5 +1,5 @@
 {
-  "locale": "es",
+  "locale": "es_419",
   "messages": {
     "reviewTransactionWarning": {
       "message": "Revise la transacción antes de continuar"
