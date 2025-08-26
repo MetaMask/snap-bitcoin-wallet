@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0]
 
-### Uncategorized
+### Changed
 
-- feat: v1 alignment ([#525](https://github.com/MetaMask/snap-bitcoin-wallet/pull/525))
+- Alignment of the dApp site ([#525](https://github.com/MetaMask/snap-bitcoin-wallet/pull/525))
 
 ## [0.19.3]
 

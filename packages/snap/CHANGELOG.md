@@ -9,16 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0]
 
-### Uncategorized
+### Added
 
-- feat: v1 alignment ([#525](https://github.com/MetaMask/snap-bitcoin-wallet/pull/525))
-- feat: events on active ([#524](https://github.com/MetaMask/snap-bitcoin-wallet/pull/524))
-- feat: confirmation for sign message ([#523](https://github.com/MetaMask/snap-bitcoin-wallet/pull/523))
-- feat: OpenRPC for dApp connectivity ([#522](https://github.com/MetaMask/snap-bitcoin-wallet/pull/522))
-- feat: sign message ([#521](https://github.com/MetaMask/snap-bitcoin-wallet/pull/521))
-- feat: utxo management in submitRequest ([#520](https://github.com/MetaMask/snap-bitcoin-wallet/pull/520))
-- feat: send transfer ([#519](https://github.com/MetaMask/snap-bitcoin-wallet/pull/519))
-- feat: submit request psbt management ([#514](https://github.com/MetaMask/snap-bitcoin-wallet/pull/514))
+- Background events executed only when client is active ([#524](https://github.com/MetaMask/snap-bitcoin-wallet/pull/524))
+- Confirmation displayed on `signMessage` ([#523](https://github.com/MetaMask/snap-bitcoin-wallet/pull/523))
+- OpenRPC for dApp connectivity ([#522](https://github.com/MetaMask/snap-bitcoin-wallet/pull/522))
+- Sign message on `submitRequest` ([#521](https://github.com/MetaMask/snap-bitcoin-wallet/pull/521))
+- UTXO management on `submitRequest` ([#520](https://github.com/MetaMask/snap-bitcoin-wallet/pull/520))
+- Send transfer on `submitRequest` ([#519](https://github.com/MetaMask/snap-bitcoin-wallet/pull/519))
+- PSBT management on `submitRequest` ([#514](https://github.com/MetaMask/snap-bitcoin-wallet/pull/514))
+
+### Changed
+
+- Translations updated in all languages ([#525](https://github.com/MetaMask/snap-bitcoin-wallet/pull/525))
 
 ## [0.19.3]
 
