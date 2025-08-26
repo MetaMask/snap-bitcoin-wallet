@@ -177,6 +177,24 @@
     },
     "error.internal": {
       "message": "Internal error. Please try again later or contact support"
+    },
+    "confirmation.origin": {
+      "message": "Origin"
+    },
+    "confirmation.origin.tooltip": {
+      "message": "The dApp requesting the signature"
+    },
+    "confirmation.account": {
+      "message": "Account"
+    },
+    "confirmation.signMessage.confirmButton": {
+      "message": "Sign"
+    },
+    "confirmation.signMessage.title": {
+      "message": "Sign Message"
+    },
+    "confirmation.signMessage.message": {
+      "message": "Message"
     }
   }
 }

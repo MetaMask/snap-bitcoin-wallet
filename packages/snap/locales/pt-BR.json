@@ -144,6 +144,27 @@
     },
     "unexpected": {
       "message": "An unexpected error occurred"
+    },
+    "error.internal": {
+      "message": "Erro interno. Por favor, tente novamente mais tarde ou contate o suporte"
+    },
+    "confirmation.origin": {
+      "message": "Origem"
+    },
+    "confirmation.origin.tooltip": {
+      "message": "O dApp solicitando a assinatura"
+    },
+    "confirmation.account": {
+      "message": "Conta"
+    },
+    "confirmation.signMessage.confirmButton": {
+      "message": "Assinar"
+    },
+    "confirmation.signMessage.title": {
+      "message": "Assinar Mensagem"
+    },
+    "confirmation.signMessage.message": {
+      "message": "Mensagem"
     }
   }
 }

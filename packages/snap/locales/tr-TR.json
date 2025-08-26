@@ -144,6 +144,27 @@
     },
     "unexpected": {
       "message": "An unexpected error occurred"
+    },
+    "error.internal": {
+      "message": "İç hata. Lütfen daha sonra tekrar deneyin veya destekle iletişime geçin"
+    },
+    "confirmation.origin": {
+      "message": "Kaynak"
+    },
+    "confirmation.origin.tooltip": {
+      "message": "İmzayı isteyen dApp"
+    },
+    "confirmation.account": {
+      "message": "Hesap"
+    },
+    "confirmation.signMessage.confirmButton": {
+      "message": "İmzala"
+    },
+    "confirmation.signMessage.title": {
+      "message": "Mesajı İmzala"
+    },
+    "confirmation.signMessage.message": {
+      "message": "Mesaj"
     }
   }
 }

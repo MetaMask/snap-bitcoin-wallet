@@ -8,16 +8,16 @@
       "message": "De"
     },
     "toAddress": {
-      "message": "To Address"
+      "message": "À"
     },
     "continue": {
-      "message": "Continue"
+      "message": "Continuer"
     },
     "cancel": {
       "message": "Annuler"
     },
     "clear": {
-      "message": "Clear"
+      "message": "Effacer"
     },
     "amount": {
       "message": "Montant"
@@ -38,16 +38,16 @@
       "message": "Vitesse de transaction"
     },
     "transactionSpeedTooltip": {
-      "message": "Heure estimée de la transaction"
+      "message": "Le temps estimé de la transaction"
     },
     "networkFee": {
-      "message": "Network Fee"
+      "message": "Frais de réseau"
     },
     "feeRate": {
-      "message": "Fee rate"
+      "message": "Taux de frais"
     },
     "networkFeeTooltip": {
-      "message": "The total network fee"
+      "message": "Les frais de réseau totaux"
     },
     "total": {
       "message": "Total"
@@ -56,16 +56,16 @@
       "message": "Envoyer"
     },
     "asset": {
-      "message": "Asset"
+      "message": "Actif"
     },
     "sending": {
       "message": "Envoi"
     },
     "max": {
-      "message": "Max."
+      "message": "Max"
     },
     "recipientPlaceholder": {
-      "message": "Enter receiving address"
+      "message": "Entrez l'adresse de réception"
     },
     "review": {
       "message": "Vérifier"
@@ -74,76 +74,127 @@
       "message": "Erreur"
     },
     "unknownError": {
-      "message": "An unknown error occurred"
+      "message": "Une erreur inconnue s'est produite"
     },
     "feeTooLow": {
-      "message": "Fee too low"
+      "message": "Frais trop bas"
     },
     "feeRateTooLow": {
-      "message": "Fee rate too low"
+      "message": "Taux de frais trop bas"
     },
     "noUtxosSelected": {
-      "message": "Failed to build transaction: missing UTXOs"
+      "message": "Échec de la construction de la transaction : UTXOs manquants"
     },
     "outputBelowDustLimit": {
-      "message": "Amount below dust limit"
+      "message": "Montant en dessous de la limite dust"
     },
     "insufficientFunds": {
-      "message": "Funds are insufficient to cover amount plus fee"
+      "message": "Fonds insuffisants pour couvrir le montant plus les frais"
     },
     "noRecipients": {
-      "message": "Missing recipients"
+      "message": "Destinataires manquants"
     },
     "psbt": {
-      "message": "Invalid PSBT"
+      "message": "PSBT invalide"
     },
     "unknownUtxo": {
-      "message": "Failed to build transaction: unknown UTXO"
+      "message": "Échec de la construction de la transaction : UTXO inconnu"
     },
     "MmssingNonWitnessUtxo": {
-      "message": "Failed to build transaction: missing non-witness UTXO"
+      "message": "Échec de la construction de la transaction : UTXO non-witness manquant"
     },
     "base58": {
-      "message": "Invalid Bitcoin address"
+      "message": "Adresse Bitcoin invalide"
     },
     "bech32": {
-      "message": "Invalid Bitcoin address"
+      "message": "Adresse Bitcoin invalide"
     },
     "witnessVersion": {
-      "message": "Invalid Bitcoin address: witness version"
+      "message": "Adresse Bitcoin invalide : version witness"
     },
     "witnessProgram": {
-      "message": "Invalid Bitcoin address: witness program"
+      "message": "Adresse Bitcoin invalide : programme witness"
     },
     "legacyAddressTooLong": {
-      "message": "Invalid Bitcoin address"
+      "message": "Adresse Bitcoin invalide"
     },
     "invalidBase58PayloadLength": {
-      "message": "Invalid Bitcoin address: invalid length"
+      "message": "Adresse Bitcoin invalide : longueur invalide"
     },
     "invalidLegacyPrefix": {
-      "message": "Invalid Bitcoin address: invalid legacy prefix"
+      "message": "Adresse Bitcoin invalide : préfixe legacy invalide"
     },
     "networkValidation": {
-      "message": "Invalid Bitcoin address: wrong network"
+      "message": "Adresse Bitcoin invalide : réseau incorrect"
     },
     "outOfRange": {
-      "message": "Invalid amount: out of range"
+      "message": "Montant invalide : hors plage"
     },
     "tooPrecise": {
-      "message": "Invalid amount: too precise"
+      "message": "Montant invalide : trop précis"
     },
     "missingDigits": {
-      "message": "Invalid amount: missing digits"
+      "message": "Montant invalide : chiffres manquants"
     },
     "inputTooLarge": {
-      "message": "Invalid amount: too large"
+      "message": "Montant invalide : trop grand"
     },
     "invalidCharacter": {
-      "message": "Invalid amount: invalid character"
+      "message": "Montant invalide : caractère invalide"
     },
     "unexpected": {
-      "message": "An unexpected error occurred"
+      "message": "Une erreur inattendue s'est produite"
+    },
+    "error.0": {
+      "message": "Format invalide"
+    },
+    "error.1000": {
+      "message": "Validation échouée"
+    },
+    "error.2000": {
+      "message": "Ressource non trouvée"
+    },
+    "error.3000": {
+      "message": "Erreur de connexion"
+    },
+    "error.4000": {
+      "message": "État du portefeuille corrompu"
+    },
+    "error.5000": {
+      "message": "Erreur de stockage"
+    },
+    "error.6000": {
+      "message": "Méthode non implémentée ou non supportée"
+    },
+    "error.7000": {
+      "message": "Permission refusée ou autorisation insuffisante"
+    },
+    "error.8000": {
+      "message": "Erreur d'action de l'utilisateur"
+    },
+    "error.9000": {
+      "message": "État corrompu, invariante non respectée ou assertion échouée."
+    },
+    "error.internal": {
+      "message": "Erreur interne. Veuillez réessayer plus tard ou contacter le support"
+    },
+    "confirmation.origin": {
+      "message": "Origine"
+    },
+    "confirmation.origin.tooltip": {
+      "message": "Le dApp demandant la signature"
+    },
+    "confirmation.account": {
+      "message": "Compte"
+    },
+    "confirmation.signMessage.confirmButton": {
+      "message": "Signer"
+    },
+    "confirmation.signMessage.title": {
+      "message": "Signer le message"
+    },
+    "confirmation.signMessage.message": {
+      "message": "Message"
     }
   }
 }

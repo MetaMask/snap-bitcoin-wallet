@@ -8,16 +8,16 @@
       "message": "Dari"
     },
     "toAddress": {
-      "message": "To Address"
+      "message": "Ke"
     },
     "continue": {
-      "message": "Continue"
+      "message": "Lanjutkan"
     },
     "cancel": {
       "message": "Batal"
     },
     "clear": {
-      "message": "Clear"
+      "message": "Hapus"
     },
     "amount": {
       "message": "Jumlah"
@@ -32,22 +32,22 @@
       "message": "Jaringan"
     },
     "minutes": {
-      "message": "min"
+      "message": "menit"
     },
     "transactionSpeed": {
-      "message": "Kecepatan Transaksi"
+      "message": "Kecepatan transaksi"
     },
     "transactionSpeedTooltip": {
       "message": "Estimasi waktu transaksi"
     },
     "networkFee": {
-      "message": "Network Fee"
+      "message": "Biaya jaringan"
     },
     "feeRate": {
-      "message": "Fee rate"
+      "message": "Tingkat biaya"
     },
     "networkFeeTooltip": {
-      "message": "The total network fee"
+      "message": "Total biaya jaringan"
     },
     "total": {
       "message": "Total"
@@ -56,7 +56,7 @@
       "message": "Kirim"
     },
     "asset": {
-      "message": "Asset"
+      "message": "Aset"
     },
     "sending": {
       "message": "Mengirim"
@@ -65,7 +65,7 @@
       "message": "Maks"
     },
     "recipientPlaceholder": {
-      "message": "Enter receiving address"
+      "message": "Masukkan alamat penerima"
     },
     "review": {
       "message": "Tinjau"
@@ -74,76 +74,127 @@
       "message": "Kesalahan"
     },
     "unknownError": {
-      "message": "An unknown error occurred"
+      "message": "Terjadi kesalahan yang tidak diketahui"
     },
     "feeTooLow": {
-      "message": "Fee too low"
+      "message": "Biaya terlalu rendah"
     },
     "feeRateTooLow": {
-      "message": "Fee rate too low"
+      "message": "Tingkat biaya terlalu rendah"
     },
     "noUtxosSelected": {
-      "message": "Failed to build transaction: missing UTXOs"
+      "message": "Gagal membangun transaksi: UTXOs hilang"
     },
     "outputBelowDustLimit": {
-      "message": "Amount below dust limit"
+      "message": "Jumlah di bawah batas dust"
     },
     "insufficientFunds": {
-      "message": "Funds are insufficient to cover amount plus fee"
+      "message": "Dana tidak cukup untuk menutupi jumlah plus biaya"
     },
     "noRecipients": {
-      "message": "Missing recipients"
+      "message": "Penerima hilang"
     },
     "psbt": {
-      "message": "Invalid PSBT"
+      "message": "PSBT tidak valid"
     },
     "unknownUtxo": {
-      "message": "Failed to build transaction: unknown UTXO"
+      "message": "Gagal membangun transaksi: UTXO tidak dikenal"
     },
     "MmssingNonWitnessUtxo": {
-      "message": "Failed to build transaction: missing non-witness UTXO"
+      "message": "Gagal membangun transaksi: UTXO non-witness hilang"
     },
     "base58": {
-      "message": "Invalid Bitcoin address"
+      "message": "Alamat Bitcoin tidak valid"
     },
     "bech32": {
-      "message": "Invalid Bitcoin address"
+      "message": "Alamat Bitcoin tidak valid"
     },
     "witnessVersion": {
-      "message": "Invalid Bitcoin address: witness version"
+      "message": "Alamat Bitcoin tidak valid: versi witness"
     },
     "witnessProgram": {
-      "message": "Invalid Bitcoin address: witness program"
+      "message": "Alamat Bitcoin tidak valid: program witness"
     },
     "legacyAddressTooLong": {
-      "message": "Invalid Bitcoin address"
+      "message": "Alamat Bitcoin tidak valid"
     },
     "invalidBase58PayloadLength": {
-      "message": "Invalid Bitcoin address: invalid length"
+      "message": "Alamat Bitcoin tidak valid: panjang tidak valid"
     },
     "invalidLegacyPrefix": {
-      "message": "Invalid Bitcoin address: invalid legacy prefix"
+      "message": "Alamat Bitcoin tidak valid: prefix legacy tidak valid"
     },
     "networkValidation": {
-      "message": "Invalid Bitcoin address: wrong network"
+      "message": "Alamat Bitcoin tidak valid: jaringan salah"
     },
     "outOfRange": {
-      "message": "Invalid amount: out of range"
+      "message": "Jumlah tidak valid: di luar jangkauan"
     },
     "tooPrecise": {
-      "message": "Invalid amount: too precise"
+      "message": "Jumlah tidak valid: terlalu presisi"
     },
     "missingDigits": {
-      "message": "Invalid amount: missing digits"
+      "message": "Jumlah tidak valid: digit hilang"
     },
     "inputTooLarge": {
-      "message": "Invalid amount: too large"
+      "message": "Jumlah tidak valid: terlalu besar"
     },
     "invalidCharacter": {
-      "message": "Invalid amount: invalid character"
+      "message": "Jumlah tidak valid: karakter tidak valid"
     },
     "unexpected": {
-      "message": "An unexpected error occurred"
+      "message": "Terjadi kesalahan tak terduga"
+    },
+    "error.0": {
+      "message": "Format tidak valid"
+    },
+    "error.1000": {
+      "message": "Validasi gagal"
+    },
+    "error.2000": {
+      "message": "Sumber daya tidak ditemukan"
+    },
+    "error.3000": {
+      "message": "Kesalahan koneksi"
+    },
+    "error.4000": {
+      "message": "Keadaan wallet rusak"
+    },
+    "error.5000": {
+      "message": "Kesalahan penyimpanan"
+    },
+    "error.6000": {
+      "message": "Metode tidak diimplementasikan atau tidak didukung"
+    },
+    "error.7000": {
+      "message": "Izin ditolak atau otorisasi tidak cukup"
+    },
+    "error.8000": {
+      "message": "Kesalahan tindakan pengguna"
+    },
+    "error.9000": {
+      "message": "Keadaan rusak, invarianta tidak dihormati atau asersi gagal."
+    },
+    "error.internal": {
+      "message": "Kesalahan internal. Silakan coba lagi nanti atau hubungi dukungan"
+    },
+    "confirmation.origin": {
+      "message": "Asal"
+    },
+    "confirmation.origin.tooltip": {
+      "message": "DApp yang meminta tanda tangan"
+    },
+    "confirmation.account": {
+      "message": "Akun"
+    },
+    "confirmation.signMessage.confirmButton": {
+      "message": "Tanda tangani"
+    },
+    "confirmation.signMessage.title": {
+      "message": "Tanda tangani Pesan"
+    },
+    "confirmation.signMessage.message": {
+      "message": "Pesan"
     }
   }
 }

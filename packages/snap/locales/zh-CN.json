@@ -144,6 +144,27 @@
     },
     "unexpected": {
       "message": "An unexpected error occurred"
+    },
+    "error.internal": {
+      "message": "内部错误。请稍后重试或联系支持"
+    },
+    "confirmation.origin": {
+      "message": "来源"
+    },
+    "confirmation.origin.tooltip": {
+      "message": "请求签名的 dApp"
+    },
+    "confirmation.account": {
+      "message": "账户"
+    },
+    "confirmation.signMessage.confirmButton": {
+      "message": "签名"
+    },
+    "confirmation.signMessage.title": {
+      "message": "签名消息"
+    },
+    "confirmation.signMessage.message": {
+      "message": "消息"
     }
   }
 }

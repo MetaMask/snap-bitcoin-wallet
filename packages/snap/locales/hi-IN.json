@@ -5,25 +5,25 @@
       "message": "आगे बढ़ने से पहले ट्रांसेक्शन की समीक्षा करें"
     },
     "from": {
-      "message": "इनके द्वारा"
+      "message": "से"
     },
     "toAddress": {
-      "message": "To Address"
+      "message": "को"
     },
     "continue": {
-      "message": "Continue"
+      "message": "जारी रखें"
     },
     "cancel": {
-      "message": "कैंसिल करें"
+      "message": "रद्द करें"
     },
     "clear": {
-      "message": "Clear"
+      "message": "साफ़ करें"
     },
     "amount": {
-      "message": "अमाउंट"
+      "message": "राशि"
     },
     "balance": {
-      "message": "बैलेंस"
+      "message": "शेष राशि"
     },
     "recipient": {
       "message": "प्राप्तकर्ता"
@@ -32,7 +32,7 @@
       "message": "नेटवर्क"
     },
     "minutes": {
-      "message": "min"
+      "message": "मिनट"
     },
     "transactionSpeed": {
       "message": "ट्रांसेक्शन की गति"
@@ -41,13 +41,13 @@
       "message": "ट्रांसेक्शन का अनुमानित समय"
     },
     "networkFee": {
-      "message": "Network Fee"
+      "message": "नेटवर्क शुल्क"
     },
     "feeRate": {
-      "message": "Fee rate"
+      "message": "शुल्क दर"
     },
     "networkFeeTooltip": {
-      "message": "The total network fee"
+      "message": "कुल नेटवर्क शुल्क"
     },
     "total": {
       "message": "कुल"
@@ -56,7 +56,7 @@
       "message": "भेजें"
     },
     "asset": {
-      "message": "Asset"
+      "message": "एसेट"
     },
     "sending": {
       "message": "भेजा जा रहा है"
@@ -65,85 +65,136 @@
       "message": "अधिकतम"
     },
     "recipientPlaceholder": {
-      "message": "Enter receiving address"
+      "message": "प्राप्त करने वाला पता दर्ज करें"
     },
     "review": {
       "message": "समीक्षा करें"
     },
     "error": {
-      "message": "एरर"
+      "message": "त्रुटि"
     },
     "unknownError": {
-      "message": "An unknown error occurred"
+      "message": "एक अज्ञात त्रुटि हुई"
     },
     "feeTooLow": {
-      "message": "Fee too low"
+      "message": "शुल्क बहुत कम है"
     },
     "feeRateTooLow": {
-      "message": "Fee rate too low"
+      "message": "शुल्क दर बहुत कम है"
     },
     "noUtxosSelected": {
-      "message": "Failed to build transaction: missing UTXOs"
+      "message": "ट्रांसेक्शन बनाने में विफल: UTXOs गायब हैं"
     },
     "outputBelowDustLimit": {
-      "message": "Amount below dust limit"
+      "message": "राशि डस्ट लिमिट से कम है"
     },
     "insufficientFunds": {
-      "message": "Funds are insufficient to cover amount plus fee"
+      "message": "राशि और शुल्क कवर करने के लिए अपर्याप्त फंड"
     },
     "noRecipients": {
-      "message": "Missing recipients"
+      "message": "प्राप्तकर्ता गायब हैं"
     },
     "psbt": {
-      "message": "Invalid PSBT"
+      "message": "अमान्य PSBT"
     },
     "unknownUtxo": {
-      "message": "Failed to build transaction: unknown UTXO"
+      "message": "ट्रांसेक्शन बनाने में विफल: अज्ञात UTXO"
     },
     "MmssingNonWitnessUtxo": {
-      "message": "Failed to build transaction: missing non-witness UTXO"
+      "message": "ट्रांसेक्शन बनाने में विफल: गैर-गवाह UTXO गायब"
     },
     "base58": {
-      "message": "Invalid Bitcoin address"
+      "message": "अमान्य बिटकॉइन पता"
     },
     "bech32": {
-      "message": "Invalid Bitcoin address"
+      "message": "अमान्य बिटकॉइन पता"
     },
     "witnessVersion": {
-      "message": "Invalid Bitcoin address: witness version"
+      "message": "अमान्य बिटकॉइन पता: गवाह संस्करण"
     },
     "witnessProgram": {
-      "message": "Invalid Bitcoin address: witness program"
+      "message": "अमान्य बिटकॉइन पता: गवाह कार्यक्रम"
     },
     "legacyAddressTooLong": {
-      "message": "Invalid Bitcoin address"
+      "message": "अमान्य बिटकॉइन पता"
     },
     "invalidBase58PayloadLength": {
-      "message": "Invalid Bitcoin address: invalid length"
+      "message": "अमान्य बिटकॉइन पता: अमान्य लंबाई"
     },
     "invalidLegacyPrefix": {
-      "message": "Invalid Bitcoin address: invalid legacy prefix"
+      "message": "अमान्य बिटकॉइन पता: अमान्य लिगेसी उपसर्ग"
     },
     "networkValidation": {
-      "message": "Invalid Bitcoin address: wrong network"
+      "message": "अमान्य बिटकॉइन पता: गलत नेटवर्क"
     },
     "outOfRange": {
-      "message": "Invalid amount: out of range"
+      "message": "अमान्य राशि: रेंज के बाहर"
     },
     "tooPrecise": {
-      "message": "Invalid amount: too precise"
+      "message": "अमान्य राशि: बहुत सटीक"
     },
     "missingDigits": {
-      "message": "Invalid amount: missing digits"
+      "message": "अमान्य राशि: अंक गायब"
     },
     "inputTooLarge": {
-      "message": "Invalid amount: too large"
+      "message": "अमान्य राशि: बहुत बड़ा"
     },
     "invalidCharacter": {
-      "message": "Invalid amount: invalid character"
+      "message": "अमान्य राशि: अमान्य अक्षर"
     },
     "unexpected": {
-      "message": "An unexpected error occurred"
+      "message": "एक अप्रत्याशित त्रुटि हुई"
+    },
+    "error.0": {
+      "message": "अमान्य प्रारूप"
+    },
+    "error.1000": {
+      "message": "मान्यकरण विफल"
+    },
+    "error.2000": {
+      "message": "संसाधन नहीं मिला"
+    },
+    "error.3000": {
+      "message": "कनेक्शन त्रुटि"
+    },
+    "error.4000": {
+      "message": "वॉलेट स्थिति दूषित"
+    },
+    "error.5000": {
+      "message": "भंडारण त्रुटि"
+    },
+    "error.6000": {
+      "message": "विधि लागू नहीं या समर्थित नहीं"
+    },
+    "error.7000": {
+      "message": "अनुमति अस्वीकृत या अपर्याप्त प्राधिकरण"
+    },
+    "error.8000": {
+      "message": "उपयोगकर्ता क्रिया त्रुटि"
+    },
+    "error.9000": {
+      "message": "दूषित स्थिति, अपरिवर्तनीय नहीं माना गया या असफल दावा."
+    },
+    "error.internal": {
+      "message": "आंतरिक त्रुटि. कृपया बाद में प्रयास करें या समर्थन से संपर्क करें"
+    },
+    "confirmation.origin": {
+      "message": "उत्पत्ति"
+    },
+    "confirmation.origin.tooltip": {
+      "message": "हस्ताक्षर का अनुरोध करने वाला dApp"
+    },
+    "confirmation.account": {
+      "message": "खाता"
+    },
+    "confirmation.signMessage.confirmButton": {
+      "message": "हस्ताक्षर"
+    },
+    "confirmation.signMessage.title": {
+      "message": "संदेश पर हस्ताक्षर करें"
+    },
+    "confirmation.signMessage.message": {
+      "message": "संदेश"
     }
   }
 }

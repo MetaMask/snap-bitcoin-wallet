@@ -4,7 +4,6 @@ import {
   Button,
   Container,
   Footer,
-  Heading,
   Icon,
   Section,
   Text as SnapText,
@@ -17,8 +16,7 @@ import type {
   SignMessageConfirmationContext,
 } from '../../../entities';
 import { ConfirmationEvent } from '../../../entities';
-import { networkToScope } from '../../../handlers';
-import { AssetIcon } from '../components';
+import { HeadingWithReturn } from '../components';
 import { displayCaip10, displayOrigin, translate } from '../format';
 
 type SignMessageConfirmationViewProps = {
@@ -36,10 +34,10 @@ export const SignMessageConfirmationView: SnapComponent<
   return (
     <Container>
       <Box>
-        <Box alignment="center" center>
-          <Box>{null}</Box>
-          <Heading size="lg">{t('confirmation.signMessage.title')}</Heading>
-        </Box>
+        <HeadingWithReturn
+          heading={t('confirmation.signMessage.title')}
+          returnButtonName={ConfirmationEvent.Cancel}
+        />
 
         <Section>
           <Box direction="horizontal" center>
@@ -75,25 +73,12 @@ export const SignMessageConfirmationView: SnapComponent<
               displayName
             />
           </Box>
-          <Box alignment="space-between" direction="horizontal">
-            <SnapText fontWeight="medium" color="alternative">
-              {t('confirmation.network')}
-            </SnapText>
-            <Box direction="horizontal" alignment="center">
-              <Box alignment="center" center>
-                <AssetIcon network={network} />
-              </Box>
-              <SnapText>{networkToScope[network]}</SnapText>
-            </Box>
-          </Box>
         </Section>
       </Box>
       <Footer>
-        <Button name={ConfirmationEvent.Cancel}>
-          {t('confirmation.cancelButton')}
-        </Button>
+        <Button name={ConfirmationEvent.Cancel}>{t('cancel')}</Button>
         <Button name={ConfirmationEvent.Confirm}>
-          {t('confirmation.confirmButton')}
+          {t('confirmation.signMessage.confirmButton')}
         </Button>
       </Footer>
     </Container>

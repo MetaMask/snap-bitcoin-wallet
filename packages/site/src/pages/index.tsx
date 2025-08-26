@@ -1,4 +1,4 @@
-import { BtcScope, type KeyringAccount } from '@metamask/keyring-api';
+import { type KeyringAccount } from '@metamask/keyring-api';
 import { useState } from 'react';
 import styled from 'styled-components';
 
@@ -9,10 +9,7 @@ import {
   Card,
   ListAccountsButton,
   SendBitcoinCard,
-  GetTransactionStatusCard,
-  GetBalancesCard,
-  EstimateFeeCard,
-  GetMaxSpendableBalanceCard,
+  SignMessageCard,
 } from '../components';
 import { defaultSnapOrigin } from '../config';
 import {
@@ -78,33 +75,6 @@ const ErrorMessage = styled.div`
   }
 `;
 
-const Resp = styled.div`
-  background-color: ${({ theme }) => theme.colors.primary?.muted};
-  border: 1px solid ${({ theme }) => theme.colors.primary?.default};
-  color: ${({ theme }) => theme.colors.primary?.alternative};
-  border-radius: ${({ theme }) => theme.radii.default};
-  padding: 2.4rem;
-  margin-bottom: 2.4rem;
-  margin-top: 2.4rem;
-  max-width: 60rem;
-  width: 100%;
-  ${({ theme }) => theme.mediaQueries.small} {
-    padding: 1.6rem;
-    margin-bottom: 1.2rem;
-    margin-top: 1.2rem;
-    max-width: 100%;
-  }
-`;
-
-const Title = styled.h2`
-  font-size: ${({ theme }) => theme.fontSizes.large};
-  margin: 0;
-  margin-bottom: 1.2rem;
-  ${({ theme }) => theme.mediaQueries.small} {
-    font-size: ${({ theme }) => theme.fontSizes.text};
-  }
-`;
-
 const Loading = styled.div`
   position: fixed;
   top: 0;
@@ -123,28 +93,15 @@ const LoadingText = styled.div`
   font-size: 5rem;
 `;
 
-const Dropdown = styled.select`
-  display: flex;
-  align-self: flex-start;
-  align-items: center;
-  justify-content: center;
-  font-size: ${(props) => props.theme.fontSizes.small};
-  border-radius: ${(props) => props.theme.radii.button};
-  border: 1px solid ${(props) => props.theme.colors.background?.inverse};
-  background-color: ${(props) => props.theme.colors.background?.inverse};
-  color: ${(props) => props.theme.colors.text?.inverse};
-  font-weight: bold;
-  padding: 1.2rem;
-`;
-
 const Index = () => {
-  const { error, resp, loading } = useMetaMaskContext();
+  const { error, loading } = useMetaMaskContext();
   const { isFlask, snapsDetected, installedSnap } = useMetaMask();
   const requestSnap = useRequestSnap();
   const invokeKeyring = useInvokeKeyring();
-  const [btcAccount, setBtcAccount] = useState<KeyringAccount>();
-
-  const [scope, setScope] = useState<BtcScope>(BtcScope.Mainnet);
+  const [accounts, setAccounts] = useState<KeyringAccount[]>([]);
+  const [selectedAccount, setSelectedAccount] = useState<
+    KeyringAccount | undefined
+  >(undefined);
 
   const isMetaMaskReady = isLocalSnap(defaultSnapOrigin)
     ? isFlask
@@ -155,23 +112,14 @@ const Index = () => {
     Boolean(installedSnap) &&
     !shouldDisplayReconnectButton(installedSnap);
 
-  const isAccountReady = Boolean(installedSnap) && btcAccount !== undefined;
-
   const handleListAccountClick = async () => {
-    const accounts = (await invokeKeyring({
+    const listedAccounts = (await invokeKeyring({
       method: 'keyring_listAccounts',
     })) as KeyringAccount[];
 
-    if (accounts.length) {
-      setBtcAccount(
-        accounts.find((account) => account.options.scope === scope),
-      );
-    }
-  };
-
-  const scopeOnChange = (chgEvent: React.ChangeEvent<HTMLSelectElement>) => {
-    if (Object.values(BtcScope).includes(chgEvent.target.value as BtcScope)) {
-      setScope(chgEvent.target.value as BtcScope);
+    setAccounts(listedAccounts);
+    if (listedAccounts.length > 0) {
+      setSelectedAccount(listedAccounts[0]);
     }
   };
 
@@ -191,12 +139,6 @@ const Index = () => {
           <ErrorMessage>
             <b>An error happened:</b> {error.message}
           </ErrorMessage>
-        )}
-        {resp && (
-          <Resp>
-            <Title>RPC Response</Title>
-            {resp}
-          </Resp>
         )}
         {!isMetaMaskReady && (
           <Card
@@ -223,6 +165,7 @@ const Index = () => {
               ),
             }}
             disabled={!isMetaMaskReady}
+            fullWidth
           />
         )}
         {shouldDisplayReconnectButton(installedSnap) && (
@@ -239,33 +182,9 @@ const Index = () => {
               ),
             }}
             disabled={!installedSnap}
+            fullWidth
           />
         )}
-
-        <Card
-          content={{
-            title: 'Select Network',
-            description: `Current: ${scope}`,
-            button: (
-              <Dropdown onChange={scopeOnChange}>
-                <option
-                  value={BtcScope.Mainnet}
-                  selected={scope === BtcScope.Mainnet}
-                >
-                  Mainnet
-                </option>
-                <option
-                  value={BtcScope.Testnet}
-                  selected={scope === BtcScope.Testnet}
-                >
-                  Testnet
-                </option>
-              </Dropdown>
-            ),
-          }}
-          disabled={!installedSnap}
-          fullWidth={isSnapReady}
-        />
 
         <Card
           content={{
@@ -281,35 +200,35 @@ const Index = () => {
           disabled={!installedSnap}
           fullWidth={isSnapReady}
         />
-        <GetBalancesCard
-          enabled={isAccountReady}
-          account={btcAccount?.id ?? ''}
-          scope={scope}
-          fullWidth={isSnapReady}
-        />
-        <EstimateFeeCard
-          enabled={isAccountReady}
-          account={btcAccount?.id ?? ''}
-          fullWidth={isSnapReady}
-        />
-        <GetMaxSpendableBalanceCard
-          enabled={isAccountReady}
-          account={btcAccount?.id ?? ''}
-          fullWidth={isSnapReady}
-        />
-        <SendBitcoinCard
-          enabled={isAccountReady}
-          account={btcAccount?.id ?? ''}
-          address={btcAccount?.address ?? ''}
-          scope={scope}
-          fullWidth={isSnapReady}
-        />
-
-        <GetTransactionStatusCard
-          enabled={isAccountReady}
-          scope={scope}
-          fullWidth={isSnapReady}
-        />
+        {selectedAccount && (
+          <>
+            <Card
+              content={{
+                title: 'Select Account',
+                description: (
+                  <select
+                    value={selectedAccount.id}
+                    onChange={(changeEvent) => {
+                      const selected = accounts.find(
+                        (acc) => acc.id === changeEvent.target.value,
+                      );
+                      setSelectedAccount(selected);
+                    }}
+                    style={{ width: '100%', padding: '8px' }}
+                  >
+                    {accounts.map((acc) => (
+                      <option key={acc.id} value={acc.id}>
+                        {acc.address} ({acc.id})
+                      </option>
+                    ))}
+                  </select>
+                ),
+              }}
+            />
+            <SendBitcoinCard account={selectedAccount} />
+            <SignMessageCard account={selectedAccount} />
+          </>
+        )}
       </CardContainer>
     </Container>
   );

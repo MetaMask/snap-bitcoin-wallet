@@ -8,7 +8,7 @@
       "message": "From"
     },
     "toAddress": {
-      "message": "To Address"
+      "message": "To"
     },
     "continue": {
       "message": "Continue"
@@ -35,13 +35,13 @@
       "message": "min"
     },
     "transactionSpeed": {
-      "message": "Transaction Speed"
+      "message": "Transaction speed"
     },
     "transactionSpeedTooltip": {
       "message": "The estimated time of the transaction"
     },
     "networkFee": {
-      "message": "Network Fee"
+      "message": "Network fee"
     },
     "feeRate": {
       "message": "Fee rate"
@@ -144,6 +144,57 @@
     },
     "unexpected": {
       "message": "An unexpected error occurred"
+    },
+    "error.0": {
+      "message": "Invalid format"
+    },
+    "error.1000": {
+      "message": "Validation failed"
+    },
+    "error.2000": {
+      "message": "Resource not found"
+    },
+    "error.3000": {
+      "message": "Connection error"
+    },
+    "error.4000": {
+      "message": "Wallet state corrupted"
+    },
+    "error.5000": {
+      "message": "Storage error"
+    },
+    "error.6000": {
+      "message": "Method not implemented or not supported"
+    },
+    "error.7000": {
+      "message": "Permission denied or insufficient authorization"
+    },
+    "error.8000": {
+      "message": "User action error"
+    },
+    "error.9000": {
+      "message": "Corrupted state, invariant not respected or failed assertion."
+    },
+    "error.internal": {
+      "message": "Internal error. Please try again later or contact support"
+    },
+    "confirmation.origin": {
+      "message": "Origin"
+    },
+    "confirmation.origin.tooltip": {
+      "message": "The dApp requesting the signature"
+    },
+    "confirmation.account": {
+      "message": "Account"
+    },
+    "confirmation.signMessage.confirmButton": {
+      "message": "Sign"
+    },
+    "confirmation.signMessage.title": {
+      "message": "Sign Message"
+    },
+    "confirmation.signMessage.message": {
+      "message": "Message"
     }
   }
 }

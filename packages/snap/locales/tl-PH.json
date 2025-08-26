@@ -144,6 +144,27 @@
     },
     "unexpected": {
       "message": "An unexpected error occurred"
+    },
+    "error.internal": {
+      "message": "Panloob na error. Subukang muli mamaya o makipag-ugnayan sa suporta"
+    },
+    "confirmation.origin": {
+      "message": "Pinagmulan"
+    },
+    "confirmation.origin.tooltip": {
+      "message": "Ang dApp na humihingi ng lagda"
+    },
+    "confirmation.account": {
+      "message": "Account"
+    },
+    "confirmation.signMessage.confirmButton": {
+      "message": "Lagdaan"
+    },
+    "confirmation.signMessage.title": {
+      "message": "Lagdaan ang Mensahe"
+    },
+    "confirmation.signMessage.message": {
+      "message": "Mensahe"
     }
   }
 }
