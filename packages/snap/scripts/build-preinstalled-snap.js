@@ -26,13 +26,19 @@ function readFileContents(filePath) {
 const bundlePath = require.resolve('../dist/bundle.js');
 const iconPath = require.resolve('../images/icon.svg');
 const manifestPath = require.resolve('../snap.manifest.json');
-const englishLocalePath = require.resolve('../locales/en.json');
 
 // File Contents
 const bundle = readFileContents(bundlePath);
 const icon = readFileContents(iconPath);
 const manifest = readFileContents(manifestPath);
-const englishLocale = readFileContents(englishLocalePath);
+
+const parsedManifest = JSON.parse(manifest);
+
+const localeFiles = parsedManifest.source.locales.map((localePath) => {
+  const fullPath = require.resolve(`../${localePath}`);
+  const contents = readFileContents(fullPath);
+  return { path: localePath, value: contents };
+});
 
 const snapId =
   /** @type {import('@metamask/snaps-controllers').PreinstalledSnap['snapId']} */ (
@@ -54,10 +60,7 @@ const preinstalledSnap = {
       path: 'dist/bundle.js',
       value: bundle,
     },
-    {
-      path: 'locales/en.json',
-      value: englishLocale,
-    },
+    ...localeFiles,
   ],
   removable: false,
   hideSnapBranding: true,
