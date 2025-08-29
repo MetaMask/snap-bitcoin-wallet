@@ -2,11 +2,9 @@ import type { JsonRpcRequest } from '@metamask/utils';
 import { assert, object, string } from 'superstruct';
 
 import {
-  ExternalServiceError,
   InexistentMethodError,
   type SnapClient,
   SynchronizationError,
-  WalletError,
 } from '../entities';
 import type { SendFlowUseCases, AccountUseCases } from '../use-cases';
 
