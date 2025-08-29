@@ -2,8 +2,10 @@ import type { JsonRpcRequest } from '@metamask/utils';
 import { assert, object, string } from 'superstruct';
 
 import {
+  ExternalServiceError,
   InexistentMethodError,
   type SnapClient,
+  SynchronizationError,
   WalletError,
 } from '../entities';
 import type { SendFlowUseCases, AccountUseCases } from '../use-cases';
@@ -74,7 +76,10 @@ export class CronHandler {
     });
 
     if (Object.keys(errors).length > 0) {
-      throw new WalletError('Account synchronization failures', errors);
+      throw new SynchronizationError(
+        'Account synchronization failures',
+        errors,
+      );
     }
   }
 }
