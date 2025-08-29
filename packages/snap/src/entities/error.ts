@@ -86,6 +86,19 @@ export class ExternalServiceError extends BaseError {
 }
 
 /**
+ * Error thrown when accounts fail to synchronize. Used to gather multiple potential errors.
+ *
+ * @example
+ * throw new SynchronizationError('Accounts failed to synchronize');
+ */
+export class SynchronizationError extends BaseError {
+  constructor(message: string, data?: Record<string, Json>, cause?: unknown) {
+    super(message, 3100, data, cause); // Under ExternalServiceError
+    this.name = 'SynchronizationError';
+  }
+}
+
+/**
  * Error thrown for wallet-specific failures.
  * Useful for signaling wallet operation errors.
  *

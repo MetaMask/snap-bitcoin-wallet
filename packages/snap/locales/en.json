@@ -157,6 +157,9 @@
     "error.3000": {
       "message": "Connection error"
     },
+    "error.3100": {
+      "message": "One or more accounts failed to synchronize"
+    },
     "error.4000": {
       "message": "Wallet state corrupted"
     },

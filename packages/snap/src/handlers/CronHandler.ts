@@ -4,7 +4,7 @@ import { assert, object, string } from 'superstruct';
 import {
   InexistentMethodError,
   type SnapClient,
-  WalletError,
+  SynchronizationError,
 } from '../entities';
 import type { SendFlowUseCases, AccountUseCases } from '../use-cases';
 
@@ -74,7 +74,10 @@ export class CronHandler {
     });
 
     if (Object.keys(errors).length > 0) {
-      throw new WalletError('Account synchronization failures', errors);
+      throw new SynchronizationError(
+        'Account synchronization failures',
+        errors,
+      );
     }
   }
 }
