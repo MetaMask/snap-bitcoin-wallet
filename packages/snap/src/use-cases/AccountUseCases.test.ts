@@ -654,6 +654,52 @@ describe('AccountUseCases', () => {
 
       expect(mockMetaProtocols.fetchInscriptions).not.toHaveBeenCalled();
     });
+
+    it('continues synchronization when tracking events fail', async () => {
+      const mockTransaction = mock<WalletTx>();
+      const mockInscriptions = mock<Inscription[]>();
+      const trackingError = new Error('Tracking service unavailable');
+
+      mockAccount.listTransactions
+        .mockReturnValueOnce([])
+        .mockReturnValueOnce([mockTransaction]);
+      mockMetaProtocols.fetchInscriptions.mockResolvedValue(mockInscriptions);
+      mockSnapClient.emitTrackingEvent.mockRejectedValue(trackingError);
+
+      // should not throw despite tracking failure
+      expect(await useCases.synchronize(mockAccount, 'test')).toBeUndefined();
+
+      // core synchronization functionality should still work
+      expect(mockChain.sync).toHaveBeenCalledWith(mockAccount);
+      expect(mockAccount.listTransactions).toHaveBeenCalledTimes(2);
+      expect(mockMetaProtocols.fetchInscriptions).toHaveBeenCalledWith(
+        mockAccount,
+      );
+      expect(mockRepository.update).toHaveBeenCalledWith(
+        mockAccount,
+        mockInscriptions,
+      );
+      expect(
+        mockSnapClient.emitAccountBalancesUpdatedEvent,
+      ).toHaveBeenCalledWith(mockAccount);
+      expect(
+        mockSnapClient.emitAccountTransactionsUpdatedEvent,
+      ).toHaveBeenCalledWith(mockAccount, [mockTransaction]);
+
+      // tracking should have been attempted
+      expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledWith(
+        TrackingSnapEvent.TransactionReceived,
+        mockAccount,
+        mockTransaction,
+        'test',
+      );
+
+      // error should be logged
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to track event',
+        trackingError,
+      );
+    });
   });
 
   describe('fullScan', () => {
@@ -996,6 +1042,57 @@ describe('AccountUseCases', () => {
           broadcast: true,
         }),
       ).rejects.toBe(error);
+    });
+
+    it('continues transaction processing when tracking events fail', async () => {
+      const trackingError = new Error('Tracking service unavailable');
+      mockAccount.getTransaction.mockReturnValue(mockWalletTx);
+      mockTransaction.compute_txid.mockReturnValue(mockTxid);
+      mockSnapClient.emitTrackingEvent.mockRejectedValue(trackingError);
+
+      // Should complete successfully despite tracking failure
+      const { txid, psbt } = await useCases.signPsbt(
+        'account-id',
+        mockPsbt,
+        'metamask',
+        {
+          fill: false,
+          broadcast: true,
+        },
+      );
+
+      // Core transaction functionality should work
+      expect(mockRepository.getWithSigner).toHaveBeenCalledWith('account-id');
+      expect(mockAccount.sign).toHaveBeenCalledWith(mockPsbt);
+      expect(mockChain.broadcast).toHaveBeenCalledWith(
+        mockAccount.network,
+        mockTransaction,
+      );
+      expect(mockRepository.update).toHaveBeenCalledWith(mockAccount);
+      expect(
+        mockSnapClient.emitAccountBalancesUpdatedEvent,
+      ).toHaveBeenCalledWith(mockAccount);
+      expect(
+        mockSnapClient.emitAccountTransactionsUpdatedEvent,
+      ).toHaveBeenCalledWith(mockAccount, [mockWalletTx]);
+
+      // Tracking should have been attempted
+      expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledWith(
+        TrackingSnapEvent.TransactionSubmitted,
+        mockAccount,
+        mockWalletTx,
+        'metamask',
+      );
+
+      // Error should be logged
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to track event',
+        trackingError,
+      );
+
+      // Transaction should still be successful
+      expect(txid).toBe(mockTxid);
+      expect(psbt).toBe('mockSignedPsbt');
     });
   });
 
