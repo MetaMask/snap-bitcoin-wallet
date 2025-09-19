@@ -4,12 +4,14 @@ import { SLIP10Node } from '@metamask/key-tree';
 import { KeyringEvent } from '@metamask/keyring-api';
 import { emitSnapKeyringEvent } from '@metamask/keyring-snap-sdk';
 import type {
+  GetClientStatusResult,
   ComponentOrElement,
   GetInterfaceContextResult,
   GetInterfaceStateResult,
   GetPreferencesResult,
   Json,
 } from '@metamask/snaps-sdk';
+import { DialogType } from '@metamask/snaps-sdk';
 
 import type { BaseError, BitcoinAccount, SnapClient } from '../entities';
 import {
@@ -146,6 +148,15 @@ export class SnapClientAdapter implements SnapClient {
     })) as unknown as ResolveType;
   }
 
+  async displayConfirmation<ResolveType>(
+    id: string,
+  ): Promise<ResolveType | null> {
+    return (await snap.request({
+      method: 'snap_dialog',
+      params: { type: DialogType.Confirmation, id },
+    })) as unknown as ResolveType;
+  }
+
   async getInterfaceState(id: string): Promise<GetInterfaceStateResult> {
     return snap.request({
       method: 'snap_getInterfaceState',
@@ -196,6 +207,12 @@ export class SnapClientAdapter implements SnapClient {
   async getPreferences(): Promise<GetPreferencesResult> {
     return snap.request({
       method: 'snap_getPreferences',
+    });
+  }
+
+  async getClientStatus(): Promise<GetClientStatusResult> {
+    return snap.request({
+      method: 'snap_getClientStatus',
     });
   }
 

@@ -1,17 +1,18 @@
 import { Address } from '@metamask/bitcoindevkit';
 import { BtcScope } from '@metamask/keyring-api';
 import type { Json, JsonRpcRequest } from '@metamask/utils';
+import { Verifier } from 'bip322-js';
 import { assert, enums, object, optional, string } from 'superstruct';
 
-import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
-import { validateOrigin } from './permissions';
 import {
   AssertionError,
   type CodifiedError,
   FormatError,
   InexistentMethodError,
   type Logger,
+  ValidationError,
 } from '../entities';
+import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
 import { scopeToNetwork } from './caip';
 import type { TransactionFee } from './mappings';
 import { mapToTransactionFees } from './mappings';
@@ -29,6 +30,7 @@ export enum RpcMethod {
   StartSendTransactionFlow = 'startSendTransactionFlow',
   SignAndSendTransaction = 'signAndSendTransaction',
   ComputeFee = 'computeFee',
+  VerifyMessage = 'verifyMessage',
   OnAddressInput = 'onAddressInput',
   OnAmountInput = 'onAmountInput',
 }
@@ -55,6 +57,12 @@ export type SendTransactionResponse = {
   transactionId: string;
 };
 
+export const VerifyMessageRequest = object({
+  address: string(),
+  message: string(),
+  signature: string(),
+});
+
 export class RpcHandler {
   readonly #logger: Logger;
 
@@ -73,10 +81,7 @@ export class RpcHandler {
   }
 
   async route(origin: string, request: JsonRpcRequest): Promise<Json> {
-    validateOrigin(origin);
-
     const { method, params } = request;
-
     if (!params) {
       throw new FormatError('Missing params');
     }
@@ -106,6 +111,15 @@ export class RpcHandler {
         assert(params, OnAmountInputRequestStruct);
         return this.#onAmountInput(params);
       }
+      case RpcMethod.VerifyMessage: {
+        assert(params, VerifyMessageRequest);
+        return this.#verifyMessage(
+          params.address,
+          params.message,
+          params.signature,
+        );
+      }
+
       default:
         throw new InexistentMethodError(`Method not found: ${method}`);
     }
@@ -234,6 +248,23 @@ export class RpcHandler {
         (error as CodifiedError).message,
       );
       return { valid: false, errors: [{ code: SendErrorCodes.Invalid }] };
+    }
+  }
+
+  #verifyMessage(
+    address: string,
+    message: string,
+    signature: string,
+  ): { valid: boolean } {
+    try {
+      const valid = Verifier.verifySignature(address, message, signature);
+      return { valid };
+    } catch (error) {
+      throw new ValidationError(
+        'Failed to verify signature',
+        { address, message, signature },
+        error,
+      );
     }
   }
 }

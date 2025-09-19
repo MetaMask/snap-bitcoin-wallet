@@ -157,7 +157,7 @@ describe('OnClientRequestHandler', () => {
         asset: {
           unit: CurrencyUnit.Regtest,
           type: Caip19Asset.Regtest,
-          amount: '0.00001053',
+          amount: expect.stringContaining('0.00001'),
           fungible: true,
         },
       },

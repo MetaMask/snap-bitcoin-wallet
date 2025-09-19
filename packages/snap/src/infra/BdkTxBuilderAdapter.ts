@@ -13,7 +13,11 @@ import {
   Recipient,
 } from '@metamask/bitcoindevkit';
 
-import type { TransactionBuilder } from '../entities';
+import {
+  type CodifiedError,
+  ValidationError,
+  type TransactionBuilder,
+} from '../entities';
 
 export class BdkTxBuilderAdapter implements TransactionBuilder {
   #builder: TxBuilder;
@@ -26,11 +30,28 @@ export class BdkTxBuilderAdapter implements TransactionBuilder {
   }
 
   addRecipient(amount: string, recipientAddress: string): TransactionBuilder {
-    const recipient = new Recipient(
-      Address.from_string(recipientAddress, this.#network).script_pubkey,
-      Amount.from_sat(BigInt(amount)),
-    );
-    return this.addRecipientByScript(recipient.amount, recipient.script_pubkey);
+    let recipient: Recipient;
+    try {
+      recipient = new Recipient(
+        Address.from_string(recipientAddress, this.#network).script_pubkey,
+        Amount.from_sat(BigInt(amount)),
+      );
+      return this.addRecipientByScript(
+        recipient.amount,
+        recipient.script_pubkey,
+      );
+    } catch (error) {
+      throw new ValidationError(
+        'Invalid recipient',
+        {
+          amount,
+          address: recipientAddress,
+        },
+        // Because of an issue with BDK, the error returned is not an Error object
+        // so we need to wrap it in an Error object
+        new Error((error as CodifiedError).message),
+      );
+    }
   }
 
   addRecipientByScript(

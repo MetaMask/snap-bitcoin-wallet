@@ -1,11 +1,11 @@
 {
-  "locale": "pt-BR",
+  "locale": "ko",
   "messages": {
     "reviewTransactionWarning": {
-      "message": "Revise a transação antes de prosseguir"
+      "message": "계속하기 전에 트랜잭션을 검토하세요"
     },
     "from": {
-      "message": "De"
+      "message": "보내는 사람"
     },
     "toAddress": {
       "message": "To Address"
@@ -14,31 +14,31 @@
       "message": "Continue"
     },
     "cancel": {
-      "message": "Cancelar"
+      "message": "취소"
     },
     "clear": {
       "message": "Clear"
     },
     "amount": {
-      "message": "Valor"
+      "message": "금액"
     },
     "balance": {
-      "message": "Saldo"
+      "message": "잔액"
     },
     "recipient": {
-      "message": "Destinatário"
+      "message": "받는 사람"
     },
     "network": {
-      "message": "Rede"
+      "message": "네트워크"
     },
     "minutes": {
       "message": "min"
     },
     "transactionSpeed": {
-      "message": "Velocidade da transação"
+      "message": "트랜잭션 속도"
     },
     "transactionSpeedTooltip": {
-      "message": "O tempo estimado da transação"
+      "message": "예상 트랜잭션 시간"
     },
     "networkFee": {
       "message": "Network Fee"
@@ -50,28 +50,28 @@
       "message": "The total network fee"
     },
     "total": {
-      "message": "Total"
+      "message": "총액"
     },
     "send": {
-      "message": "Enviar"
+      "message": "보내기"
     },
     "asset": {
       "message": "Asset"
     },
     "sending": {
-      "message": "Enviando"
+      "message": "보내는 중"
     },
     "max": {
-      "message": "Máx."
+      "message": "최대"
     },
     "recipientPlaceholder": {
       "message": "Enter receiving address"
     },
     "review": {
-      "message": "Revisar"
+      "message": "검토"
     },
     "error": {
-      "message": "Erro"
+      "message": "오류"
     },
     "unknownError": {
       "message": "An unknown error occurred"
@@ -144,6 +144,27 @@
     },
     "unexpected": {
       "message": "An unexpected error occurred"
+    },
+    "error.internal": {
+      "message": "내부 오류. 나중에 다시 시도하거나 지원팀에 문의하세요"
+    },
+    "confirmation.origin": {
+      "message": "출처"
+    },
+    "confirmation.origin.tooltip": {
+      "message": "서명을 요청하는 dApp"
+    },
+    "confirmation.account": {
+      "message": "계정"
+    },
+    "confirmation.signMessage.confirmButton": {
+      "message": "서명"
+    },
+    "confirmation.signMessage.title": {
+      "message": "메시지 서명"
+    },
+    "confirmation.signMessage.message": {
+      "message": "메시지"
     }
   }
 }

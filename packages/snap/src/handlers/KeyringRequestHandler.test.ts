@@ -1,4 +1,4 @@
-import type { Txid, Psbt, Amount } from '@metamask/bitcoindevkit';
+import type { Txid, Psbt, Amount, LocalOutput } from '@metamask/bitcoindevkit';
 import type { KeyringRequest } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
@@ -8,10 +8,15 @@ import {
   BroadcastPsbtRequest,
   ComputeFeeRequest,
   FillPsbtRequest,
+  GetUtxoRequest,
   KeyringRequestHandler,
+  SendTransferRequest,
   SignPsbtRequest,
 } from './KeyringRequestHandler';
+import type { BitcoinAccount } from '../entities';
 import { AccountCapability } from '../entities';
+import type { Utxo } from './mappings';
+import { mapToUtxo } from './mappings';
 import { parsePsbt } from './parsers';
 
 jest.mock('superstruct', () => ({
@@ -22,6 +27,9 @@ jest.mock('superstruct', () => ({
 const mockPsbt = mock<Psbt>();
 jest.mock('./parsers', () => ({
   parsePsbt: jest.fn(),
+}));
+jest.mock('./mappings', () => ({
+  mapToUtxo: jest.fn(),
 }));
 
 describe('KeyringRequestHandler', () => {
@@ -301,6 +309,186 @@ describe('KeyringRequestHandler', () => {
       await expect(handler.route(mockRequest)).rejects.toThrow(error);
 
       expect(mockAccountsUseCases.broadcastPsbt).toHaveBeenCalled();
+    });
+  });
+
+  describe('sendTransfer', () => {
+    const recipients = [
+      {
+        address: 'bcrt1qstku2y3pfh9av50lxj55arm8r5gj8tf2yv5nxz',
+        amount: '1000',
+      },
+    ];
+    const mockRequest = mock<KeyringRequest>({
+      origin,
+      request: {
+        method: AccountCapability.SendTransfer,
+        params: {
+          recipients,
+          feeRate: 3,
+        },
+      },
+      account: 'account-id',
+    });
+
+    it('executes sendTransferq', async () => {
+      const mockTxid = mock<Txid>({
+        toString: jest.fn().mockReturnValue('txid'),
+      });
+      mockAccountsUseCases.sendTransfer.mockResolvedValue(mockTxid);
+
+      const result = await handler.route(mockRequest);
+
+      expect(assert).toHaveBeenCalledWith(
+        mockRequest.request.params,
+        SendTransferRequest,
+      );
+      expect(mockAccountsUseCases.sendTransfer).toHaveBeenCalledWith(
+        'account-id',
+        recipients,
+        origin,
+        3,
+      );
+      expect(result).toStrictEqual({
+        pending: false,
+        result: { txid: 'txid' },
+      });
+    });
+
+    it('propagates errors from sendTransfer', async () => {
+      const error = new Error();
+      mockAccountsUseCases.sendTransfer.mockRejectedValue(error);
+
+      await expect(handler.route(mockRequest)).rejects.toThrow(error);
+
+      expect(mockAccountsUseCases.sendTransfer).toHaveBeenCalled();
+    });
+  });
+
+  describe('getUtxo', () => {
+    const mockLocalOutput = mock<LocalOutput>();
+    const mockAccount = mock<BitcoinAccount>({
+      getUtxo: () => mockLocalOutput,
+      network: 'bitcoin',
+    });
+    const mockRequest = mock<KeyringRequest>({
+      origin,
+      request: {
+        method: AccountCapability.GetUtxo,
+        params: {
+          outpoint: 'mytxid:0',
+        },
+      },
+      account: 'account-id',
+    });
+
+    it('executes getUtxo', async () => {
+      const expectedUtxo = {
+        derivationIndex: 0,
+        outpoint: 'mytxid:0',
+        value: '1000',
+        scriptPubkey: 'scriptPubkey',
+        scriptPubkeyHex: 'scriptPubkeyHex',
+      };
+      mockAccountsUseCases.get.mockResolvedValue(mockAccount);
+      jest.mocked(mapToUtxo).mockReturnValue(expectedUtxo);
+      const result = await handler.route(mockRequest);
+
+      expect(assert).toHaveBeenCalledWith(
+        mockRequest.request.params,
+        GetUtxoRequest,
+      );
+      expect(mockAccountsUseCases.get).toHaveBeenCalledWith('account-id');
+      expect(result).toStrictEqual({
+        pending: false,
+        result: expectedUtxo,
+      });
+    });
+  });
+
+  describe('listUtxos', () => {
+    const mockLocalOutput = mock<LocalOutput>();
+    const mockAccount = mock<BitcoinAccount>({
+      listUnspent: () => [mockLocalOutput, mockLocalOutput],
+      network: 'bitcoin',
+    });
+    const mockRequest = mock<KeyringRequest>({
+      origin,
+      request: {
+        method: AccountCapability.ListUtxos,
+      },
+      account: 'account-id',
+    });
+
+    it('executes listUtxos', async () => {
+      const mockUtxo = mock<Utxo>({
+        derivationIndex: 0,
+        outpoint: 'mytxid:0',
+        value: '1000',
+        scriptPubkey: 'scriptPubkey',
+        scriptPubkeyHex: 'scriptPubkeyHex',
+      });
+      mockAccountsUseCases.get.mockResolvedValue(mockAccount);
+      jest.mocked(mapToUtxo).mockReturnValue(mockUtxo);
+      const result = await handler.route(mockRequest);
+
+      expect(mockAccountsUseCases.get).toHaveBeenCalledWith('account-id');
+      expect(result).toStrictEqual({
+        pending: false,
+        result: [mockUtxo, mockUtxo],
+      });
+    });
+  });
+
+  describe('publicDescriptor', () => {
+    const mockAccount = mock<BitcoinAccount>({
+      publicDescriptor: 'publicDescriptor',
+    });
+    const mockRequest = mock<KeyringRequest>({
+      origin,
+      request: {
+        method: AccountCapability.PublicDescriptor,
+      },
+      account: 'account-id',
+    });
+
+    it('executes publicDescriptor', async () => {
+      mockAccountsUseCases.get.mockResolvedValue(mockAccount);
+      const result = await handler.route(mockRequest);
+
+      expect(mockAccountsUseCases.get).toHaveBeenCalledWith('account-id');
+      expect(result).toStrictEqual({
+        pending: false,
+        result: 'publicDescriptor',
+      });
+    });
+  });
+
+  describe('signMessage', () => {
+    const mockRequest = mock<KeyringRequest>({
+      origin,
+      request: {
+        method: AccountCapability.SignMessage,
+        params: {
+          message: 'message',
+        },
+      },
+      account: 'account-id',
+    });
+
+    it('executes signMessage', async () => {
+      mockAccountsUseCases.signMessage.mockResolvedValue('signature');
+      const result = await handler.route(mockRequest);
+
+      expect(mockAccountsUseCases.signMessage).toHaveBeenCalledWith(
+        'account-id',
+        'message',
+        'metamask',
+      );
+      expect(result).toStrictEqual({
+        pending: false,
+        result: { signature: 'signature' },
+      });
     });
   });
 });

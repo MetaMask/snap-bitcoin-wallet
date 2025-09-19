@@ -1,0 +1,200 @@
+{
+  "locale": "es",
+  "messages": {
+    "reviewTransactionWarning": {
+      "message": "Revise la transacción antes de continuar"
+    },
+    "from": {
+      "message": "De"
+    },
+    "toAddress": {
+      "message": "A"
+    },
+    "continue": {
+      "message": "Continuar"
+    },
+    "cancel": {
+      "message": "Cancelar"
+    },
+    "clear": {
+      "message": "Borrar"
+    },
+    "amount": {
+      "message": "Monto"
+    },
+    "balance": {
+      "message": "Saldo"
+    },
+    "recipient": {
+      "message": "Destinatario"
+    },
+    "network": {
+      "message": "Red"
+    },
+    "minutes": {
+      "message": "min"
+    },
+    "transactionSpeed": {
+      "message": "Velocidad de la transacción"
+    },
+    "transactionSpeedTooltip": {
+      "message": "El tiempo estimado de la transacción"
+    },
+    "networkFee": {
+      "message": "Tarifa de red"
+    },
+    "feeRate": {
+      "message": "Tasa de tarifa"
+    },
+    "networkFeeTooltip": {
+      "message": "La tarifa total de red"
+    },
+    "total": {
+      "message": "Total"
+    },
+    "send": {
+      "message": "Enviar"
+    },
+    "asset": {
+      "message": "Activo"
+    },
+    "sending": {
+      "message": "Enviando"
+    },
+    "max": {
+      "message": "Máx"
+    },
+    "recipientPlaceholder": {
+      "message": "Ingrese la dirección de recepción"
+    },
+    "review": {
+      "message": "Revisar"
+    },
+    "error": {
+      "message": "Error"
+    },
+    "unknownError": {
+      "message": "Se produjo un error desconocido"
+    },
+    "feeTooLow": {
+      "message": "Tarifa demasiado baja"
+    },
+    "feeRateTooLow": {
+      "message": "Tasa de tarifa demasiado baja"
+    },
+    "noUtxosSelected": {
+      "message": "No se pudo construir la transacción: faltan UTXOs"
+    },
+    "outputBelowDustLimit": {
+      "message": "Monto por debajo del límite de dust"
+    },
+    "insufficientFunds": {
+      "message": "Fondos insuficientes para cubrir el monto más la tarifa"
+    },
+    "noRecipients": {
+      "message": "Faltan destinatarios"
+    },
+    "psbt": {
+      "message": "PSBT inválido"
+    },
+    "unknownUtxo": {
+      "message": "No se pudo construir la transacción: UTXO desconocido"
+    },
+    "MmssingNonWitnessUtxo": {
+      "message": "No se pudo construir la transacción: falta UTXO non-witness"
+    },
+    "base58": {
+      "message": "Dirección de Bitcoin inválida"
+    },
+    "bech32": {
+      "message": "Dirección de Bitcoin inválida"
+    },
+    "witnessVersion": {
+      "message": "Dirección de Bitcoin inválida: versión witness"
+    },
+    "witnessProgram": {
+      "message": "Dirección de Bitcoin inválida: programa witness"
+    },
+    "legacyAddressTooLong": {
+      "message": "Dirección de Bitcoin inválida"
+    },
+    "invalidBase58PayloadLength": {
+      "message": "Dirección de Bitcoin inválida: longitud inválida"
+    },
+    "invalidLegacyPrefix": {
+      "message": "Dirección de Bitcoin inválida: prefijo legacy inválido"
+    },
+    "networkValidation": {
+      "message": "Dirección de Bitcoin inválida: red incorrecta"
+    },
+    "outOfRange": {
+      "message": "Monto inválido: fuera de rango"
+    },
+    "tooPrecise": {
+      "message": "Monto inválido: demasiado preciso"
+    },
+    "missingDigits": {
+      "message": "Monto inválido: faltan dígitos"
+    },
+    "inputTooLarge": {
+      "message": "Monto inválido: demasiado grande"
+    },
+    "invalidCharacter": {
+      "message": "Monto inválido: carácter inválido"
+    },
+    "unexpected": {
+      "message": "Se produjo un error inesperado"
+    },
+    "error.0": {
+      "message": "Formato inválido"
+    },
+    "error.1000": {
+      "message": "Validación fallida"
+    },
+    "error.2000": {
+      "message": "Recurso no encontrado"
+    },
+    "error.3000": {
+      "message": "Error de conexión"
+    },
+    "error.4000": {
+      "message": "Estado de la billetera corrompido"
+    },
+    "error.5000": {
+      "message": "Error de almacenamiento"
+    },
+    "error.6000": {
+      "message": "Método no implementado o no soportado"
+    },
+    "error.7000": {
+      "message": "Permiso denegado o autorización insuficiente"
+    },
+    "error.8000": {
+      "message": "Error de acción del usuario"
+    },
+    "error.9000": {
+      "message": "Estado corrompido, invariante no respetada o aserción fallida."
+    },
+    "error.internal": {
+      "message": "Error interno. Por favor intente de nuevo más tarde o contacte al soporte"
+    },
+    "confirmation.origin": {
+      "message": "Origen"
+    },
+    "confirmation.origin.tooltip": {
+      "message": "La dApp solicitando la firma"
+    },
+    "confirmation.account": {
+      "message": "Cuenta"
+    },
+    "confirmation.signMessage.confirmButton": {
+      "message": "Firmar"
+    },
+    "confirmation.signMessage.title": {
+      "message": "Firmar mensaje"
+    },
+    "confirmation.signMessage.message": {
+      "message": "Mensaje"
+    }
+  }
+}

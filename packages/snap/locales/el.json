@@ -1,0 +1,200 @@
+{
+  "locale": "el",
+  "messages": {
+    "reviewTransactionWarning": {
+      "message": "Ελέγξτε τη συναλλαγή πριν προχωρήσετε"
+    },
+    "from": {
+      "message": "Από"
+    },
+    "toAddress": {
+      "message": "Προς"
+    },
+    "continue": {
+      "message": "Συνέχεια"
+    },
+    "cancel": {
+      "message": "Ακύρωση"
+    },
+    "clear": {
+      "message": "Καθαρισμός"
+    },
+    "amount": {
+      "message": "Ποσό"
+    },
+    "balance": {
+      "message": "Υπόλοιπο"
+    },
+    "recipient": {
+      "message": "Παραλήπτης"
+    },
+    "network": {
+      "message": "Δίκτυο"
+    },
+    "minutes": {
+      "message": "λεπτά"
+    },
+    "transactionSpeed": {
+      "message": "Ταχύτητα συναλλαγής"
+    },
+    "transactionSpeedTooltip": {
+      "message": "Ο εκτιμώμενος χρόνος της συναλλαγής"
+    },
+    "networkFee": {
+      "message": "Χρέωση δικτύου"
+    },
+    "feeRate": {
+      "message": "Ρυθμός χρέωσης"
+    },
+    "networkFeeTooltip": {
+      "message": "Η συνολική χρέωση δικτύου"
+    },
+    "total": {
+      "message": "Σύνολο"
+    },
+    "send": {
+      "message": "Αποστολή"
+    },
+    "asset": {
+      "message": "Περιουσιακό στοιχείο"
+    },
+    "sending": {
+      "message": "Αποστολή"
+    },
+    "max": {
+      "message": "Μέγ"
+    },
+    "recipientPlaceholder": {
+      "message": "Εισαγάγετε διεύθυνση παραλήπτη"
+    },
+    "review": {
+      "message": "Επανεξέταση"
+    },
+    "error": {
+      "message": "Σφάλμα"
+    },
+    "unknownError": {
+      "message": "Προέκυψε ένα άγνωστο σφάλμα"
+    },
+    "feeTooLow": {
+      "message": "Χρέωση πολύ χαμηλή"
+    },
+    "feeRateTooLow": {
+      "message": "Ρυθμός χρέωσης πολύ χαμηλός"
+    },
+    "noUtxosSelected": {
+      "message": "Αποτυχία κατασκευής συναλλαγής: λείπουν UTXOs"
+    },
+    "outputBelowDustLimit": {
+      "message": "Ποσό κάτω από το όριο dust"
+    },
+    "insufficientFunds": {
+      "message": "Ανεπαρκή κεφάλαια για κάλυψη ποσού συν χρέωση"
+    },
+    "noRecipients": {
+      "message": "Λείπουν παραλήπτες"
+    },
+    "psbt": {
+      "message": "Άκυρο PSBT"
+    },
+    "unknownUtxo": {
+      "message": "Αποτυχία κατασκευής συναλλαγής: άγνωστο UTXO"
+    },
+    "MmssingNonWitnessUtxo": {
+      "message": "Αποτυχία κατασκευής συναλλαγής: λείπει non-witness UTXO"
+    },
+    "base58": {
+      "message": "Άκυρη διεύθυνση Bitcoin"
+    },
+    "bech32": {
+      "message": "Άκυρη διεύθυνση Bitcoin"
+    },
+    "witnessVersion": {
+      "message": "Άκυρη διεύθυνση Bitcoin: έκδοση witness"
+    },
+    "witnessProgram": {
+      "message": "Άκυρη διεύθυνση Bitcoin: πρόγραμμα witness"
+    },
+    "legacyAddressTooLong": {
+      "message": "Άκυρη διεύθυνση Bitcoin"
+    },
+    "invalidBase58PayloadLength": {
+      "message": "Άκυρη διεύθυνση Bitcoin: άκυρο μήκος"
+    },
+    "invalidLegacyPrefix": {
+      "message": "Άκυρη διεύθυνση Bitcoin: άκυρο legacy prefix"
+    },
+    "networkValidation": {
+      "message": "Άκυρη διεύθυνση Bitcoin: λάθος δίκτυο"
+    },
+    "outOfRange": {
+      "message": "Άκυρο ποσό: εκτός εμβέλειας"
+    },
+    "tooPrecise": {
+      "message": "Άκυρο ποσό: πολύ ακριβές"
+    },
+    "missingDigits": {
+      "message": "Άκυρο ποσό: λείπουν ψηφία"
+    },
+    "inputTooLarge": {
+      "message": "Άκυρο ποσό: πολύ μεγάλο"
+    },
+    "invalidCharacter": {
+      "message": "Άκυρο ποσό: άκυρος χαρακτήρας"
+    },
+    "unexpected": {
+      "message": "Προέκυψε ένα απροσδόκητο σφάλμα"
+    },
+    "error.0": {
+      "message": "Άκυρη μορφή"
+    },
+    "error.1000": {
+      "message": "Η επικύρωση απέτυχε"
+    },
+    "error.2000": {
+      "message": "Ο πόρος δεν βρέθηκε"
+    },
+    "error.3000": {
+      "message": "Σφάλμα σύνδεσης"
+    },
+    "error.4000": {
+      "message": "Η κατάσταση πορτοφολιού είναι κατεστραμμένη"
+    },
+    "error.5000": {
+      "message": "Σφάλμα αποθήκευσης"
+    },
+    "error.6000": {
+      "message": "Η μέθοδος δεν έχει υλοποιηθεί ή δεν υποστηρίζεται"
+    },
+    "error.7000": {
+      "message": "Άρνηση άδειας ή ανεπαρκής εξουσιοδότηση"
+    },
+    "error.8000": {
+      "message": "Σφάλμα ενέργειας χρήστη"
+    },
+    "error.9000": {
+      "message": "Κατεστραμμένη κατάσταση, η αμετάβλητη δεν τηρήθηκε ή απέτυχε η επιβεβαίωση."
+    },
+    "error.internal": {
+      "message": "Εσωτερικό σφάλμα. Παρακαλώ δοκιμάστε ξανά αργότερα ή επικοινωνήστε με την υποστήριξη"
+    },
+    "confirmation.origin": {
+      "message": "Προέλευση"
+    },
+    "confirmation.origin.tooltip": {
+      "message": "Η dApp που ζητά την υπογραφή"
+    },
+    "confirmation.account": {
+      "message": "Λογαριασμός"
+    },
+    "confirmation.signMessage.confirmButton": {
+      "message": "Υπογραφή"
+    },
+    "confirmation.signMessage.title": {
+      "message": "Υπογραφή μηνύματος"
+    },
+    "confirmation.signMessage.message": {
+      "message": "Μήνυμα"
+    }
+  }
+}

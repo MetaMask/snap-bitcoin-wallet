@@ -1,44 +1,44 @@
 {
-  "locale": "de",
+  "locale": "中文",
   "messages": {
     "reviewTransactionWarning": {
-      "message": "Überprüfen Sie die Transaktion, bevor Sie fortfahren"
+      "message": "继续之前，请先审查交易"
     },
     "from": {
-      "message": "Von"
+      "message": "从"
     },
     "toAddress": {
-      "message": "To"
+      "message": "To Address"
     },
     "continue": {
       "message": "Continue"
     },
     "cancel": {
-      "message": "Abbrechen"
+      "message": "取消"
     },
     "clear": {
       "message": "Clear"
     },
     "amount": {
-      "message": "Betrag"
+      "message": "金额"
     },
     "balance": {
-      "message": "Guthaben"
+      "message": "余额"
     },
     "recipient": {
-      "message": "Empfänger"
+      "message": "收款人"
     },
     "network": {
-      "message": "Netzwerk"
+      "message": "网络"
     },
     "minutes": {
       "message": "min"
     },
     "transactionSpeed": {
-      "message": "Transaktionsgeschwindigkeit"
+      "message": "交易速度"
     },
     "transactionSpeedTooltip": {
-      "message": "Die geschätzte Transaktionsdauer"
+      "message": "交易预计时间"
     },
     "networkFee": {
       "message": "Network Fee"
@@ -50,28 +50,28 @@
       "message": "The total network fee"
     },
     "total": {
-      "message": "Insgesamt"
+      "message": "总额"
     },
     "send": {
-      "message": "Senden"
+      "message": "发送"
     },
     "asset": {
       "message": "Asset"
     },
     "sending": {
-      "message": "Wird gesendet"
+      "message": "发送中"
     },
     "max": {
-      "message": "Max."
+      "message": "最多"
     },
     "recipientPlaceholder": {
       "message": "Enter receiving address"
     },
     "review": {
-      "message": "Überprüfung"
+      "message": "审查"
     },
     "error": {
-      "message": "Fehler"
+      "message": "错误"
     },
     "unknownError": {
       "message": "An unknown error occurred"
@@ -144,6 +144,27 @@
     },
     "unexpected": {
       "message": "An unexpected error occurred"
+    },
+    "error.internal": {
+      "message": "内部错误。请稍后重试或联系支持"
+    },
+    "confirmation.origin": {
+      "message": "来源"
+    },
+    "confirmation.origin.tooltip": {
+      "message": "请求签名的 dApp"
+    },
+    "confirmation.account": {
+      "message": "账户"
+    },
+    "confirmation.signMessage.confirmButton": {
+      "message": "签名"
+    },
+    "confirmation.signMessage.title": {
+      "message": "签名消息"
+    },
+    "confirmation.signMessage.message": {
+      "message": "消息"
     }
   }
 }

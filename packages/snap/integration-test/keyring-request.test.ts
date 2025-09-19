@@ -1,7 +1,7 @@
 import type { KeyringAccount, KeyringRequest } from '@metamask/keyring-api';
 import { BtcScope } from '@metamask/keyring-api';
 import type { Snap } from '@metamask/snaps-jest';
-import { installSnap } from '@metamask/snaps-jest';
+import { assertIsConfirmationDialog, installSnap } from '@metamask/snaps-jest';
 
 import { BlockchainTestUtils } from './blockchain-utils';
 import { MNEMONIC, ORIGIN } from './constants';
@@ -15,7 +15,7 @@ describe('KeyringRequestHandler', () => {
   let account: KeyringAccount;
   let snap: Snap;
   let blockchain: BlockchainTestUtils;
-  const origin = 'integration-tests';
+  const origin = 'http://my-dapp.com';
 
   beforeAll(async () => {
     blockchain = new BlockchainTestUtils();
@@ -97,6 +97,88 @@ describe('KeyringRequestHandler', () => {
       message:
         'Method not implemented or not supported: Unrecognized Bitcoin account capability',
       stack: expect.anything(),
+    });
+  });
+
+  // Keep order of tests as UTXOs are modified by other tests
+  describe('UTXO management', () => {
+    it('listUtxos', async () => {
+      let response = await snap.onKeyringRequest({
+        origin: ORIGIN,
+        method: submitRequestMethod,
+        params: {
+          id: account.id,
+          origin,
+          scope: BtcScope.Regtest,
+          account: account.id,
+          request: {
+            method: AccountCapability.ListUtxos,
+          },
+        } as KeyringRequest,
+      });
+
+      expect(response).toRespondWith({
+        pending: false,
+        result: [
+          {
+            address: 'bcrt1qs2fj7czz0amfm74j73yujx6dn6223md56gkkuy',
+            derivationIndex: 0,
+            outpoint: expect.any(String),
+            scriptPubkey:
+              'OP_0 OP_PUSHBYTES_20 82932f60427f769dfab2f449c91b4d9e94a8edb4',
+            scriptPubkeyHex: '001482932f60427f769dfab2f449c91b4d9e94a8edb4',
+            value: '1000000000',
+          },
+        ],
+      });
+
+      const utxos = (
+        response.response as { result: { result: { outpoint: string }[] } }
+      ).result.result;
+
+      response = await snap.onKeyringRequest({
+        origin: ORIGIN,
+        method: submitRequestMethod,
+        params: {
+          id: account.id,
+          origin,
+          scope: BtcScope.Regtest,
+          account: account.id,
+          request: {
+            method: AccountCapability.GetUtxo,
+            params: {
+              outpoint: utxos[0]?.outpoint,
+            },
+          },
+        } as KeyringRequest,
+      });
+
+      expect(response).toRespondWith({
+        pending: false,
+        result: utxos[0],
+      });
+    });
+
+    it('publicDescriptor', async () => {
+      const response = await snap.onKeyringRequest({
+        origin: ORIGIN,
+        method: submitRequestMethod,
+        params: {
+          id: account.id,
+          origin,
+          scope: BtcScope.Regtest,
+          account: account.id,
+          request: {
+            method: AccountCapability.PublicDescriptor,
+          },
+        } as KeyringRequest,
+      });
+
+      expect(response).toRespondWith({
+        pending: false,
+        result:
+          "wpkh([27f9035f/84'/1'/0']tpubDCkv2fHDfPg5ok9EPv6CDozH72rvY2jgEPm79szMeBwCBwUf2T6n5nLrWFfhuuD48SgzrELezoiyDM9KbZaVen4wuuGwrqQANDhzB7E8yDh/0/*)#sx899xk6",
+      });
     });
   });
 
@@ -471,6 +553,105 @@ describe('KeyringRequestHandler', () => {
           transaction: 'notAPsbt',
         },
         stack: expect.anything(),
+      });
+    });
+  });
+
+  describe('sendTransfer', () => {
+    it('sends funds successfully', async () => {
+      const response = await snap.onKeyringRequest({
+        origin: ORIGIN,
+        method: submitRequestMethod,
+        params: {
+          id: account.id,
+          origin,
+          scope: BtcScope.Regtest,
+          account: account.id,
+          request: {
+            method: AccountCapability.SendTransfer,
+            params: {
+              recipients: [
+                {
+                  address: 'bcrt1qstku2y3pfh9av50lxj55arm8r5gj8tf2yv5nxz',
+                  amount: '1000',
+                },
+                {
+                  address: 'bcrt1q4gfcga7jfjmm02zpvrh4ttc5k7lmnq2re52z2y',
+                  amount: '1000',
+                },
+              ],
+              feeRate: 3,
+            },
+          },
+        } as KeyringRequest,
+      });
+
+      expect(response).toRespondWith({
+        pending: false,
+        result: {
+          txid: expect.any(String),
+        },
+      });
+    });
+
+    it('fails if invalid recipients', async () => {
+      const response = await snap.onKeyringRequest({
+        origin: ORIGIN,
+        method: submitRequestMethod,
+        params: {
+          id: account.id,
+          origin,
+          scope: BtcScope.Regtest,
+          account: account.id,
+          request: {
+            method: AccountCapability.SendTransfer,
+            params: {
+              recipients: [{ address: 'notAnAddress', amount: '1000' }],
+            },
+          },
+        } as KeyringRequest,
+      });
+
+      expect(response).toRespondWithError({
+        code: -32602,
+        data: { address: 'notAnAddress', amount: '1000', cause: null },
+        message: 'Validation failed: Invalid recipient',
+        stack: expect.anything(),
+      });
+    });
+  });
+
+  describe('signMessage', () => {
+    it('signs a message successfully', async () => {
+      const response = snap.onKeyringRequest({
+        origin: ORIGIN,
+        method: submitRequestMethod,
+        params: {
+          id: account.id,
+          origin,
+          scope: BtcScope.Regtest,
+          account: account.id,
+          request: {
+            method: AccountCapability.SignMessage,
+            params: {
+              message: 'Hello, world!',
+            },
+          },
+        } as KeyringRequest,
+      });
+
+      const ui = await response.getInterface();
+      assertIsConfirmationDialog(ui);
+      await ui.ok();
+
+      const result = await response;
+
+      expect(result).toRespondWith({
+        pending: false,
+        result: {
+          signature:
+            'AkcwRAIgZxodJQ60t9Rr/hABEHZ1zPUJ4m5hdM5QLpysH8fDSzgCIENOEuZtYf9/Nn/ZW15PcImkknol403dmZrgoOQ+6K+TASECwDKypXm/ElmVTxTLJ7nao6X5mB/iGbU2Q2qtot0QRL4=',
+        },
       });
     });
   });

@@ -1,0 +1,200 @@
+{
+  "locale": "hi",
+  "messages": {
+    "reviewTransactionWarning": {
+      "message": "आगे बढ़ने से पहले ट्रांसेक्शन की समीक्षा करें"
+    },
+    "from": {
+      "message": "से"
+    },
+    "toAddress": {
+      "message": "को"
+    },
+    "continue": {
+      "message": "जारी रखें"
+    },
+    "cancel": {
+      "message": "रद्द करें"
+    },
+    "clear": {
+      "message": "साफ़ करें"
+    },
+    "amount": {
+      "message": "राशि"
+    },
+    "balance": {
+      "message": "शेष राशि"
+    },
+    "recipient": {
+      "message": "प्राप्तकर्ता"
+    },
+    "network": {
+      "message": "नेटवर्क"
+    },
+    "minutes": {
+      "message": "मिनट"
+    },
+    "transactionSpeed": {
+      "message": "ट्रांसेक्शन की गति"
+    },
+    "transactionSpeedTooltip": {
+      "message": "ट्रांसेक्शन का अनुमानित समय"
+    },
+    "networkFee": {
+      "message": "नेटवर्क शुल्क"
+    },
+    "feeRate": {
+      "message": "शुल्क दर"
+    },
+    "networkFeeTooltip": {
+      "message": "कुल नेटवर्क शुल्क"
+    },
+    "total": {
+      "message": "कुल"
+    },
+    "send": {
+      "message": "भेजें"
+    },
+    "asset": {
+      "message": "एसेट"
+    },
+    "sending": {
+      "message": "भेजा जा रहा है"
+    },
+    "max": {
+      "message": "अधिकतम"
+    },
+    "recipientPlaceholder": {
+      "message": "प्राप्त करने वाला पता दर्ज करें"
+    },
+    "review": {
+      "message": "समीक्षा करें"
+    },
+    "error": {
+      "message": "त्रुटि"
+    },
+    "unknownError": {
+      "message": "एक अज्ञात त्रुटि हुई"
+    },
+    "feeTooLow": {
+      "message": "शुल्क बहुत कम है"
+    },
+    "feeRateTooLow": {
+      "message": "शुल्क दर बहुत कम है"
+    },
+    "noUtxosSelected": {
+      "message": "ट्रांसेक्शन बनाने में विफल: UTXOs गायब हैं"
+    },
+    "outputBelowDustLimit": {
+      "message": "राशि डस्ट लिमिट से कम है"
+    },
+    "insufficientFunds": {
+      "message": "राशि और शुल्क कवर करने के लिए अपर्याप्त फंड"
+    },
+    "noRecipients": {
+      "message": "प्राप्तकर्ता गायब हैं"
+    },
+    "psbt": {
+      "message": "अमान्य PSBT"
+    },
+    "unknownUtxo": {
+      "message": "ट्रांसेक्शन बनाने में विफल: अज्ञात UTXO"
+    },
+    "MmssingNonWitnessUtxo": {
+      "message": "ट्रांसेक्शन बनाने में विफल: गैर-गवाह UTXO गायब"
+    },
+    "base58": {
+      "message": "अमान्य बिटकॉइन पता"
+    },
+    "bech32": {
+      "message": "अमान्य बिटकॉइन पता"
+    },
+    "witnessVersion": {
+      "message": "अमान्य बिटकॉइन पता: गवाह संस्करण"
+    },
+    "witnessProgram": {
+      "message": "अमान्य बिटकॉइन पता: गवाह कार्यक्रम"
+    },
+    "legacyAddressTooLong": {
+      "message": "अमान्य बिटकॉइन पता"
+    },
+    "invalidBase58PayloadLength": {
+      "message": "अमान्य बिटकॉइन पता: अमान्य लंबाई"
+    },
+    "invalidLegacyPrefix": {
+      "message": "अमान्य बिटकॉइन पता: अमान्य लिगेसी उपसर्ग"
+    },
+    "networkValidation": {
+      "message": "अमान्य बिटकॉइन पता: गलत नेटवर्क"
+    },
+    "outOfRange": {
+      "message": "अमान्य राशि: रेंज के बाहर"
+    },
+    "tooPrecise": {
+      "message": "अमान्य राशि: बहुत सटीक"
+    },
+    "missingDigits": {
+      "message": "अमान्य राशि: अंक गायब"
+    },
+    "inputTooLarge": {
+      "message": "अमान्य राशि: बहुत बड़ा"
+    },
+    "invalidCharacter": {
+      "message": "अमान्य राशि: अमान्य अक्षर"
+    },
+    "unexpected": {
+      "message": "एक अप्रत्याशित त्रुटि हुई"
+    },
+    "error.0": {
+      "message": "अमान्य प्रारूप"
+    },
+    "error.1000": {
+      "message": "मान्यकरण विफल"
+    },
+    "error.2000": {
+      "message": "संसाधन नहीं मिला"
+    },
+    "error.3000": {
+      "message": "कनेक्शन त्रुटि"
+    },
+    "error.4000": {
+      "message": "वॉलेट स्थिति दूषित"
+    },
+    "error.5000": {
+      "message": "भंडारण त्रुटि"
+    },
+    "error.6000": {
+      "message": "विधि लागू नहीं या समर्थित नहीं"
+    },
+    "error.7000": {
+      "message": "अनुमति अस्वीकृत या अपर्याप्त प्राधिकरण"
+    },
+    "error.8000": {
+      "message": "उपयोगकर्ता क्रिया त्रुटि"
+    },
+    "error.9000": {
+      "message": "दूषित स्थिति, अपरिवर्तनीय नहीं माना गया या असफल दावा."
+    },
+    "error.internal": {
+      "message": "आंतरिक त्रुटि. कृपया बाद में प्रयास करें या समर्थन से संपर्क करें"
+    },
+    "confirmation.origin": {
+      "message": "उत्पत्ति"
+    },
+    "confirmation.origin.tooltip": {
+      "message": "हस्ताक्षर का अनुरोध करने वाला dApp"
+    },
+    "confirmation.account": {
+      "message": "खाता"
+    },
+    "confirmation.signMessage.confirmButton": {
+      "message": "हस्ताक्षर"
+    },
+    "confirmation.signMessage.title": {
+      "message": "संदेश पर हस्ताक्षर करें"
+    },
+    "confirmation.signMessage.message": {
+      "message": "संदेश"
+    }
+  }
+}

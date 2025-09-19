@@ -1,5 +1,5 @@
 {
-  "version": "0.19.3",
+  "version": "1.0.0",
   "description": "Manage Bitcoin using MetaMask",
   "proposedName": "Bitcoin",
   "repository": {
@@ -16,13 +16,18 @@
         "registry": "https://registry.npmjs.org/"
       }
     },
-    "locales": ["locales/en.json"]
-  },
-  "initialConnections": {
-    "https://portfolio.metamask.io": {},
-    "https://portfolio-builds.metafi-dev.codefi.network": {},
-    "https://dev.portfolio.metamask.io": {},
-    "https://ramps-dev.portfolio.metamask.io": {}
+    "locales": [
+      "locales/de.json",
+      "locales/en.json",
+      "locales/es.json",
+      "locales/fr.json",
+      "locales/ja.json",
+      "locales/ru.json",
+      "locales/tl.json",
+      "locales/tr.json",
+      "locales/vi.json",
+      "locales/zh_CN.json"
+    ]
   },
   "initialPermissions": {
     "endowment:webassembly": {},
@@ -30,14 +35,7 @@
       "dapps": true,
       "snaps": false
     },
-    "endowment:keyring": {
-      "allowedOrigins": [
-        "https://portfolio.metamask.io",
-        "https://portfolio-builds.metafi-dev.codefi.network",
-        "https://dev.portfolio.metamask.io",
-        "https://ramps-dev.portfolio.metamask.io"
-      ]
-    },
+    "endowment:keyring": {},
     "snap_getBip32Entropy": [
       {
         "path": ["m", "44'", "0'"],
@@ -72,6 +70,7 @@
         "curve": "secp256k1"
       }
     ],
+    "endowment:lifecycle-hooks": {},
     "endowment:network-access": {},
     "snap_manageAccounts": {},
     "snap_manageState": {},

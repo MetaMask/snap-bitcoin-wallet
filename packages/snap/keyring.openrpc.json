@@ -1,0 +1,315 @@
+{
+  "openrpc": "1.2.6",
+  "info": {
+    "title": "Bitcoin Keyring SubmitRequest API",
+    "description": "Methods available through the submitRequest endpoint of the Bitcoin Wallet Snap keyring. These are intended for dApp developers. Each method is called by passing it as request.method in the submitRequest params, with request.params containing the method parameters. The account ID is specified in the top-level account field of the submitRequest params.",
+    "version": "1.0.0"
+  },
+  "methods": [
+    {
+      "name": "signPsbt",
+      "description": "Signs a partially signed Bitcoin transaction (PSBT) and optionally fills/broadcasts it.",
+      "paramStructure": "by-name",
+      "params": [
+        {
+          "name": "psbt",
+          "description": "The base64-encoded PSBT string.",
+          "required": true,
+          "schema": { "type": "string" }
+        },
+        {
+          "name": "feeRate",
+          "description": "Optional fee rate in sat/vB.",
+          "required": false,
+          "schema": { "type": "number" }
+        },
+        {
+          "name": "options",
+          "description": "Options for filling and broadcasting.",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "fill": { "type": "boolean" },
+              "broadcast": { "type": "boolean" }
+            },
+            "required": ["fill", "broadcast"]
+          }
+        }
+      ],
+      "result": {
+        "name": "signPsbtResponse",
+        "description": "The signed PSBT and optional txid if broadcast.",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "psbt": { "type": "string" },
+            "txid": { "type": ["string", "null"] }
+          },
+          "required": ["psbt", "txid"]
+        }
+      }
+    },
+    {
+      "name": "fillPsbt",
+      "description": "Fills a partially signed Bitcoin transaction (PSBT) with inputs and outputs.",
+      "paramStructure": "by-name",
+      "params": [
+        {
+          "name": "psbt",
+          "description": "The base64-encoded PSBT string.",
+          "required": true,
+          "schema": { "type": "string" }
+        },
+        {
+          "name": "feeRate",
+          "description": "Optional fee rate in sat/vB.",
+          "required": false,
+          "schema": { "type": "number" }
+        }
+      ],
+      "result": {
+        "name": "fillPsbtResponse",
+        "description": "The filled PSBT.",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "psbt": { "type": "string" }
+          },
+          "required": ["psbt"]
+        }
+      }
+    },
+    {
+      "name": "computeFee",
+      "description": "Computes the fee for a partially signed Bitcoin transaction (PSBT).",
+      "paramStructure": "by-name",
+      "params": [
+        {
+          "name": "psbt",
+          "description": "The base64-encoded PSBT string.",
+          "required": true,
+          "schema": { "type": "string" }
+        },
+        {
+          "name": "feeRate",
+          "description": "Optional fee rate in sat/vB.",
+          "required": false,
+          "schema": { "type": "number" }
+        }
+      ],
+      "result": {
+        "name": "computeFeeResponse",
+        "description": "The computed fee in satoshis.",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "fee": { "type": "string" }
+          },
+          "required": ["fee"]
+        }
+      }
+    },
+    {
+      "name": "broadcastPsbt",
+      "description": "Broadcasts a signed Bitcoin transaction (PSBT).",
+      "paramStructure": "by-name",
+      "params": [
+        {
+          "name": "psbt",
+          "description": "The base64-encoded signed PSBT string.",
+          "required": true,
+          "schema": { "type": "string" }
+        }
+      ],
+      "result": {
+        "name": "broadcastPsbtResponse",
+        "description": "The transaction ID.",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "txid": { "type": "string" }
+          },
+          "required": ["txid"]
+        }
+      }
+    },
+    {
+      "name": "sendTransfer",
+      "description": "Creates, signs, and broadcasts a transfer to multiple recipients.",
+      "paramStructure": "by-name",
+      "params": [
+        {
+          "name": "recipients",
+          "description": "Array of recipients with address and amount.",
+          "required": true,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "address": { "type": "string" },
+                "amount": { "type": "string" }
+              },
+              "required": ["address", "amount"]
+            }
+          }
+        },
+        {
+          "name": "feeRate",
+          "description": "Optional fee rate in sat/vB.",
+          "required": false,
+          "schema": { "type": "number" }
+        }
+      ],
+      "result": {
+        "name": "sendTransferResponse",
+        "description": "The transaction ID.",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "txid": { "type": "string" }
+          },
+          "required": ["txid"]
+        }
+      }
+    },
+    {
+      "name": "getUtxo",
+      "description": "Retrieves a specific UTXO by outpoint.",
+      "paramStructure": "by-name",
+      "params": [
+        {
+          "name": "outpoint",
+          "description": "The UTXO outpoint in txid:vout format.",
+          "required": true,
+          "schema": { "type": "string" }
+        }
+      ],
+      "result": {
+        "name": "getUtxoResponse",
+        "description": "The UTXO details.",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "outpoint": {
+              "type": "string",
+              "description": "Outpoint of the utxo in the format <txid>:<vout>"
+            },
+            "value": {
+              "type": "string",
+              "description": "Value of output in satoshis"
+            },
+            "derivationIndex": {
+              "type": "number",
+              "description": "Derivation index"
+            },
+            "scriptPubkey": {
+              "type": "string",
+              "description": "scriptPubkey in ASM format"
+            },
+            "scriptPubkeyHex": {
+              "type": "string",
+              "description": "scriptPubkey in hex format"
+            },
+            "address": {
+              "type": "string",
+              "description": "Address if the script can be represented as one (optional)"
+            }
+          },
+          "required": [
+            "outpoint",
+            "value",
+            "derivationIndex",
+            "scriptPubkey",
+            "scriptPubkeyHex"
+          ]
+        }
+      }
+    },
+    {
+      "name": "listUtxos",
+      "description": "Lists all unspent UTXOs for the account.",
+      "paramStructure": "by-name",
+      "params": [],
+      "result": {
+        "name": "listUtxosResponse",
+        "description": "Array of UTXO details.",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "outpoint": {
+                "type": "string",
+                "description": "Outpoint of the utxo in the format <txid>:<vout>"
+              },
+              "value": {
+                "type": "string",
+                "description": "Value of output in satoshis"
+              },
+              "derivationIndex": {
+                "type": "number",
+                "description": "Derivation index"
+              },
+              "scriptPubkey": {
+                "type": "string",
+                "description": "scriptPubkey in ASM format"
+              },
+              "scriptPubkeyHex": {
+                "type": "string",
+                "description": "scriptPubkey in hex format"
+              },
+              "address": {
+                "type": "string",
+                "description": "Address if the script can be represented as one (optional)"
+              }
+            },
+            "required": [
+              "outpoint",
+              "value",
+              "derivationIndex",
+              "scriptPubkey",
+              "scriptPubkeyHex"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "publicDescriptor",
+      "description": "Retrieves the public descriptor for the account.",
+      "paramStructure": "by-name",
+      "params": [],
+      "result": {
+        "name": "publicDescriptorResponse",
+        "description": "The public descriptor string.",
+        "schema": { "type": "string" }
+      }
+    },
+    {
+      "name": "signMessage",
+      "description": "Signs a message with the account's private key.",
+      "paramStructure": "by-name",
+      "params": [
+        {
+          "name": "message",
+          "description": "The message to sign.",
+          "required": true,
+          "schema": { "type": "string" }
+        }
+      ],
+      "result": {
+        "name": "signMessageResponse",
+        "description": "The signature.",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "signature": { "type": "string" }
+          },
+          "required": ["signature"]
+        }
+      }
+    }
+  ]
+}

@@ -8,21 +8,28 @@ import type {
   WalletTx,
 } from '@metamask/bitcoindevkit';
 import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
+import { Signer } from 'bip322-js';
+import { encode } from 'wif';
 
 import {
   AccountCapability,
   addressTypeToPurpose,
-  type BitcoinAccount,
-  type BitcoinAccountRepository,
-  type BlockchainClient,
-  type Logger,
-  type MetaProtocolsClient,
+  AssertionError,
   networkToCoinType,
   NotFoundError,
   PermissionError,
-  type SnapClient,
   TrackingSnapEvent,
   ValidationError,
+  WalletError,
+} from '../entities';
+import type {
+  BitcoinAccount,
+  BitcoinAccountRepository,
+  BlockchainClient,
+  Logger,
+  MetaProtocolsClient,
+  SnapClient,
+  ConfirmationRepository,
 } from '../entities';
 
 export type DiscoverAccountParams = {
@@ -45,6 +52,8 @@ export class AccountUseCases {
 
   readonly #repository: BitcoinAccountRepository;
 
+  readonly #confirmationRepository: ConfirmationRepository;
+
   readonly #chain: BlockchainClient;
 
   readonly #metaProtocols: MetaProtocolsClient | undefined;
@@ -57,6 +66,7 @@ export class AccountUseCases {
     logger: Logger,
     snapClient: SnapClient,
     repository: BitcoinAccountRepository,
+    confirmationRepository: ConfirmationRepository,
     chain: BlockchainClient,
     fallbackFeeRate: number,
     targetBlocksConfirmation: number,
@@ -65,6 +75,7 @@ export class AccountUseCases {
     this.#logger = logger;
     this.#snapClient = snapClient;
     this.#repository = repository;
+    this.#confirmationRepository = confirmationRepository;
     this.#chain = chain;
     this.#fallbackFeeRate = fallbackFeeRate;
     this.#targetBlocksConfirmation = targetBlocksConfirmation;
@@ -413,6 +424,108 @@ export class AccountUseCases {
     );
 
     return txid;
+  }
+
+  async sendTransfer(
+    id: string,
+    recipients: { address: string; amount: string }[],
+    origin: string,
+    feeRate?: number,
+  ): Promise<Txid> {
+    this.#logger.debug(
+      'Transferring funds: %s. Recipients: %o',
+      id,
+      recipients,
+    );
+
+    const account = await this.#repository.getWithSigner(id);
+    if (!account) {
+      throw new NotFoundError('Account not found', { id });
+    }
+    this.#checkCapability(account, AccountCapability.SendTransfer);
+
+    // Create a template PSBT with the recipients as outputs
+    let builder = account.buildTx();
+    for (const { address, amount } of recipients) {
+      builder = builder.addRecipient(amount, address);
+    }
+    const templatePsbt = builder.finish();
+
+    // Complete the PSBT with the necessary inputs, fee rate, etc.
+    const psbt = await this.#fillPsbt(account, templatePsbt, feeRate);
+    const signedPsbt = account.sign(psbt);
+    const tx = account.extractTransaction(signedPsbt);
+    const txid = await this.#broadcast(account, tx, origin);
+
+    this.#logger.info(
+      'Funds transferred successfully: %s. Account: %s, Network: %s',
+      txid.toString(),
+      account.id,
+      account.network,
+    );
+    return txid;
+  }
+
+  async signMessage(
+    id: string,
+    message: string,
+    origin: string,
+  ): Promise<string> {
+    this.#logger.debug('Signing message: %s. Message: %s', id, message);
+
+    const account = await this.#repository.get(id);
+    if (!account) {
+      throw new NotFoundError('Account not found', { id });
+    }
+    this.#checkCapability(account, AccountCapability.SignMessage);
+
+    await this.#confirmationRepository.insertSignMessage(
+      account,
+      message,
+      origin,
+    );
+
+    const entropy = await this.#snapClient.getPrivateEntropy(
+      account.derivationPath.concat(['0', '0']), // We sign with address index 0, which is the public address
+    );
+    if (!entropy.privateKey) {
+      // Should never happen when getting the private entropy
+      throw new AssertionError('Failed to get private entropy', {
+        id,
+      });
+    }
+
+    try {
+      // Private key is returned in "0x..." format, transform into WIF:
+      const wifPrivateKey = encode({
+        version: account.network === 'bitcoin' ? 128 : 239, // 128 for mainnet, 239 for testnets
+        // eslint-disable-next-line no-restricted-globals
+        privateKey: Buffer.from(entropy.privateKey.slice(2), 'hex'),
+        compressed: true,
+      });
+      const signature = Signer.sign(
+        wifPrivateKey,
+        account.publicAddress.toString(),
+        message,
+      );
+
+      this.#logger.info(
+        'Message signed successfully: %s. Message: %s, Signature: %s.',
+        id,
+        message,
+        signature,
+      );
+      return signature;
+    } catch (error) {
+      throw new WalletError(
+        'Failed to sign message',
+        {
+          id,
+          message,
+        },
+        error,
+      );
+    }
   }
 
   async #fillPsbt(

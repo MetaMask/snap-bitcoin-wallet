@@ -14,6 +14,7 @@ import {
   RpcHandler,
   RpcMethod,
   SendPsbtRequest,
+  VerifyMessageRequest,
 } from './RpcHandler';
 import { SendErrorCodes } from './validation';
 
@@ -73,12 +74,6 @@ describe('RpcHandler', () => {
       params: {
         account: 'account-id',
       },
-    });
-
-    it('throws error if invalid origin', async () => {
-      await expect(handler.route('invalidOrigin', mockRequest)).rejects.toThrow(
-        'Invalid origin',
-      );
     });
 
     it('throws error if missing params', async () => {
@@ -628,6 +623,50 @@ describe('RpcHandler', () => {
         valid: true,
         errors: [],
       });
+    });
+  });
+
+  describe('verifyMessage', () => {
+    const mockRequest = mock<JsonRpcRequest>({
+      method: RpcMethod.VerifyMessage,
+      params: {
+        address: 'bcrt1qs2fj7czz0amfm74j73yujx6dn6223md56gkkuy',
+        message: 'Hello, world!',
+        signature:
+          'AkcwRAIgZxodJQ60t9Rr/hABEHZ1zPUJ4m5hdM5QLpysH8fDSzgCIENOEuZtYf9/Nn/ZW15PcImkknol403dmZrgoOQ+6K+TASECwDKypXm/ElmVTxTLJ7nao6X5mB/iGbU2Q2qtot0QRL4=',
+      },
+    });
+
+    it('executes verifyMessage successfully with valid signature', async () => {
+      const result = await handler.route(origin, mockRequest);
+
+      expect(assert).toHaveBeenCalledWith(
+        mockRequest.params,
+        VerifyMessageRequest,
+      );
+
+      expect(result).toStrictEqual({ valid: true });
+    });
+
+    it('executes verifyMessage successfully with invalid signature', async () => {
+      const result = await handler.route(origin, {
+        ...mockRequest,
+        params: {
+          ...mockRequest.params,
+          address: 'bcrt1qstku2y3pfh9av50lxj55arm8r5gj8tf2yv5nxz', // wrong address for given signature
+        },
+      } as JsonRpcRequest);
+
+      expect(result).toStrictEqual({ valid: false });
+    });
+
+    it('throws ValidationError for invalid signature', async () => {
+      await expect(
+        handler.route(origin, {
+          ...mockRequest,
+          params: { ...mockRequest.params, signature: 'invalidaSignature' },
+        } as JsonRpcRequest),
+      ).rejects.toThrow('Failed to verify signature');
     });
   });
 });

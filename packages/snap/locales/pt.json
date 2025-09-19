@@ -1,11 +1,11 @@
 {
-  "locale": "en",
+  "locale": "pt-BR",
   "messages": {
     "reviewTransactionWarning": {
-      "message": "Review the transaction before proceeding"
+      "message": "Revise a transação antes de prosseguir"
     },
     "from": {
-      "message": "From"
+      "message": "De"
     },
     "toAddress": {
       "message": "To Address"
@@ -14,31 +14,31 @@
       "message": "Continue"
     },
     "cancel": {
-      "message": "Cancel"
+      "message": "Cancelar"
     },
     "clear": {
       "message": "Clear"
     },
     "amount": {
-      "message": "Amount"
+      "message": "Valor"
     },
     "balance": {
-      "message": "Balance"
+      "message": "Saldo"
     },
     "recipient": {
-      "message": "Recipient"
+      "message": "Destinatário"
     },
     "network": {
-      "message": "Network"
+      "message": "Rede"
     },
     "minutes": {
       "message": "min"
     },
     "transactionSpeed": {
-      "message": "Transaction Speed"
+      "message": "Velocidade da transação"
     },
     "transactionSpeedTooltip": {
-      "message": "The estimated time of the transaction"
+      "message": "O tempo estimado da transação"
     },
     "networkFee": {
       "message": "Network Fee"
@@ -53,25 +53,25 @@
       "message": "Total"
     },
     "send": {
-      "message": "Send"
+      "message": "Enviar"
     },
     "asset": {
       "message": "Asset"
     },
     "sending": {
-      "message": "Sending"
+      "message": "Enviando"
     },
     "max": {
-      "message": "Max"
+      "message": "Máx."
     },
     "recipientPlaceholder": {
       "message": "Enter receiving address"
     },
     "review": {
-      "message": "Review"
+      "message": "Revisar"
     },
     "error": {
-      "message": "Error"
+      "message": "Erro"
     },
     "unknownError": {
       "message": "An unknown error occurred"
@@ -144,6 +144,27 @@
     },
     "unexpected": {
       "message": "An unexpected error occurred"
+    },
+    "error.internal": {
+      "message": "Erro interno. Por favor, tente novamente mais tarde ou contate o suporte"
+    },
+    "confirmation.origin": {
+      "message": "Origem"
+    },
+    "confirmation.origin.tooltip": {
+      "message": "O dApp solicitando a assinatura"
+    },
+    "confirmation.account": {
+      "message": "Conta"
+    },
+    "confirmation.signMessage.confirmButton": {
+      "message": "Assinar"
+    },
+    "confirmation.signMessage.title": {
+      "message": "Assinar Mensagem"
+    },
+    "confirmation.signMessage.message": {
+      "message": "Mensagem"
     }
   }
 }

@@ -22,6 +22,7 @@ import {
   SignOptions,
   Txid,
   Wallet,
+  OutPoint,
 } from '@metamask/bitcoindevkit';
 
 import {
@@ -123,6 +124,10 @@ export class BdkAccountAdapter implements BitcoinAccount {
     return this.peekAddress(0).address;
   }
 
+  get publicDescriptor(): string {
+    return this.#wallet.public_descriptor('external');
+  }
+
   get capabilities(): AccountCapability[] {
     return this.#capabilities;
   }
@@ -197,6 +202,14 @@ export class BdkAccountAdapter implements BitcoinAccount {
         { id: this.#id },
         error,
       );
+    }
+  }
+
+  getUtxo(outpoint: string): LocalOutput | undefined {
+    try {
+      return this.#wallet.get_utxo(OutPoint.from_string(outpoint));
+    } catch (error) {
+      throw new ValidationError('Invalid outpoint', { id: this.#id }, error);
     }
   }
 

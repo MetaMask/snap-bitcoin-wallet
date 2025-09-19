@@ -3,18 +3,26 @@ import { UserInputEventType } from '@metamask/snaps-sdk';
 import { mock } from 'jest-mock-extended';
 
 import type { SendFormContext } from '../entities';
-import { ReviewTransactionEvent, SendFormEvent } from '../entities';
-import type { SendFlowUseCases } from '../use-cases';
+import {
+  ConfirmationEvent,
+  ReviewTransactionEvent,
+  SendFormEvent,
+} from '../entities';
+import type { ConfirmationUseCases, SendFlowUseCases } from '../use-cases';
 import { UserInputHandler } from './UserInputHandler';
 
 describe('UserInputHandler', () => {
   const mockSendFlowUseCases = mock<SendFlowUseCases>();
+  const mockConfirmationUseCases = mock<ConfirmationUseCases>();
   const mockContext = mock<SendFormContext>();
 
   let handler: UserInputHandler;
 
   beforeEach(() => {
-    handler = new UserInputHandler(mockSendFlowUseCases);
+    handler = new UserInputHandler(
+      mockSendFlowUseCases,
+      mockConfirmationUseCases,
+    );
   });
 
   describe('route', () => {
@@ -119,6 +127,56 @@ describe('UserInputHandler', () => {
             name: ReviewTransactionEvent.Send,
           },
           mockContext,
+        ),
+      ).rejects.toThrow(error);
+    });
+  });
+
+  describe('handle confirmation', () => {
+    it('executes on confirm', async () => {
+      await handler.route(
+        'interface-id',
+        {
+          type: UserInputEventType.ButtonClickEvent,
+          name: ConfirmationEvent.Confirm,
+        },
+        {},
+      );
+
+      expect(mockConfirmationUseCases.onChange).toHaveBeenCalledWith(
+        'interface-id',
+        ConfirmationEvent.Confirm,
+      );
+    });
+
+    it('executes on cancel', async () => {
+      await handler.route(
+        'interface-id',
+        {
+          type: UserInputEventType.ButtonClickEvent,
+          name: ConfirmationEvent.Cancel,
+        },
+        {},
+      );
+
+      expect(mockConfirmationUseCases.onChange).toHaveBeenCalledWith(
+        'interface-id',
+        ConfirmationEvent.Cancel,
+      );
+    });
+
+    it('propagates errors from onChange', async () => {
+      const error = new Error();
+      mockConfirmationUseCases.onChange.mockRejectedValue(error);
+
+      await expect(
+        handler.route(
+          'interface-id',
+          {
+            type: UserInputEventType.ButtonClickEvent,
+            name: ConfirmationEvent.Cancel,
+          },
+          {},
         ),
       ).rejects.toThrow(error);
     });

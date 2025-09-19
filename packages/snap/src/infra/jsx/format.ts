@@ -1,7 +1,9 @@
+import type { Network } from '@metamask/bitcoindevkit';
 import { Amount, BdkErrorCode } from '@metamask/bitcoindevkit';
-import type { CurrencyRate } from '@metamask/snaps-sdk';
+import type { CaipAccountId, CurrencyRate } from '@metamask/snaps-sdk';
 
 import type { CurrencyUnit, Messages } from '../../entities';
+import { networkToScope } from '../../handlers';
 
 export const displayAmount = (
   amountSats: bigint,
@@ -51,4 +53,15 @@ export const errorCodeToLabel = (code: number): string => {
 
   // lowercase the first letter to respect camelCase convention
   return raw.charAt(0).toLowerCase() + raw.slice(1);
+};
+
+export const displayOrigin = (origin: string): string => {
+  return new URL(origin).hostname;
+};
+
+export const displayCaip10 = (
+  network: Network,
+  address: string,
+): CaipAccountId => {
+  return `${networkToScope[network]}:${address}`;
 };

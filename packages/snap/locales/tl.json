@@ -1,11 +1,11 @@
 {
-  "locale": "vi",
+  "locale": "tl",
   "messages": {
     "reviewTransactionWarning": {
-      "message": "Xem lại giao dịch trước khi tiếp tục"
+      "message": "Suriin ang transaksyon bago magpatuloy"
     },
     "from": {
-      "message": "Từ"
+      "message": "Mula sa"
     },
     "toAddress": {
       "message": "To Address"
@@ -14,31 +14,31 @@
       "message": "Continue"
     },
     "cancel": {
-      "message": "Hủy"
+      "message": "Kanselahin"
     },
     "clear": {
       "message": "Clear"
     },
     "amount": {
-      "message": "Số tiền"
+      "message": "Halaga"
     },
     "balance": {
-      "message": "Số dư"
+      "message": "Balanse"
     },
     "recipient": {
-      "message": "Người nhận"
+      "message": "Tatanggap"
     },
     "network": {
-      "message": "Mạng"
+      "message": "Network"
     },
     "minutes": {
       "message": "min"
     },
     "transactionSpeed": {
-      "message": "Tốc độ giao dịch"
+      "message": "Bilis ng Transaksyon"
     },
     "transactionSpeedTooltip": {
-      "message": "Thời gian giao dịch ước tính"
+      "message": "Ang tinatayang tagal ng transaksyon"
     },
     "networkFee": {
       "message": "Network Fee"
@@ -50,28 +50,28 @@
       "message": "The total network fee"
     },
     "total": {
-      "message": "Tổng"
+      "message": "Kabuuan"
     },
     "send": {
-      "message": "Gửi"
+      "message": "Ipadala"
     },
     "asset": {
       "message": "Asset"
     },
     "sending": {
-      "message": "Đang gửi"
+      "message": "Ipinapadala"
     },
     "max": {
-      "message": "Tối đa"
+      "message": "Max"
     },
     "recipientPlaceholder": {
       "message": "Enter receiving address"
     },
     "review": {
-      "message": "Xem lại"
+      "message": "Suriin"
     },
     "error": {
-      "message": "Lỗi"
+      "message": "Error"
     },
     "unknownError": {
       "message": "An unknown error occurred"
@@ -144,6 +144,27 @@
     },
     "unexpected": {
       "message": "An unexpected error occurred"
+    },
+    "error.internal": {
+      "message": "Panloob na error. Subukang muli mamaya o makipag-ugnayan sa suporta"
+    },
+    "confirmation.origin": {
+      "message": "Pinagmulan"
+    },
+    "confirmation.origin.tooltip": {
+      "message": "Ang dApp na humihingi ng lagda"
+    },
+    "confirmation.account": {
+      "message": "Account"
+    },
+    "confirmation.signMessage.confirmButton": {
+      "message": "Lagdaan"
+    },
+    "confirmation.signMessage.title": {
+      "message": "Lagdaan ang Mensahe"
+    },
+    "confirmation.signMessage.message": {
+      "message": "Mensahe"
     }
   }
 }

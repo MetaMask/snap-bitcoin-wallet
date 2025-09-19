@@ -1,0 +1,200 @@
+{
+  "locale": "ja",
+  "messages": {
+    "reviewTransactionWarning": {
+      "message": "進める前にトランザクションを確認してください"
+    },
+    "from": {
+      "message": "送金元"
+    },
+    "toAddress": {
+      "message": "宛先"
+    },
+    "continue": {
+      "message": "続ける"
+    },
+    "cancel": {
+      "message": "キャンセル"
+    },
+    "clear": {
+      "message": "クリア"
+    },
+    "amount": {
+      "message": "金額"
+    },
+    "balance": {
+      "message": "残高"
+    },
+    "recipient": {
+      "message": "受取人"
+    },
+    "network": {
+      "message": "ネットワーク"
+    },
+    "minutes": {
+      "message": "分"
+    },
+    "transactionSpeed": {
+      "message": "トランザクション速度"
+    },
+    "transactionSpeedTooltip": {
+      "message": "トランザクションの予想時間"
+    },
+    "networkFee": {
+      "message": "ネットワーク手数料"
+    },
+    "feeRate": {
+      "message": "手数料率"
+    },
+    "networkFeeTooltip": {
+      "message": "総ネットワーク手数料"
+    },
+    "total": {
+      "message": "合計"
+    },
+    "send": {
+      "message": "送信"
+    },
+    "asset": {
+      "message": "資産"
+    },
+    "sending": {
+      "message": "送信中"
+    },
+    "max": {
+      "message": "最大"
+    },
+    "recipientPlaceholder": {
+      "message": "受信アドレスを入力"
+    },
+    "review": {
+      "message": "レビュー"
+    },
+    "error": {
+      "message": "エラー"
+    },
+    "unknownError": {
+      "message": "不明なエラーが発生しました"
+    },
+    "feeTooLow": {
+      "message": "手数料が低すぎます"
+    },
+    "feeRateTooLow": {
+      "message": "手数料率が低すぎます"
+    },
+    "noUtxosSelected": {
+      "message": "トランザクションの構築に失敗: UTXO が不足しています"
+    },
+    "outputBelowDustLimit": {
+      "message": "金額がダスト制限以下です"
+    },
+    "insufficientFunds": {
+      "message": "金額プラス手数料をカバーするのに資金が不足しています"
+    },
+    "noRecipients": {
+      "message": "受取人が不足しています"
+    },
+    "psbt": {
+      "message": "無効な PSBT"
+    },
+    "unknownUtxo": {
+      "message": "トランザクションの構築に失敗: 不明な UTXO"
+    },
+    "MmssingNonWitnessUtxo": {
+      "message": "トランザクションの構築に失敗: non-witness UTXO が不足しています"
+    },
+    "base58": {
+      "message": "無効な Bitcoin アドレス"
+    },
+    "bech32": {
+      "message": "無効な Bitcoin アドレス"
+    },
+    "witnessVersion": {
+      "message": "無効な Bitcoin アドレス: witness バージョン"
+    },
+    "witnessProgram": {
+      "message": "無効な Bitcoin アドレス: witness プログラム"
+    },
+    "legacyAddressTooLong": {
+      "message": "無効な Bitcoin アドレス"
+    },
+    "invalidBase58PayloadLength": {
+      "message": "無効な Bitcoin アドレス: 無効な長さ"
+    },
+    "invalidLegacyPrefix": {
+      "message": "無効な Bitcoin アドレス: 無効な legacy プレフィックス"
+    },
+    "networkValidation": {
+      "message": "無効な Bitcoin アドレス: 間違ったネットワーク"
+    },
+    "outOfRange": {
+      "message": "無効な金額: 範囲外"
+    },
+    "tooPrecise": {
+      "message": "無効な金額: 精度が高すぎる"
+    },
+    "missingDigits": {
+      "message": "無効な金額: 桁が不足"
+    },
+    "inputTooLarge": {
+      "message": "無効な金額: 大きすぎる"
+    },
+    "invalidCharacter": {
+      "message": "無効な金額: 無効な文字"
+    },
+    "unexpected": {
+      "message": "予期せぬエラーが発生しました"
+    },
+    "error.0": {
+      "message": "無効な形式"
+    },
+    "error.1000": {
+      "message": "検証に失敗しました"
+    },
+    "error.2000": {
+      "message": "リソースが見つかりません"
+    },
+    "error.3000": {
+      "message": "接続エラー"
+    },
+    "error.4000": {
+      "message": "ウォレット状態が破損しています"
+    },
+    "error.5000": {
+      "message": "ストレージエラー"
+    },
+    "error.6000": {
+      "message": "メソッドが実装されていないかサポートされていません"
+    },
+    "error.7000": {
+      "message": "権限が拒否されたか十分な認証がありません"
+    },
+    "error.8000": {
+      "message": "ユーザーアクションエラー"
+    },
+    "error.9000": {
+      "message": "破損した状態、不変条件が守られていないかアサーションに失敗しました。"
+    },
+    "error.internal": {
+      "message": "内部エラー。後ほどお試しくださいまたはサポートにご連絡ください"
+    },
+    "confirmation.origin": {
+      "message": "オリジン"
+    },
+    "confirmation.origin.tooltip": {
+      "message": "署名をリクエストしている dApp"
+    },
+    "confirmation.account": {
+      "message": "アカウント"
+    },
+    "confirmation.signMessage.confirmButton": {
+      "message": "署名"
+    },
+    "confirmation.signMessage.title": {
+      "message": "メッセージに署名"
+    },
+    "confirmation.signMessage.message": {
+      "message": "メッセージ"
+    }
+  }
+}

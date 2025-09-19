@@ -64,6 +64,11 @@ export type BitcoinAccount = {
   publicAddress: Address;
 
   /**
+   * The public descriptor of the account.
+   */
+  publicDescriptor: string;
+
+  /**
    * The capabilities of the account.
    */
   capabilities: AccountCapability[];
@@ -143,6 +148,14 @@ export type BitcoinAccount = {
   extractTransaction(psbt: Psbt, maxFeeRate?: number): Transaction;
 
   /**
+   * Get a UTXO by outpoint.
+   *
+   * @param outpoint - Outpoint of the utxo in the format <txid>:<vout>.
+   * @returns the wallet UTXO or undefined if the UTXO is not found
+   */
+  getUtxo(outpoint: string): LocalOutput | undefined;
+
+  /**
    * Get the list of UTXOs
    *
    * @returns the list of UTXOs
@@ -207,6 +220,11 @@ export enum AccountCapability {
   ComputeFee = 'computeFee',
   FillPsbt = 'fillPsbt',
   BroadcastPsbt = 'broadcastPsbt',
+  SendTransfer = 'sendTransfer',
+  GetUtxo = 'getUtxo',
+  ListUtxos = 'listUtxos',
+  PublicDescriptor = 'publicDescriptor',
+  SignMessage = 'signMessage',
 }
 
 /**

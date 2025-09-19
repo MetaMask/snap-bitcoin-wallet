@@ -8,6 +8,10 @@
   [
     {
       'source': 'packages/snap/locales/en.json',
-      'translation': 'packages/snap/locales/%locale%.json',
+      'translation': 'packages/snap/locales/%locale_with_underscore%.json',
+    },
+    {
+      'source': 'packages/snap/locales/en.json',
+      'translation': 'packages/snap/locales/%two_letters_code%.json',
     },
   ]

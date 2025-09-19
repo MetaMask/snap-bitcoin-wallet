@@ -1,8 +1,21 @@
 import type { KeyringRequest, KeyringResponse } from '@metamask/keyring-api';
 import type { Json } from '@metamask/utils';
-import { assert, boolean, number, object, optional, string } from 'superstruct';
+import {
+  array,
+  assert,
+  boolean,
+  number,
+  object,
+  optional,
+  string,
+} from 'superstruct';
 
-import { AccountCapability, InexistentMethodError } from '../entities';
+import {
+  AccountCapability,
+  InexistentMethodError,
+  NotFoundError,
+} from '../entities';
+import { mapToUtxo } from './mappings';
 import { parsePsbt } from './parsers';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 
@@ -47,6 +60,28 @@ export type FillPsbtResponse = {
   psbt: string;
 };
 
+export const SendTransferRequest = object({
+  recipients: array(
+    object({
+      address: string(),
+      amount: string(),
+    }),
+  ),
+  feeRate: optional(number()),
+});
+
+export const GetUtxoRequest = object({
+  outpoint: string(),
+});
+
+export const SignMessageRequest = object({
+  message: string(),
+});
+
+export type SignMessageResponse = {
+  signature: string;
+};
+
 export class KeyringRequestHandler {
   readonly #accountsUseCases: AccountUseCases;
 
@@ -75,6 +110,29 @@ export class KeyringRequestHandler {
       case AccountCapability.BroadcastPsbt: {
         assert(params, BroadcastPsbtRequest);
         return this.#broadcastPsbt(account, params.psbt, origin);
+      }
+      case AccountCapability.SendTransfer: {
+        assert(params, SendTransferRequest);
+        return this.#sendTransfer(
+          account,
+          params.recipients,
+          origin,
+          params.feeRate,
+        );
+      }
+      case AccountCapability.GetUtxo: {
+        assert(params, GetUtxoRequest);
+        return this.#getUtxo(account, params.outpoint);
+      }
+      case AccountCapability.ListUtxos: {
+        return this.#listUtxos(account);
+      }
+      case AccountCapability.PublicDescriptor: {
+        return this.#publicDescriptor(account);
+      }
+      case AccountCapability.SignMessage: {
+        assert(params, SignMessageRequest);
+        return this.#signMessage(account, params.message, origin);
       }
       default: {
         throw new InexistentMethodError(
@@ -151,6 +209,59 @@ export class KeyringRequestHandler {
     return this.#toKeyringResponse({
       txid: txid.toString(),
     } as BroadcastPsbtResponse);
+  }
+
+  async #sendTransfer(
+    id: string,
+    recipients: { address: string; amount: string }[],
+    origin: string,
+    feeRate?: number,
+  ): Promise<KeyringResponse> {
+    const txid = await this.#accountsUseCases.sendTransfer(
+      id,
+      recipients,
+      origin,
+      feeRate,
+    );
+    return this.#toKeyringResponse({
+      txid: txid.toString(),
+    } as BroadcastPsbtResponse);
+  }
+
+  async #getUtxo(id: string, outpoint: string): Promise<KeyringResponse> {
+    const account = await this.#accountsUseCases.get(id);
+    const utxo = account.getUtxo(outpoint);
+    if (!utxo) {
+      throw new NotFoundError('UTXO not found', { id });
+    }
+    return this.#toKeyringResponse(mapToUtxo(utxo, account.network));
+  }
+
+  async #listUtxos(id: string): Promise<KeyringResponse> {
+    const account = await this.#accountsUseCases.get(id);
+    return this.#toKeyringResponse(
+      account.listUnspent().map((utxo) => mapToUtxo(utxo, account.network)),
+    );
+  }
+
+  async #publicDescriptor(id: string): Promise<KeyringResponse> {
+    const account = await this.#accountsUseCases.get(id);
+    return this.#toKeyringResponse(account.publicDescriptor);
+  }
+
+  async #signMessage(
+    id: string,
+    message: string,
+    origin: string,
+  ): Promise<KeyringResponse> {
+    const signature = await this.#accountsUseCases.signMessage(
+      id,
+      message,
+      origin,
+    );
+    return this.#toKeyringResponse({
+      signature,
+    } as SignMessageResponse);
   }
 
   #toKeyringResponse(result: Json): KeyringResponse {

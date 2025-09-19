@@ -1,11 +1,11 @@
 {
-  "locale": "tr",
+  "locale": "ru",
   "messages": {
     "reviewTransactionWarning": {
-      "message": "Devam etmeden önce işlemi inceleyin"
+      "message": "Проверьте транзакцию, прежде чем продолжить"
     },
     "from": {
-      "message": "Gönderen"
+      "message": "От"
     },
     "toAddress": {
       "message": "To Address"
@@ -14,31 +14,31 @@
       "message": "Continue"
     },
     "cancel": {
-      "message": "İptal"
+      "message": "Отмена"
     },
     "clear": {
       "message": "Clear"
     },
     "amount": {
-      "message": "Miktar"
+      "message": "Сумма"
     },
     "balance": {
-      "message": "Bakiye"
+      "message": "Баланс"
     },
     "recipient": {
-      "message": "Alıcı"
+      "message": "Получатель"
     },
     "network": {
-      "message": "Ağ"
+      "message": "Сеть"
     },
     "minutes": {
       "message": "min"
     },
     "transactionSpeed": {
-      "message": "İşlem Hızı"
+      "message": "Скорость транзакции"
     },
     "transactionSpeedTooltip": {
-      "message": "Tahmini işlem süresi"
+      "message": "Примерное время транзакции"
     },
     "networkFee": {
       "message": "Network Fee"
@@ -50,28 +50,28 @@
       "message": "The total network fee"
     },
     "total": {
-      "message": "Toplam"
+      "message": "Итого"
     },
     "send": {
-      "message": "Gönder"
+      "message": "Отправить"
     },
     "asset": {
       "message": "Asset"
     },
     "sending": {
-      "message": "Gönderiliyor"
+      "message": "Отправка..."
     },
     "max": {
-      "message": "Maksimum"
+      "message": "Макс."
     },
     "recipientPlaceholder": {
       "message": "Enter receiving address"
     },
     "review": {
-      "message": "İncele"
+      "message": "Просмотр"
     },
     "error": {
-      "message": "Hata"
+      "message": "Ошибка"
     },
     "unknownError": {
       "message": "An unknown error occurred"
@@ -144,6 +144,27 @@
     },
     "unexpected": {
       "message": "An unexpected error occurred"
+    },
+    "error.internal": {
+      "message": "Внутренняя ошибка. Пожалуйста, попробуйте позже или обратитесь в поддержку"
+    },
+    "confirmation.origin": {
+      "message": "Источник"
+    },
+    "confirmation.origin.tooltip": {
+      "message": "dApp, запрашивающий подпись"
+    },
+    "confirmation.account": {
+      "message": "Аккаунт"
+    },
+    "confirmation.signMessage.confirmButton": {
+      "message": "Подписать"
+    },
+    "confirmation.signMessage.title": {
+      "message": "Подписать сообщение"
+    },
+    "confirmation.signMessage.message": {
+      "message": "Сообщение"
     }
   }
 }
