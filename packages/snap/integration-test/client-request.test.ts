@@ -4,7 +4,7 @@ import type { Snap } from '@metamask/snaps-jest';
 import { installSnap } from '@metamask/snaps-jest';
 
 import { BlockchainTestUtils } from './blockchain-utils';
-import { MNEMONIC, ORIGIN } from './constants';
+import { MNEMONIC, ORIGIN, TEST_ADDRESS_REGTEST } from './constants';
 import { CurrencyUnit, TrackingSnapEvent } from '../src/entities';
 import { Caip19Asset } from '../src/handlers/caip';
 
@@ -198,6 +198,51 @@ describe('OnClientRequestHandler', () => {
       message:
         'Invalid format: At path: accountId -- Expected a string, but received: null',
       stack: expect.anything(),
+    });
+  });
+
+  it('validates a valid regtest address', async () => {
+    const response = await snap.onClientRequest({
+      method: 'onAddressInput',
+      params: {
+        value: TEST_ADDRESS_REGTEST,
+        accountId: account.id,
+      },
+    });
+
+    expect(response).toRespondWith({
+      valid: true,
+      errors: [],
+    });
+  });
+
+  it('rejects an invalid address format', async () => {
+    const response = await snap.onClientRequest({
+      method: 'onAddressInput',
+      params: {
+        value: 'not-a-valid-bitcoin-address',
+        accountId: account.id,
+      },
+    });
+
+    expect(response).toRespondWith({
+      valid: false,
+      errors: [{ code: 'Invalid' }],
+    });
+  });
+
+  it('rejects a testnet address when using regtest account', async () => {
+    const response = await snap.onClientRequest({
+      method: 'onAddressInput',
+      params: {
+        value: 'tb1qrn9d5qewjqq5syc4nrjprkfq8gge0cjdaznwcn', // testnet address (tb1)
+        accountId: account.id, // regtest account
+      },
+    });
+
+    expect(response).toRespondWith({
+      valid: false,
+      errors: [{ code: 'Invalid' }],
     });
   });
 });

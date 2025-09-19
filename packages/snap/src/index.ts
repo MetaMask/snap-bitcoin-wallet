@@ -72,7 +72,7 @@ const keyringHandler = new KeyringHandler(
   Config.defaultAddressType,
 );
 const cronHandler = new CronHandler(logger, accountsUseCases, sendFlowUseCases);
-const rpcHandler = new RpcHandler(sendFlowUseCases, accountsUseCases);
+const rpcHandler = new RpcHandler(sendFlowUseCases, accountsUseCases, logger);
 const userInputHandler = new UserInputHandler(sendFlowUseCases);
 const assetsHandler = new AssetsHandler(
   assetsUseCases,
