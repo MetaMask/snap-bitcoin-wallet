@@ -1,6 +1,6 @@
 import { CaipAssetTypeStruct } from '@metamask/utils';
 import type { Infer } from 'superstruct';
-import { array, boolean, enums, object, string } from 'superstruct';
+import { pattern, array, boolean, enums, object, string } from 'superstruct';
 
 export enum SendErrorCodes {
   // eslint-disable-next-line @typescript-eslint/no-shadow
@@ -9,14 +9,19 @@ export enum SendErrorCodes {
   InsufficientBalance = 'InsufficientBalance',
 }
 
+export const UuidStruct = pattern(
+  string(),
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/u,
+);
+
 export const OnAddressInputRequestStruct = object({
   value: string(),
-  accountId: string(),
+  accountId: UuidStruct,
 });
 
 export const OnAmountInputRequestStruct = object({
   value: string(),
-  accountId: string(),
+  accountId: UuidStruct,
   assetId: CaipAssetTypeStruct,
 });
 

@@ -9,8 +9,8 @@ import type { Logger } from '../entities';
 import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
 import { Caip19Asset } from './caip';
 import {
-  CreateSendFormRequest,
   ComputeFeeRequest,
+  CreateSendFormRequest,
   RpcHandler,
   RpcMethod,
   SendPsbtRequest,
@@ -66,6 +66,124 @@ describe('RpcHandler', () => {
         }
         throw new Error(`Invalid address: ${address}`);
       });
+  });
+
+  describe('parameter validation', () => {
+    beforeEach(() => {
+      const { assert: realAssert } = jest.requireActual('superstruct');
+      jest.mocked(assert).mockImplementation(realAssert);
+    });
+
+    describe('onAddressInput validation', () => {
+      it('rejects invalid UUID accountId', async () => {
+        const invalidRequest = mock<JsonRpcRequest>({
+          method: RpcMethod.OnAddressInput,
+          params: {
+            value: 'bcrt1qjtgffm20l9vu6a7gacxvpu2ej4kdcsgcgnly6t',
+            accountId: 'not-a-uuid',
+          },
+        });
+
+        await expect(handler.route(origin, invalidRequest)).rejects.toThrow(
+          'Expected a string matching',
+        );
+      });
+
+      it('rejects missing value parameter', async () => {
+        const missingValueRequest = mock<JsonRpcRequest>({
+          method: RpcMethod.OnAddressInput,
+          params: {
+            accountId: 'e36749ce-7c63-41df-b23c-6446c69b8e96',
+            // Missing 'value' field
+          },
+        });
+
+        await expect(
+          handler.route(origin, missingValueRequest),
+        ).rejects.toThrow('At path: value -- Expected a string');
+      });
+
+      it('rejects missing accountId parameter', async () => {
+        const missingAccountRequest = mock<JsonRpcRequest>({
+          method: RpcMethod.OnAddressInput,
+          params: {
+            value: 'bcrt1qjtgffm20l9vu6a7gacxvpu2ej4kdcsgcgnly6t',
+            // Missing 'accountId' field
+          },
+        });
+
+        await expect(
+          handler.route(origin, missingAccountRequest),
+        ).rejects.toThrow('At path: accountId -- Expected a string');
+      });
+    });
+
+    describe('onAmountInput validation', () => {
+      it('rejects invalid UUID accountId', async () => {
+        const invalidRequest = mock<JsonRpcRequest>({
+          method: RpcMethod.OnAmountInput,
+          params: {
+            value: '1.5',
+            accountId: 'not-a-uuid',
+            assetId: 'bip122:000000000019d6689c085ae165831e93/slip44:0',
+          },
+        });
+
+        await expect(handler.route(origin, invalidRequest)).rejects.toThrow(
+          'Expected a string matching',
+        );
+      });
+
+      it('rejects missing assetId parameter', async () => {
+        const missingAssetRequest = mock<JsonRpcRequest>({
+          method: RpcMethod.OnAmountInput,
+          params: {
+            value: '1.5',
+            accountId: 'e36749ce-7c63-41df-b23c-6446c69b8e96',
+            // Missing 'assetId' field
+          },
+        });
+
+        await expect(
+          handler.route(origin, missingAssetRequest),
+        ).rejects.toThrow(
+          'At path: assetId -- Expected a value of type `CaipAssetType`',
+        );
+      });
+
+      it('rejects invalid assetId format', async () => {
+        const invalidAssetRequest = mock<JsonRpcRequest>({
+          method: RpcMethod.OnAmountInput,
+          params: {
+            value: '1.5',
+            accountId: 'e36749ce-7c63-41df-b23c-6446c69b8e96',
+            assetId: 'invalid-asset-id',
+          },
+        });
+
+        await expect(
+          handler.route(origin, invalidAssetRequest),
+        ).rejects.toThrow(
+          'At path: assetId -- Expected a value of type `CaipAssetType`',
+        );
+      });
+    });
+
+    describe('verifyMessage validation', () => {
+      it('rejects missing parameters', async () => {
+        const missingParamsRequest = mock<JsonRpcRequest>({
+          method: RpcMethod.VerifyMessage,
+          params: {
+            address: 'bcrt1qjtgffm20l9vu6a7gacxvpu2ej4kdcsgcgnly6t',
+            // Missing 'message' and 'signature'
+          },
+        });
+
+        await expect(
+          handler.route(origin, missingParamsRequest),
+        ).rejects.toThrow('At path: message -- Expected a string');
+      });
+    });
   });
 
   describe('route', () => {
