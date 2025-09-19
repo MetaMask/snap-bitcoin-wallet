@@ -22,7 +22,6 @@ import type { ValidationResponse } from './validation';
 import {
   SendErrorCodes,
   OnAddressInputRequestStruct,
-  checkEmptyStringParams,
   OnAmountInputRequestStruct,
 } from './validation';
 
@@ -185,11 +184,6 @@ export class RpcHandler {
   ): Promise<ValidationResponse> {
     const { value, accountId } = request;
 
-    const requiredResponse = checkEmptyStringParams([value, accountId]);
-    if (requiredResponse !== null) {
-      return requiredResponse;
-    }
-
     try {
       // get the scope of the account so we can validate the address against the
       // appropriate network (e.g. mainnet, testnet etc)
@@ -219,11 +213,6 @@ export class RpcHandler {
     request: OnAmountInputRequest,
   ): Promise<ValidationResponse> {
     const { value, accountId } = request;
-
-    const requiredCheck = checkEmptyStringParams([value, accountId]);
-    if (requiredCheck) {
-      return requiredCheck;
-    }
 
     const valueToNumber = Number(value);
     if (!Number.isFinite(valueToNumber) || valueToNumber <= 0) {
