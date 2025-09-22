@@ -1,20 +1,22 @@
-import { Psbt } from '@metamask/bitcoindevkit';
+import { Psbt, Address } from '@metamask/bitcoindevkit';
 import type { Amount, Txid } from '@metamask/bitcoindevkit';
 import { BtcScope, FeeType } from '@metamask/keyring-api';
 import type { JsonRpcRequest } from '@metamask/utils';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
+import type { Logger } from '../entities';
 import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
 import { Caip19Asset } from './caip';
 import {
-  CreateSendFormRequest,
   ComputeFeeRequest,
+  CreateSendFormRequest,
   RpcHandler,
   RpcMethod,
   SendPsbtRequest,
   VerifyMessageRequest,
 } from './RpcHandler';
+import { SendErrorCodes } from './validation';
 
 jest.mock('superstruct', () => ({
   ...jest.requireActual('superstruct'),
@@ -26,24 +28,250 @@ const mockPsbt = mock<Psbt>();
 /* eslint-disable @typescript-eslint/naming-convention */
 jest.mock('@metamask/bitcoindevkit', () => ({
   Psbt: { from_string: jest.fn() },
+  Address: {
+    from_string: jest.fn(),
+  },
 }));
 
 describe('RpcHandler', () => {
   const mockSendFlowUseCases = mock<SendFlowUseCases>();
   const mockAccountsUseCases = mock<AccountUseCases>();
+  const mockLogger = mock<Logger>();
   const origin = 'metamask';
+  const validAccountId = '724ac464-6572-4d9c-a8e2-4075c8846d65';
 
-  const handler = new RpcHandler(mockSendFlowUseCases, mockAccountsUseCases);
+  const handler = new RpcHandler(
+    mockSendFlowUseCases,
+    mockAccountsUseCases,
+    mockLogger,
+  );
 
   beforeEach(() => {
+    jest.clearAllMocks();
+
     jest.mocked(Psbt.from_string).mockReturnValue(mockPsbt);
+
+    // setup Address mock with validation logic
+    const validAddresses = [
+      'bc1qux9xtsj6mr4un7yg9kgd7tv8kndvlhv2gv5yc8', // bech32 mainnet
+      'bc1qtest123address', // test address
+      '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa', // P2PKH mainnet
+      '3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy', // P2SH mainnet
+    ];
+
+    jest
+      .mocked(Address.from_string)
+      .mockImplementation((address: string, _: string) => {
+        if (validAddresses.includes(address)) {
+          return { toString: () => address } as any;
+        }
+        throw new Error(`Invalid address: ${address}`);
+      });
+  });
+
+  describe('parameter validation', () => {
+    beforeEach(() => {
+      const { assert: realAssert } = jest.requireActual('superstruct');
+      jest.mocked(assert).mockImplementation(realAssert);
+    });
+
+    describe('onAddressInput validation', () => {
+      it('rejects invalid address format', async () => {
+        const invalidAddressRequest = mock<JsonRpcRequest>({
+          method: RpcMethod.OnAddressInput,
+          params: {
+            value: 'not-a-valid-address',
+            accountId: validAccountId,
+          },
+        });
+
+        const result = await handler.route(origin, invalidAddressRequest);
+
+        expect(mockAccountsUseCases.get).toHaveBeenCalledWith(validAccountId);
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'Invalid account and/or invalid address. Error: %s',
+          expect.any(String),
+        );
+        expect(result).toStrictEqual({
+          valid: false,
+          errors: [{ code: SendErrorCodes.Invalid }],
+        });
+      });
+
+      it('rejects invalid UUID accountId', async () => {
+        const invalidRequest = mock<JsonRpcRequest>({
+          method: RpcMethod.OnAddressInput,
+          params: {
+            value: 'bcrt1qjtgffm20l9vu6a7gacxvpu2ej4kdcsgcgnly6t',
+            accountId: 'not-a-uuid',
+          },
+        });
+
+        await expect(handler.route(origin, invalidRequest)).rejects.toThrow(
+          'Expected a string matching',
+        );
+      });
+
+      it('rejects missing value parameter', async () => {
+        const missingValueRequest = mock<JsonRpcRequest>({
+          method: RpcMethod.OnAddressInput,
+          params: {
+            accountId: 'e36749ce-7c63-41df-b23c-6446c69b8e96',
+            // Missing 'value' field
+          },
+        });
+
+        await expect(
+          handler.route(origin, missingValueRequest),
+        ).rejects.toThrow('At path: value -- Expected a string');
+      });
+
+      it('rejects missing accountId parameter', async () => {
+        const missingAccountRequest = mock<JsonRpcRequest>({
+          method: RpcMethod.OnAddressInput,
+          params: {
+            value: 'bcrt1qjtgffm20l9vu6a7gacxvpu2ej4kdcsgcgnly6t',
+            // Missing 'accountId' field
+          },
+        });
+
+        await expect(
+          handler.route(origin, missingAccountRequest),
+        ).rejects.toThrow('At path: accountId -- Expected a string');
+      });
+    });
+
+    describe('onAmountInput validation', () => {
+      it('rejects invalid UUID accountId', async () => {
+        const invalidRequest = mock<JsonRpcRequest>({
+          method: RpcMethod.OnAmountInput,
+          params: {
+            value: '1.5',
+            accountId: 'not-a-uuid',
+            assetId: 'bip122:000000000019d6689c085ae165831e93/slip44:0',
+          },
+        });
+
+        await expect(handler.route(origin, invalidRequest)).rejects.toThrow(
+          'Expected a string matching',
+        );
+      });
+
+      it('rejects negative amounts', async () => {
+        const negativeAmountRequest = mock<JsonRpcRequest>({
+          method: RpcMethod.OnAmountInput,
+          params: {
+            value: '-0.5',
+            accountId: 'e36749ce-7c63-41df-b23c-6446c69b8e96',
+            assetId: 'bip122:000000000019d6689c085ae165831e93/slip44:0',
+          },
+        });
+
+        const result = await handler.route(origin, negativeAmountRequest);
+
+        expect(result).toStrictEqual({
+          valid: false,
+          errors: [{ code: SendErrorCodes.Invalid }],
+        });
+      });
+
+      it('rejects zero amount', async () => {
+        const zeroAmountRequest = mock<JsonRpcRequest>({
+          method: RpcMethod.OnAmountInput,
+          params: {
+            value: '0',
+            accountId: 'e36749ce-7c63-41df-b23c-6446c69b8e96',
+            assetId: 'bip122:000000000019d6689c085ae165831e93/slip44:0',
+          },
+        });
+
+        const result = await handler.route(origin, zeroAmountRequest);
+
+        expect(result).toStrictEqual({
+          valid: false,
+          errors: [{ code: SendErrorCodes.Invalid }],
+        });
+      });
+
+      it('rejects invalid number formats', async () => {
+        const testCases = ['abc', '1.2.3', 'not-a-number', 'NaN', 'Infinity'];
+
+        for (const invalidValue of testCases) {
+          const invalidAmountRequest = mock<JsonRpcRequest>({
+            method: RpcMethod.OnAmountInput,
+            params: {
+              value: invalidValue,
+              accountId: 'e36749ce-7c63-41df-b23c-6446c69b8e96',
+              assetId: 'bip122:000000000019d6689c085ae165831e93/slip44:0',
+            },
+          });
+
+          const result = await handler.route(origin, invalidAmountRequest);
+
+          expect(result).toStrictEqual({
+            valid: false,
+            errors: [{ code: SendErrorCodes.Invalid }],
+          });
+        }
+      });
+
+      it('rejects missing assetId parameter', async () => {
+        const missingAssetRequest = mock<JsonRpcRequest>({
+          method: RpcMethod.OnAmountInput,
+          params: {
+            value: '1.5',
+            accountId: 'e36749ce-7c63-41df-b23c-6446c69b8e96',
+            // Missing 'assetId' field
+          },
+        });
+
+        await expect(
+          handler.route(origin, missingAssetRequest),
+        ).rejects.toThrow(
+          'At path: assetId -- Expected a value of type `CaipAssetType`',
+        );
+      });
+
+      it('rejects invalid assetId format', async () => {
+        const invalidAssetRequest = mock<JsonRpcRequest>({
+          method: RpcMethod.OnAmountInput,
+          params: {
+            value: '1.5',
+            accountId: 'e36749ce-7c63-41df-b23c-6446c69b8e96',
+            assetId: 'invalid-asset-id',
+          },
+        });
+
+        await expect(
+          handler.route(origin, invalidAssetRequest),
+        ).rejects.toThrow(
+          'At path: assetId -- Expected a value of type `CaipAssetType`',
+        );
+      });
+    });
+
+    describe('verifyMessage validation', () => {
+      it('rejects missing parameters', async () => {
+        const missingParamsRequest = mock<JsonRpcRequest>({
+          method: RpcMethod.VerifyMessage,
+          params: {
+            address: 'bcrt1qjtgffm20l9vu6a7gacxvpu2ej4kdcsgcgnly6t',
+            // Missing 'message' and 'signature'
+          },
+        });
+
+        await expect(
+          handler.route(origin, missingParamsRequest),
+        ).rejects.toThrow('At path: message -- Expected a string');
+      });
+    });
   });
 
   describe('route', () => {
     const mockRequest = mock<JsonRpcRequest>({
       method: RpcMethod.StartSendTransactionFlow,
       params: {
-        account: 'account-id',
+        account: validAccountId,
       },
     });
 
@@ -64,7 +292,7 @@ describe('RpcHandler', () => {
     const mockRequest = mock<JsonRpcRequest>({
       method: RpcMethod.StartSendTransactionFlow,
       params: {
-        account: 'account-id',
+        account: validAccountId,
       },
     });
 
@@ -83,9 +311,9 @@ describe('RpcHandler', () => {
         mockRequest.params,
         CreateSendFormRequest,
       );
-      expect(mockSendFlowUseCases.display).toHaveBeenCalledWith('account-id');
+      expect(mockSendFlowUseCases.display).toHaveBeenCalledWith(validAccountId);
       expect(mockAccountsUseCases.signPsbt).toHaveBeenCalledWith(
-        'account-id',
+        validAccountId,
         mockPsbt,
         'metamask',
         { broadcast: true, fill: false },
@@ -121,7 +349,7 @@ describe('RpcHandler', () => {
     const mockRequest = mock<JsonRpcRequest>({
       method: RpcMethod.SignAndSendTransaction,
       params: {
-        accountId: 'account-id',
+        accountId: validAccountId,
         transaction: psbt,
       },
     });
@@ -138,7 +366,7 @@ describe('RpcHandler', () => {
 
       expect(assert).toHaveBeenCalledWith(mockRequest.params, SendPsbtRequest);
       expect(mockAccountsUseCases.signPsbt).toHaveBeenCalledWith(
-        'account-id',
+        validAccountId,
         mockPsbt,
         'metamask',
         { broadcast: true, fill: true },
@@ -161,7 +389,7 @@ describe('RpcHandler', () => {
     const mockRequest = mock<JsonRpcRequest>({
       method: RpcMethod.ComputeFee,
       params: {
-        accountId: 'account-id',
+        accountId: validAccountId,
         transaction: psbt,
         scope: BtcScope.Mainnet,
       },
@@ -181,7 +409,7 @@ describe('RpcHandler', () => {
       );
       expect(Psbt.from_string).toHaveBeenCalledWith(psbt);
       expect(mockAccountsUseCases.computeFee).toHaveBeenCalledWith(
-        'account-id',
+        validAccountId,
         mockPsbt,
       );
       expect(result).toStrictEqual([
@@ -210,7 +438,7 @@ describe('RpcHandler', () => {
       const invalidRequest = mock<JsonRpcRequest>({
         method: RpcMethod.ComputeFee,
         params: {
-          accountId: 'account-id',
+          accountId: validAccountId,
           transaction: 'invalid-psbt-base64',
           scope: BtcScope.Mainnet,
         },
@@ -225,6 +453,120 @@ describe('RpcHandler', () => {
       );
 
       expect(mockAccountsUseCases.computeFee).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('onAddressInput', () => {
+    const mockBitcoinAccount = {
+      network: 'bitcoin',
+    };
+
+    const validAddressRequest = mock<JsonRpcRequest>({
+      method: RpcMethod.OnAddressInput,
+      params: {
+        value: 'bc1qtest123address',
+        accountId: validAccountId,
+      },
+    });
+
+    beforeEach(() => {
+      mockAccountsUseCases.get.mockResolvedValue(mockBitcoinAccount as any);
+    });
+
+    it('validates a correct address', async () => {
+      const result = await handler.route(origin, validAddressRequest);
+
+      expect(mockAccountsUseCases.get).toHaveBeenCalledWith(validAccountId);
+      expect(result).toStrictEqual({
+        valid: true,
+        errors: [],
+      });
+    });
+
+    it('handles account not found error', async () => {
+      const accountError = new Error('Account not found');
+      mockAccountsUseCases.get.mockRejectedValue(accountError);
+
+      const result = await handler.route(origin, validAddressRequest);
+
+      expect(mockAccountsUseCases.get).toHaveBeenCalledWith(validAccountId);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Invalid account and/or invalid address. Error: %s',
+        'Account not found',
+      );
+      expect(result).toStrictEqual({
+        valid: false,
+        errors: [{ code: SendErrorCodes.Invalid }],
+      });
+    });
+  });
+
+  describe('onAmountInput', () => {
+    const validAmountRequest = mock<JsonRpcRequest>({
+      method: RpcMethod.OnAmountInput,
+      params: {
+        value: '0.5',
+        accountId: validAccountId,
+        assetId: 'bip122:000000000019d6689c085ae165831e93/slip44:0',
+      },
+    });
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      const mockAmountAccount = {
+        network: 'bitcoin',
+        balance: {
+          trusted_spendable: {
+            to_btc: jest.fn().mockReturnValue(1.5),
+          },
+        },
+      };
+      mockAccountsUseCases.get.mockResolvedValue(mockAmountAccount as any);
+    });
+
+    it('validates a correct amount within balance', async () => {
+      const result = await handler.route(origin, validAmountRequest);
+
+      expect(mockAccountsUseCases.get).toHaveBeenCalledWith(validAccountId);
+      expect(result).toStrictEqual({
+        valid: true,
+        errors: [],
+      });
+    });
+
+    it('rejects amount exceeding balance', async () => {
+      const excessiveAmountRequest = mock<JsonRpcRequest>({
+        method: RpcMethod.OnAmountInput,
+        params: {
+          value: '2.0', // more than account's balance
+          accountId: validAccountId,
+          assetId: 'bip122:000000000019d6689c085ae165831e93/slip44:0',
+        },
+      });
+
+      const result = await handler.route(origin, excessiveAmountRequest);
+
+      expect(result).toStrictEqual({
+        valid: false,
+        errors: [{ code: SendErrorCodes.InsufficientBalance }],
+      });
+    });
+
+    it('handles account not found error', async () => {
+      const accountError = new Error('Account not found');
+      mockAccountsUseCases.get.mockRejectedValue(accountError);
+
+      const result = await handler.route(origin, validAmountRequest);
+
+      expect(mockAccountsUseCases.get).toHaveBeenCalledWith(validAccountId);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'An error occurred: %s',
+        'Account not found',
+      );
+      expect(result).toStrictEqual({
+        valid: false,
+        errors: [{ code: SendErrorCodes.Invalid }],
+      });
     });
   });
 
