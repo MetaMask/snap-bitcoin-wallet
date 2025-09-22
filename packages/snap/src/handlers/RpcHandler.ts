@@ -1,3 +1,4 @@
+import type { Psbt, Txid } from '@metamask/bitcoindevkit';
 import { Address } from '@metamask/bitcoindevkit';
 import { BtcScope } from '@metamask/keyring-api';
 import type { Json, JsonRpcRequest } from '@metamask/utils';
@@ -17,22 +18,19 @@ import { scopeToNetwork } from './caip';
 import type { TransactionFee } from './mappings';
 import { mapToTransactionFees } from './mappings';
 import { parsePsbt } from './parsers';
-import type { OnAddressInputRequest, OnAmountInputRequest } from './types';
+import type {
+  ConfirmSendRequest,
+  OnAddressInputRequest,
+  OnAmountInputRequest,
+} from './types';
 import type { ValidationResponse } from './validation';
 import {
+  ConfirmSendRequestStruct,
+  RpcMethod,
   SendErrorCodes,
   OnAddressInputRequestStruct,
   OnAmountInputRequestStruct,
 } from './validation';
-
-export enum RpcMethod {
-  StartSendTransactionFlow = 'startSendTransactionFlow',
-  SignAndSendTransaction = 'signAndSendTransaction',
-  ComputeFee = 'computeFee',
-  VerifyMessage = 'verifyMessage',
-  OnAddressInput = 'onAddressInput',
-  OnAmountInput = 'onAmountInput',
-}
 
 export const CreateSendFormRequest = object({
   account: string(),
@@ -92,7 +90,10 @@ export class RpcHandler {
       }
       case RpcMethod.SignAndSendTransaction: {
         assert(params, SendPsbtRequest);
-        return this.#signAndSend(params.accountId, params.transaction, origin);
+        return this.#signAndSend(params.accountId, params.transaction, origin, {
+          fill: true,
+          broadcast: true,
+        });
       }
       case RpcMethod.ComputeFee: {
         assert(params, ComputeFeeRequest);
@@ -109,6 +110,10 @@ export class RpcHandler {
       case RpcMethod.OnAmountInput: {
         assert(params, OnAmountInputRequestStruct);
         return this.#onAmountInput(params);
+      }
+      case RpcMethod.ConfirmSend: {
+        assert(params, ConfirmSendRequestStruct);
+        return await this.#confirmSend(params, origin);
       }
       case RpcMethod.VerifyMessage: {
         assert(params, VerifyMessageRequest);
@@ -149,23 +154,36 @@ export class RpcHandler {
     accountId: string,
     transaction: string,
     origin: string,
+    options: { fill: boolean; broadcast: boolean },
   ): Promise<SendTransactionResponse | null> {
     const psbt = parsePsbt(transaction);
 
-    const { txid } = await this.#accountUseCases.signPsbt(
-      accountId,
-      psbt,
-      origin,
-      {
-        fill: true,
-        broadcast: true,
-      },
-    );
+    const txid = await this.#signPsbt(accountId, origin, psbt, options);
     if (!txid) {
       throw new AssertionError('Missing transaction ID ');
     }
 
     return { transactionId: txid.toString() };
+  }
+
+  async #signPsbt(
+    accountId: string,
+    origin: string,
+    psbt: Psbt,
+    options: { fill: boolean; broadcast: boolean },
+  ): Promise<Txid> {
+    const { txid } = await this.#accountUseCases.signPsbt(
+      accountId,
+      psbt,
+      origin,
+      options,
+    );
+
+    if (!txid) {
+      throw new AssertionError('Missing transaction ID ');
+    }
+
+    return txid;
   }
 
   async #computeFee(
@@ -255,5 +273,26 @@ export class RpcHandler {
         error,
       );
     }
+  }
+
+  async #confirmSend(
+    request: ConfirmSendRequest,
+    origin: string,
+  ): Promise<Json> {
+    const account = await this.#accountUseCases.get(request.fromAccountId);
+    const feeRate = await this.#accountUseCases.getFallbackFeeRate(account);
+    const frozenUTXOs = await this.#accountUseCases.getFrozenUTXOs(account.id);
+
+    const psbt = account
+      .buildTx()
+      .feeRate(feeRate)
+      .unspendable(frozenUTXOs)
+      .addRecipient(request.amount, request.toAddress)
+      .finish();
+
+    return this.#signAndSend(account.id, psbt.toString(), origin, {
+      fill: true,
+      broadcast: false,
+    });
   }
 }

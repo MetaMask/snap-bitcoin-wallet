@@ -12,11 +12,10 @@ import {
   ComputeFeeRequest,
   CreateSendFormRequest,
   RpcHandler,
-  RpcMethod,
   SendPsbtRequest,
   VerifyMessageRequest,
 } from './RpcHandler';
-import { SendErrorCodes } from './validation';
+import { RpcMethod, SendErrorCodes } from './validation';
 
 jest.mock('superstruct', () => ({
   ...jest.requireActual('superstruct'),

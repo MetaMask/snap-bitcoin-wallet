@@ -11,6 +11,16 @@ import {
   refine,
 } from 'superstruct';
 
+export enum RpcMethod {
+  StartSendTransactionFlow = 'startSendTransactionFlow',
+  SignAndSendTransaction = 'signAndSendTransaction',
+  ComputeFee = 'computeFee',
+  VerifyMessage = 'verifyMessage',
+  OnAddressInput = 'onAddressInput',
+  OnAmountInput = 'onAmountInput',
+  ConfirmSend = 'confirmSend',
+}
+
 export enum SendErrorCodes {
   // eslint-disable-next-line @typescript-eslint/no-shadow
   Required = 'Required',
@@ -38,6 +48,13 @@ export const OnAmountInputRequestStruct = object({
   value: NonEmptyStringStruct,
   accountId: UuidStruct,
   assetId: CaipAssetTypeStruct,
+});
+
+export const ConfirmSendRequestStruct = object({
+  fromAccountId: UuidStruct,
+  toAddress: NonEmptyStringStruct,
+  assetId: CaipAssetTypeStruct,
+  amount: NonEmptyStringStruct,
 });
 
 export const ValidationResponseStruct = object({
