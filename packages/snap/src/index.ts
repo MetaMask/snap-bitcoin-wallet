@@ -89,7 +89,7 @@ const cronHandler = new CronHandler(
   sendFlowUseCases,
   snapClient,
 );
-const rpcHandler = new RpcHandler(sendFlowUseCases, accountsUseCases);
+const rpcHandler = new RpcHandler(sendFlowUseCases, accountsUseCases, logger);
 const userInputHandler = new UserInputHandler(
   sendFlowUseCases,
   confirmationUseCases,
