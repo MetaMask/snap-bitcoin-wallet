@@ -3,6 +3,7 @@ import type {
   ChainPosition,
   LocalOutput,
   Network,
+  Transaction,
   TxOut,
   WalletTx,
 } from '@metamask/bitcoindevkit';
@@ -212,6 +213,49 @@ export function mapToTransaction(
   }
 
   return transaction;
+}
+
+/**
+ * Maps a PSBT to a Keyring Transaction.
+ *
+ * @param account - The Bitcoin account.
+ * @param tx - The extracted transaction from the PSBT.
+ * @returns The Keyring transaction.
+ */
+export function mapPsbtToTransaction(
+  account: BitcoinAccount,
+  tx: Transaction,
+): KeyringTransaction {
+  const txid = tx.compute_txid();
+  const currentTime = Date.now();
+
+  const getRecipients = (txOut: TxOut[]): TransactionRecipient[] => {
+    return txOut.flatMap((output) => {
+      if (account.isMine(output.script_pubkey)) {
+        return [];
+      }
+      const recipient = mapToAssetMovement(output, account.network);
+      return recipient ? [recipient] : [];
+    });
+  };
+
+  return {
+    type: 'send',
+    id: txid.toString(),
+    account: account.id,
+    chain: networkToScope[account.network],
+    status: TransactionStatus.Unconfirmed,
+    timestamp: currentTime,
+    events: [
+      {
+        status: TransactionStatus.Unconfirmed,
+        timestamp: currentTime,
+      },
+    ],
+    to: getRecipients(tx.output),
+    from: [],
+    fees: [mapToTransactionFees(account.calculateFee(tx), account.network)],
+  };
 }
 
 /**

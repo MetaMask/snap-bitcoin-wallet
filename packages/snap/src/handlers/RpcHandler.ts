@@ -1,4 +1,3 @@
-import type { Psbt, Txid } from '@metamask/bitcoindevkit';
 import { Address } from '@metamask/bitcoindevkit';
 import { BtcScope } from '@metamask/keyring-api';
 import type { Json, JsonRpcRequest } from '@metamask/utils';
@@ -16,7 +15,7 @@ import {
 import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
 import { scopeToNetwork } from './caip';
 import type { TransactionFee } from './mappings';
-import { mapToTransactionFees } from './mappings';
+import { mapPsbtToTransaction, mapToTransactionFees } from './mappings';
 import { parsePsbt } from './parsers';
 import type {
   ConfirmSendRequest,
@@ -26,10 +25,10 @@ import type {
 import type { ValidationResponse } from './validation';
 import {
   ConfirmSendRequestStruct,
-  RpcMethod,
-  SendErrorCodes,
   OnAddressInputRequestStruct,
   OnAmountInputRequestStruct,
+  RpcMethod,
+  SendErrorCodes,
 } from './validation';
 
 export const CreateSendFormRequest = object({
@@ -90,10 +89,7 @@ export class RpcHandler {
       }
       case RpcMethod.SignAndSendTransaction: {
         assert(params, SendPsbtRequest);
-        return this.#signAndSend(params.accountId, params.transaction, origin, {
-          fill: true,
-          broadcast: true,
-        });
+        return this.#signAndSend(params.accountId, params.transaction, origin);
       }
       case RpcMethod.ComputeFee: {
         assert(params, ComputeFeeRequest);
@@ -113,7 +109,7 @@ export class RpcHandler {
       }
       case RpcMethod.ConfirmSend: {
         assert(params, ConfirmSendRequestStruct);
-        return await this.#confirmSend(params, origin);
+        return await this.#confirmSend(params);
       }
       case RpcMethod.VerifyMessage: {
         assert(params, VerifyMessageRequest);
@@ -154,32 +150,23 @@ export class RpcHandler {
     accountId: string,
     transaction: string,
     origin: string,
-    options: { fill: boolean; broadcast: boolean },
-  ): Promise<SendTransactionResponse> {
+  ): Promise<SendTransactionResponse | null> {
     const psbt = parsePsbt(transaction);
 
-    const txid = await this.#signPsbt(accountId, origin, psbt, options);
-    return { transactionId: txid.toString() };
-  }
-
-  async #signPsbt(
-    accountId: string,
-    origin: string,
-    psbt: Psbt,
-    options: { fill: boolean; broadcast: boolean },
-  ): Promise<Txid> {
     const { txid } = await this.#accountUseCases.signPsbt(
       accountId,
       psbt,
       origin,
-      options,
+      {
+        fill: true,
+        broadcast: true,
+      },
     );
-
     if (!txid) {
       throw new AssertionError('Missing transaction ID ');
     }
 
-    return txid;
+    return { transactionId: txid.toString() };
   }
 
   async #computeFee(
@@ -271,10 +258,7 @@ export class RpcHandler {
     }
   }
 
-  async #confirmSend(
-    request: ConfirmSendRequest,
-    origin: string,
-  ): Promise<Json> {
+  async #confirmSend(request: ConfirmSendRequest): Promise<Json> {
     try {
       const account = await this.#accountUseCases.get(request.fromAccountId);
       const feeRate = await this.#accountUseCases.getFallbackFeeRate(account);
@@ -289,11 +273,10 @@ export class RpcHandler {
         .addRecipient(request.amount, request.toAddress)
         .finish();
 
-      // TODO: map to a KeyringTransaction
-      return this.#signAndSend(account.id, psbt.toString(), origin, {
-        fill: true,
-        broadcast: false,
-      });
+      const signedPsbt = account.sign(psbt);
+      const tx = account.extractTransaction(signedPsbt);
+
+      return mapPsbtToTransaction(account, tx);
     } catch (error) {
       this.#logger.error(
         'An error occurred: %s',
