@@ -9,11 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.1.0]
 
-### Uncategorized
+### Added
 
-- fix: add defensive code around snap_eventTrack ([#531](https://github.com/MetaMask/snap-bitcoin-wallet/pull/531))
-- feat: add onAmountInput and onAddressInput rpc methods ([#532](https://github.com/MetaMask/snap-bitcoin-wallet/pull/532))
-- fix: error message on synchronization ([#529](https://github.com/MetaMask/snap-bitcoin-wallet/pull/529))
+- onAmountInput and onAddressInput RPC methods ([#532](https://github.com/MetaMask/snap-bitcoin-wallet/pull/532))
+
+### Fixed
+
+- Defensive code around snap_eventTrack ([#531](https://github.com/MetaMask/snap-bitcoin-wallet/pull/531))
+- Error message on synchronization ([#529](https://github.com/MetaMask/snap-bitcoin-wallet/pull/529))
 
 ## [1.0.0]
 
