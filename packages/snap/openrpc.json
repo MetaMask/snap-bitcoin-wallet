@@ -330,7 +330,7 @@
     },
     {
       "name": "confirmSend",
-      "description": "Creates and signs a Bitcoin transaction for confirmation.",
+      "description": "Creates and signs a Bitcoin transaction for confirmation. Returns a KeyringTransaction object.",
       "paramStructure": "by-name",
       "params": [
         {
@@ -367,15 +367,145 @@
         }
       ],
       "result": {
-        "name": "sendTransactionResponse",
-        "description": "The signed transaction. Throws an error if the operation fails.",
+        "name": "keyringTransaction",
+        "description": "The KeyringTransaction object representing the transaction. Throws an error if the operation fails.",
         "schema": {
           "type": "object",
-          "required": ["transactionId"],
+          "required": [
+            "id",
+            "account",
+            "chain",
+            "type",
+            "status",
+            "timestamp",
+            "events",
+            "to",
+            "from",
+            "fees"
+          ],
           "properties": {
-            "transactionId": {
+            "id": {
               "type": "string",
-              "description": "The transaction ID of the transaction."
+              "description": "The transaction ID."
+            },
+            "account": {
+              "type": "string",
+              "description": "The account ID that created this transaction."
+            },
+            "chain": {
+              "type": "string",
+              "description": "The chain scope (e.g., 'bip122:000000000019d6689c085ae165831e93')."
+            },
+            "type": {
+              "type": "string",
+              "enum": ["send", "receive"],
+              "description": "The transaction type."
+            },
+            "status": {
+              "type": "string",
+              "enum": ["unconfirmed", "confirmed", "failed"],
+              "description": "The transaction status."
+            },
+            "timestamp": {
+              "type": ["number", "null"],
+              "description": "The timestamp when the transaction was created."
+            },
+            "events": {
+              "type": "array",
+              "description": "Transaction status change events.",
+              "items": {
+                "type": "object",
+                "required": ["status", "timestamp"],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": ["unconfirmed", "confirmed", "failed"]
+                  },
+                  "timestamp": {
+                    "type": ["number", "null"]
+                  }
+                }
+              }
+            },
+            "to": {
+              "type": "array",
+              "description": "Recipients of the transaction.",
+              "items": {
+                "type": "object",
+                "required": ["address", "asset"],
+                "properties": {
+                  "address": {
+                    "type": "string",
+                    "description": "The recipient address."
+                  },
+                  "asset": {
+                    "type": "object",
+                    "required": ["amount", "fungible", "unit", "type"],
+                    "properties": {
+                      "amount": {
+                        "type": "string",
+                        "description": "The amount in BTC."
+                      },
+                      "fungible": {
+                        "type": "boolean",
+                        "const": true
+                      },
+                      "unit": {
+                        "type": "string",
+                        "description": "The currency unit (e.g., 'BTC')."
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "The CAIP-19 asset type."
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "from": {
+              "type": "array",
+              "description": "Senders of the transaction (typically empty for Bitcoin).",
+              "items": {
+                "type": "object"
+              }
+            },
+            "fees": {
+              "type": "array",
+              "description": "Transaction fees.",
+              "items": {
+                "type": "object",
+                "required": ["type", "asset"],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["priority"],
+                    "description": "The fee type."
+                  },
+                  "asset": {
+                    "type": "object",
+                    "required": ["amount", "fungible", "unit", "type"],
+                    "properties": {
+                      "amount": {
+                        "type": "string",
+                        "description": "The fee amount in BTC."
+                      },
+                      "fungible": {
+                        "type": "boolean",
+                        "const": true
+                      },
+                      "unit": {
+                        "type": "string",
+                        "description": "The currency unit (e.g., 'BTC')."
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "The CAIP-19 asset type."
+                      }
+                    }
+                  }
+                }
+              }
             }
           }
         }
