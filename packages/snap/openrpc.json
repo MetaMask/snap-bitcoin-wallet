@@ -197,6 +197,189 @@
           }
         }
       }
+    },
+    {
+      "name": "onAddressInput",
+      "description": "Validates a Bitcoin address for a send transaction.",
+      "paramStructure": "by-name",
+      "params": [
+        {
+          "name": "toAddress",
+          "description": "The recipient Bitcoin address to validate.",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "fromAccountId",
+          "description": "The account ID from which the transaction will be sent.",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "result": {
+        "name": "validationResponse",
+        "description": "Validation result with any errors.",
+        "schema": {
+          "type": "object",
+          "required": ["valid", "errors"],
+          "properties": {
+            "valid": {
+              "type": "boolean",
+              "description": "Whether the input is valid."
+            },
+            "errors": {
+              "type": "array",
+              "description": "List of validation errors.",
+              "items": {
+                "type": "object",
+                "required": ["code", "message"],
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "enum": [
+                      "Required",
+                      "Invalid",
+                      "InsufficientFunds",
+                      "MinimumAmount"
+                    ],
+                    "description": "Error code."
+                  },
+                  "message": {
+                    "type": "string",
+                    "description": "Human-readable error message."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "onAmountInput",
+      "description": "Validates a transaction amount for a send transaction. Checks for sufficient balance and minimum amounts.",
+      "paramStructure": "by-name",
+      "params": [
+        {
+          "name": "amount",
+          "description": "The amount to send in BTC.",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "fromAccountId",
+          "description": "The account ID from which the transaction will be sent.",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "assetId",
+          "description": "The CAIP-19 asset identifier.",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "result": {
+        "name": "validationResponse",
+        "description": "Validation result with any errors.",
+        "schema": {
+          "type": "object",
+          "required": ["valid", "errors"],
+          "properties": {
+            "valid": {
+              "type": "boolean",
+              "description": "Whether the input is valid."
+            },
+            "errors": {
+              "type": "array",
+              "description": "List of validation errors.",
+              "items": {
+                "type": "object",
+                "required": ["code", "message"],
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "enum": [
+                      "Required",
+                      "Invalid",
+                      "InsufficientFunds",
+                      "MinimumAmount"
+                    ],
+                    "description": "Error code."
+                  },
+                  "message": {
+                    "type": "string",
+                    "description": "Human-readable error message."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "confirmSend",
+      "description": "Creates and signs a Bitcoin transaction for confirmation.",
+      "paramStructure": "by-name",
+      "params": [
+        {
+          "name": "fromAccountId",
+          "description": "The account ID from which to send.",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "toAddress",
+          "description": "The recipient Bitcoin address.",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "amount",
+          "description": "The amount to send in BTC.",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "assetId",
+          "description": "The CAIP-19 asset identifier.",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "result": {
+        "name": "sendTransactionResponse",
+        "description": "The signed transaction. Throws an error if the operation fails.",
+        "schema": {
+          "type": "object",
+          "required": ["transactionId"],
+          "properties": {
+            "transactionId": {
+              "type": "string",
+              "description": "The transaction ID of the transaction."
+            }
+          }
+        }
+      }
     }
   ]
 }

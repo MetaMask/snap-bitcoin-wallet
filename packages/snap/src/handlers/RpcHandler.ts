@@ -155,14 +155,10 @@ export class RpcHandler {
     transaction: string,
     origin: string,
     options: { fill: boolean; broadcast: boolean },
-  ): Promise<SendTransactionResponse | null> {
+  ): Promise<SendTransactionResponse> {
     const psbt = parsePsbt(transaction);
 
     const txid = await this.#signPsbt(accountId, origin, psbt, options);
-    if (!txid) {
-      throw new AssertionError('Missing transaction ID ');
-    }
-
     return { transactionId: txid.toString() };
   }
 
@@ -279,20 +275,31 @@ export class RpcHandler {
     request: ConfirmSendRequest,
     origin: string,
   ): Promise<Json> {
-    const account = await this.#accountUseCases.get(request.fromAccountId);
-    const feeRate = await this.#accountUseCases.getFallbackFeeRate(account);
-    const frozenUTXOs = await this.#accountUseCases.getFrozenUTXOs(account.id);
+    try {
+      const account = await this.#accountUseCases.get(request.fromAccountId);
+      const feeRate = await this.#accountUseCases.getFallbackFeeRate(account);
+      const frozenUTXOs = await this.#accountUseCases.getFrozenUTXOs(
+        account.id,
+      );
 
-    const psbt = account
-      .buildTx()
-      .feeRate(feeRate)
-      .unspendable(frozenUTXOs)
-      .addRecipient(request.amount, request.toAddress)
-      .finish();
+      const psbt = account
+        .buildTx()
+        .feeRate(feeRate)
+        .unspendable(frozenUTXOs)
+        .addRecipient(request.amount, request.toAddress)
+        .finish();
 
-    return this.#signAndSend(account.id, psbt.toString(), origin, {
-      fill: true,
-      broadcast: false,
-    });
+      // TODO: map to a KeyringTransaction
+      return this.#signAndSend(account.id, psbt.toString(), origin, {
+        fill: true,
+        broadcast: false,
+      });
+    } catch (error) {
+      this.#logger.error(
+        'An error occurred: %s',
+        (error as CodifiedError).message,
+      );
+      throw error;
+    }
   }
 }
