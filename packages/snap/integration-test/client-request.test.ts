@@ -245,4 +245,142 @@ describe('OnClientRequestHandler', () => {
       errors: [{ code: 'Invalid' }],
     });
   });
+
+  describe('confirmSend', () => {
+    it('creates a transaction without broadcasting', async () => {
+      const response = await snap.onClientRequest({
+        method: 'confirmSend',
+        params: {
+          fromAccountId: account.id,
+          toAddress: TEST_ADDRESS_REGTEST,
+          assetId: Caip19Asset.Regtest,
+          amount: '0.001', // 0.001 BTC
+        },
+      });
+
+      expect(response).toRespondWith({
+        type: 'send',
+        id: expect.any(String),
+        account: account.id,
+        chain: BtcScope.Regtest,
+        status: 'unconfirmed',
+        timestamp: expect.any(Number),
+        events: [
+          {
+            status: 'unconfirmed',
+            timestamp: expect.any(Number),
+          },
+        ],
+        to: [
+          {
+            address: TEST_ADDRESS_REGTEST,
+            asset: {
+              amount: '0.001', // BTC amount
+              fungible: true,
+              unit: CurrencyUnit.Regtest,
+              type: Caip19Asset.Regtest,
+            },
+          },
+        ],
+        from: [],
+        fees: [
+          {
+            type: FeeType.Priority,
+            asset: {
+              amount: expect.any(String),
+              fungible: true,
+              unit: CurrencyUnit.Regtest,
+              type: Caip19Asset.Regtest,
+            },
+          },
+        ],
+      });
+    });
+
+    it('fails with invalid account ID', async () => {
+      const response = await snap.onClientRequest({
+        method: 'confirmSend',
+        params: {
+          fromAccountId: 'not-a-uuid',
+          toAddress: TEST_ADDRESS_REGTEST,
+          assetId: Caip19Asset.Regtest,
+          amount: '0.001',
+        },
+      });
+
+      expect(response).toRespondWithError({
+        code: -32000,
+        message: expect.stringContaining('Expected a string matching'),
+        stack: expect.anything(),
+      });
+    });
+
+    it('fails with invalid address', async () => {
+      const response = await snap.onClientRequest({
+        method: 'confirmSend',
+        params: {
+          fromAccountId: account.id,
+          toAddress: 'invalid-address',
+          assetId: Caip19Asset.Regtest,
+          amount: '0.001',
+        },
+      });
+
+      expect(response).toRespondWith({
+        errors: [{ code: 'Invalid' }],
+        valid: false,
+      });
+    });
+
+    it('fails with invalid amount', async () => {
+      const response = await snap.onClientRequest({
+        method: 'confirmSend',
+        params: {
+          fromAccountId: account.id,
+          toAddress: TEST_ADDRESS_REGTEST,
+          assetId: Caip19Asset.Regtest,
+          amount: '-0.001', // negative amount
+        },
+      });
+
+      expect(response).toRespondWith({
+        errors: [{ code: 'Invalid' }],
+        valid: false,
+      });
+    });
+
+    it('fails with insufficient funds', async () => {
+      const response = await snap.onClientRequest({
+        method: 'confirmSend',
+        params: {
+          fromAccountId: account.id,
+          toAddress: TEST_ADDRESS_REGTEST,
+          assetId: Caip19Asset.Regtest,
+          amount: '1000', // 1000 BTC - more than available
+        },
+      });
+
+      expect(response).toRespondWithError({
+        code: -32603,
+        message: 'An unexpected error occurred',
+        stack: expect.anything(),
+      });
+    });
+
+    it('fails with missing parameters', async () => {
+      const response = await snap.onClientRequest({
+        method: 'confirmSend',
+        params: {
+          fromAccountId: account.id,
+          // missing toAddress, assetId, amount
+        } as any,
+      });
+
+      expect(response).toRespondWithError({
+        code: -32000,
+        message: expect.stringContaining('At path:'),
+        stack: expect.anything(),
+      });
+    });
+  });
 });

@@ -1,10 +1,12 @@
-import { Address } from '@metamask/bitcoindevkit';
+import { Address, Amount } from '@metamask/bitcoindevkit';
+import type { Network } from '@metamask/bitcoindevkit';
 import { BtcScope } from '@metamask/keyring-api';
 import type { Json, JsonRpcRequest } from '@metamask/utils';
 import { Verifier } from 'bip322-js';
 import { assert, enums, object, optional, string } from 'superstruct';
 
 import {
+  type BitcoinAccount,
   AssertionError,
   type CodifiedError,
   FormatError,
@@ -24,6 +26,8 @@ import type {
 } from './types';
 import type { ValidationResponse } from './validation';
 import {
+  NO_ERRORS_RESPONSE,
+  INVALID_RESPONSE,
   ConfirmSendRequestStruct,
   OnAddressInputRequestStruct,
   OnAmountInputRequestStruct,
@@ -190,24 +194,15 @@ export class RpcHandler {
       // appropriate network (e.g. mainnet, testnet etc)
       const bitcoinAccount = await this.#accountUseCases.get(accountId);
 
-      // try to parse the input address or throw if invalid.
-      Address.from_string(value, bitcoinAccount.network).toString();
+      return this.#validateAddress(value, bitcoinAccount.network);
     } catch (error) {
       this.#logger.error(
-        `Invalid account and/or invalid address. Error: %s`,
+        `Invalid account. Error: %s`,
         (error as CodifiedError).message,
       );
 
-      return {
-        valid: false,
-        errors: [{ code: SendErrorCodes.Invalid }],
-      };
+      return INVALID_RESPONSE;
     }
-
-    return {
-      valid: true,
-      errors: [],
-    };
   }
 
   async #onAmountInput(
@@ -215,29 +210,25 @@ export class RpcHandler {
   ): Promise<ValidationResponse> {
     const { value, accountId } = request;
 
-    const valueToNumber = Number(value);
-    if (!Number.isFinite(valueToNumber) || valueToNumber <= 0) {
-      return { valid: false, errors: [{ code: SendErrorCodes.Invalid }] };
+    const amountValidation = this.#validateAmount(value);
+    if (!amountValidation.valid) {
+      return amountValidation;
     }
 
     try {
       const bitcoinAccount = await this.#accountUseCases.get(accountId);
-      const balance = bitcoinAccount.balance.trusted_spendable.to_btc();
+      const balanceValidation = this.#validateAccountBalance(
+        value,
+        bitcoinAccount,
+      );
 
-      if (valueToNumber > balance) {
-        return {
-          valid: false,
-          errors: [{ code: SendErrorCodes.InsufficientBalance }],
-        };
-      }
-
-      return { valid: true, errors: [] };
+      return balanceValidation.valid ? NO_ERRORS_RESPONSE : balanceValidation;
     } catch (error) {
       this.#logger.error(
         'An error occurred: %s',
         (error as CodifiedError).message,
       );
-      return { valid: false, errors: [{ code: SendErrorCodes.Invalid }] };
+      return INVALID_RESPONSE;
     }
   }
 
@@ -258,30 +249,106 @@ export class RpcHandler {
     }
   }
 
+  #validateAmount(amount: string): ValidationResponse {
+    const valueToNumber = Number(amount);
+    if (!Number.isFinite(valueToNumber) || valueToNumber <= 0) {
+      return INVALID_RESPONSE;
+    }
+    return NO_ERRORS_RESPONSE;
+  }
+
+  #validateAddress(address: string, network: Network): ValidationResponse {
+    try {
+      Address.from_string(address, network).toString();
+      return NO_ERRORS_RESPONSE;
+    } catch (error) {
+      this.#logger.error(
+        'Invalid address for network %s. Error: %s',
+        network,
+        (error as CodifiedError).message,
+      );
+      return INVALID_RESPONSE;
+    }
+  }
+
+  #validateAccountBalance(
+    amountInBtc: string,
+    account: BitcoinAccount,
+  ): ValidationResponse {
+    const balance = account.balance.trusted_spendable.to_btc();
+    const valueToNumber = Number(amountInBtc);
+
+    if (valueToNumber > balance) {
+      return {
+        valid: false,
+        errors: [{ code: SendErrorCodes.InsufficientBalance }],
+      };
+    }
+
+    return NO_ERRORS_RESPONSE;
+  }
+
   async #confirmSend(request: ConfirmSendRequest): Promise<Json> {
     try {
       const account = await this.#accountUseCases.get(request.fromAccountId);
-      const feeRate = await this.#accountUseCases.getFallbackFeeRate(account);
-      const frozenUTXOs = await this.#accountUseCases.getFrozenUTXOs(
-        account.id,
-      );
 
-      const psbt = account
+      const inputValidation =
+        this.#validateAmount(request.amount).valid &&
+        this.#validateAddress(request.toAddress, account.network).valid;
+
+      if (!inputValidation) {
+        return INVALID_RESPONSE;
+      }
+
+      const amountInSats = Amount.from_btc(Number(request.amount))
+        .to_sat()
+        .toString();
+
+      const templatePsbt = account
         .buildTx()
-        .feeRate(feeRate)
-        .unspendable(frozenUTXOs)
-        .addRecipient(request.amount, request.toAddress)
+        .addRecipient(amountInSats, request.toAddress)
         .finish();
 
-      const signedPsbt = account.sign(psbt);
+      const { psbt: signedPsbtString } = await this.#accountUseCases.signPsbt(
+        account.id,
+        templatePsbt,
+        'metamask',
+        {
+          fill: true,
+          broadcast: false, // this is confirmation flow we don't want to broadcast
+        },
+      );
+
+      const signedPsbt = parsePsbt(signedPsbtString);
+
+      const balanceValidation = this.#validateAccountBalance(
+        request.amount,
+        account,
+      );
+
+      if (!balanceValidation.valid) {
+        return balanceValidation;
+      }
+
+      // let's validate the balance now that we have
+      // an accurate figure for the fees
+      if (
+        BigInt(amountInSats) + signedPsbt.fee().to_sat() >
+        account.balance.trusted_spendable.to_sat()
+      ) {
+        return {
+          valid: false,
+          errors: [{ code: SendErrorCodes.InsufficientBalanceToCoverFee }],
+        };
+      }
+
       const tx = account.extractTransaction(signedPsbt);
 
       return mapPsbtToTransaction(account, tx);
     } catch (error) {
-      this.#logger.error(
-        'An error occurred: %s',
-        (error as CodifiedError).message,
-      );
+      const errorMessage = (error as CodifiedError).message;
+      this.#logger.error('An error occurred: %s', errorMessage);
+
       throw error;
     }
   }

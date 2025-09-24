@@ -26,6 +26,7 @@ export enum SendErrorCodes {
   Required = 'Required',
   Invalid = 'Invalid',
   InsufficientBalance = 'InsufficientBalance',
+  InsufficientBalanceToCoverFee = 'InsufficientBalanceToCoverFee',
 }
 
 export const NonEmptyStringStruct = refine(
@@ -67,3 +68,14 @@ export const ValidationResponseStruct = object({
 });
 
 export type ValidationResponse = Infer<typeof ValidationResponseStruct>;
+
+// create constants for the two most common responses
+export const INVALID_RESPONSE: ValidationResponse = {
+  valid: false,
+  errors: [{ code: SendErrorCodes.Invalid }],
+};
+
+export const NO_ERRORS_RESPONSE: ValidationResponse = {
+  valid: true,
+  errors: [],
+};

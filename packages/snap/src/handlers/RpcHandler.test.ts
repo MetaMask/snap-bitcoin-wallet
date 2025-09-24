@@ -1,5 +1,5 @@
-import { Psbt, Address } from '@metamask/bitcoindevkit';
-import type { Transaction, Amount, Txid } from '@metamask/bitcoindevkit';
+import { Psbt, Address, Amount } from '@metamask/bitcoindevkit';
+import type { Transaction, Txid } from '@metamask/bitcoindevkit';
 import type { Transaction as KeyringTransaction } from '@metamask/keyring-api';
 import { BtcScope, FeeType } from '@metamask/keyring-api';
 import type { JsonRpcRequest } from '@metamask/utils';
@@ -19,6 +19,9 @@ jest.mock('@metamask/bitcoindevkit', () => ({
   Psbt: { from_string: jest.fn() },
   Address: {
     from_string: jest.fn(),
+  },
+  Amount: {
+    from_btc: jest.fn(),
   },
 }));
 
@@ -65,6 +68,11 @@ describe('RpcHandler', () => {
 
   describe('parameter validation', () => {
     describe('onAddressInput validation', () => {
+      beforeEach(() => {
+        const mockAccount = mock<BitcoinAccount>({ network: 'bitcoin' });
+        mockAccountsUseCases.get.mockResolvedValue(mockAccount);
+      });
+
       it('rejects invalid address format', async () => {
         const invalidAddressRequest: JsonRpcRequest = {
           id: 1,
@@ -80,8 +88,9 @@ describe('RpcHandler', () => {
 
         expect(mockAccountsUseCases.get).toHaveBeenCalledWith(validAccountId);
         expect(mockLogger.error).toHaveBeenCalledWith(
-          'Invalid account and/or invalid address. Error: %s',
-          expect.any(String),
+          'Invalid address for network %s. Error: %s',
+          'bitcoin',
+          'Invalid address: not-a-valid-address',
         );
         expect(result).toStrictEqual({
           valid: false,
@@ -505,7 +514,7 @@ describe('RpcHandler', () => {
 
       expect(mockAccountsUseCases.get).toHaveBeenCalledWith(validAccountId);
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'Invalid account and/or invalid address. Error: %s',
+        'Invalid account. Error: %s',
         'Account not found',
       );
       expect(result).toStrictEqual({
@@ -631,6 +640,7 @@ describe('RpcHandler', () => {
   describe('confirmSend', () => {
     const mockAccount = mock<BitcoinAccount>();
     const mockTxBuilder = mock<TransactionBuilder>();
+    const mockTemplatePsbt = mock<Psbt>();
     const mockSignedPsbt = mock<Psbt>();
     const mockTransaction = mock<Transaction>();
 
@@ -641,7 +651,7 @@ describe('RpcHandler', () => {
       params: {
         fromAccountId: validAccountId,
         toAddress: 'bc1qux9xtsj6mr4un7yg9kgd7tv8kndvlhv2gv5yc8',
-        amount: '10000',
+        amount: '0.0001',
         assetId: Caip19Asset.Bitcoin,
       },
     };
@@ -650,19 +660,31 @@ describe('RpcHandler', () => {
       mockAccount.id = validAccountId;
       mockAccount.network = 'bitcoin';
 
+      const mockBalanceAmount = mock<Amount>();
+      mockBalanceAmount.to_sat.mockReturnValue(BigInt(100_000_000)); // 1 BTC in satoshis
+      mockAccount.balance = {
+        trusted_spendable: mockBalanceAmount,
+      } as any;
+
       mockAccountsUseCases.get.mockResolvedValue(mockAccount);
-      mockAccountsUseCases.getFallbackFeeRate.mockResolvedValue(5);
-      mockAccountsUseCases.getFrozenUTXOs.mockResolvedValue(['utxo1', 'utxo2']);
+      mockAccountsUseCases.signPsbt.mockResolvedValue({
+        psbt: 'signed-psbt-string',
+        txid: undefined,
+      });
 
       mockAccount.buildTx.mockReturnValue(mockTxBuilder);
-      // this is useful so the mock builder can do chaining
-      mockTxBuilder.feeRate.mockReturnThis();
-      mockTxBuilder.unspendable.mockReturnThis();
       mockTxBuilder.addRecipient.mockReturnThis();
-      mockTxBuilder.finish.mockReturnValue(mockPsbt);
+      mockTxBuilder.finish.mockReturnValue(mockTemplatePsbt);
 
-      mockAccount.sign.mockReturnValue(mockSignedPsbt);
+      const mockFeeAmount = mock<Amount>();
+      mockFeeAmount.to_sat.mockReturnValue(BigInt(500)); // 500 satoshis fee
+      mockSignedPsbt.fee.mockReturnValue(mockFeeAmount);
+      jest.mocked(Psbt.from_string).mockReturnValue(mockSignedPsbt);
       mockAccount.extractTransaction.mockReturnValue(mockTransaction);
+
+      (Amount.from_btc as jest.Mock).mockImplementation((btc) => ({
+        to_sat: () => BigInt(Math.round(btc * 100_000_000)),
+      }));
 
       // we mock the mapping function since we don't care about the result structure here
       // it is tested in mappings.test.ts
@@ -675,26 +697,25 @@ describe('RpcHandler', () => {
       const result = await handler.route(origin, validRequest);
 
       expect(mockAccountsUseCases.get).toHaveBeenCalledWith(validAccountId);
-      expect(mockAccountsUseCases.getFallbackFeeRate).toHaveBeenCalledWith(
-        mockAccount,
-      );
-      expect(mockAccountsUseCases.getFrozenUTXOs).toHaveBeenCalledWith(
-        validAccountId,
-      );
 
       expect(mockAccount.buildTx).toHaveBeenCalled();
-      expect(mockTxBuilder.feeRate).toHaveBeenCalledWith(5);
-      expect(mockTxBuilder.unspendable).toHaveBeenCalledWith([
-        'utxo1',
-        'utxo2',
-      ]);
       expect(mockTxBuilder.addRecipient).toHaveBeenCalledWith(
-        '10000',
+        '10000', // 0.0001 BTC in satoshis (addRecipient requires satoshis)
         'bc1qux9xtsj6mr4un7yg9kgd7tv8kndvlhv2gv5yc8',
       );
       expect(mockTxBuilder.finish).toHaveBeenCalled();
 
-      expect(mockAccount.sign).toHaveBeenCalledWith(mockPsbt);
+      expect(mockAccountsUseCases.signPsbt).toHaveBeenCalledWith(
+        validAccountId,
+        mockTemplatePsbt,
+        'metamask',
+        {
+          fill: true,
+          broadcast: false,
+        },
+      );
+
+      expect(Psbt.from_string).toHaveBeenCalledWith('signed-psbt-string');
       expect(mockAccount.extractTransaction).toHaveBeenCalledWith(
         mockSignedPsbt,
       );
@@ -714,7 +735,7 @@ describe('RpcHandler', () => {
         params: {
           fromAccountId: validAccountId,
           toAddress: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
-          amount: '50000',
+          amount: '0.0005',
           assetId: Caip19Asset.Bitcoin,
         },
       };
@@ -722,7 +743,7 @@ describe('RpcHandler', () => {
       await handler.route(origin, customRequest);
 
       expect(mockTxBuilder.addRecipient).toHaveBeenCalledWith(
-        '50000',
+        '50000', // 0.0005 BTC in satoshis
         '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
       );
     });
@@ -761,9 +782,7 @@ describe('RpcHandler', () => {
 
     it('throws error when sign fails', async () => {
       const signError = new Error('Signing failed');
-      mockAccount.sign.mockImplementation(() => {
-        throw signError;
-      });
+      mockAccountsUseCases.signPsbt.mockRejectedValue(signError);
 
       await expect(handler.route(origin, validRequest)).rejects.toThrow(
         'Signing failed',
@@ -799,7 +818,7 @@ describe('RpcHandler', () => {
         params: {
           // missing fromAccountId
           toAddress: 'bc1qux9xtsj6mr4un7yg9kgd7tv8kndvlhv2gv5yc8',
-          amount: '10000',
+          amount: '0.0001',
           assetId: Caip19Asset.Bitcoin,
         } as any,
       };
@@ -816,7 +835,7 @@ describe('RpcHandler', () => {
         params: {
           fromAccountId: 'not-a-uuid',
           toAddress: 'bc1qux9xtsj6mr4un7yg9kgd7tv8kndvlhv2gv5yc8',
-          amount: '10000',
+          amount: '0.0001',
           assetId: Caip19Asset.Bitcoin,
         },
       };
@@ -824,6 +843,149 @@ describe('RpcHandler', () => {
       await expect(handler.route(origin, invalidUuidRequest)).rejects.toThrow(
         'Expected a string matching',
       );
+    });
+
+    it('returns validation error for invalid amount', async () => {
+      const invalidAmountRequest: JsonRpcRequest = {
+        id: 1,
+        jsonrpc: '2.0',
+        method: RpcMethod.ConfirmSend,
+        params: {
+          fromAccountId: validAccountId,
+          toAddress: 'bc1qux9xtsj6mr4un7yg9kgd7tv8kndvlhv2gv5yc8',
+          amount: '-0.0001',
+          assetId: Caip19Asset.Bitcoin,
+        },
+      };
+
+      const result = await handler.route(origin, invalidAmountRequest);
+
+      expect(result).toStrictEqual({
+        valid: false,
+        errors: [{ code: SendErrorCodes.Invalid }],
+      });
+    });
+
+    it('returns validation error for invalid address', async () => {
+      const invalidAddressRequest: JsonRpcRequest = {
+        id: 1,
+        jsonrpc: '2.0',
+        method: RpcMethod.ConfirmSend,
+        params: {
+          fromAccountId: validAccountId,
+          toAddress: 'invalid-address',
+          amount: '0.0001',
+          assetId: Caip19Asset.Bitcoin,
+        },
+      };
+
+      const result = await handler.route(origin, invalidAddressRequest);
+
+      expect(result).toStrictEqual({
+        valid: false,
+        errors: [{ code: SendErrorCodes.Invalid }],
+      });
+    });
+
+    it('returns validation error for insufficient fee balance', async () => {
+      // small balance that won't cover amount + fees
+      const smallBalanceAmount = mock<Amount>();
+      smallBalanceAmount.to_sat.mockReturnValue(BigInt(5000)); // 0.00005 BTC in satoshis
+      smallBalanceAmount.to_btc.mockReturnValue(0.00005);
+
+      const mockBalance = {
+        trusted_spendable: smallBalanceAmount,
+        free: mock<Amount>(),
+        immature: mock<Amount>(),
+        trusted_pending: mock<Amount>(),
+        untrusted_pending: mock<Amount>(),
+        coin_count: 1,
+        coin_value: mock<Amount>(),
+      };
+
+      const smallBalanceAccount = mock<BitcoinAccount>();
+      smallBalanceAccount.id = validAccountId;
+      smallBalanceAccount.network = 'bitcoin';
+      smallBalanceAccount.balance = mockBalance as any;
+      smallBalanceAccount.buildTx.mockReturnValue(mockTxBuilder);
+      smallBalanceAccount.extractTransaction.mockReturnValue(mockTransaction);
+
+      mockAccountsUseCases.get.mockResolvedValue(smallBalanceAccount);
+
+      const mockSignedPsbtWithFee = mock<Psbt>();
+      const mockFeeAmount = mock<Amount>();
+      mockFeeAmount.to_sat.mockReturnValue(BigInt(1000)); // 0.00001 BTC fee in satoshis
+      mockSignedPsbtWithFee.fee.mockReturnValue(mockFeeAmount);
+      jest.mocked(Psbt.from_string).mockReturnValue(mockSignedPsbtWithFee);
+
+      const insufficientBalanceRequest: JsonRpcRequest = {
+        id: 1,
+        jsonrpc: '2.0',
+        method: RpcMethod.ConfirmSend,
+        params: {
+          fromAccountId: validAccountId,
+          toAddress: 'bc1qux9xtsj6mr4un7yg9kgd7tv8kndvlhv2gv5yc8',
+          amount: '0.00005', // 0.00005 BTC (5000 sats) + 0.00001 BTC fee (1000 sats) > 0.00005 BTC balance (5000 sats)
+          assetId: Caip19Asset.Bitcoin,
+        },
+      };
+
+      const result = await handler.route(origin, insufficientBalanceRequest);
+
+      expect(result).toStrictEqual({
+        valid: false,
+        errors: [{ code: SendErrorCodes.InsufficientBalanceToCoverFee }],
+      });
+    });
+
+    it('returns validation error for insufficient balance', async () => {
+      const smallBalanceAmount = mock<Amount>();
+      smallBalanceAmount.to_sat.mockReturnValue(BigInt(5000)); // 0.00005 BTC in satoshis
+      smallBalanceAmount.to_btc.mockReturnValue(0.00005);
+
+      const mockBalance = {
+        trusted_spendable: smallBalanceAmount,
+        free: mock<Amount>(),
+        immature: mock<Amount>(),
+        trusted_pending: mock<Amount>(),
+        untrusted_pending: mock<Amount>(),
+        coin_count: 1,
+        coin_value: mock<Amount>(),
+      };
+
+      const smallBalanceAccount = mock<BitcoinAccount>();
+      smallBalanceAccount.id = validAccountId;
+      smallBalanceAccount.network = 'bitcoin';
+      smallBalanceAccount.balance = mockBalance as any;
+      smallBalanceAccount.buildTx.mockReturnValue(mockTxBuilder);
+      smallBalanceAccount.extractTransaction.mockReturnValue(mockTransaction);
+
+      mockAccountsUseCases.get.mockResolvedValue(smallBalanceAccount);
+
+      const mockSignedPsbtWithFee = mock<Psbt>();
+      const mockFeeAmount = mock<Amount>();
+      mockFeeAmount.to_sat.mockReturnValue(BigInt(1000)); // 0.00001 BTC fee in satoshis
+      mockSignedPsbtWithFee.fee.mockReturnValue(mockFeeAmount);
+      jest.mocked(Psbt.from_string).mockReturnValue(mockSignedPsbtWithFee);
+
+      const insufficientBalanceRequest: JsonRpcRequest = {
+        id: 1,
+        jsonrpc: '2.0',
+        method: RpcMethod.ConfirmSend,
+        params: {
+          fromAccountId: validAccountId,
+          toAddress: 'bc1qux9xtsj6mr4un7yg9kgd7tv8kndvlhv2gv5yc8',
+          amount: '0.00006', // 0.00006 BTC (6000 sats) + 0.00001 BTC fee (1000 sats) > 0.00005 BTC balance (5000 sats)
+          assetId: Caip19Asset.Bitcoin,
+        },
+      };
+
+      const result = await handler.route(origin, insufficientBalanceRequest);
+
+      expect(result).toStrictEqual({
+        valid: false,
+        errors: [{ code: SendErrorCodes.InsufficientBalance }],
+      });
     });
   });
 });
