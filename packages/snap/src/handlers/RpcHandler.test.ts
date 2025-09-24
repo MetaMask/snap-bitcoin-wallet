@@ -1,11 +1,11 @@
 import { Psbt, Address } from '@metamask/bitcoindevkit';
-import type { Amount, Txid } from '@metamask/bitcoindevkit';
-import { BtcScope, FeeType } from '@metamask/keyring-api';
+import type { Amount, Txid, Transaction } from '@metamask/bitcoindevkit';
+import type { Transaction as KeyringTransaction } from '@metamask/keyring-api';
+import { BtcScope, FeeType, TransactionStatus } from '@metamask/keyring-api';
 import type { JsonRpcRequest } from '@metamask/utils';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
-import type { Logger } from '../entities';
 import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
 import { Caip19Asset } from './caip';
 import {
@@ -16,6 +16,8 @@ import {
   VerifyMessageRequest,
 } from './RpcHandler';
 import { RpcMethod, SendErrorCodes } from './validation';
+import type { Logger, BitcoinAccount, TransactionBuilder } from '../entities';
+import { mapPsbtToTransaction } from './mappings';
 
 jest.mock('superstruct', () => ({
   ...jest.requireActual('superstruct'),
@@ -30,6 +32,11 @@ jest.mock('@metamask/bitcoindevkit', () => ({
   Address: {
     from_string: jest.fn(),
   },
+}));
+
+jest.mock('./mappings', () => ({
+  ...jest.requireActual('./mappings'),
+  mapPsbtToTransaction: jest.fn(),
 }));
 
 describe('RpcHandler', () => {
@@ -511,7 +518,9 @@ describe('RpcHandler', () => {
     });
 
     beforeEach(() => {
-      jest.clearAllMocks();
+      const { assert: realAssert } = jest.requireActual('superstruct');
+      jest.mocked(assert).mockImplementation(realAssert);
+
       const mockAmountAccount = {
         network: 'bitcoin',
         balance: {
@@ -610,6 +619,342 @@ describe('RpcHandler', () => {
           params: { ...mockRequest.params, signature: 'invalidaSignature' },
         } as JsonRpcRequest),
       ).rejects.toThrow('Failed to verify signature');
+    });
+  });
+
+  describe('confirmSend', () => {
+    const mockAccount = mock<BitcoinAccount>({
+      id: validAccountId,
+      network: 'bitcoin' as any,
+    });
+    const mockTxBuilder = mock<TransactionBuilder>({
+      feeRate: jest.fn(),
+      unspendable: jest.fn(),
+      addRecipient: jest.fn(),
+      finish: jest.fn(),
+    });
+    const mockSignedPsbt = mock<Psbt>();
+    const mockTransaction = mock<Transaction>();
+    const mockKeyringTransaction: KeyringTransaction = {
+      type: 'send',
+      id: 'txid123',
+      account: validAccountId,
+      chain: 'btc:mainnet',
+      status: TransactionStatus.Unconfirmed,
+      timestamp: 1234567890,
+      events: [
+        {
+          status: TransactionStatus.Unconfirmed,
+          timestamp: 1234567890,
+        },
+      ],
+      to: [],
+      from: [],
+      fees: [],
+    };
+
+    const validRequest: JsonRpcRequest = {
+      id: 1,
+      jsonrpc: '2.0',
+      method: RpcMethod.ConfirmSend,
+      params: {
+        fromAccountId: validAccountId,
+        toAddress: 'bc1qux9xtsj6mr4un7yg9kgd7tv8kndvlhv2gv5yc8',
+        amount: '10000',
+        assetId: Caip19Asset.Bitcoin,
+      },
+    };
+
+    beforeEach(() => {
+      mockAccountsUseCases.get.mockResolvedValue(mockAccount);
+      mockAccountsUseCases.getFallbackFeeRate.mockResolvedValue(5);
+      mockAccountsUseCases.getFrozenUTXOs.mockResolvedValue(['utxo1', 'utxo2']);
+
+      mockAccount.buildTx.mockReturnValue(mockTxBuilder);
+      mockTxBuilder.feeRate.mockReturnThis();
+      mockTxBuilder.unspendable.mockReturnThis();
+      mockTxBuilder.addRecipient.mockReturnThis();
+      mockTxBuilder.finish.mockReturnValue(mockPsbt);
+
+      mockAccount.sign.mockReturnValue(mockSignedPsbt);
+      mockAccount.extractTransaction.mockReturnValue(mockTransaction);
+
+      jest.mocked(mapPsbtToTransaction).mockReturnValue(mockKeyringTransaction);
+    });
+
+    it('creates and signs a transaction successfully', async () => {
+      const { assert: realAssert } = jest.requireActual('superstruct');
+      jest.mocked(assert).mockImplementation(realAssert);
+
+      const result = await handler.route(origin, validRequest);
+
+      expect(mockAccountsUseCases.get).toHaveBeenCalledWith(validAccountId);
+      expect(mockAccountsUseCases.getFallbackFeeRate).toHaveBeenCalledWith(
+        mockAccount,
+      );
+      expect(mockAccountsUseCases.getFrozenUTXOs).toHaveBeenCalledWith(
+        validAccountId,
+      );
+
+      expect(mockAccount.buildTx).toHaveBeenCalled();
+      expect(mockTxBuilder.feeRate).toHaveBeenCalledWith(5);
+      expect(mockTxBuilder.unspendable).toHaveBeenCalledWith([
+        'utxo1',
+        'utxo2',
+      ]);
+      expect(mockTxBuilder.addRecipient).toHaveBeenCalledWith(
+        '10000',
+        'bc1qux9xtsj6mr4un7yg9kgd7tv8kndvlhv2gv5yc8',
+      );
+      expect(mockTxBuilder.finish).toHaveBeenCalled();
+
+      expect(mockAccount.sign).toHaveBeenCalledWith(mockPsbt);
+      expect(mockAccount.extractTransaction).toHaveBeenCalledWith(
+        mockSignedPsbt,
+      );
+      expect(mapPsbtToTransaction).toHaveBeenCalledWith(
+        mockAccount,
+        mockTransaction,
+      );
+
+      expect(result).toStrictEqual(mockKeyringTransaction);
+    });
+
+    it('handles different amounts and addresses', async () => {
+      const { assert: realAssert } = jest.requireActual('superstruct');
+      jest.mocked(assert).mockImplementation(realAssert);
+
+      const customRequest: JsonRpcRequest = {
+        id: 1,
+        jsonrpc: '2.0',
+        method: RpcMethod.ConfirmSend,
+        params: {
+          fromAccountId: validAccountId,
+          toAddress: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
+          amount: '50000',
+          assetId: Caip19Asset.Bitcoin,
+        },
+      };
+
+      await handler.route(origin, customRequest);
+
+      expect(mockTxBuilder.addRecipient).toHaveBeenCalledWith(
+        '50000',
+        '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
+      );
+    });
+
+    it('throws error when account is not found', async () => {
+      const { assert: realAssert } = jest.requireActual('superstruct');
+      jest.mocked(assert).mockImplementation(realAssert);
+
+      mockAccountsUseCases.get.mockRejectedValue(
+        new Error('Account not found'),
+      );
+
+      await expect(handler.route(origin, validRequest)).rejects.toThrow(
+        'Account not found',
+      );
+
+      expect(mockAccountsUseCases.get).toHaveBeenCalledWith(validAccountId);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'An error occurred: %s',
+        'Account not found',
+      );
+    });
+
+    it('throws error when buildTx fails', async () => {
+      const { assert: realAssert } = jest.requireActual('superstruct');
+      jest.mocked(assert).mockImplementation(realAssert);
+
+      const buildError = new Error('Insufficient funds');
+      mockTxBuilder.finish.mockImplementation(() => {
+        throw buildError;
+      });
+
+      await expect(handler.route(origin, validRequest)).rejects.toThrow(
+        'Insufficient funds',
+      );
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'An error occurred: %s',
+        'Insufficient funds',
+      );
+    });
+
+    it('throws error when sign fails', async () => {
+      const { assert: realAssert } = jest.requireActual('superstruct');
+      jest.mocked(assert).mockImplementation(realAssert);
+
+      const signError = new Error('Signing failed');
+      mockAccount.sign.mockImplementation(() => {
+        throw signError;
+      });
+
+      await expect(handler.route(origin, validRequest)).rejects.toThrow(
+        'Signing failed',
+      );
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'An error occurred: %s',
+        'Signing failed',
+      );
+    });
+
+    it('throws error when extractTransaction fails', async () => {
+      const { assert: realAssert } = jest.requireActual('superstruct');
+      jest.mocked(assert).mockImplementation(realAssert);
+
+      const extractError = new Error('Failed to extract transaction');
+      mockAccount.extractTransaction.mockImplementation(() => {
+        throw extractError;
+      });
+
+      await expect(handler.route(origin, validRequest)).rejects.toThrow(
+        'Failed to extract transaction',
+      );
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'An error occurred: %s',
+        'Failed to extract transaction',
+      );
+    });
+
+    it('validates required parameters', async () => {
+      const { assert: realAssert } = jest.requireActual('superstruct');
+      jest.mocked(assert).mockImplementation(realAssert);
+      const invalidRequests: JsonRpcRequest[] = [
+        {
+          id: 1,
+          jsonrpc: '2.0',
+          method: RpcMethod.ConfirmSend,
+          params: {
+            // missing fromAccountId
+            toAddress: 'bc1qux9xtsj6mr4un7yg9kgd7tv8kndvlhv2gv5yc8',
+            amount: '10000',
+            assetId: Caip19Asset.Bitcoin,
+          } as any,
+        },
+        {
+          id: 1,
+          jsonrpc: '2.0',
+          method: RpcMethod.ConfirmSend,
+          params: {
+            fromAccountId: validAccountId,
+            // missing toAddress
+            amount: '10000',
+            assetId: Caip19Asset.Bitcoin,
+          } as any,
+        },
+        {
+          id: 1,
+          jsonrpc: '2.0',
+          method: RpcMethod.ConfirmSend,
+          params: {
+            fromAccountId: validAccountId,
+            toAddress: 'bc1qux9xtsj6mr4un7yg9kgd7tv8kndvlhv2gv5yc8',
+            // missing amount
+            assetId: Caip19Asset.Bitcoin,
+          } as any,
+        },
+        {
+          id: 1,
+          jsonrpc: '2.0',
+          method: RpcMethod.ConfirmSend,
+          params: {
+            fromAccountId: validAccountId,
+            toAddress: 'bc1qux9xtsj6mr4un7yg9kgd7tv8kndvlhv2gv5yc8',
+            amount: '10000',
+            // missing assetId
+          } as any,
+        },
+      ];
+
+      for (const invalidRequest of invalidRequests) {
+        await expect(handler.route(origin, invalidRequest)).rejects.toThrow(
+          'At path:',
+        );
+      }
+    });
+
+    it('validates accountId is a valid UUID', async () => {
+      const { assert: realAssert } = jest.requireActual('superstruct');
+      jest.mocked(assert).mockImplementation(realAssert);
+      const invalidUuidRequest: JsonRpcRequest = {
+        id: 1,
+        jsonrpc: '2.0',
+        method: RpcMethod.ConfirmSend,
+        params: {
+          fromAccountId: 'not-a-uuid',
+          toAddress: 'bc1qux9xtsj6mr4un7yg9kgd7tv8kndvlhv2gv5yc8',
+          amount: '10000',
+          assetId: Caip19Asset.Bitcoin,
+        } as any,
+      };
+
+      await expect(handler.route(origin, invalidUuidRequest)).rejects.toThrow(
+        'Expected a string matching',
+      );
+    });
+
+    it('validates amount is a non-empty string', async () => {
+      const { assert: realAssert } = jest.requireActual('superstruct');
+      jest.mocked(assert).mockImplementation(realAssert);
+      const emptyAmountRequest: JsonRpcRequest = {
+        id: 1,
+        jsonrpc: '2.0',
+        method: RpcMethod.ConfirmSend,
+        params: {
+          fromAccountId: validAccountId,
+          toAddress: 'bc1qux9xtsj6mr4un7yg9kgd7tv8kndvlhv2gv5yc8',
+          amount: '',
+          assetId: Caip19Asset.Bitcoin,
+        } as any,
+      };
+
+      await expect(handler.route(origin, emptyAmountRequest)).rejects.toThrow(
+        'Expected a nonempty string',
+      );
+    });
+
+    it('validates toAddress is a non-empty string', async () => {
+      const { assert: realAssert } = jest.requireActual('superstruct');
+      jest.mocked(assert).mockImplementation(realAssert);
+      const emptyAddressRequest: JsonRpcRequest = {
+        id: 1,
+        jsonrpc: '2.0',
+        method: RpcMethod.ConfirmSend,
+        params: {
+          fromAccountId: validAccountId,
+          toAddress: '',
+          amount: '10000',
+          assetId: Caip19Asset.Bitcoin,
+        } as any,
+      };
+
+      await expect(handler.route(origin, emptyAddressRequest)).rejects.toThrow(
+        'Expected a nonempty string',
+      );
+    });
+
+    it('validates assetId follows CAIP-19 format', async () => {
+      const { assert: realAssert } = jest.requireActual('superstruct');
+      jest.mocked(assert).mockImplementation(realAssert);
+      const invalidAssetRequest: JsonRpcRequest = {
+        id: 1,
+        jsonrpc: '2.0',
+        method: RpcMethod.ConfirmSend,
+        params: {
+          fromAccountId: validAccountId,
+          toAddress: 'bc1qux9xtsj6mr4un7yg9kgd7tv8kndvlhv2gv5yc8',
+          amount: '10000',
+          assetId: 'invalid-asset-id',
+        } as any,
+      };
+
+      await expect(handler.route(origin, invalidAssetRequest)).rejects.toThrow(
+        'Expected a value of type',
+      );
     });
   });
 });
