@@ -204,16 +204,16 @@
       "paramStructure": "by-name",
       "params": [
         {
-          "name": "toAddress",
-          "description": "The recipient Bitcoin address to validate.",
+          "name": "value",
+          "description": "The Bitcoin address to validate.",
           "required": true,
           "schema": {
             "type": "string"
           }
         },
         {
-          "name": "fromAccountId",
-          "description": "The account ID from which the transaction will be sent.",
+          "name": "accountId",
+          "description": "Current account.",
           "required": true,
           "schema": {
             "type": "string"
@@ -229,28 +229,19 @@
           "properties": {
             "valid": {
               "type": "boolean",
-              "description": "Whether the input is valid."
+              "description": "The address is valid."
             },
             "errors": {
               "type": "array",
-              "description": "List of validation errors.",
+              "description": "In case the address value is invalid.",
               "items": {
                 "type": "object",
-                "required": ["code", "message"],
+                "required": ["code"],
                 "properties": {
                   "code": {
                     "type": "string",
-                    "enum": [
-                      "Required",
-                      "Invalid",
-                      "InsufficientFunds",
-                      "MinimumAmount"
-                    ],
+                    "enum": ["Required", "Invalid"],
                     "description": "Error code."
-                  },
-                  "message": {
-                    "type": "string",
-                    "description": "Human-readable error message."
                   }
                 }
               }
@@ -261,20 +252,20 @@
     },
     {
       "name": "onAmountInput",
-      "description": "Validates a transaction amount for a send transaction. Checks for sufficient balance and minimum amounts.",
+      "description": "Validates a transaction amount for a send transaction. Checks for sufficient balance.",
       "paramStructure": "by-name",
       "params": [
         {
-          "name": "amount",
-          "description": "The amount to send in BTC.",
+          "name": "value",
+          "description": "The amount to send.",
           "required": true,
           "schema": {
             "type": "string"
           }
         },
         {
-          "name": "fromAccountId",
-          "description": "The account ID from which the transaction will be sent.",
+          "name": "accountId",
+          "description": "From where we will get native balance.",
           "required": true,
           "schema": {
             "type": "string"
@@ -282,7 +273,7 @@
         },
         {
           "name": "assetId",
-          "description": "The CAIP-19 asset identifier.",
+          "description": "From where we will get balances.",
           "required": true,
           "schema": {
             "type": "string"
@@ -298,28 +289,23 @@
           "properties": {
             "valid": {
               "type": "boolean",
-              "description": "Whether the input is valid."
+              "description": "The amount is valid."
             },
             "errors": {
               "type": "array",
-              "description": "List of validation errors.",
+              "description": "In case the amount value is invalid.",
               "items": {
                 "type": "object",
-                "required": ["code", "message"],
+                "required": ["code"],
                 "properties": {
                   "code": {
                     "type": "string",
                     "enum": [
                       "Required",
-                      "Invalid",
-                      "InsufficientFunds",
-                      "MinimumAmount"
+                      "InsufficientBalanceToCoverFee",
+                      "InsufficientBalance"
                     ],
                     "description": "Error code."
-                  },
-                  "message": {
-                    "type": "string",
-                    "description": "Human-readable error message."
                   }
                 }
               }
@@ -330,7 +316,7 @@
     },
     {
       "name": "confirmSend",
-      "description": "Creates and signs a Bitcoin transaction for confirmation. Returns a KeyringTransaction object.",
+      "description": "Creates a Bitcoin transaction for confirmation. Returns a KeyringTransaction object.",
       "paramStructure": "by-name",
       "params": [
         {
@@ -371,6 +357,7 @@
         "description": "The KeyringTransaction object representing the transaction. Throws an error if the operation fails.",
         "schema": {
           "type": "object",
+          "description": "Transaction object",
           "required": [
             "id",
             "account",
