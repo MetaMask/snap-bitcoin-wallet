@@ -1,5 +1,4 @@
-import type { Network } from '@metamask/bitcoindevkit';
-import { Address, Amount } from '@metamask/bitcoindevkit';
+import { Amount } from '@metamask/bitcoindevkit';
 import { BtcScope } from '@metamask/keyring-api';
 import type { Json, JsonRpcRequest } from '@metamask/utils';
 import { Verifier } from 'bip322-js';
@@ -7,7 +6,6 @@ import { assert, enums, object, optional, string } from 'superstruct';
 
 import {
   AssertionError,
-  type BitcoinAccount,
   type CodifiedError,
   FormatError,
   InexistentMethodError,
@@ -33,6 +31,9 @@ import {
   OnAmountInputRequestStruct,
   RpcMethod,
   SendErrorCodes,
+  validateAmount,
+  validateAddress,
+  validateAccountBalance,
 } from './validation';
 
 export const CreateSendFormRequest = object({
@@ -194,7 +195,7 @@ export class RpcHandler {
       // appropriate network (e.g. mainnet, testnet etc)
       const bitcoinAccount = await this.#accountUseCases.get(accountId);
 
-      return this.#validateAddress(value, bitcoinAccount.network);
+      return validateAddress(value, bitcoinAccount.network, this.#logger);
     } catch (error) {
       this.#logger.error(
         `Invalid account. Error: %s`,
@@ -210,17 +211,14 @@ export class RpcHandler {
   ): Promise<ValidationResponse> {
     const { value, accountId } = request;
 
-    const amountValidation = this.#validateAmount(value);
+    const amountValidation = validateAmount(value);
     if (!amountValidation.valid) {
       return amountValidation;
     }
 
     try {
       const bitcoinAccount = await this.#accountUseCases.get(accountId);
-      const balanceValidation = this.#validateAccountBalance(
-        value,
-        bitcoinAccount,
-      );
+      const balanceValidation = validateAccountBalance(value, bitcoinAccount);
 
       return balanceValidation.valid ? NO_ERRORS_RESPONSE : balanceValidation;
     } catch (error) {
@@ -249,61 +247,19 @@ export class RpcHandler {
     }
   }
 
-  #validateAmount(amount: string): ValidationResponse {
-    const valueToNumber = Number(amount);
-    if (!Number.isFinite(valueToNumber) || valueToNumber <= 0) {
-      return INVALID_RESPONSE;
-    }
-    return NO_ERRORS_RESPONSE;
-  }
-
-  #validateAddress(address: string, network: Network): ValidationResponse {
-    try {
-      Address.from_string(address, network).toString();
-      return NO_ERRORS_RESPONSE;
-    } catch (error) {
-      this.#logger.error(
-        'Invalid address for network %s. Error: %s',
-        network,
-        (error as CodifiedError).message,
-      );
-      return INVALID_RESPONSE;
-    }
-  }
-
-  #validateAccountBalance(
-    amountInBtc: string,
-    account: BitcoinAccount,
-  ): ValidationResponse {
-    const balance = Amount.from_btc(account.balance.trusted_spendable.to_btc());
-    const valueToNumber = Amount.from_btc(Number(amountInBtc));
-
-    if (valueToNumber.to_sat() > balance.to_sat()) {
-      return {
-        valid: false,
-        errors: [{ code: SendErrorCodes.InsufficientBalance }],
-      };
-    }
-
-    return NO_ERRORS_RESPONSE;
-  }
-
   async #confirmSend(request: ConfirmSendRequest): Promise<Json> {
     try {
       const account = await this.#accountUseCases.get(request.fromAccountId);
 
       const inputValidation =
-        this.#validateAmount(request.amount).valid &&
-        this.#validateAddress(request.toAddress, account.network).valid;
+        validateAmount(request.amount).valid &&
+        validateAddress(request.toAddress, account.network, this.#logger).valid;
 
       if (!inputValidation) {
         return INVALID_RESPONSE;
       }
 
-      const balanceValidation = this.#validateAccountBalance(
-        request.amount,
-        account,
-      );
+      const balanceValidation = validateAccountBalance(request.amount, account);
 
       if (!balanceValidation.valid) {
         return balanceValidation;
