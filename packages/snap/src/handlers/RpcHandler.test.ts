@@ -537,12 +537,14 @@ describe('RpcHandler', () => {
     };
 
     beforeEach(() => {
+      const mockTrustedSpendable = mock<Amount>();
+      mockTrustedSpendable.to_sat.mockReturnValue(BigInt(150_000_000));
+      mockTrustedSpendable.to_btc.mockReturnValue(1.5);
+
       const mockAmountAccount = {
         network: 'bitcoin',
         balance: {
-          trusted_spendable: {
-            to_btc: jest.fn().mockReturnValue(1.5),
-          },
+          trusted_spendable: mockTrustedSpendable,
         },
       };
       mockAccountsUseCases.get.mockResolvedValue(mockAmountAccount as any);

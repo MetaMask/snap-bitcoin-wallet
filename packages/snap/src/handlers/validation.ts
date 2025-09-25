@@ -137,7 +137,7 @@ export function validateAccountBalance(
   amountInBtc: string,
   account: BitcoinAccount,
 ): ValidationResponse {
-  const balance = Amount.from_btc(account.balance.trusted_spendable.to_btc());
+  const balance = account.balance.trusted_spendable;
   const valueToNumber = Amount.from_btc(Number(amountInBtc));
 
   if (valueToNumber.to_sat() > balance.to_sat()) {
