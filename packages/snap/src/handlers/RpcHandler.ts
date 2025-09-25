@@ -1,13 +1,13 @@
-import { Address, Amount } from '@metamask/bitcoindevkit';
 import type { Network } from '@metamask/bitcoindevkit';
+import { Address, Amount } from '@metamask/bitcoindevkit';
 import { BtcScope } from '@metamask/keyring-api';
 import type { Json, JsonRpcRequest } from '@metamask/utils';
 import { Verifier } from 'bip322-js';
 import { assert, enums, object, optional, string } from 'superstruct';
 
 import {
-  type BitcoinAccount,
   AssertionError,
+  type BitcoinAccount,
   type CodifiedError,
   FormatError,
   InexistentMethodError,
@@ -300,27 +300,6 @@ export class RpcHandler {
         return INVALID_RESPONSE;
       }
 
-      const amountInSats = Amount.from_btc(Number(request.amount))
-        .to_sat()
-        .toString();
-
-      const templatePsbt = account
-        .buildTx()
-        .addRecipient(amountInSats, request.toAddress)
-        .finish();
-
-      const { psbt: signedPsbtString } = await this.#accountUseCases.signPsbt(
-        account.id,
-        templatePsbt,
-        'metamask',
-        {
-          fill: true,
-          broadcast: false, // this is confirmation flow we don't want to broadcast
-        },
-      );
-
-      const signedPsbt = parsePsbt(signedPsbtString);
-
       const balanceValidation = this.#validateAccountBalance(
         request.amount,
         account,
@@ -330,21 +309,44 @@ export class RpcHandler {
         return balanceValidation;
       }
 
-      // let's validate the balance now that we have
-      // an accurate figure for the fees
-      if (
-        BigInt(amountInSats) + signedPsbt.fee().to_sat() >
-        account.balance.trusted_spendable.to_sat()
-      ) {
-        return {
-          valid: false,
-          errors: [{ code: SendErrorCodes.InsufficientBalanceToCoverFee }],
-        };
+      const amountInSats = Amount.from_btc(Number(request.amount))
+        .to_sat()
+        .toString();
+
+      try {
+        const templatePsbt = account
+          .buildTx()
+          .addRecipient(amountInSats, request.toAddress)
+          .finish();
+
+        const { psbt: signedPsbtString } = await this.#accountUseCases.signPsbt(
+          account.id,
+          templatePsbt,
+          'metamask',
+          {
+            fill: true,
+            broadcast: false, // this is confirmation flow we don't want to broadcast
+          },
+        );
+
+        const signedPsbt = parsePsbt(signedPsbtString);
+        const tx = account.extractTransaction(signedPsbt);
+        return mapPsbtToTransaction(account, tx);
+      } catch (error) {
+        const { message } = error as CodifiedError;
+
+        // we have tested for account balance earlier so if we get
+        // and insufficient funds message when trying to sign the PBST
+        // it will be because of insufficient fees
+        if (message.includes('Insufficient funds')) {
+          return {
+            valid: false,
+            errors: [{ code: SendErrorCodes.InsufficientBalanceToCoverFee }],
+          };
+        }
+
+        throw error;
       }
-
-      const tx = account.extractTransaction(signedPsbt);
-
-      return mapPsbtToTransaction(account, tx);
     } catch (error) {
       const errorMessage = (error as CodifiedError).message;
       this.#logger.error('An error occurred: %s', errorMessage);

@@ -246,6 +246,22 @@ describe('OnClientRequestHandler', () => {
     });
   });
 
+  it('missing accountId for onAddressInput', async () => {
+    const response = await snap.onClientRequest({
+      method: 'onAddressInput',
+      params: {
+        value: 'tb1qrn9d5qewjqq5syc4nrjprkfq8gge0cjdaznwcn',
+      },
+    });
+
+    expect(response).toRespondWithError({
+      code: -32000,
+      message:
+        'Invalid format: At path: accountId -- Expected a string, but received: undefined',
+      stack: expect.anything(),
+    });
+  });
+
   describe('confirmSend', () => {
     it('creates a transaction without broadcasting', async () => {
       const response = await snap.onClientRequest({
@@ -360,10 +376,29 @@ describe('OnClientRequestHandler', () => {
         },
       });
 
-      expect(response).toRespondWithError({
-        code: -32603,
-        message: 'An unexpected error occurred',
-        stack: expect.anything(),
+      expect(response).toRespondWith({
+        errors: [{ code: 'InsufficientBalance' }],
+        valid: false,
+      });
+    });
+
+    it('fails with insufficient funds to pay fees', async () => {
+      const balanceBtc = await blockchain.getBalanceInBTC(account.address);
+
+      console.log(`balance btc: ${balanceBtc}`);
+      const response = await snap.onClientRequest({
+        method: 'confirmSend',
+        params: {
+          fromAccountId: account.id,
+          toAddress: TEST_ADDRESS_REGTEST,
+          assetId: Caip19Asset.Regtest,
+          amount: balanceBtc.toString(),
+        },
+      });
+
+      expect(response).toRespondWith({
+        errors: [{ code: 'InsufficientBalanceToCoverFee' }],
+        valid: false,
       });
     });
 

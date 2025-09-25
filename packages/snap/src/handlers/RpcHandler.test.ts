@@ -765,18 +765,18 @@ describe('RpcHandler', () => {
     });
 
     it('throws error when buildTx fails', async () => {
-      const buildError = new Error('Insufficient funds');
+      const buildError = new Error('An error occurred when building PBST');
       mockTxBuilder.finish.mockImplementation(() => {
         throw buildError;
       });
 
       await expect(handler.route(origin, validRequest)).rejects.toThrow(
-        'Insufficient funds',
+        buildError.message,
       );
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         'An error occurred: %s',
-        'Insufficient funds',
+        buildError.message,
       );
     });
 
@@ -887,7 +887,7 @@ describe('RpcHandler', () => {
       });
     });
 
-    it('returns validation error for insufficient fee balance', async () => {
+    it('throws error when PSBT construction fails due to insufficient funds for fees', async () => {
       // small balance that won't cover amount + fees
       const smallBalanceAmount = mock<Amount>();
       smallBalanceAmount.to_sat.mockReturnValue(BigInt(5000)); // 0.00005 BTC in satoshis
@@ -907,16 +907,19 @@ describe('RpcHandler', () => {
       smallBalanceAccount.id = validAccountId;
       smallBalanceAccount.network = 'bitcoin';
       smallBalanceAccount.balance = mockBalance as any;
-      smallBalanceAccount.buildTx.mockReturnValue(mockTxBuilder);
+
+      const mockTxBuilderWithError = mock<TransactionBuilder>();
+      mockTxBuilderWithError.addRecipient.mockReturnThis();
+      mockTxBuilderWithError.finish.mockImplementation(() => {
+        throw new Error(
+          'Insufficient funds: 0.00005 BTC available of 0.00006 BTC needed',
+        );
+      });
+
+      smallBalanceAccount.buildTx.mockReturnValue(mockTxBuilderWithError);
       smallBalanceAccount.extractTransaction.mockReturnValue(mockTransaction);
 
       mockAccountsUseCases.get.mockResolvedValue(smallBalanceAccount);
-
-      const mockSignedPsbtWithFee = mock<Psbt>();
-      const mockFeeAmount = mock<Amount>();
-      mockFeeAmount.to_sat.mockReturnValue(BigInt(1000)); // 0.00001 BTC fee in satoshis
-      mockSignedPsbtWithFee.fee.mockReturnValue(mockFeeAmount);
-      jest.mocked(Psbt.from_string).mockReturnValue(mockSignedPsbtWithFee);
 
       const insufficientBalanceRequest: JsonRpcRequest = {
         id: 1,
