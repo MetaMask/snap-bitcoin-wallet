@@ -385,7 +385,6 @@ describe('OnClientRequestHandler', () => {
     it('fails with insufficient funds to pay fees', async () => {
       const balanceBtc = await blockchain.getBalanceInBTC(account.address);
 
-      console.log(`balance btc: ${balanceBtc}`);
       const response = await snap.onClientRequest({
         method: 'confirmSend',
         params: {
