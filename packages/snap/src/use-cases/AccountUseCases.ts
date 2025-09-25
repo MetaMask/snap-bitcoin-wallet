@@ -231,12 +231,14 @@ export class AccountUseCases {
       if (!prevTx) {
         txsToNotify.push(tx);
 
-        await this.#snapClient.emitTrackingEvent(
-          TrackingSnapEvent.TransactionReceived,
-          account,
-          tx,
-          origin,
-        );
+        await this.#trackEventSafely(async (): Promise<void> => {
+          await this.#snapClient.emitTrackingEvent(
+            TrackingSnapEvent.TransactionReceived,
+            account,
+            tx,
+            origin,
+          );
+        });
 
         continue;
       }
@@ -251,23 +253,27 @@ export class AccountUseCases {
         if (tx.chain_position.is_confirmed) {
           txsToNotify.push(tx);
 
-          await this.#snapClient.emitTrackingEvent(
-            TrackingSnapEvent.TransactionFinalized,
-            account,
-            tx,
-            origin,
-          );
+          await this.#trackEventSafely(async (): Promise<void> => {
+            await this.#snapClient.emitTrackingEvent(
+              TrackingSnapEvent.TransactionFinalized,
+              account,
+              tx,
+              origin,
+            );
+          });
         } else {
           // if the status was changed, and now it's NOT confirmed
           // it means the tx was reorged.
           txsToNotify.push(tx);
 
-          await this.#snapClient.emitTrackingEvent(
-            TrackingSnapEvent.TransactionReorged,
-            account,
-            tx,
-            origin,
-          );
+          await this.#trackEventSafely(async (): Promise<void> => {
+            await this.#snapClient.emitTrackingEvent(
+              TrackingSnapEvent.TransactionReorged,
+              account,
+              tx,
+              origin,
+            );
+          });
         }
       }
     }
@@ -598,12 +604,14 @@ export class AccountUseCases {
         walletTx,
       ]);
 
-      await this.#snapClient.emitTrackingEvent(
-        TrackingSnapEvent.TransactionSubmitted,
-        account,
-        walletTx,
-        origin,
-      );
+      await this.#trackEventSafely(async (): Promise<void> => {
+        await this.#snapClient.emitTrackingEvent(
+          TrackingSnapEvent.TransactionSubmitted,
+          account,
+          walletTx,
+          origin,
+        );
+      });
     }
 
     return txid;
@@ -619,6 +627,14 @@ export class AccountUseCases {
         capability,
         capabilities: account.capabilities,
       });
+    }
+  }
+
+  async #trackEventSafely(fn: () => Promise<void>): Promise<void> {
+    try {
+      await fn();
+    } catch (error) {
+      this.#logger.error('Failed to track event', error);
     }
   }
 }
