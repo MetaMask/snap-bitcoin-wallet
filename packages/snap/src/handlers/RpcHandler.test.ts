@@ -672,10 +672,7 @@ describe('RpcHandler', () => {
       } as any;
 
       mockAccountsUseCases.get.mockResolvedValue(mockAccount);
-      mockAccountsUseCases.signPsbt.mockResolvedValue({
-        psbt: 'signed-psbt-string',
-        txid: undefined,
-      });
+      mockAccountsUseCases.fillPsbt.mockResolvedValue(mockSignedPsbt);
 
       mockAccount.buildTx.mockReturnValue(mockTxBuilder);
       mockTxBuilder.addRecipient.mockReturnThis();
@@ -684,6 +681,9 @@ describe('RpcHandler', () => {
       const mockFeeAmount = mock<Amount>();
       mockFeeAmount.to_sat.mockReturnValue(BigInt(500)); // 500 satoshis fee
       mockSignedPsbt.fee.mockReturnValue(mockFeeAmount);
+      jest
+        .spyOn(mockSignedPsbt, 'toString')
+        .mockReturnValue('filled-psbt-string');
       jest.mocked(Psbt.from_string).mockReturnValue(mockSignedPsbt);
       mockAccount.extractTransaction.mockReturnValue(mockTransaction);
 
@@ -710,17 +710,12 @@ describe('RpcHandler', () => {
       );
       expect(mockTxBuilder.finish).toHaveBeenCalled();
 
-      expect(mockAccountsUseCases.signPsbt).toHaveBeenCalledWith(
+      expect(mockAccountsUseCases.fillPsbt).toHaveBeenCalledWith(
         validAccountId,
         mockTemplatePsbt,
-        'metamask',
-        {
-          fill: true,
-          broadcast: false,
-        },
       );
 
-      expect(Psbt.from_string).toHaveBeenCalledWith('signed-psbt-string');
+      expect(Psbt.from_string).toHaveBeenCalledWith('filled-psbt-string');
       expect(mockAccount.extractTransaction).toHaveBeenCalledWith(
         mockSignedPsbt,
       );
@@ -785,17 +780,17 @@ describe('RpcHandler', () => {
       );
     });
 
-    it('throws error when sign fails', async () => {
-      const signError = new Error('Signing failed');
-      mockAccountsUseCases.signPsbt.mockRejectedValue(signError);
+    it('throws error when fillPsbt fails', async () => {
+      const fillError = new Error('Failed to fill PSBT');
+      mockAccountsUseCases.fillPsbt.mockRejectedValue(fillError);
 
       await expect(handler.route(origin, validRequest)).rejects.toThrow(
-        'Signing failed',
+        'Failed to fill PSBT',
       );
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         'An error occurred: %s',
-        'Signing failed',
+        'Failed to fill PSBT',
       );
     });
 

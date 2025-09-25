@@ -275,17 +275,12 @@ export class RpcHandler {
           .addRecipient(amountInSats, request.toAddress)
           .finish();
 
-        const { psbt: signedPsbtString } = await this.#accountUseCases.signPsbt(
+        const filledPbst = await this.#accountUseCases.fillPsbt(
           account.id,
           templatePsbt,
-          'metamask',
-          {
-            fill: true,
-            broadcast: false, // this is confirmation flow we don't want to broadcast
-          },
         );
 
-        const signedPsbt = parsePsbt(signedPsbtString);
+        const signedPsbt = parsePsbt(filledPbst.toString());
         const tx = account.extractTransaction(signedPsbt);
         return mapPsbtToTransaction(account, tx);
       } catch (error) {
