@@ -546,6 +546,10 @@ describe('RpcHandler', () => {
         },
       };
       mockAccountsUseCases.get.mockResolvedValue(mockAmountAccount as any);
+
+      (Amount.from_btc as jest.Mock).mockImplementation((btc) => ({
+        to_sat: () => BigInt(Math.round(btc * 100_000_000)),
+      }));
     });
 
     it('validates a correct amount within balance', async () => {
@@ -662,6 +666,7 @@ describe('RpcHandler', () => {
 
       const mockBalanceAmount = mock<Amount>();
       mockBalanceAmount.to_sat.mockReturnValue(BigInt(100_000_000)); // 1 BTC in satoshis
+      mockBalanceAmount.to_btc.mockReturnValue(1);
       mockAccount.balance = {
         trusted_spendable: mockBalanceAmount,
       } as any;

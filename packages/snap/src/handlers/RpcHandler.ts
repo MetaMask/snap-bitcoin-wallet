@@ -275,10 +275,10 @@ export class RpcHandler {
     amountInBtc: string,
     account: BitcoinAccount,
   ): ValidationResponse {
-    const balance = account.balance.trusted_spendable.to_btc();
-    const valueToNumber = Number(amountInBtc);
+    const balance = Amount.from_btc(account.balance.trusted_spendable.to_btc());
+    const valueToNumber = Amount.from_btc(Number(amountInBtc));
 
-    if (valueToNumber > balance) {
+    if (valueToNumber.to_sat() > balance.to_sat()) {
       return {
         valid: false,
         errors: [{ code: SendErrorCodes.InsufficientBalance }],
