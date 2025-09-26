@@ -1,4 +1,4 @@
-import { Address } from '@metamask/bitcoindevkit';
+import { Amount } from '@metamask/bitcoindevkit';
 import { BtcScope } from '@metamask/keyring-api';
 import type { Json, JsonRpcRequest } from '@metamask/utils';
 import { Verifier } from 'bip322-js';
@@ -15,24 +15,26 @@ import {
 import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
 import { scopeToNetwork } from './caip';
 import type { TransactionFee } from './mappings';
-import { mapToTransactionFees } from './mappings';
+import { mapPsbtToTransaction, mapToTransactionFees } from './mappings';
 import { parsePsbt } from './parsers';
-import type { OnAddressInputRequest, OnAmountInputRequest } from './types';
+import type {
+  ConfirmSendRequest,
+  OnAddressInputRequest,
+  OnAmountInputRequest,
+} from './types';
 import type { ValidationResponse } from './validation';
 import {
-  SendErrorCodes,
+  NO_ERRORS_RESPONSE,
+  INVALID_RESPONSE,
+  ConfirmSendRequestStruct,
   OnAddressInputRequestStruct,
   OnAmountInputRequestStruct,
+  RpcMethod,
+  SendErrorCodes,
+  validateAmount,
+  validateAddress,
+  validateAccountBalance,
 } from './validation';
-
-export enum RpcMethod {
-  StartSendTransactionFlow = 'startSendTransactionFlow',
-  SignAndSendTransaction = 'signAndSendTransaction',
-  ComputeFee = 'computeFee',
-  VerifyMessage = 'verifyMessage',
-  OnAddressInput = 'onAddressInput',
-  OnAmountInput = 'onAmountInput',
-}
 
 export const CreateSendFormRequest = object({
   account: string(),
@@ -109,6 +111,10 @@ export class RpcHandler {
       case RpcMethod.OnAmountInput: {
         assert(params, OnAmountInputRequestStruct);
         return this.#onAmountInput(params);
+      }
+      case RpcMethod.ConfirmSend: {
+        assert(params, ConfirmSendRequestStruct);
+        return await this.#confirmSend(params);
       }
       case RpcMethod.VerifyMessage: {
         assert(params, VerifyMessageRequest);
@@ -189,24 +195,15 @@ export class RpcHandler {
       // appropriate network (e.g. mainnet, testnet etc)
       const bitcoinAccount = await this.#accountUseCases.get(accountId);
 
-      // try to parse the input address or throw if invalid.
-      Address.from_string(value, bitcoinAccount.network).toString();
+      return validateAddress(value, bitcoinAccount.network, this.#logger);
     } catch (error) {
       this.#logger.error(
-        `Invalid account and/or invalid address. Error: %s`,
+        `Invalid account. Error: %s`,
         (error as CodifiedError).message,
       );
 
-      return {
-        valid: false,
-        errors: [{ code: SendErrorCodes.Invalid }],
-      };
+      return INVALID_RESPONSE;
     }
-
-    return {
-      valid: true,
-      errors: [],
-    };
   }
 
   async #onAmountInput(
@@ -214,29 +211,22 @@ export class RpcHandler {
   ): Promise<ValidationResponse> {
     const { value, accountId } = request;
 
-    const valueToNumber = Number(value);
-    if (!Number.isFinite(valueToNumber) || valueToNumber <= 0) {
-      return { valid: false, errors: [{ code: SendErrorCodes.Invalid }] };
+    const amountValidation = validateAmount(value);
+    if (!amountValidation.valid) {
+      return amountValidation;
     }
 
     try {
       const bitcoinAccount = await this.#accountUseCases.get(accountId);
-      const balance = bitcoinAccount.balance.trusted_spendable.to_btc();
+      const balanceValidation = validateAccountBalance(value, bitcoinAccount);
 
-      if (valueToNumber > balance) {
-        return {
-          valid: false,
-          errors: [{ code: SendErrorCodes.InsufficientBalance }],
-        };
-      }
-
-      return { valid: true, errors: [] };
+      return balanceValidation.valid ? NO_ERRORS_RESPONSE : balanceValidation;
     } catch (error) {
       this.#logger.error(
         'An error occurred: %s',
         (error as CodifiedError).message,
       );
-      return { valid: false, errors: [{ code: SendErrorCodes.Invalid }] };
+      return INVALID_RESPONSE;
     }
   }
 
@@ -254,6 +244,65 @@ export class RpcHandler {
         { address, message, signature },
         error,
       );
+    }
+  }
+
+  async #confirmSend(request: ConfirmSendRequest): Promise<Json> {
+    try {
+      const account = await this.#accountUseCases.get(request.fromAccountId);
+
+      const inputValidation =
+        validateAmount(request.amount).valid &&
+        validateAddress(request.toAddress, account.network, this.#logger).valid;
+
+      if (!inputValidation) {
+        return INVALID_RESPONSE;
+      }
+
+      const balanceValidation = validateAccountBalance(request.amount, account);
+
+      if (!balanceValidation.valid) {
+        return balanceValidation;
+      }
+
+      const amountInSats = Amount.from_btc(Number(request.amount))
+        .to_sat()
+        .toString();
+
+      try {
+        const templatePsbt = account
+          .buildTx()
+          .addRecipient(amountInSats, request.toAddress)
+          .finish();
+
+        const filledPbst = await this.#accountUseCases.fillPsbt(
+          account.id,
+          templatePsbt,
+        );
+
+        const signedPsbt = parsePsbt(filledPbst.toString());
+        const tx = account.extractTransaction(signedPsbt);
+        return mapPsbtToTransaction(account, tx);
+      } catch (error) {
+        const { message } = error as CodifiedError;
+
+        // we have tested for account balance earlier so if we get
+        // and insufficient funds message when trying to sign the PBST
+        // it will be because of insufficient fees
+        if (message.includes('Insufficient funds')) {
+          return {
+            valid: false,
+            errors: [{ code: SendErrorCodes.InsufficientBalanceToCoverFee }],
+          };
+        }
+
+        throw error;
+      }
+    } catch (error) {
+      const errorMessage = (error as CodifiedError).message;
+      this.#logger.error('An error occurred: %s', errorMessage);
+
+      throw error;
     }
   }
 }

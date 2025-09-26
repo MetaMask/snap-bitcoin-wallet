@@ -534,18 +534,24 @@ export class AccountUseCases {
     }
   }
 
+  async getFrozenUTXOs(accountId: string): Promise<string[]> {
+    return this.#repository.getFrozenUTXOs(accountId);
+  }
+
+  async getFallbackFeeRate(account: BitcoinAccount): Promise<number> {
+    const feeEstimates = await this.#chain.getFeeEstimates(account.network);
+    return (
+      feeEstimates.get(this.#targetBlocksConfirmation) ?? this.#fallbackFeeRate
+    );
+  }
+
   async #fillPsbt(
     account: BitcoinAccount,
     templatePsbt: Psbt,
     feeRate?: number,
   ): Promise<Psbt> {
     const frozenUTXOs = await this.#repository.getFrozenUTXOs(account.id);
-    const feeEstimates = await this.#chain.getFeeEstimates(account.network);
-
-    const feeRateToUse =
-      feeRate ??
-      feeEstimates.get(this.#targetBlocksConfirmation) ??
-      this.#fallbackFeeRate;
+    const feeRateToUse = feeRate ?? (await this.getFallbackFeeRate(account));
 
     try {
       let builder = account

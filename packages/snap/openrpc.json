@@ -197,6 +197,306 @@
           }
         }
       }
+    },
+    {
+      "name": "onAddressInput",
+      "description": "Validates a Bitcoin address for a send transaction.",
+      "paramStructure": "by-name",
+      "params": [
+        {
+          "name": "value",
+          "description": "The Bitcoin address to validate.",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "accountId",
+          "description": "Current account.",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "result": {
+        "name": "validationResponse",
+        "description": "Validation result with any errors.",
+        "schema": {
+          "type": "object",
+          "required": ["valid", "errors"],
+          "properties": {
+            "valid": {
+              "type": "boolean",
+              "description": "The address is valid."
+            },
+            "errors": {
+              "type": "array",
+              "description": "In case the address value is invalid.",
+              "items": {
+                "type": "object",
+                "required": ["code"],
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "enum": ["Required", "Invalid"],
+                    "description": "Error code."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "onAmountInput",
+      "description": "Validates a transaction amount for a send transaction. Checks for sufficient balance.",
+      "paramStructure": "by-name",
+      "params": [
+        {
+          "name": "value",
+          "description": "The amount to send.",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "accountId",
+          "description": "From where we will get native balance.",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "assetId",
+          "description": "From where we will get balances.",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "result": {
+        "name": "validationResponse",
+        "description": "Validation result with any errors.",
+        "schema": {
+          "type": "object",
+          "required": ["valid", "errors"],
+          "properties": {
+            "valid": {
+              "type": "boolean",
+              "description": "The amount is valid."
+            },
+            "errors": {
+              "type": "array",
+              "description": "In case the amount value is invalid.",
+              "items": {
+                "type": "object",
+                "required": ["code"],
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "enum": [
+                      "Required",
+                      "InsufficientBalanceToCoverFee",
+                      "InsufficientBalance"
+                    ],
+                    "description": "Error code."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "confirmSend",
+      "description": "Creates a Bitcoin transaction for confirmation. Returns a KeyringTransaction object.",
+      "paramStructure": "by-name",
+      "params": [
+        {
+          "name": "fromAccountId",
+          "description": "The account ID from which to send.",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "toAddress",
+          "description": "The recipient Bitcoin address.",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "amount",
+          "description": "The amount to send in BTC.",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "assetId",
+          "description": "The CAIP-19 asset identifier.",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "result": {
+        "name": "keyringTransaction",
+        "description": "The KeyringTransaction object representing the transaction. Throws an error if the operation fails.",
+        "schema": {
+          "type": "object",
+          "description": "Transaction object",
+          "required": [
+            "id",
+            "account",
+            "chain",
+            "type",
+            "status",
+            "timestamp",
+            "events",
+            "to",
+            "from",
+            "fees"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "The transaction ID."
+            },
+            "account": {
+              "type": "string",
+              "description": "The account ID that created this transaction."
+            },
+            "chain": {
+              "type": "string",
+              "description": "The chain scope (e.g., 'bip122:000000000019d6689c085ae165831e93')."
+            },
+            "type": {
+              "type": "string",
+              "enum": ["send", "receive"],
+              "description": "The transaction type."
+            },
+            "status": {
+              "type": "string",
+              "enum": ["unconfirmed", "confirmed", "failed"],
+              "description": "The transaction status."
+            },
+            "timestamp": {
+              "type": ["number", "null"],
+              "description": "The timestamp when the transaction was created."
+            },
+            "events": {
+              "type": "array",
+              "description": "Transaction status change events.",
+              "items": {
+                "type": "object",
+                "required": ["status", "timestamp"],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": ["unconfirmed", "confirmed", "failed"]
+                  },
+                  "timestamp": {
+                    "type": ["number", "null"]
+                  }
+                }
+              }
+            },
+            "to": {
+              "type": "array",
+              "description": "Recipients of the transaction.",
+              "items": {
+                "type": "object",
+                "required": ["address", "asset"],
+                "properties": {
+                  "address": {
+                    "type": "string",
+                    "description": "The recipient address."
+                  },
+                  "asset": {
+                    "type": "object",
+                    "required": ["amount", "fungible", "unit", "type"],
+                    "properties": {
+                      "amount": {
+                        "type": "string",
+                        "description": "The amount in BTC."
+                      },
+                      "fungible": {
+                        "type": "boolean",
+                        "const": true
+                      },
+                      "unit": {
+                        "type": "string",
+                        "description": "The currency unit (e.g., 'BTC')."
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "The CAIP-19 asset type."
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "from": {
+              "type": "array",
+              "description": "Senders of the transaction (typically empty for Bitcoin).",
+              "items": {
+                "type": "object"
+              }
+            },
+            "fees": {
+              "type": "array",
+              "description": "Transaction fees.",
+              "items": {
+                "type": "object",
+                "required": ["type", "asset"],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["priority"],
+                    "description": "The fee type."
+                  },
+                  "asset": {
+                    "type": "object",
+                    "required": ["amount", "fungible", "unit", "type"],
+                    "properties": {
+                      "amount": {
+                        "type": "string",
+                        "description": "The fee amount in BTC."
+                      },
+                      "fungible": {
+                        "type": "boolean",
+                        "const": true
+                      },
+                      "unit": {
+                        "type": "string",
+                        "description": "The currency unit (e.g., 'BTC')."
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "The CAIP-19 asset type."
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   ]
 }

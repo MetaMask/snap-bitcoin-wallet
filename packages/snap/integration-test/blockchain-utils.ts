@@ -1,6 +1,7 @@
 /* eslint-disable import-x/no-nodejs-modules */
 import { execSync } from 'child_process';
 import process from 'process';
+
 /* eslint-enable import-x/no-nodejs-modules */
 
 /**
@@ -135,5 +136,42 @@ export class BlockchainTestUtils {
     this.#execCli(`generatetoaddress ${count} ${minerAddress}`);
 
     await this.#waitForEsploraHeight(targetHeight);
+  }
+
+  /**
+   * Get the balance of a Bitcoin address in satoshis
+   *
+   * @param address - The Bitcoin address to query
+   * @returns The balance in satoshis
+   */
+  async getBalance(address: string): Promise<bigint> {
+    try {
+      const response = await fetch(
+        `${this.#esploraBaseUrl}/address/${address}`,
+      );
+      if (!response.ok) {
+        throw new Error(`Failed to get address info: ${response.statusText}`);
+      }
+
+      const addressInfo = await response.json();
+      const funded = BigInt(addressInfo.chain_stats.funded_txo_sum ?? 0);
+      const spent = BigInt(addressInfo.chain_stats.spent_txo_sum ?? 0);
+      return funded - spent;
+    } catch (error) {
+      throw new Error(
+        `Failed to get balance for address ${address}: ${String(error)}`,
+      );
+    }
+  }
+
+  /**
+   * Get the balance of a Bitcoin address in BTC
+   *
+   * @param address - The Bitcoin address to query
+   * @returns The balance in BTC as a number
+   */
+  async getBalanceInBTC(address: string): Promise<number> {
+    const balanceSats = await this.getBalance(address);
+    return Number(balanceSats) / 100_000_000;
   }
 }
