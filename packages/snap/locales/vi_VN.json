@@ -1,11 +1,11 @@
 {
-  "locale": "中文",
+  "locale": "vi",
   "messages": {
     "reviewTransactionWarning": {
-      "message": "继续之前，请先审查交易"
+      "message": "Xem lại giao dịch trước khi tiếp tục"
     },
     "from": {
-      "message": "从"
+      "message": "Từ"
     },
     "toAddress": {
       "message": "To Address"
@@ -14,31 +14,31 @@
       "message": "Continue"
     },
     "cancel": {
-      "message": "取消"
+      "message": "Hủy"
     },
     "clear": {
       "message": "Clear"
     },
     "amount": {
-      "message": "金额"
+      "message": "Số tiền"
     },
     "balance": {
-      "message": "余额"
+      "message": "Số dư"
     },
     "recipient": {
-      "message": "收款人"
+      "message": "Người nhận"
     },
     "network": {
-      "message": "网络"
+      "message": "Mạng"
     },
     "minutes": {
       "message": "min"
     },
     "transactionSpeed": {
-      "message": "交易速度"
+      "message": "Tốc độ giao dịch"
     },
     "transactionSpeedTooltip": {
-      "message": "交易预计时间"
+      "message": "Thời gian giao dịch ước tính"
     },
     "networkFee": {
       "message": "Network Fee"
@@ -50,28 +50,28 @@
       "message": "The total network fee"
     },
     "total": {
-      "message": "总额"
+      "message": "Tổng"
     },
     "send": {
-      "message": "发送"
+      "message": "Gửi"
     },
     "asset": {
       "message": "Asset"
     },
     "sending": {
-      "message": "发送中"
+      "message": "Đang gửi"
     },
     "max": {
-      "message": "最多"
+      "message": "Tối đa"
     },
     "recipientPlaceholder": {
       "message": "Enter receiving address"
     },
     "review": {
-      "message": "审查"
+      "message": "Xem lại"
     },
     "error": {
-      "message": "错误"
+      "message": "Lỗi"
     },
     "unknownError": {
       "message": "An unknown error occurred"
@@ -179,25 +179,25 @@
       "message": "Corrupted state, invariant not respected or failed assertion."
     },
     "error.internal": {
-      "message": "内部错误。请稍后重试或联系支持"
+      "message": "Lỗi nội bộ. Vui lòng thử lại sau hoặc liên hệ hỗ trợ"
     },
     "confirmation.origin": {
-      "message": "来源"
+      "message": "Nguồn gốc"
     },
     "confirmation.origin.tooltip": {
-      "message": "请求签名的 dApp"
+      "message": "DApp yêu cầu chữ ký"
     },
     "confirmation.account": {
-      "message": "账户"
+      "message": "Tài khoản"
     },
     "confirmation.signMessage.confirmButton": {
-      "message": "签名"
+      "message": "Ký"
     },
     "confirmation.signMessage.title": {
-      "message": "签名消息"
+      "message": "Ký Tin nhắn"
     },
     "confirmation.signMessage.message": {
-      "message": "消息"
+      "message": "Tin nhắn"
     }
   }
 }
