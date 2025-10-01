@@ -1,28 +1,37 @@
-import { Psbt, Address, Amount } from '@metamask/bitcoindevkit';
+import {
+  Address,
+  Amount,
+  Psbt,
+  type Transaction,
+} from '@metamask/bitcoindevkit';
 import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 import type { InputChangeEvent } from '@metamask/snaps-sdk';
 
 import type {
-  BitcoinAccountRepository,
-  SendFlowRepository,
-  SnapClient,
-  BlockchainClient,
-  SendFormContext,
-  ReviewTransactionContext,
   AssetRatesClient,
-  Logger,
+  BitcoinAccount,
+  BitcoinAccountRepository,
+  BlockchainClient,
   CodifiedError,
+  Logger,
+  ReviewTransactionContext,
+  SendFlowRepository,
+  SendFormContext,
+  SnapClient,
 } from '../entities';
 import {
-  SendFormEvent,
-  ReviewTransactionEvent,
-  networkToCurrencyUnit,
-  CurrencyUnit,
-  UserActionError,
-  NotFoundError,
   AssertionError,
+  CurrencyUnit,
+  networkToCurrencyUnit,
+  NotFoundError,
+  ReviewTransactionEvent,
+  SendFormEvent,
+  UserActionError,
 } from '../entities';
+import type { AccountUseCases } from './AccountUseCases';
+import type { UnifiedSendFormContext } from '../entities/unified-send-flow';
 import { CronMethod } from '../handlers';
+import { parsePsbt } from '../handlers/parsers';
 
 type SetAccountEventValue = {
   accountId: string;
@@ -34,6 +43,8 @@ export class SendFlowUseCases {
   readonly #snapClient: SnapClient;
 
   readonly #accountRepository: BitcoinAccountRepository;
+
+  readonly #accountUseCases: AccountUseCases;
 
   readonly #sendFlowRepository: SendFlowRepository;
 
@@ -51,6 +62,7 @@ export class SendFlowUseCases {
     logger: Logger,
     snapClient: SnapClient,
     accountRepository: BitcoinAccountRepository,
+    accounts: AccountUseCases,
     sendFlowRepository: SendFlowRepository,
     chainClient: BlockchainClient,
     ratesClient: AssetRatesClient,
@@ -61,12 +73,80 @@ export class SendFlowUseCases {
     this.#logger = logger;
     this.#snapClient = snapClient;
     this.#accountRepository = accountRepository;
+    this.#accountUseCases = accounts;
     this.#sendFlowRepository = sendFlowRepository;
     this.#chainClient = chainClient;
     this.#ratesClient = ratesClient;
     this.#targetBlocksConfirmation = targetBlocksConfirmation;
     this.#fallbackFeeRate = fallbackFeeRate;
     this.#ratesRefreshInterval = ratesRefreshInterval;
+  }
+
+  async confirmSendFlow(
+    account: BitcoinAccount,
+    amount: string,
+    toAddress: string,
+  ): Promise<Transaction> {
+    const amountInSats = Amount.from_btc(Number(amount)).to_sat();
+    const templatePsbt = account.buildTx();
+    const { locale } = await this.#snapClient.getPreferences();
+
+    // TODO: add all the necessary properties we need here
+    const context: UnifiedSendFormContext = {
+      balance: account.balance.trusted_spendable.to_sat().toString(),
+      currency: networkToCurrencyUnit[account.network],
+      account: {
+        id: account.id,
+        address: account.publicAddress.toString(), // FIXME: Address should not be needed in the send flow
+      },
+      network: account.network,
+      feeRate: this.#fallbackFeeRate,
+      errors: {},
+      locale,
+    };
+
+    // TODO: think about if we need an EPSILON here
+    if (amountInSats === account.balance.trusted_spendable.to_sat()) {
+      templatePsbt.drainWallet().drainTo(toAddress);
+      context.drain = true;
+    } else {
+      templatePsbt.addRecipient(amountInSats.toString(), toAddress);
+      context.drain = false;
+    }
+
+    const interfaceId =
+      await this.#sendFlowRepository.insertUnifiedSendForm(context);
+
+    // Blocks and waits for user actions.
+    const confirmed =
+      await this.#snapClient.displayConfirmation<boolean>(interfaceId);
+
+    if (!confirmed) {
+      throw new UserActionError('User canceled the confirmation');
+    }
+
+    // Asynchronously start the fetching of rates background loop.
+    await this.#refreshRates(interfaceId, context);
+
+    const signedPsbt = (
+      await this.#accountUseCases.signPsbt(
+        account.id,
+        templatePsbt.finish(),
+        'metamask',
+        { fill: false, broadcast: false },
+      )
+    ).psbt;
+
+    const parsedPsbt = parsePsbt(signedPsbt);
+    const txId = await this.#accountUseCases.broadcastPsbt(
+      account.id,
+      parsedPsbt,
+      'metamask',
+    );
+
+    this.#logger.info(`Broadcasted tx: ${txId.toString()}`);
+
+    return account.extractTransaction(parsedPsbt);
   }
 
   async display(accountId: string): Promise<Psbt | undefined> {
@@ -411,10 +491,10 @@ export class SendFlowUseCases {
 
     try {
       const feeEstimates = await this.#chainClient.getFeeEstimates(network);
-      const feeRate =
+
+      updatedContext.feeRate =
         feeEstimates.get(this.#targetBlocksConfirmation) ??
         this.#fallbackFeeRate;
-      updatedContext.feeRate = feeRate;
 
       // Exchange rate is only relevant for Bitcoin
       if (network === 'bitcoin') {

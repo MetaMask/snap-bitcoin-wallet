@@ -3,6 +3,7 @@ import type { CurrencyRate } from '@metamask/snaps-sdk';
 
 import type { CurrencyUnit } from './currency';
 import type { CodifiedError } from './error';
+import type { UnifiedSendFormContext } from './unified-send-flow';
 
 export type SendFormContext = {
   account: {
@@ -99,4 +100,11 @@ export type SendFlowRepository = {
    * @param context - the review transaction context
    */
   updateReview(id: string, context: ReviewTransactionContext): Promise<void>;
+
+  insertUnifiedSendForm(context: SendFormContext): Promise<string>;
+
+  updateUnifiedSendForm(
+    id: string,
+    context: UnifiedSendFormContext,
+  ): Promise<void>;
 };

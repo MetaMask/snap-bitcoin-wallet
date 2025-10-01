@@ -1,4 +1,3 @@
-import { Amount } from '@metamask/bitcoindevkit';
 import { BtcScope } from '@metamask/keyring-api';
 import type { Json, JsonRpcRequest } from '@metamask/utils';
 import { Verifier } from 'bip322-js';
@@ -265,40 +264,25 @@ export class RpcHandler {
         return balanceValidation;
       }
 
-      const amountInSats = Amount.from_btc(Number(request.amount))
-        .to_sat()
-        .toString();
-
-      try {
-        const templatePsbt = account
-          .buildTx()
-          .addRecipient(amountInSats, request.toAddress)
-          .finish();
-
-        const filledPbst = await this.#accountUseCases.fillPsbt(
-          account.id,
-          templatePsbt,
-        );
-
-        const signedPsbt = parsePsbt(filledPbst.toString());
-        const tx = account.extractTransaction(signedPsbt);
-        return mapPsbtToTransaction(account, tx);
-      } catch (error) {
-        const { message } = error as CodifiedError;
-
-        // we have tested for account balance earlier so if we get
-        // and insufficient funds message when trying to sign the PBST
-        // it will be because of insufficient fees
-        if (message.includes('Insufficient funds')) {
-          return {
-            valid: false,
-            errors: [{ code: SendErrorCodes.InsufficientBalanceToCoverFee }],
-          };
-        }
-
-        throw error;
-      }
+      const transaction = await this.#sendFlowUseCases.confirmSendFlow(
+        account,
+        request.amount,
+        request.toAddress,
+      );
+      return mapPsbtToTransaction(account, transaction);
     } catch (error) {
+      const { message } = error as CodifiedError;
+
+      // we have tested for account balance earlier so if we get
+      // and insufficient funds message when trying to sign the PBST
+      // it will be because of insufficient fees
+      if (message.includes('Insufficient funds')) {
+        return {
+          valid: false,
+          errors: [{ code: SendErrorCodes.InsufficientBalanceToCoverFee }],
+        };
+      }
+
       const errorMessage = (error as CodifiedError).message;
       this.#logger.error('An error occurred: %s', errorMessage);
 
