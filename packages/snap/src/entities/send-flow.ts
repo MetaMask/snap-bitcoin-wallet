@@ -3,7 +3,31 @@ import type { CurrencyRate } from '@metamask/snaps-sdk';
 
 import type { CurrencyUnit } from './currency';
 import type { CodifiedError } from './error';
-import type { UnifiedSendFormContext } from './unified-send-flow';
+
+// TODO: This context will be adjusted to the needs
+// of unified send flow.
+export type UnifiedSendFormContext = {
+  account: {
+    id: string;
+    address: string;
+  };
+  network: Network;
+  balance: string;
+  feeRate: number;
+  currency: CurrencyUnit;
+  exchangeRate?: CurrencyRate;
+  recipient?: string;
+  amount?: string;
+  fee?: string;
+  drain?: boolean;
+  errors: {
+    tx?: CodifiedError;
+    recipient?: CodifiedError;
+    amount?: CodifiedError;
+  };
+  backgroundEventId?: string;
+  locale: string;
+};
 
 export type SendFormContext = {
   account: {
@@ -101,7 +125,7 @@ export type SendFlowRepository = {
    */
   updateReview(id: string, context: ReviewTransactionContext): Promise<void>;
 
-  insertUnifiedSendForm(context: SendFormContext): Promise<string>;
+  insertUnifiedSendForm(context: UnifiedSendFormContext): Promise<string>;
 
   updateUnifiedSendForm(
     id: string,

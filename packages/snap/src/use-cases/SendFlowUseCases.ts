@@ -14,6 +14,7 @@ import type {
   BlockchainClient,
   CodifiedError,
   Logger,
+  UnifiedSendFormContext,
   ReviewTransactionContext,
   SendFlowRepository,
   SendFormContext,
@@ -29,7 +30,6 @@ import {
   UserActionError,
 } from '../entities';
 import type { AccountUseCases } from './AccountUseCases';
-import type { UnifiedSendFormContext } from '../entities/unified-send-flow';
 import { CronMethod } from '../handlers';
 import { parsePsbt } from '../handlers/parsers';
 
@@ -91,28 +91,37 @@ export class SendFlowUseCases {
     const templatePsbt = account.buildTx();
     const { locale } = await this.#snapClient.getPreferences();
 
+    const feeEstimates = await this.#chainClient.getFeeEstimates(
+      account.network,
+    );
+
+    const currentFeeRate =
+      feeEstimates.get(this.#targetBlocksConfirmation) ?? this.#fallbackFeeRate;
+
+    templatePsbt.feeRate(currentFeeRate);
+
+    if (amountInSats === account.balance.trusted_spendable.to_sat()) {
+      templatePsbt.drainWallet().drainTo(toAddress);
+    } else {
+      templatePsbt.addRecipient(amountInSats.toString(), toAddress);
+    }
+
+    const psbt = templatePsbt.finish();
+
     // TODO: add all the necessary properties we need here
     const context: UnifiedSendFormContext = {
       balance: account.balance.trusted_spendable.to_sat().toString(),
       currency: networkToCurrencyUnit[account.network],
       account: {
         id: account.id,
-        address: account.publicAddress.toString(), // FIXME: Address should not be needed in the send flow
+        address: account.publicAddress.toString(),
       },
       network: account.network,
-      feeRate: this.#fallbackFeeRate,
+      feeRate: currentFeeRate,
+      fee: psbt.fee().to_sat().toString(),
       errors: {},
       locale,
     };
-
-    // TODO: think about if we need an EPSILON here
-    if (amountInSats === account.balance.trusted_spendable.to_sat()) {
-      templatePsbt.drainWallet().drainTo(toAddress);
-      context.drain = true;
-    } else {
-      templatePsbt.addRecipient(amountInSats.toString(), toAddress);
-      context.drain = false;
-    }
 
     const interfaceId =
       await this.#sendFlowRepository.insertUnifiedSendForm(context);
@@ -125,27 +134,21 @@ export class SendFlowUseCases {
       throw new UserActionError('User canceled the confirmation');
     }
 
-    // Asynchronously start the fetching of rates background loop.
-    await this.#refreshRates(interfaceId, context);
-
+    // sign and broadcast
     const signedPsbt = (
       await this.#accountUseCases.signPsbt(
         account.id,
-        templatePsbt.finish(),
+        psbt,
         'metamask',
-        { fill: false, broadcast: false },
+        {
+          fill: false,
+          broadcast: true,
+        },
+        currentFeeRate,
       )
     ).psbt;
 
     const parsedPsbt = parsePsbt(signedPsbt);
-    const txId = await this.#accountUseCases.broadcastPsbt(
-      account.id,
-      parsedPsbt,
-      'metamask',
-    );
-
-    this.#logger.info(`Broadcasted tx: ${txId.toString()}`);
-
     return account.extractTransaction(parsedPsbt);
   }
 

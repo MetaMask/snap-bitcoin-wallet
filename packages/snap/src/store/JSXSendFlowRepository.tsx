@@ -1,4 +1,5 @@
 import {
+  type UnifiedSendFormContext,
   type SendFormContext,
   type SendFlowRepository,
   type SnapClient,
@@ -6,7 +7,6 @@ import {
   type Translator,
   AssertionError,
 } from '../entities';
-import type { UnifiedSendFormContext } from '../entities/unified-send-flow';
 import { ReviewTransactionView, SendFormView } from '../infra/jsx';
 import { UnifiedSendFormView } from '../infra/jsx/unified-send-flow';
 

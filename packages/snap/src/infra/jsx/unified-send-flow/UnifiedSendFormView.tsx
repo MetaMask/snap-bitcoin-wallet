@@ -8,9 +8,8 @@ import {
   Text as SnapText,
 } from '@metamask/snaps-sdk/jsx';
 
-import type { Messages } from '../../../entities';
+import type { Messages, UnifiedSendFormContext } from '../../../entities';
 import { ConfirmationEvent } from '../../../entities';
-import type { UnifiedSendFormContext } from '../../../entities/unified-send-flow';
 import { SendForm } from '../components';
 import { errorCodeToLabel, translate } from '../format';
 
