@@ -825,7 +825,7 @@ describe('SendFlowUseCases', () => {
       mockFeeEstimates.get.mockReturnValue(2.5);
       mockChain.getFeeEstimates.mockResolvedValue(mockFeeEstimates);
       mockChain.getExplorerUrl.mockReturnValue(explorerUrl);
-      mockSendFlowRepository.insertUnifiedSendForm.mockResolvedValue(
+      mockSendFlowRepository.insertConfirmSendForm.mockResolvedValue(
         'interface-id',
       );
       mockSnapClient.displayConfirmation.mockResolvedValue(true);
@@ -853,7 +853,7 @@ describe('SendFlowUseCases', () => {
         toAddress,
       );
       expect(mockTxBuilder.finish).toHaveBeenCalled();
-      expect(mockSendFlowRepository.insertUnifiedSendForm).toHaveBeenCalled();
+      expect(mockSendFlowRepository.insertConfirmSendForm).toHaveBeenCalled();
       expect(mockSnapClient.displayConfirmation).toHaveBeenCalledWith(
         'interface-id',
       );
@@ -950,7 +950,7 @@ describe('SendFlowUseCases', () => {
       expect(mockRatesClient.spotPrices).toHaveBeenCalledWith(
         CurrencyUnit.Bitcoin,
       );
-      expect(mockSendFlowRepository.insertUnifiedSendForm).toHaveBeenCalledWith(
+      expect(mockSendFlowRepository.insertConfirmSendForm).toHaveBeenCalledWith(
         expect.objectContaining({
           exchangeRate: expect.objectContaining({
             conversionRate: { value: 50000, currency: 'usd' },
@@ -968,7 +968,7 @@ describe('SendFlowUseCases', () => {
 
       await useCases.confirmSendFlow(mockAccount, amount, toAddress);
 
-      expect(mockSendFlowRepository.insertUnifiedSendForm).toHaveBeenCalledWith(
+      expect(mockSendFlowRepository.insertConfirmSendForm).toHaveBeenCalledWith(
         expect.objectContaining({
           exchangeRate: expect.objectContaining({
             conversionRate: undefined,
