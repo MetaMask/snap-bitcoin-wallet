@@ -1,11 +1,12 @@
 import {
+  type Network,
   Address,
   Amount,
   Psbt,
   type Transaction,
 } from '@metamask/bitcoindevkit';
 import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
-import type { InputChangeEvent } from '@metamask/snaps-sdk';
+import type { CurrencyRate, InputChangeEvent } from '@metamask/snaps-sdk';
 
 import type {
   AssetRatesClient,
@@ -107,19 +108,18 @@ export class SendFlowUseCases {
     }
 
     const psbt = templatePsbt.finish();
+    const currency = networkToCurrencyUnit[account.network];
 
     // TODO: add all the necessary properties we need here
     const context: UnifiedSendFormContext = {
-      balance: account.balance.trusted_spendable.to_sat().toString(),
-      currency: networkToCurrencyUnit[account.network],
-      account: {
-        id: account.id,
-        address: account.publicAddress.toString(),
-      },
+      from: account.publicAddress.toString(),
+      explorerUrl: this.#chainClient.getExplorerUrl(account.network),
+      amount,
+      recipient: toAddress,
+      psbt: psbt.toString(),
+      currency,
+      exchangeRate: await this.#getExchangeRate(account.network, currency),
       network: account.network,
-      feeRate: currentFeeRate,
-      fee: psbt.fee().to_sat().toString(),
-      errors: {},
       locale,
     };
 
@@ -314,6 +314,23 @@ export class SendFlowUseCases {
     return await this.#sendFlowRepository.updateForm(id, updatedContext);
   }
 
+  async #getExchangeRate(
+    network: Network,
+    currency: string,
+  ): Promise<CurrencyRate | undefined> {
+    // Exchange rate is only relevant for Bitcoin
+    if (network === 'bitcoin') {
+      const spotPrice = await this.#ratesClient.spotPrices(currency);
+      return {
+        conversionRate: spotPrice.price,
+        conversionDate: getCurrentUnixTimestamp(),
+        currency: currency.toUpperCase(),
+      };
+    }
+
+    return undefined;
+  }
+
   async #handleSetRecipient(
     id: string,
     context: SendFormContext,
@@ -499,16 +516,10 @@ export class SendFlowUseCases {
         feeEstimates.get(this.#targetBlocksConfirmation) ??
         this.#fallbackFeeRate;
 
-      // Exchange rate is only relevant for Bitcoin
-      if (network === 'bitcoin') {
-        const spotPrice = await this.#ratesClient.spotPrices(currency);
-        updatedContext.exchangeRate = {
-          conversionRate: spotPrice.price,
-          conversionDate: getCurrentUnixTimestamp(),
-          currency: currency.toUpperCase(),
-        };
-      }
-
+      updatedContext.exchangeRate = await this.#getExchangeRate(
+        network,
+        currency,
+      );
       updatedContext = await this.#computeFee(updatedContext);
     } catch (error) {
       // We do not throw so we can reschedule. Previous fetched values or fallbacks will be used.

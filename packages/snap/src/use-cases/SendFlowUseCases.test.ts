@@ -24,6 +24,7 @@ import {
 } from '../entities';
 import { SendFlowUseCases } from './SendFlowUseCases';
 import { CronMethod } from '../handlers';
+import type { AccountUseCases } from './AccountUseCases';
 
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
 /* eslint-disable @typescript-eslint/naming-convention */
@@ -44,6 +45,7 @@ describe('SendFlowUseCases', () => {
   const mockLogger = mock<Logger>();
   const mockSnapClient = mock<SnapClient>();
   const mockAccountRepository = mock<BitcoinAccountRepository>();
+  const mockAccountUseCases = mock<AccountUseCases>();
   const mockSendFlowRepository = mock<SendFlowRepository>();
   const mockChain = mock<BlockchainClient>();
   const mockRatesClient = mock<AssetRatesClient>();
@@ -73,6 +75,7 @@ describe('SendFlowUseCases', () => {
     mockLogger,
     mockSnapClient,
     mockAccountRepository,
+    mockAccountUseCases,
     mockSendFlowRepository,
     mockChain,
     mockRatesClient,

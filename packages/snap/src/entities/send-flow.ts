@@ -7,26 +7,16 @@ import type { CodifiedError } from './error';
 // TODO: This context will be adjusted to the needs
 // of unified send flow.
 export type UnifiedSendFormContext = {
-  account: {
-    id: string;
-    address: string;
-  };
+  from: string;
+  explorerUrl: string;
   network: Network;
-  balance: string;
-  feeRate: number;
   currency: CurrencyUnit;
   exchangeRate?: CurrencyRate;
-  recipient?: string;
-  amount?: string;
-  fee?: string;
-  drain?: boolean;
-  errors: {
-    tx?: CodifiedError;
-    recipient?: CodifiedError;
-    amount?: CodifiedError;
-  };
+  recipient: string;
+  amount: string;
   backgroundEventId?: string;
   locale: string;
+  psbt: string;
 };
 
 export type SendFormContext = {
