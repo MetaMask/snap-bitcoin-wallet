@@ -15,7 +15,7 @@ import type {
   BlockchainClient,
   CodifiedError,
   Logger,
-  UnifiedSendFormContext,
+  ConfirmSendFormContext,
   ReviewTransactionContext,
   SendFlowRepository,
   SendFormContext,
@@ -111,7 +111,7 @@ export class SendFlowUseCases {
     const currency = networkToCurrencyUnit[account.network];
 
     // TODO: add all the necessary properties we need here
-    const context: UnifiedSendFormContext = {
+    const context: ConfirmSendFormContext = {
       from: account.publicAddress.toString(),
       explorerUrl: this.#chainClient.getExplorerUrl(account.network),
       amount,
@@ -124,7 +124,7 @@ export class SendFlowUseCases {
     };
 
     const interfaceId =
-      await this.#sendFlowRepository.insertUnifiedSendForm(context);
+      await this.#sendFlowRepository.insertConfirmSendForm(context);
 
     // Blocks and waits for user actions.
     const confirmed =

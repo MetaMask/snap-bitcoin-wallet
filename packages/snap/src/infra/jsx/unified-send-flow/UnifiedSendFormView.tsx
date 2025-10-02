@@ -15,7 +15,7 @@ import {
 } from '@metamask/snaps-sdk/jsx';
 
 import { Config } from '../../../config';
-import type { Messages, UnifiedSendFormContext } from '../../../entities';
+import type { Messages, ConfirmSendFormContext } from '../../../entities';
 import {
   BlockTime,
   networkToCurrencyUnit,
@@ -31,7 +31,7 @@ import {
 } from '../format';
 
 export type UnifiedSendFormViewProps = {
-  context: UnifiedSendFormContext;
+  context: ConfirmSendFormContext;
   messages: Messages;
 };
 

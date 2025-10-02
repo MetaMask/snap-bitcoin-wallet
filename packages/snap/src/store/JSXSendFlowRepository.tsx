@@ -1,5 +1,5 @@
 import {
-  type UnifiedSendFormContext,
+  type ConfirmSendFormContext,
   type SendFormContext,
   type SendFlowRepository,
   type SnapClient,
@@ -58,24 +58,12 @@ export class JSXSendFlowRepository implements SendFlowRepository {
     );
   }
 
-  async insertUnifiedSendForm(
-    context: UnifiedSendFormContext,
+  async insertConfirmSendForm(
+    context: ConfirmSendFormContext,
   ): Promise<string> {
     const messages = await this.#translator.load(context.locale);
 
     return await this.#snapClient.createInterface(
-      <UnifiedSendFormView context={context} messages={messages} />,
-      context,
-    );
-  }
-
-  async updateUnifiedSendForm(
-    id: string,
-    context: UnifiedSendFormContext,
-  ): Promise<void> {
-    const messages = await this.#translator.load(context.locale);
-    return this.#snapClient.updateInterface(
-      id,
       <UnifiedSendFormView context={context} messages={messages} />,
       context,
     );

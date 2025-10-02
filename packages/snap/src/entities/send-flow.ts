@@ -6,7 +6,7 @@ import type { CodifiedError } from './error';
 
 // TODO: This context will be adjusted to the needs
 // of unified send flow.
-export type UnifiedSendFormContext = {
+export type ConfirmSendFormContext = {
   from: string;
   explorerUrl: string;
   network: Network;
@@ -115,10 +115,5 @@ export type SendFlowRepository = {
    */
   updateReview(id: string, context: ReviewTransactionContext): Promise<void>;
 
-  insertUnifiedSendForm(context: UnifiedSendFormContext): Promise<string>;
-
-  updateUnifiedSendForm(
-    id: string,
-    context: UnifiedSendFormContext,
-  ): Promise<void>;
+  insertConfirmSendForm(context: ConfirmSendFormContext): Promise<string>;
 };
