@@ -58,9 +58,9 @@ export const UnifiedSendFormView: SnapComponent<UnifiedSendFormViewProps> = ({
         <Box alignment="center" center>
           <AssetIcon network={network} />
           <Heading size="lg">{displayAmount(BigInt(amount), currency)}</Heading>
-           <SnapText color="muted">
+          <SnapText color="muted">
             {displayExchangeAmount(BigInt(amount), exchangeRate)}
-           </SnapText>
+          </SnapText>
         </Box>
 
         <Section>
