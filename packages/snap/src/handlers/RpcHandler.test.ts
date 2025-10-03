@@ -9,7 +9,7 @@ import type { AccountUseCases, SendFlowUseCases } from '../use-cases';
 import { Caip19Asset } from './caip';
 import { RpcHandler } from './RpcHandler';
 import { RpcMethod, SendErrorCodes } from './validation';
-import type { Logger, BitcoinAccount, TransactionBuilder } from '../entities';
+import type { Logger, BitcoinAccount } from '../entities';
 import { mapPsbtToTransaction } from './mappings';
 
 const mockPsbt = mock<Psbt>();
@@ -645,9 +645,6 @@ describe('RpcHandler', () => {
 
   describe('confirmSend', () => {
     const mockAccount = mock<BitcoinAccount>();
-    const mockTxBuilder = mock<TransactionBuilder>();
-    const mockTemplatePsbt = mock<Psbt>();
-    const mockSignedPsbt = mock<Psbt>();
     const mockTransaction = mock<Transaction>();
 
     const validRequest: JsonRpcRequest = {
@@ -674,21 +671,9 @@ describe('RpcHandler', () => {
       } as any;
 
       mockAccountsUseCases.get.mockResolvedValue(mockAccount);
-      mockAccountsUseCases.fillPsbt.mockResolvedValue(mockSignedPsbt);
+      mockSendFlowUseCases.confirmSendFlow.mockResolvedValue(mockTransaction);
 
-      mockAccount.buildTx.mockReturnValue(mockTxBuilder);
-      mockTxBuilder.addRecipient.mockReturnThis();
-      mockTxBuilder.finish.mockReturnValue(mockTemplatePsbt);
-
-      const mockFeeAmount = mock<Amount>();
-      mockFeeAmount.to_sat.mockReturnValue(BigInt(500)); // 500 satoshis fee
-      mockSignedPsbt.fee.mockReturnValue(mockFeeAmount);
-      jest
-        .spyOn(mockSignedPsbt, 'toString')
-        .mockReturnValue('filled-psbt-string');
-      jest.mocked(Psbt.from_string).mockReturnValue(mockSignedPsbt);
-      mockAccount.extractTransaction.mockReturnValue(mockTransaction);
-
+      // mock Amount.from_btc to return an object with to_sat method
       (Amount.from_btc as jest.Mock).mockImplementation((btc) => ({
         to_sat: () => BigInt(Math.round(btc * 100_000_000)),
       }));
@@ -704,22 +689,10 @@ describe('RpcHandler', () => {
       const result = await handler.route(origin, validRequest);
 
       expect(mockAccountsUseCases.get).toHaveBeenCalledWith(validAccountId);
-
-      expect(mockAccount.buildTx).toHaveBeenCalled();
-      expect(mockTxBuilder.addRecipient).toHaveBeenCalledWith(
-        '10000', // 0.0001 BTC in satoshis (addRecipient requires satoshis)
+      expect(mockSendFlowUseCases.confirmSendFlow).toHaveBeenCalledWith(
+        mockAccount,
+        '0.0001',
         'bc1qux9xtsj6mr4un7yg9kgd7tv8kndvlhv2gv5yc8',
-      );
-      expect(mockTxBuilder.finish).toHaveBeenCalled();
-
-      expect(mockAccountsUseCases.fillPsbt).toHaveBeenCalledWith(
-        validAccountId,
-        mockTemplatePsbt,
-      );
-
-      expect(Psbt.from_string).toHaveBeenCalledWith('filled-psbt-string');
-      expect(mockAccount.extractTransaction).toHaveBeenCalledWith(
-        mockSignedPsbt,
       );
       expect(mapPsbtToTransaction).toHaveBeenCalledWith(
         mockAccount,
@@ -744,8 +717,9 @@ describe('RpcHandler', () => {
 
       await handler.route(origin, customRequest);
 
-      expect(mockTxBuilder.addRecipient).toHaveBeenCalledWith(
-        '50000', // 0.0005 BTC in satoshis
+      expect(mockSendFlowUseCases.confirmSendFlow).toHaveBeenCalledWith(
+        mockAccount,
+        '0.0005',
         '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
       );
     });
@@ -766,49 +740,17 @@ describe('RpcHandler', () => {
       );
     });
 
-    it('throws error when buildTx fails', async () => {
-      const buildError = new Error('An error occurred when building PBST');
-      mockTxBuilder.finish.mockImplementation(() => {
-        throw buildError;
-      });
+    it('throws error when confirmSendFlow fails', async () => {
+      const sendError = new Error('Failed to build transaction');
+      mockSendFlowUseCases.confirmSendFlow.mockRejectedValue(sendError);
 
       await expect(handler.route(origin, validRequest)).rejects.toThrow(
-        buildError.message,
+        sendError.message,
       );
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         'An error occurred: %s',
-        buildError.message,
-      );
-    });
-
-    it('throws error when fillPsbt fails', async () => {
-      const fillError = new Error('Failed to fill PSBT');
-      mockAccountsUseCases.fillPsbt.mockRejectedValue(fillError);
-
-      await expect(handler.route(origin, validRequest)).rejects.toThrow(
-        'Failed to fill PSBT',
-      );
-
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'An error occurred: %s',
-        'Failed to fill PSBT',
-      );
-    });
-
-    it('throws error when extractTransaction fails', async () => {
-      const extractError = new Error('Failed to extract transaction');
-      mockAccount.extractTransaction.mockImplementation(() => {
-        throw extractError;
-      });
-
-      await expect(handler.route(origin, validRequest)).rejects.toThrow(
-        'Failed to extract transaction',
-      );
-
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'An error occurred: %s',
-        'Failed to extract transaction',
+        sendError.message,
       );
     });
 
@@ -889,7 +831,7 @@ describe('RpcHandler', () => {
       });
     });
 
-    it('throws error when PSBT construction fails due to insufficient funds for fees', async () => {
+    it('returns error when PSBT construction fails due to insufficient funds for fees', async () => {
       // small balance that won't cover amount + fees
       const smallBalanceAmount = mock<Amount>();
       smallBalanceAmount.to_sat.mockReturnValue(BigInt(5000)); // 0.00005 BTC in satoshis
@@ -910,18 +852,14 @@ describe('RpcHandler', () => {
       smallBalanceAccount.network = 'bitcoin';
       smallBalanceAccount.balance = mockBalance as any;
 
-      const mockTxBuilderWithError = mock<TransactionBuilder>();
-      mockTxBuilderWithError.addRecipient.mockReturnThis();
-      mockTxBuilderWithError.finish.mockImplementation(() => {
-        throw new Error(
-          'Insufficient funds: 0.00005 BTC available of 0.00006 BTC needed',
-        );
-      });
-
-      smallBalanceAccount.buildTx.mockReturnValue(mockTxBuilderWithError);
-      smallBalanceAccount.extractTransaction.mockReturnValue(mockTransaction);
-
       mockAccountsUseCases.get.mockResolvedValue(smallBalanceAccount);
+
+      // mock confirmSendFlow to throw an insufficient funds error
+      mockSendFlowUseCases.confirmSendFlow.mockRejectedValue(
+        new Error(
+          'Insufficient funds: 0.00005 BTC available of 0.00006 BTC needed',
+        ),
+      );
 
       const insufficientBalanceRequest: JsonRpcRequest = {
         id: 1,
@@ -962,8 +900,6 @@ describe('RpcHandler', () => {
       smallBalanceAccount.id = validAccountId;
       smallBalanceAccount.network = 'bitcoin';
       smallBalanceAccount.balance = mockBalance as any;
-      smallBalanceAccount.buildTx.mockReturnValue(mockTxBuilder);
-      smallBalanceAccount.extractTransaction.mockReturnValue(mockTransaction);
 
       mockAccountsUseCases.get.mockResolvedValue(smallBalanceAccount);
 

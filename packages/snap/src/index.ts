@@ -67,6 +67,7 @@ const sendFlowUseCases = new SendFlowUseCases(
   logger,
   snapClient,
   accountRepository,
+  accountsUseCases,
   sendFlowRepository,
   chainClient,
   assetRatesClient,

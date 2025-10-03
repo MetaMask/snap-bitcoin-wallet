@@ -1,28 +1,38 @@
-import { Psbt, Address, Amount } from '@metamask/bitcoindevkit';
+import {
+  type Network,
+  Address,
+  Amount,
+  Psbt,
+  type Transaction,
+} from '@metamask/bitcoindevkit';
 import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
-import type { InputChangeEvent } from '@metamask/snaps-sdk';
+import type { CurrencyRate, InputChangeEvent } from '@metamask/snaps-sdk';
 
 import type {
-  BitcoinAccountRepository,
-  SendFlowRepository,
-  SnapClient,
-  BlockchainClient,
-  SendFormContext,
-  ReviewTransactionContext,
   AssetRatesClient,
-  Logger,
+  BitcoinAccount,
+  BitcoinAccountRepository,
+  BlockchainClient,
   CodifiedError,
+  Logger,
+  ConfirmSendFormContext,
+  ReviewTransactionContext,
+  SendFlowRepository,
+  SendFormContext,
+  SnapClient,
 } from '../entities';
 import {
-  SendFormEvent,
-  ReviewTransactionEvent,
-  networkToCurrencyUnit,
-  CurrencyUnit,
-  UserActionError,
-  NotFoundError,
   AssertionError,
+  CurrencyUnit,
+  networkToCurrencyUnit,
+  NotFoundError,
+  ReviewTransactionEvent,
+  SendFormEvent,
+  UserActionError,
 } from '../entities';
+import type { AccountUseCases } from './AccountUseCases';
 import { CronMethod } from '../handlers';
+import { parsePsbt } from '../handlers/parsers';
 
 type SetAccountEventValue = {
   accountId: string;
@@ -34,6 +44,8 @@ export class SendFlowUseCases {
   readonly #snapClient: SnapClient;
 
   readonly #accountRepository: BitcoinAccountRepository;
+
+  readonly #accountUseCases: AccountUseCases;
 
   readonly #sendFlowRepository: SendFlowRepository;
 
@@ -51,6 +63,7 @@ export class SendFlowUseCases {
     logger: Logger,
     snapClient: SnapClient,
     accountRepository: BitcoinAccountRepository,
+    accounts: AccountUseCases,
     sendFlowRepository: SendFlowRepository,
     chainClient: BlockchainClient,
     ratesClient: AssetRatesClient,
@@ -61,12 +74,83 @@ export class SendFlowUseCases {
     this.#logger = logger;
     this.#snapClient = snapClient;
     this.#accountRepository = accountRepository;
+    this.#accountUseCases = accounts;
     this.#sendFlowRepository = sendFlowRepository;
     this.#chainClient = chainClient;
     this.#ratesClient = ratesClient;
     this.#targetBlocksConfirmation = targetBlocksConfirmation;
     this.#fallbackFeeRate = fallbackFeeRate;
     this.#ratesRefreshInterval = ratesRefreshInterval;
+  }
+
+  async confirmSendFlow(
+    account: BitcoinAccount,
+    amount: string,
+    toAddress: string,
+  ): Promise<Transaction> {
+    const amountInSats = Amount.from_btc(Number(amount)).to_sat();
+    const templatePsbt = account.buildTx();
+    const { locale, currency: fiatCurrency } =
+      await this.#snapClient.getPreferences();
+
+    const feeEstimates = await this.#chainClient.getFeeEstimates(
+      account.network,
+    );
+
+    const currentFeeRate =
+      feeEstimates.get(this.#targetBlocksConfirmation) ?? this.#fallbackFeeRate;
+
+    templatePsbt.feeRate(currentFeeRate);
+
+    if (amountInSats === account.balance.trusted_spendable.to_sat()) {
+      templatePsbt.drainWallet().drainTo(toAddress);
+    } else {
+      templatePsbt.addRecipient(amountInSats.toString(), toAddress);
+    }
+
+    const psbt = templatePsbt.finish();
+    const currency = networkToCurrencyUnit[account.network];
+
+    // TODO: add all the necessary properties we need here
+    const context: ConfirmSendFormContext = {
+      from: account.publicAddress.toString(),
+      explorerUrl: this.#chainClient.getExplorerUrl(account.network),
+      amount: amountInSats.toString(),
+      recipient: toAddress,
+      psbt: psbt.toString(),
+      currency,
+      exchangeRate: await this.#getExchangeRate(account.network, fiatCurrency),
+      network: account.network,
+      locale,
+    };
+
+    const interfaceId =
+      await this.#sendFlowRepository.insertConfirmSendForm(context);
+
+    // Blocks and waits for user actions.
+    const confirmed =
+      await this.#snapClient.displayConfirmation<boolean>(interfaceId);
+
+    if (!confirmed) {
+      throw new UserActionError('User canceled the confirmation');
+    }
+
+    // sign and broadcast
+    const signedPsbt = (
+      await this.#accountUseCases.signPsbt(
+        account.id,
+        psbt,
+        'metamask',
+        {
+          fill: false,
+          broadcast: true,
+        },
+        currentFeeRate,
+      )
+    ).psbt;
+
+    const parsedPsbt = parsePsbt(signedPsbt);
+    return account.extractTransaction(parsedPsbt);
   }
 
   async display(accountId: string): Promise<Psbt | undefined> {
@@ -229,6 +313,40 @@ export class SendFlowUseCases {
 
     updatedContext = await this.#computeFee(updatedContext);
     return await this.#sendFlowRepository.updateForm(id, updatedContext);
+  }
+
+  async #getExchangeRate(
+    network: Network,
+    currency: string,
+  ): Promise<CurrencyRate | undefined> {
+    // Exchange rate is only relevant for Bitcoin
+    if (network === 'bitcoin') {
+      try {
+        const spotPrice = await this.#ratesClient.spotPrices(currency);
+
+        if (spotPrice.price === undefined || spotPrice.price === null) {
+          this.#logger.warn(
+            `Exchange rate API returned invalid price for ${currency}`,
+          );
+          return undefined;
+        }
+
+        return {
+          conversionRate: spotPrice.price,
+          conversionDate: getCurrentUnixTimestamp(),
+          currency: currency.toUpperCase(),
+        };
+      } catch (error) {
+        // exchange rates are optional display information - don't fail if unavailable
+        this.#logger.warn(
+          `Failed to fetch exchange rate for ${currency}. Error: %s`,
+          error,
+        );
+        return undefined;
+      }
+    }
+
+    return undefined;
   }
 
   async #handleSetRecipient(
@@ -411,21 +529,15 @@ export class SendFlowUseCases {
 
     try {
       const feeEstimates = await this.#chainClient.getFeeEstimates(network);
-      const feeRate =
+
+      updatedContext.feeRate =
         feeEstimates.get(this.#targetBlocksConfirmation) ??
         this.#fallbackFeeRate;
-      updatedContext.feeRate = feeRate;
 
-      // Exchange rate is only relevant for Bitcoin
-      if (network === 'bitcoin') {
-        const spotPrice = await this.#ratesClient.spotPrices(currency);
-        updatedContext.exchangeRate = {
-          conversionRate: spotPrice.price,
-          conversionDate: getCurrentUnixTimestamp(),
-          currency: currency.toUpperCase(),
-        };
-      }
-
+      updatedContext.exchangeRate = await this.#getExchangeRate(
+        network,
+        currency,
+      );
       updatedContext = await this.#computeFee(updatedContext);
     } catch (error) {
       // We do not throw so we can reschedule. Previous fetched values or fallbacks will be used.
