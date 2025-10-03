@@ -225,16 +225,14 @@ export class KeyringHandler implements Keyring {
   ): Promise<DiscoveredAccount[]> {
     const accounts = await Promise.all(
       scopes.flatMap((scope) =>
-        Object.values(BtcAccountType)
-          // .filter((addressType) => addressType === BtcAccountType.P2wpkh)
-          .map(async (addressType) =>
-            this.#accountsUseCases.discover({
-              network: scopeToNetwork[scope],
-              entropySource,
-              index: groupIndex,
-              addressType: caipToAddressType[addressType],
-            }),
-          ),
+        Object.values(BtcAccountType).map(async (addressType) =>
+          this.#accountsUseCases.discover({
+            network: scopeToNetwork[scope],
+            entropySource,
+            index: groupIndex,
+            addressType: caipToAddressType[addressType],
+          }),
+        ),
       ),
     );
 

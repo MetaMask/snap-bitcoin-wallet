@@ -14,14 +14,8 @@ import {
   Text as SnapText,
 } from '@metamask/snaps-sdk/jsx';
 
-import { Config } from '../../../config';
 import type { Messages, ConfirmSendFormContext } from '../../../entities';
-import {
-  BlockTime,
-  networkToCurrencyUnit,
-  ConfirmationEvent,
-} from '../../../entities';
-import { AssetIcon } from '../components';
+import { networkToCurrencyUnit, ConfirmationEvent } from '../../../entities';
 import {
   displayAmount,
   displayCaip10,
@@ -36,36 +30,41 @@ export type UnifiedSendFormViewProps = {
   messages: Messages;
 };
 
-// TODO: This Form will need to be adjusted to the needs of unified send.
 export const UnifiedSendFormView: SnapComponent<UnifiedSendFormViewProps> = ({
   context,
   messages,
 }) => {
   const t = translate(messages);
-  const { amount, recipient, exchangeRate, network, from, explorerUrl } =
-    context;
+  const { amount, exchangeRate, network, from, explorerUrl } = context;
 
   const psbt = Psbt.from_string(context.psbt);
   const fee = psbt.fee().to_sat();
-  const feeRate = psbt.fee_rate()?.to_sat_per_vb_floor();
-  const total = BigInt(amount) + fee;
   const currency = networkToCurrencyUnit[network];
 
   return (
     <Container>
       <Box>
-        <Heading size="lg"> {t('Transaction request')} </Heading>
-
-        <Box alignment="center" center>
-          <AssetIcon network={network} />
-          <Heading size="lg">{displayAmount(BigInt(amount), currency)}</Heading>
-          <SnapText color="muted">
-            {displayExchangeAmount(BigInt(amount), exchangeRate)}
-          </SnapText>
-        </Box>
+        <Heading size="lg">{t('Transaction request')}</Heading>
 
         <Section>
-          <Row label={t('from')}>
+          <Row label={t('Estimated changes')} variant="default">
+            <SnapText> </SnapText>
+          </Row>
+          <Row label={t('You send')}>
+            <Box alignment="end">
+              <SnapText>{displayAmount(BigInt(amount), currency)}</SnapText>
+              <SnapText color="muted">
+                {displayExchangeAmount(BigInt(amount), exchangeRate)}
+              </SnapText>
+            </Box>
+          </Row>
+        </Section>
+
+        <Section>
+          <Row label={t('Request from')}>
+            <SnapText>MetaMask</SnapText>
+          </Row>
+          <Row label={t('Account')}>
             {isValidSnapLinkProtocol(explorerUrl) ? (
               <Link href={displayExplorerUrl(explorerUrl, from)}>
                 <Address address={displayCaip10(network, from)} displayName />
@@ -74,47 +73,13 @@ export const UnifiedSendFormView: SnapComponent<UnifiedSendFormViewProps> = ({
               <Address address={displayCaip10(network, from)} displayName />
             )}
           </Row>
-          <Row label={t('recipient')}>
-            {isValidSnapLinkProtocol(explorerUrl) ? (
-              <Link href={displayExplorerUrl(explorerUrl, recipient)}>
-                <Address
-                  address={displayCaip10(network, recipient)}
-                  displayName
-                />
-              </Link>
-            ) : (
-              <Address
-                address={displayCaip10(network, recipient)}
-                displayName
-              />
-            )}
+          <Row label={t('Network')}>
+            <SnapText>{network}</SnapText>
           </Row>
-        </Section>
-
-        <Section>
-          <Row
-            label={t('transactionSpeed')}
-            tooltip={t('transactionSpeedTooltip')}
-          >
-            <SnapText>
-              {`${Config.targetBlocksConfirmation * BlockTime[network]} ${t(
-                'minutes',
-              )}`}
-            </SnapText>
-          </Row>
-          <Row label={t('networkFee')} tooltip={t('networkFeeTooltip')}>
+          <Row label={t('Network fee')} tooltip={t('networkFeeTooltip')}>
             <Value
-              value={`${fee} sats`}
-              extra={displayExchangeAmount(BigInt(fee), exchangeRate)}
-            />
-          </Row>
-          <Row label={t('feeRate')}>
-            <SnapText>{`${feeRate} sat/vB`}</SnapText>
-          </Row>
-          <Row label={t('total')}>
-            <Value
-              value={displayAmount(total, currency)}
-              extra={displayExchangeAmount(total, exchangeRate)}
+              value={displayAmount(fee, currency)}
+              extra={displayExchangeAmount(fee, exchangeRate)}
             />
           </Row>
         </Section>
