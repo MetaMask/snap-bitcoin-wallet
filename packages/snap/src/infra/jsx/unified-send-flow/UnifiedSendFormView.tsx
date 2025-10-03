@@ -27,6 +27,7 @@ import {
   displayCaip10,
   displayExchangeAmount,
   displayExplorerUrl,
+  isValidSnapLinkProtocol,
   translate,
 } from '../format';
 
@@ -65,17 +66,28 @@ export const UnifiedSendFormView: SnapComponent<UnifiedSendFormViewProps> = ({
 
         <Section>
           <Row label={t('from')}>
-            <Link href={displayExplorerUrl(explorerUrl, from)}>
+            {isValidSnapLinkProtocol(explorerUrl) ? (
+              <Link href={displayExplorerUrl(explorerUrl, from)}>
+                <Address address={displayCaip10(network, from)} displayName />
+              </Link>
+            ) : (
               <Address address={displayCaip10(network, from)} displayName />
-            </Link>
+            )}
           </Row>
           <Row label={t('recipient')}>
-            <Link href={displayExplorerUrl(explorerUrl, recipient)}>
+            {isValidSnapLinkProtocol(explorerUrl) ? (
+              <Link href={displayExplorerUrl(explorerUrl, recipient)}>
+                <Address
+                  address={displayCaip10(network, recipient)}
+                  displayName
+                />
+              </Link>
+            ) : (
               <Address
                 address={displayCaip10(network, recipient)}
                 displayName
               />
-            </Link>
+            )}
           </Row>
         </Section>
 

@@ -114,7 +114,7 @@ export class SendFlowUseCases {
     const context: ConfirmSendFormContext = {
       from: account.publicAddress.toString(),
       explorerUrl: this.#chainClient.getExplorerUrl(account.network),
-      amount,
+      amount: amountInSats.toString(),
       recipient: toAddress,
       psbt: psbt.toString(),
       currency,

@@ -45,6 +45,19 @@ export const translate =
 export const displayExplorerUrl = (url: string, address: string): string =>
   `${url}/address/${address}`;
 
+export const isValidSnapLinkProtocol = (url: string): boolean => {
+  try {
+    const { protocol } = new URL(url);
+    return (
+      protocol === 'https:' ||
+      protocol === 'mailto:' ||
+      protocol === 'metamask:'
+    );
+  } catch {
+    return false;
+  }
+};
+
 export const errorCodeToLabel = (code: number): string => {
   const raw = BdkErrorCode[code] as string | undefined;
   if (!raw) {
