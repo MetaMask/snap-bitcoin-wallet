@@ -972,7 +972,7 @@ describe('SendFlowUseCases', () => {
         expect.objectContaining({
           exchangeRate: expect.objectContaining({
             conversionRate: undefined,
-            currency: CurrencyUnit.Bitcoin.toUpperCase(),
+            currency: 'USD',
           }),
         }),
       );

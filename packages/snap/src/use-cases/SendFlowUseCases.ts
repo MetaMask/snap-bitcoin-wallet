@@ -90,7 +90,8 @@ export class SendFlowUseCases {
   ): Promise<Transaction> {
     const amountInSats = Amount.from_btc(Number(amount)).to_sat();
     const templatePsbt = account.buildTx();
-    const { locale } = await this.#snapClient.getPreferences();
+    const { locale, currency: fiatCurrency } =
+      await this.#snapClient.getPreferences();
 
     const feeEstimates = await this.#chainClient.getFeeEstimates(
       account.network,
@@ -118,7 +119,7 @@ export class SendFlowUseCases {
       recipient: toAddress,
       psbt: psbt.toString(),
       currency,
-      exchangeRate: await this.#getExchangeRate(account.network, currency),
+      exchangeRate: await this.#getExchangeRate(account.network, fiatCurrency),
       network: account.network,
       locale,
     };
