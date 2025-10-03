@@ -321,12 +321,29 @@ export class SendFlowUseCases {
   ): Promise<CurrencyRate | undefined> {
     // Exchange rate is only relevant for Bitcoin
     if (network === 'bitcoin') {
-      const spotPrice = await this.#ratesClient.spotPrices(currency);
-      return {
-        conversionRate: spotPrice.price,
-        conversionDate: getCurrentUnixTimestamp(),
-        currency: currency.toUpperCase(),
-      };
+      try {
+        const spotPrice = await this.#ratesClient.spotPrices(currency);
+
+        if (spotPrice.price === undefined || spotPrice.price === null) {
+          this.#logger.warn(
+            `Exchange rate API returned invalid price for ${currency}`,
+          );
+          return undefined;
+        }
+
+        return {
+          conversionRate: spotPrice.price,
+          conversionDate: getCurrentUnixTimestamp(),
+          currency: currency.toUpperCase(),
+        };
+      } catch (error) {
+        // exchange rates are optional display information - don't fail if unavailable
+        this.#logger.warn(
+          `Failed to fetch exchange rate for ${currency}. Error: %s`,
+          error,
+        );
+        return undefined;
+      }
     }
 
     return undefined;

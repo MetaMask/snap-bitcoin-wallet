@@ -947,14 +947,12 @@ describe('SendFlowUseCases', () => {
     it('includes exchange rate in context when available', async () => {
       await useCases.confirmSendFlow(mockAccount, amount, toAddress);
 
-      expect(mockRatesClient.spotPrices).toHaveBeenCalledWith(
-        CurrencyUnit.Bitcoin,
-      );
+      expect(mockRatesClient.spotPrices).toHaveBeenCalledWith('usd');
       expect(mockSendFlowRepository.insertConfirmSendForm).toHaveBeenCalledWith(
         expect.objectContaining({
           exchangeRate: expect.objectContaining({
             conversionRate: { value: 50000, currency: 'usd' },
-            currency: CurrencyUnit.Bitcoin.toUpperCase(),
+            currency: 'USD',
           }),
           currency: CurrencyUnit.Bitcoin,
         }),
@@ -970,10 +968,7 @@ describe('SendFlowUseCases', () => {
 
       expect(mockSendFlowRepository.insertConfirmSendForm).toHaveBeenCalledWith(
         expect.objectContaining({
-          exchangeRate: expect.objectContaining({
-            conversionRate: undefined,
-            currency: 'USD',
-          }),
+          exchangeRate: undefined,
         }),
       );
     });
