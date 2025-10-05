@@ -1,0 +1,203 @@
+{
+  "locale": "id",
+  "messages": {
+    "reviewTransactionWarning": {
+      "message": "Tinjau transaksi sebelum melanjutkan"
+    },
+    "from": {
+      "message": "Dari"
+    },
+    "toAddress": {
+      "message": "Ke"
+    },
+    "continue": {
+      "message": "Lanjutkan"
+    },
+    "cancel": {
+      "message": "Batal"
+    },
+    "clear": {
+      "message": "Hapus"
+    },
+    "amount": {
+      "message": "Jumlah"
+    },
+    "balance": {
+      "message": "Saldo"
+    },
+    "recipient": {
+      "message": "Penerima"
+    },
+    "network": {
+      "message": "Jaringan"
+    },
+    "minutes": {
+      "message": "menit"
+    },
+    "transactionSpeed": {
+      "message": "Kecepatan transaksi"
+    },
+    "transactionSpeedTooltip": {
+      "message": "Estimasi waktu transaksi"
+    },
+    "networkFee": {
+      "message": "Biaya jaringan"
+    },
+    "feeRate": {
+      "message": "Tingkat biaya"
+    },
+    "networkFeeTooltip": {
+      "message": "Total biaya jaringan"
+    },
+    "total": {
+      "message": "Total"
+    },
+    "send": {
+      "message": "Kirim"
+    },
+    "asset": {
+      "message": "Aset"
+    },
+    "sending": {
+      "message": "Mengirim"
+    },
+    "max": {
+      "message": "Maks"
+    },
+    "recipientPlaceholder": {
+      "message": "Masukkan alamat penerima"
+    },
+    "review": {
+      "message": "Tinjau"
+    },
+    "error": {
+      "message": "Kesalahan"
+    },
+    "unknownError": {
+      "message": "Terjadi kesalahan yang tidak diketahui"
+    },
+    "feeTooLow": {
+      "message": "Biaya terlalu rendah"
+    },
+    "feeRateTooLow": {
+      "message": "Tingkat biaya terlalu rendah"
+    },
+    "noUtxosSelected": {
+      "message": "Gagal membangun transaksi: UTXOs hilang"
+    },
+    "outputBelowDustLimit": {
+      "message": "Jumlah di bawah batas dust"
+    },
+    "insufficientFunds": {
+      "message": "Dana tidak cukup untuk menutupi jumlah plus biaya"
+    },
+    "noRecipients": {
+      "message": "Penerima hilang"
+    },
+    "psbt": {
+      "message": "PSBT tidak valid"
+    },
+    "unknownUtxo": {
+      "message": "Gagal membangun transaksi: UTXO tidak dikenal"
+    },
+    "MmssingNonWitnessUtxo": {
+      "message": "Gagal membangun transaksi: UTXO non-witness hilang"
+    },
+    "base58": {
+      "message": "Alamat Bitcoin tidak valid"
+    },
+    "bech32": {
+      "message": "Alamat Bitcoin tidak valid"
+    },
+    "witnessVersion": {
+      "message": "Alamat Bitcoin tidak valid: versi witness"
+    },
+    "witnessProgram": {
+      "message": "Alamat Bitcoin tidak valid: program witness"
+    },
+    "legacyAddressTooLong": {
+      "message": "Alamat Bitcoin tidak valid"
+    },
+    "invalidBase58PayloadLength": {
+      "message": "Alamat Bitcoin tidak valid: panjang tidak valid"
+    },
+    "invalidLegacyPrefix": {
+      "message": "Alamat Bitcoin tidak valid: prefix legacy tidak valid"
+    },
+    "networkValidation": {
+      "message": "Alamat Bitcoin tidak valid: jaringan salah"
+    },
+    "outOfRange": {
+      "message": "Jumlah tidak valid: di luar jangkauan"
+    },
+    "tooPrecise": {
+      "message": "Jumlah tidak valid: terlalu presisi"
+    },
+    "missingDigits": {
+      "message": "Jumlah tidak valid: digit hilang"
+    },
+    "inputTooLarge": {
+      "message": "Jumlah tidak valid: terlalu besar"
+    },
+    "invalidCharacter": {
+      "message": "Jumlah tidak valid: karakter tidak valid"
+    },
+    "unexpected": {
+      "message": "Terjadi kesalahan tak terduga"
+    },
+    "error.0": {
+      "message": "Format tidak valid"
+    },
+    "error.1000": {
+      "message": "Validasi gagal"
+    },
+    "error.2000": {
+      "message": "Sumber daya tidak ditemukan"
+    },
+    "error.3000": {
+      "message": "Kesalahan koneksi"
+    },
+    "error.3100": {
+      "message": "One or more accounts failed to synchronize"
+    },
+    "error.4000": {
+      "message": "Keadaan wallet rusak"
+    },
+    "error.5000": {
+      "message": "Kesalahan penyimpanan"
+    },
+    "error.6000": {
+      "message": "Metode tidak diimplementasikan atau tidak didukung"
+    },
+    "error.7000": {
+      "message": "Izin ditolak atau otorisasi tidak cukup"
+    },
+    "error.8000": {
+      "message": "Kesalahan tindakan pengguna"
+    },
+    "error.9000": {
+      "message": "Keadaan rusak, invarianta tidak dihormati atau asersi gagal."
+    },
+    "error.internal": {
+      "message": "Kesalahan internal. Silakan coba lagi nanti atau hubungi dukungan"
+    },
+    "confirmation.origin": {
+      "message": "Asal"
+    },
+    "confirmation.origin.tooltip": {
+      "message": "DApp yang meminta tanda tangan"
+    },
+    "confirmation.account": {
+      "message": "Akun"
+    },
+    "confirmation.signMessage.confirmButton": {
+      "message": "Tanda tangani"
+    },
+    "confirmation.signMessage.title": {
+      "message": "Tanda tangani Pesan"
+    },
+    "confirmation.signMessage.message": {
+      "message": "Pesan"
+    }
+  }
+}
