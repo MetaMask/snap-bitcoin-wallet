@@ -1,0 +1,203 @@
+{
+  "locale": "de",
+  "messages": {
+    "reviewTransactionWarning": {
+      "message": "Überprüfen Sie die Transaktion, bevor Sie fortfahren"
+    },
+    "from": {
+      "message": "Von"
+    },
+    "toAddress": {
+      "message": "An"
+    },
+    "continue": {
+      "message": "Fortfahren"
+    },
+    "cancel": {
+      "message": "Abbrechen"
+    },
+    "clear": {
+      "message": "Löschen"
+    },
+    "amount": {
+      "message": "Betrag"
+    },
+    "balance": {
+      "message": "Guthaben"
+    },
+    "recipient": {
+      "message": "Empfänger"
+    },
+    "network": {
+      "message": "Netzwerk"
+    },
+    "minutes": {
+      "message": "min"
+    },
+    "transactionSpeed": {
+      "message": "Transaktionsgeschwindigkeit"
+    },
+    "transactionSpeedTooltip": {
+      "message": "Die geschätzte Transaktionsdauer"
+    },
+    "networkFee": {
+      "message": "Netzwerkgebühr"
+    },
+    "feeRate": {
+      "message": "Gebührenrate"
+    },
+    "networkFeeTooltip": {
+      "message": "Die gesamte Netzwerkgebühr"
+    },
+    "total": {
+      "message": "Insgesamt"
+    },
+    "send": {
+      "message": "Senden"
+    },
+    "asset": {
+      "message": "Asset"
+    },
+    "sending": {
+      "message": "Wird gesendet"
+    },
+    "max": {
+      "message": "Max."
+    },
+    "recipientPlaceholder": {
+      "message": "Empfängeradresse eingeben"
+    },
+    "review": {
+      "message": "Überprüfung"
+    },
+    "error": {
+      "message": "Fehler"
+    },
+    "unknownError": {
+      "message": "Ein unbekannter Fehler ist aufgetreten"
+    },
+    "feeTooLow": {
+      "message": "Gebühr zu niedrig"
+    },
+    "feeRateTooLow": {
+      "message": "Gebührenrate zu niedrig"
+    },
+    "noUtxosSelected": {
+      "message": "Transaktion konnte nicht erstellt werden: fehlende UTXOs"
+    },
+    "outputBelowDustLimit": {
+      "message": "Betrag unter Dust-Limit"
+    },
+    "insufficientFunds": {
+      "message": "Unzureichende Mittel, um Betrag plus Gebühr zu decken"
+    },
+    "noRecipients": {
+      "message": "Fehlende Empfänger"
+    },
+    "psbt": {
+      "message": "Ungültiges PSBT"
+    },
+    "unknownUtxo": {
+      "message": "Transaktion konnte nicht erstellt werden: unbekannter UTXO"
+    },
+    "MmssingNonWitnessUtxo": {
+      "message": "Transaktion konnte nicht erstellt werden: fehlender Non-Witness UTXO"
+    },
+    "base58": {
+      "message": "Ungültige Bitcoin-Adresse"
+    },
+    "bech32": {
+      "message": "Ungültige Bitcoin-Adresse"
+    },
+    "witnessVersion": {
+      "message": "Ungültige Bitcoin-Adresse: Witness-Version"
+    },
+    "witnessProgram": {
+      "message": "Ungültige Bitcoin-Adresse: Witness-Programm"
+    },
+    "legacyAddressTooLong": {
+      "message": "Ungültige Bitcoin-Adresse"
+    },
+    "invalidBase58PayloadLength": {
+      "message": "Ungültige Bitcoin-Adresse: ungültige Länge"
+    },
+    "invalidLegacyPrefix": {
+      "message": "Ungültige Bitcoin-Adresse: ungültiges Legacy-Prefix"
+    },
+    "networkValidation": {
+      "message": "Ungültige Bitcoin-Adresse: falsches Netzwerk"
+    },
+    "outOfRange": {
+      "message": "Ungültiger Betrag: außerhalb des Bereichs"
+    },
+    "tooPrecise": {
+      "message": "Ungültiger Betrag: zu präzise"
+    },
+    "missingDigits": {
+      "message": "Ungültiger Betrag: fehlende Ziffern"
+    },
+    "inputTooLarge": {
+      "message": "Ungültiger Betrag: zu groß"
+    },
+    "invalidCharacter": {
+      "message": "Ungültiger Betrag: ungültiges Zeichen"
+    },
+    "unexpected": {
+      "message": "Ein unerwarteter Fehler ist aufgetreten"
+    },
+    "error.0": {
+      "message": "Ungültiges Format"
+    },
+    "error.1000": {
+      "message": "Validierung fehlgeschlagen"
+    },
+    "error.2000": {
+      "message": "Ressource nicht gefunden"
+    },
+    "error.3000": {
+      "message": "Verbindungsfehler"
+    },
+    "error.3100": {
+      "message": "One or more accounts failed to synchronize"
+    },
+    "error.4000": {
+      "message": "Wallet-Zustand beschädigt"
+    },
+    "error.5000": {
+      "message": "Speicherfehler"
+    },
+    "error.6000": {
+      "message": "Methode nicht implementiert oder nicht unterstützt"
+    },
+    "error.7000": {
+      "message": "Zugriff verweigert oder unzureichende Berechtigung"
+    },
+    "error.8000": {
+      "message": "Benutzeraktionsfehler"
+    },
+    "error.9000": {
+      "message": "Beschädigter Zustand, Invariante nicht eingehalten oder fehlgeschlagene Assertion"
+    },
+    "error.internal": {
+      "message": "Interner Fehler. Bitte versuchen Sie es später erneut oder kontaktieren Sie den Support"
+    },
+    "confirmation.origin": {
+      "message": "Ursprung"
+    },
+    "confirmation.origin.tooltip": {
+      "message": "Die dApp, die die Signatur anfordert"
+    },
+    "confirmation.account": {
+      "message": "Konto"
+    },
+    "confirmation.signMessage.confirmButton": {
+      "message": "Signieren"
+    },
+    "confirmation.signMessage.title": {
+      "message": "Nachricht signieren"
+    },
+    "confirmation.signMessage.message": {
+      "message": "Nachricht"
+    }
+  }
+}
