@@ -1,4 +1,5 @@
 import {
+  type ConfirmSendFormContext,
   type SendFormContext,
   type SendFlowRepository,
   type SnapClient,
@@ -7,6 +8,7 @@ import {
   AssertionError,
 } from '../entities';
 import { ReviewTransactionView, SendFormView } from '../infra/jsx';
+import { UnifiedSendFormView } from '../infra/jsx/unified-send-flow';
 
 export class JSXSendFlowRepository implements SendFlowRepository {
   readonly #snapClient: SnapClient;
@@ -52,6 +54,17 @@ export class JSXSendFlowRepository implements SendFlowRepository {
     return this.#snapClient.updateInterface(
       id,
       <ReviewTransactionView context={context} messages={messages} />,
+      context,
+    );
+  }
+
+  async insertConfirmSendForm(
+    context: ConfirmSendFormContext,
+  ): Promise<string> {
+    const messages = await this.#translator.load(context.locale);
+
+    return await this.#snapClient.createInterface(
+      <UnifiedSendFormView context={context} messages={messages} />,
       context,
     );
   }

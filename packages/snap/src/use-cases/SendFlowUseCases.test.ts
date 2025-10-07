@@ -1,4 +1,8 @@
-import type { FeeEstimates, Network } from '@metamask/bitcoindevkit';
+import type {
+  FeeEstimates,
+  Network,
+  Transaction,
+} from '@metamask/bitcoindevkit';
 import { Psbt, Address, Amount } from '@metamask/bitcoindevkit';
 import type { GetPreferencesResult } from '@metamask/snaps-sdk';
 import { mock } from 'jest-mock-extended';
@@ -24,6 +28,7 @@ import {
 } from '../entities';
 import { SendFlowUseCases } from './SendFlowUseCases';
 import { CronMethod } from '../handlers';
+import type { AccountUseCases } from './AccountUseCases';
 
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
 /* eslint-disable @typescript-eslint/naming-convention */
@@ -44,6 +49,7 @@ describe('SendFlowUseCases', () => {
   const mockLogger = mock<Logger>();
   const mockSnapClient = mock<SnapClient>();
   const mockAccountRepository = mock<BitcoinAccountRepository>();
+  const mockAccountUseCases = mock<AccountUseCases>();
   const mockSendFlowRepository = mock<SendFlowRepository>();
   const mockChain = mock<BlockchainClient>();
   const mockRatesClient = mock<AssetRatesClient>();
@@ -73,6 +79,7 @@ describe('SendFlowUseCases', () => {
     mockLogger,
     mockSnapClient,
     mockAccountRepository,
+    mockAccountUseCases,
     mockSendFlowRepository,
     mockChain,
     mockRatesClient,
@@ -787,6 +794,183 @@ describe('SendFlowUseCases', () => {
       mockSnapClient.scheduleBackgroundEvent.mockRejectedValue(error);
 
       await expect(useCases.refresh('interface-id')).rejects.toThrow(error);
+    });
+  });
+
+  describe('confirmSendFlow', () => {
+    const mockTxBuilder = mock<TransactionBuilder>();
+    const mockTemplatePsbt = mock<Psbt>({
+      toString: jest.fn().mockReturnValue('template-psbt-base64'),
+    });
+    const mockSignedPsbt = mock<Psbt>({
+      toString: jest.fn().mockReturnValue('signed-psbt-base64'),
+    });
+    const mockTransaction = mock<Transaction>();
+    const mockAmount = mock<Amount>();
+    const toAddress = 'bc1qux9xtsj6mr4un7yg9kgd7tv8kndvlhv2gv5yc8';
+    const amount = '0.0001';
+    const mockFeeEstimates = mock<FeeEstimates>();
+
+    beforeEach(() => {
+      mockAccount.buildTx.mockReturnValue(mockTxBuilder);
+      mockAccount.extractTransaction.mockReturnValue(mockTransaction);
+      mockAmount.to_sat.mockReturnValue(BigInt(10000));
+      (Amount.from_btc as jest.Mock).mockReturnValue(mockAmount);
+      mockTxBuilder.feeRate.mockReturnThis();
+      mockTxBuilder.addRecipient.mockReturnThis();
+      mockTxBuilder.drainWallet.mockReturnThis();
+      mockTxBuilder.drainTo.mockReturnThis();
+      mockTxBuilder.finish.mockReturnValue(mockTemplatePsbt);
+      mockSnapClient.getPreferences.mockResolvedValue(mockPreferences);
+      mockFeeEstimates.get.mockReturnValue(2.5);
+      mockChain.getFeeEstimates.mockResolvedValue(mockFeeEstimates);
+      mockChain.getExplorerUrl.mockReturnValue(explorerUrl);
+      mockSendFlowRepository.insertConfirmSendForm.mockResolvedValue(
+        'interface-id',
+      );
+      mockSnapClient.displayConfirmation.mockResolvedValue(true);
+      mockAccountUseCases.signPsbt.mockResolvedValue({
+        psbt: mockSignedPsbt,
+      } as any);
+      (Psbt.from_string as jest.Mock).mockReturnValue(mockSignedPsbt);
+      mockRatesClient.spotPrices.mockResolvedValue({
+        price: { value: 50000, currency: 'usd' },
+      } as any);
+    });
+
+    it('builds and confirms a regular send transaction', async () => {
+      const result = await useCases.confirmSendFlow(
+        mockAccount,
+        amount,
+        toAddress,
+      );
+
+      expect(Amount.from_btc).toHaveBeenCalledWith(Number(amount));
+      expect(mockAccount.buildTx).toHaveBeenCalled();
+      expect(mockTxBuilder.feeRate).toHaveBeenCalledWith(2.5);
+      expect(mockTxBuilder.addRecipient).toHaveBeenCalledWith(
+        '10000',
+        toAddress,
+      );
+      expect(mockTxBuilder.finish).toHaveBeenCalled();
+      expect(mockSendFlowRepository.insertConfirmSendForm).toHaveBeenCalled();
+      expect(mockSnapClient.displayConfirmation).toHaveBeenCalledWith(
+        'interface-id',
+      );
+      expect(mockAccountUseCases.signPsbt).toHaveBeenCalledWith(
+        mockAccount.id,
+        mockTemplatePsbt,
+        'metamask',
+        { fill: false, broadcast: true },
+        2.5,
+      );
+      expect(mockAccount.extractTransaction).toHaveBeenCalledWith(
+        mockSignedPsbt,
+      );
+      expect(result).toBe(mockTransaction);
+    });
+
+    it('builds a drain transaction when amount equals balance', async () => {
+      const balanceAmount = mock<Amount>();
+      balanceAmount.to_sat.mockReturnValue(BigInt(10000));
+      mockAccount.balance = {
+        trusted_spendable: balanceAmount,
+      } as any;
+
+      await useCases.confirmSendFlow(mockAccount, amount, toAddress);
+
+      expect(mockTxBuilder.drainWallet).toHaveBeenCalled();
+      expect(mockTxBuilder.drainTo).toHaveBeenCalledWith(toAddress);
+      expect(mockTxBuilder.addRecipient).not.toHaveBeenCalled();
+    });
+
+    it('uses fallback fee rate when fee estimates are not available', async () => {
+      const emptyFeeEstimates = mock<FeeEstimates>();
+      emptyFeeEstimates.get.mockReturnValue(undefined);
+      mockChain.getFeeEstimates.mockResolvedValue(emptyFeeEstimates);
+
+      await useCases.confirmSendFlow(mockAccount, amount, toAddress);
+
+      expect(mockTxBuilder.feeRate).toHaveBeenCalledWith(fallbackFeeRate);
+    });
+
+    it('throws error when user cancels confirmation', async () => {
+      mockSnapClient.displayConfirmation.mockResolvedValue(false);
+
+      await expect(
+        useCases.confirmSendFlow(mockAccount, amount, toAddress),
+      ).rejects.toThrow('User canceled the confirmation');
+    });
+
+    it('throws error when buildTx fails', async () => {
+      const buildError = new Error('Failed to build transaction');
+      mockAccount.buildTx.mockImplementation(() => {
+        throw buildError;
+      });
+
+      await expect(
+        useCases.confirmSendFlow(mockAccount, amount, toAddress),
+      ).rejects.toThrow(buildError);
+    });
+
+    it('throws error when finish fails', async () => {
+      const finishError = new Error('Insufficient funds');
+      mockTxBuilder.finish.mockImplementation(() => {
+        throw finishError;
+      });
+
+      await expect(
+        useCases.confirmSendFlow(mockAccount, amount, toAddress),
+      ).rejects.toThrow(finishError);
+    });
+
+    it('throws error when signPsbt fails', async () => {
+      const signError = new Error('Failed to sign PSBT');
+      mockAccountUseCases.signPsbt.mockRejectedValue(signError);
+
+      await expect(
+        useCases.confirmSendFlow(mockAccount, amount, toAddress),
+      ).rejects.toThrow(signError);
+    });
+
+    it('throws error when extractTransaction fails', async () => {
+      const extractError = new Error('Failed to extract transaction');
+      mockAccount.extractTransaction.mockImplementation(() => {
+        throw extractError;
+      });
+
+      await expect(
+        useCases.confirmSendFlow(mockAccount, amount, toAddress),
+      ).rejects.toThrow(extractError);
+    });
+
+    it('includes exchange rate in context when available', async () => {
+      await useCases.confirmSendFlow(mockAccount, amount, toAddress);
+
+      expect(mockRatesClient.spotPrices).toHaveBeenCalledWith('usd');
+      expect(mockSendFlowRepository.insertConfirmSendForm).toHaveBeenCalledWith(
+        expect.objectContaining({
+          exchangeRate: expect.objectContaining({
+            conversionRate: { value: 50000, currency: 'usd' },
+            currency: 'USD',
+          }),
+          currency: CurrencyUnit.Bitcoin,
+        }),
+      );
+    });
+
+    it('handles missing exchange rate gracefully', async () => {
+      mockRatesClient.spotPrices.mockResolvedValue({
+        price: undefined,
+      } as any);
+
+      await useCases.confirmSendFlow(mockAccount, amount, toAddress);
+
+      expect(mockSendFlowRepository.insertConfirmSendForm).toHaveBeenCalledWith(
+        expect.objectContaining({
+          exchangeRate: undefined,
+        }),
+      );
     });
   });
 });
