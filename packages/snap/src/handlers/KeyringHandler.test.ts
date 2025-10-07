@@ -20,7 +20,12 @@ import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
 import type { BitcoinAccount } from '../entities';
-import { AccountCapability, CurrencyUnit, Purpose } from '../entities';
+import {
+  AccountCapability,
+  CurrencyUnit,
+  Purpose,
+  FormatError,
+} from '../entities';
 import { scopeToNetwork, caipToAddressType, Caip19Asset } from './caip';
 import { KeyringHandler, CreateAccountRequest } from './KeyringHandler';
 import type { KeyringRequestHandler } from './KeyringRequestHandler';
@@ -81,7 +86,8 @@ describe('KeyringHandler', () => {
     const index = 1;
     const correlationId = 'correlation-id';
 
-    it('respects provided params', async () => {
+    // non-P2WPKH address types as we are not supporting them for v1
+    it.skip('respects provided params', async () => {
       const options = {
         scope: BtcScope.Signet,
         entropySource,
@@ -110,7 +116,8 @@ describe('KeyringHandler', () => {
       expect(mockAccounts.fullScan).not.toHaveBeenCalled();
     });
 
-    it('extracts index from derivationPath', async () => {
+    // only P2WPKH (BIP-84) derivation paths are now supported for v1
+    it.skip('extracts index from derivationPath', async () => {
       const options = {
         scope: BtcScope.Signet,
         derivationPath: "m/44'/0'/5'/*/*", // change and address indexes can be anything
@@ -138,7 +145,7 @@ describe('KeyringHandler', () => {
     });
 
     it('auto increment index', async () => {
-      // We should get index index 1
+      // We should get index 1
       mockAccounts.list.mockResolvedValue([
         mock<BitcoinAccount>({
           entropySource: 'entropy1',
@@ -185,10 +192,33 @@ describe('KeyringHandler', () => {
       expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
     });
 
-    it.each([
+    it.each([{ purpose: Purpose.NativeSegwit, addressType: 'p2wpkh' }] as {
+      purpose: Purpose;
+      addressType: AddressType;
+    }[])(
+      'extracts P2WPKH address type from derivationPath: %s',
+      async ({ purpose, addressType }) => {
+        const options = {
+          scope: BtcScope.Signet,
+          derivationPath: `m/${purpose}'/0'/0'`,
+        };
+        const expectedCreateParams: CreateAccountParams = {
+          network: 'signet',
+          index: 0,
+          addressType,
+          entropySource: 'm',
+          synchronize: true,
+        };
+
+        await handler.createAccount(options);
+        expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
+      },
+    );
+
+    // skip non-P2WPKH address types as they are not supported on v1
+    it.skip.each([
       { purpose: Purpose.Legacy, addressType: 'p2pkh' },
       { purpose: Purpose.Segwit, addressType: 'p2sh' },
-      { purpose: Purpose.NativeSegwit, addressType: 'p2wpkh' },
       { purpose: Purpose.Taproot, addressType: 'p2tr' },
       { purpose: Purpose.Multisig, addressType: 'p2wsh' },
     ] as { purpose: Purpose; addressType: AddressType }[])(
@@ -234,6 +264,39 @@ describe('KeyringHandler', () => {
       ).rejects.toThrow("Invalid derivation path: m/44'");
     });
 
+    it('fails when addressType and derivationPath mismatch', async () => {
+      const options = {
+        scope: BtcScope.Signet,
+        addressType: BtcAccountType.P2wpkh,
+        derivationPath: "m/44'/0'/0'", // Legacy path (P2PKH)
+      };
+
+      // The error comes from #extractAddressType which validates the derivation path first
+      await expect(handler.createAccount(options)).rejects.toThrow(
+        new FormatError(
+          'Only native segwit (BIP-84) derivation paths are supported',
+        ),
+      );
+    });
+
+    it('succeeds when addressType and derivationPath both indicate P2WPKH', async () => {
+      const options = {
+        scope: BtcScope.Signet,
+        addressType: BtcAccountType.P2wpkh,
+        derivationPath: "m/84'/0'/5'", // Native segwit path
+      };
+      const expectedCreateParams: CreateAccountParams = {
+        network: 'signet',
+        index: 5,
+        addressType: 'p2wpkh',
+        entropySource: 'm',
+        synchronize: true,
+      };
+
+      await handler.createAccount(options);
+      expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
+    });
+
     it('propagates errors from createAccount', async () => {
       const error = new Error('createAccount error');
       mockAccounts.create.mockRejectedValue(error);
@@ -251,7 +314,8 @@ describe('KeyringHandler', () => {
     const scopes = Object.values(BtcScope);
 
     it('creates, scans and returns accounts for every scope/addressType combination', async () => {
-      const addressTypes = Object.values(BtcAccountType);
+      // only P2WPKH is now supported for v1
+      const addressTypes = [BtcAccountType.P2wpkh];
       const totalCombinations = scopes.length * addressTypes.length;
 
       const expected: DiscoveredAccount[] = [];

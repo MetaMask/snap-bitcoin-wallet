@@ -109,6 +109,42 @@ describe('Keyring', () => {
       index: 0,
       expectedAddress: TEST_ADDRESS_MAINNET,
     },
+  ])(
+    'creates a P2WPKH account: %s',
+    async ({ expectedAddress, ...requestOpts }) => {
+      const response = await snap.onKeyringRequest({
+        origin: ORIGIN,
+        method: 'keyring_createAccount',
+        params: { options: { ...requestOpts, synchronize: false } },
+      });
+
+      expect(response).toRespondWith({
+        type: requestOpts.addressType,
+        id: expect.anything(),
+        address: expectedAddress,
+        options: {
+          entropySource: 'm',
+          entropy: {
+            type: 'mnemonic',
+            id: 'm',
+            groupIndex: requestOpts.index,
+            derivationPath: `m/${accountTypeToPurpose[requestOpts.addressType]}/${scopeToCoinType[requestOpts.scope]}/${requestOpts.index}'`,
+          },
+          exportable: false,
+        },
+        scopes: [requestOpts.scope],
+        methods: Object.values(AccountCapability),
+      });
+
+      // eslint-disable-next-line jest/no-conditional-in-test
+      if ('result' in response.response) {
+        accounts[expectedAddress] = response.response.result as KeyringAccount;
+      }
+    },
+  );
+
+  // skip non-P2WPKH address types as we are not supporting them for v1
+  it.skip.each([
     {
       addressType: BtcAccountType.P2pkh,
       scope: BtcScope.Mainnet,
@@ -209,6 +245,144 @@ describe('Keyring', () => {
     });
 
     expect(response).toRespondWith(accounts[TEST_ADDRESS_REGTEST]);
+  });
+
+  it.each([
+    {
+      addressType: BtcAccountType.P2pkh,
+      scope: BtcScope.Mainnet,
+      expectedError: 'Only native segwit (P2WPKH) addresses are supported',
+    },
+    {
+      addressType: BtcAccountType.P2sh,
+      scope: BtcScope.Testnet,
+      expectedError: 'Only native segwit (P2WPKH) addresses are supported',
+    },
+    {
+      addressType: BtcAccountType.P2tr,
+      scope: BtcScope.Mainnet,
+      expectedError: 'Only native segwit (P2WPKH) addresses are supported',
+    },
+  ])(
+    'rejects creation of non-P2WPKH account: $addressType',
+    async ({ addressType, scope, expectedError }) => {
+      const response = await snap.onKeyringRequest({
+        origin: ORIGIN,
+        method: 'keyring_createAccount',
+        params: {
+          options: {
+            scope,
+            addressType,
+            index: 0,
+            synchronize: false,
+          },
+        },
+      });
+
+      expect(response.response).toMatchObject({
+        error: {
+          code: -32000,
+          message: `Invalid format: ${expectedError}`,
+        },
+      });
+    },
+  );
+
+  it.each([
+    {
+      derivationPath: "m/44'/0'/0'", // (P2PKH)
+      expectedError:
+        'Only native segwit (BIP-84) derivation paths are supported',
+    },
+    {
+      derivationPath: "m/49'/0'/0'", // (P2SH)
+      expectedError:
+        'Only native segwit (BIP-84) derivation paths are supported',
+    },
+    {
+      derivationPath: "m/86'/0'/0'", // (P2TR)
+      expectedError:
+        'Only native segwit (BIP-84) derivation paths are supported',
+    },
+  ])(
+    'rejects creation with non-BIP84 derivation path: $derivationPath',
+    async ({ derivationPath, expectedError }) => {
+      const response = await snap.onKeyringRequest({
+        origin: ORIGIN,
+        method: 'keyring_createAccount',
+        params: {
+          options: {
+            scope: BtcScope.Regtest,
+            derivationPath,
+            synchronize: false,
+          },
+        },
+      });
+
+      expect(response.response).toMatchObject({
+        error: {
+          code: -32000,
+          message: `Invalid format: ${expectedError}`,
+        },
+      });
+    },
+  );
+
+  it('rejects creation when addressType and derivationPath mismatch', async () => {
+    const response = await snap.onKeyringRequest({
+      origin: ORIGIN,
+      method: 'keyring_createAccount',
+      params: {
+        options: {
+          scope: BtcScope.Regtest,
+          addressType: BtcAccountType.P2wpkh, // Native segwit
+          derivationPath: "m/44'/0'/0'", // Legacy path (P2PKH)
+          synchronize: false,
+        },
+      },
+    });
+
+    expect(response.response).toMatchObject({
+      error: {
+        code: -32000,
+        message:
+          'Invalid format: Only native segwit (BIP-84) derivation paths are supported',
+      },
+    });
+  });
+
+  it('accepts creation when addressType and derivationPath both indicate P2WPKH', async () => {
+    const response = await snap.onKeyringRequest({
+      origin: ORIGIN,
+      method: 'keyring_createAccount',
+      params: {
+        options: {
+          scope: BtcScope.Regtest,
+          addressType: BtcAccountType.P2wpkh,
+          derivationPath: "m/84'/1'/10'", // Native segwit path matching P2WPKH
+          synchronize: false,
+        },
+      },
+    });
+
+    expect(response.response).toHaveProperty('result');
+
+    const account: KeyringAccount = (
+      response.response as { result: KeyringAccount }
+    ).result;
+    expect(account.address).toMatch(/^bcrt1/u); // Native segwit address
+    expect((account.options.entropy as { groupIndex: number }).groupIndex).toBe(
+      10,
+    );
+
+    // remove to avoid interfering with other tests
+    await snap.onKeyringRequest({
+      origin: ORIGIN,
+      method: 'keyring_deleteAccount',
+      params: {
+        id: account.id,
+      },
+    });
   });
 
   it('gets an account', async () => {
