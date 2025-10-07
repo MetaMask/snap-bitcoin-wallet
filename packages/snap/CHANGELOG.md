@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0]
+
+### Added
+
+- Limit account creation & discovery to P2WPKH addresses ([#537](https://github.com/MetaMask/snap-bitcoin-wallet/pull/537))
+- Implement confirm send UI ([#536](https://github.com/MetaMask/snap-bitcoin-wallet/pull/536))
+- Add confirmSend for unified send flow ([#533](https://github.com/MetaMask/snap-bitcoin-wallet/pull/533))
+
 ## [1.1.0]
 
 ### Added
@@ -469,7 +477,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add CI for lint and test ([#2](https://github.com/MetaMask/bitcoin/pull/2))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.19.3...v1.0.0
 [0.19.3]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.19.2...v0.19.3
