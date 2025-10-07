@@ -14,6 +14,10 @@ jest.mock('../infra/jsx', () => ({
   ReviewTransactionView: jest.fn(),
 }));
 
+jest.mock('../infra/jsx/unified-send-flow', () => ({
+  UnifiedSendFormView: jest.fn(),
+}));
+
 describe('JSXSendFlowRepository', () => {
   const mockMessages = { foo: { message: 'bar' } };
 
