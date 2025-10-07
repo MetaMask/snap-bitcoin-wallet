@@ -109,6 +109,42 @@ describe('Keyring', () => {
       index: 0,
       expectedAddress: TEST_ADDRESS_MAINNET,
     },
+  ])(
+    'creates a P2WPKH account: %s',
+    async ({ expectedAddress, ...requestOpts }) => {
+      const response = await snap.onKeyringRequest({
+        origin: ORIGIN,
+        method: 'keyring_createAccount',
+        params: { options: { ...requestOpts, synchronize: false } },
+      });
+
+      expect(response).toRespondWith({
+        type: requestOpts.addressType,
+        id: expect.anything(),
+        address: expectedAddress,
+        options: {
+          entropySource: 'm',
+          entropy: {
+            type: 'mnemonic',
+            id: 'm',
+            groupIndex: requestOpts.index,
+            derivationPath: `m/${accountTypeToPurpose[requestOpts.addressType]}/${scopeToCoinType[requestOpts.scope]}/${requestOpts.index}'`,
+          },
+          exportable: false,
+        },
+        scopes: [requestOpts.scope],
+        methods: Object.values(AccountCapability),
+      });
+
+      // eslint-disable-next-line jest/no-conditional-in-test
+      if ('result' in response.response) {
+        accounts[expectedAddress] = response.response.result as KeyringAccount;
+      }
+    },
+  );
+
+  // skip non-P2WPKH address types as we are not supporting them for v1
+  it.skip.each([
     {
       addressType: BtcAccountType.P2pkh,
       scope: BtcScope.Mainnet,

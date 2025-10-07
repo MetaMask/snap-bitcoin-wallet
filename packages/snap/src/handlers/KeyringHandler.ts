@@ -184,6 +184,12 @@ export class KeyringHandler implements Keyring {
 
     let resolvedAddressType: AddressType;
     if (addressType) {
+      // only support P2WPKH addresses for v1
+      if (addressType !== BtcAccountType.P2wpkh) {
+        throw new FormatError(
+          'Only native segwit (P2WPKH) addresses are supported',
+        );
+      }
       resolvedAddressType = caipToAddressType[addressType];
     } else if (derivationPath) {
       resolvedAddressType = this.#extractAddressType(derivationPath);
@@ -225,7 +231,8 @@ export class KeyringHandler implements Keyring {
   ): Promise<DiscoveredAccount[]> {
     const accounts = await Promise.all(
       scopes.flatMap((scope) =>
-        Object.values(BtcAccountType).map(async (addressType) =>
+        // only discover P2WPKH addresses
+        [BtcAccountType.P2wpkh].map(async (addressType) =>
           this.#accountsUseCases.discover({
             network: scopeToNetwork[scope],
             entropySource,
@@ -325,6 +332,13 @@ export class KeyringHandler implements Keyring {
     const purpose = Number(match[1]);
     if (!Object.values(Purpose).includes(purpose)) {
       throw new FormatError(`Invalid BIP-purpose: ${purpose}`);
+    }
+
+    // only support native segwit (BIP-84) derivation paths for now
+    if ((purpose as Purpose) !== Purpose.NativeSegwit) {
+      throw new FormatError(
+        `Only native segwit (BIP-84) derivation paths are supported`,
+      );
     }
 
     const addressType = purposeToAddressType[purpose as Purpose];
