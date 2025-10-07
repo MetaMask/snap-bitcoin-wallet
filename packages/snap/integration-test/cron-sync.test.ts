@@ -73,7 +73,6 @@ describe('CronHandler', () => {
         message: 'Snap transaction received',
         chain_id: BtcScope.Regtest,
         account_id: account.id,
-        account_address: account.address,
         account_type: BtcAccountType.P2wpkh,
         tx_id: txid,
       },

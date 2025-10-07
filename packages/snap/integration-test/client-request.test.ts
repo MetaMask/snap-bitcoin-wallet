@@ -69,7 +69,6 @@ describe('OnClientRequestHandler', () => {
     expect(response).toTrackEvent({
       event: TrackingSnapEvent.TransactionSubmitted,
       properties: {
-        account_address: account.address,
         account_id: account.id,
         account_type: BtcAccountType.P2wpkh,
         chain_id: BtcScope.Regtest,
@@ -97,7 +96,6 @@ describe('OnClientRequestHandler', () => {
         message: 'Snap transaction finalized',
         chain_id: BtcScope.Regtest,
         account_id: account.id,
-        account_address: account.address,
         account_type: BtcAccountType.P2wpkh,
         tx_id: transactionId,
       },
