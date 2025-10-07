@@ -20,7 +20,12 @@ import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
 import type { BitcoinAccount } from '../entities';
-import { AccountCapability, CurrencyUnit, Purpose } from '../entities';
+import {
+  AccountCapability,
+  CurrencyUnit,
+  Purpose,
+  FormatError,
+} from '../entities';
 import { scopeToNetwork, caipToAddressType, Caip19Asset } from './caip';
 import { KeyringHandler, CreateAccountRequest } from './KeyringHandler';
 import type { KeyringRequestHandler } from './KeyringRequestHandler';
@@ -257,6 +262,39 @@ describe('KeyringHandler', () => {
       await expect(
         handler.createAccount({ ...options, derivationPath: "m/44'" }), // missing segments
       ).rejects.toThrow("Invalid derivation path: m/44'");
+    });
+
+    it('fails when addressType and derivationPath mismatch', async () => {
+      const options = {
+        scope: BtcScope.Signet,
+        addressType: BtcAccountType.P2wpkh,
+        derivationPath: "m/44'/0'/0'", // Legacy path (P2PKH)
+      };
+
+      // The error comes from #extractAddressType which validates the derivation path first
+      await expect(handler.createAccount(options)).rejects.toThrow(
+        new FormatError(
+          'Only native segwit (BIP-84) derivation paths are supported',
+        ),
+      );
+    });
+
+    it('succeeds when addressType and derivationPath both indicate P2WPKH', async () => {
+      const options = {
+        scope: BtcScope.Signet,
+        addressType: BtcAccountType.P2wpkh,
+        derivationPath: "m/84'/0'/5'", // Native segwit path
+      };
+      const expectedCreateParams: CreateAccountParams = {
+        network: 'signet',
+        index: 5,
+        addressType: 'p2wpkh',
+        entropySource: 'm',
+        synchronize: true,
+      };
+
+      await handler.createAccount(options);
+      expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
     });
 
     it('propagates errors from createAccount', async () => {
