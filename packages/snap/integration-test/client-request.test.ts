@@ -71,7 +71,7 @@ describe('OnClientRequestHandler', () => {
       properties: {
         account_id: account.id,
         account_type: BtcAccountType.P2wpkh,
-        chain_id: BtcScope.Regtest,
+        chain_id_caip: BtcScope.Regtest,
         message: 'Snap transaction submitted',
         origin: ORIGIN,
         tx_id: transactionId,
@@ -94,7 +94,7 @@ describe('OnClientRequestHandler', () => {
       properties: {
         origin: 'cron',
         message: 'Snap transaction finalized',
-        chain_id: BtcScope.Regtest,
+        chain_id_caip: BtcScope.Regtest,
         account_id: account.id,
         account_type: BtcAccountType.P2wpkh,
         tx_id: transactionId,
