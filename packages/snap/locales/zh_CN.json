@@ -165,6 +165,21 @@
     },
     "confirmation.signMessage.message": {
       "message": "消息"
+    },
+    "confirmation.estimatedChanges": {
+      "message": "预计变化"
+    },
+    "confirmation.estimatedChanges.send": {
+      "message": "您发送"
+    },
+    "confirmation.confirmButton": {
+      "message": "确认"
+    },
+    "confirmation.signAndSendTransaction.title": {
+      "message": "交易请求"
+    },
+    "confirmation.requestOrigin": {
+      "message": "请求来自"
     }
   }
 }

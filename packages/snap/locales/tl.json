@@ -165,6 +165,21 @@
     },
     "confirmation.signMessage.message": {
       "message": "Mensahe"
+    },
+    "confirmation.estimatedChanges": {
+      "message": "Tinatayang mga pagbabago"
+    },
+    "confirmation.estimatedChanges.send": {
+      "message": "Nagpadala ka ng"
+    },
+    "confirmation.confirmButton": {
+      "message": "Kumpirmahin"
+    },
+    "confirmation.signAndSendTransaction.title": {
+      "message": "Hiling na transaksyon"
+    },
+    "confirmation.requestOrigin": {
+      "message": "Kahilingan mula sa/kay"
     }
   }
 }

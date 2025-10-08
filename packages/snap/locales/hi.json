@@ -195,6 +195,21 @@
     },
     "confirmation.signMessage.message": {
       "message": "संदेश"
+    },
+    "confirmation.estimatedChanges": {
+      "message": "अनुमानित बदलाव"
+    },
+    "confirmation.estimatedChanges.send": {
+      "message": "आप भेजते हैं"
+    },
+    "confirmation.confirmButton": {
+      "message": "कन्फर्म करें"
+    },
+    "confirmation.signAndSendTransaction.title": {
+      "message": "ट्रांसेक्शन रिक्वेस्ट"
+    },
+    "confirmation.requestOrigin": {
+      "message": "इनसे मिला अनुरोध"
     }
   }
 }

@@ -195,6 +195,21 @@
     },
     "confirmation.signMessage.message": {
       "message": "Pesan"
+    },
+    "confirmation.estimatedChanges": {
+      "message": "Estimasi perubahan"
+    },
+    "confirmation.estimatedChanges.send": {
+      "message": "Anda mengirim"
+    },
+    "confirmation.confirmButton": {
+      "message": "Konfirmasikan"
+    },
+    "confirmation.signAndSendTransaction.title": {
+      "message": "Permintaan transaksi"
+    },
+    "confirmation.requestOrigin": {
+      "message": "Permintaan dari"
     }
   }
 }

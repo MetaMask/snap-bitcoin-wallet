@@ -195,6 +195,21 @@
     },
     "confirmation.signMessage.message": {
       "message": "メッセージ"
+    },
+    "confirmation.estimatedChanges": {
+      "message": "予測される増減額"
+    },
+    "confirmation.estimatedChanges.send": {
+      "message": "送金額"
+    },
+    "confirmation.confirmButton": {
+      "message": "確定"
+    },
+    "confirmation.signAndSendTransaction.title": {
+      "message": "トランザクションリクエスト"
+    },
+    "confirmation.requestOrigin": {
+      "message": "要求元"
     }
   }
 }
