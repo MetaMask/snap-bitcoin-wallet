@@ -9,12 +9,12 @@ import {
   Button,
   Container,
   Footer,
-  Icon,
   Text as SnapText,
 } from '@metamask/snaps-sdk/jsx';
 
 import type { Messages, ConfirmSendFormContext } from '../../../entities';
 import { networkToCurrencyUnit, ConfirmationEvent } from '../../../entities';
+import { AssetIconInline } from '../components';
 import {
   displayAmount,
   displayCaip10,
@@ -66,10 +66,8 @@ export const UnifiedSendFormView: SnapComponent<UnifiedSendFormViewProps> = ({
                 <SnapText color="error">
                   -{displayAmount(BigInt(amount), currency).replace(' BTC', '')}
                 </SnapText>
-                <Box alignment="center" center>
-                  <Icon name="coin" color="primary" size="md" />
-                </Box>
-                <SnapText> BTC</SnapText>
+                <AssetIconInline network={network} />
+                <SnapText>BTC</SnapText>
               </Box>
               <SnapText color="muted">
                 {displayExchangeAmount(BigInt(amount), exchangeRate)}
@@ -104,9 +102,7 @@ export const UnifiedSendFormView: SnapComponent<UnifiedSendFormViewProps> = ({
               {t('network')}
             </SnapText>
             <Box direction="horizontal" alignment="center">
-              <Box alignment="center" center>
-                <Icon name="global" color="primary" size="md" />
-              </Box>
+              <AssetIconInline network={network} variant="network" />
               <SnapText>{network}</SnapText>
             </Box>
           </Box>
