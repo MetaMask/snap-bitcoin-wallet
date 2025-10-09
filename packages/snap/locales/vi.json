@@ -165,6 +165,21 @@
     },
     "confirmation.signMessage.message": {
       "message": "Tin nhắn"
+    },
+    "confirmation.estimatedChanges": {
+      "message": "Thay đổi ước tính"
+    },
+    "confirmation.estimatedChanges.send": {
+      "message": "Bạn gửi"
+    },
+    "confirmation.confirmButton": {
+      "message": "Xác nhận"
+    },
+    "confirmation.signAndSendTransaction.title": {
+      "message": "Yêu cầu giao dịch"
+    },
+    "confirmation.requestOrigin": {
+      "message": "Yêu cầu từ"
     }
   }
 }

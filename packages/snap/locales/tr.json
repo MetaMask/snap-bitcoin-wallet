@@ -165,6 +165,21 @@
     },
     "confirmation.signMessage.message": {
       "message": "Mesaj"
+    },
+    "confirmation.estimatedChanges": {
+      "message": "Tahmini değişiklikler"
+    },
+    "confirmation.estimatedChanges.send": {
+      "message": "Gönderdiğiniz"
+    },
+    "confirmation.confirmButton": {
+      "message": "Onayla"
+    },
+    "confirmation.signAndSendTransaction.title": {
+      "message": "İşlem talebi"
+    },
+    "confirmation.requestOrigin": {
+      "message": "Talebi gönderen"
     }
   }
 }

@@ -44,13 +44,15 @@ export const UnifiedSendFormView: SnapComponent<UnifiedSendFormViewProps> = ({
   return (
     <Container>
       <Box>
-        <Heading size="lg">{t('Transaction request')}</Heading>
+        <Heading size="lg">
+          {t('confirmation.signAndSendTransaction.title')}
+        </Heading>
 
         <Section>
-          <Row label={t('Estimated changes')} variant="default">
+          <Row label={t('confirmation.estimatedChanges')} variant="default">
             <SnapText> </SnapText>
           </Row>
-          <Row label={t('You send')}>
+          <Row label={t('confirmation.estimatedChanges.send')}>
             <Box alignment="end">
               <SnapText>{displayAmount(BigInt(amount), currency)}</SnapText>
               <SnapText color="muted">
@@ -61,10 +63,10 @@ export const UnifiedSendFormView: SnapComponent<UnifiedSendFormViewProps> = ({
         </Section>
 
         <Section>
-          <Row label={t('Request from')}>
+          <Row label={t('confirmation.requestOrigin')}>
             <SnapText>MetaMask</SnapText>
           </Row>
-          <Row label={t('Account')}>
+          <Row label={t('confirmation.account')}>
             {isValidSnapLinkProtocol(explorerUrl) ? (
               <Link href={displayExplorerUrl(explorerUrl, from)}>
                 <Address address={displayCaip10(network, from)} displayName />
@@ -73,10 +75,10 @@ export const UnifiedSendFormView: SnapComponent<UnifiedSendFormViewProps> = ({
               <Address address={displayCaip10(network, from)} displayName />
             )}
           </Row>
-          <Row label={t('Network')}>
+          <Row label={t('network')}>
             <SnapText>{network}</SnapText>
           </Row>
-          <Row label={t('Network fee')} tooltip={t('networkFeeTooltip')}>
+          <Row label={t('networkFee')} tooltip={t('networkFeeTooltip')}>
             <Value
               value={displayAmount(fee, currency)}
               extra={displayExchangeAmount(fee, exchangeRate)}
@@ -87,10 +89,10 @@ export const UnifiedSendFormView: SnapComponent<UnifiedSendFormViewProps> = ({
 
       <Footer>
         <Button name={ConfirmationEvent.Cancel} type="button">
-          {t('Cancel')}
+          {t('cancel')}
         </Button>
         <Button name={ConfirmationEvent.Confirm} type="button">
-          {t('Confirm')}
+          {t('confirmation.confirmButton')}
         </Button>
       </Footer>
     </Container>
