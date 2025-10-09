@@ -4,9 +4,7 @@ import {
   Address,
   Heading,
   Link,
-  Row,
   Section,
-  Value,
   Box,
   Button,
   Container,
@@ -15,7 +13,8 @@ import {
 } from '@metamask/snaps-sdk/jsx';
 
 import type { Messages, ConfirmSendFormContext } from '../../../entities';
-import { networkToCurrencyUnit, ConfirmationEvent } from '../../../entities';
+import { ConfirmationEvent, networkToCurrencyUnit } from '../../../entities';
+import { AssetIconInline } from '../components';
 import {
   displayAmount,
   displayCaip10,
@@ -44,29 +43,51 @@ export const UnifiedSendFormView: SnapComponent<UnifiedSendFormViewProps> = ({
   return (
     <Container>
       <Box>
-        <Heading size="lg">
-          {t('confirmation.signAndSendTransaction.title')}
-        </Heading>
+        <Box alignment="center" center>
+          <Box>{null}</Box>
+          <Heading size="lg">
+            {t('confirmation.signAndSendTransaction.title')}
+          </Heading>
+          <Box>{null}</Box>
+        </Box>
 
         <Section>
-          <Row label={t('confirmation.estimatedChanges')} variant="default">
-            <SnapText> </SnapText>
-          </Row>
-          <Row label={t('confirmation.estimatedChanges.send')}>
-            <Box alignment="end">
-              <SnapText>{displayAmount(BigInt(amount), currency)}</SnapText>
+          <Box>
+            <SnapText fontWeight="medium" color="alternative">
+              {t('confirmation.estimatedChanges')}
+            </SnapText>
+          </Box>
+          <Box alignment="space-between" direction="horizontal">
+            <SnapText fontWeight="medium" color="alternative">
+              {t('confirmation.estimatedChanges.send')}
+            </SnapText>
+            <Box direction="vertical" crossAlignment="end">
+              <Box direction="horizontal" alignment="center">
+                <SnapText color="error">
+                  -{displayAmount(BigInt(amount), currency).replace(' BTC', '')}
+                </SnapText>
+                <AssetIconInline network={network} />
+                <SnapText>BTC</SnapText>
+              </Box>
               <SnapText color="muted">
                 {displayExchangeAmount(BigInt(amount), exchangeRate)}
               </SnapText>
             </Box>
-          </Row>
+          </Box>
         </Section>
 
         <Section>
-          <Row label={t('confirmation.requestOrigin')}>
+          <Box alignment="space-between" direction="horizontal">
+            <SnapText fontWeight="medium" color="alternative">
+              {t('confirmation.requestOrigin')}
+            </SnapText>
             <SnapText>MetaMask</SnapText>
-          </Row>
-          <Row label={t('confirmation.account')}>
+          </Box>
+          <Box>{null}</Box>
+          <Box alignment="space-between" direction="horizontal">
+            <SnapText fontWeight="medium" color="alternative">
+              {t('confirmation.account')}
+            </SnapText>
             {isValidSnapLinkProtocol(explorerUrl) ? (
               <Link href={displayExplorerUrl(explorerUrl, from)}>
                 <Address address={displayCaip10(network, from)} displayName />
@@ -74,24 +95,35 @@ export const UnifiedSendFormView: SnapComponent<UnifiedSendFormViewProps> = ({
             ) : (
               <Address address={displayCaip10(network, from)} displayName />
             )}
-          </Row>
-          <Row label={t('network')}>
-            <SnapText>{network}</SnapText>
-          </Row>
-          <Row label={t('networkFee')} tooltip={t('networkFeeTooltip')}>
-            <Value
-              value={displayAmount(fee, currency)}
-              extra={displayExchangeAmount(fee, exchangeRate)}
-            />
-          </Row>
+          </Box>
+          <Box>{null}</Box>
+          <Box alignment="space-between" direction="horizontal">
+            <SnapText fontWeight="medium" color="alternative">
+              {t('network')}
+            </SnapText>
+            <Box direction="horizontal" alignment="center">
+              <AssetIconInline network={network} variant="network" />
+              <SnapText>{network}</SnapText>
+            </Box>
+          </Box>
+          <Box>{null}</Box>
+          <Box alignment="space-between" direction="horizontal">
+            <SnapText fontWeight="medium" color="alternative">
+              {t('networkFee')}
+            </SnapText>
+            <Box direction="horizontal" alignment="center">
+              <SnapText color="muted">
+                {displayExchangeAmount(fee, exchangeRate)}
+              </SnapText>
+              <SnapText>{displayAmount(fee, currency)}</SnapText>
+            </Box>
+          </Box>
         </Section>
       </Box>
 
       <Footer>
-        <Button name={ConfirmationEvent.Cancel} type="button">
-          {t('cancel')}
-        </Button>
-        <Button name={ConfirmationEvent.Confirm} type="button">
+        <Button name={ConfirmationEvent.Cancel}>{t('cancel')}</Button>
+        <Button name={ConfirmationEvent.Confirm}>
           {t('confirmation.confirmButton')}
         </Button>
       </Footer>

@@ -828,7 +828,7 @@ describe('SendFlowUseCases', () => {
       mockSendFlowRepository.insertConfirmSendForm.mockResolvedValue(
         'interface-id',
       );
-      mockSnapClient.displayConfirmation.mockResolvedValue(true);
+      mockSnapClient.displayUserPrompt.mockResolvedValue(true);
       mockAccountUseCases.signPsbt.mockResolvedValue({
         psbt: mockSignedPsbt,
       } as any);
@@ -854,7 +854,7 @@ describe('SendFlowUseCases', () => {
       );
       expect(mockTxBuilder.finish).toHaveBeenCalled();
       expect(mockSendFlowRepository.insertConfirmSendForm).toHaveBeenCalled();
-      expect(mockSnapClient.displayConfirmation).toHaveBeenCalledWith(
+      expect(mockSnapClient.displayUserPrompt).toHaveBeenCalledWith(
         'interface-id',
       );
       expect(mockAccountUseCases.signPsbt).toHaveBeenCalledWith(
@@ -895,7 +895,7 @@ describe('SendFlowUseCases', () => {
     });
 
     it('throws error when user cancels confirmation', async () => {
-      mockSnapClient.displayConfirmation.mockResolvedValue(false);
+      mockSnapClient.displayUserPrompt.mockResolvedValue(false);
 
       await expect(
         useCases.confirmSendFlow(mockAccount, amount, toAddress),
