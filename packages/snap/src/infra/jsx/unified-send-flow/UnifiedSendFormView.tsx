@@ -13,7 +13,7 @@ import {
 } from '@metamask/snaps-sdk/jsx';
 
 import type { Messages, ConfirmSendFormContext } from '../../../entities';
-import { networkToCurrencyUnit, ConfirmationEvent } from '../../../entities';
+import { ConfirmationEvent, networkToCurrencyUnit } from '../../../entities';
 import { AssetIconInline } from '../components';
 import {
   displayAmount,

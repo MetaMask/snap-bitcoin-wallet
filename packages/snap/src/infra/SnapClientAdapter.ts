@@ -157,6 +157,15 @@ export class SnapClientAdapter implements SnapClient {
     })) as unknown as ResolveType;
   }
 
+  async displayUserPrompt<ResolveType>(
+    id: string,
+  ): Promise<ResolveType | null> {
+    return (await snap.request({
+      method: 'snap_dialog',
+      params: { id },
+    })) as unknown as ResolveType;
+  }
+
   async getInterfaceState(id: string): Promise<GetInterfaceStateResult> {
     return snap.request({
       method: 'snap_getInterfaceState',

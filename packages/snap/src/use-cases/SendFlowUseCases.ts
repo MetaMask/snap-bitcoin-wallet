@@ -129,7 +129,7 @@ export class SendFlowUseCases {
 
     // Blocks and waits for user actions.
     const confirmed =
-      await this.#snapClient.displayConfirmation<boolean>(interfaceId);
+      await this.#snapClient.displayUserPrompt<boolean>(interfaceId);
 
     if (!confirmed) {
       throw new UserActionError('User canceled the confirmation');
