@@ -258,9 +258,7 @@ export class SnapClientAdapter implements SnapClient {
           properties: {
             origin,
             message: createMessage(),
-            chain_id: networkToScope[account.network],
-            account_id: account.id,
-            account_address: account.publicAddress.toString(),
+            chain_id_caip: networkToScope[account.network],
             account_type: addressTypeToCaip[account.addressType],
             tx_id: tx.txid.toString(),
           },
