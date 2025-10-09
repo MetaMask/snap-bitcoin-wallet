@@ -1,6 +1,6 @@
 {
   "name": "bitcoin-wallet-snap-monorepo",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "private": true,
   "description": "",
   "homepage": "https://github.com/MetaMask/snap-bitcoin-wallet#readme",
