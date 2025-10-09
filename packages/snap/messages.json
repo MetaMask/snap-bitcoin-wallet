@@ -196,5 +196,20 @@
   },
   "confirmation.signMessage.message": {
     "message": "Message"
+  },
+  "confirmation.estimatedChanges": {
+    "message": "Estimated changes"
+  },
+  "confirmation.estimatedChanges.send": {
+    "message": "You send"
+  },
+  "confirmation.confirmButton": {
+    "message": "Confirm"
+  },
+  "confirmation.signAndSendTransaction.title": {
+    "message": "Transaction request"
+  },
+  "confirmation.requestOrigin": {
+    "message": "Request from"
   }
 }

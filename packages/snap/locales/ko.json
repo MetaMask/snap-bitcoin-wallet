@@ -165,6 +165,21 @@
     },
     "confirmation.signMessage.message": {
       "message": "메시지"
+    },
+    "confirmation.estimatedChanges": {
+      "message": "예상 변동 사항"
+    },
+    "confirmation.estimatedChanges.send": {
+      "message": "전송:"
+    },
+    "confirmation.confirmButton": {
+      "message": "컨펌"
+    },
+    "confirmation.signAndSendTransaction.title": {
+      "message": "트랜잭션 요청"
+    },
+    "confirmation.requestOrigin": {
+      "message": "요청자:"
     }
   }
 }

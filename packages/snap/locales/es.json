@@ -195,6 +195,21 @@
     },
     "confirmation.signMessage.message": {
       "message": "Mensaje"
+    },
+    "confirmation.estimatedChanges": {
+      "message": "Cambios estimados"
+    },
+    "confirmation.estimatedChanges.send": {
+      "message": "Usted envía"
+    },
+    "confirmation.confirmButton": {
+      "message": "Confirmar"
+    },
+    "confirmation.signAndSendTransaction.title": {
+      "message": "Solicitud de transacción"
+    },
+    "confirmation.requestOrigin": {
+      "message": "Solicitud de"
     }
   }
 }

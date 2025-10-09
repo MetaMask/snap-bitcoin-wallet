@@ -195,6 +195,21 @@
     },
     "confirmation.signMessage.message": {
       "message": "Μήνυμα"
+    },
+    "confirmation.estimatedChanges": {
+      "message": "Εκτιμώμενες αλλαγές"
+    },
+    "confirmation.estimatedChanges.send": {
+      "message": "Θα στείλετε"
+    },
+    "confirmation.confirmButton": {
+      "message": "Επιβεβαίωση"
+    },
+    "confirmation.signAndSendTransaction.title": {
+      "message": "Αίτημα συναλλαγής"
+    },
+    "confirmation.requestOrigin": {
+      "message": "Ζητήθηκε από"
     }
   }
 }
