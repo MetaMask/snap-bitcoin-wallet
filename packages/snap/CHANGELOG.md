@@ -9,11 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.3.0]
 
-### Uncategorized
+### Fixed
 
-- fix: confirmSend UI modal ([#541](https://github.com/MetaMask/snap-bitcoin-wallet/pull/541))
-- fix: remove account address snap tracking ([#539](https://github.com/MetaMask/snap-bitcoin-wallet/pull/539))
-- fix: update locales ([#540](https://github.com/MetaMask/snap-bitcoin-wallet/pull/540))
+- Fix confirmSend UI modal ([#541](https://github.com/MetaMask/snap-bitcoin-wallet/pull/541))
+- Remove account address snap tracking ([#539](https://github.com/MetaMask/snap-bitcoin-wallet/pull/539))
+- Update locales ([#540](https://github.com/MetaMask/snap-bitcoin-wallet/pull/540))
 
 ## [1.2.0]
 
@@ -222,7 +222,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Icons as base64 ([#422](https://github.com/MetaMask/snap-bitcoin-wallet/pull/422))
 - Synchronize Bitcoin accounts in a cron job ([#407](https://github.com/MetaMask/snap-bitcoin-wallet/pull/407))
 - Integration tests ([#382](https://github.com/MetaMask/snap-bitcoin-wallet/pull/382))
-- Translations ([#403]https://github.com/MetaMask/snap-bitcoin-wallet/pull/403)
+- Translations ([#403](https://github.com/MetaMask/snap-bitcoin-wallet/pull/403))
 
 ### Changed
 
