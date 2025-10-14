@@ -539,24 +539,6 @@ export class AccountUseCases {
     );
   }
 
-  async setSelectedAccounts(accountIds: string[]): Promise<void> {
-    const selectedAccounts =
-      await this.#repository.setSelectedAccounts(accountIds);
-
-    const scanPromises = selectedAccounts.map(async (account) => {
-      await this.fullScan(account);
-      this.#logger.info(
-        `Bitcoin account discovered successfully. Account id: ${account.id}`,
-      );
-    });
-
-    await Promise.all(scanPromises);
-  }
-
-  async getSelectedAccounts(): Promise<BitcoinAccount[]> {
-    return await this.#repository.getSelectedAccounts();
-  }
-
   async #fillPsbt(
     account: BitcoinAccount,
     templatePsbt: Psbt,

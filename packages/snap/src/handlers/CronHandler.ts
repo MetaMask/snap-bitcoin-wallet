@@ -1,3 +1,5 @@
+import { getSelectedAccounts } from '@metamask/keyring-snap-sdk';
+import type { SnapsProvider } from '@metamask/snaps-sdk';
 import type { JsonRpcRequest } from '@metamask/utils';
 import { assert, object, string } from 'superstruct';
 
@@ -24,14 +26,18 @@ export class CronHandler {
 
   readonly #snapClient: SnapClient;
 
+  readonly #snap: SnapsProvider;
+
   constructor(
     accounts: AccountUseCases,
     sendFlow: SendFlowUseCases,
     snapClient: SnapClient,
+    snap: SnapsProvider,
   ) {
     this.#accountsUseCases = accounts;
     this.#sendFlowUseCases = sendFlow;
     this.#snapClient = snapClient;
+    this.#snap = snap;
   }
 
   async route(request: JsonRpcRequest): Promise<void> {
@@ -56,7 +62,14 @@ export class CronHandler {
   }
 
   async synchronizeAccounts(): Promise<void> {
-    const accounts = await this.#accountsUseCases.getSelectedAccounts();
+    const selectedAccounts: Set<string> = new Set(
+      await getSelectedAccounts(this.#snap),
+    );
+
+    const accounts = (await this.#accountsUseCases.list()).filter((account) => {
+      return selectedAccounts.has(account.id);
+    });
+
     const results = await Promise.allSettled(
       accounts.map(async (account) => {
         return this.#accountsUseCases.synchronize(account, 'cron');

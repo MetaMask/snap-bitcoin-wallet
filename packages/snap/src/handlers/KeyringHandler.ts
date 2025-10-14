@@ -43,7 +43,6 @@ import {
 
 import type { BitcoinAccount } from '../entities';
 import {
-  ValidationError,
   FormatError,
   InexistentMethodError,
   networkToCurrencyUnit,
@@ -62,6 +61,7 @@ import {
   mapToKeyringAccount,
   mapToTransaction,
 } from './mappings';
+import { validateSelectedAccounts } from './validation';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 
 export const CreateAccountRequest = object({
@@ -335,21 +335,23 @@ export class KeyringHandler implements Keyring {
   }
 
   async setSelectedAccounts(accounts: string[]): Promise<void> {
-    const isSubset = (first: Set<string>, second: Set<string>): boolean => {
-      return Array.from(first).every((element) => second.has(element));
-    };
+    const accountIdSet = new Set(accounts);
+    const allAccounts = await this.#accountsUseCases.list();
 
-    const currentAccounts = new Set(
-      (await this.#accountsUseCases.list()).map((account) => account.id),
+    validateSelectedAccounts(
+      accountIdSet,
+      allAccounts.map((acc) => acc.id),
     );
 
-    if (!isSubset(new Set(accounts), currentAccounts)) {
-      throw new ValidationError(
-        `Accounts ids were not part of existing accounts.`,
-      );
-    }
+    const selectedAccounts = allAccounts.filter((account) =>
+      accountIdSet.has(account.id),
+    );
 
-    await this.#accountsUseCases.setSelectedAccounts(accounts);
+    const scanPromises = selectedAccounts.map(async (account) => {
+      await this.#accountsUseCases.fullScan(account);
+    });
+
+    await Promise.all(scanPromises);
   }
 
   #extractAddressType(path: string): AddressType {

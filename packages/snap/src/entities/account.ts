@@ -306,21 +306,6 @@ export type BitcoinAccountRepository = {
    * @returns the frozen UTXO outpoints.
    */
   getFrozenUTXOs(id: string): Promise<string[]>;
-
-  /**
-   * Set the selected accounts for synchronization.
-   *
-   * @param accountIds - Array of account IDs to mark as selected.
-   * @returns The selected Bitcoin accounts.
-   */
-  setSelectedAccounts(accountIds: string[]): Promise<BitcoinAccount[]>;
-
-  /**
-   * Get all accounts that are marked as selected for synchronization.
-   *
-   * @returns The list of selected Bitcoin accounts.
-   */
-  getSelectedAccounts(): Promise<BitcoinAccount[]>;
 };
 
 export enum Purpose {
