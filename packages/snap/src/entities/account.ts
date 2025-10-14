@@ -306,6 +306,9 @@ export type BitcoinAccountRepository = {
    * @returns the frozen UTXO outpoints.
    */
   getFrozenUTXOs(id: string): Promise<string[]>;
+
+  setSelectedAccounts(accountIds: string[]): Promise<BitcoinAccount[]>;
+  getSelectedAccounts(): Promise<BitcoinAccount[]>;
 };
 
 export enum Purpose {

@@ -25,6 +25,8 @@ export type AccountState = {
   wallet: string;
   // Wallet inscriptions for meta protocols (ordinals, etc.)
   inscriptions: Inscription[];
+  // if the account is selected
+  isSelected: boolean;
 };
 
 export enum TrackingSnapEvent {

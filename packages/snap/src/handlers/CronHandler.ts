@@ -56,7 +56,7 @@ export class CronHandler {
   }
 
   async synchronizeAccounts(): Promise<void> {
-    const accounts = await this.#accountsUseCases.list();
+    const accounts = await this.#accountsUseCases.getSelectedAccounts();
     const results = await Promise.allSettled(
       accounts.map(async (account) => {
         return this.#accountsUseCases.synchronize(account, 'cron');

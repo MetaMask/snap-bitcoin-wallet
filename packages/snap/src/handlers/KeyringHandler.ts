@@ -13,6 +13,7 @@ import {
   ListAccountsRequestStruct,
   ListAccountTransactionsRequestStruct,
   MetaMaskOptionsStruct,
+  SetSelectedAccountsRequestStruct,
   SubmitRequestRequestStruct,
 } from '@metamask/keyring-api';
 import type {
@@ -143,6 +144,11 @@ export class KeyringHandler implements Keyring {
         assert(request, SubmitRequestRequestStruct);
         return this.submitRequest(request.params);
       }
+      case `${KeyringRpcMethod.SetSelectedAccounts}`: {
+        assert(request, SetSelectedAccountsRequestStruct);
+        await this.setSelectedAccounts((request as any).params.accountIds);
+        return null;
+      }
 
       default: {
         throw new InexistentMethodError('Keyring method not supported', {
@@ -174,7 +180,7 @@ export class KeyringHandler implements Keyring {
       index,
       derivationPath,
       addressType,
-      synchronize = true,
+      synchronize = false,
       accountNameSuggestion,
     } = options;
 
@@ -257,10 +263,7 @@ export class KeyringHandler implements Keyring {
       ),
     );
 
-    // Return only accounts with history.
-    return accounts
-      .filter((account) => account.listTransactions().length > 0)
-      .map(mapToDiscoveredAccount);
+    return accounts.map(mapToDiscoveredAccount);
   }
 
   async getAccountBalances(
@@ -328,6 +331,22 @@ export class KeyringHandler implements Keyring {
 
   async submitRequest(request: KeyringRequest): Promise<KeyringResponse> {
     return this.#keyringRequest.route(request);
+  }
+
+  async setSelectedAccounts(accounts: string[]): Promise<void> {
+    const isSubset = (first: Set<string>, second: Set<string>): boolean => {
+      return Array.from(first).every((element) => second.has(element));
+    };
+
+    const currentAccounts = new Set(
+      (await this.#accountsUseCases.list()).map((account) => account.id),
+    );
+
+    if (!isSubset(new Set(accounts), currentAccounts)) {
+      throw new Error(`Accounts ids were not part of existing accounts.`);
+    }
+
+    await this.#accountsUseCases.setSelectedAccounts(accounts);
   }
 
   #extractAddressType(path: string): AddressType {

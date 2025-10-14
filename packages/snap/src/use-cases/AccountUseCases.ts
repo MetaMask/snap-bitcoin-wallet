@@ -128,12 +128,6 @@ export class AccountUseCases {
       addressType,
     );
 
-    await this.#chain.fullScan(newAccount);
-
-    this.#logger.info(
-      'Bitcoin account discovered successfully. Request: %o',
-      req,
-    );
     return newAccount;
   }
 
@@ -543,6 +537,24 @@ export class AccountUseCases {
     return (
       feeEstimates.get(this.#targetBlocksConfirmation) ?? this.#fallbackFeeRate
     );
+  }
+
+  async setSelectedAccounts(accountIds: string[]): Promise<void> {
+    const selectedAccounts =
+      await this.#repository.setSelectedAccounts(accountIds);
+
+    const scanPromises = selectedAccounts.map(async (account) => {
+      await this.fullScan(account);
+      this.#logger.info(
+        `Bitcoin account discovered successfully. Account id: ${account.id}`,
+      );
+    });
+
+    await Promise.all(scanPromises);
+  }
+
+  async getSelectedAccounts(): Promise<BitcoinAccount[]> {
+    return await this.#repository.getSelectedAccounts();
   }
 
   async #fillPsbt(

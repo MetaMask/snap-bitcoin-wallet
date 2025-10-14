@@ -227,4 +227,39 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
       return `${txid}:${vout}`;
     });
   }
+
+  async setSelectedAccounts(accountIds: string[]): Promise<BitcoinAccount[]> {
+    const allAccounts = await this.getAll();
+    const accountIdSet = new Set(accountIds);
+
+    const updatePromises = allAccounts.map(async (account) => {
+      return this.#snapClient.setState(
+        `accounts.${account.id}.isSelected`,
+        accountIdSet.has(account.id), // this should switch to inactive previously active accounts
+      );
+    });
+
+    await Promise.all(updatePromises);
+    return allAccounts.filter((account) => accountIdSet.has(account.id));
+  }
+
+  async getSelectedAccounts(): Promise<BitcoinAccount[]> {
+    const accounts = (await this.#snapClient.getState('accounts')) as
+      | SnapState['accounts']
+      | null;
+
+    if (!accounts) {
+      return [];
+    }
+
+    return Object.entries(accounts)
+      .filter(([_id, accState]) => accState.isSelected)
+      .map(([id, account]) =>
+        BdkAccountAdapter.load(
+          id,
+          account.derivationPath,
+          ChangeSet.from_json(account.wallet),
+        ),
+      );
+  }
 }
