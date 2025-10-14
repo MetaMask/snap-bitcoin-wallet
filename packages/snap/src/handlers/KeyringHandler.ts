@@ -43,6 +43,7 @@ import {
 
 import type { BitcoinAccount } from '../entities';
 import {
+  ValidationError,
   FormatError,
   InexistentMethodError,
   networkToCurrencyUnit,
@@ -343,7 +344,9 @@ export class KeyringHandler implements Keyring {
     );
 
     if (!isSubset(new Set(accounts), currentAccounts)) {
-      throw new Error(`Accounts ids were not part of existing accounts.`);
+      throw new ValidationError(
+        `Accounts ids were not part of existing accounts.`,
+      );
     }
 
     await this.#accountsUseCases.setSelectedAccounts(accounts);
