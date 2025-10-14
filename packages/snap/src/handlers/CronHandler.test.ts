@@ -1,4 +1,5 @@
 import { getSelectedAccounts } from '@metamask/keyring-snap-sdk';
+import type { SnapsProvider } from '@metamask/snaps-sdk';
 import type { JsonRpcRequest } from '@metamask/utils';
 import { mock } from 'jest-mock-extended';
 
@@ -14,7 +15,7 @@ describe('CronHandler', () => {
   const mockSendFlowUseCases = mock<SendFlowUseCases>();
   const mockAccountUseCases = mock<AccountUseCases>();
   const mockSnapClient = mock<SnapClient>();
-  const mockSnap = {};
+  const mockSnap = mock<SnapsProvider>();
 
   const handler = new CronHandler(
     mockAccountUseCases,
