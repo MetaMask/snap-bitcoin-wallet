@@ -347,11 +347,11 @@ export class KeyringHandler implements Keyring {
       accountIdSet.has(account.id),
     );
 
-    const scanPromises = selectedAccounts.map(async (account) => {
-      await this.#accountsUseCases.fullScan(account);
-    });
+    const scanPromises = selectedAccounts.map(async (account) =>
+      this.#accountsUseCases.fullScan(account),
+    );
 
-    await Promise.all(scanPromises);
+    await Promise.allSettled(scanPromises);
   }
 
   #extractAddressType(path: string): AddressType {

@@ -39,7 +39,7 @@ describe('CronHandler', () => {
     ];
     const request = { method: 'synchronizeAccounts' } as JsonRpcRequest;
 
-    it('synchronizes all accounts', async () => {
+    it('synchronizes all selected accounts', async () => {
       (getSelectedAccounts as jest.Mock).mockResolvedValue([
         'account-1',
         'account-2',
