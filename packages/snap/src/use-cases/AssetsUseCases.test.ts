@@ -48,13 +48,13 @@ describe('AssetsUseCases', () => {
 
       expect(mockAssetRates.spotPrices).toHaveBeenCalled();
       expect(result).toStrictEqual([
-        ['swift:0/unknown:unknown', null],
         ['eip155:1/slip44:60', mockExchangeRatesETH],
         [
           'bip122:000000000019d6689c085ae165831e93/slip44:0',
           mockExchangeRatesBTC,
         ],
         ['swift:0/iso4217:USD', mockExchangeRatesUSD],
+        ['swift:0/unknown:unknown', null],
       ]);
     });
 
@@ -103,6 +103,40 @@ describe('AssetsUseCases', () => {
         mockSpotPrice,
         30000,
       );
+    });
+
+    it('deduplicates requests for assets with the same ticker', async () => {
+      const mockSpotPrice = mock<SpotPrice>({
+        price: 50000,
+        marketData: {
+          allTimeHigh: '110000',
+        },
+      });
+
+      // First call to cache.get returns undefined (cache miss)
+      // Subsequent calls return the cached value (cache hit)
+      mockCache.get
+        .mockResolvedValueOnce(undefined)
+        .mockResolvedValue(mockSpotPrice);
+      mockAssetRates.spotPrices.mockResolvedValue(mockSpotPrice);
+
+      // Multiple assets that map to the same ticker (usd)
+      const result = await useCases.getRates([
+        'swift:0/iso4217:USD',
+        'swift:1/iso4217:USD',
+        'swift:2/iso4217:USD',
+      ]);
+
+      // Should only call spotPrices once for the unique ticker
+      expect(mockAssetRates.spotPrices).toHaveBeenCalledTimes(1);
+      expect(mockAssetRates.spotPrices).toHaveBeenCalledWith('usd');
+
+      // All assets should get the same spot price
+      expect(result).toStrictEqual([
+        ['swift:0/iso4217:USD', mockSpotPrice],
+        ['swift:1/iso4217:USD', mockSpotPrice],
+        ['swift:2/iso4217:USD', mockSpotPrice],
+      ]);
     });
   });
 

@@ -33,30 +33,29 @@ export class AssetsUseCases {
     this.#logger.debug('Fetching BTC rates for: %o', assets);
 
     const assetRates: AssetRate[] = [];
-    await Promise.all(
-      assets.map(async (asset) => {
-        const ticker = this.#assetToTicker(asset);
-        if (!ticker) {
-          assetRates.push([asset, null]);
-          return;
-        }
 
-        const cacheKey = `spotPrices:${ticker}`;
-        const cachedValue = await this.#cache.get(cacheKey);
+    for (const asset of assets) {
+      const ticker = this.#assetToTicker(asset);
+      if (!ticker) {
+        assetRates.push([asset, null]);
+        continue;
+      }
 
-        let spotPrices: SpotPrice;
-        if (cachedValue === undefined) {
-          spotPrices = await this.#assetRates.spotPrices(ticker);
-          // use 30secs as the ttl since we don't wanna risk stale prices
-          // just to avoid back to back calls for the same ticker
-          await this.#cache.set(cacheKey, spotPrices, 30000);
-        } else {
-          spotPrices = cachedValue as SpotPrice;
-        }
+      const cacheKey = `spotPrices:${ticker}`;
+      const cachedValue = await this.#cache.get(cacheKey);
 
-        assetRates.push([asset, spotPrices]);
-      }),
-    );
+      let spotPrices: SpotPrice;
+      if (cachedValue === undefined) {
+        spotPrices = await this.#assetRates.spotPrices(ticker);
+        // use 30secs as the ttl since we don't wanna risk stale prices
+        // just to avoid back to back calls for the same ticker
+        await this.#cache.set(cacheKey, spotPrices, 30000);
+      } else {
+        spotPrices = cachedValue as SpotPrice;
+      }
+
+      assetRates.push([asset, spotPrices]);
+    }
 
     this.#logger.debug('BTC rates fetched successfully');
     return assetRates;
