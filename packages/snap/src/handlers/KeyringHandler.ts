@@ -147,7 +147,7 @@ export class KeyringHandler implements Keyring {
       }
       case `${KeyringRpcMethod.SetSelectedAccounts}`: {
         assert(request, SetSelectedAccountsRequestStruct);
-        await this.setSelectedAccounts((request as any).params.accountIds);
+        await this.setSelectedAccounts(request.params.accounts);
         return null;
       }
 
