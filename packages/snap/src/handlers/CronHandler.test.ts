@@ -1,3 +1,5 @@
+import { getSelectedAccounts } from '@metamask/keyring-snap-sdk';
+import type { SnapsProvider } from '@metamask/snaps-sdk';
 import type { JsonRpcRequest } from '@metamask/utils';
 import { mock } from 'jest-mock-extended';
 
@@ -5,18 +7,25 @@ import type { BitcoinAccount, SnapClient } from '../entities';
 import type { SendFlowUseCases, AccountUseCases } from '../use-cases';
 import { CronHandler, CronMethod } from './CronHandler';
 
+jest.mock('@metamask/keyring-snap-sdk', () => ({
+  getSelectedAccounts: jest.fn(),
+}));
+
 describe('CronHandler', () => {
   const mockSendFlowUseCases = mock<SendFlowUseCases>();
   const mockAccountUseCases = mock<AccountUseCases>();
   const mockSnapClient = mock<SnapClient>();
+  const mockSnap = mock<SnapsProvider>();
 
   const handler = new CronHandler(
     mockAccountUseCases,
     mockSendFlowUseCases,
     mockSnapClient,
+    mockSnap,
   );
 
   beforeEach(() => {
+    jest.clearAllMocks();
     mockSnapClient.getClientStatus.mockResolvedValue({
       active: true,
       locked: false,
@@ -24,10 +33,17 @@ describe('CronHandler', () => {
   });
 
   describe('synchronizeAccounts', () => {
-    const mockAccounts = [mock<BitcoinAccount>(), mock<BitcoinAccount>()];
+    const mockAccounts = [
+      mock<BitcoinAccount>({ id: 'account-1' }),
+      mock<BitcoinAccount>({ id: 'account-2' }),
+    ];
     const request = { method: 'synchronizeAccounts' } as JsonRpcRequest;
 
-    it('synchronizes all accounts', async () => {
+    it('synchronizes all selected accounts', async () => {
+      (getSelectedAccounts as jest.Mock).mockResolvedValue([
+        'account-1',
+        'account-2',
+      ]);
       mockAccountUseCases.list.mockResolvedValue(mockAccounts);
 
       await handler.route(request);
@@ -41,6 +57,7 @@ describe('CronHandler', () => {
 
     it('propagates errors from list', async () => {
       const error = new Error();
+      (getSelectedAccounts as jest.Mock).mockResolvedValue(['account-1']);
       mockAccountUseCases.list.mockRejectedValue(error);
 
       await expect(handler.route(request)).rejects.toThrow(error);
@@ -57,6 +74,10 @@ describe('CronHandler', () => {
     });
 
     it('throws error if some account fails to synchronize', async () => {
+      (getSelectedAccounts as jest.Mock).mockResolvedValue([
+        'account-1',
+        'account-2',
+      ]);
       mockAccountUseCases.list.mockResolvedValue(mockAccounts);
       mockAccountUseCases.synchronize.mockRejectedValue(new Error('error'));
 

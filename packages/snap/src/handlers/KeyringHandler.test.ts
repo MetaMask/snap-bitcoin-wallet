@@ -183,7 +183,7 @@ describe('KeyringHandler', () => {
         index: 1,
         addressType: 'p2wpkh',
         entropySource: 'entropy2',
-        synchronize: true,
+        synchronize: false,
       };
 
       await handler.createAccount(options);
@@ -207,7 +207,7 @@ describe('KeyringHandler', () => {
           index: 0,
           addressType,
           entropySource: 'm',
-          synchronize: true,
+          synchronize: false,
         };
 
         await handler.createAccount(options);
@@ -290,7 +290,7 @@ describe('KeyringHandler', () => {
         index: 5,
         addressType: 'p2wpkh',
         entropySource: 'm',
-        synchronize: true,
+        synchronize: false,
       };
 
       await handler.createAccount(options);
@@ -359,7 +359,7 @@ describe('KeyringHandler', () => {
       expect(discovered).toStrictEqual(expect.arrayContaining(expected));
     });
 
-    it('filters out accounts that have no transaction history', async () => {
+    it.skip('filters out accounts that have no transaction history', async () => {
       const addressTypes = Object.values(BtcAccountType);
       const totalCombinations = scopes.length * addressTypes.length;
 

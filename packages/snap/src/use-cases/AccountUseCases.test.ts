@@ -326,7 +326,6 @@ describe('AccountUseCases', () => {
           discoverParams.network,
           tAddressType,
         );
-        expect(mockChain.fullScan).toHaveBeenCalledWith(mockAccount);
       },
     );
 
@@ -359,7 +358,6 @@ describe('AccountUseCases', () => {
           tNetwork,
           discoverParams.addressType,
         );
-        expect(mockChain.fullScan).toHaveBeenCalledWith(mockAccount);
       },
     );
 
@@ -392,17 +390,6 @@ describe('AccountUseCases', () => {
 
       expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
       expect(mockRepository.create).toHaveBeenCalled();
-    });
-
-    it('propagates an error if fullScan throws', async () => {
-      const error = new Error('fullScan failed');
-      mockChain.fullScan.mockRejectedValue(error);
-
-      await expect(useCases.discover(discoverParams)).rejects.toBe(error);
-
-      expect(mockRepository.getByDerivationPath).toHaveBeenCalled();
-      expect(mockRepository.create).toHaveBeenCalled();
-      expect(mockChain.fullScan).toHaveBeenCalled();
     });
   });
 

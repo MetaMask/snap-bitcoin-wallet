@@ -13,6 +13,7 @@ import {
   ListAccountsRequestStruct,
   ListAccountTransactionsRequestStruct,
   MetaMaskOptionsStruct,
+  SetSelectedAccountsRequestStruct,
   SubmitRequestRequestStruct,
 } from '@metamask/keyring-api';
 import type {
@@ -60,6 +61,7 @@ import {
   mapToKeyringAccount,
   mapToTransaction,
 } from './mappings';
+import { validateSelectedAccounts } from './validation';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 
 export const CreateAccountRequest = object({
@@ -143,6 +145,11 @@ export class KeyringHandler implements Keyring {
         assert(request, SubmitRequestRequestStruct);
         return this.submitRequest(request.params);
       }
+      case `${KeyringRpcMethod.SetSelectedAccounts}`: {
+        assert(request, SetSelectedAccountsRequestStruct);
+        await this.setSelectedAccounts(request.params.accounts);
+        return null;
+      }
 
       default: {
         throw new InexistentMethodError('Keyring method not supported', {
@@ -174,7 +181,7 @@ export class KeyringHandler implements Keyring {
       index,
       derivationPath,
       addressType,
-      synchronize = true,
+      synchronize = false,
       accountNameSuggestion,
     } = options;
 
@@ -257,10 +264,7 @@ export class KeyringHandler implements Keyring {
       ),
     );
 
-    // Return only accounts with history.
-    return accounts
-      .filter((account) => account.listTransactions().length > 0)
-      .map(mapToDiscoveredAccount);
+    return accounts.map(mapToDiscoveredAccount);
   }
 
   async getAccountBalances(
@@ -328,6 +332,26 @@ export class KeyringHandler implements Keyring {
 
   async submitRequest(request: KeyringRequest): Promise<KeyringResponse> {
     return this.#keyringRequest.route(request);
+  }
+
+  async setSelectedAccounts(accounts: string[]): Promise<void> {
+    const accountIdSet = new Set(accounts);
+    const allAccounts = await this.#accountsUseCases.list();
+
+    validateSelectedAccounts(
+      accountIdSet,
+      allAccounts.map((acc) => acc.id),
+    );
+
+    const selectedAccounts = allAccounts.filter((account) =>
+      accountIdSet.has(account.id),
+    );
+
+    const scanPromises = selectedAccounts.map(async (account) =>
+      this.#accountsUseCases.fullScan(account),
+    );
+
+    await Promise.allSettled(scanPromises);
   }
 
   #extractAddressType(path: string): AddressType {

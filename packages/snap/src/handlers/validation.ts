@@ -14,6 +14,7 @@ import {
 } from 'superstruct';
 
 import type { BitcoinAccount, CodifiedError, Logger } from '../entities';
+import { ValidationError } from '../entities';
 
 export enum RpcMethod {
   StartSendTransactionFlow = 'startSendTransactionFlow',
@@ -148,4 +149,26 @@ export function validateAccountBalance(
   }
 
   return NO_ERRORS_RESPONSE;
+}
+
+/**
+ * Validates that all account IDs are part of the existing accounts.
+ *
+ * @param accountIds - Set of account IDs to validate
+ * @param existingAccountIds - Array of existing account IDs
+ * @throws {ValidationError} If any account ID is not part of existing accounts
+ */
+export function validateSelectedAccounts(
+  accountIds: Set<string>,
+  existingAccountIds: string[],
+): void {
+  const isSubset = (first: Set<string>, second: Set<string>): boolean => {
+    return Array.from(first).every((element) => second.has(element));
+  };
+
+  if (!isSubset(accountIds, new Set(existingAccountIds))) {
+    throw new ValidationError(
+      'Account IDs were not part of existing accounts.',
+    );
+  }
 }

@@ -128,12 +128,6 @@ export class AccountUseCases {
       addressType,
     );
 
-    await this.#chain.fullScan(newAccount);
-
-    this.#logger.info(
-      'Bitcoin account discovered successfully. Request: %o',
-      req,
-    );
     return newAccount;
   }
 
