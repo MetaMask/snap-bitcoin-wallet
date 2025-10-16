@@ -4,12 +4,14 @@ import { mock } from 'jest-mock-extended';
 import type { AssetRatesClient, Logger, SpotPrice } from '../entities';
 import { AssetsUseCases } from './AssetsUseCases';
 import { Caip19Asset } from '../handlers/caip';
+import type { ICache, Serializable } from '../store/ICache';
 
 describe('AssetsUseCases', () => {
   const mockLogger = mock<Logger>();
   const mockAssetRates = mock<AssetRatesClient>();
+  const mockCache = mock<ICache<Serializable>>();
 
-  const useCases = new AssetsUseCases(mockLogger, mockAssetRates);
+  const useCases = new AssetsUseCases(mockLogger, mockAssetRates, mockCache);
 
   describe('getBtcRates', () => {
     it('returns rate for the known assets and null for unknown', async () => {
@@ -32,6 +34,7 @@ describe('AssetsUseCases', () => {
         },
       });
 
+      mockCache.get.mockResolvedValue(undefined);
       mockAssetRates.spotPrices.mockResolvedValueOnce(mockExchangeRatesETH);
       mockAssetRates.spotPrices.mockResolvedValueOnce(mockExchangeRatesBTC);
       mockAssetRates.spotPrices.mockResolvedValueOnce(mockExchangeRatesUSD);
@@ -57,10 +60,48 @@ describe('AssetsUseCases', () => {
 
     it('propagates an error if spotPrices fails', async () => {
       const error = new Error('getRates failed');
+      mockCache.get.mockResolvedValue(undefined);
       mockAssetRates.spotPrices.mockRejectedValue(error);
 
       await expect(useCases.getRates([Caip19Asset.Testnet])).rejects.toBe(
         error,
+      );
+    });
+
+    it('uses cached values when available', async () => {
+      const cachedSpotPrice = mock<SpotPrice>({
+        price: 42000,
+        marketData: {
+          allTimeHigh: '110000',
+        },
+      });
+
+      mockCache.get.mockResolvedValue(cachedSpotPrice);
+
+      const result = await useCases.getRates(['swift:0/iso4217:USD']);
+
+      expect(mockCache.get).toHaveBeenCalledWith('spotPrices:usd');
+      expect(mockAssetRates.spotPrices).not.toHaveBeenCalled();
+      expect(result).toStrictEqual([['swift:0/iso4217:USD', cachedSpotPrice]]);
+    });
+
+    it('caches fetched spot prices with 30 second TTL', async () => {
+      const mockSpotPrice = mock<SpotPrice>({
+        price: 50000,
+        marketData: {
+          allTimeHigh: '110000',
+        },
+      });
+
+      mockCache.get.mockResolvedValue(undefined);
+      mockAssetRates.spotPrices.mockResolvedValue(mockSpotPrice);
+
+      await useCases.getRates(['swift:0/iso4217:USD']);
+
+      expect(mockCache.set).toHaveBeenCalledWith(
+        'spotPrices:usd',
+        mockSpotPrice,
+        30000,
       );
     });
   });

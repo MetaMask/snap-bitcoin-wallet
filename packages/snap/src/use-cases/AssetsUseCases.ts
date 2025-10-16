@@ -7,17 +7,26 @@ import type {
   AssetRatesClient,
   AssetRate,
   Logger,
+  SpotPrice,
   TimePeriod,
 } from '../entities';
+import type { ICache, Serializable } from '../store/ICache';
 
 export class AssetsUseCases {
   readonly #logger: Logger;
 
   readonly #assetRates: AssetRatesClient;
 
-  constructor(logger: Logger, assetRates: AssetRatesClient) {
+  readonly #cache: ICache<Serializable>;
+
+  constructor(
+    logger: Logger,
+    assetRates: AssetRatesClient,
+    cache: ICache<Serializable>,
+  ) {
     this.#logger = logger;
     this.#assetRates = assetRates;
+    this.#cache = cache;
   }
 
   async getRates(assets: CaipAssetType[]): Promise<AssetRate[]> {
@@ -27,10 +36,25 @@ export class AssetsUseCases {
     await Promise.all(
       assets.map(async (asset) => {
         const ticker = this.#assetToTicker(asset);
-        assetRates.push([
-          asset,
-          ticker ? await this.#assetRates.spotPrices(ticker) : null,
-        ]);
+        if (!ticker) {
+          assetRates.push([asset, null]);
+          return;
+        }
+
+        const cacheKey = `spotPrices:${ticker}`;
+        const cachedValue = await this.#cache.get(cacheKey);
+
+        let spotPrices: SpotPrice;
+        if (cachedValue === undefined) {
+          spotPrices = await this.#assetRates.spotPrices(ticker);
+          // use 30secs as the ttl since we don't wanna risk stale prices
+          // just to avoid back to back calls for the same ticker
+          await this.#cache.set(cacheKey, spotPrices, 30000);
+        } else {
+          spotPrices = cachedValue as SpotPrice;
+        }
+
+        assetRates.push([asset, spotPrices]);
       }),
     );
 
