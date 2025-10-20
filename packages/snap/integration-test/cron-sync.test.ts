@@ -11,6 +11,7 @@ const ACCOUNT_INDEX = 2;
 describe('CronHandler', () => {
   let snap: Snap;
   let blockchain: BlockchainTestUtils;
+  const accountsToSync: string[] = [];
 
   beforeAll(async () => {
     blockchain = new BlockchainTestUtils();
@@ -22,8 +23,24 @@ describe('CronHandler', () => {
   });
 
   beforeEach(() => {
-    snap.mockJsonRpc({ method: 'snap_manageAccounts', result: {} });
-    snap.mockJsonRpc({ method: 'snap_trackError', result: {} });
+    // clear accounts list before each test
+    accountsToSync.length = 0;
+
+    snap.mockJsonRpc((request) => {
+      if (request.method === 'snap_manageAccounts') {
+        const params = request.params as Record<string, unknown> | undefined;
+        if (params && params.method === 'getSelectedAccounts') {
+          return [...accountsToSync];
+        }
+        return null;
+      }
+
+      if (request.method === 'snap_trackError') {
+        return {};
+      }
+
+      return undefined;
+    });
   });
 
   it('should synchronize the account', async () => {
@@ -54,6 +71,8 @@ describe('CronHandler', () => {
 
     const account = (createResponse.response as { result: KeyringAccount })
       .result;
+
+    accountsToSync.push(account.id);
 
     // send a new transaction to the new account
     const txid = await blockchain.sendToAddress(account.address, 10);

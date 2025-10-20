@@ -14,6 +14,7 @@ describe('OnClientRequestHandler', () => {
   let account: KeyringAccount;
   let snap: Snap;
   let blockchain: BlockchainTestUtils;
+  let createdAccountId: string | undefined;
 
   beforeAll(async () => {
     blockchain = new BlockchainTestUtils();
@@ -23,9 +24,27 @@ describe('OnClientRequestHandler', () => {
       },
     });
 
-    snap.mockJsonRpc({ method: 'snap_manageAccounts', result: {} });
-    snap.mockJsonRpc({ method: 'snap_trackError', result: {} });
-    snap.mockJsonRpc({ method: 'snap_dialog', result: true });
+    // mock snap_manageAccounts to handle different sub-methods
+    snap.mockJsonRpc((request) => {
+      if (request.method === 'snap_manageAccounts') {
+        const params = request.params as Record<string, unknown> | undefined;
+        if (params && params.method === 'getSelectedAccounts') {
+          return createdAccountId ? [createdAccountId] : [];
+        }
+        return null;
+      }
+
+      if (request.method === 'snap_trackError') {
+        return {};
+      }
+
+      if (request.method === 'snap_dialog') {
+        return true;
+      }
+
+      // don't mock other methods
+      return undefined;
+    });
 
     const response = await snap.onKeyringRequest({
       origin: ORIGIN,
@@ -41,6 +60,7 @@ describe('OnClientRequestHandler', () => {
 
     if ('result' in response.response) {
       account = response.response.result as KeyringAccount;
+      createdAccountId = account.id;
     }
 
     await blockchain.sendToAddress(account.address, 10);
