@@ -29,6 +29,7 @@ import {
   LocalTranslatorAdapter,
 } from './infra';
 import { BdkAccountRepository, JSXSendFlowRepository } from './store';
+import { InMemoryCache } from './store/InMemoryCache';
 import { JSXConfirmationRepository } from './store/JSXConfirmationRepository';
 import {
   AccountUseCases,
@@ -75,7 +76,11 @@ const sendFlowUseCases = new SendFlowUseCases(
   Config.fallbackFeeRate,
   Config.ratesRefreshInterval,
 );
-const assetsUseCases = new AssetsUseCases(logger, assetRatesClient);
+const assetsUseCases = new AssetsUseCases(
+  logger,
+  assetRatesClient,
+  new InMemoryCache(),
+);
 const confirmationUseCases = new ConfirmationUseCases(logger, snapClient);
 
 // Application layer
