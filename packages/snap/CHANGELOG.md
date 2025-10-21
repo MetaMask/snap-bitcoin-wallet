@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0]
+
+### Added
+
+- Add support for `setSelectedAccounts` ([#543](https://github.com/MetaMask/snap-bitcoin-wallet/pull/543))
+- Cache spot prices for consecutive calls ([#544](https://github.com/MetaMask/snap-bitcoin-wallet/pull/544))
+
 ## [1.3.0]
 
 ### Fixed
@@ -485,7 +492,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add CI for lint and test ([#2](https://github.com/MetaMask/bitcoin/pull/2))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.0.0...v1.1.0
