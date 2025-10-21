@@ -9,10 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.4.0]
 
-### Uncategorized
+### Added
 
-- feat: add support for `setSelectedAccounts` ([#543](https://github.com/MetaMask/snap-bitcoin-wallet/pull/543))
-- feat: cache spot prices for consecutive calls ([#544](https://github.com/MetaMask/snap-bitcoin-wallet/pull/544))
+- Add support for `setSelectedAccounts` ([#543](https://github.com/MetaMask/snap-bitcoin-wallet/pull/543))
+- Cache spot prices for consecutive calls ([#544](https://github.com/MetaMask/snap-bitcoin-wallet/pull/544))
 
 ## [1.3.0]
 
