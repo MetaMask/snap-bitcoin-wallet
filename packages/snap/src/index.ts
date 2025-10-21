@@ -94,6 +94,7 @@ const cronHandler = new CronHandler(
   accountsUseCases,
   sendFlowUseCases,
   snapClient,
+  snap,
 );
 const rpcHandler = new RpcHandler(sendFlowUseCases, accountsUseCases, logger);
 const userInputHandler = new UserInputHandler(

@@ -32,8 +32,21 @@ describe('Keyring', () => {
   });
 
   beforeEach(() => {
-    snap.mockJsonRpc({ method: 'snap_manageAccounts', result: {} });
-    snap.mockJsonRpc({ method: 'snap_trackError', result: {} });
+    snap.mockJsonRpc((request) => {
+      if (request.method === 'snap_manageAccounts') {
+        const params = request.params as Record<string, unknown> | undefined;
+        if (params && params.method === 'getSelectedAccounts') {
+          return [];
+        }
+        return null;
+      }
+
+      if (request.method === 'snap_trackError') {
+        return {};
+      }
+
+      return undefined;
+    });
   });
 
   it('discover accounts successfully', async () => {
