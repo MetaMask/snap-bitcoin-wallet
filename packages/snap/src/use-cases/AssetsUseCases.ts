@@ -32,6 +32,9 @@ export class AssetsUseCases {
   async getRates(assets: CaipAssetType[]): Promise<AssetRate[]> {
     this.#logger.debug('Fetching BTC rates for: %o', assets);
 
+    // group assets by ticker to deduplicate API calls. Multiple CAIP asset types
+    // can map to the same ticker (e.g., 'bip122:000000000019d6689c085ae165831e93/slip44:0'
+    // and other BTC representations both resolve to 'btc'), so we fetch each ticker only once.
     const tickerToAssets = new Map<string, CaipAssetType[]>();
     const assetsWithoutTicker: CaipAssetType[] = [];
 
@@ -50,6 +53,8 @@ export class AssetsUseCases {
       }
     }
 
+    // fetch all unique tickers in parallel. Each promise handles
+    // its own errors via .catch() to prevent one failure from breaking all fetches.
     const promises = Array.from(tickerToAssets.entries()).map(
       async ([ticker, tickerAssets]) => {
         const cacheKey = `spotPrices:${ticker}`;
@@ -82,6 +87,7 @@ export class AssetsUseCases {
     const results = await Promise.all(promises);
     const ratesMap = new Map<CaipAssetType, SpotPrice | null>();
 
+    // flatten results from ticker-grouped arrays back to individual asset rates
     results.flat().forEach(([asset, rate]) => {
       ratesMap.set(asset, rate);
     });
@@ -91,6 +97,7 @@ export class AssetsUseCases {
     });
 
     this.#logger.debug('BTC rates fetched successfully');
+
     return assets.map((asset) => {
       const rate = ratesMap.get(asset);
       return [asset, rate ?? null];
