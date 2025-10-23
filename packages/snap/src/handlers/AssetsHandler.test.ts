@@ -7,16 +7,21 @@ import { mock } from 'jest-mock-extended';
 import type { AssetsUseCases } from '../use-cases';
 import { AssetsHandler } from './AssetsHandler';
 import { Caip19Asset } from './caip';
-import type { SpotPrice } from '../entities';
+import type { Logger, SpotPrice } from '../entities';
 
 describe('AssetsHandler', () => {
   const mockAssetsUseCases = mock<AssetsUseCases>();
+  const mockLogger = mock<Logger>();
   const expirationInterval = 60;
 
   let handler: AssetsHandler;
 
   beforeEach(() => {
-    handler = new AssetsHandler(mockAssetsUseCases, expirationInterval);
+    handler = new AssetsHandler(
+      mockAssetsUseCases,
+      expirationInterval,
+      mockLogger,
+    );
   });
 
   describe('lookup', () => {
@@ -99,14 +104,21 @@ describe('AssetsHandler', () => {
       });
     });
 
-    it('propagates errors from getRates', async () => {
+    it('handles null rates gracefully when getRates returns null', async () => {
       const conversions = [
         { from: Caip19Asset.Bitcoin, to: Caip19Asset.Testnet },
       ];
-      const error = new Error();
-      mockAssetsUseCases.getRates.mockRejectedValue(error);
+      mockAssetsUseCases.getRates.mockResolvedValue([
+        [Caip19Asset.Testnet, null],
+      ]);
 
-      await expect(handler.conversion(conversions)).rejects.toThrow(error);
+      const result = await handler.conversion(conversions);
+
+      expect(result.conversionRates).toStrictEqual({
+        [Caip19Asset.Bitcoin]: {
+          [Caip19Asset.Testnet]: null,
+        },
+      });
     });
   });
 
@@ -134,13 +146,22 @@ describe('AssetsHandler', () => {
       expect(result?.historicalPrice.intervals).toStrictEqual(mockIntervals);
     });
 
-    it('propagates errors from getPriceIntervals', async () => {
-      const error = new Error();
+    it('returns null and logs warning when getPriceIntervals fails', async () => {
+      const error = new Error('getPriceIntervals failed');
       mockAssetsUseCases.getPriceIntervals.mockRejectedValue(error);
 
-      await expect(
-        handler.historicalPrice(Caip19Asset.Bitcoin, Caip19Asset.Testnet),
-      ).rejects.toThrow(error);
+      const result = await handler.historicalPrice(
+        Caip19Asset.Bitcoin,
+        Caip19Asset.Testnet,
+      );
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Failed to fetch historical prices from %s to %s. Error: %s',
+        Caip19Asset.Bitcoin,
+        Caip19Asset.Testnet,
+        error,
+      );
+      expect(result).toBeNull();
     });
   });
 
@@ -193,14 +214,21 @@ describe('AssetsHandler', () => {
       });
     });
 
-    it('propagates errors from getRates', async () => {
+    it('handles null rates gracefully when getRates returns null', async () => {
       const assets = [
         { asset: Caip19Asset.Bitcoin, unit: Caip19Asset.Testnet },
       ];
-      const error = new Error();
-      mockAssetsUseCases.getRates.mockRejectedValue(error);
+      mockAssetsUseCases.getRates.mockResolvedValue([
+        [Caip19Asset.Testnet, null],
+      ]);
 
-      await expect(handler.marketData(assets)).rejects.toThrow(error);
+      const result = await handler.marketData(assets);
+
+      expect(result.marketData).toStrictEqual({
+        [Caip19Asset.Bitcoin]: {
+          [Caip19Asset.Testnet]: null,
+        },
+      });
     });
   });
 });

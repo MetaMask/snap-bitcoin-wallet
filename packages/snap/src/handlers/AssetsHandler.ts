@@ -13,6 +13,7 @@ import type {
 import { CaipAssetTypeStruct } from '@metamask/utils';
 import { assert } from 'superstruct';
 
+import type { Logger } from '../entities';
 import type { AssetsUseCases } from '../use-cases';
 import { Caip19Asset } from './caip';
 import { networkToIcon } from './icons';
@@ -22,9 +23,16 @@ export class AssetsHandler {
 
   readonly #expirationInterval: number;
 
-  constructor(assets: AssetsUseCases, expirationInterval: number) {
+  readonly #logger: Logger;
+
+  constructor(
+    assets: AssetsUseCases,
+    expirationInterval: number,
+    logger: Logger,
+  ) {
     this.#assetsUseCases = assets;
     this.#expirationInterval = expirationInterval;
+    this.#logger = logger;
   }
 
   async lookup(): Promise<OnAssetsLookupResponse> {
@@ -143,16 +151,26 @@ export class AssetsHandler {
       return null;
     }
 
-    const updateTime = getCurrentUnixTimestamp();
-    const intervals = await this.#assetsUseCases.getPriceIntervals(to);
+    try {
+      const updateTime = getCurrentUnixTimestamp();
+      const intervals = await this.#assetsUseCases.getPriceIntervals(to);
 
-    return {
-      historicalPrice: {
-        intervals,
-        updateTime,
-        expirationTime: updateTime + this.#expirationInterval,
-      },
-    };
+      return {
+        historicalPrice: {
+          intervals,
+          updateTime,
+          expirationTime: updateTime + this.#expirationInterval,
+        },
+      };
+    } catch (error) {
+      this.#logger.warn(
+        'Failed to fetch historical prices from %s to %s. Error: %s',
+        from,
+        to,
+        error,
+      );
+      return null;
+    }
   }
 
   async marketData(

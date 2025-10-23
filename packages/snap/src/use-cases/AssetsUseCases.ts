@@ -4,8 +4,8 @@ import type { CaipAssetType } from '@metamask/utils';
 import { parseCaipAssetType } from '@metamask/utils';
 
 import type {
-  AssetRatesClient,
   AssetRate,
+  AssetRatesClient,
   Logger,
   SpotPrice,
   TimePeriod,
@@ -32,33 +32,76 @@ export class AssetsUseCases {
   async getRates(assets: CaipAssetType[]): Promise<AssetRate[]> {
     this.#logger.debug('Fetching BTC rates for: %o', assets);
 
-    const assetRates: AssetRate[] = [];
+    // group assets by ticker to deduplicate API calls. Multiple CAIP asset types
+    // can map to the same ticker (e.g., 'bip122:000000000019d6689c085ae165831e93/slip44:0'
+    // and other BTC representations both resolve to 'btc'), so we fetch each ticker only once.
+    const tickerToAssets = new Map<string, CaipAssetType[]>();
+    const assetsWithoutTicker: CaipAssetType[] = [];
 
     for (const asset of assets) {
       const ticker = this.#assetToTicker(asset);
       if (!ticker) {
-        assetRates.push([asset, null]);
+        assetsWithoutTicker.push(asset);
         continue;
       }
 
-      const cacheKey = `spotPrices:${ticker}`;
-      const cachedValue = await this.#cache.get(cacheKey);
-
-      let spotPrices: SpotPrice;
-      if (cachedValue === undefined) {
-        spotPrices = await this.#assetRates.spotPrices(ticker);
-        // use 30secs as the ttl since we don't wanna risk stale prices
-        // just to avoid back to back calls for the same ticker
-        await this.#cache.set(cacheKey, spotPrices, 30000);
+      const existing = tickerToAssets.get(ticker);
+      if (existing) {
+        existing.push(asset);
       } else {
-        spotPrices = cachedValue as SpotPrice;
+        tickerToAssets.set(ticker, [asset]);
       }
-
-      assetRates.push([asset, spotPrices]);
     }
 
+    // fetch all unique tickers in parallel. Each promise handles
+    // its own errors via .catch() to prevent one failure from breaking all fetches.
+    const promises = Array.from(tickerToAssets.entries()).map(
+      async ([ticker, tickerAssets]) => {
+        const cacheKey = `spotPrices:${ticker}`;
+        const cachedValue = await this.#cache.get(cacheKey);
+
+        if (cachedValue !== undefined) {
+          return tickerAssets.map(
+            (asset) => [asset, cachedValue as SpotPrice] as AssetRate,
+          );
+        }
+
+        return this.#assetRates
+          .spotPrices(ticker)
+          .then(async (spotPrices) => {
+            await this.#cache.set(cacheKey, spotPrices, 30000);
+            return tickerAssets.map(
+              (asset) => [asset, spotPrices] as AssetRate,
+            );
+          })
+          .catch((error) => {
+            this.#logger.warn(
+              `Failed to fetch spot price for ticker ${ticker}`,
+              error,
+            );
+            return tickerAssets.map((asset) => [asset, null] as AssetRate);
+          });
+      },
+    );
+
+    const results = await Promise.all(promises);
+    const ratesMap = new Map<CaipAssetType, SpotPrice | null>();
+
+    // flatten results from ticker-grouped arrays back to individual asset rates
+    results.flat().forEach(([asset, rate]) => {
+      ratesMap.set(asset, rate);
+    });
+
+    assetsWithoutTicker.forEach((asset) => {
+      ratesMap.set(asset, null);
+    });
+
     this.#logger.debug('BTC rates fetched successfully');
-    return assetRates;
+
+    return assets.map((asset) => {
+      const rate = ratesMap.get(asset);
+      return [asset, rate ?? null];
+    });
   }
 
   async getPriceIntervals(
@@ -75,19 +118,30 @@ export class AssetsUseCases {
       'P1000Y',
     ];
     const vsCurrency = this.#assetToTicker(to);
-    const historicalPrices: HistoricalPriceIntervals = {};
-    await Promise.all(
-      timePeriods.map(async (timePeriod) => {
-        const prices = await this.#assetRates.historicalPrices(
-          timePeriod,
-          vsCurrency,
-        );
-        historicalPrices[timePeriod] = prices;
-      }),
+
+    const promises = timePeriods.map(async (timePeriod) =>
+      this.#assetRates
+        .historicalPrices(timePeriod, vsCurrency)
+        .then((prices) => ({ timePeriod, prices }))
+        .catch((error) => {
+          this.#logger.warn(
+            `Failed to fetch historical prices for period ${timePeriod}`,
+            error,
+          );
+          return { timePeriod, prices: [] };
+        }),
     );
 
+    const results = await Promise.all(promises);
+
     this.#logger.debug('BTC historical prices fetched successfully');
-    return historicalPrices;
+    return results.reduce<HistoricalPriceIntervals>(
+      (acc, { timePeriod, prices }) => {
+        acc[timePeriod] = prices;
+        return acc;
+      },
+      {},
+    );
   }
 
   #assetToTicker(asset: CaipAssetType): string | undefined {
