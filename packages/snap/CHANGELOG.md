@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.4.1]
 
-### Uncategorized
+### Fixed
 
-- fix: add defensive code for fetching prices ([#546](https://github.com/MetaMask/snap-bitcoin-wallet/pull/546))
+- Add defensive code for fetching prices ([#546](https://github.com/MetaMask/snap-bitcoin-wallet/pull/546))
 
 ## [1.4.0]
 
