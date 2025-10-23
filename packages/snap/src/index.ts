@@ -104,6 +104,7 @@ const userInputHandler = new UserInputHandler(
 const assetsHandler = new AssetsHandler(
   assetsUseCases,
   Config.conversionsExpirationInterval,
+  logger,
 );
 
 export const onCronjob: OnCronjobHandler = async ({ request }) =>

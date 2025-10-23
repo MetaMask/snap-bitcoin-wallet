@@ -4,8 +4,8 @@ import type { CaipAssetType } from '@metamask/utils';
 import { parseCaipAssetType } from '@metamask/utils';
 
 import type {
-  AssetRatesClient,
   AssetRate,
+  AssetRatesClient,
   Logger,
   SpotPrice,
   TimePeriod,
@@ -42,19 +42,30 @@ export class AssetsUseCases {
       }
 
       const cacheKey = `spotPrices:${ticker}`;
-      const cachedValue = await this.#cache.get(cacheKey);
 
-      let spotPrices: SpotPrice;
-      if (cachedValue === undefined) {
-        spotPrices = await this.#assetRates.spotPrices(ticker);
-        // use 30secs as the ttl since we don't wanna risk stale prices
-        // just to avoid back to back calls for the same ticker
-        await this.#cache.set(cacheKey, spotPrices, 30000);
-      } else {
-        spotPrices = cachedValue as SpotPrice;
+      try {
+        const cachedValue = await this.#cache.get(cacheKey);
+
+        let spotPrices: SpotPrice;
+        if (cachedValue === undefined) {
+          spotPrices = await this.#assetRates.spotPrices(ticker);
+          // use 30secs as the ttl since we don't wanna risk stale prices
+          // just to avoid back to back calls for the same ticker
+          await this.#cache.set(cacheKey, spotPrices, 30000);
+        } else {
+          spotPrices = cachedValue as SpotPrice;
+        }
+
+        assetRates.push([asset, spotPrices]);
+      } catch (error) {
+        this.#logger.warn(
+          'Failed to fetch spot price for %s (ticker: %s). Error: %s',
+          asset,
+          ticker,
+          error,
+        );
+        assetRates.push([asset, null]);
       }
-
-      assetRates.push([asset, spotPrices]);
     }
 
     this.#logger.debug('BTC rates fetched successfully');
@@ -78,11 +89,17 @@ export class AssetsUseCases {
     const historicalPrices: HistoricalPriceIntervals = {};
     await Promise.all(
       timePeriods.map(async (timePeriod) => {
-        const prices = await this.#assetRates.historicalPrices(
-          timePeriod,
-          vsCurrency,
-        );
-        historicalPrices[timePeriod] = prices;
+        try {
+          historicalPrices[timePeriod] =
+            await this.#assetRates.historicalPrices(timePeriod, vsCurrency);
+        } catch (error) {
+          this.#logger.warn(
+            'Failed to fetch historical prices for period %s. Error: %s',
+            timePeriod,
+            error,
+          );
+          historicalPrices[timePeriod] = [];
+        }
       }),
     );
 
