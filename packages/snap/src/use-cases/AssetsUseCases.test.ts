@@ -58,14 +58,18 @@ describe('AssetsUseCases', () => {
       ]);
     });
 
-    it.skip('propagates an error if spotPrices fails', async () => {
+    it('returns null for assets when spotPrices fails', async () => {
       const error = new Error('getRates failed');
       mockCache.get.mockResolvedValue(undefined);
       mockAssetRates.spotPrices.mockRejectedValue(error);
 
-      await expect(useCases.getRates([Caip19Asset.Testnet])).rejects.toBe(
+      const result = await useCases.getRates([Caip19Asset.Testnet]);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Failed to fetch spot price for ticker btc',
         error,
       );
+      expect(result).toStrictEqual([[Caip19Asset.Testnet, null]]);
     });
 
     it('uses cached values when available', async () => {
@@ -158,13 +162,25 @@ describe('AssetsUseCases', () => {
       });
     });
 
-    it.skip('propagates an error if historicalPrices fails', async () => {
+    it('returns empty arrays for periods when historicalPrices fails', async () => {
       const error = new Error('historicalPrices failed');
       mockAssetRates.historicalPrices.mockRejectedValue(error);
 
-      await expect(
-        useCases.getPriceIntervals('swift:0/iso4217:USD'),
-      ).rejects.toBe(error);
+      const result = await useCases.getPriceIntervals('swift:0/iso4217:USD');
+
+      expect(mockLogger.warn).toHaveBeenCalledTimes(6);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Failed to fetch historical prices for period P1D',
+        error,
+      );
+      expect(result).toStrictEqual({
+        P1D: [],
+        P7D: [],
+        P1M: [],
+        P3M: [],
+        P1Y: [],
+        P1000Y: [],
+      });
     });
   });
 });
