@@ -165,6 +165,11 @@ export class AccountUseCases {
     const account = await this.#repository.getByDerivationPath(derivationPath);
     if (account && account.network === network) {
       this.#logger.debug('Account already exists: %s,', account.id);
+      await this.#snapClient.emitAccountCreatedEvent(
+        account,
+        correlationId,
+        accountName,
+      );
       return account;
     }
 
