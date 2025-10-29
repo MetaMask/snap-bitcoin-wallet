@@ -181,18 +181,23 @@ export type SnapClient = {
   getInterfaceContext(id: string): Promise<Record<string, Json> | null>;
 
   /**
-   * Schedule a one-off callback.
+   * Schedules a background event.
    *
-   * @param interval - The interval in seconds before the event is executed.
-   * @param method - The method to call on reception of the event being triggered.
-   * @param interfaceId - The interface id.
-   * @returns the background event id.
+   * @param options - The options for the background event.
+   * @param options.method - The method to call.
+   * @param options.params - The params to pass to the method.
+   * @param options.duration - The duration to wait before the event is scheduled.
+   * @returns A promise that resolves to a string.
    */
-  scheduleBackgroundEvent(
-    interval: string,
-    method: string,
-    interfaceId: string,
-  ): Promise<string>;
+  scheduleBackgroundEvent({
+    method,
+    params,
+    duration,
+  }: {
+    method: string;
+    params?: Record<string, Json>;
+    duration: string;
+  }): Promise<string>;
 
   /**
    * Cancel an already scheduled background event.
