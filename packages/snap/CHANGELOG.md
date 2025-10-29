@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.4.2]
 
-### Uncategorized
+### Changed
 
-- feat: full scan & sync accounts on the background ([#548](https://github.com/MetaMask/snap-bitcoin-wallet/pull/548))
+- Bringing back `fullScan` on discovery and making `setSelectedAccount` run `fullScan` in the background ([#548](https://github.com/MetaMask/snap-bitcoin-wallet/pull/548))
 
 ## [1.4.1]
 
