@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.2]
+
+### Uncategorized
+
+- chore: update shasum ([#550](https://github.com/MetaMask/snap-bitcoin-wallet/pull/550))
+- feat: full scan & sync accounts on the background ([#548](https://github.com/MetaMask/snap-bitcoin-wallet/pull/548))
+
 ## [1.4.1]
 
 ### Fixed
@@ -498,7 +505,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add CI for lint and test ([#2](https://github.com/MetaMask/bitcoin/pull/2))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.4.1...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.4.2...HEAD
+[1.4.2]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.4.1...v1.4.2
 [1.4.1]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.2.0...v1.3.0
