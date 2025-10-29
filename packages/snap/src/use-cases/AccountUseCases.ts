@@ -123,7 +123,22 @@ export class AccountUseCases {
       return account;
     }
 
-    return await this.#repository.create(derivationPath, network, addressType);
+    const newAccount = await this.#repository.create(
+      derivationPath,
+      network,
+      addressType,
+    );
+
+    // We need to do a full scan here to know if the account
+    // has any previous activity since later on we filter out
+    // accounts with no tx history
+    await this.#chain.fullScan(newAccount);
+
+    this.#logger.info(
+      'Bitcoin account discovered successfully. Request: %o',
+      req,
+    );
+    return newAccount;
   }
 
   async create(req: CreateAccountParams): Promise<BitcoinAccount> {
