@@ -39,6 +39,10 @@ describe('CronHandler', () => {
         return {};
       }
 
+      if (request.method === 'snap_scheduleBackgroundEvent') {
+        return 'mock-event-id';
+      }
+
       return undefined;
     });
   });

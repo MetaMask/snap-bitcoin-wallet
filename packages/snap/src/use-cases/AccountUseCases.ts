@@ -11,6 +11,15 @@ import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 import { Signer } from 'bip322-js';
 import { encode } from 'wif';
 
+import type {
+  BitcoinAccount,
+  BitcoinAccountRepository,
+  BlockchainClient,
+  ConfirmationRepository,
+  Logger,
+  MetaProtocolsClient,
+  SnapClient,
+} from '../entities';
 import {
   AccountCapability,
   addressTypeToPurpose,
@@ -22,15 +31,7 @@ import {
   ValidationError,
   WalletError,
 } from '../entities';
-import type {
-  BitcoinAccount,
-  BitcoinAccountRepository,
-  BlockchainClient,
-  Logger,
-  MetaProtocolsClient,
-  SnapClient,
-  ConfirmationRepository,
-} from '../entities';
+import { CronMethod } from '../handlers/CronHandler';
 
 export type DiscoverAccountParams = {
   network: Network;
@@ -122,13 +123,7 @@ export class AccountUseCases {
       return account;
     }
 
-    const newAccount = await this.#repository.create(
-      derivationPath,
-      network,
-      addressType,
-    );
-
-    return newAccount;
+    return await this.#repository.create(derivationPath, network, addressType);
   }
 
   async create(req: CreateAccountParams): Promise<BitcoinAccount> {
@@ -155,12 +150,6 @@ export class AccountUseCases {
     const account = await this.#repository.getByDerivationPath(derivationPath);
     if (account && account.network === network) {
       this.#logger.debug('Account already exists: %s,', account.id);
-      await this.#snapClient.emitAccountCreatedEvent(
-        account,
-        correlationId,
-        accountName,
-      );
-
       return account;
     }
 
@@ -174,7 +163,7 @@ export class AccountUseCases {
 
     await this.#repository.insert(newAccount);
 
-    // First notify the event has been created, then full scan.
+    // First notify the event has been created, then schedule full scan.
     await this.#snapClient.emitAccountCreatedEvent(
       newAccount,
       correlationId,
@@ -182,7 +171,11 @@ export class AccountUseCases {
     );
 
     if (synchronize) {
-      await this.fullScan(newAccount);
+      await this.#snapClient.scheduleBackgroundEvent({
+        duration: 'PT1S',
+        method: CronMethod.FullScanAccount,
+        params: { accountId: newAccount.id },
+      });
     }
 
     this.#logger.info(

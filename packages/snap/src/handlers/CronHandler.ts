@@ -14,6 +14,7 @@ export enum CronMethod {
   SynchronizeAccounts = 'synchronizeAccounts',
   RefreshRates = 'refreshRates',
   FullScanSelectedAccounts = 'fullScanSelectedAccounts',
+  FullScanAccount = 'fullScanAccount',
 }
 
 export const SendFormRefreshRatesRequest = object({
@@ -22,6 +23,10 @@ export const SendFormRefreshRatesRequest = object({
 
 export const FullScanSelectedAccountsRequest = object({
   accountIds: array(string()),
+});
+
+export const FullScanAccountRequest = object({
+  accountId: string(),
 });
 
 export class CronHandler {
@@ -64,6 +69,10 @@ export class CronHandler {
       case CronMethod.FullScanSelectedAccounts: {
         assert(params, FullScanSelectedAccountsRequest);
         return this.fullScanSelectedAccounts(params.accountIds);
+      }
+      case CronMethod.FullScanAccount: {
+        assert(params, FullScanAccountRequest);
+        return this.fullScanAccount(params.accountId);
       }
       default:
         throw new InexistentMethodError(`Method not found: ${method}`);
@@ -116,5 +125,10 @@ export class CronHandler {
     );
 
     await Promise.allSettled(scanPromises);
+  }
+
+  async fullScanAccount(accountId: string): Promise<void> {
+    const account = await this.#accountsUseCases.get(accountId);
+    await this.#accountsUseCases.fullScan(account);
   }
 }

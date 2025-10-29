@@ -35,6 +35,7 @@ import type {
   DiscoverAccountParams,
 } from './AccountUseCases';
 import { AccountUseCases } from './AccountUseCases';
+import { CronMethod } from '../handlers/CronHandler';
 
 describe('AccountUseCases', () => {
   const mockLogger = mock<Logger>();
@@ -168,7 +169,11 @@ describe('AccountUseCases', () => {
           createParams.correlationId,
           createParams.accountName,
         );
-        expect(mockChain.fullScan).toHaveBeenCalledWith(mockAccount);
+        expect(mockSnapClient.scheduleBackgroundEvent).toHaveBeenCalledWith({
+          duration: 'PT1S',
+          method: CronMethod.FullScanAccount,
+          params: { accountId: mockAccount.id },
+        });
       },
     );
 
@@ -208,7 +213,11 @@ describe('AccountUseCases', () => {
           createParams.correlationId,
           createParams.accountName,
         );
-        expect(mockChain.fullScan).toHaveBeenCalledWith(mockAccount);
+        expect(mockSnapClient.scheduleBackgroundEvent).toHaveBeenCalledWith({
+          duration: 'PT1S',
+          method: CronMethod.FullScanAccount,
+          params: { accountId: mockAccount.id },
+        });
       },
     );
 
@@ -266,9 +275,9 @@ describe('AccountUseCases', () => {
       expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalled();
     });
 
-    it('propagates an error if fullScan throws', async () => {
-      const error = new Error('fullScan failed');
-      mockChain.fullScan.mockRejectedValue(error);
+    it('propagates an error if scheduleBackgroundEvent throws', async () => {
+      const error = new Error('scheduleBackgroundEvent failed');
+      mockSnapClient.scheduleBackgroundEvent.mockRejectedValue(error);
 
       await expect(
         useCases.create({ ...createParams, synchronize: true }),
@@ -278,7 +287,7 @@ describe('AccountUseCases', () => {
       expect(mockRepository.create).toHaveBeenCalled();
       expect(mockRepository.insert).toHaveBeenCalled();
       expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalled();
-      expect(mockChain.fullScan).toHaveBeenCalled();
+      expect(mockSnapClient.scheduleBackgroundEvent).toHaveBeenCalled();
     });
   });
 

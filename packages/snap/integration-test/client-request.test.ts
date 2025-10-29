@@ -42,6 +42,10 @@ describe('OnClientRequestHandler', () => {
         return true;
       }
 
+      if (request.method === 'snap_scheduleBackgroundEvent') {
+        return 'mock-event-id';
+      }
+
       // don't mock other methods
       return undefined;
     });
