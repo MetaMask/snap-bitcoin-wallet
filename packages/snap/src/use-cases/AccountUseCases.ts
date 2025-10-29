@@ -11,6 +11,15 @@ import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 import { Signer } from 'bip322-js';
 import { encode } from 'wif';
 
+import type {
+  BitcoinAccount,
+  BitcoinAccountRepository,
+  BlockchainClient,
+  ConfirmationRepository,
+  Logger,
+  MetaProtocolsClient,
+  SnapClient,
+} from '../entities';
 import {
   AccountCapability,
   addressTypeToPurpose,
@@ -22,15 +31,7 @@ import {
   ValidationError,
   WalletError,
 } from '../entities';
-import type {
-  BitcoinAccount,
-  BitcoinAccountRepository,
-  BlockchainClient,
-  Logger,
-  MetaProtocolsClient,
-  SnapClient,
-  ConfirmationRepository,
-} from '../entities';
+import { CronMethod } from '../handlers/CronHandler';
 
 export type DiscoverAccountParams = {
   network: Network;
@@ -128,6 +129,15 @@ export class AccountUseCases {
       addressType,
     );
 
+    // We need to do a full scan here to know if the account
+    // has any previous activity since later on we filter out
+    // accounts with no tx history
+    await this.#chain.fullScan(newAccount);
+
+    this.#logger.info(
+      'Bitcoin account discovered successfully. Request: %o',
+      req,
+    );
     return newAccount;
   }
 
@@ -160,7 +170,6 @@ export class AccountUseCases {
         correlationId,
         accountName,
       );
-
       return account;
     }
 
@@ -174,7 +183,7 @@ export class AccountUseCases {
 
     await this.#repository.insert(newAccount);
 
-    // First notify the event has been created, then full scan.
+    // First notify the event has been created, then schedule full scan.
     await this.#snapClient.emitAccountCreatedEvent(
       newAccount,
       correlationId,
@@ -182,7 +191,11 @@ export class AccountUseCases {
     );
 
     if (synchronize) {
-      await this.fullScan(newAccount);
+      await this.#snapClient.scheduleBackgroundEvent({
+        duration: 'PT1S',
+        method: CronMethod.FullScanAccount,
+        params: { accountId: newAccount.id },
+      });
     }
 
     this.#logger.info(

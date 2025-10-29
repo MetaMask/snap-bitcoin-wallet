@@ -1,7 +1,7 @@
 import { getSelectedAccounts } from '@metamask/keyring-snap-sdk';
 import type { SnapsProvider } from '@metamask/snaps-sdk';
 import type { JsonRpcRequest } from '@metamask/utils';
-import { assert, object, string } from 'superstruct';
+import { array, assert, object, string } from 'superstruct';
 
 import {
   InexistentMethodError,
@@ -13,10 +13,20 @@ import type { SendFlowUseCases, AccountUseCases } from '../use-cases';
 export enum CronMethod {
   SynchronizeAccounts = 'synchronizeAccounts',
   RefreshRates = 'refreshRates',
+  FullScanSelectedAccounts = 'fullScanSelectedAccounts',
+  FullScanAccount = 'fullScanAccount',
 }
 
 export const SendFormRefreshRatesRequest = object({
   interfaceId: string(),
+});
+
+export const FullScanSelectedAccountsRequest = object({
+  accountIds: array(string()),
+});
+
+export const FullScanAccountRequest = object({
+  accountId: string(),
 });
 
 export class CronHandler {
@@ -43,8 +53,8 @@ export class CronHandler {
   async route(request: JsonRpcRequest): Promise<void> {
     const { method, params } = request;
 
-    const { active } = await this.#snapClient.getClientStatus();
-    if (!active) {
+    const { active, locked } = await this.#snapClient.getClientStatus();
+    if (!active || locked) {
       return undefined;
     }
 
@@ -55,6 +65,14 @@ export class CronHandler {
       case CronMethod.RefreshRates: {
         assert(params, SendFormRefreshRatesRequest);
         return this.#sendFlowUseCases.refresh(params.interfaceId);
+      }
+      case CronMethod.FullScanSelectedAccounts: {
+        assert(params, FullScanSelectedAccountsRequest);
+        return this.fullScanSelectedAccounts(params.accountIds);
+      }
+      case CronMethod.FullScanAccount: {
+        assert(params, FullScanAccountRequest);
+        return this.fullScanAccount(params.accountId);
       }
       default:
         throw new InexistentMethodError(`Method not found: ${method}`);
@@ -92,5 +110,25 @@ export class CronHandler {
         errors,
       );
     }
+  }
+
+  async fullScanSelectedAccounts(accountIds: string[]): Promise<void> {
+    const accountIdSet = new Set(accountIds);
+    const allAccounts = await this.#accountsUseCases.list();
+
+    const selectedAccounts = allAccounts.filter((account) =>
+      accountIdSet.has(account.id),
+    );
+
+    const scanPromises = selectedAccounts.map(async (account) =>
+      this.#accountsUseCases.fullScan(account),
+    );
+
+    await Promise.allSettled(scanPromises);
+  }
+
+  async fullScanAccount(accountId: string): Promise<void> {
+    const account = await this.#accountsUseCases.get(accountId);
+    await this.#accountsUseCases.fullScan(account);
   }
 }

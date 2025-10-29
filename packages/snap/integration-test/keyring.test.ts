@@ -45,6 +45,10 @@ describe('Keyring', () => {
         return {};
       }
 
+      if (request.method === 'snap_scheduleBackgroundEvent') {
+        return 'mock-event-id';
+      }
+
       return undefined;
     });
   });
@@ -105,6 +109,11 @@ describe('Keyring', () => {
     if ('result' in response.response) {
       accounts[TEST_ADDRESS_REGTEST] = response.response
         .result as KeyringAccount;
+
+      await snap.onCronjob({
+        method: 'fullScanAccount',
+        params: { accountId: accounts[TEST_ADDRESS_REGTEST].id },
+      });
     }
   });
 

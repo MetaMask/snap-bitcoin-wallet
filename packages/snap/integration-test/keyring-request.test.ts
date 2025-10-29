@@ -39,6 +39,10 @@ describe('KeyringRequestHandler', () => {
         return {};
       }
 
+      if (request.method === 'snap_scheduleBackgroundEvent') {
+        return 'mock-event-id';
+      }
+
       // no mocking for other methods
       return undefined;
     });

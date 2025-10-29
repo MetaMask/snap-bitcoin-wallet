@@ -19,7 +19,7 @@ import { BtcAccountType, BtcScope } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
-import type { BitcoinAccount } from '../entities';
+import type { BitcoinAccount, SnapClient } from '../entities';
 import {
   AccountCapability,
   CurrencyUnit,
@@ -53,6 +53,7 @@ jest.mock('@metamask/bitcoindevkit', () => {
 describe('KeyringHandler', () => {
   const mockKeyringRequest = mock<KeyringRequestHandler>();
   const mockAccounts = mock<AccountUseCases>();
+  const mockSnapClient = mock<SnapClient>();
   const mockAddress = mock<Address>({
     toString: () => 'bc1qaddress...',
   });
@@ -75,6 +76,7 @@ describe('KeyringHandler', () => {
     mockKeyringRequest,
     mockAccounts,
     defaultAddressType,
+    mockSnapClient,
   );
 
   beforeEach(() => {
@@ -359,25 +361,46 @@ describe('KeyringHandler', () => {
       expect(discovered).toStrictEqual(expect.arrayContaining(expected));
     });
 
-    it.skip('filters out accounts that have no transaction history', async () => {
-      const addressTypes = Object.values(BtcAccountType);
-      const totalCombinations = scopes.length * addressTypes.length;
+    it('returns mix of accounts with and without history, filtering correctly', async () => {
+      // create mock accounts - some with history, some without
+      const accountWithHistory1 = mock<BitcoinAccount>({
+        addressType: 'p2wpkh',
+        network: 'bitcoin',
+        listTransactions: jest.fn().mockReturnValue([{}, {}]), // has 2 transactions
+        derivationPath: ['m', "84'", "0'", "0'"],
+      });
 
-      for (let i = 0; i < totalCombinations; i += 1) {
-        const acc = mock<BitcoinAccount>({
-          listTransactions: jest.fn().mockReturnValue([]), // no history
-        });
+      const accountWithoutHistory = mock<BitcoinAccount>({
+        addressType: 'p2wpkh',
+        network: 'testnet',
+        listTransactions: jest.fn().mockReturnValue([]), // no history
+        derivationPath: ['m', "84'", "1'", "0'"],
+      });
 
-        mockAccounts.discover.mockResolvedValueOnce(acc);
-      }
+      const accountWithHistory2 = mock<BitcoinAccount>({
+        addressType: 'p2wpkh',
+        network: 'signet',
+        listTransactions: jest.fn().mockReturnValue([{}]), // has 1 transaction
+        derivationPath: ['m', "84'", "1'", "0'"],
+      });
+
+      mockAccounts.discover
+        .mockResolvedValueOnce(accountWithHistory1)
+        .mockResolvedValueOnce(accountWithoutHistory)
+        .mockResolvedValueOnce(accountWithHistory2);
 
       const discovered = await handler.discoverAccounts(
-        scopes,
+        [BtcScope.Mainnet, BtcScope.Testnet, BtcScope.Signet],
         entropySource,
         groupIndex,
       );
 
-      expect(discovered).toHaveLength(0);
+      expect(mockAccounts.discover).toHaveBeenCalledTimes(3);
+      expect(discovered).toHaveLength(2);
+      expect(discovered).toStrictEqual([
+        mapToDiscoveredAccount(accountWithHistory1),
+        mapToDiscoveredAccount(accountWithHistory2),
+      ]);
     });
 
     it('propagates errors from discover', async () => {

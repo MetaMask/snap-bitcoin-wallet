@@ -126,4 +126,115 @@ describe('CronHandler', () => {
       await expect(handler.route(request)).rejects.toThrow(error);
     });
   });
+
+  describe('fullScanSelectedAccounts', () => {
+    const mockAccounts = [
+      mock<BitcoinAccount>({ id: 'account-1' }),
+      mock<BitcoinAccount>({ id: 'account-2' }),
+      mock<BitcoinAccount>({ id: 'account-3' }),
+    ];
+    const request = {
+      method: CronMethod.FullScanSelectedAccounts,
+      params: { accountIds: ['account-1', 'account-2'] },
+    } as unknown as JsonRpcRequest;
+
+    it('throws if invalid params', async () => {
+      await expect(
+        handler.route({ ...request, params: { invalid: true } }),
+      ).rejects.toThrow('');
+    });
+
+    it('performs full scan on selected accounts', async () => {
+      mockAccountUseCases.list.mockResolvedValue(mockAccounts);
+
+      await handler.route(request);
+
+      expect(mockAccountUseCases.list).toHaveBeenCalled();
+      expect(mockAccountUseCases.fullScan).toHaveBeenCalledTimes(2);
+      expect(mockAccountUseCases.fullScan).toHaveBeenCalledWith(
+        mockAccounts[0],
+      );
+      expect(mockAccountUseCases.fullScan).toHaveBeenCalledWith(
+        mockAccounts[1],
+      );
+    });
+
+    it('returns early if the client is not active', async () => {
+      mockSnapClient.getClientStatus.mockResolvedValue({
+        active: false,
+        locked: true,
+      });
+      await handler.route(request);
+
+      expect(mockAccountUseCases.fullScan).not.toHaveBeenCalled();
+    });
+
+    it('propagates errors from list', async () => {
+      const error = new Error();
+      mockAccountUseCases.list.mockRejectedValue(error);
+
+      await expect(handler.route(request)).rejects.toThrow(error);
+    });
+
+    it('completes successfully even if some accounts fail to scan', async () => {
+      mockAccountUseCases.list.mockResolvedValue(mockAccounts);
+      mockAccountUseCases.fullScan
+        .mockResolvedValueOnce(undefined)
+        .mockRejectedValueOnce(new Error('scan failed'));
+
+      const result = await handler.route(request);
+
+      expect(result).toBeUndefined();
+      expect(mockAccountUseCases.fullScan).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('fullScanAccount', () => {
+    const mockAccount = mock<BitcoinAccount>({ id: 'account-1' });
+    const request = {
+      method: CronMethod.FullScanAccount,
+      params: { accountId: 'account-1' },
+    } as unknown as JsonRpcRequest;
+
+    it('throws if invalid params', async () => {
+      await expect(
+        handler.route({ ...request, params: { invalid: true } }),
+      ).rejects.toThrow('');
+    });
+
+    it('performs full scan on the specified account', async () => {
+      mockAccountUseCases.get.mockResolvedValue(mockAccount);
+
+      await handler.route(request);
+
+      expect(mockAccountUseCases.get).toHaveBeenCalledWith('account-1');
+      expect(mockAccountUseCases.fullScan).toHaveBeenCalledWith(mockAccount);
+    });
+
+    it('returns early if the client is not active', async () => {
+      mockSnapClient.getClientStatus.mockResolvedValue({
+        active: false,
+        locked: true,
+      });
+      await handler.route(request);
+
+      expect(mockAccountUseCases.get).not.toHaveBeenCalled();
+      expect(mockAccountUseCases.fullScan).not.toHaveBeenCalled();
+    });
+
+    it('propagates errors from get', async () => {
+      const error = new Error('get failed');
+      mockAccountUseCases.get.mockRejectedValue(error);
+
+      await expect(handler.route(request)).rejects.toThrow(error);
+    });
+
+    it('propagates errors from fullScan', async () => {
+      const error = new Error('fullScan failed');
+      mockAccountUseCases.get.mockResolvedValue(mockAccount);
+      mockAccountUseCases.fullScan.mockRejectedValue(error);
+
+      await expect(handler.route(request)).rejects.toThrow(error);
+    });
+  });
 });

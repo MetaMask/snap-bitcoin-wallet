@@ -726,11 +726,11 @@ describe('SendFlowUseCases', () => {
 
       await useCases.refresh('interface-id');
 
-      expect(mockSnapClient.scheduleBackgroundEvent).toHaveBeenCalledWith(
-        ratesRefreshInterval,
-        CronMethod.RefreshRates,
-        'interface-id',
-      );
+      expect(mockSnapClient.scheduleBackgroundEvent).toHaveBeenCalledWith({
+        duration: ratesRefreshInterval,
+        method: CronMethod.RefreshRates,
+        params: { interfaceId: 'interface-id' },
+      });
       expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
         'interface-id',
         {

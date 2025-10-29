@@ -549,11 +549,11 @@ export class SendFlowUseCases {
     }
 
     updatedContext.backgroundEventId =
-      await this.#snapClient.scheduleBackgroundEvent(
-        this.#ratesRefreshInterval,
-        CronMethod.RefreshRates,
-        id,
-      );
+      await this.#snapClient.scheduleBackgroundEvent({
+        duration: this.#ratesRefreshInterval,
+        method: CronMethod.RefreshRates,
+        params: { interfaceId: id },
+      });
     updatedContext.locale = locale; // Take advantage of the loop to update the locale as well
 
     await this.#sendFlowRepository.updateForm(id, updatedContext);

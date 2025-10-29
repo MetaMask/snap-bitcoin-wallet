@@ -187,18 +187,31 @@ export class SnapClientAdapter implements SnapClient {
     });
   }
 
-  async scheduleBackgroundEvent(
-    interval: string,
-    method: string,
-    interfaceId: string,
-  ): Promise<string> {
+  /**
+   * Schedules a background event.
+   *
+   * @param options - The options for the background event.
+   * @param options.method - The method to call.
+   * @param options.params - The params to pass to the method.
+   * @param options.duration - The duration to wait before the event is scheduled.
+   * @returns A promise that resolves to a string.
+   */
+  async scheduleBackgroundEvent({
+    method,
+    params = {},
+    duration,
+  }: {
+    method: string;
+    params?: Record<string, Json>;
+    duration: string;
+  }): Promise<string> {
     return snap.request({
       method: 'snap_scheduleBackgroundEvent',
       params: {
-        duration: interval,
+        duration,
         request: {
           method,
-          params: { interfaceId },
+          params,
         },
       },
     });
