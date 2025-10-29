@@ -41,7 +41,7 @@ import {
   string,
 } from 'superstruct';
 
-import type { BitcoinAccount } from '../entities';
+import type { BitcoinAccount, SnapClient } from '../entities';
 import {
   FormatError,
   InexistentMethodError,
@@ -55,6 +55,7 @@ import {
   scopeToNetwork,
   networkToScope,
 } from './caip';
+import { CronMethod } from './CronHandler';
 import type { KeyringRequestHandler } from './KeyringRequestHandler';
 import {
   mapToDiscoveredAccount,
@@ -82,14 +83,18 @@ export class KeyringHandler implements Keyring {
 
   readonly #defaultAddressType: AddressType;
 
+  readonly #snapClient: SnapClient;
+
   constructor(
     keyringRequest: KeyringRequestHandler,
     accounts: AccountUseCases,
     defaultAddressType: AddressType,
+    snapClient: SnapClient,
   ) {
     this.#keyringRequest = keyringRequest;
     this.#accountsUseCases = accounts;
     this.#defaultAddressType = defaultAddressType;
+    this.#snapClient = snapClient;
   }
 
   async route(request: JsonRpcRequest): Promise<Json> {
@@ -343,15 +348,12 @@ export class KeyringHandler implements Keyring {
       allAccounts.map((acc) => acc.id),
     );
 
-    const selectedAccounts = allAccounts.filter((account) =>
-      accountIdSet.has(account.id),
-    );
-
-    const scanPromises = selectedAccounts.map(async (account) =>
-      this.#accountsUseCases.fullScan(account),
-    );
-
-    await Promise.allSettled(scanPromises);
+    // Schedule immediate background job to perform full scan
+    await this.#snapClient.scheduleBackgroundEvent({
+      duration: '0s',
+      method: CronMethod.FullScanSelectedAccounts,
+      params: { accountIds: accounts },
+    });
   }
 
   #extractAddressType(path: string): AddressType {

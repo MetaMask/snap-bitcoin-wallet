@@ -19,7 +19,7 @@ import { BtcAccountType, BtcScope } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
-import type { BitcoinAccount } from '../entities';
+import type { BitcoinAccount, SnapClient } from '../entities';
 import {
   AccountCapability,
   CurrencyUnit,
@@ -53,6 +53,7 @@ jest.mock('@metamask/bitcoindevkit', () => {
 describe('KeyringHandler', () => {
   const mockKeyringRequest = mock<KeyringRequestHandler>();
   const mockAccounts = mock<AccountUseCases>();
+  const mockSnapClient = mock<SnapClient>();
   const mockAddress = mock<Address>({
     toString: () => 'bc1qaddress...',
   });
@@ -75,6 +76,7 @@ describe('KeyringHandler', () => {
     mockKeyringRequest,
     mockAccounts,
     defaultAddressType,
+    mockSnapClient,
   );
 
   beforeEach(() => {
