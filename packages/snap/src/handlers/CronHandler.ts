@@ -53,8 +53,8 @@ export class CronHandler {
   async route(request: JsonRpcRequest): Promise<void> {
     const { method, params } = request;
 
-    const { active } = await this.#snapClient.getClientStatus();
-    if (!active) {
+    const { active, locked } = await this.#snapClient.getClientStatus();
+    if (!active || locked) {
       return undefined;
     }
 
