@@ -116,9 +116,12 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
   ): Promise<BitcoinAccount> {
     const slip10 = await this.#snapClient.getPublicEntropy(derivationPath);
     const id = v4();
+    // READ THIS CAREFULLY:
+    // The BDK expects 4-bytes fingerprint, so we have to pad with 0, in case
+    // our fingerprint contains leading null-bytes.
     const fingerprint = (
       slip10.masterFingerprint ?? slip10.parentFingerprint
-    ).toString(16);
+    ).toString(16).padStart(8, '0');
 
     const xpub = slip10_to_extended(slip10, network);
     const descriptors = xpub_to_descriptor(
