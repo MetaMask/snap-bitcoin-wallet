@@ -21,13 +21,17 @@ import {
 } from '../entities';
 import { BdkAccountAdapter } from '../infra';
 
-function toBdkFingerprint(fingerprint: number) {
+/**
+ * Encode a fingerprint to a 4-bytes hex-string (required by the BDK).
+ *
+ * @param fingerprint - The fingerprint to encode.
+ * @returns The encoded fingerprint.
+ */
+function toBdkFingerprint(fingerprint: number): string {
   // READ THIS CAREFULLY:
   // The BDK expects 4-bytes fingerprint, so we have to pad with 0, in case
   // our fingerprint contains leading null-bytes.
-  return fingerprint
-      .toString(16)
-      .padStart(8, '0');
+  return fingerprint.toString(16).padStart(8, '0');
 }
 
 export class BdkAccountRepository implements BitcoinAccountRepository {
@@ -94,7 +98,7 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
 
     const slip10 = await this.#snapClient.getPrivateEntropy(derivationPath);
     const fingerprint = toBdkFingerprint(
-      slip10.masterFingerprint ?? slip10.parentFingerprint
+      slip10.masterFingerprint ?? slip10.parentFingerprint,
     );
 
     const account = BdkAccountAdapter.load(
@@ -125,7 +129,9 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
   ): Promise<BitcoinAccount> {
     const slip10 = await this.#snapClient.getPublicEntropy(derivationPath);
     const id = v4();
-    const fingerprint = toBdkFingerprint(slip10.masterFingerprint ?? slip10.parentFingerprint);
+    const fingerprint = toBdkFingerprint(
+      slip10.masterFingerprint ?? slip10.parentFingerprint,
+    );
 
     const xpub = slip10_to_extended(slip10, network);
     const descriptors = xpub_to_descriptor(
