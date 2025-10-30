@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.4.3]
 
-### Uncategorized
+### Fixed
 
-- fix: fix fingerprint format (for BDK) ([#552](https://github.com/MetaMask/snap-bitcoin-wallet/pull/552))
+- Fix fingerprint format (for BDK) ([#552](https://github.com/MetaMask/snap-bitcoin-wallet/pull/552))
 
 ## [1.4.2]
 
