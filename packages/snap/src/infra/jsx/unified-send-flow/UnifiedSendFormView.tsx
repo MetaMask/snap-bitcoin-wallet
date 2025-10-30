@@ -20,6 +20,7 @@ import {
   displayCaip10,
   displayExchangeAmount,
   displayExplorerUrl,
+  displayNetwork,
   isValidSnapLinkProtocol,
   translate,
 } from '../format';
@@ -62,7 +63,7 @@ export const UnifiedSendFormView: SnapComponent<UnifiedSendFormViewProps> = ({
               {t('confirmation.estimatedChanges.send')}
             </SnapText>
             <Box direction="vertical" crossAlignment="end">
-              <Box direction="horizontal" alignment="center">
+              <Box direction="horizontal" alignment="center" center>
                 <SnapText color="error">
                   -{displayAmount(BigInt(amount), currency).replace(' BTC', '')}
                 </SnapText>
@@ -101,9 +102,9 @@ export const UnifiedSendFormView: SnapComponent<UnifiedSendFormViewProps> = ({
             <SnapText fontWeight="medium" color="alternative">
               {t('network')}
             </SnapText>
-            <Box direction="horizontal" alignment="center">
+            <Box direction="horizontal" alignment="center" center>
               <AssetIconInline network={network} variant="network" />
-              <SnapText>{network}</SnapText>
+              <SnapText>{displayNetwork(network)}</SnapText>
             </Box>
           </Box>
           <Box>{null}</Box>
