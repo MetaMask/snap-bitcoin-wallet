@@ -63,7 +63,7 @@ export const UnifiedSendFormView: SnapComponent<UnifiedSendFormViewProps> = ({
               {t('confirmation.estimatedChanges.send')}
             </SnapText>
             <Box direction="vertical" crossAlignment="end">
-              <Box direction="horizontal" alignment="center" center>
+              <Box direction="horizontal" center>
                 <SnapText color="error">
                   -{displayAmount(BigInt(amount), currency).replace(' BTC', '')}
                 </SnapText>
@@ -102,7 +102,7 @@ export const UnifiedSendFormView: SnapComponent<UnifiedSendFormViewProps> = ({
             <SnapText fontWeight="medium" color="alternative">
               {t('network')}
             </SnapText>
-            <Box direction="horizontal" alignment="center" center>
+            <Box direction="horizontal" center>
               <AssetIconInline network={network} variant="network" />
               <SnapText>{displayNetwork(network)}</SnapText>
             </Box>
