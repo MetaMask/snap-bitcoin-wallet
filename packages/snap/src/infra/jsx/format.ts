@@ -78,3 +78,7 @@ export const displayCaip10 = (
 ): CaipAccountId => {
   return `${networkToScope[network]}:${address}`;
 };
+
+export const displayNetwork = (network: Network): string => {
+  return network.charAt(0).toUpperCase() + network.slice(1);
+};

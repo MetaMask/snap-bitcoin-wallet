@@ -127,14 +127,14 @@ describe('CronHandler', () => {
     });
   });
 
-  describe('fullScanSelectedAccounts', () => {
+  describe('syncSelectedAccounts', () => {
     const mockAccounts = [
       mock<BitcoinAccount>({ id: 'account-1' }),
       mock<BitcoinAccount>({ id: 'account-2' }),
       mock<BitcoinAccount>({ id: 'account-3' }),
     ];
     const request = {
-      method: CronMethod.FullScanSelectedAccounts,
+      method: CronMethod.SyncSelectedAccounts,
       params: { accountIds: ['account-1', 'account-2'] },
     } as unknown as JsonRpcRequest;
 
@@ -150,12 +150,14 @@ describe('CronHandler', () => {
       await handler.route(request);
 
       expect(mockAccountUseCases.list).toHaveBeenCalled();
-      expect(mockAccountUseCases.fullScan).toHaveBeenCalledTimes(2);
-      expect(mockAccountUseCases.fullScan).toHaveBeenCalledWith(
+      expect(mockAccountUseCases.synchronize).toHaveBeenCalledTimes(2);
+      expect(mockAccountUseCases.synchronize).toHaveBeenCalledWith(
         mockAccounts[0],
+        'metamask',
       );
-      expect(mockAccountUseCases.fullScan).toHaveBeenCalledWith(
+      expect(mockAccountUseCases.synchronize).toHaveBeenCalledWith(
         mockAccounts[1],
+        'metamask',
       );
     });
 
@@ -166,7 +168,7 @@ describe('CronHandler', () => {
       });
       await handler.route(request);
 
-      expect(mockAccountUseCases.fullScan).not.toHaveBeenCalled();
+      expect(mockAccountUseCases.synchronize).not.toHaveBeenCalled();
     });
 
     it('propagates errors from list', async () => {
@@ -178,14 +180,14 @@ describe('CronHandler', () => {
 
     it('completes successfully even if some accounts fail to scan', async () => {
       mockAccountUseCases.list.mockResolvedValue(mockAccounts);
-      mockAccountUseCases.fullScan
+      mockAccountUseCases.synchronize
         .mockResolvedValueOnce(undefined)
         .mockRejectedValueOnce(new Error('scan failed'));
 
       const result = await handler.route(request);
 
       expect(result).toBeUndefined();
-      expect(mockAccountUseCases.fullScan).toHaveBeenCalledTimes(2);
+      expect(mockAccountUseCases.synchronize).toHaveBeenCalledTimes(2);
     });
   });
 
