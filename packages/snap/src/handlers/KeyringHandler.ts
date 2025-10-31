@@ -354,7 +354,7 @@ export class KeyringHandler implements Keyring {
     // Schedule immediate background job to perform full scan
     await this.#snapClient.scheduleBackgroundEvent({
       duration: 'PT1S',
-      method: CronMethod.FullScanSelectedAccounts,
+      method: CronMethod.SyncSelectedAccounts,
       params: { accountIds: accounts },
     });
   }

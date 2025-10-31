@@ -13,7 +13,7 @@ import type { SendFlowUseCases, AccountUseCases } from '../use-cases';
 export enum CronMethod {
   SynchronizeAccounts = 'synchronizeAccounts',
   RefreshRates = 'refreshRates',
-  FullScanSelectedAccounts = 'fullScanSelectedAccounts',
+  SyncSelectedAccounts = 'syncSelectedAccounts',
   FullScanAccount = 'fullScanAccount',
 }
 
@@ -66,9 +66,9 @@ export class CronHandler {
         assert(params, SendFormRefreshRatesRequest);
         return this.#sendFlowUseCases.refresh(params.interfaceId);
       }
-      case CronMethod.FullScanSelectedAccounts: {
+      case CronMethod.SyncSelectedAccounts: {
         assert(params, FullScanSelectedAccountsRequest);
-        return this.fullScanSelectedAccounts(params.accountIds);
+        return this.syncSelectedAccounts(params.accountIds);
       }
       case CronMethod.FullScanAccount: {
         assert(params, FullScanAccountRequest);
@@ -112,7 +112,7 @@ export class CronHandler {
     }
   }
 
-  async fullScanSelectedAccounts(accountIds: string[]): Promise<void> {
+  async syncSelectedAccounts(accountIds: string[]): Promise<void> {
     const accountIdSet = new Set(accountIds);
     const allAccounts = await this.#accountsUseCases.list();
 
@@ -121,7 +121,7 @@ export class CronHandler {
     );
 
     const scanPromises = selectedAccounts.map(async (account) =>
-      this.#accountsUseCases.fullScan(account),
+      this.#accountsUseCases.synchronize(account, 'metamask'),
     );
 
     await Promise.allSettled(scanPromises);
