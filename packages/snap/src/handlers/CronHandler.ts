@@ -21,7 +21,7 @@ export const SendFormRefreshRatesRequest = object({
   interfaceId: string(),
 });
 
-export const FullScanSelectedAccountsRequest = object({
+export const SyncSelectedAccountsRequest = object({
   accountIds: array(string()),
 });
 
@@ -67,7 +67,7 @@ export class CronHandler {
         return this.#sendFlowUseCases.refresh(params.interfaceId);
       }
       case CronMethod.SyncSelectedAccounts: {
-        assert(params, FullScanSelectedAccountsRequest);
+        assert(params, SyncSelectedAccountsRequest);
         return this.syncSelectedAccounts(params.accountIds);
       }
       case CronMethod.FullScanAccount: {

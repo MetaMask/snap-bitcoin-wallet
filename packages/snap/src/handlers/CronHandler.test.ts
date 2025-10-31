@@ -168,7 +168,7 @@ describe('CronHandler', () => {
       });
       await handler.route(request);
 
-      expect(mockAccountUseCases.fullScan).not.toHaveBeenCalled();
+      expect(mockAccountUseCases.synchronize).not.toHaveBeenCalled();
     });
 
     it('propagates errors from list', async () => {
