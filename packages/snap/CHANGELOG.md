@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.4.4]
 
-### Uncategorized
+### Fixed
 
-- fix: sync on setSelectedAccounts & fix network name format ([#554](https://github.com/MetaMask/snap-bitcoin-wallet/pull/554))
+- Sync on setSelectedAccounts & fix network name format ([#554](https://github.com/MetaMask/snap-bitcoin-wallet/pull/554))
 
 ## [1.4.3]
 
