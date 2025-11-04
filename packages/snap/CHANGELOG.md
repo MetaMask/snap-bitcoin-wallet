@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.4]
+
+### Uncategorized
+
+- fix: sync on setSelectedAccounts & fix network name format ([#554](https://github.com/MetaMask/snap-bitcoin-wallet/pull/554))
+
 ## [1.4.3]
 
 ### Fixed
@@ -510,7 +516,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add CI for lint and test ([#2](https://github.com/MetaMask/bitcoin/pull/2))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.4.3...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.4.4...HEAD
+[1.4.4]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.4.3...v1.4.4
 [1.4.3]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.4.2...v1.4.3
 [1.4.2]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.4.1...v1.4.2
 [1.4.1]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.4.0...v1.4.1
