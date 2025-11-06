@@ -308,6 +308,82 @@ describe('KeyringHandler', () => {
       ).rejects.toThrow(error);
       expect(mockAccounts.create).toHaveBeenCalled();
     });
+
+    describe('tracing', () => {
+      const options = {
+        scope: BtcScope.Mainnet,
+        index: 0,
+      };
+
+      beforeEach(() => {
+        mockSnapClient.startTrace.mockResolvedValue(undefined);
+        mockSnapClient.endTrace.mockResolvedValue(undefined);
+      });
+
+      it('calls startTrace and endTrace with correct trace name', async () => {
+        await handler.createAccount(options);
+
+        expect(mockSnapClient.startTrace).toHaveBeenCalledWith(
+          'Create Bitcoin Account',
+        );
+        expect(mockSnapClient.endTrace).toHaveBeenCalledWith(
+          'Create Bitcoin Account',
+        );
+      });
+
+      it('calls startTrace before creating account', async () => {
+        const callOrder: string[] = [];
+        mockSnapClient.startTrace.mockImplementation(async () => {
+          callOrder.push('startTrace');
+        });
+        mockAccounts.create.mockImplementation(async () => {
+          callOrder.push('createAccount');
+          return mockAccount;
+        });
+
+        await handler.createAccount(options);
+
+        expect(callOrder).toStrictEqual(['startTrace', 'createAccount']);
+      });
+
+      it('calls endTrace after creating account', async () => {
+        const callOrder: string[] = [];
+        mockAccounts.create.mockImplementation(async () => {
+          callOrder.push('createAccount');
+          return mockAccount;
+        });
+        mockSnapClient.endTrace.mockImplementation(async () => {
+          callOrder.push('endTrace');
+        });
+
+        await handler.createAccount(options);
+
+        expect(callOrder).toStrictEqual(['createAccount', 'endTrace']);
+      });
+
+      it('creates account even if startTrace fails', async () => {
+        mockSnapClient.startTrace.mockResolvedValue(undefined);
+
+        const result = await handler.createAccount(options);
+
+        expect(result).toBeDefined();
+        expect(mockAccounts.create).toHaveBeenCalled();
+        expect(mockSnapClient.startTrace).toHaveBeenCalled();
+      });
+
+      it('calls both startTrace and endTrace even if startTrace returns null', async () => {
+        mockSnapClient.startTrace.mockResolvedValue(undefined);
+
+        await handler.createAccount(options);
+
+        expect(mockSnapClient.startTrace).toHaveBeenCalledWith(
+          'Create Bitcoin Account',
+        );
+        expect(mockSnapClient.endTrace).toHaveBeenCalledWith(
+          'Create Bitcoin Account',
+        );
+      });
+    });
   });
 
   describe('discoverAccounts', () => {
