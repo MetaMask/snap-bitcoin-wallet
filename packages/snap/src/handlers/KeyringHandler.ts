@@ -179,6 +179,9 @@ export class KeyringHandler implements Keyring {
   ): Promise<KeyringAccount> {
     assert(options, CreateAccountRequest);
 
+    const traceName = 'Create Bitcoin Account';
+    await this.#snapClient.startTrace(traceName);
+
     const {
       metamask,
       scope,
@@ -246,6 +249,8 @@ export class KeyringHandler implements Keyring {
       synchronize,
       accountName: accountNameSuggestion,
     });
+
+    await this.#snapClient.endTrace(traceName);
 
     return mapToKeyringAccount(account);
   }

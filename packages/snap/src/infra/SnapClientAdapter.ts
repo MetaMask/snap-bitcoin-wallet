@@ -13,7 +13,12 @@ import type {
 } from '@metamask/snaps-sdk';
 import { DialogType } from '@metamask/snaps-sdk';
 
-import type { BaseError, BitcoinAccount, SnapClient } from '../entities';
+import type {
+  BaseError,
+  BitcoinAccount,
+  Logger,
+  SnapClient,
+} from '../entities';
 import {
   TrackingSnapEvent,
   networkToCurrencyUnit,
@@ -29,8 +34,11 @@ import { mapToKeyringAccount, mapToTransaction } from '../handlers/mappings';
 export class SnapClientAdapter implements SnapClient {
   readonly #encrypt: boolean;
 
-  constructor(encrypt = false) {
+  readonly #logger: Logger;
+
+  constructor(logger: Logger, encrypt = false) {
     this.#encrypt = encrypt;
+    this.#logger = logger;
   }
 
   async getState(key?: string): Promise<Json | null> {
@@ -301,5 +309,33 @@ export class SnapClientAdapter implements SnapClient {
         },
       },
     });
+  }
+
+  async startTrace(name: string): Promise<number | null> {
+    try {
+      const result = await snap.request({
+        method: 'snap_startTrace',
+        params: {
+          name,
+        },
+      });
+      return result as number;
+    } catch (error) {
+      this.#logger.error('Failed to start trace:', { name, error });
+      return null;
+    }
+  }
+
+  async endTrace(name: string): Promise<void> {
+    try {
+      await snap.request({
+        method: 'snap_endTrace',
+        params: {
+          name,
+        },
+      });
+    } catch (error) {
+      this.#logger.warn('Failed to end trace', { traceName: name, error });
+    }
   }
 }
