@@ -303,7 +303,8 @@
                     "enum": [
                       "Required",
                       "InsufficientBalanceToCoverFee",
-                      "InsufficientBalance"
+                      "InsufficientBalance",
+                      "BelowDustLimit"
                     ],
                     "description": "Error code."
                   }
