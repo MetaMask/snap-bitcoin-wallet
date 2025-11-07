@@ -41,7 +41,7 @@ import {
   string,
 } from 'superstruct';
 
-import type { BitcoinAccount, SnapClient } from '../entities';
+import type { BitcoinAccount, Logger, SnapClient } from '../entities';
 import {
   FormatError,
   InexistentMethodError,
@@ -64,6 +64,7 @@ import {
 } from './mappings';
 import { validateSelectedAccounts } from './validation';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
+import { runSnapActionSafely } from '../utils/snapHelpers';
 
 export const CreateAccountRequest = object({
   scope: enums(Object.values(BtcScope)),
@@ -85,16 +86,20 @@ export class KeyringHandler implements Keyring {
 
   readonly #snapClient: SnapClient;
 
+  readonly #logger: Logger;
+
   constructor(
     keyringRequest: KeyringRequestHandler,
     accounts: AccountUseCases,
     defaultAddressType: AddressType,
     snapClient: SnapClient,
+    logger: Logger,
   ) {
     this.#keyringRequest = keyringRequest;
     this.#accountsUseCases = accounts;
     this.#defaultAddressType = defaultAddressType;
     this.#snapClient = snapClient;
+    this.#logger = logger;
   }
 
   async route(request: JsonRpcRequest): Promise<Json> {
@@ -182,7 +187,11 @@ export class KeyringHandler implements Keyring {
     const traceName = 'Create Bitcoin Account';
 
     try {
-      await this.#snapClient.startTrace(traceName);
+      await runSnapActionSafely(
+        async () => this.#snapClient.startTrace(traceName),
+        this.#logger,
+        'startTrace',
+      );
 
       const {
         metamask,
@@ -254,7 +263,11 @@ export class KeyringHandler implements Keyring {
 
       return mapToKeyringAccount(account);
     } finally {
-      await this.#snapClient.endTrace(traceName);
+      await runSnapActionSafely(
+        async () => this.#snapClient.endTrace(traceName),
+        this.#logger,
+        'endTrace',
+      );
     }
   }
 

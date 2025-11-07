@@ -304,28 +304,20 @@ export class SnapClientAdapter implements SnapClient {
   }
 
   async startTrace(name: string): Promise<void> {
-    try {
-      await snap.request({
-        method: 'snap_startTrace',
-        params: {
-          name,
-        },
-      });
-    } catch {
-      // ignore errors
-    }
+    await snap.request({
+      method: 'snap_startTrace',
+      params: {
+        name,
+      },
+    });
   }
 
   async endTrace(name: string): Promise<void> {
-    try {
-      await snap.request({
-        method: 'snap_endTrace',
-        params: {
-          name,
-        },
-      });
-    } catch {
-      // ignore errors
-    }
+    await snap.request({
+      method: 'snap_endTrace',
+      params: {
+        name,
+      },
+    });
   }
 }

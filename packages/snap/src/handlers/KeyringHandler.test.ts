@@ -19,7 +19,7 @@ import { BtcAccountType, BtcScope } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
-import type { BitcoinAccount, SnapClient } from '../entities';
+import type { BitcoinAccount, Logger, SnapClient } from '../entities';
 import {
   AccountCapability,
   CurrencyUnit,
@@ -57,6 +57,8 @@ describe('KeyringHandler', () => {
   const mockAddress = mock<Address>({
     toString: () => 'bc1qaddress...',
   });
+  const mockLogger = mock<Logger>();
+
   // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
   /* eslint-disable @typescript-eslint/naming-convention */
   const mockAccount = mock<BitcoinAccount>({
@@ -77,6 +79,7 @@ describe('KeyringHandler', () => {
     mockAccounts,
     defaultAddressType,
     mockSnapClient,
+    mockLogger,
   );
 
   beforeEach(() => {
