@@ -185,10 +185,14 @@ export class KeyringHandler implements Keyring {
     assert(options, CreateAccountRequest);
 
     const traceName = 'Create Bitcoin Account';
+    let traceStarted = false;
 
     try {
       await runSnapActionSafely(
-        async () => this.#snapClient.startTrace(traceName),
+        async () => {
+          await this.#snapClient.startTrace(traceName);
+          traceStarted = true;
+        },
         this.#logger,
         'startTrace',
       );
@@ -263,11 +267,13 @@ export class KeyringHandler implements Keyring {
 
       return mapToKeyringAccount(account);
     } finally {
-      await runSnapActionSafely(
-        async () => this.#snapClient.endTrace(traceName),
-        this.#logger,
-        'endTrace',
-      );
+      if (traceStarted) {
+        await runSnapActionSafely(
+          async () => this.#snapClient.endTrace(traceName),
+          this.#logger,
+          'endTrace',
+        );
+      }
     }
   }
 
