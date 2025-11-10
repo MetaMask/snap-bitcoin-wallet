@@ -635,7 +635,7 @@ describe('RpcHandler', () => {
 
       expect(result).toStrictEqual({
         valid: false,
-        errors: [{ code: SendErrorCodes.BelowDustLimit }],
+        errors: [{ code: SendErrorCodes.Invalid }],
       });
     });
   });

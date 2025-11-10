@@ -32,7 +32,6 @@ export enum SendErrorCodes {
   Invalid = 'Invalid',
   InsufficientBalance = 'InsufficientBalance',
   InsufficientBalanceToCoverFee = 'InsufficientBalanceToCoverFee',
-  BelowDustLimit = 'BelowDustLimit',
 }
 
 export const NonEmptyStringStruct = refine(
@@ -211,7 +210,7 @@ export function validateDustLimit(
   const sats = Amount.from_btc(Number(amountInBtc)).to_sat();
   const min = getDustLimitSats(account.addressType);
   if (sats < min) {
-    return { valid: false, errors: [{ code: SendErrorCodes.BelowDustLimit }] };
+    return { valid: false, errors: [{ code: SendErrorCodes.Invalid }] };
   }
   return NO_ERRORS_RESPONSE;
 }
