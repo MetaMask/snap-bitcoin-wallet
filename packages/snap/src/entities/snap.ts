@@ -241,4 +241,20 @@ export type SnapClient = {
    * @param error The error to track
    */
   emitTrackingError(error: BaseError): Promise<void>;
+
+  /**
+   * Start a performance trace.
+   *
+   * @param name - The name of the trace.
+   * @returns A promise that resolves.
+   */
+  startTrace(name: string): Promise<void>;
+
+  /**
+   * End a performance trace.
+   *
+   * @param name - The name of the trace.
+   * @returns A promise that resolves when the trace is ended.
+   */
+  endTrace(name: string): Promise<void>;
 };

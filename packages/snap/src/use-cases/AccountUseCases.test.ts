@@ -706,7 +706,7 @@ describe('AccountUseCases', () => {
 
       // error should be logged
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'Failed to track event',
+        'Failed to execute snap action: emitTrackingEvent:TransactionReceived',
         trackingError,
       );
     });
@@ -1096,7 +1096,7 @@ describe('AccountUseCases', () => {
 
       // Error should be logged
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'Failed to track event',
+        'Failed to execute snap action: emitTrackingEvent:TransactionSubmitted',
         trackingError,
       );
 

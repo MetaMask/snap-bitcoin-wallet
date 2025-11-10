@@ -41,7 +41,7 @@ import {
   string,
 } from 'superstruct';
 
-import type { BitcoinAccount, SnapClient } from '../entities';
+import type { BitcoinAccount, Logger, SnapClient } from '../entities';
 import {
   FormatError,
   InexistentMethodError,
@@ -64,6 +64,7 @@ import {
 } from './mappings';
 import { validateSelectedAccounts } from './validation';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
+import { runSnapActionSafely } from '../utils/snapHelpers';
 
 export const CreateAccountRequest = object({
   scope: enums(Object.values(BtcScope)),
@@ -85,16 +86,20 @@ export class KeyringHandler implements Keyring {
 
   readonly #snapClient: SnapClient;
 
+  readonly #logger: Logger;
+
   constructor(
     keyringRequest: KeyringRequestHandler,
     accounts: AccountUseCases,
     defaultAddressType: AddressType,
     snapClient: SnapClient,
+    logger: Logger,
   ) {
     this.#keyringRequest = keyringRequest;
     this.#accountsUseCases = accounts;
     this.#defaultAddressType = defaultAddressType;
     this.#snapClient = snapClient;
+    this.#logger = logger;
   }
 
   async route(request: JsonRpcRequest): Promise<Json> {
@@ -179,75 +184,97 @@ export class KeyringHandler implements Keyring {
   ): Promise<KeyringAccount> {
     assert(options, CreateAccountRequest);
 
-    const {
-      metamask,
-      scope,
-      entropySource = 'm',
-      index,
-      derivationPath,
-      addressType,
-      synchronize = false,
-      accountNameSuggestion,
-    } = options;
+    const traceName = 'Create Bitcoin Account';
+    let traceStarted = false;
 
-    let resolvedIndex = derivationPath
-      ? this.#extractAccountIndex(derivationPath)
-      : index;
-
-    let resolvedAddressType: AddressType;
-    if (addressType) {
-      // only support P2WPKH addresses for v1
-      if (addressType !== BtcAccountType.P2wpkh) {
-        throw new FormatError(
-          'Only native segwit (P2WPKH) addresses are supported',
-        );
-      }
-      resolvedAddressType = caipToAddressType[addressType];
-
-      // if both addressType and derivationPath are provided, validate they match
-      if (derivationPath) {
-        const pathAddressType = this.#extractAddressType(derivationPath);
-        if (pathAddressType !== resolvedAddressType) {
-          throw new FormatError('Address type and derivation path mismatch');
-        }
-      }
-    } else if (derivationPath) {
-      resolvedAddressType = this.#extractAddressType(derivationPath);
-    } else {
-      resolvedAddressType = this.#defaultAddressType;
-      // validate default address type is P2WPKH just to be sure
-      if (resolvedAddressType !== 'p2wpkh') {
-        throw new FormatError(
-          'Only native segwit (P2WPKH) addresses are supported',
-        );
-      }
-    }
-
-    // FIXME: This if should be removed ASAP as the index should always be defined or be 0
-    // The Snap automatically increasing the index per request creates significant issues
-    // such as: concurrency, lack of idempotency, dangling state (if MM crashes before saving the account), etc.
-    if (resolvedIndex === undefined || resolvedIndex === null) {
-      const accounts = (await this.#accountsUseCases.list()).filter(
-        (acc) =>
-          acc.entropySource === entropySource &&
-          acc.network === scopeToNetwork[scope] &&
-          acc.addressType === resolvedAddressType,
+    try {
+      await runSnapActionSafely(
+        async () => {
+          await this.#snapClient.startTrace(traceName);
+          traceStarted = true;
+        },
+        this.#logger,
+        'startTrace',
       );
 
-      resolvedIndex = this.#getLowestUnusedIndex(accounts);
+      const {
+        metamask,
+        scope,
+        entropySource = 'm',
+        index,
+        derivationPath,
+        addressType,
+        synchronize = false,
+        accountNameSuggestion,
+      } = options;
+
+      let resolvedIndex = derivationPath
+        ? this.#extractAccountIndex(derivationPath)
+        : index;
+
+      let resolvedAddressType: AddressType;
+      if (addressType) {
+        // only support P2WPKH addresses for v1
+        if (addressType !== BtcAccountType.P2wpkh) {
+          throw new FormatError(
+            'Only native segwit (P2WPKH) addresses are supported',
+          );
+        }
+        resolvedAddressType = caipToAddressType[addressType];
+
+        // if both addressType and derivationPath are provided, validate they match
+        if (derivationPath) {
+          const pathAddressType = this.#extractAddressType(derivationPath);
+          if (pathAddressType !== resolvedAddressType) {
+            throw new FormatError('Address type and derivation path mismatch');
+          }
+        }
+      } else if (derivationPath) {
+        resolvedAddressType = this.#extractAddressType(derivationPath);
+      } else {
+        resolvedAddressType = this.#defaultAddressType;
+        // validate default address type is P2WPKH just to be sure
+        if (resolvedAddressType !== 'p2wpkh') {
+          throw new FormatError(
+            'Only native segwit (P2WPKH) addresses are supported',
+          );
+        }
+      }
+
+      // FIXME: This if should be removed ASAP as the index should always be defined or be 0
+      // The Snap automatically increasing the index per request creates significant issues
+      // such as: concurrency, lack of idempotency, dangling state (if MM crashes before saving the account), etc.
+      if (resolvedIndex === undefined || resolvedIndex === null) {
+        const accounts = (await this.#accountsUseCases.list()).filter(
+          (acc) =>
+            acc.entropySource === entropySource &&
+            acc.network === scopeToNetwork[scope] &&
+            acc.addressType === resolvedAddressType,
+        );
+
+        resolvedIndex = this.#getLowestUnusedIndex(accounts);
+      }
+
+      const account = await this.#accountsUseCases.create({
+        network: scopeToNetwork[scope],
+        entropySource,
+        index: resolvedIndex,
+        addressType: resolvedAddressType,
+        correlationId: metamask?.correlationId,
+        synchronize,
+        accountName: accountNameSuggestion,
+      });
+
+      return mapToKeyringAccount(account);
+    } finally {
+      if (traceStarted) {
+        await runSnapActionSafely(
+          async () => this.#snapClient.endTrace(traceName),
+          this.#logger,
+          'endTrace',
+        );
+      }
     }
-
-    const account = await this.#accountsUseCases.create({
-      network: scopeToNetwork[scope],
-      entropySource,
-      index: resolvedIndex,
-      addressType: resolvedAddressType,
-      correlationId: metamask?.correlationId,
-      synchronize,
-      accountName: accountNameSuggestion,
-    });
-
-    return mapToKeyringAccount(account);
   }
 
   async discoverAccounts(

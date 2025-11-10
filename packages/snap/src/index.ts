@@ -90,6 +90,7 @@ const keyringHandler = new KeyringHandler(
   accountsUseCases,
   Config.defaultAddressType,
   snapClient,
+  logger,
 );
 const cronHandler = new CronHandler(
   accountsUseCases,
