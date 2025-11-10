@@ -1,4 +1,4 @@
-import type { Network } from '@metamask/bitcoindevkit';
+import type { Network, AddressType } from '@metamask/bitcoindevkit';
 import { Address, Amount } from '@metamask/bitcoindevkit';
 import { CaipAssetTypeStruct } from '@metamask/utils';
 import type { Infer } from 'superstruct';
@@ -171,4 +171,46 @@ export function validateSelectedAccounts(
       'Account IDs were not part of existing accounts.',
     );
   }
+}
+
+/**
+ * Returns the dust limit (in satoshis) for a given address type.
+ *
+ * @param addressType - The account address type (script type).
+ * @returns The minimum spendable amount in satoshis for this script type.
+ */
+function getDustLimitSats(addressType: AddressType): bigint {
+  switch (addressType) {
+    case 'p2wpkh':
+      return 294n;
+    case 'p2pkh':
+      return 546n;
+    case 'p2sh':
+      return 546n;
+    case 'p2wsh':
+      return 546n;
+    case 'p2tr':
+      return 546n;
+    default:
+      return 546n;
+  }
+}
+
+/**
+ * Validates that the amount is above the dust limit for the account's script type.
+ *
+ * @param amountInBtc - The amount to send, in BTC units.
+ * @param account - The Bitcoin account providing address type and context.
+ * @returns ValidationResponse indicating whether the amount meets dust requirements.
+ */
+export function validateDustLimit(
+  amountInBtc: string,
+  account: BitcoinAccount,
+): ValidationResponse {
+  const sats = Amount.from_btc(Number(amountInBtc)).to_sat();
+  const min = getDustLimitSats(account.addressType);
+  if (sats < min) {
+    return { valid: false, errors: [{ code: SendErrorCodes.Invalid }] };
+  }
+  return NO_ERRORS_RESPONSE;
 }
