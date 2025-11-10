@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.4.5]
 
-### Uncategorized
+### Added
 
-- feat: add minimal amount validation ([#558](https://github.com/MetaMask/snap-bitcoin-wallet/pull/558))
+- Add minimal amount validation ([#558](https://github.com/MetaMask/snap-bitcoin-wallet/pull/558))
 
 ## [1.4.4]
 
