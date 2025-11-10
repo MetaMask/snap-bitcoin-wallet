@@ -543,6 +543,7 @@ describe('RpcHandler', () => {
 
       const mockAmountAccount = {
         network: 'bitcoin',
+        addressType: 'p2wpkh',
         balance: {
           trusted_spendable: mockTrustedSpendable,
         },
@@ -595,6 +596,43 @@ describe('RpcHandler', () => {
         'An error occurred: %s',
         'Account not found',
       );
+      expect(result).toStrictEqual({
+        valid: false,
+        errors: [{ code: SendErrorCodes.Invalid }],
+      });
+    });
+
+    it('accepts amount equal to segwit dust limit for p2wpkh', async () => {
+      const segwitDustOkRequest: JsonRpcRequest = {
+        id: 1,
+        jsonrpc: '2.0',
+        method: RpcMethod.OnAmountInput,
+        params: {
+          value: '0.00000294',
+          accountId: validAccountId,
+          assetId: 'bip122:000000000019d6689c085ae165831e93/slip44:0',
+        },
+      };
+
+      const result = await handler.route(origin, segwitDustOkRequest);
+
+      expect(result).toStrictEqual({ valid: true, errors: [] });
+    });
+
+    it('rejects amount below segwit dust limit for p2wpkh', async () => {
+      const segwitDustTooLowRequest: JsonRpcRequest = {
+        id: 1,
+        jsonrpc: '2.0',
+        method: RpcMethod.OnAmountInput,
+        params: {
+          value: '0.00000293',
+          accountId: validAccountId,
+          assetId: 'bip122:000000000019d6689c085ae165831e93/slip44:0',
+        },
+      };
+
+      const result = await handler.route(origin, segwitDustTooLowRequest);
+
       expect(result).toStrictEqual({
         valid: false,
         errors: [{ code: SendErrorCodes.Invalid }],

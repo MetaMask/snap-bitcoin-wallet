@@ -33,6 +33,7 @@ import {
   validateAmount,
   validateAddress,
   validateAccountBalance,
+  validateDustLimit,
 } from './validation';
 
 export const CreateSendFormRequest = object({
@@ -217,6 +218,10 @@ export class RpcHandler {
 
     try {
       const bitcoinAccount = await this.#accountUseCases.get(accountId);
+      const dustValidation = validateDustLimit(value, bitcoinAccount);
+      if (!dustValidation.valid) {
+        return dustValidation;
+      }
       const balanceValidation = validateAccountBalance(value, bitcoinAccount);
 
       return balanceValidation.valid ? NO_ERRORS_RESPONSE : balanceValidation;
@@ -252,7 +257,9 @@ export class RpcHandler {
 
       const inputValidation =
         validateAmount(request.amount).valid &&
-        validateAddress(request.toAddress, account.network, this.#logger).valid;
+        validateAddress(request.toAddress, account.network, this.#logger)
+          .valid &&
+        validateDustLimit(request.amount, account).valid;
 
       if (!inputValidation) {
         return INVALID_RESPONSE;
