@@ -15,7 +15,6 @@ import type {
   BitcoinAccount,
   Inscription,
   SnapClient,
-  SnapState,
 } from '../entities';
 import { BdkAccountAdapter } from '../infra';
 import { BdkAccountRepository } from './BdkAccountRepository';
@@ -123,6 +122,30 @@ describe('BdkAccountRepository', () => {
       const state = {
         [id1]: { ...mockAccountState, id: id1 },
         [id2]: { ...mockAccountState, id: id2 },
+      };
+      const mockAccount1 = { ...mockAccount, id: id1 };
+      const mockAccount2 = { ...mockAccount, id: id2 };
+
+      mockSnapClient.getState.mockResolvedValue(state);
+      (BdkAccountAdapter.load as jest.Mock)
+        .mockReturnValueOnce(mockAccount1)
+        .mockReturnValueOnce(mockAccount2);
+
+      const result = await repo.getAll();
+
+      expect(mockSnapClient.getState).toHaveBeenCalledWith('accounts');
+      expect(BdkAccountAdapter.load).toHaveBeenCalledTimes(2);
+      expect(result).toStrictEqual([mockAccount1, mockAccount2]);
+    });
+
+    it('filters out null accounts', async () => {
+      const id1 = 'some-id-1';
+      const id2 = 'some-id-2';
+      const id3 = 'deleted-id';
+      const state = {
+        [id1]: { ...mockAccountState, id: id1 },
+        [id2]: { ...mockAccountState, id: id2 },
+        [id3]: null, // Deleted account
       };
       const mockAccount1 = { ...mockAccount, id: id1 };
       const mockAccount2 = { ...mockAccount, id: id2 };
@@ -286,32 +309,26 @@ describe('BdkAccountRepository', () => {
     });
 
     it('removes wallet data from store', async () => {
-      const mockState: SnapState = {
-        accounts: {
-          'some-id-1': { ...mockAccountState, derivationPath: ["m/84'/0'/0'"] },
-          'some-id-2': { ...mockAccountState, derivationPath: ["m/86'/0'/0'"] },
-        },
-        derivationPaths: {
-          "m/84'/0'/0'": 'some-id-1',
-          "m/86'/0'/0'": 'some-id-2',
-        },
-      };
-      const expectedState = {
-        accounts: {
-          'some-id-2': { ...mockAccountState, derivationPath: ["m/86'/0'/0'"] },
-        },
-        derivationPaths: {
-          "m/86'/0'/0'": 'some-id-2',
-        },
+      const accountState: AccountState = {
+        ...mockAccountState,
+        derivationPath: ['m', "84'", "0'", "0'"],
       };
 
-      mockSnapClient.getState.mockResolvedValue(mockState);
+      mockSnapClient.getState.mockResolvedValue(accountState);
 
       await repo.delete('some-id-1');
 
+      expect(mockSnapClient.getState).toHaveBeenCalledWith(
+        'accounts.some-id-1',
+      );
+      expect(mockSnapClient.setState).toHaveBeenCalledTimes(2);
       expect(mockSnapClient.setState).toHaveBeenCalledWith(
-        undefined,
-        expectedState,
+        "derivationPaths.m/84'/0'/0'",
+        null,
+      );
+      expect(mockSnapClient.setState).toHaveBeenCalledWith(
+        'accounts.some-id-1',
+        null,
       );
     });
   });

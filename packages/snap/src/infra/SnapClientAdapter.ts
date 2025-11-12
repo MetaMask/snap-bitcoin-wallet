@@ -33,12 +33,20 @@ export class SnapClientAdapter implements SnapClient {
     this.#encrypt = encrypt;
   }
 
+  decideToEncrypt(key?: string): boolean {
+    if (!key) {
+      return this.#encrypt;
+    }
+
+    return key.includes('accounts') || this.#encrypt;
+  }
+
   async getState(key?: string): Promise<Json | null> {
     return snap.request({
       method: 'snap_getState',
       params: {
         key,
-        encrypted: this.#encrypt,
+        encrypted: this.decideToEncrypt(key),
       },
     });
   }
@@ -49,7 +57,7 @@ export class SnapClientAdapter implements SnapClient {
       params: {
         key,
         value: newState,
-        encrypted: this.#encrypt,
+        encrypted: this.decideToEncrypt(key),
       },
     });
   }

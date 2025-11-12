@@ -64,13 +64,15 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
       return [];
     }
 
-    return Object.entries(accounts).map(([id, account]) =>
-      BdkAccountAdapter.load(
-        id,
-        account.derivationPath,
-        ChangeSet.from_json(account.wallet),
-      ),
-    );
+    return Object.entries(accounts)
+      .filter(([, account]) => account !== null)
+      .map(([id, account]) =>
+        BdkAccountAdapter.load(
+          id,
+          account.derivationPath,
+          ChangeSet.from_json(account.wallet),
+        ),
+      );
   }
 
   async getByDerivationPath(
@@ -204,15 +206,19 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
   }
 
   async delete(id: string): Promise<void> {
-    const state = (await this.#snapClient.getState()) as SnapState | null;
-    if (!state?.accounts[id]) {
+    const account = (await this.#snapClient.getState(
+      `accounts.${id}`,
+    )) as AccountState | null;
+    if (!account) {
       return;
     }
 
-    delete state.derivationPaths[state.accounts[id].derivationPath.join('/')];
-    delete state.accounts[id];
+    const derivationPath = account.derivationPath.join('/');
 
-    await this.#snapClient.setState(undefined, state);
+    await Promise.all([
+      this.#snapClient.setState(`derivationPaths.${derivationPath}`, null),
+      this.#snapClient.setState(`accounts.${id}`, null),
+    ]);
   }
 
   async fetchInscriptions(id: string): Promise<Inscription[] | null> {
