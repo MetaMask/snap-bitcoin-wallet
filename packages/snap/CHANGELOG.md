@@ -9,10 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.5.0]
 
-### Uncategorized
+### Added
 
-- fix: accounts under encrypted state ([#560](https://github.com/MetaMask/snap-bitcoin-wallet/pull/560))
-- feat: add perf tracing account creation ([#557](https://github.com/MetaMask/snap-bitcoin-wallet/pull/557))
+- Add perf tracing account creation ([#557](https://github.com/MetaMask/snap-bitcoin-wallet/pull/557))
+
+### Changed
+
+- State `accounts` under encrypted state ([#560](https://github.com/MetaMask/snap-bitcoin-wallet/pull/560))
 
 ## [1.4.5]
 
