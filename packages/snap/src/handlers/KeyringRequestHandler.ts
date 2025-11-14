@@ -172,32 +172,23 @@ export class KeyringRequestHandler {
     switch (method as AccountCapability) {
       case AccountCapability.SignPsbt: {
         assert(params, SignPsbtRequest);
-        const { account: accountParam, psbt, feeRate, options } = params;
-        await this.#validateAccountAddress(account, accountParam.address);
+        const { psbt, feeRate, options } = params;
         return this.#signPsbt(account, psbt, origin, options, feeRate);
       }
       case AccountCapability.FillPsbt: {
         assert(params, FillPsbtRequest);
-        const { account: accountParam } = params;
-        await this.#validateAccountAddress(account, accountParam.address);
         return this.#fillPsbt(account, params.psbt, params.feeRate);
       }
       case AccountCapability.ComputeFee: {
         assert(params, ComputeFeeRequest);
-        const { account: accountParam } = params;
-        await this.#validateAccountAddress(account, accountParam.address);
         return this.#computeFee(account, params.psbt, params.feeRate);
       }
       case AccountCapability.BroadcastPsbt: {
         assert(params, BroadcastPsbtRequest);
-        const { account: accountParam } = params;
-        await this.#validateAccountAddress(account, accountParam.address);
         return this.#broadcastPsbt(account, params.psbt, origin);
       }
       case AccountCapability.SendTransfer: {
         assert(params, SendTransferRequest);
-        const { account: accountParam } = params;
-        await this.#validateAccountAddress(account, accountParam.address);
         return this.#sendTransfer(
           account,
           params.recipients,
@@ -207,8 +198,6 @@ export class KeyringRequestHandler {
       }
       case AccountCapability.GetUtxo: {
         assert(params, GetUtxoRequest);
-        const { account: accountParam } = params;
-        await this.#validateAccountAddress(account, accountParam.address);
         return this.#getUtxo(account, params.outpoint);
       }
       case AccountCapability.ListUtxos: {
@@ -219,8 +208,6 @@ export class KeyringRequestHandler {
       }
       case AccountCapability.SignMessage: {
         assert(params, SignMessageRequest);
-        const { account: accountParam } = params;
-        await this.#validateAccountAddress(account, accountParam.address);
         return this.#signMessage(account, params.message, origin);
       }
       default: {
@@ -358,27 +345,6 @@ export class KeyringRequestHandler {
       pending: false,
       result,
     };
-  }
-
-  /**
-   * Validates that the account address in params matches the account's address.
-   * This ensures the caller is specifying the correct account.
-   *
-   * @param accountId - The account ID from the KeyringRequest
-   * @param accountAddress - The account address from the request params
-   */
-  async #validateAccountAddress(
-    accountId: string,
-    accountAddress: string,
-  ): Promise<void> {
-    const account = await this.#accountsUseCases.get(accountId);
-    if (account.publicAddress.toString() !== accountAddress) {
-      throw new NotFoundError('Account address mismatch', {
-        accountId,
-        expected: account.publicAddress.toString(),
-        received: accountAddress,
-      });
-    }
   }
 
   /**
