@@ -1,13 +1,21 @@
-import type { KeyringRequest, KeyringResponse } from '@metamask/keyring-api';
-import type { Json } from '@metamask/utils';
+import {
+  BtcMethod,
+  type KeyringAccount,
+  type KeyringRequest,
+  type KeyringResponse,
+} from '@metamask/keyring-api';
+import type { CaipAccountId, CaipChainId, Json } from '@metamask/utils';
+import type { Infer } from 'superstruct';
 import {
   array,
   assert,
   boolean,
+  enums,
   number,
   object,
   optional,
   string,
+  union,
 } from 'superstruct';
 
 import {
@@ -19,7 +27,15 @@ import { mapToUtxo } from './mappings';
 import { parsePsbt } from './parsers';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 
+/**
+ * Wallet account struct for Bitcoin requests.
+ */
+const WalletAccountStruct = object({
+  address: string(),
+});
+
 export const SignPsbtRequest = object({
+  account: WalletAccountStruct,
   psbt: string(),
   feeRate: optional(number()),
   options: object({
@@ -34,6 +50,7 @@ export type SignPsbtResponse = {
 };
 
 export const ComputeFeeRequest = object({
+  account: WalletAccountStruct,
   psbt: string(),
   feeRate: optional(number()),
 });
@@ -44,6 +61,7 @@ export type ComputeFeeResponse = {
 };
 
 export const BroadcastPsbtRequest = object({
+  account: WalletAccountStruct,
   psbt: string(),
 });
 
@@ -52,6 +70,7 @@ export type BroadcastPsbtResponse = {
 };
 
 export const FillPsbtRequest = object({
+  account: WalletAccountStruct,
   psbt: string(),
   feeRate: optional(number()),
 });
@@ -61,6 +80,7 @@ export type FillPsbtResponse = {
 };
 
 export const SendTransferRequest = object({
+  account: WalletAccountStruct,
   recipients: array(
     object({
       address: string(),
@@ -71,16 +91,72 @@ export const SendTransferRequest = object({
 });
 
 export const GetUtxoRequest = object({
+  account: WalletAccountStruct,
   outpoint: string(),
 });
 
 export const SignMessageRequest = object({
+  account: WalletAccountStruct,
   message: string(),
 });
 
 export type SignMessageResponse = {
   signature: string;
 };
+
+/**
+ * Validates that a JsonRpcRequest is a valid Bitcoin request.
+ *
+ * TODO: update btc-methods.md to include all the new methods
+ *
+ * @see https://github.com/MetaMask/accounts/blob/main/packages/keyring-api/docs/btc-methods.md
+ */
+export const SignPsbtKeyringRequestStruct = object({
+  method: enums([BtcMethod.SignPsbt]),
+  params: SignPsbtRequest,
+});
+
+export const FillPsbtKeyringRequestStruct = object({
+  method: enums([BtcMethod.FillPsbt]),
+  params: FillPsbtRequest,
+});
+
+export const ComputeFeeKeyringRequestStruct = object({
+  method: enums([BtcMethod.ComputeFee]),
+  params: ComputeFeeRequest,
+});
+
+export const BroadcastPsbtKeyringRequestStruct = object({
+  method: enums([BtcMethod.BroadcastPsbt]),
+  params: BroadcastPsbtRequest,
+});
+
+export const SendTransferKeyringRequestStruct = object({
+  method: enums([BtcMethod.SendTransfer]),
+  params: SendTransferRequest,
+});
+
+export const GetUtxoKeyringRequestStruct = object({
+  method: enums([BtcMethod.GetUtxo]),
+  params: GetUtxoRequest,
+});
+
+export const SignMessageKeyringRequestStruct = object({
+  method: enums([BtcMethod.SignMessage]),
+  params: SignMessageRequest,
+});
+
+export const BtcWalletRequestStruct = union([
+  SignPsbtKeyringRequestStruct,
+  FillPsbtKeyringRequestStruct,
+  ComputeFeeKeyringRequestStruct,
+  BroadcastPsbtKeyringRequestStruct,
+  SendTransferKeyringRequestStruct,
+  GetUtxoKeyringRequestStruct,
+  SignMessageKeyringRequestStruct,
+]);
+
+export type BtcWalletRequest = Infer<typeof BtcWalletRequestStruct>;
 
 export class KeyringRequestHandler {
   readonly #accountsUseCases: AccountUseCases;
@@ -96,23 +172,32 @@ export class KeyringRequestHandler {
     switch (method as AccountCapability) {
       case AccountCapability.SignPsbt: {
         assert(params, SignPsbtRequest);
-        const { psbt, feeRate, options } = params;
+        const { account: accountParam, psbt, feeRate, options } = params;
+        await this.#validateAccountAddress(account, accountParam.address);
         return this.#signPsbt(account, psbt, origin, options, feeRate);
       }
       case AccountCapability.FillPsbt: {
         assert(params, FillPsbtRequest);
+        const { account: accountParam } = params;
+        await this.#validateAccountAddress(account, accountParam.address);
         return this.#fillPsbt(account, params.psbt, params.feeRate);
       }
       case AccountCapability.ComputeFee: {
         assert(params, ComputeFeeRequest);
+        const { account: accountParam } = params;
+        await this.#validateAccountAddress(account, accountParam.address);
         return this.#computeFee(account, params.psbt, params.feeRate);
       }
       case AccountCapability.BroadcastPsbt: {
         assert(params, BroadcastPsbtRequest);
+        const { account: accountParam } = params;
+        await this.#validateAccountAddress(account, accountParam.address);
         return this.#broadcastPsbt(account, params.psbt, origin);
       }
       case AccountCapability.SendTransfer: {
         assert(params, SendTransferRequest);
+        const { account: accountParam } = params;
+        await this.#validateAccountAddress(account, accountParam.address);
         return this.#sendTransfer(
           account,
           params.recipients,
@@ -122,6 +207,8 @@ export class KeyringRequestHandler {
       }
       case AccountCapability.GetUtxo: {
         assert(params, GetUtxoRequest);
+        const { account: accountParam } = params;
+        await this.#validateAccountAddress(account, accountParam.address);
         return this.#getUtxo(account, params.outpoint);
       }
       case AccountCapability.ListUtxos: {
@@ -132,6 +219,8 @@ export class KeyringRequestHandler {
       }
       case AccountCapability.SignMessage: {
         assert(params, SignMessageRequest);
+        const { account: accountParam } = params;
+        await this.#validateAccountAddress(account, accountParam.address);
         return this.#signMessage(account, params.message, origin);
       }
       default: {
@@ -269,5 +358,83 @@ export class KeyringRequestHandler {
       pending: false,
       result,
     };
+  }
+
+  /**
+   * Validates that the account address in params matches the account's address.
+   * This ensures the caller is specifying the correct account.
+   *
+   * @param accountId - The account ID from the KeyringRequest
+   * @param accountAddress - The account address from the request params
+   */
+  async #validateAccountAddress(
+    accountId: string,
+    accountAddress: string,
+  ): Promise<void> {
+    const account = await this.#accountsUseCases.get(accountId);
+    if (account.publicAddress.toString() !== accountAddress) {
+      throw new NotFoundError('Account address mismatch', {
+        accountId,
+        expected: account.publicAddress.toString(),
+        received: accountAddress,
+      });
+    }
+  }
+
+  /**
+   * Resolves the address of an account from a signing request.
+   *
+   * This is required by the routing system of MetaMask to dispatch
+   * incoming non-EVM dapp signing requests.
+   *
+   * @param keyringAccounts - The accounts available in the keyring.
+   * @param scope - Request's scope (CAIP-2).
+   * @param request - Signing request object.
+   * @returns A Promise that resolves to the account address that must
+   * be used to process this signing request, or null if none candidates
+   * could be found.
+   * @throws If the request is invalid.
+   */
+  resolveAccountAddress(
+    keyringAccounts: KeyringAccount[],
+    scope: CaipChainId,
+    request: Infer<typeof BtcWalletRequestStruct>,
+  ): CaipAccountId {
+    const accountsWithThisScope = keyringAccounts.filter((account) =>
+      account.scopes.includes(scope),
+    );
+
+    if (accountsWithThisScope.length === 0) {
+      throw new Error('No accounts with this scope');
+    }
+
+    let addressToValidate: string;
+
+    switch (request.method) {
+      case BtcMethod.BroadcastPsbt:
+      case BtcMethod.FillPsbt:
+      case BtcMethod.ComputeFee:
+      case BtcMethod.GetUtxo:
+      case BtcMethod.SendTransfer:
+      case BtcMethod.SignMessage:
+      case BtcMethod.SignPsbt: {
+        const { account } = request.params;
+        addressToValidate = account.address;
+        break;
+      }
+      default: {
+        throw new Error('Unsupported method');
+      }
+    }
+
+    const foundAccount = accountsWithThisScope.find(
+      (account) => account.address === addressToValidate,
+    );
+
+    if (!foundAccount) {
+      throw new Error('Account not found');
+    }
+
+    return `${scope}:${addressToValidate}`;
   }
 }
