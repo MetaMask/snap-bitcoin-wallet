@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.6.0]
 
-### Uncategorized
+### Changed
 
 - feat: add from/to to confirmation ([#563](https://github.com/MetaMask/snap-bitcoin-wallet/pull/563))
 
