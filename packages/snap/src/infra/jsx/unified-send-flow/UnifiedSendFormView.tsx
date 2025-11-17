@@ -35,7 +35,8 @@ export const UnifiedSendFormView: SnapComponent<UnifiedSendFormViewProps> = ({
   messages,
 }) => {
   const t = translate(messages);
-  const { amount, exchangeRate, network, from, explorerUrl } = context;
+  const { amount, exchangeRate, network, from, recipient, explorerUrl } =
+    context;
 
   const psbt = Psbt.from_string(context.psbt);
   const fee = psbt.fee().to_sat();
@@ -87,7 +88,7 @@ export const UnifiedSendFormView: SnapComponent<UnifiedSendFormViewProps> = ({
           <Box>{null}</Box>
           <Box alignment="space-between" direction="horizontal">
             <SnapText fontWeight="medium" color="alternative">
-              {t('confirmation.account')}
+              {t('from')}
             </SnapText>
             {isValidSnapLinkProtocol(explorerUrl) ? (
               <Link href={displayExplorerUrl(explorerUrl, from)}>
@@ -95,6 +96,29 @@ export const UnifiedSendFormView: SnapComponent<UnifiedSendFormViewProps> = ({
               </Link>
             ) : (
               <Address address={displayCaip10(network, from)} displayName />
+            )}
+          </Box>
+          <Box>{null}</Box>
+          <Box alignment="space-between" direction="horizontal">
+            <SnapText fontWeight="medium" color="alternative">
+              {t('toAddress')}
+            </SnapText>
+            {isValidSnapLinkProtocol(explorerUrl) ? (
+              <Link href={displayExplorerUrl(explorerUrl, recipient)}>
+                <Address
+                  address={displayCaip10(network, recipient)}
+                  truncate
+                  displayName
+                  avatar
+                />
+              </Link>
+            ) : (
+              <Address
+                address={displayCaip10(network, recipient)}
+                truncate
+                displayName
+                avatar
+              />
             )}
           </Box>
           <Box>{null}</Box>
