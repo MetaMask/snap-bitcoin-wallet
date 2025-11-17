@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- feat: add from/to to confirmation ([#563](https://github.com/MetaMask/snap-bitcoin-wallet/pull/563))
+- Add `from` and `to` to confirmation ([#563](https://github.com/MetaMask/snap-bitcoin-wallet/pull/563))
 
 ## [1.5.0]
 
