@@ -1,5 +1,6 @@
 import type { Txid, Psbt, Amount, LocalOutput } from '@metamask/bitcoindevkit';
-import type { KeyringRequest } from '@metamask/keyring-api';
+import type { KeyringRequest, KeyringAccount } from '@metamask/keyring-api';
+import { BtcMethod, BtcScope } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
@@ -489,6 +490,132 @@ describe('KeyringRequestHandler', () => {
         pending: false,
         result: { signature: 'signature' },
       });
+    });
+  });
+
+  describe('resolveAccountAddress', () => {
+    const mockAccount1 = mock<KeyringAccount>({
+      id: 'account-1',
+      address: 'test123',
+      scopes: [BtcScope.Regtest],
+    });
+    const mockAccount2 = mock<KeyringAccount>({
+      id: 'account-2',
+      address: 'test456',
+      scopes: [BtcScope.Regtest, BtcScope.Testnet],
+    });
+    const mockAccount3 = mock<KeyringAccount>({
+      id: 'account-3',
+      address: 'test789',
+      scopes: [BtcScope.Testnet],
+    });
+
+    it('resolves account address for SignPsbt', () => {
+      const request = {
+        method: BtcMethod.SignPsbt as const,
+        params: {
+          account: { address: 'test123' },
+          psbt: 'psbt',
+          options: { fill: false, broadcast: false },
+        },
+      };
+
+      const result = handler.resolveAccountAddress(
+        [mockAccount1, mockAccount2, mockAccount3],
+        BtcScope.Regtest,
+        request,
+      );
+
+      expect(result).toBe('bip122:regtest:test123');
+    });
+
+    it('resolves account address for SendTransfer', () => {
+      const request = {
+        method: BtcMethod.SendTransfer as const,
+        params: {
+          account: { address: 'test456' },
+          recipients: [{ address: 'recipient', amount: '1000' }],
+        },
+      };
+
+      const result = handler.resolveAccountAddress(
+        [mockAccount1, mockAccount2, mockAccount3],
+        BtcScope.Regtest,
+        request,
+      );
+
+      expect(result).toBe('bip122:regtest:test456');
+    });
+
+    it('resolves account address for SignMessage', () => {
+      const request = {
+        method: BtcMethod.SignMessage as const,
+        params: {
+          account: { address: 'test123' },
+          message: 'hello',
+        },
+      };
+
+      const result = handler.resolveAccountAddress(
+        [mockAccount1, mockAccount2, mockAccount3],
+        BtcScope.Regtest,
+        request,
+      );
+
+      expect(result).toBe('bip122:regtest:test123');
+    });
+
+    it('throws error if no accounts with scope', () => {
+      const request = {
+        method: BtcMethod.SignPsbt as const,
+        params: {
+          account: { address: 'test123' },
+          psbt: 'psbt',
+          options: { fill: false, broadcast: false },
+        },
+      };
+
+      expect(() =>
+        handler.resolveAccountAddress(
+          [mockAccount3],
+          BtcScope.Regtest,
+          request,
+        ),
+      ).toThrow('No accounts with this scope');
+    });
+
+    it('throws error if account address not found', () => {
+      const request = {
+        method: BtcMethod.SignPsbt as const,
+        params: {
+          account: { address: 'notfound' },
+          psbt: 'psbt',
+          options: { fill: false, broadcast: false },
+        },
+      };
+
+      expect(() =>
+        handler.resolveAccountAddress(
+          [mockAccount1, mockAccount2, mockAccount3],
+          BtcScope.Regtest,
+          request,
+        ),
+      ).toThrow('Account not found');
+    });
+
+    it('throws error for unsupported method', () => {
+      const request = {
+        method: 'unsupported' as BtcMethod,
+        params: {},
+      };
+
+      expect(() =>
+        handler.resolveAccountAddress(
+          [mockAccount1, mockAccount2, mockAccount3],
+          BtcScope.Regtest,
+          request as any,
+        ),
+      ).toThrow('Unsupported method');
     });
   });
 });
