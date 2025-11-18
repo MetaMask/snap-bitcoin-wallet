@@ -13,6 +13,7 @@ import {
   KeyringRequestHandler,
   SendTransferRequest,
   SignPsbtRequest,
+  type BtcWalletRequest,
 } from './KeyringRequestHandler';
 import type { BitcoinAccount } from '../entities';
 import { AccountCapability } from '../entities';
@@ -36,6 +37,11 @@ jest.mock('./mappings', () => ({
 describe('KeyringRequestHandler', () => {
   const mockAccountsUseCases = mock<AccountUseCases>();
   const origin = 'metamask';
+
+  const ACCOUNT_ADDRESS = 'test-account-address';
+  const accountParam = {
+    account: { address: ACCOUNT_ADDRESS },
+  };
 
   const handler = new KeyringRequestHandler(mockAccountsUseCases);
 
@@ -66,6 +72,7 @@ describe('KeyringRequestHandler', () => {
       request: {
         method: AccountCapability.SignPsbt,
         params: {
+          ...accountParam,
           psbt: 'psbtBase64',
           feeRate: 3,
           options: mockOptions,
@@ -110,7 +117,10 @@ describe('KeyringRequestHandler', () => {
       await expect(
         handler.route({
           ...mockRequest,
-          request: { ...mockRequest.request, params: { psbt: 'invalidPsbt' } },
+          request: {
+            ...mockRequest.request,
+            params: { ...accountParam, psbt: 'invalidPsbt' },
+          },
         }),
       ).rejects.toThrow(error);
 
@@ -132,6 +142,7 @@ describe('KeyringRequestHandler', () => {
       request: {
         method: AccountCapability.ComputeFee,
         params: {
+          ...accountParam,
           psbt: 'psbtBase64',
           feeRate: 3,
         },
@@ -173,7 +184,10 @@ describe('KeyringRequestHandler', () => {
       await expect(
         handler.route({
           ...mockRequest,
-          request: { ...mockRequest.request, params: { psbt: 'invalidPsbt' } },
+          request: {
+            ...mockRequest.request,
+            params: { ...accountParam, psbt: 'invalidPsbt' },
+          },
         }),
       ).rejects.toThrow(error);
 
@@ -195,6 +209,7 @@ describe('KeyringRequestHandler', () => {
       request: {
         method: AccountCapability.FillPsbt,
         params: {
+          ...accountParam,
           psbt: 'psbtBase64',
           feeRate: 3,
         },
@@ -234,7 +249,10 @@ describe('KeyringRequestHandler', () => {
       await expect(
         handler.route({
           ...mockRequest,
-          request: { ...mockRequest.request, params: { psbt: 'invalidPsbt' } },
+          request: {
+            ...mockRequest.request,
+            params: { ...accountParam, psbt: 'invalidPsbt' },
+          },
         }),
       ).rejects.toThrow(error);
 
@@ -257,6 +275,7 @@ describe('KeyringRequestHandler', () => {
       request: {
         method: AccountCapability.BroadcastPsbt,
         params: {
+          ...accountParam,
           psbt: 'psbtBase64',
           feeRate: 3,
         },
@@ -296,7 +315,10 @@ describe('KeyringRequestHandler', () => {
       await expect(
         handler.route({
           ...mockRequest,
-          request: { ...mockRequest.request, params: { psbt: 'invalidPsbt' } },
+          request: {
+            ...mockRequest.request,
+            params: { ...accountParam, psbt: 'invalidPsbt' },
+          },
         }),
       ).rejects.toThrow(error);
 
@@ -325,6 +347,7 @@ describe('KeyringRequestHandler', () => {
       request: {
         method: AccountCapability.SendTransfer,
         params: {
+          ...accountParam,
           recipients,
           feeRate: 3,
         },
@@ -377,6 +400,7 @@ describe('KeyringRequestHandler', () => {
       request: {
         method: AccountCapability.GetUtxo,
         params: {
+          ...accountParam,
           outpoint: 'mytxid:0',
         },
       },
@@ -471,6 +495,7 @@ describe('KeyringRequestHandler', () => {
       request: {
         method: AccountCapability.SignMessage,
         params: {
+          ...accountParam,
           message: 'message',
         },
       },
@@ -613,7 +638,7 @@ describe('KeyringRequestHandler', () => {
         handler.resolveAccountAddress(
           [mockAccount1, mockAccount2, mockAccount3],
           BtcScope.Regtest,
-          request as any,
+          request as unknown as BtcWalletRequest,
         ),
       ).toThrow('Unsupported method');
     });
