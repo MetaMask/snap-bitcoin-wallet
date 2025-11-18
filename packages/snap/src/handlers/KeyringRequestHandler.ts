@@ -10,7 +10,7 @@ import {
   array,
   assert,
   boolean,
-  enums,
+  literal,
   number,
   object,
   optional,
@@ -112,37 +112,37 @@ export type SignMessageResponse = {
  * @see https://github.com/MetaMask/accounts/blob/main/packages/keyring-api/docs/btc-methods.md
  */
 export const SignPsbtKeyringRequestStruct = object({
-  method: enums([BtcMethod.SignPsbt]),
+  method: literal(BtcMethod.SignPsbt),
   params: SignPsbtRequest,
 });
 
 export const FillPsbtKeyringRequestStruct = object({
-  method: enums([BtcMethod.FillPsbt]),
+  method: literal(BtcMethod.FillPsbt),
   params: FillPsbtRequest,
 });
 
 export const ComputeFeeKeyringRequestStruct = object({
-  method: enums([BtcMethod.ComputeFee]),
+  method: literal(BtcMethod.ComputeFee),
   params: ComputeFeeRequest,
 });
 
 export const BroadcastPsbtKeyringRequestStruct = object({
-  method: enums([BtcMethod.BroadcastPsbt]),
+  method: literal(BtcMethod.BroadcastPsbt),
   params: BroadcastPsbtRequest,
 });
 
 export const SendTransferKeyringRequestStruct = object({
-  method: enums([BtcMethod.SendTransfer]),
+  method: literal(BtcMethod.SendTransfer),
   params: SendTransferRequest,
 });
 
 export const GetUtxoKeyringRequestStruct = object({
-  method: enums([BtcMethod.GetUtxo]),
+  method: literal(BtcMethod.GetUtxo),
   params: GetUtxoRequest,
 });
 
 export const SignMessageKeyringRequestStruct = object({
-  method: enums([BtcMethod.SignMessage]),
+  method: literal(BtcMethod.SignMessage),
   params: SignMessageRequest,
 });
 
