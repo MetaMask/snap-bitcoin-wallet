@@ -312,6 +312,7 @@ export class RpcHandler {
 
   /**
    * Handles the signing of a rewards message, of format 'rewards,{address},{timestamp}' base64 encoded.
+   *
    * @param accountId - The ID of the account to sign with
    * @param message - The base64-encoded rewards message
    * @returns The signature
@@ -320,8 +321,7 @@ export class RpcHandler {
     accountId: string,
     message: string,
   ): Promise<{ signature: string }> {
-
     const { address: messageAddress } = parseRewardsMessage(message);
-    return { 'signature': '0x' };
+    return { signature: '0x' };
   }
 }

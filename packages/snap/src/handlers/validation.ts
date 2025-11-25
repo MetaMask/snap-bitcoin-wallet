@@ -217,6 +217,11 @@ export function validateDustLimit(
   return NO_ERRORS_RESPONSE;
 }
 
+export const PositiveNumberStringStruct = pattern(
+  string(),
+  /^(?!0\d)(\d+(\.\d+)?)$/u,
+);
+
 /**
  * Parses a base64-encoded rewards message in the format 'rewards,{address},{timestamp}'
  *
@@ -231,8 +236,8 @@ export function parseRewardsMessage(base64Message: string): {
   // Decode the message from base64 to utf8
   let decodedMessage: string;
   try {
-    decodedMessage = Buffer.from(base64Message, 'base64').toString('utf8');
-  } catch (error) {
+    decodedMessage = atob(base64Message);
+  } catch {
     throw new Error('Invalid base64 encoding');
   }
 
@@ -276,8 +281,3 @@ export function parseRewardsMessage(base64Message: string): {
     timestamp,
   };
 }
-
-export const PositiveNumberStringStruct = pattern(
-  string(),
-  /^(?!0\d)(\d+(\.\d+)?)$/u,
-);
