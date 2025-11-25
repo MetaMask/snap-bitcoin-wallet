@@ -34,6 +34,7 @@ import {
   validateAddress,
   validateAccountBalance,
   validateDustLimit,
+  parseRewardsMessage,
 } from './validation';
 
 export const CreateSendFormRequest = object({
@@ -62,6 +63,11 @@ export const VerifyMessageRequest = object({
   address: string(),
   message: string(),
   signature: string(),
+});
+
+export const SignRewardsMessageRequest = object({
+  accountId: string(),
+  message: string(),
 });
 
 export class RpcHandler {
@@ -122,6 +128,13 @@ export class RpcHandler {
           params.address,
           params.message,
           params.signature,
+        );
+      }
+      case RpcMethod.SignRewardsMessage: {
+        assert(params, SignRewardsMessageRequest);
+        return this.#signRewardsMessage(
+          (params as { accountId: string; message: string }).accountId,
+          (params as { accountId: string; message: string }).message,
         );
       }
 
@@ -295,5 +308,20 @@ export class RpcHandler {
 
       throw error;
     }
+  }
+
+  /**
+   * Handles the signing of a rewards message, of format 'rewards,{address},{timestamp}' base64 encoded.
+   * @param accountId - The ID of the account to sign with
+   * @param message - The base64-encoded rewards message
+   * @returns The signature
+   */
+  async #signRewardsMessage(
+    accountId: string,
+    message: string,
+  ): Promise<{ signature: string }> {
+
+    const { address: messageAddress } = parseRewardsMessage(message);
+    return { 'signature': '0x' };
   }
 }

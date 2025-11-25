@@ -11,6 +11,7 @@ import {
   string,
   nonempty,
   refine,
+  is,
 } from 'superstruct';
 
 import type { BitcoinAccount, CodifiedError, Logger } from '../entities';
@@ -24,6 +25,7 @@ export enum RpcMethod {
   OnAddressInput = 'onAddressInput',
   OnAmountInput = 'onAmountInput',
   ConfirmSend = 'confirmSend',
+  SignRewardsMessage = 'signRewardsMessage',
 }
 
 export enum SendErrorCodes {
@@ -214,3 +216,68 @@ export function validateDustLimit(
   }
   return NO_ERRORS_RESPONSE;
 }
+
+/**
+ * Parses a base64-encoded rewards message in the format 'rewards,{address},{timestamp}'
+ *
+ * @param base64Message - The base64-encoded message to parse
+ * @returns Object containing the parsed address and timestamp
+ * @throws Error if the message format is invalid
+ */
+export function parseRewardsMessage(base64Message: string): {
+  address: string;
+  timestamp: number;
+} {
+  // Decode the message from base64 to utf8
+  let decodedMessage: string;
+  try {
+    decodedMessage = Buffer.from(base64Message, 'base64').toString('utf8');
+  } catch (error) {
+    throw new Error('Invalid base64 encoding');
+  }
+
+  // Check if message starts with 'rewards,'
+  if (!decodedMessage.startsWith('rewards,')) {
+    throw new Error('Message must start with "rewards,"');
+  }
+
+  // Split the message into parts
+  const parts = decodedMessage.split(',');
+  if (parts.length !== 3) {
+    throw new Error(
+      'Message must have exactly 3 parts: rewards,{address},{timestamp}',
+    );
+  }
+
+  const [prefix, addressPart, timestampPart] = parts;
+
+  // Validate prefix (already checked above, but being explicit)
+  if (prefix !== 'rewards') {
+    throw new Error('Message must start with "rewards"');
+  }
+
+  // Validate timestamp
+  if (!is(timestampPart, PositiveNumberStringStruct)) {
+    throw new Error('Invalid timestamp format');
+  }
+
+  // Ensure timestamp is an integer (no decimals)
+  if (timestampPart.includes('.')) {
+    throw new Error('Invalid timestamp');
+  }
+
+  const timestamp = parseInt(timestampPart, 10);
+  if (timestamp <= 0) {
+    throw new Error('Invalid timestamp');
+  }
+
+  return {
+    address: addressPart as string,
+    timestamp,
+  };
+}
+
+export const PositiveNumberStringStruct = pattern(
+  string(),
+  /^(?!0\d)(\d+(\.\d+)?)$/u,
+);
