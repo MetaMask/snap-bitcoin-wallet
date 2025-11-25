@@ -316,12 +316,39 @@ export class RpcHandler {
    * @param accountId - The ID of the account to sign with
    * @param message - The base64-encoded rewards message
    * @returns The signature
+   * @throws {ValidationError} If the account is not found or if the address in the message doesn't match the signing account
    */
   async #signRewardsMessage(
     accountId: string,
     message: string,
   ): Promise<{ signature: string }> {
     const { address: messageAddress } = parseRewardsMessage(message);
+
+    const account = await this.#accountUseCases.get(accountId);
+    if (!account) {
+      throw new ValidationError('Account not found', { accountId });
+    }
+
+    const addressValidation = validateAddress(
+      messageAddress,
+      account.network,
+      this.#logger,
+    );
+    if (!addressValidation.valid) {
+      throw new ValidationError(
+        `Invalid Bitcoin address in rewards message for network ${account.network}`,
+        { messageAddress, network: account.network },
+      );
+    }
+
+    const accountAddress = account.publicAddress.toString();
+    if (messageAddress !== accountAddress) {
+      throw new ValidationError(
+        `Address in rewards message (${messageAddress}) does not match signing account address (${accountAddress})`,
+        { messageAddress, accountAddress },
+      );
+    }
+
     return { signature: '0x' };
   }
 }
