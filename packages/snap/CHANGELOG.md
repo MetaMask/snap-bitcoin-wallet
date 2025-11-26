@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.7.0]
 
-### Uncategorized
+### Added
 
-- feat: integrate the 'signRewardsMessage' flow ([#566](https://github.com/MetaMask/snap-bitcoin-wallet/pull/566))
+- Add the 'signRewardsMessage' flow ([#566](https://github.com/MetaMask/snap-bitcoin-wallet/pull/566))
 
 ## [1.6.0]
 
