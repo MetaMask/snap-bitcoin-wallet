@@ -551,6 +551,68 @@ export class AccountUseCases {
     }
   }
 
+  /**
+   * Signs a message directly without showing confirmation dialog.
+   * This should only be used for trusted flows like rewards signup.
+   *
+   * @param id - Account ID
+   * @param message - Message to sign
+   * @returns The signature
+   */
+  async signMessageDirect(id: string, message: string): Promise<string> {
+    this.#logger.debug(
+      'Signing message directly (no confirmation): %s. Message: %s.',
+      id,
+      message,
+    );
+
+    const account = await this.#repository.get(id);
+    if (!account) {
+      throw new NotFoundError('Account not found', { id });
+    }
+    this.#checkCapability(account, AccountCapability.SignMessage);
+
+    const entropy = await this.#snapClient.getPrivateEntropy(
+      account.derivationPath.concat(['0', '0']),
+    );
+    if (!entropy.privateKey) {
+      throw new AssertionError('Failed to get private entropy', {
+        id,
+      });
+    }
+
+    try {
+      const wifPrivateKey = encode({
+        version: account.network === 'bitcoin' ? 128 : 239,
+        // eslint-disable-next-line no-restricted-globals
+        privateKey: Buffer.from(entropy.privateKey.slice(2), 'hex'),
+        compressed: true,
+      });
+      const signature = Signer.sign(
+        wifPrivateKey,
+        account.publicAddress.toString(),
+        message,
+      );
+
+      this.#logger.info(
+        'Message signed successfully (direct): %s. Message: %s, Signature: %s.',
+        id,
+        message,
+        signature,
+      );
+      return signature;
+    } catch (error) {
+      throw new WalletError(
+        'Failed to sign message',
+        {
+          id,
+          message,
+        },
+        error,
+      );
+    }
+  }
+
   async getFrozenUTXOs(accountId: string): Promise<string[]> {
     return this.#repository.getFrozenUTXOs(accountId);
   }

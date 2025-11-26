@@ -132,10 +132,7 @@ export class RpcHandler {
       }
       case RpcMethod.SignRewardsMessage: {
         assert(params, SignRewardsMessageRequest);
-        return this.#signRewardsMessage(
-          (params as { accountId: string; message: string }).accountId,
-          (params as { accountId: string; message: string }).message,
-        );
+        return this.#signRewardsMessage(params.accountId, params.message);
       }
 
       default:
@@ -349,6 +346,13 @@ export class RpcHandler {
       );
     }
 
-    return { signature: '0x' };
+    const decodedMessage = atob(message);
+
+    const signature = await this.#accountUseCases.signMessageDirect(
+      accountId,
+      decodedMessage,
+    );
+
+    return { signature };
   }
 }
