@@ -1558,4 +1558,47 @@ describe('AccountUseCases', () => {
       ).rejects.toBe(error);
     });
   });
+
+  describe('signMessageDirect', () => {
+    const mockAccount = mock<BitcoinAccount>({
+      publicAddress: mock<Address>({
+        toString: () => 'bcrt1qs2fj7czz0amfm74j73yujx6dn6223md56gkkuy',
+      }),
+      capabilities: [AccountCapability.SignMessage],
+      derivationPath: ['m', "84'", "0'"],
+    });
+    const mockMessage = 'Hello, world!';
+
+    beforeEach(() => {
+      mockRepository.get.mockResolvedValue(mockAccount);
+      mockSnapClient.getPrivateEntropy.mockResolvedValue({
+        privateKey:
+          '0xdf23b869a1395aec3bf878797daac998ed4acf404fa26ff622eef7f30dc46791',
+      } as JsonSLIP10Node);
+    });
+
+    it('signs a message without inserting confirmation', async () => {
+      const expectedSignature =
+        'AkcwRAIgZxodJQ60t9Rr/hABEHZ1zPUJ4m5hdM5QLpysH8fDSzgCIENOEuZtYf9/Nn/ZW15PcImkknol403dmZrgoOQ+6K+TASECwDKypXm/ElmVTxTLJ7nao6X5mB/iGbU2Q2qtot0QRL4=';
+
+      const signature = await useCases.signMessageDirect(
+        'account-id',
+        mockMessage,
+      );
+
+      expect(mockRepository.get).toHaveBeenCalledWith('account-id');
+      expect(
+        mockConfirmationRepository.insertSignMessage,
+      ).not.toHaveBeenCalled();
+      expect(signature).toBe(expectedSignature);
+    });
+
+    it('throws error if account is not found', async () => {
+      mockRepository.get.mockResolvedValue(null);
+
+      await expect(
+        useCases.signMessageDirect('missing-id', mockMessage),
+      ).rejects.toThrow('Account not found');
+    });
+  });
 });
