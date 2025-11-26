@@ -1016,7 +1016,6 @@ describe('RpcHandler', () => {
     });
 
     it('throws error when address in message does not match account', async () => {
-      const accountAddress = 'bc1qwl8399fz829uqvqly9tcatgrgtwp3udnhxfq4k';
       const differentAddress = 'bc1qdifferentaddress123456789abcdefgh';
       const timestamp = 1736660000;
       const message = btoa(`rewards,${differentAddress},${timestamp}`);
