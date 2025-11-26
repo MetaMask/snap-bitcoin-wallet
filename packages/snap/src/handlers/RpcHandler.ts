@@ -352,7 +352,7 @@ export class RpcHandler {
       accountId,
       decodedMessage,
       'rewards-system',
-      true,
+      { skipConfirmation: true },
     );
 
     return { signature };

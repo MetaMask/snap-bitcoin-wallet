@@ -493,7 +493,7 @@ export class AccountUseCases {
     id: string,
     message: string,
     origin: string,
-    skipConfirmation = false,
+    options: { skipConfirmation?: boolean } = {},
   ): Promise<string> {
     this.#logger.debug('Signing message: %s. Message: %s', id, message);
 
@@ -503,6 +503,7 @@ export class AccountUseCases {
     }
     this.#checkCapability(account, AccountCapability.SignMessage);
 
+    const { skipConfirmation = false } = options;
     if (!skipConfirmation) {
       await this.#confirmationRepository.insertSignMessage(
         account,

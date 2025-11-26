@@ -1009,7 +1009,7 @@ describe('RpcHandler', () => {
         validAccountId,
         `rewards,${address},${timestamp}`,
         'rewards-system',
-        true,
+        { skipConfirmation: true },
       );
       expect(result).toStrictEqual({ signature: 'mock-signature-base64' });
     });
