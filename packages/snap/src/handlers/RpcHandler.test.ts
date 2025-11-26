@@ -1008,7 +1008,7 @@ describe('RpcHandler', () => {
       expect(signMessageSpy).toHaveBeenCalledWith(
         validAccountId,
         `rewards,${address},${timestamp}`,
-        'rewards-system',
+        'metamask',
         { skipConfirmation: true },
       );
       expect(result).toStrictEqual({ signature: 'mock-signature-base64' });

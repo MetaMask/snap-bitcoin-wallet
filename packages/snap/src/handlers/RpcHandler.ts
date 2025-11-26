@@ -351,7 +351,7 @@ export class RpcHandler {
     const signature = await this.#accountUseCases.signMessage(
       accountId,
       decodedMessage,
-      'rewards-system',
+      'metamask',
       { skipConfirmation: true },
     );
 
