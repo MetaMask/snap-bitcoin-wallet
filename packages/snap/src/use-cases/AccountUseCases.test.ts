@@ -1557,5 +1557,15 @@ describe('AccountUseCases', () => {
         useCases.signMessage('account-id', mockMessage, mockOrigin),
       ).rejects.toBe(error);
     });
+
+    it('skips confirmation when skipConfirmation option is true', async () => {
+      await useCases.signMessage('account-id', mockMessage, mockOrigin, {
+        skipConfirmation: true,
+      });
+
+      expect(
+        mockConfirmationRepository.insertSignMessage,
+      ).not.toHaveBeenCalled();
+    });
   });
 });

@@ -493,6 +493,7 @@ export class AccountUseCases {
     id: string,
     message: string,
     origin: string,
+    options: { skipConfirmation?: boolean } = {},
   ): Promise<string> {
     this.#logger.debug('Signing message: %s. Message: %s', id, message);
 
@@ -502,11 +503,14 @@ export class AccountUseCases {
     }
     this.#checkCapability(account, AccountCapability.SignMessage);
 
-    await this.#confirmationRepository.insertSignMessage(
-      account,
-      message,
-      origin,
-    );
+    const { skipConfirmation = false } = options;
+    if (!skipConfirmation) {
+      await this.#confirmationRepository.insertSignMessage(
+        account,
+        message,
+        origin,
+      );
+    }
 
     const entropy = await this.#snapClient.getPrivateEntropy(
       account.derivationPath.concat(['0', '0']), // We sign with address index 0, which is the public address

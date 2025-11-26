@@ -34,6 +34,7 @@ import {
   validateAddress,
   validateAccountBalance,
   validateDustLimit,
+  parseRewardsMessage,
 } from './validation';
 
 export const CreateSendFormRequest = object({
@@ -62,6 +63,11 @@ export const VerifyMessageRequest = object({
   address: string(),
   message: string(),
   signature: string(),
+});
+
+export const SignRewardsMessageRequest = object({
+  accountId: string(),
+  message: string(),
 });
 
 export class RpcHandler {
@@ -123,6 +129,10 @@ export class RpcHandler {
           params.message,
           params.signature,
         );
+      }
+      case RpcMethod.SignRewardsMessage: {
+        assert(params, SignRewardsMessageRequest);
+        return this.#signRewardsMessage(params.accountId, params.message);
       }
 
       default:
@@ -295,5 +305,56 @@ export class RpcHandler {
 
       throw error;
     }
+  }
+
+  /**
+   * Handles the signing of a rewards message, of format 'rewards,{address},{timestamp}' base64 encoded.
+   *
+   * @param accountId - The ID of the account to sign with
+   * @param message - The base64-encoded rewards message
+   * @returns The signature
+   * @throws {ValidationError} If the account is not found or if the address in the message doesn't match the signing account
+   */
+  async #signRewardsMessage(
+    accountId: string,
+    message: string,
+  ): Promise<{ signature: string }> {
+    const { address: messageAddress } = parseRewardsMessage(message);
+
+    const account = await this.#accountUseCases.get(accountId);
+    if (!account) {
+      throw new ValidationError('Account not found', { accountId });
+    }
+
+    const addressValidation = validateAddress(
+      messageAddress,
+      account.network,
+      this.#logger,
+    );
+    if (!addressValidation.valid) {
+      throw new ValidationError(
+        `Invalid Bitcoin address in rewards message for network ${account.network}`,
+        { messageAddress, network: account.network },
+      );
+    }
+
+    const accountAddress = account.publicAddress.toString();
+    if (messageAddress !== accountAddress) {
+      throw new ValidationError(
+        `Address in rewards message (${messageAddress}) does not match signing account address (${accountAddress})`,
+        { messageAddress, accountAddress },
+      );
+    }
+
+    const decodedMessage = atob(message);
+
+    const signature = await this.#accountUseCases.signMessage(
+      accountId,
+      decodedMessage,
+      'metamask',
+      { skipConfirmation: true },
+    );
+
+    return { signature };
   }
 }

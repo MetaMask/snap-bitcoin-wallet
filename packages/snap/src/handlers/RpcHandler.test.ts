@@ -967,4 +967,100 @@ describe('RpcHandler', () => {
       });
     });
   });
+
+  describe('signRewardsMessage', () => {
+    const mockBitcoinAccount = mock<BitcoinAccount>({
+      id: validAccountId,
+      publicAddress: {
+        toString: () => 'bc1qwl8399fz829uqvqly9tcatgrgtwp3udnhxfq4k',
+      },
+      network: 'bitcoin',
+    });
+
+    it('successfully signs a valid rewards message', async () => {
+      const address = 'bc1qwl8399fz829uqvqly9tcatgrgtwp3udnhxfq4k';
+      const timestamp = 1736660000;
+      const message = btoa(`rewards,${address},${timestamp}`);
+
+      mockAccountsUseCases.get.mockResolvedValue(mockBitcoinAccount);
+      jest
+        .mocked(Address.from_string)
+        .mockReturnValue(mockBitcoinAccount.publicAddress);
+
+      const signMessageSpy = jest
+        .spyOn(mockAccountsUseCases, 'signMessage' as keyof AccountUseCases)
+        .mockResolvedValue('mock-signature-base64' as never);
+
+      const request: JsonRpcRequest = {
+        jsonrpc: '2.0',
+        id: '1',
+        method: RpcMethod.SignRewardsMessage,
+        params: {
+          accountId: validAccountId,
+          message,
+        },
+      };
+
+      const result = await handler.route(origin, request);
+
+      expect(mockAccountsUseCases.get).toHaveBeenCalledWith(validAccountId);
+      expect(Address.from_string).toHaveBeenCalledWith(address, 'bitcoin');
+      expect(signMessageSpy).toHaveBeenCalledWith(
+        validAccountId,
+        `rewards,${address},${timestamp}`,
+        'metamask',
+        { skipConfirmation: true },
+      );
+      expect(result).toStrictEqual({ signature: 'mock-signature-base64' });
+    });
+
+    it('throws error when address in message does not match account', async () => {
+      const differentAddress = 'bc1qdifferentaddress123456789abcdefgh';
+      const timestamp = 1736660000;
+      const message = btoa(`rewards,${differentAddress},${timestamp}`);
+
+      mockAccountsUseCases.get.mockResolvedValue(mockBitcoinAccount);
+      jest
+        .mocked(Address.from_string)
+        .mockReturnValue(mockBitcoinAccount.publicAddress);
+
+      const request: JsonRpcRequest = {
+        jsonrpc: '2.0',
+        id: '1',
+        method: RpcMethod.SignRewardsMessage,
+        params: {
+          accountId: validAccountId,
+          message,
+        },
+      };
+
+      await expect(handler.route(origin, request)).rejects.toThrow(
+        'does not match signing account address',
+      );
+    });
+
+    it('throws error when account is not found', async () => {
+      const address = 'bc1qwl8399fz829uqvqly9tcatgrgtwp3udnhxfq4k';
+      const timestamp = 1736660000;
+      const message = btoa(`rewards,${address},${timestamp}`);
+
+      mockAccountsUseCases.get.mockResolvedValue(
+        null as unknown as BitcoinAccount,
+      );
+
+      const request: JsonRpcRequest = {
+        jsonrpc: '2.0',
+        id: '1',
+        method: RpcMethod.SignRewardsMessage,
+        params: {
+          accountId: 'non-existent-account',
+          message,
+        },
+      };
+
+      await expect(handler.route(origin, request)).rejects.toThrow(
+        'Account not found',
+      );
+    });
+  });
 });
