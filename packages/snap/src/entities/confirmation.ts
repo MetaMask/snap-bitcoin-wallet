@@ -1,4 +1,4 @@
-import type { Network } from '@metamask/bitcoindevkit';
+import type { Network, Psbt } from '@metamask/bitcoindevkit';
 
 import type { BitcoinAccount } from './account';
 
@@ -31,6 +31,23 @@ export type ConfirmationRepository = {
   insertSignMessage(
     account: BitcoinAccount,
     message: string,
+    origin: string,
+  ): Promise<void>;
+
+  /**
+   * Inserts a send transfer confirmation interface.
+   *
+   * @param account - The account sending the transfer.
+   * @param psbt - The PSBT of the transfer.
+   * @param recipient - The recipient of the transfer.
+   * @param recipient.address - The address of the recipient.
+   * @param recipient.amount - The amount to send to the recipient.
+   * @param origin - The origin of the request.
+   */
+  insertSendTransfer(
+    account: BitcoinAccount,
+    psbt: Psbt,
+    recipient: { address: string; amount: string },
     origin: string,
   ): Promise<void>;
 };
