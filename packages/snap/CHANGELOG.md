@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0]
+
+### Added
+
+- Add `signRewardsMessage` method ([#566](https://github.com/MetaMask/snap-bitcoin-wallet/pull/566))
+
 ## [1.6.0]
 
 ### Changed
@@ -538,7 +544,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add CI for lint and test ([#2](https://github.com/MetaMask/bitcoin/pull/2))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.6.0...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.7.0...HEAD
+[1.7.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.4.5...v1.5.0
 [1.4.5]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.4.4...v1.4.5
