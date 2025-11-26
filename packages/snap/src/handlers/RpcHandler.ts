@@ -348,9 +348,11 @@ export class RpcHandler {
 
     const decodedMessage = atob(message);
 
-    const signature = await this.#accountUseCases.signMessageDirect(
+    const signature = await this.#accountUseCases.signMessage(
       accountId,
       decodedMessage,
+      'rewards-system',
+      true,
     );
 
     return { signature };

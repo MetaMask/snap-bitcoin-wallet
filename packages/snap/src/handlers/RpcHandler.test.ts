@@ -987,11 +987,8 @@ describe('RpcHandler', () => {
         .mocked(Address.from_string)
         .mockReturnValue(mockBitcoinAccount.publicAddress);
 
-      const signMessageDirectSpy = jest
-        .spyOn(
-          mockAccountsUseCases,
-          'signMessageDirect' as keyof AccountUseCases,
-        )
+      const signMessageSpy = jest
+        .spyOn(mockAccountsUseCases, 'signMessage' as keyof AccountUseCases)
         .mockResolvedValue('mock-signature-base64' as never);
 
       const request: JsonRpcRequest = {
@@ -1008,9 +1005,11 @@ describe('RpcHandler', () => {
 
       expect(mockAccountsUseCases.get).toHaveBeenCalledWith(validAccountId);
       expect(Address.from_string).toHaveBeenCalledWith(address, 'bitcoin');
-      expect(signMessageDirectSpy).toHaveBeenCalledWith(
+      expect(signMessageSpy).toHaveBeenCalledWith(
         validAccountId,
         `rewards,${address},${timestamp}`,
+        'rewards-system',
+        true,
       );
       expect(result).toStrictEqual({ signature: 'mock-signature-base64' });
     });
