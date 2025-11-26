@@ -2,7 +2,12 @@ import type { Address } from '@metamask/bitcoindevkit';
 import type { GetPreferencesResult } from '@metamask/snaps-sdk';
 import { mock } from 'jest-mock-extended';
 
-import type { SnapClient, Translator, BitcoinAccount } from '../entities';
+import type {
+  SnapClient,
+  Translator,
+  BitcoinAccount,
+  BlockchainClient,
+} from '../entities';
 import { JSXConfirmationRepository } from './JSXConfirmationRepository';
 import { SignMessageConfirmationView } from '../infra/jsx';
 
@@ -14,8 +19,13 @@ describe('JSXConfirmationRepository', () => {
   const mockMessages = { foo: { message: 'bar' } };
   const mockSnapClient = mock<SnapClient>();
   const mockTranslator = mock<Translator>();
+  const mockChainClient = mock<BlockchainClient>();
 
-  const repo = new JSXConfirmationRepository(mockSnapClient, mockTranslator);
+  const repo = new JSXConfirmationRepository(
+    mockSnapClient,
+    mockTranslator,
+    mockChainClient,
+  );
 
   describe('insertSignMessage', () => {
     const mockAccount = mock<BitcoinAccount>({

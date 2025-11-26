@@ -52,6 +52,7 @@ const sendFlowRepository = new JSXSendFlowRepository(snapClient, translator);
 const confirmationRepository = new JSXConfirmationRepository(
   snapClient,
   translator,
+  chainClient,
 );
 
 // Business layer
