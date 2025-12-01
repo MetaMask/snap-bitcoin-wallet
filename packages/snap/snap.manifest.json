@@ -7,7 +7,7 @@
     "url": "https://github.com/MetaMask/snap-bitcoin-wallet.git"
   },
   "source": {
-    "shasum": "an5d3f7caF4hiwanFK329pfEXbsZVO5hvsnudh6cBq8=",
+    "shasum": "ZJWGWIUjaU7vre7bgrTSY68GMKyiB9RNVf6GHuksC4Y=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
@@ -31,10 +31,6 @@
   },
   "initialPermissions": {
     "endowment:webassembly": {},
-    "endowment:rpc": {
-      "dapps": true,
-      "snaps": false
-    },
     "endowment:keyring": {},
     "snap_getBip32Entropy": [
       {
