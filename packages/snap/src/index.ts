@@ -2,7 +2,6 @@ import type {
   OnAssetsConversionHandler,
   OnAssetsLookupHandler,
   OnCronjobHandler,
-  OnRpcRequestHandler,
   OnKeyringRequestHandler,
   OnUserInputHandler,
   OnAssetHistoricalPriceHandler,
@@ -111,9 +110,6 @@ const assetsHandler = new AssetsHandler(
 
 export const onCronjob: OnCronjobHandler = async ({ request }) =>
   middleware.handle(async () => cronHandler.route(request));
-
-export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request }) =>
-  middleware.handle(async () => rpcHandler.route(origin, request));
 
 export const onClientRequest: OnClientRequestHandler = async ({ request }) =>
   middleware.handle(async () => rpcHandler.route('metamask', request));
