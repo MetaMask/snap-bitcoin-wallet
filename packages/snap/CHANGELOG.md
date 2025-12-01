@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.8.0]
 
-### Uncategorized
+### Changed
 
-- feat: Remove onRPCRequest ([#568](https://github.com/MetaMask/snap-bitcoin-wallet/pull/568))
+- feat: Remove `onRPCRequest` ([#568](https://github.com/MetaMask/snap-bitcoin-wallet/pull/568))
 
 ## [1.7.0]
 
