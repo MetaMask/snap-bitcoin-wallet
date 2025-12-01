@@ -499,7 +499,7 @@ describe('AccountUseCases', () => {
         mockSnapClient.emitAccountTransactionsUpdatedEvent,
       ).toHaveBeenCalledWith(mockAccount, [mockTxConfirmed]);
       expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledWith(
-        TrackingSnapEvent.TransactionFinalized,
+        TrackingSnapEvent.TransactionConfirmed,
         mockAccount,
         mockTxConfirmed,
         'test',
@@ -566,9 +566,9 @@ describe('AccountUseCases', () => {
         mockTxReorged,
       ]);
 
-      // Check for TransactionFinalized event for confirmed transaction
+      // Check for TransactionConfirmed event for confirmed transaction
       expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledWith(
-        TrackingSnapEvent.TransactionFinalized,
+        TrackingSnapEvent.TransactionConfirmed,
         mockAccount,
         mockTxConfirmed,
         origin,

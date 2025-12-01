@@ -28,7 +28,7 @@ export type AccountState = {
 };
 
 export enum TrackingSnapEvent {
-  TransactionFinalized = 'Transaction Finalized',
+  TransactionConfirmed = 'Transaction Confirmed',
   TransactionReceived = 'Transaction Received',
   TransactionReorged = 'Transaction Reorged',
   TransactionSubmitted = 'Transaction Submitted',

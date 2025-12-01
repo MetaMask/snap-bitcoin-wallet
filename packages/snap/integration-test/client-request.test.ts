@@ -113,10 +113,10 @@ describe('OnClientRequestHandler', () => {
 
     /* eslint-disable @typescript-eslint/naming-convention */
     expect(finalSyncResponse).toTrackEvent({
-      event: TrackingSnapEvent.TransactionFinalized,
+      event: TrackingSnapEvent.TransactionConfirmed,
       properties: {
         origin: 'cron',
-        message: 'Snap transaction finalized',
+        message: 'Snap transaction confirmed',
         chain_id_caip: BtcScope.Regtest,
         account_type: BtcAccountType.P2wpkh,
         tx_id: transactionId,

@@ -254,8 +254,8 @@ export class SnapClientAdapter implements SnapClient {
   ): Promise<void> {
     const createMessage = (): string => {
       switch (eventType) {
-        case TrackingSnapEvent.TransactionFinalized:
-          return 'Snap transaction finalized';
+        case TrackingSnapEvent.TransactionConfirmed:
+          return 'Snap transaction confirmed';
         case TrackingSnapEvent.TransactionSubmitted:
           return 'Snap transaction submitted';
         case TrackingSnapEvent.TransactionReorged:

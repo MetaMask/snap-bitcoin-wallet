@@ -267,13 +267,13 @@ export class AccountUseCases {
           await runSnapActionSafely(
             async () =>
               this.#snapClient.emitTrackingEvent(
-                TrackingSnapEvent.TransactionFinalized,
+                TrackingSnapEvent.TransactionConfirmed,
                 account,
                 tx,
                 origin,
               ),
             this.#logger,
-            'emitTrackingEvent:TransactionFinalized',
+            'emitTrackingEvent:TransactionConfirmed',
           );
         } else {
           // if the status was changed, and now it's NOT confirmed
