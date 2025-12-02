@@ -188,11 +188,11 @@ function getDustLimitSats(addressType: AddressType): bigint {
     case 'p2pkh':
       return 546n;
     case 'p2sh':
-      return 546n;
+      return 540n;
     case 'p2wsh':
-      return 546n;
+      return 330n;
     case 'p2tr':
-      return 546n;
+      return 330n;
     default:
       return 546n;
   }
