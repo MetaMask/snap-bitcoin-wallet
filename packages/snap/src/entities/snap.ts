@@ -1,4 +1,4 @@
-import type { WalletTx } from '@metamask/bitcoindevkit';
+import type { WalletTx, Network, AddressType } from '@metamask/bitcoindevkit';
 import type { JsonSLIP10Node, SLIP10Node } from '@metamask/key-tree';
 import type {
   ComponentOrElement,
@@ -21,7 +21,9 @@ export type SnapState = {
 export type AccountState = {
   // Split derivation path.
   derivationPath: string[];
-  // Wallet data.
+  network: Network;
+  addressType: AddressType;
+  // Wallet data (transaction history, UTXOs).
   wallet: string;
   // Wallet inscriptions for meta protocols (ordinals, etc.)
   inscriptions: Inscription[];
