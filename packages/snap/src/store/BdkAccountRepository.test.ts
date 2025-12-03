@@ -217,8 +217,13 @@ describe('BdkAccountRepository', () => {
       expect(mockSnapClient.getPrivateEntropy).toHaveBeenCalledWith(
         mockDerivationPath,
       );
-      expect(BdkAccountAdapter.load).toHaveBeenCalledTimes(2);
-      expect(BdkAccountAdapter.load).toHaveBeenLastCalledWith(
+      expect(xpriv_to_descriptor).toHaveBeenCalledWith(
+        'mock-xpub',
+        'deadbeef',
+        'bitcoin',
+        'p2wpkh',
+      );
+      expect(BdkAccountAdapter.load).toHaveBeenCalledWith(
         'some-id',
         mockDerivationPath,
         mockChangeSet,

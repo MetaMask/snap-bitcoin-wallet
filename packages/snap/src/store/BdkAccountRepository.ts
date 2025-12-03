@@ -157,24 +157,12 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
       return null;
     }
 
-    const { derivationPath, wallet } = accountState;
+    const { derivationPath, wallet, network, addressType } = accountState;
 
-    const slip10 = await this.#snapClient.getPrivateEntropy(derivationPath);
-    const fingerprint = toBdkFingerprint(
-      slip10.masterFingerprint ?? slip10.parentFingerprint,
-    );
-
-    const account = BdkAccountAdapter.load(
-      id,
+    const privDescriptors = await this.#derivePrivateDescriptors(
       derivationPath,
-      ChangeSet.from_json(wallet),
-    );
-
-    const privDescriptors = xpriv_to_descriptor(
-      slip10_to_extended(slip10, account.network),
-      fingerprint,
-      account.network,
-      account.addressType,
+      network,
+      addressType,
     );
 
     return BdkAccountAdapter.load(
