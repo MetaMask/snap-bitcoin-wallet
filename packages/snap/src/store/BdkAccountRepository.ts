@@ -41,6 +41,48 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     this.#snapClient = snapClient;
   }
 
+  /**
+   * Derive public descriptors.
+   *
+   * @param derivationPath - The BIP-32 derivation path.
+   * @param network - The Bitcoin network.
+   * @param addressType - The address type.
+   * @returns The derived descriptor pair.
+   */
+  async #derivePublicDescriptors(
+    derivationPath: string[],
+    network: Network,
+    addressType: AddressType,
+  ) {
+    const slip10 = await this.#snapClient.getPublicEntropy(derivationPath);
+    const fingerprint = toBdkFingerprint(
+      slip10.masterFingerprint ?? slip10.parentFingerprint,
+    );
+    const xpub = slip10_to_extended(slip10, network);
+    return xpub_to_descriptor(xpub, fingerprint, network, addressType);
+  }
+
+  /**
+   * Derive private descriptors.
+   *
+   * @param derivationPath - The BIP-32 derivation path.
+   * @param network - The Bitcoin network.
+   * @param addressType - The address type.
+   * @returns The derived descriptor pair.
+   */
+  async #derivePrivateDescriptors(
+    derivationPath: string[],
+    network: Network,
+    addressType: AddressType,
+  ) {
+    const slip10 = await this.#snapClient.getPrivateEntropy(derivationPath);
+    const fingerprint = toBdkFingerprint(
+      slip10.masterFingerprint ?? slip10.parentFingerprint,
+    );
+    const xpriv = slip10_to_extended(slip10, network);
+    return xpriv_to_descriptor(xpriv, fingerprint, network, addressType);
+  }
+
   async get(id: string): Promise<BitcoinAccount | null> {
     const account = (await this.#snapClient.getState(
       `accounts.${id}`,
