@@ -1,7 +1,11 @@
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
 /* eslint-disable camelcase */
 
-import type { AddressType, Network } from '@metamask/bitcoindevkit';
+import type {
+  AddressType,
+  DescriptorPair,
+  Network,
+} from '@metamask/bitcoindevkit';
 import {
   ChangeSet,
   slip10_to_extended,
@@ -53,7 +57,7 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     derivationPath: string[],
     network: Network,
     addressType: AddressType,
-  ) {
+  ): Promise<DescriptorPair> {
     const slip10 = await this.#snapClient.getPublicEntropy(derivationPath);
     const fingerprint = toBdkFingerprint(
       slip10.masterFingerprint ?? slip10.parentFingerprint,
@@ -74,7 +78,7 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     derivationPath: string[],
     network: Network,
     addressType: AddressType,
-  ) {
+  ): Promise<DescriptorPair> {
     const slip10 = await this.#snapClient.getPrivateEntropy(derivationPath);
     const fingerprint = toBdkFingerprint(
       slip10.masterFingerprint ?? slip10.parentFingerprint,
@@ -91,10 +95,17 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
       return null;
     }
 
+    const descriptors = await this.#derivePublicDescriptors(
+      account.derivationPath,
+      account.network,
+      account.addressType,
+    );
+
     return BdkAccountAdapter.load(
       id,
       account.derivationPath,
       ChangeSet.from_json(account.wallet),
+      descriptors,
     );
   }
 
@@ -106,15 +117,23 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
       return [];
     }
 
-    return Object.entries(accounts)
-      .filter(([, account]) => account !== null)
-      .map(([id, account]) =>
-        BdkAccountAdapter.load(
-          id,
-          account.derivationPath,
-          ChangeSet.from_json(account.wallet),
-        ),
-      );
+    return Promise.all(
+      Object.entries(accounts)
+        .filter(([, account]) => account !== null)
+        .map(async ([id, account]) => {
+          const descriptors = await this.#derivePublicDescriptors(
+            account.derivationPath,
+            account.network,
+            account.addressType,
+          );
+          return BdkAccountAdapter.load(
+            id,
+            account.derivationPath,
+            ChangeSet.from_json(account.wallet),
+            descriptors,
+          );
+        }),
+    );
   }
 
   async getByDerivationPath(
@@ -189,7 +208,7 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
   }
 
   async insert(account: BitcoinAccount): Promise<BitcoinAccount> {
-    const { id, derivationPath } = account;
+    const { id, derivationPath, network, addressType } = account;
 
     const walletData = account.takeStaged();
     if (!walletData) {
@@ -204,9 +223,11 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
         id,
       ),
       this.#snapClient.setState(`accounts.${id}`, {
+        derivationPath,
+        network,
+        addressType,
         wallet: walletData.to_json(),
         inscriptions: [],
-        derivationPath,
       }),
     ]);
 

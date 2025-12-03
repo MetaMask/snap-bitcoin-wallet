@@ -4,6 +4,7 @@
 import type { DescriptorPair } from '@metamask/bitcoindevkit';
 import {
   ChangeSet,
+  slip10_to_extended,
   xpriv_to_descriptor,
   xpub_to_descriptor,
 } from '@metamask/bitcoindevkit';
@@ -55,6 +56,9 @@ describe('BdkAccountRepository', () => {
   const mockAccountState = mock<AccountState>({
     wallet: mockWalletData,
     derivationPath: mockDerivationPath,
+    network: 'bitcoin',
+    addressType: 'p2wpkh',
+    inscriptions: [],
   });
   const mockChangeSet = mock<ChangeSet>();
   const mockAccount = mock<BitcoinAccount>({
@@ -72,6 +76,7 @@ describe('BdkAccountRepository', () => {
     (ChangeSet.from_json as jest.Mock).mockReturnValue(mockChangeSet);
     mockSnapClient.getPrivateEntropy.mockResolvedValue(mockSlip10Node);
     mockSnapClient.getPublicEntropy.mockResolvedValue(mockSlip10Node);
+    (slip10_to_extended as jest.Mock).mockReturnValue('mock-xpub');
     (xpriv_to_descriptor as jest.Mock).mockReturnValue(mockDescriptors);
     (xpub_to_descriptor as jest.Mock).mockReturnValue(mockDescriptors);
     (mockAccount.takeStaged as jest.Mock) = jest
@@ -97,11 +102,21 @@ describe('BdkAccountRepository', () => {
       const result = await repo.get('some-id');
 
       expect(mockSnapClient.getState).toHaveBeenCalledWith('accounts.some-id');
+      expect(mockSnapClient.getPublicEntropy).toHaveBeenCalledWith(
+        mockDerivationPath,
+      );
+      expect(xpub_to_descriptor).toHaveBeenCalledWith(
+        'mock-xpub',
+        'deadbeef',
+        'bitcoin',
+        'p2wpkh',
+      );
       expect(ChangeSet.from_json).toHaveBeenCalledWith(mockWalletData);
       expect(BdkAccountAdapter.load).toHaveBeenCalledWith(
-        mockAccount.id,
+        'some-id',
         mockDerivationPath,
         mockChangeSet,
+        mockDescriptors,
       );
       expect(result).toBe(mockAccount);
     });
@@ -250,9 +265,11 @@ describe('BdkAccountRepository', () => {
       expect(mockSnapClient.setState).toHaveBeenLastCalledWith(
         'accounts.some-id',
         {
+          derivationPath: mockDerivationPath,
+          network: 'bitcoin',
+          addressType: 'p2wpkh',
           wallet: mockWalletData,
           inscriptions: [],
-          derivationPath: mockDerivationPath,
         },
       );
     });
