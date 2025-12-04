@@ -4,6 +4,7 @@ import type {
   AddressInfo,
   AddressType,
   Balance,
+  KeychainKind,
   Network,
   Update,
   ChangeSet,
@@ -96,6 +97,23 @@ export type BitcoinAccount = {
    * @returns the address
    */
   revealNextAddress(): AddressInfo;
+
+  /**
+   * Reveal addresses up to a given index.
+   *
+   * @param keychain - The keychain to reveal addresses for ('external' or 'internal').
+   * @param index - The index to reveal addresses up to.
+   * @returns the revealed addresses
+   */
+  revealAddressesTo(keychain: KeychainKind, index: number): AddressInfo[];
+
+  /**
+   * Get the derivation index of the keychain.
+   *
+   * @param keychain - The keychain to get the derivation index for.
+   * @returns the derivation index or undefined if never revealed
+   */
+  derivationIndex(keychain: KeychainKind): number | undefined;
 
   /**
    * Start a full scan.

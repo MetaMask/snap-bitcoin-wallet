@@ -7,7 +7,6 @@ import type {
   Network,
 } from '@metamask/bitcoindevkit';
 import {
-  ChangeSet,
   slip10_to_extended,
   xpriv_to_descriptor,
   xpub_to_descriptor,
@@ -17,6 +16,7 @@ import { v4 } from 'uuid';
 import {
   type BitcoinAccountRepository,
   type BitcoinAccount,
+  type ChainClient,
   type SnapClient,
   type Inscription,
   type AccountState,
@@ -41,8 +41,11 @@ function toBdkFingerprint(fingerprint: number): string {
 export class BdkAccountRepository implements BitcoinAccountRepository {
   readonly #snapClient: SnapClient;
 
-  constructor(snapClient: SnapClient) {
+  readonly #chainClient: ChainClient;
+
+  constructor(snapClient: SnapClient, chainClient: ChainClient) {
     this.#snapClient = snapClient;
+    this.#chainClient = chainClient;
   }
 
   /**
@@ -87,6 +90,44 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     return xpriv_to_descriptor(xpriv, fingerprint, network, addressType);
   }
 
+  /**
+   * Create a fresh wallet from derived descriptors and sync with blockchain.
+   *
+   * @param id - The account ID.
+   * @param derivationPath - The BIP-32 derivation path.
+   * @param network - The Bitcoin network.
+   * @param addressType - The address type.
+   * @param lastRevealedIndex - The last revealed address index.
+   * @param descriptors - The derived descriptor pair.
+   * @returns The synced account with balance and UTXOs.
+   */
+  async #createAndSyncWallet(
+    id: string,
+    derivationPath: string[],
+    network: Network,
+    addressType: AddressType,
+    lastRevealedIndex: number,
+    descriptors: DescriptorPair,
+  ): Promise<BitcoinAccount> {
+    const account = BdkAccountAdapter.create(
+      id,
+      derivationPath,
+      descriptors,
+      network,
+    );
+
+    // Reveal addresses up to stored index for efficient sync
+    if (lastRevealedIndex > 0) {
+      account.revealAddressesTo('external', lastRevealedIndex);
+      account.revealAddressesTo('internal', lastRevealedIndex);
+    }
+
+    // Sync with blockchain to get balance and UTXOs
+    await this.#chainClient.sync(account);
+
+    return account;
+  }
+
   async get(id: string): Promise<BitcoinAccount | null> {
     const account = (await this.#snapClient.getState(
       `accounts.${id}`,
@@ -101,10 +142,12 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
       account.addressType,
     );
 
-    return BdkAccountAdapter.load(
+    return this.#createAndSyncWallet(
       id,
       account.derivationPath,
-      ChangeSet.from_json(account.wallet),
+      account.network,
+      account.addressType,
+      account.lastRevealedIndex,
       descriptors,
     );
   }
@@ -126,10 +169,13 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
             account.network,
             account.addressType,
           );
-          return BdkAccountAdapter.load(
+
+          return this.#createAndSyncWallet(
             id,
             account.derivationPath,
-            ChangeSet.from_json(account.wallet),
+            account.network,
+            account.addressType,
+            account.lastRevealedIndex,
             descriptors,
           );
         }),
@@ -150,25 +196,25 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
   }
 
   async getWithSigner(id: string): Promise<BitcoinAccount | null> {
-    const accountState = (await this.#snapClient.getState(
+    const account = (await this.#snapClient.getState(
       `accounts.${id}`,
     )) as AccountState | null;
-    if (!accountState) {
+    if (!account) {
       return null;
     }
 
-    const { derivationPath, wallet, network, addressType } = accountState;
-
     const privDescriptors = await this.#derivePrivateDescriptors(
-      derivationPath,
-      network,
-      addressType,
+      account.derivationPath,
+      account.network,
+      account.addressType,
     );
 
-    return BdkAccountAdapter.load(
+    return this.#createAndSyncWallet(
       id,
-      derivationPath,
-      ChangeSet.from_json(wallet),
+      account.derivationPath,
+      account.network,
+      account.addressType,
+      account.lastRevealedIndex,
       privDescriptors,
     );
   }
@@ -198,12 +244,10 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
   async insert(account: BitcoinAccount): Promise<BitcoinAccount> {
     const { id, derivationPath, network, addressType } = account;
 
-    const walletData = account.takeStaged();
-    if (!walletData) {
-      throw new StorageError(
-        `Missing changeset data for account "${id}" for insertion.`,
-      );
-    }
+    // Get max of external and internal derivation indices
+    const externalIndex = account.derivationIndex('external') ?? 0;
+    const internalIndex = account.derivationIndex('internal') ?? 0;
+    const lastRevealedIndex = Math.max(externalIndex, internalIndex);
 
     await Promise.all([
       this.#snapClient.setState(
@@ -214,7 +258,7 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
         derivationPath,
         network,
         addressType,
-        wallet: walletData.to_json(),
+        lastRevealedIndex,
         inscriptions: [],
       }),
     ]);
@@ -228,23 +272,14 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
   ): Promise<void> {
     const { id } = account;
 
-    const newWalletData = account.takeStaged();
-    if (!newWalletData) {
-      // Nothing to update
-      return;
-    }
+    // Get max of external and internal derivation indices
+    const externalIndex = account.derivationIndex('external') ?? 0;
+    const internalIndex = account.derivationIndex('internal') ?? 0;
+    const lastRevealedIndex = Math.max(externalIndex, internalIndex);
 
-    const walletData = await this.#snapClient.getState(`accounts.${id}.wallet`);
-    if (!walletData) {
-      throw new StorageError(
-        `Inconsistent state: account "${id}" not found for update`,
-      );
-    }
-
-    newWalletData.merge(ChangeSet.from_json(walletData as string));
     await this.#snapClient.setState(
-      `accounts.${id}.wallet`,
-      newWalletData.to_json(),
+      `accounts.${id}.lastRevealedIndex`,
+      lastRevealedIndex,
     );
 
     // Inscriptions are overwritten and not merged

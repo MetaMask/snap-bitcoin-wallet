@@ -23,8 +23,7 @@ export type AccountState = {
   derivationPath: string[];
   network: Network;
   addressType: AddressType;
-  // Wallet data (transaction history, UTXOs).
-  wallet: string;
+  lastRevealedIndex: number;
   // Wallet inscriptions for meta protocols (ordinals, etc.)
   inscriptions: Inscription[];
 };
