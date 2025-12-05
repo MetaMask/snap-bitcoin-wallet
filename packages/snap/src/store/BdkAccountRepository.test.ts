@@ -3,7 +3,6 @@
 
 import type { DescriptorPair } from '@metamask/bitcoindevkit';
 import {
-  ChangeSet,
   slip10_to_extended,
   xpriv_to_descriptor,
   xpub_to_descriptor,
@@ -14,6 +13,7 @@ import { mock } from 'jest-mock-extended';
 import type {
   AccountState,
   BitcoinAccount,
+  BlockchainClient,
   Inscription,
   SnapClient,
 } from '../entities';
@@ -24,9 +24,6 @@ import { BdkAccountRepository } from './BdkAccountRepository';
 /* eslint-disable @typescript-eslint/naming-convention */
 jest.mock('@metamask/bitcoindevkit', () => {
   return {
-    ChangeSet: {
-      from_json: jest.fn(),
-    },
     slip10_to_extended: jest.fn().mockReturnValue('mock-extended'),
     xpub_to_descriptor: jest.fn(),
     xpriv_to_descriptor: jest.fn(),
@@ -35,7 +32,6 @@ jest.mock('@metamask/bitcoindevkit', () => {
 
 jest.mock('../infra/BdkAccountAdapter', () => ({
   BdkAccountAdapter: {
-    load: jest.fn(),
     create: jest.fn(),
   },
 }));
@@ -44,7 +40,7 @@ jest.mock('uuid', () => ({ v4: () => 'mock-uuid' }));
 
 describe('BdkAccountRepository', () => {
   const mockSnapClient = mock<SnapClient>();
-  const mockWalletData = '{"mywallet":"data"}';
+  const mockBlockchainClient = mock<BlockchainClient>();
   const mockDerivationPath = ['m', "84'", "0'", "0'"];
   const mockSlip10Node = {
     masterFingerprint: 0xdeadbeef,
@@ -54,13 +50,12 @@ describe('BdkAccountRepository', () => {
     internal: 'int-desc',
   });
   const mockAccountState = mock<AccountState>({
-    wallet: mockWalletData,
     derivationPath: mockDerivationPath,
     network: 'bitcoin',
     addressType: 'p2wpkh',
+    lastRevealedIndex: 5,
     inscriptions: [],
   });
-  const mockChangeSet = mock<ChangeSet>();
   const mockAccount = mock<BitcoinAccount>({
     id: 'some-id',
     derivationPath: mockDerivationPath,
@@ -68,23 +63,19 @@ describe('BdkAccountRepository', () => {
     addressType: 'p2wpkh',
   });
 
-  const repo = new BdkAccountRepository(mockSnapClient);
+  const repo = new BdkAccountRepository(mockSnapClient, mockBlockchainClient);
 
   beforeEach(() => {
-    (BdkAccountAdapter.load as jest.Mock).mockReturnValue(mockAccount);
+    //jest.clearAllMocks();
     (BdkAccountAdapter.create as jest.Mock).mockReturnValue(mockAccount);
-    (ChangeSet.from_json as jest.Mock).mockReturnValue(mockChangeSet);
     mockSnapClient.getPrivateEntropy.mockResolvedValue(mockSlip10Node);
     mockSnapClient.getPublicEntropy.mockResolvedValue(mockSlip10Node);
+    mockBlockchainClient.sync.mockResolvedValue(undefined);
     (slip10_to_extended as jest.Mock).mockReturnValue('mock-xpub');
     (xpriv_to_descriptor as jest.Mock).mockReturnValue(mockDescriptors);
     (xpub_to_descriptor as jest.Mock).mockReturnValue(mockDescriptors);
-    (mockAccount.takeStaged as jest.Mock) = jest
-      .fn()
-      .mockReturnValue(mockChangeSet);
-    (mockChangeSet.to_json as jest.Mock) = jest
-      .fn()
-      .mockReturnValue(mockWalletData);
+    (mockAccount.derivationIndex as jest.Mock) = jest.fn().mockReturnValue(5);
+    (mockAccount.revealAddressesTo as jest.Mock) = jest.fn();
   });
 
   describe('get', () => {
@@ -96,7 +87,7 @@ describe('BdkAccountRepository', () => {
       expect(result).toBeNull();
     });
 
-    it('returns loaded account if found', async () => {
+    it('creates fresh wallet and syncs with blockchain', async () => {
       mockSnapClient.getState.mockResolvedValue(mockAccountState);
 
       const result = await repo.get('some-id');
@@ -111,13 +102,15 @@ describe('BdkAccountRepository', () => {
         'bitcoin',
         'p2wpkh',
       );
-      expect(ChangeSet.from_json).toHaveBeenCalledWith(mockWalletData);
-      expect(BdkAccountAdapter.load).toHaveBeenCalledWith(
+      expect(BdkAccountAdapter.create).toHaveBeenCalledWith(
         'some-id',
         mockDerivationPath,
-        mockChangeSet,
         mockDescriptors,
+        'bitcoin',
       );
+      expect(mockAccount.revealAddressesTo).toHaveBeenCalledWith('external', 5);
+      expect(mockAccount.revealAddressesTo).toHaveBeenCalledWith('internal', 5);
+      expect(mockBlockchainClient.sync).toHaveBeenCalledWith(mockAccount);
       expect(result).toBe(mockAccount);
     });
   });
@@ -131,25 +124,26 @@ describe('BdkAccountRepository', () => {
       expect(result).toStrictEqual([]);
     });
 
-    it('returns all accounts', async () => {
+    it('returns all accounts with fresh wallets synced', async () => {
       const id1 = 'some-id-1';
       const id2 = 'some-id-2';
       const state = {
         [id1]: { ...mockAccountState, id: id1 },
         [id2]: { ...mockAccountState, id: id2 },
       };
-      const mockAccount1 = { ...mockAccount, id: id1 };
-      const mockAccount2 = { ...mockAccount, id: id2 };
+      const mockAccount1 = { ...mockAccount, id: id1, revealAddressesTo: jest.fn() };
+      const mockAccount2 = { ...mockAccount, id: id2, revealAddressesTo: jest.fn() };
 
       mockSnapClient.getState.mockResolvedValue(state);
-      (BdkAccountAdapter.load as jest.Mock)
+      (BdkAccountAdapter.create as jest.Mock)
         .mockReturnValueOnce(mockAccount1)
         .mockReturnValueOnce(mockAccount2);
 
       const result = await repo.getAll();
 
       expect(mockSnapClient.getState).toHaveBeenCalledWith('accounts');
-      expect(BdkAccountAdapter.load).toHaveBeenCalledTimes(2);
+      expect(BdkAccountAdapter.create).toHaveBeenCalledTimes(2);
+      expect(mockBlockchainClient.sync).toHaveBeenCalledTimes(2);
       expect(result).toStrictEqual([mockAccount1, mockAccount2]);
     });
 
@@ -162,18 +156,18 @@ describe('BdkAccountRepository', () => {
         [id2]: { ...mockAccountState, id: id2 },
         [id3]: null, // Deleted account
       };
-      const mockAccount1 = { ...mockAccount, id: id1 };
-      const mockAccount2 = { ...mockAccount, id: id2 };
+      const mockAccount1 = { ...mockAccount, id: id1, revealAddressesTo: jest.fn() };
+      const mockAccount2 = { ...mockAccount, id: id2, revealAddressesTo: jest.fn() };
 
       mockSnapClient.getState.mockResolvedValue(state);
-      (BdkAccountAdapter.load as jest.Mock)
+      (BdkAccountAdapter.create as jest.Mock)
         .mockReturnValueOnce(mockAccount1)
         .mockReturnValueOnce(mockAccount2);
 
       const result = await repo.getAll();
 
       expect(mockSnapClient.getState).toHaveBeenCalledWith('accounts');
-      expect(BdkAccountAdapter.load).toHaveBeenCalledTimes(2);
+      expect(BdkAccountAdapter.create).toHaveBeenCalledTimes(2);
       expect(result).toStrictEqual([mockAccount1, mockAccount2]);
     });
   });
@@ -209,7 +203,7 @@ describe('BdkAccountRepository', () => {
       expect(result).toBeNull();
     });
 
-    it('returns account with signer if account exists', async () => {
+    it('creates fresh wallet with signer and syncs', async () => {
       mockSnapClient.getState.mockResolvedValue(mockAccountState);
 
       const result = await repo.getWithSigner('some-id');
@@ -223,12 +217,15 @@ describe('BdkAccountRepository', () => {
         'bitcoin',
         'p2wpkh',
       );
-      expect(BdkAccountAdapter.load).toHaveBeenCalledWith(
+      expect(BdkAccountAdapter.create).toHaveBeenCalledWith(
         'some-id',
         mockDerivationPath,
-        mockChangeSet,
         mockDescriptors,
+        'bitcoin',
       );
+      expect(mockAccount.revealAddressesTo).toHaveBeenCalledWith('external', 5);
+      expect(mockAccount.revealAddressesTo).toHaveBeenCalledWith('internal', 5);
+      expect(mockBlockchainClient.sync).toHaveBeenCalledWith(mockAccount);
       expect(result).toBe(mockAccount);
     });
   });
@@ -248,20 +245,11 @@ describe('BdkAccountRepository', () => {
   });
 
   describe('insert', () => {
-    it('throws an error if no wallet data', async () => {
-      await expect(
-        repo.insert({
-          ...mockAccount,
-          takeStaged: jest.fn().mockReturnValue(undefined),
-        }),
-      ).rejects.toThrow(
-        'Missing changeset data for account "some-id" for insertion.',
-      );
-    });
-
-    it('inserts an account', async () => {
+    it('inserts derivation data', async () => {
       await repo.insert(mockAccount);
 
+      expect(mockAccount.derivationIndex).toHaveBeenCalledWith('external');
+      expect(mockAccount.derivationIndex).toHaveBeenCalledWith('internal');
       expect(mockSnapClient.setState).toHaveBeenNthCalledWith(
         1,
         "derivationPaths.m/84'/0'/0'",
@@ -273,7 +261,7 @@ describe('BdkAccountRepository', () => {
           derivationPath: mockDerivationPath,
           network: 'bitcoin',
           addressType: 'p2wpkh',
-          wallet: mockWalletData,
+          lastRevealedIndex: 5,
           inscriptions: [],
         },
       );
@@ -281,40 +269,27 @@ describe('BdkAccountRepository', () => {
   });
 
   describe('update', () => {
-    it('does nothing if no wallet data', async () => {
-      await repo.update({
-        ...mockAccount,
-        takeStaged: jest.fn().mockReturnValue(undefined),
-      });
+    it('updates lastRevealedIndex', async () => {
+      await repo.update(mockAccount);
 
-      expect(mockSnapClient.setState).not.toHaveBeenCalled();
-    });
-
-    it('throws an error if account not found', async () => {
-      mockSnapClient.getState.mockResolvedValue(null);
-
-      await expect(repo.update(mockAccount)).rejects.toThrow(
-        'Inconsistent state: account "some-id" not found for update',
+      expect(mockAccount.derivationIndex).toHaveBeenCalledWith('external');
+      expect(mockAccount.derivationIndex).toHaveBeenCalledWith('internal');
+      expect(mockSnapClient.setState).toHaveBeenCalledWith(
+        'accounts.some-id.lastRevealedIndex',
+        5,
       );
     });
 
-    it('updates the account and inscriptions', async () => {
+    it('updates inscriptions if provided', async () => {
       const mockInscription = mock<Inscription>();
-
-      mockSnapClient.getState.mockResolvedValue(mockWalletData);
 
       await repo.update(mockAccount, [mockInscription]);
 
-      expect(mockChangeSet.merge).toHaveBeenCalled();
-      expect(mockSnapClient.getState).toHaveBeenCalledWith(
-        'accounts.some-id.wallet',
+      expect(mockSnapClient.setState).toHaveBeenCalledWith(
+        'accounts.some-id.lastRevealedIndex',
+        5,
       );
-      expect(mockSnapClient.setState).toHaveBeenNthCalledWith(
-        1,
-        'accounts.some-id.wallet',
-        mockWalletData,
-      );
-      expect(mockSnapClient.setState).toHaveBeenLastCalledWith(
+      expect(mockSnapClient.setState).toHaveBeenCalledWith(
         'accounts.some-id.inscriptions',
         [mockInscription],
       );
@@ -330,13 +305,8 @@ describe('BdkAccountRepository', () => {
       expect(mockSnapClient.setState).not.toHaveBeenCalled();
     });
 
-    it('removes wallet data from store', async () => {
-      const accountState: AccountState = {
-        ...mockAccountState,
-        derivationPath: ['m', "84'", "0'", "0'"],
-      };
-
-      mockSnapClient.getState.mockResolvedValue(accountState);
+    it('removes account data from store', async () => {
+      mockSnapClient.getState.mockResolvedValue(mockAccountState);
 
       await repo.delete('some-id-1');
 

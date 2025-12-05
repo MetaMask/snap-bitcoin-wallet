@@ -16,12 +16,11 @@ import { v4 } from 'uuid';
 import {
   type BitcoinAccountRepository,
   type BitcoinAccount,
-  type ChainClient,
+  type BlockchainClient,
   type SnapClient,
   type Inscription,
   type AccountState,
   type SnapState,
-  StorageError,
 } from '../entities';
 import { BdkAccountAdapter } from '../infra';
 
@@ -41,11 +40,11 @@ function toBdkFingerprint(fingerprint: number): string {
 export class BdkAccountRepository implements BitcoinAccountRepository {
   readonly #snapClient: SnapClient;
 
-  readonly #chainClient: ChainClient;
+  readonly #blockchainClient: BlockchainClient;
 
-  constructor(snapClient: SnapClient, chainClient: ChainClient) {
+  constructor(snapClient: SnapClient, blockchainClient: BlockchainClient) {
     this.#snapClient = snapClient;
-    this.#chainClient = chainClient;
+    this.#blockchainClient = blockchainClient;
   }
 
   /**
@@ -123,7 +122,7 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     }
 
     // Sync with blockchain to get balance and UTXOs
-    await this.#chainClient.sync(account);
+    await this.#blockchainClient.sync(account);
 
     return account;
   }
