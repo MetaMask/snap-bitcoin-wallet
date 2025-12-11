@@ -882,7 +882,11 @@ describe('AccountUseCases', () => {
     const mockFeeEstimates = mock<FeeEstimates>({
       get: () => mockFeeRate,
     });
-    const mockFilledPsbt = mock<Psbt>();
+    const mockFilledPsbt = mock<Psbt>({
+      unsigned_tx: {
+        output: [mockOutput],
+      },
+    });
     const mockTxBuilder = mock<TransactionBuilder>({
       addRecipientByScript: jest.fn(),
       feeRate: jest.fn(),
@@ -1129,7 +1133,11 @@ describe('AccountUseCases', () => {
       get: () => mockFeeRate,
     });
     const mockFrozenUTXOs = ['utxo1', 'utxo2'];
-    const mockFilledPsbt = mock<Psbt>();
+    const mockFilledPsbt = mock<Psbt>({
+      unsigned_tx: {
+        output: [mockOutput],
+      },
+    });
     const mockTxBuilder = mock<TransactionBuilder>({
       addRecipientByScript: jest.fn(),
       feeRate: jest.fn(),
@@ -1225,6 +1233,179 @@ describe('AccountUseCases', () => {
         ),
       );
     });
+
+    it('preserves all outputs from bridge PSBT template including change', async () => {
+      // Simulate a bridge transaction with 3 outputs:
+      // Output 0: Bridge deposit
+      // Output 1: OP_RETURN data
+      // Output 2: Change output
+      const bridgeDepositOutput = mock<TxOut>({
+        script_pubkey: mock<ScriptBuf>(),
+        value: mock<Amount>(),
+      });
+      const opReturnOutput = mock<TxOut>({
+        script_pubkey: mock<ScriptBuf>(),
+        value: mock<Amount>(),
+      });
+      const changeOutput = mock<TxOut>({
+        script_pubkey: mock<ScriptBuf>(),
+        value: mock<Amount>(),
+      });
+
+      const bridgePsbt = mock<Psbt>({
+        unsigned_tx: {
+          output: [bridgeDepositOutput, opReturnOutput, changeOutput],
+        },
+        toString: () => 'bridgePsbtBase64',
+      });
+
+      // Mock the built PSBT to have matching output count (3 outputs)
+      // This simulates the happy path where drainToByScript works correctly
+      const builtBridgePsbt = mock<Psbt>({
+        unsigned_tx: {
+          output: [bridgeDepositOutput, opReturnOutput, changeOutput],
+        },
+      });
+      mockTxBuilder.finish.mockReturnValue(builtBridgePsbt);
+
+      // Account recognizes the change output as its own
+      const accountWithChange = mock<BitcoinAccount>({
+        id: 'account-id',
+        network: 'bitcoin',
+        isMine: (script: ScriptBuf) => script === changeOutput.script_pubkey,
+        capabilities: [AccountCapability.FillPsbt],
+      });
+      accountWithChange.buildTx.mockReturnValue(mockTxBuilder);
+      mockRepository.get.mockResolvedValueOnce(accountWithChange);
+
+      await useCases.fillPsbt('account-id', bridgePsbt);
+
+      // Verify exact call counts:
+      // - drainToByScript: called exactly 1 time (for change output)
+      // - addRecipientByScript: called exactly 2 times (for bridge deposit and OP_RETURN)
+      expect(mockTxBuilder.drainToByScript).toHaveBeenCalledTimes(1);
+      expect(mockTxBuilder.drainToByScript).toHaveBeenCalledWith(
+        changeOutput.script_pubkey,
+      );
+
+      expect(mockTxBuilder.addRecipientByScript).toHaveBeenCalledTimes(2);
+      expect(mockTxBuilder.addRecipientByScript).toHaveBeenNthCalledWith(
+        1,
+        bridgeDepositOutput.value,
+        bridgeDepositOutput.script_pubkey,
+      );
+      expect(mockTxBuilder.addRecipientByScript).toHaveBeenNthCalledWith(
+        2,
+        opReturnOutput.value,
+        opReturnOutput.script_pubkey,
+      );
+
+      // finish() should only be called once since output count matches
+      expect(mockTxBuilder.finish).toHaveBeenCalledTimes(1);
+    });
+
+    it('rebuilds with fixed recipients when change output is dropped (full-balance swap)', async () => {
+      // This test specifically covers the case where change was dropped
+      // when user swapped their entire balance through a bridge
+      // Simulate a bridge transaction with 3 outputs:
+      // Output 0: Bridge deposit
+      // Output 1: OP_RETURN data
+      // Output 2: Change output
+      const bridgeDepositOutput = mock<TxOut>({
+        script_pubkey: mock<ScriptBuf>(),
+        value: mock<Amount>(),
+      });
+      const opReturnOutput = mock<TxOut>({
+        script_pubkey: mock<ScriptBuf>(),
+        value: mock<Amount>(),
+      });
+      const changeOutput = mock<TxOut>({
+        script_pubkey: mock<ScriptBuf>(),
+        value: mock<Amount>(),
+      });
+
+      const fullBalanceSwapPsbt = mock<Psbt>({
+        unsigned_tx: {
+          output: [bridgeDepositOutput, opReturnOutput, changeOutput],
+        },
+        toString: () => 'fullBalanceSwapPsbt',
+      });
+
+      // First build returns PSBT with dropped change
+      const droppedChangePsbt = mock<Psbt>({
+        unsigned_tx: {
+          output: [bridgeDepositOutput, opReturnOutput], // Only 2 outputs - change is dropped
+        },
+      });
+      // Second build (rebuild) returns PSBT with all outputs preserved
+      const rebuiltPsbt = mock<Psbt>({
+        unsigned_tx: {
+          output: [bridgeDepositOutput, opReturnOutput, changeOutput], // All 3 outputs preserved
+        },
+      });
+      mockTxBuilder.finish
+        .mockReturnValueOnce(droppedChangePsbt) // First attempt: change dropped
+        .mockReturnValueOnce(rebuiltPsbt); // Second attempt: rebuilt with fixed recipients
+
+      // Account recognizes the change output as its own
+      const accountFullBalance = mock<BitcoinAccount>({
+        id: 'account-id',
+        network: 'bitcoin',
+        isMine: (script: ScriptBuf) => script === changeOutput.script_pubkey,
+        capabilities: [AccountCapability.FillPsbt],
+      });
+      accountFullBalance.buildTx.mockReturnValue(mockTxBuilder);
+      mockRepository.get.mockResolvedValueOnce(accountFullBalance);
+
+      const result = await useCases.fillPsbt('account-id', fullBalanceSwapPsbt);
+
+      // finish() called twice: first attempt (change dropped) + rebuild
+      expect(mockTxBuilder.finish).toHaveBeenCalledTimes(2);
+
+      // drainToByScript: called exactly 1 time (for change output in first attempt)
+      expect(mockTxBuilder.drainToByScript).toHaveBeenCalledTimes(1);
+      expect(mockTxBuilder.drainToByScript).toHaveBeenCalledWith(
+        changeOutput.script_pubkey,
+      );
+
+      // addRecipientByScript call count:
+      // First attempt: 2 calls (bridge deposit + OP_RETURN)
+      // Second attempt (rebuild): 3 calls (all outputs as fixed recipients)
+      // Total: 2 + 3 = 5
+      expect(mockTxBuilder.addRecipientByScript).toHaveBeenCalledTimes(5);
+
+      // First attempt: bridge deposit and OP_RETURN
+      expect(mockTxBuilder.addRecipientByScript).toHaveBeenNthCalledWith(
+        1,
+        bridgeDepositOutput.value,
+        bridgeDepositOutput.script_pubkey,
+      );
+      expect(mockTxBuilder.addRecipientByScript).toHaveBeenNthCalledWith(
+        2,
+        opReturnOutput.value,
+        opReturnOutput.script_pubkey,
+      );
+
+      // Second attempt (rebuild): all 3 outputs as fixed recipients
+      expect(mockTxBuilder.addRecipientByScript).toHaveBeenNthCalledWith(
+        3,
+        bridgeDepositOutput.value,
+        bridgeDepositOutput.script_pubkey,
+      );
+      expect(mockTxBuilder.addRecipientByScript).toHaveBeenNthCalledWith(
+        4,
+        opReturnOutput.value,
+        opReturnOutput.script_pubkey,
+      );
+      expect(mockTxBuilder.addRecipientByScript).toHaveBeenNthCalledWith(
+        5,
+        changeOutput.value,
+        changeOutput.script_pubkey,
+      );
+
+      // Result should be the rebuilt PSBT with all outputs preserved
+      expect(result).toBe(rebuiltPsbt);
+    });
   });
 
   describe('computeFee', () => {
@@ -1250,7 +1431,11 @@ describe('AccountUseCases', () => {
       get: () => mockFeeRate,
     });
     const mockFrozenUTXOs = ['utxo1', 'utxo2'];
-    const mockFilledPsbt = mock<Psbt>();
+    const mockFilledPsbt = mock<Psbt>({
+      unsigned_tx: {
+        output: [mockOutput],
+      },
+    });
     const mockTxBuilder = mock<TransactionBuilder>({
       addRecipientByScript: jest.fn(),
       feeRate: jest.fn(),
@@ -1366,7 +1551,11 @@ describe('AccountUseCases', () => {
     const mockFeeEstimates = mock<FeeEstimates>({
       get: () => mockFeeRate,
     });
-    const mockFilledPsbt = mock<Psbt>();
+    const mockFilledPsbt = mock<Psbt>({
+      unsigned_tx: {
+        output: [mockOutput],
+      },
+    });
     const mockTxBuilder = mock<TransactionBuilder>({
       addRecipient: jest.fn(),
       addRecipientByScript: jest.fn(),
