@@ -592,7 +592,29 @@ export class AccountUseCases {
           );
         }
       }
-      return builder.finish();
+      let builtPsbt = builder.finish();
+
+      if (
+        builtPsbt.unsigned_tx.output.length <
+        templatePsbt.unsigned_tx.output.length
+      ) {
+        // Second attempt: use fixed recipients for all outputs
+        builder = account
+          .buildTx()
+          .feeRate(feeRateToUse)
+          .unspendable(frozenUTXOs)
+          .untouchedOrdering();
+
+        for (const txout of templatePsbt.unsigned_tx.output) {
+          builder = builder.addRecipientByScript(
+            txout.value,
+            txout.script_pubkey,
+          );
+        }
+        builtPsbt = builder.finish();
+      }
+
+      return builtPsbt;
     } catch (error) {
       throw new ValidationError(
         'Failed to build PSBT from template',
