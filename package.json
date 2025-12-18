@@ -37,7 +37,6 @@
     "@metamask/eslint-config-jest": "^14.0.0",
     "@metamask/eslint-config-nodejs": "^14.0.0",
     "@metamask/eslint-config-typescript": "^14.0.0",
-    "bitcoinjs-lib": "^7.0.0",
     "depcheck": "^1.4.7",
     "eslint": "^9.26.0",
     "eslint-config-prettier": "^9.1.0",
@@ -51,7 +50,6 @@
     "prettier": "^3.5.3",
     "prettier-plugin-packagejson": "^2.5.13",
     "rimraf": "^6.0.1",
-    "tiny-secp256k1": "^2.2.4",
     "typescript": "~5.8.3",
     "typescript-eslint": "8.32.1"
   },
@@ -65,8 +63,5 @@
       "eslint-plugin-import-x>unrs-resolver": false,
       "eslint-plugin-jest>jest>@jest/core>jest-resolve>unrs-resolver": false
     }
-  },
-  "dependencies": {
-    "@chainflip/sdk": "^1.11.2"
   }
 }
