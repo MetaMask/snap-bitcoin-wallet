@@ -104,13 +104,16 @@ export class SnapClientAdapter implements SnapClient {
   async emitAccountBalancesUpdatedEvent(
     account: BitcoinAccount,
   ): Promise<void> {
-    const balance = account.balance.trusted_spendable.to_btc().toString();
+    const trustedSpendable = account.balance.trusted_spendable;
+    const balance = trustedSpendable.to_btc().toString();
+    const rawBalance = trustedSpendable.to_sat().toString();
     return emitSnapKeyringEvent(snap, KeyringEvent.AccountBalancesUpdated, {
       balances: {
         [account.id]: {
           [networkToCaip19[account.network]]: {
             amount: balance,
             unit: networkToCurrencyUnit[account.network],
+            rawAmount: rawBalance,
           },
         },
       },

@@ -64,7 +64,9 @@ describe('KeyringHandler', () => {
   const mockAccount = mock<BitcoinAccount>({
     id: 'some-id',
     addressType: 'p2wpkh',
-    balance: { trusted_spendable: { to_btc: () => 1 } },
+    balance: {
+      trusted_spendable: { to_btc: () => 1, to_sat: () => BigInt(100000000) },
+    },
     network: 'bitcoin',
     derivationPath: ['myEntropy', "84'", "0'", "0'"],
     entropySource: 'myEntropy',
@@ -500,6 +502,7 @@ describe('KeyringHandler', () => {
         [Caip19Asset.Bitcoin]: {
           amount: '1',
           unit: 'BTC',
+          rawAmount: '100000000',
         },
       };
 
