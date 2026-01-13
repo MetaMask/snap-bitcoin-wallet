@@ -306,12 +306,15 @@ export class KeyringHandler implements Keyring {
     id: string,
   ): Promise<Record<CaipAssetType, Balance>> {
     const account = await this.#accountsUseCases.get(id);
-    const balance = account.balance.trusted_spendable.to_btc().toString();
+    const trustedSpendable = account.balance.trusted_spendable;
+    const balance = trustedSpendable.to_btc().toString();
+    const rawBalance = trustedSpendable.to_sat().toString();
 
     return {
       [networkToCaip19[account.network]]: {
         amount: balance,
         unit: networkToCurrencyUnit[account.network],
+        rawAmount: rawBalance,
       },
     };
   }

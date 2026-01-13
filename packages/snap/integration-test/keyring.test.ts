@@ -459,6 +459,7 @@ describe('Keyring', () => {
       [Caip19Asset.Regtest]: {
         amount: '500',
         unit: CurrencyUnit.Regtest,
+        rawAmount: '50000000000',
       },
     });
   });
