@@ -1,5 +1,5 @@
 import type { KeyringRequest, KeyringResponse } from '@metamask/keyring-api';
-import type { Json } from '@metamask/utils';
+import type { Json } from '@metamask/snaps-sdk';
 import {
   array,
   assert,

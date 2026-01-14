@@ -1,5 +1,5 @@
 import { BtcScope } from '@metamask/keyring-api';
-import type { Json, JsonRpcRequest } from '@metamask/utils';
+import type { Json, JsonRpcRequest } from '@metamask/snaps-sdk';
 import { Verifier } from 'bip322-js';
 import { assert, enums, object, optional, string } from 'superstruct';
 

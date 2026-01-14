@@ -2,7 +2,7 @@ import { Psbt, Address, Amount } from '@metamask/bitcoindevkit';
 import type { Transaction, Txid } from '@metamask/bitcoindevkit';
 import type { Transaction as KeyringTransaction } from '@metamask/keyring-api';
 import { BtcScope, FeeType } from '@metamask/keyring-api';
-import type { JsonRpcRequest } from '@metamask/utils';
+import type { JsonRpcRequest } from '@metamask/snaps-sdk';
 import { mock } from 'jest-mock-extended';
 
 import type { AccountUseCases, SendFlowUseCases } from '../use-cases';

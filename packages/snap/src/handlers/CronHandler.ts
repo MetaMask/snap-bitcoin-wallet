@@ -1,6 +1,5 @@
 import { getSelectedAccounts } from '@metamask/keyring-snap-sdk';
-import type { SnapsProvider } from '@metamask/snaps-sdk';
-import type { JsonRpcRequest } from '@metamask/utils';
+import type { JsonRpcRequest, SnapsProvider } from '@metamask/snaps-sdk';
 import { array, assert, object, string } from 'superstruct';
 
 import {
