@@ -9,10 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.9.0]
 
-### Uncategorized
+### Changed
 
-- feat: add change utxo dropped when full swap use case ([#572](https://github.com/MetaMask/snap-bitcoin-wallet/pull/572))
-- fix: update p2wsh, p2tr and p2sh dust minimum value ([#570](https://github.com/MetaMask/snap-bitcoin-wallet/pull/570))
+- Add change utxo dropped when full swap use case ([#572](https://github.com/MetaMask/snap-bitcoin-wallet/pull/572))
+- Update p2wsh, p2tr and p2sh dust minimum value ([#570](https://github.com/MetaMask/snap-bitcoin-wallet/pull/570))
 
 ## [1.8.0]
 
