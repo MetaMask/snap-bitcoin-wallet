@@ -1,6 +1,5 @@
 import { getSelectedAccounts } from '@metamask/keyring-snap-sdk';
-import type { SnapsProvider } from '@metamask/snaps-sdk';
-import type { JsonRpcRequest } from '@metamask/utils';
+import type { SnapsProvider, JsonRpcRequest } from '@metamask/snaps-sdk';
 import { mock } from 'jest-mock-extended';
 
 import type { BitcoinAccount, SnapClient } from '../entities';
@@ -29,6 +28,8 @@ describe('CronHandler', () => {
     mockSnapClient.getClientStatus.mockResolvedValue({
       active: true,
       locked: false,
+      clientVersion: '1.0.0',
+      platformVersion: '1.0.0',
     });
   });
 
@@ -67,6 +68,8 @@ describe('CronHandler', () => {
       mockSnapClient.getClientStatus.mockResolvedValue({
         active: false,
         locked: true,
+        clientVersion: '1.0.0',
+        platformVersion: '1.0.0',
       });
       await handler.route(request);
 
@@ -113,6 +116,8 @@ describe('CronHandler', () => {
       mockSnapClient.getClientStatus.mockResolvedValue({
         active: false,
         locked: true,
+        clientVersion: '1.0.0',
+        platformVersion: '1.0.0',
       });
       await handler.route(request);
 
@@ -165,6 +170,8 @@ describe('CronHandler', () => {
       mockSnapClient.getClientStatus.mockResolvedValue({
         active: false,
         locked: true,
+        clientVersion: '1.0.0',
+        platformVersion: '1.0.0',
       });
       await handler.route(request);
 
@@ -217,6 +224,8 @@ describe('CronHandler', () => {
       mockSnapClient.getClientStatus.mockResolvedValue({
         active: false,
         locked: true,
+        clientVersion: '1.0.0',
+        platformVersion: '1.0.0',
       });
       await handler.route(request);
 

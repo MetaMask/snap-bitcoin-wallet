@@ -30,7 +30,7 @@ import type {
   DiscoveredAccount,
   KeyringRequest,
 } from '@metamask/keyring-api';
-import type { Json, JsonRpcRequest } from '@metamask/utils';
+import type { Json, JsonRpcRequest } from '@metamask/snaps-sdk';
 import {
   assert,
   boolean,
