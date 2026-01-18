@@ -1,11 +1,11 @@
 {
-  "locale": "中文",
+  "locale": "tl",
   "messages": {
     "reviewTransactionWarning": {
-      "message": "继续之前，请先审查交易"
+      "message": "Suriin ang transaksyon bago magpatuloy"
     },
     "from": {
-      "message": "从"
+      "message": "Mula sa"
     },
     "toAddress": {
       "message": "To Address"
@@ -14,31 +14,31 @@
       "message": "Continue"
     },
     "cancel": {
-      "message": "取消"
+      "message": "Kanselahin"
     },
     "clear": {
       "message": "Clear"
     },
     "amount": {
-      "message": "金额"
+      "message": "Halaga"
     },
     "balance": {
-      "message": "余额"
+      "message": "Balanse"
     },
     "recipient": {
-      "message": "收款人"
+      "message": "Tatanggap"
     },
     "network": {
-      "message": "网络"
+      "message": "Network"
     },
     "minutes": {
       "message": "min"
     },
     "transactionSpeed": {
-      "message": "交易速度"
+      "message": "Bilis ng Transaksyon"
     },
     "transactionSpeedTooltip": {
-      "message": "交易预计时间"
+      "message": "Ang tinatayang tagal ng transaksyon"
     },
     "networkFee": {
       "message": "Network Fee"
@@ -50,28 +50,28 @@
       "message": "The total network fee"
     },
     "total": {
-      "message": "总额"
+      "message": "Kabuuan"
     },
     "send": {
-      "message": "发送"
+      "message": "Ipadala"
     },
     "asset": {
       "message": "Asset"
     },
     "sending": {
-      "message": "发送中"
+      "message": "Ipinapadala"
     },
     "max": {
-      "message": "最多"
+      "message": "Max"
     },
     "recipientPlaceholder": {
       "message": "Enter receiving address"
     },
     "review": {
-      "message": "审查"
+      "message": "Suriin"
     },
     "error": {
-      "message": "错误"
+      "message": "Error"
     },
     "unknownError": {
       "message": "An unknown error occurred"
@@ -179,40 +179,40 @@
       "message": "Corrupted state, invariant not respected or failed assertion."
     },
     "error.internal": {
-      "message": "内部错误。请稍后重试或联系支持"
+      "message": "Panloob na error. Subukang muli mamaya o makipag-ugnayan sa suporta"
     },
     "confirmation.origin": {
-      "message": "来源"
+      "message": "Pinagmulan"
     },
     "confirmation.origin.tooltip": {
-      "message": "请求签名的 dApp"
+      "message": "Ang dApp na humihingi ng lagda"
     },
     "confirmation.account": {
-      "message": "账户"
+      "message": "Account"
     },
     "confirmation.signMessage.confirmButton": {
-      "message": "签名"
+      "message": "Lagdaan"
     },
     "confirmation.signMessage.title": {
-      "message": "签名消息"
+      "message": "Lagdaan ang Mensahe"
     },
     "confirmation.signMessage.message": {
-      "message": "消息"
+      "message": "Mensahe"
     },
     "confirmation.estimatedChanges": {
-      "message": "预计变化"
+      "message": "Tinatayang mga pagbabago"
     },
     "confirmation.estimatedChanges.send": {
-      "message": "您发送"
+      "message": "Nagpadala ka ng"
     },
     "confirmation.confirmButton": {
-      "message": "确认"
+      "message": "Kumpirmahin"
     },
     "confirmation.signAndSendTransaction.title": {
-      "message": "交易请求"
+      "message": "Hiling na transaksyon"
     },
     "confirmation.requestOrigin": {
-      "message": "请求来自"
+      "message": "Kahilingan mula sa/kay"
     }
   }
 }
