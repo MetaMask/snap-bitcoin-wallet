@@ -197,11 +197,14 @@ describe('KeyringHandler', () => {
       expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
     });
 
-    it.each([{ purpose: Purpose.NativeSegwit, addressType: 'p2wpkh' }] as {
+    it.each([
+      { purpose: Purpose.NativeSegwit, addressType: 'p2wpkh' },
+      { purpose: Purpose.Taproot, addressType: 'p2tr' },
+    ] as {
       purpose: Purpose;
       addressType: AddressType;
     }[])(
-      'extracts P2WPKH address type from derivationPath: %s',
+      'extracts address type from derivationPath: %s',
       async ({ purpose, addressType }) => {
         const options = {
           scope: BtcScope.Signet,
@@ -300,6 +303,120 @@ describe('KeyringHandler', () => {
 
       await handler.createAccount(options);
       expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
+    });
+
+    it('accepts explicit P2TR addressType', async () => {
+      const options = {
+        scope: BtcScope.Mainnet,
+        addressType: BtcAccountType.P2tr,
+        index: 0,
+      };
+      const expectedCreateParams: CreateAccountParams = {
+        network: 'bitcoin',
+        index: 0,
+        addressType: 'p2tr',
+        entropySource: 'm',
+        synchronize: false,
+      };
+
+      await handler.createAccount(options);
+      expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
+    });
+
+    it('succeeds when addressType and derivationPath both indicate P2TR', async () => {
+      const options = {
+        scope: BtcScope.Signet,
+        addressType: BtcAccountType.P2tr,
+        derivationPath: "m/86'/0'/5'", // Taproot path
+      };
+      const expectedCreateParams: CreateAccountParams = {
+        network: 'signet',
+        index: 5,
+        addressType: 'p2tr',
+        entropySource: 'm',
+        synchronize: false,
+      };
+
+      await handler.createAccount(options);
+      expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
+    });
+
+    it('fails when P2TR addressType and P2WPKH derivationPath mismatch', async () => {
+      const options = {
+        scope: BtcScope.Signet,
+        addressType: BtcAccountType.P2tr,
+        derivationPath: "m/84'/0'/0'", // SegWit path, not Taproot
+      };
+
+      await expect(handler.createAccount(options)).rejects.toThrow(
+        new FormatError('Address type and derivation path mismatch'),
+      );
+    });
+
+    it('fails when P2WPKH addressType and P2TR derivationPath mismatch', async () => {
+      const options = {
+        scope: BtcScope.Signet,
+        addressType: BtcAccountType.P2wpkh,
+        derivationPath: "m/86'/0'/0'", // Taproot path, not SegWit
+      };
+
+      await expect(handler.createAccount(options)).rejects.toThrow(
+        new FormatError('Address type and derivation path mismatch'),
+      );
+    });
+
+    it('rejects unsupported P2PKH addressType', async () => {
+      const options = {
+        scope: BtcScope.Mainnet,
+        addressType: BtcAccountType.P2pkh,
+        index: 0,
+      };
+
+      await expect(handler.createAccount(options)).rejects.toThrow(
+        new FormatError(
+          'Only native segwit (P2WPKH) and taproot (P2TR) addresses are supported',
+        ),
+      );
+    });
+
+    it('auto increments index for P2TR accounts separately from P2WPKH', async () => {
+      mockAccounts.list.mockResolvedValue([
+        mock<BitcoinAccount>({
+          entropySource: 'entropy1',
+          accountIndex: 0,
+          addressType: 'p2wpkh',
+          network: 'signet',
+        }),
+        mock<BitcoinAccount>({
+          entropySource: 'entropy1',
+          accountIndex: 0,
+          addressType: 'p2tr',
+          network: 'signet',
+        }),
+        mock<BitcoinAccount>({
+          entropySource: 'entropy1',
+          accountIndex: 1,
+          addressType: 'p2tr',
+          network: 'signet',
+        }),
+      ]);
+
+      const options = {
+        scope: BtcScope.Signet,
+        addressType: BtcAccountType.P2tr,
+        entropySource: 'entropy1',
+        index: null,
+      };
+
+      await handler.createAccount(options);
+
+      // Should get index 2 for P2TR (0 and 1 are used)
+      expect(mockAccounts.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          index: 2,
+          addressType: 'p2tr',
+        }),
+      );
     });
 
     it('propagates errors from createAccount', async () => {
@@ -518,6 +635,38 @@ describe('KeyringHandler', () => {
         mapToDiscoveredAccount(signetP2wpkh),
         mapToDiscoveredAccount(signetP2tr),
       ]);
+    });
+
+    it('discovers P2TR accounts independently of P2WPKH history', async () => {
+      const p2wpkhNoHistory = mock<BitcoinAccount>({
+        addressType: 'p2wpkh',
+        network: 'bitcoin',
+        listTransactions: jest.fn().mockReturnValue([]),
+        derivationPath: ['m', "84'", "0'", "0'"],
+      });
+
+      const p2trWithHistory = mock<BitcoinAccount>({
+        addressType: 'p2tr',
+        network: 'bitcoin',
+        listTransactions: jest.fn().mockReturnValue([{}]),
+        derivationPath: ['m', "86'", "0'", "0'"],
+      });
+
+      mockAccounts.discover
+        .mockResolvedValueOnce(p2wpkhNoHistory)
+        .mockResolvedValueOnce(p2trWithHistory);
+
+      const discovered = await handler.discoverAccounts(
+        [BtcScope.Mainnet],
+        entropySource,
+        groupIndex,
+      );
+
+      expect(mockAccounts.discover).toHaveBeenCalledTimes(2);
+      expect(discovered).toHaveLength(1);
+      expect(discovered[0]).toStrictEqual(
+        mapToDiscoveredAccount(p2trWithHistory),
+      );
     });
 
     it('propagates errors from discover', async () => {
