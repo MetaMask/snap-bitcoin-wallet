@@ -237,7 +237,10 @@ export class KeyringHandler implements Keyring {
       } else {
         resolvedAddressType = this.#defaultAddressType;
         // validate default address type is P2WPKH or P2TR
-        if (resolvedAddressType !== 'p2wpkh' && resolvedAddressType !== 'p2tr') {
+        if (
+          resolvedAddressType !== 'p2wpkh' &&
+          resolvedAddressType !== 'p2tr'
+        ) {
           throw new FormatError(
             'Only native segwit (P2WPKH) and taproot (P2TR) addresses are supported',
           );
