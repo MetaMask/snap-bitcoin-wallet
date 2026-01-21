@@ -17,7 +17,6 @@ import type {
 } from '@metamask/keyring-api';
 import { BtcAccountType, BtcScope } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
-import { assert } from 'superstruct';
 
 import type { BitcoinAccount, Logger, SnapClient } from '../entities';
 import {
@@ -27,7 +26,7 @@ import {
   FormatError,
 } from '../entities';
 import { scopeToNetwork, caipToAddressType, Caip19Asset } from './caip';
-import { KeyringHandler, CreateAccountRequest } from './KeyringHandler';
+import { KeyringHandler } from './KeyringHandler';
 import type { KeyringRequestHandler } from './KeyringRequestHandler';
 import { mapToDiscoveredAccount } from './mappings';
 import type {
@@ -87,68 +86,6 @@ describe('KeyringHandler', () => {
   });
 
   describe('createAccount', () => {
-    const entropySource = 'some-source';
-    const index = 1;
-    const correlationId = 'correlation-id';
-
-    // non-P2WPKH address types as we are not supporting them for v1
-    it.skip('respects provided params', async () => {
-      const options = {
-        scope: BtcScope.Signet,
-        entropySource,
-        index,
-        addressType: BtcAccountType.P2pkh,
-        metamask: {
-          correlationId,
-        },
-        accountNameSuggestion: 'My account',
-        synchronize: false,
-      };
-      const expectedCreateParams: CreateAccountParams = {
-        network: scopeToNetwork[BtcScope.Signet],
-        entropySource,
-        index,
-        addressType: 'p2pkh',
-        synchronize: false,
-        correlationId,
-        accountName: 'My account',
-      };
-
-      await handler.createAccount(options);
-
-      expect(assert).toHaveBeenCalledWith(options, CreateAccountRequest);
-      expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
-      expect(mockAccounts.fullScan).not.toHaveBeenCalled();
-    });
-
-    // only P2WPKH (BIP-84) derivation paths are now supported for v1
-    it.skip('extracts index from derivationPath', async () => {
-      const options = {
-        scope: BtcScope.Signet,
-        derivationPath: "m/44'/0'/5'/*/*", // change and address indexes can be anything
-      };
-      const expectedCreateParams: CreateAccountParams = {
-        network: 'signet',
-        index: 5,
-        addressType: 'p2pkh',
-        entropySource: 'm',
-        synchronize: true,
-      };
-
-      await handler.createAccount(options);
-      expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
-
-      // Test with a valid derivationPath without change and address index
-      await handler.createAccount({
-        ...options,
-        derivationPath: "m/44'/0'/3'",
-      });
-      expect(mockAccounts.create).toHaveBeenCalledWith({
-        ...expectedCreateParams,
-        index: 3,
-      });
-    });
-
     it('auto increment index', async () => {
       // We should get index 1
       mockAccounts.list.mockResolvedValue([
@@ -216,32 +153,6 @@ describe('KeyringHandler', () => {
           addressType,
           entropySource: 'm',
           synchronize: false,
-        };
-
-        await handler.createAccount(options);
-        expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
-      },
-    );
-
-    // skip non-P2WPKH address types as they are not supported on v1
-    it.skip.each([
-      { purpose: Purpose.Legacy, addressType: 'p2pkh' },
-      { purpose: Purpose.Segwit, addressType: 'p2sh' },
-      { purpose: Purpose.Taproot, addressType: 'p2tr' },
-      { purpose: Purpose.Multisig, addressType: 'p2wsh' },
-    ] as { purpose: Purpose; addressType: AddressType }[])(
-      'extracts address type from derivationPath: %s',
-      async ({ purpose, addressType }) => {
-        const options = {
-          scope: BtcScope.Signet,
-          derivationPath: `m/${purpose}'/0'/0'`,
-        };
-        const expectedCreateParams: CreateAccountParams = {
-          network: 'signet',
-          index: 0,
-          addressType,
-          entropySource: 'm',
-          synchronize: true,
         };
 
         await handler.createAccount(options);
