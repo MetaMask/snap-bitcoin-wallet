@@ -296,13 +296,13 @@ export class AccountUseCases {
     }
 
     if (txsToNotify.length > 0) {
-      await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
       await this.#snapClient.emitAccountTransactionsUpdatedEvent(
         account,
         txsToNotify,
       );
     }
-
+    await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
+    
     this.#logger.debug('Account synchronized successfully: %s', account.id);
   }
 
