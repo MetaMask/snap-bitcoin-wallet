@@ -27,6 +27,13 @@ export type AccountState = {
   inscriptions: Inscription[];
 };
 
+export type SyncResult = {
+  // The synchronized account.
+  account: BitcoinAccount;
+  // Transactions that changed and should be notified.
+  transactionsToNotify: WalletTx[];
+};
+
 export enum TrackingSnapEvent {
   TransactionFinalized = 'Transaction Finalized',
   TransactionReceived = 'Transaction Received',
@@ -92,9 +99,9 @@ export type SnapClient = {
   /**
    * Emit an event notifying the extension of updated balances
    *
-   * @param account - The Bitcoin account.
+   * @param accounts - The Bitcoin accounts to emit balances for.
    */
-  emitAccountBalancesUpdatedEvent(account: BitcoinAccount): Promise<void>;
+  emitAccountBalancesUpdatedEvent(accounts: BitcoinAccount[]): Promise<void>;
 
   /**
    * Emit an event notifying the extension of updated transactions
