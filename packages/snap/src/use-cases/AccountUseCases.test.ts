@@ -434,7 +434,7 @@ describe('AccountUseCases', () => {
       expect(mockChain.sync).toHaveBeenCalledWith(mockAccount);
       expect(mockAccount.listTransactions).toHaveBeenCalledTimes(2);
       expect(mockRepository.update).toHaveBeenCalledWith(mockAccount);
-      expect(result).toEqual({
+      expect(result).toStrictEqual({
         account: mockAccount,
         transactionsToNotify: [],
       });
@@ -466,7 +466,7 @@ describe('AccountUseCases', () => {
         'test',
       );
       expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledTimes(1);
-      expect(result).toEqual({
+      expect(result).toStrictEqual({
         account: mockAccount,
         transactionsToNotify: [mockTransaction],
       });
@@ -500,7 +500,7 @@ describe('AccountUseCases', () => {
         mockTxConfirmed,
         'test',
       );
-      expect(result).toEqual({
+      expect(result).toStrictEqual({
         account: mockAccount,
         transactionsToNotify: [mockTxConfirmed],
       });
@@ -581,7 +581,7 @@ describe('AccountUseCases', () => {
       );
 
       expect(mockSnapClient.emitTrackingEvent).toHaveBeenCalledTimes(3);
-      expect(result).toEqual({
+      expect(result).toStrictEqual({
         account: mockAccount,
         transactionsToNotify: [mockTxConfirmed, mockTxNew, mockTxReorged],
       });
@@ -609,7 +609,7 @@ describe('AccountUseCases', () => {
         mockTxReorged,
         'test',
       );
-      expect(result).toEqual({
+      expect(result).toStrictEqual({
         account: mockAccount,
         transactionsToNotify: [mockTxReorged],
       });
@@ -698,7 +698,7 @@ describe('AccountUseCases', () => {
         trackingError,
       );
 
-      expect(result).toEqual({
+      expect(result).toStrictEqual({
         account: mockAccount,
         transactionsToNotify: [mockTransaction],
       });
@@ -726,7 +726,7 @@ describe('AccountUseCases', () => {
         mockAccount,
         mockInscriptions,
       );
-      expect(result).toEqual({
+      expect(result).toStrictEqual({
         account: mockAccount,
         transactionsToNotify: mockTransactions,
       });

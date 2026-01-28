@@ -89,13 +89,13 @@ export class CronHandler {
     });
 
     const results = await Promise.allSettled(
-      accounts.map((account) =>
+      accounts.map(async (account) =>
         this.#accountsUseCases.synchronize(account, 'cron'),
       ),
     );
 
     const successfulResults: SyncResult[] = [];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const errors: Record<string, any> = {};
 
     results.forEach((result, index) => {
@@ -128,16 +128,17 @@ export class CronHandler {
     );
 
     const results = await Promise.allSettled(
-      selectedAccounts.map((account) =>
+      selectedAccounts.map(async (account) =>
         this.#accountsUseCases.synchronize(account, 'metamask'),
       ),
     );
 
     const successfulResults = results
       .filter(
-        (r): r is PromiseFulfilledResult<SyncResult> => r.status === 'fulfilled',
+        (result): result is PromiseFulfilledResult<SyncResult> =>
+          result.status === 'fulfilled',
       )
-      .map((r) => r.value);
+      .map((result) => result.value);
 
     await this.#emitSyncEvents(successfulResults);
   }
@@ -154,7 +155,7 @@ export class CronHandler {
 
     // Emit one batched balance event for all accounts
     await this.#snapClient.emitAccountBalancesUpdatedEvent(
-      results.map((r) => r.account),
+      results.map((syncResult) => syncResult.account),
     );
 
     // Emit transaction events per account
