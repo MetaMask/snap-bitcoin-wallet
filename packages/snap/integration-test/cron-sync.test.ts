@@ -5,6 +5,7 @@ import { installSnap } from '@metamask/snaps-jest';
 
 import { BlockchainTestUtils } from './blockchain-utils';
 import { MNEMONIC, ORIGIN } from './constants';
+import { TrackingSnapEvent } from '../src/entities';
 
 const ACCOUNT_INDEX = 2;
 
@@ -55,7 +56,7 @@ describe('CronHandler', () => {
     expect(response).toBeDefined();
   });
 
-  it('tracks TransactionReceived for new unconfirmed transaction', async () => {
+  it('tracks TransactionReceived for new unconfirmed transaction with multiple syncs', async () => {
     // create account without initial sync
     const createResponse = await snap.onKeyringRequest({
       origin: ORIGIN,
@@ -79,11 +80,11 @@ describe('CronHandler', () => {
     accountsToSync.push(account.id);
 
     // send a new transaction to the new account
-    const txid = await blockchain.sendToAddress(account.address, 10);
+    let txid = await blockchain.sendToAddress(account.address, 10);
     expect(txid).toBeDefined();
 
     // run cron sync to discover the unconfirmed transaction
-    const syncResponse = await snap.onCronjob({
+    let syncResponse = await snap.onCronjob({
       method: 'synchronizeAccounts',
     });
     expect(syncResponse).toRespondWith(null);
@@ -93,6 +94,31 @@ describe('CronHandler', () => {
       event: 'Transaction Received',
       properties: {
         origin: 'cron',
+        message: 'Snap transaction received',
+        chain_id_caip: BtcScope.Regtest,
+        account_type: BtcAccountType.P2wpkh,
+        tx_id: txid,
+      },
+    });
+    /* eslint-enable @typescript-eslint/naming-convention */
+
+    // send a transaction to the account
+    txid = await blockchain.sendToAddress(account.address, 5);
+    expect(txid).toBeDefined();
+
+    // sync using syncSelectedAccounts
+    syncResponse = await snap.onCronjob({
+      method: 'syncSelectedAccounts',
+      params: { accountIds: [account.id] },
+    });
+
+    expect(syncResponse).toRespondWith(null);
+
+    /* eslint-disable @typescript-eslint/naming-convention */
+    expect(syncResponse).toTrackEvent({
+      event: TrackingSnapEvent.TransactionReceived,
+      properties: {
+        origin: 'metamask',
         message: 'Snap transaction received',
         chain_id_caip: BtcScope.Regtest,
         account_type: BtcAccountType.P2wpkh,
