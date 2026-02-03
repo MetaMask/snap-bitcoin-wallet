@@ -1,4 +1,4 @@
-import { Psbt } from '@metamask/bitcoindevkit';
+import { Psbt } from '@bitcoindevkit/bdk-wallet-web';
 import type { SnapComponent } from '@metamask/snaps-sdk/jsx';
 import {
   Address,

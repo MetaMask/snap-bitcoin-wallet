@@ -14,7 +14,7 @@ import type {
   Amount,
   ScriptBuf,
   Address,
-} from '@metamask/bitcoindevkit';
+} from '@bitcoindevkit/bdk-wallet-web';
 
 import type { Inscription } from './meta-protocols';
 import type { TransactionBuilder } from './transaction';

@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 
-import type { AddressType } from '@metamask/bitcoindevkit';
+import type { AddressType } from '@bitcoindevkit/bdk-wallet-web';
 
 import { LogLevel, type SnapConfig } from './entities';
 

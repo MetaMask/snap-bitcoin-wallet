@@ -1,7 +1,7 @@
 import { parseRewardsMessage } from './validation';
 
 /* eslint-disable @typescript-eslint/naming-convention */
-jest.mock('@metamask/bitcoindevkit', () => ({
+jest.mock('@bitcoindevkit/bdk-wallet-web', () => ({
   Address: {
     from_string: jest.fn(),
   },

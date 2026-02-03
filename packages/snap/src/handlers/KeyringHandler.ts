@@ -1,4 +1,4 @@
-import type { AddressType } from '@metamask/bitcoindevkit';
+import type { AddressType } from '@bitcoindevkit/bdk-wallet-web';
 import {
   BtcAccountType,
   BtcScope,

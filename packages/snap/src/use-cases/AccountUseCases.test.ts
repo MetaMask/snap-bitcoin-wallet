@@ -10,7 +10,7 @@ import type {
   Network,
   Psbt,
   Address,
-} from '@metamask/bitcoindevkit';
+} from '@bitcoindevkit/bdk-wallet-web';
 import type { JsonSLIP10Node } from '@metamask/key-tree';
 import { mock } from 'jest-mock-extended';
 

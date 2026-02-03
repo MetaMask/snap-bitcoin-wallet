@@ -1,4 +1,4 @@
-import type { WalletTx } from '@metamask/bitcoindevkit';
+import type { WalletTx } from '@bitcoindevkit/bdk-wallet-web';
 import type { JsonSLIP10Node, SLIP10Node } from '@metamask/key-tree';
 import type {
   ComponentOrElement,

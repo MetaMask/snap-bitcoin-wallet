@@ -1,4 +1,4 @@
-import type { Network } from '@metamask/bitcoindevkit';
+import type { Network } from '@bitcoindevkit/bdk-wallet-web';
 import type { SnapComponent } from '@metamask/snaps-sdk/jsx';
 import { Box, Image } from '@metamask/snaps-sdk/jsx';
 

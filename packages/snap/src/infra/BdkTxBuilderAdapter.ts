@@ -3,7 +3,7 @@ import type {
   Psbt,
   ScriptBuf,
   TxBuilder,
-} from '@metamask/bitcoindevkit';
+} from '@bitcoindevkit/bdk-wallet-web';
 import {
   TxOrdering,
   OutPoint,
@@ -11,7 +11,7 @@ import {
   Amount,
   FeeRate,
   Recipient,
-} from '@metamask/bitcoindevkit';
+} from '@bitcoindevkit/bdk-wallet-web';
 
 import {
   type CodifiedError,

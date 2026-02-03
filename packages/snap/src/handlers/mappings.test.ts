@@ -4,8 +4,8 @@ import type {
   ScriptBuf,
   Amount,
   Txid,
-} from '@metamask/bitcoindevkit';
-import { Address } from '@metamask/bitcoindevkit';
+} from '@bitcoindevkit/bdk-wallet-web';
+import { Address } from '@bitcoindevkit/bdk-wallet-web';
 import { TransactionStatus, FeeType } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
 
@@ -15,7 +15,7 @@ import { mapPsbtToTransaction } from './mappings';
 
 // Mock the entire bitcoindevkit module
 /* eslint-disable @typescript-eslint/naming-convention */
-jest.mock('@metamask/bitcoindevkit', () => ({
+jest.mock('@bitcoindevkit/bdk-wallet-web', () => ({
   Address: {
     from_script: jest.fn(),
   },

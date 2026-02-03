@@ -1,5 +1,5 @@
-import { Psbt, Address, Amount } from '@metamask/bitcoindevkit';
-import type { Transaction, Txid } from '@metamask/bitcoindevkit';
+import { Psbt, Address, Amount } from '@bitcoindevkit/bdk-wallet-web';
+import type { Transaction, Txid } from '@bitcoindevkit/bdk-wallet-web';
 import type { Transaction as KeyringTransaction } from '@metamask/keyring-api';
 import { BtcScope, FeeType } from '@metamask/keyring-api';
 import type { JsonRpcRequest } from '@metamask/snaps-sdk';
@@ -15,7 +15,7 @@ import { mapPsbtToTransaction } from './mappings';
 const mockPsbt = mock<Psbt>();
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
 /* eslint-disable @typescript-eslint/naming-convention */
-jest.mock('@metamask/bitcoindevkit', () => ({
+jest.mock('@bitcoindevkit/bdk-wallet-web', () => ({
   Psbt: { from_string: jest.fn() },
   Address: {
     from_string: jest.fn(),

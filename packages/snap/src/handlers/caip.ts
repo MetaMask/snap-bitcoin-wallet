@@ -1,4 +1,4 @@
-import type { AddressType, Network } from '@metamask/bitcoindevkit';
+import type { AddressType, Network } from '@bitcoindevkit/bdk-wallet-web';
 import { BtcAccountType, BtcScope } from '@metamask/keyring-api';
 
 const reverseMapping = <

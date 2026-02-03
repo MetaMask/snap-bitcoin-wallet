@@ -6,8 +6,8 @@ import type {
   Transaction,
   TxOut,
   WalletTx,
-} from '@metamask/bitcoindevkit';
-import { Address } from '@metamask/bitcoindevkit';
+} from '@bitcoindevkit/bdk-wallet-web';
+import { Address } from '@bitcoindevkit/bdk-wallet-web';
 import type {
   DiscoveredAccount,
   KeyringAccount,

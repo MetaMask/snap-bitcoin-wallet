@@ -2,8 +2,8 @@ import type {
   FeeEstimates,
   Network,
   Transaction,
-} from '@metamask/bitcoindevkit';
-import { EsploraClient } from '@metamask/bitcoindevkit';
+} from '@bitcoindevkit/bdk-wallet-web';
+import { EsploraClient } from '@bitcoindevkit/bdk-wallet-web';
 
 import {
   type BitcoinAccount,
