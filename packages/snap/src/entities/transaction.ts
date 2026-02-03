@@ -1,4 +1,4 @@
-import type { Amount, Psbt, ScriptBuf } from '@metamask/bitcoindevkit';
+import type { Amount, Psbt, ScriptBuf } from '@bitcoindevkit/bdk-wallet-web';
 
 /**
  * A Bitcoin transaction builder.

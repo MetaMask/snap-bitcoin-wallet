@@ -6,7 +6,7 @@ import type {
   Transaction,
   Txid,
   WalletTx,
-} from '@metamask/bitcoindevkit';
+} from '@bitcoindevkit/bdk-wallet-web';
 import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 import { Signer } from 'bip322-js';
 import { encode } from 'wif';

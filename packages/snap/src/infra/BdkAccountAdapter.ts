@@ -15,7 +15,7 @@ import type {
   Amount,
   ScriptBuf,
   Address,
-} from '@metamask/bitcoindevkit';
+} from '@bitcoindevkit/bdk-wallet-web';
 import {
   FeeRate,
   UnconfirmedTx,
@@ -23,7 +23,7 @@ import {
   Txid,
   Wallet,
   OutPoint,
-} from '@metamask/bitcoindevkit';
+} from '@bitcoindevkit/bdk-wallet-web';
 
 import {
   AccountCapability,

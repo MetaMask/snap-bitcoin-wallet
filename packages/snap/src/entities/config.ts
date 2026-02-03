@@ -1,4 +1,4 @@
-import type { AddressType, Network } from '@metamask/bitcoindevkit';
+import type { AddressType, Network } from '@bitcoindevkit/bdk-wallet-web';
 
 import type { LogLevel } from './logger';
 

@@ -1,5 +1,5 @@
-import type { Network, AddressType } from '@metamask/bitcoindevkit';
-import { Address, Amount } from '@metamask/bitcoindevkit';
+import type { Network, AddressType } from '@bitcoindevkit/bdk-wallet-web';
+import { Address, Amount } from '@bitcoindevkit/bdk-wallet-web';
 import { CaipAssetTypeStruct } from '@metamask/utils';
 import type { Infer } from 'superstruct';
 import {

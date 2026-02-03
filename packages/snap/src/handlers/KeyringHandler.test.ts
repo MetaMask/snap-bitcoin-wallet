@@ -7,8 +7,8 @@ import type {
   WalletTx,
   AddressType,
   ScriptBuf,
-} from '@metamask/bitcoindevkit';
-import { Address } from '@metamask/bitcoindevkit';
+} from '@bitcoindevkit/bdk-wallet-web';
+import { Address } from '@bitcoindevkit/bdk-wallet-web';
 import type {
   DiscoveredAccount,
   KeyringResponse,
@@ -42,7 +42,7 @@ jest.mock('superstruct', () => ({
 
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
 /* eslint-disable @typescript-eslint/naming-convention */
-jest.mock('@metamask/bitcoindevkit', () => {
+jest.mock('@bitcoindevkit/bdk-wallet-web', () => {
   return {
     Address: {
       from_script: jest.fn(),

@@ -4,7 +4,7 @@ import {
   Amount,
   Psbt,
   type Transaction,
-} from '@metamask/bitcoindevkit';
+} from '@bitcoindevkit/bdk-wallet-web';
 import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
 import type { CurrencyRate, InputChangeEvent } from '@metamask/snaps-sdk';
 

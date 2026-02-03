@@ -1,4 +1,4 @@
-import type { WalletTx } from '@metamask/bitcoindevkit';
+import type { WalletTx } from '@bitcoindevkit/bdk-wallet-web';
 import { getSelectedAccounts } from '@metamask/keyring-snap-sdk';
 import type { SnapsProvider, JsonRpcRequest } from '@metamask/snaps-sdk';
 import { mock } from 'jest-mock-extended';

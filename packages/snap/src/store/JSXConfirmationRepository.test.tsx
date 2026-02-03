@@ -1,4 +1,4 @@
-import type { Address } from '@metamask/bitcoindevkit';
+import type { Address } from '@bitcoindevkit/bdk-wallet-web';
 import type { GetPreferencesResult } from '@metamask/snaps-sdk';
 import { mock } from 'jest-mock-extended';
 

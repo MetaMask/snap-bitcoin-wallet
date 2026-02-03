@@ -2,8 +2,8 @@ import type {
   FeeEstimates,
   Network,
   Transaction,
-} from '@metamask/bitcoindevkit';
-import { Psbt, Address, Amount } from '@metamask/bitcoindevkit';
+} from '@bitcoindevkit/bdk-wallet-web';
+import { Psbt, Address, Amount } from '@bitcoindevkit/bdk-wallet-web';
 import type { GetPreferencesResult } from '@metamask/snaps-sdk';
 import { mock } from 'jest-mock-extended';
 
@@ -32,7 +32,7 @@ import type { AccountUseCases } from './AccountUseCases';
 
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
 /* eslint-disable @typescript-eslint/naming-convention */
-jest.mock('@metamask/bitcoindevkit', () => {
+jest.mock('@bitcoindevkit/bdk-wallet-web', () => {
   return {
     Address: {
       from_string: jest.fn(),

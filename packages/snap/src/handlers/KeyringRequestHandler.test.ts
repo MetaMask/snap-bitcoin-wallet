@@ -1,4 +1,9 @@
-import type { Txid, Psbt, Amount, LocalOutput } from '@metamask/bitcoindevkit';
+import type {
+  Txid,
+  Psbt,
+  Amount,
+  LocalOutput,
+} from '@bitcoindevkit/bdk-wallet-web';
 import type { KeyringRequest } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';

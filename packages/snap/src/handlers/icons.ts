@@ -1,4 +1,4 @@
-import type { Network } from '@metamask/bitcoindevkit';
+import type { Network } from '@bitcoindevkit/bdk-wallet-web';
 
 export const networkToIcon: Record<Network, string> = {
   bitcoin:

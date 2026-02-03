@@ -1,5 +1,5 @@
-import type { Network } from '@metamask/bitcoindevkit';
-import { Amount, BdkErrorCode } from '@metamask/bitcoindevkit';
+import type { Network } from '@bitcoindevkit/bdk-wallet-web';
+import { Amount, BdkErrorCode } from '@bitcoindevkit/bdk-wallet-web';
 import type { CaipAccountId, CurrencyRate } from '@metamask/snaps-sdk';
 
 import type { CurrencyUnit, Messages } from '../../entities';

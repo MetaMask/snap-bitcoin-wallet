@@ -1579,6 +1579,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@bitcoindevkit/bdk-wallet-web@npm:^0.2.0":
+  version: 0.2.0
+  resolution: "@bitcoindevkit/bdk-wallet-web@npm:0.2.0"
+  checksum: 10/aa9cf729f1b8ac5da41ff4e6f7fa384f459399fa8d827c2053dddc173ec7131b5daeabfc03af22b881d57fbadb36d31962480e61357dba3cb29f8908a9867a72
+  languageName: node
+  linkType: hard
+
 "@bitcoinerlab/secp256k1@npm:^1.2.0":
   version: 1.2.0
   resolution: "@bitcoinerlab/secp256k1@npm:1.2.0"
@@ -2885,8 +2892,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@metamask/bitcoin-wallet-snap@workspace:packages/snap"
   dependencies:
+    "@bitcoindevkit/bdk-wallet-web": "npm:^0.2.0"
     "@jest/globals": "npm:^30.0.5"
-    "@metamask/bitcoindevkit": "npm:^0.1.13"
     "@metamask/key-tree": "npm:^10.1.1"
     "@metamask/keyring-api": "npm:^21.3.0"
     "@metamask/keyring-snap-sdk": "npm:^7.1.1"
@@ -2932,13 +2939,6 @@ __metadata:
     uuid: "npm:^11.1.0"
   languageName: unknown
   linkType: soft
-
-"@metamask/bitcoindevkit@npm:^0.1.13":
-  version: 0.1.13
-  resolution: "@metamask/bitcoindevkit@npm:0.1.13"
-  checksum: 10/650d140df7cf4e86af0102cdfade71d3c56a28999a0f477108018c6240110d9f9b19b5c3582b761c806bfcef9763b4b4b4089c0bcd16f4f41d856fbc38ae6e21
-  languageName: node
-  linkType: hard
 
 "@metamask/controller-utils@npm:^11.16.0, @metamask/controller-utils@npm:^11.17.0":
   version: 11.18.0

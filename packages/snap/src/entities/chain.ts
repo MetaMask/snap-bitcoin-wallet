@@ -2,7 +2,7 @@ import type {
   FeeEstimates,
   Network,
   Transaction,
-} from '@metamask/bitcoindevkit';
+} from '@bitcoindevkit/bdk-wallet-web';
 
 import type { BitcoinAccount } from './account';
 

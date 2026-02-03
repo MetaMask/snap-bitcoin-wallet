@@ -1,12 +1,12 @@
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
 /* eslint-disable camelcase */
 
-import type { DescriptorPair } from '@metamask/bitcoindevkit';
+import type { DescriptorPair } from '@bitcoindevkit/bdk-wallet-web';
 import {
   ChangeSet,
   xpriv_to_descriptor,
   xpub_to_descriptor,
-} from '@metamask/bitcoindevkit';
+} from '@bitcoindevkit/bdk-wallet-web';
 import type { SLIP10Node } from '@metamask/key-tree';
 import { mock } from 'jest-mock-extended';
 
@@ -21,7 +21,7 @@ import { BdkAccountRepository } from './BdkAccountRepository';
 
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
 /* eslint-disable @typescript-eslint/naming-convention */
-jest.mock('@metamask/bitcoindevkit', () => {
+jest.mock('@bitcoindevkit/bdk-wallet-web', () => {
   return {
     ChangeSet: {
       from_json: jest.fn(),
