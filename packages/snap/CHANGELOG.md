@@ -9,10 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.10.0]
 
-### Uncategorized
+### Changed
 
-- Feat/balance event ([#577](https://github.com/MetaMask/snap-bitcoin-wallet/pull/577))
-- chore: update Snaps technology dependencies ([#574](https://github.com/MetaMask/snap-bitcoin-wallet/pull/574))
+- Modify balance/transaction events sending ([#577](https://github.com/MetaMask/snap-bitcoin-wallet/pull/577))
+- update Snaps technology dependencies ([#574](https://github.com/MetaMask/snap-bitcoin-wallet/pull/574))
 
 ## [1.9.0]
 
