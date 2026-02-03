@@ -1,8 +1,9 @@
+import type { WalletTx } from '@metamask/bitcoindevkit';
 import { getSelectedAccounts } from '@metamask/keyring-snap-sdk';
 import type { SnapsProvider, JsonRpcRequest } from '@metamask/snaps-sdk';
 import { mock } from 'jest-mock-extended';
 
-import type { BitcoinAccount, SnapClient } from '../entities';
+import type { BitcoinAccount, SnapClient, SyncResult } from '../entities';
 import type { SendFlowUseCases, AccountUseCases } from '../use-cases';
 import { CronHandler, CronMethod } from './CronHandler';
 
@@ -34,18 +35,28 @@ describe('CronHandler', () => {
   });
 
   describe('synchronizeAccounts', () => {
-    const mockAccounts = [
-      mock<BitcoinAccount>({ id: 'account-1' }),
-      mock<BitcoinAccount>({ id: 'account-2' }),
-    ];
+    const mockAccount1 = mock<BitcoinAccount>({ id: 'account-1' });
+    const mockAccount2 = mock<BitcoinAccount>({ id: 'account-2' });
+    const mockAccounts = [mockAccount1, mockAccount2];
     const request = { method: 'synchronizeAccounts' } as JsonRpcRequest;
 
-    it('synchronizes all selected accounts', async () => {
+    it('synchronizes all selected accounts and emits batched events', async () => {
+      const mockResult1: SyncResult = {
+        account: mockAccount1,
+        transactionsToNotify: [],
+      };
+      const mockResult2: SyncResult = {
+        account: mockAccount2,
+        transactionsToNotify: [],
+      };
       (getSelectedAccounts as jest.Mock).mockResolvedValue([
         'account-1',
         'account-2',
       ]);
       mockAccountUseCases.list.mockResolvedValue(mockAccounts);
+      mockAccountUseCases.synchronize
+        .mockResolvedValueOnce(mockResult1)
+        .mockResolvedValueOnce(mockResult2);
 
       await handler.route(request);
 
@@ -54,6 +65,41 @@ describe('CronHandler', () => {
       expect(mockAccountUseCases.synchronize).toHaveBeenCalledTimes(
         mockAccounts.length,
       );
+      expect(
+        mockSnapClient.emitAccountBalancesUpdatedEvent,
+      ).toHaveBeenCalledWith(mockAccounts);
+      expect(
+        mockSnapClient.emitAccountBalancesUpdatedEvent,
+      ).toHaveBeenCalledTimes(1);
+    });
+
+    it('emits transaction events for accounts with new transactions', async () => {
+      const mockTx = mock<WalletTx>();
+      const mockResult1: SyncResult = {
+        account: mockAccount1,
+        transactionsToNotify: [mockTx],
+      };
+      const mockResult2: SyncResult = {
+        account: mockAccount2,
+        transactionsToNotify: [],
+      };
+      (getSelectedAccounts as jest.Mock).mockResolvedValue([
+        'account-1',
+        'account-2',
+      ]);
+      mockAccountUseCases.list.mockResolvedValue(mockAccounts);
+      mockAccountUseCases.synchronize
+        .mockResolvedValueOnce(mockResult1)
+        .mockResolvedValueOnce(mockResult2);
+
+      await handler.route(request);
+
+      expect(
+        mockSnapClient.emitAccountTransactionsUpdatedEvent,
+      ).toHaveBeenCalledWith(mockAccount1, [mockTx]);
+      expect(
+        mockSnapClient.emitAccountTransactionsUpdatedEvent,
+      ).toHaveBeenCalledTimes(1);
     });
 
     it('propagates errors from list', async () => {
@@ -76,13 +122,19 @@ describe('CronHandler', () => {
       expect(mockAccountUseCases.synchronize).not.toHaveBeenCalled();
     });
 
-    it('throws error if some account fails to synchronize', async () => {
+    it('throws error if some account fails but still emits for successful ones', async () => {
+      const mockResult: SyncResult = {
+        account: mockAccount1,
+        transactionsToNotify: [],
+      };
       (getSelectedAccounts as jest.Mock).mockResolvedValue([
         'account-1',
         'account-2',
       ]);
       mockAccountUseCases.list.mockResolvedValue(mockAccounts);
-      mockAccountUseCases.synchronize.mockRejectedValue(new Error('error'));
+      mockAccountUseCases.synchronize
+        .mockResolvedValueOnce(mockResult)
+        .mockRejectedValueOnce(new Error('error'));
 
       await expect(handler.route(request)).rejects.toThrow(
         'Account synchronization failures',
@@ -91,6 +143,10 @@ describe('CronHandler', () => {
       expect(mockAccountUseCases.synchronize).toHaveBeenCalledTimes(
         mockAccounts.length,
       );
+      // Should still emit for successful account
+      expect(
+        mockSnapClient.emitAccountBalancesUpdatedEvent,
+      ).toHaveBeenCalledWith([mockAccounts[0]]);
     });
   });
 
@@ -133,11 +189,10 @@ describe('CronHandler', () => {
   });
 
   describe('syncSelectedAccounts', () => {
-    const mockAccounts = [
-      mock<BitcoinAccount>({ id: 'account-1' }),
-      mock<BitcoinAccount>({ id: 'account-2' }),
-      mock<BitcoinAccount>({ id: 'account-3' }),
-    ];
+    const mockAccount1 = mock<BitcoinAccount>({ id: 'account-1' });
+    const mockAccount2 = mock<BitcoinAccount>({ id: 'account-2' });
+    const mockAccount3 = mock<BitcoinAccount>({ id: 'account-3' });
+    const mockAccounts = [mockAccount1, mockAccount2, mockAccount3];
     const request = {
       method: CronMethod.SyncSelectedAccounts,
       params: { accountIds: ['account-1', 'account-2'] },
@@ -149,8 +204,19 @@ describe('CronHandler', () => {
       ).rejects.toThrow('');
     });
 
-    it('performs full scan on selected accounts', async () => {
+    it('synchronizes selected accounts and emits batched events', async () => {
+      const mockResult1: SyncResult = {
+        account: mockAccount1,
+        transactionsToNotify: [],
+      };
+      const mockResult2: SyncResult = {
+        account: mockAccount2,
+        transactionsToNotify: [],
+      };
       mockAccountUseCases.list.mockResolvedValue(mockAccounts);
+      mockAccountUseCases.synchronize
+        .mockResolvedValueOnce(mockResult1)
+        .mockResolvedValueOnce(mockResult2);
 
       await handler.route(request);
 
@@ -164,6 +230,13 @@ describe('CronHandler', () => {
         mockAccounts[1],
         'metamask',
       );
+      // Verify batched balance event
+      expect(
+        mockSnapClient.emitAccountBalancesUpdatedEvent,
+      ).toHaveBeenCalledWith([mockAccounts[0], mockAccounts[1]]);
+      expect(
+        mockSnapClient.emitAccountBalancesUpdatedEvent,
+      ).toHaveBeenCalledTimes(1);
     });
 
     it('returns early if the client is not active', async () => {
@@ -185,16 +258,24 @@ describe('CronHandler', () => {
       await expect(handler.route(request)).rejects.toThrow(error);
     });
 
-    it('completes successfully even if some accounts fail to scan', async () => {
+    it('emits events only for successful accounts when some fail', async () => {
+      const mockResult: SyncResult = {
+        account: mockAccount1,
+        transactionsToNotify: [],
+      };
       mockAccountUseCases.list.mockResolvedValue(mockAccounts);
       mockAccountUseCases.synchronize
-        .mockResolvedValueOnce(undefined)
+        .mockResolvedValueOnce(mockResult)
         .mockRejectedValueOnce(new Error('scan failed'));
 
       const result = await handler.route(request);
 
       expect(result).toBeUndefined();
       expect(mockAccountUseCases.synchronize).toHaveBeenCalledTimes(2);
+      // Should emit for successful account only
+      expect(
+        mockSnapClient.emitAccountBalancesUpdatedEvent,
+      ).toHaveBeenCalledWith([mockAccounts[0]]);
     });
   });
 
@@ -211,13 +292,25 @@ describe('CronHandler', () => {
       ).rejects.toThrow('');
     });
 
-    it('performs full scan on the specified account', async () => {
+    it('performs full scan and emits events', async () => {
+      const mockTxs = [mock<WalletTx>()];
+      const mockResult: SyncResult = {
+        account: mockAccount,
+        transactionsToNotify: mockTxs,
+      };
       mockAccountUseCases.get.mockResolvedValue(mockAccount);
+      mockAccountUseCases.fullScan.mockResolvedValue(mockResult);
 
       await handler.route(request);
 
       expect(mockAccountUseCases.get).toHaveBeenCalledWith('account-1');
       expect(mockAccountUseCases.fullScan).toHaveBeenCalledWith(mockAccount);
+      expect(
+        mockSnapClient.emitAccountBalancesUpdatedEvent,
+      ).toHaveBeenCalledWith([mockAccount]);
+      expect(
+        mockSnapClient.emitAccountTransactionsUpdatedEvent,
+      ).toHaveBeenCalledWith(mockAccount, mockTxs);
     });
 
     it('returns early if the client is not active', async () => {
