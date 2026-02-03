@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.10.0]
 
-### Uncategorized
+### Changed
 
-- chore: update Snaps technology dependencies ([#574](https://github.com/MetaMask/snap-bitcoin-wallet/pull/574))
+- update Snaps technology dependencies ([#574](https://github.com/MetaMask/snap-bitcoin-wallet/pull/574))
 
 ## [1.0.0]
 
