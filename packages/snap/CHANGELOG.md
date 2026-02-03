@@ -12,7 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Modify balance/transaction events sending ([#577](https://github.com/MetaMask/snap-bitcoin-wallet/pull/577))
-- update Snaps technology dependencies ([#574](https://github.com/MetaMask/snap-bitcoin-wallet/pull/574))
+- Bump `@metamask/keyring-api` from `^21.1.0` to `^21.3.0` ([#574](https://github.com/MetaMask/snap-bitcoin-wallet/pull/574))
+- Bump `@metamask/keyring-snap-sdk` from `^7.1.0` to `^7.1.1` ([#574](https://github.com/MetaMask/snap-bitcoin-wallet/pull/574))
 
 ## [1.9.0]
 
