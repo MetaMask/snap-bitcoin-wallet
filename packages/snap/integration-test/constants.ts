@@ -9,6 +9,13 @@ export const TEST_ADDRESS_REGTEST =
   'bcrt1qjtgffm20l9vu6a7gacxvpu2ej4kdcsgcgnly6t';
 export const TEST_ADDRESS_MAINNET =
   'bc1q832zlt4tgnqy88vd20mazw77dlt0j0wf2naw8q';
+
+// P2TR (Taproot) addresses
+export const TEST_ADDRESS_P2TR_MAINNET =
+  'bc1p4rue37y0v9snd4z3fvw43d29u97qxf9j3fva72xy2t7hekg24dzsaz40mz';
+export const TEST_ADDRESS_P2TR_TESTNET =
+  'tb1pwwjax3vpq6h69965hcr22vkpm4qdvyu2pz67wyj8eagp9vxkcz0q0ya20h';
+
 export const ORIGIN = 'metamask';
 export const FUNDING_TX = {
   account: expect.any(Number),
