@@ -17,6 +17,7 @@ import type {
 } from '@metamask/keyring-api';
 import { BtcAccountType, BtcScope } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
+import { assert } from 'superstruct';
 
 import type { BitcoinAccount, Logger, SnapClient } from '../entities';
 import {
@@ -26,7 +27,7 @@ import {
   FormatError,
 } from '../entities';
 import { scopeToNetwork, caipToAddressType, Caip19Asset } from './caip';
-import { KeyringHandler } from './KeyringHandler';
+import { CreateAccountRequest, KeyringHandler } from './KeyringHandler';
 import type { KeyringRequestHandler } from './KeyringRequestHandler';
 import { mapToDiscoveredAccount } from './mappings';
 import type {
@@ -156,6 +157,7 @@ describe('KeyringHandler', () => {
         };
 
         await handler.createAccount(options);
+        expect(assert).toHaveBeenCalledWith(options, CreateAccountRequest);
         expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
       },
     );
