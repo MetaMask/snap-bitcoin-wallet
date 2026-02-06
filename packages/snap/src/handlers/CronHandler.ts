@@ -5,6 +5,7 @@ import { array, assert, object, string } from 'superstruct';
 import {
   InexistentMethodError,
   type SnapClient,
+  type SyncResult,
   SynchronizationError,
 } from '../entities';
 import type { SendFlowUseCases, AccountUseCases } from '../use-cases';
@@ -88,20 +89,27 @@ export class CronHandler {
     });
 
     const results = await Promise.allSettled(
-      accounts.map(async (account) => {
-        return this.#accountsUseCases.synchronize(account, 'cron');
-      }),
+      accounts.map(async (account) =>
+        this.#accountsUseCases.synchronize(account, 'cron'),
+      ),
     );
 
+    const successfulResults: SyncResult[] = [];
+
     const errors: Record<string, any> = {};
+
     results.forEach((result, index) => {
-      if (result.status === 'rejected') {
+      if (result.status === 'fulfilled') {
+        successfulResults.push(result.value);
+      } else {
         const id = accounts[index]?.id;
         if (id) {
           errors[id] = result.reason;
         }
       }
     });
+
+    await this.#emitSyncEvents(successfulResults);
 
     if (Object.keys(errors).length > 0) {
       throw new SynchronizationError(
@@ -119,15 +127,52 @@ export class CronHandler {
       accountIdSet.has(account.id),
     );
 
-    const scanPromises = selectedAccounts.map(async (account) =>
-      this.#accountsUseCases.synchronize(account, 'metamask'),
+    const results = await Promise.allSettled(
+      selectedAccounts.map(async (account) =>
+        this.#accountsUseCases.synchronize(account, 'metamask'),
+      ),
     );
 
-    await Promise.allSettled(scanPromises);
+    const successfulResults = results
+      .filter(
+        (result): result is PromiseFulfilledResult<SyncResult> =>
+          result.status === 'fulfilled',
+      )
+      .map((result) => result.value);
+
+    await this.#emitSyncEvents(successfulResults);
+  }
+
+  /**
+   * Emit batched balance and transaction events for sync results.
+   *
+   * @param results - The successful sync results.
+   */
+  async #emitSyncEvents(results: SyncResult[]): Promise<void> {
+    if (results.length === 0) {
+      return;
+    }
+
+    // Emit one batched balance event for all accounts
+    await this.#snapClient.emitAccountBalancesUpdatedEvent(
+      results.map((syncResult) => syncResult.account),
+    );
+
+    // Emit transaction events per account
+    for (const { account, transactionsToNotify } of results) {
+      if (transactionsToNotify.length > 0) {
+        await this.#snapClient.emitAccountTransactionsUpdatedEvent(
+          account,
+          transactionsToNotify,
+        );
+      }
+    }
   }
 
   async fullScanAccount(accountId: string): Promise<void> {
     const account = await this.#accountsUseCases.get(accountId);
-    await this.#accountsUseCases.fullScan(account);
+    const result = await this.#accountsUseCases.fullScan(account);
+
+    await this.#emitSyncEvents([result]);
   }
 }

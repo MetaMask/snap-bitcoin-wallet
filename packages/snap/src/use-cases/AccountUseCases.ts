@@ -19,6 +19,7 @@ import type {
   Logger,
   MetaProtocolsClient,
   SnapClient,
+  SyncResult,
 } from '../entities';
 import {
   AccountCapability,
@@ -208,7 +209,10 @@ export class AccountUseCases {
     return newAccount;
   }
 
-  async synchronize(account: BitcoinAccount, origin: string): Promise<void> {
+  async synchronize(
+    account: BitcoinAccount,
+    origin: string,
+  ): Promise<SyncResult> {
     this.#logger.debug('Synchronizing account: %s', account.id);
 
     const txsBeforeSync = account.listTransactions();
@@ -295,18 +299,15 @@ export class AccountUseCases {
       }
     }
 
-    if (txsToNotify.length > 0) {
-      await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
-      await this.#snapClient.emitAccountTransactionsUpdatedEvent(
-        account,
-        txsToNotify,
-      );
-    }
-
     this.#logger.debug('Account synchronized successfully: %s', account.id);
+
+    return {
+      account,
+      transactionsToNotify: txsToNotify,
+    };
   }
 
-  async fullScan(account: BitcoinAccount): Promise<void> {
+  async fullScan(account: BitcoinAccount): Promise<SyncResult> {
     this.#logger.debug('Performing initial full scan: %s', account.id);
 
     await this.#chain.fullScan(account);
@@ -316,16 +317,15 @@ export class AccountUseCases {
       : [];
     await this.#repository.update(account, inscriptions);
 
-    await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
-    await this.#snapClient.emitAccountTransactionsUpdatedEvent(
-      account,
-      account.listTransactions(),
-    );
-
     this.#logger.info(
       'initial full scan performed successfully: %s',
       account.id,
     );
+
+    return {
+      account,
+      transactionsToNotify: account.listTransactions(),
+    };
   }
 
   async delete(id: string): Promise<void> {
@@ -638,7 +638,7 @@ export class AccountUseCases {
     account.applyUnconfirmedTx(tx, getCurrentUnixTimestamp());
     await this.#repository.update(account);
 
-    await this.#snapClient.emitAccountBalancesUpdatedEvent(account);
+    await this.#snapClient.emitAccountBalancesUpdatedEvent([account]);
 
     const walletTx = account.getTransaction(txid.toString());
     if (walletTx) {
