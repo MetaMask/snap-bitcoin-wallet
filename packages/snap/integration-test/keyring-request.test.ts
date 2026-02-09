@@ -1,10 +1,11 @@
-import type { KeyringAccount, KeyringRequest } from '@metamask/keyring-api';
+import type { KeyringAccount } from '@metamask/keyring-api';
 import { BtcScope } from '@metamask/keyring-api';
 import type { Snap } from '@metamask/snaps-jest';
 import { assertIsConfirmationDialog, installSnap } from '@metamask/snaps-jest';
 
 import { BlockchainTestUtils } from './blockchain-utils';
 import { MNEMONIC, ORIGIN, TEMPLATE_PSBT } from './constants';
+import { getRequiredOutpoint } from './test-helpers';
 import { AccountCapability } from '../src/entities';
 import type { FillPsbtResponse } from '../src/handlers/KeyringRequestHandler';
 
@@ -81,7 +82,7 @@ describe('KeyringRequestHandler', () => {
         request: {
           method: AccountCapability.SignPsbt,
         },
-      } as KeyringRequest,
+      },
     });
 
     expect(response).toRespondWithError({
@@ -104,7 +105,7 @@ describe('KeyringRequestHandler', () => {
         request: {
           method: 'invalidMethod',
         },
-      } as KeyringRequest,
+      },
     });
 
     expect(response).toRespondWithError({
@@ -134,7 +135,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.ListUtxos,
           },
-        } as KeyringRequest,
+        },
       });
 
       expect(response).toRespondWith({
@@ -155,6 +156,7 @@ describe('KeyringRequestHandler', () => {
       const utxos = (
         response.response as { result: { result: { outpoint: string }[] } }
       ).result.result;
+      const outpoint = getRequiredOutpoint(utxos);
 
       response = await snap.onKeyringRequest({
         origin: ORIGIN,
@@ -167,10 +169,10 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.GetUtxo,
             params: {
-              outpoint: utxos[0]?.outpoint,
+              outpoint,
             },
           },
-        } as KeyringRequest,
+        },
       });
 
       expect(response).toRespondWith({
@@ -191,7 +193,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.PublicDescriptor,
           },
-        } as KeyringRequest,
+        },
       });
 
       expect(response).toRespondWith({
@@ -226,7 +228,7 @@ describe('KeyringRequestHandler', () => {
               },
             },
           },
-        } as KeyringRequest,
+        },
       });
 
       expect(response).toRespondWith({
@@ -258,7 +260,7 @@ describe('KeyringRequestHandler', () => {
               },
             },
           },
-        } as KeyringRequest,
+        },
       });
 
       expect(response).toRespondWith({
@@ -290,7 +292,7 @@ describe('KeyringRequestHandler', () => {
               },
             },
           },
-        } as KeyringRequest,
+        },
       });
 
       expect(response).toRespondWith({
@@ -321,7 +323,7 @@ describe('KeyringRequestHandler', () => {
               },
             },
           },
-        } as KeyringRequest,
+        },
       });
 
       expect(response).toRespondWithError({
@@ -350,7 +352,7 @@ describe('KeyringRequestHandler', () => {
               psbt: TEMPLATE_PSBT,
             },
           },
-        } as KeyringRequest,
+        },
       });
 
       expect(response).toRespondWithError({
@@ -379,7 +381,7 @@ describe('KeyringRequestHandler', () => {
               feeRate: 3,
             },
           },
-        } as KeyringRequest,
+        },
       });
 
       expect(response).toRespondWith({
@@ -405,7 +407,7 @@ describe('KeyringRequestHandler', () => {
               psbt: 'notAPsbt',
             },
           },
-        } as KeyringRequest,
+        },
       });
 
       expect(response).toRespondWithError({
@@ -437,7 +439,7 @@ describe('KeyringRequestHandler', () => {
               feeRate: 3,
             },
           },
-        } as KeyringRequest,
+        },
       });
 
       expect(response).toRespondWith({
@@ -463,7 +465,7 @@ describe('KeyringRequestHandler', () => {
               psbt: 'notAPsbt',
             },
           },
-        } as KeyringRequest,
+        },
       });
 
       expect(response).toRespondWithError({
@@ -500,7 +502,7 @@ describe('KeyringRequestHandler', () => {
               },
             },
           },
-        } as KeyringRequest,
+        },
       });
 
       const { result } = (
@@ -521,7 +523,7 @@ describe('KeyringRequestHandler', () => {
               psbt: result.psbt,
             },
           },
-        } as KeyringRequest,
+        },
       });
 
       expect(response).toRespondWith({
@@ -547,7 +549,7 @@ describe('KeyringRequestHandler', () => {
               psbt: 'notAPsbt',
             },
           },
-        } as KeyringRequest,
+        },
       });
 
       expect(response).toRespondWithError({
@@ -588,7 +590,7 @@ describe('KeyringRequestHandler', () => {
               feeRate: 3,
             },
           },
-        } as KeyringRequest,
+        },
       });
 
       expect(response).toRespondWith({
@@ -614,7 +616,7 @@ describe('KeyringRequestHandler', () => {
               recipients: [{ address: 'notAnAddress', amount: '1000' }],
             },
           },
-        } as KeyringRequest,
+        },
       });
 
       expect(response).toRespondWithError({
@@ -642,7 +644,7 @@ describe('KeyringRequestHandler', () => {
               message: 'Hello, world!',
             },
           },
-        } as KeyringRequest,
+        },
       });
 
       const ui = await response.getInterface();

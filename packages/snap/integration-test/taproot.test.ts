@@ -1,10 +1,11 @@
-import type { KeyringAccount, KeyringRequest } from '@metamask/keyring-api';
+import type { KeyringAccount } from '@metamask/keyring-api';
 import { BtcAccountType, BtcScope } from '@metamask/keyring-api';
 import type { Snap } from '@metamask/snaps-jest';
 import { assertIsConfirmationDialog, installSnap } from '@metamask/snaps-jest';
 
 import { BlockchainTestUtils } from './blockchain-utils';
 import { MNEMONIC, ORIGIN, TEMPLATE_PSBT } from './constants';
+import { getRequiredOutpoint } from './test-helpers';
 import { AccountCapability } from '../src/entities';
 import type { FillPsbtResponse } from '../src/handlers/KeyringRequestHandler';
 
@@ -99,7 +100,7 @@ describe('Taproot (P2TR) Integration Tests', () => {
           request: {
             method: AccountCapability.ListUtxos,
           },
-        } as KeyringRequest,
+        },
       });
 
       expect(response).toRespondWith({
@@ -126,12 +127,13 @@ describe('Taproot (P2TR) Integration Tests', () => {
           request: {
             method: AccountCapability.ListUtxos,
           },
-        } as KeyringRequest,
+        },
       });
 
       const utxos = (
         response.response as { result: { result: { outpoint: string }[] } }
       ).result.result;
+      const outpoint = getRequiredOutpoint(utxos);
 
       // Then get a specific UTXO
       response = await snap.onKeyringRequest({
@@ -145,16 +147,16 @@ describe('Taproot (P2TR) Integration Tests', () => {
           request: {
             method: AccountCapability.GetUtxo,
             params: {
-              outpoint: utxos[0]?.outpoint,
+              outpoint,
             },
           },
-        } as KeyringRequest,
+        },
       });
 
       expect(response).toRespondWith({
         pending: false,
         result: expect.objectContaining({
-          outpoint: utxos[0]?.outpoint,
+          outpoint,
           address: expect.stringMatching(/^bcrt1p/u),
         }),
       });
@@ -172,7 +174,7 @@ describe('Taproot (P2TR) Integration Tests', () => {
           request: {
             method: AccountCapability.PublicDescriptor,
           },
-        } as KeyringRequest,
+        },
       });
 
       expect(response).toRespondWith({
@@ -200,7 +202,7 @@ describe('Taproot (P2TR) Integration Tests', () => {
               feeRate: 3,
             },
           },
-        } as KeyringRequest,
+        },
       });
 
       expect(response).toRespondWith({
@@ -231,7 +233,7 @@ describe('Taproot (P2TR) Integration Tests', () => {
               },
             },
           },
-        } as KeyringRequest,
+        },
       });
 
       expect(response).toRespondWith({
@@ -263,7 +265,7 @@ describe('Taproot (P2TR) Integration Tests', () => {
               },
             },
           },
-        } as KeyringRequest,
+        },
       });
 
       expect(response).toRespondWith({
@@ -294,7 +296,7 @@ describe('Taproot (P2TR) Integration Tests', () => {
               feeRate: 3,
             },
           },
-        } as KeyringRequest,
+        },
       });
 
       expect(response).toRespondWith({
@@ -329,7 +331,7 @@ describe('Taproot (P2TR) Integration Tests', () => {
               feeRate: 3,
             },
           },
-        } as KeyringRequest,
+        },
       });
 
       expect(response).toRespondWith({
@@ -366,7 +368,7 @@ describe('Taproot (P2TR) Integration Tests', () => {
               feeRate: 3,
             },
           },
-        } as KeyringRequest,
+        },
       });
 
       expect(response).toRespondWith({
@@ -405,7 +407,7 @@ describe('Taproot (P2TR) Integration Tests', () => {
               feeRate: 3,
             },
           },
-        } as KeyringRequest,
+        },
       });
 
       expect(response).toRespondWith({
@@ -436,7 +438,7 @@ describe('Taproot (P2TR) Integration Tests', () => {
               message: 'Hello, Taproot!',
             },
           },
-        } as KeyringRequest,
+        },
       });
 
       const ui = await response.getInterface();
@@ -469,7 +471,7 @@ describe('Taproot (P2TR) Integration Tests', () => {
               message: '',
             },
           },
-        } as KeyringRequest,
+        },
       });
 
       const ui = await response.getInterface();
@@ -509,7 +511,7 @@ describe('Taproot (P2TR) Integration Tests', () => {
               },
             },
           },
-        } as KeyringRequest,
+        },
       });
 
       const { result } = (
@@ -531,7 +533,7 @@ describe('Taproot (P2TR) Integration Tests', () => {
               psbt: result.psbt,
             },
           },
-        } as KeyringRequest,
+        },
       });
 
       expect(response).toRespondWith({
