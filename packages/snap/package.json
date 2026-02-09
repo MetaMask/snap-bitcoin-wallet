@@ -21,6 +21,8 @@
     "build:clean": "yarn clean && yarn build:locale && yarn build",
     "build:locale": "node ./scripts/populate-en-locale.js && prettier 'locales/**/*.json' -w",
     "build:locale:watch": "npx nodemon --watch packages/snap/messages.json --exec \"node ./scripts/populate-en-locale.js && prettier 'locales/**/*.json' -w\"",
+    "changelog:update": "../../scripts/update-changelog.sh @metamask/tron-wallet-snap",
+    "changelog:validate": "../../scripts/validate-changelog.sh @metamask/tron-wallet-snap",
     "clean": "rimraf dist",
     "lint": "yarn lint:eslint && yarn lint:misc && yarn lint:deps && yarn lint:types",
     "lint:deps": "depcheck",
@@ -36,6 +38,7 @@
   },
   "devDependencies": {
     "@jest/globals": "^30.0.5",
+    "@metamask/auto-changelog": "^3.4.4",
     "@metamask/bitcoindevkit": "^0.1.13",
     "@metamask/key-tree": "^10.1.1",
     "@metamask/keyring-api": "^21.3.0",

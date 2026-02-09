@@ -19,6 +19,8 @@
     "build": "yarn workspaces foreach --all --parallel --verbose --topological run build",
     "build:dapp": "yarn workspace @metamask/bitcoin-wallet-test-dapp build",
     "build:snap": "yarn workspace @metamask/bitcoin-wallet-snap build",
+    "changelog:update": "yarn workspaces foreach --all --no-private --parallel --interlaced --verbose run changelog:update",
+    "changelog:validate": "yarn workspaces foreach --all --no-private --parallel --interlaced --verbose run changelog:validate",
     "lint": "yarn workspaces foreach --all --parallel --verbose run lint",
     "lint:deps": "yarn workspaces foreach --all --parallel --verbose run lint:deps",
     "lint:eslint": "yarn workspaces foreach --all --parallel --verbose run lint:eslint",
