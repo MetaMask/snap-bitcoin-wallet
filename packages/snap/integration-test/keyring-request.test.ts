@@ -4,7 +4,7 @@ import type { Snap } from '@metamask/snaps-jest';
 import { assertIsConfirmationDialog, installSnap } from '@metamask/snaps-jest';
 
 import { BlockchainTestUtils } from './blockchain-utils';
-import { MNEMONIC, ORIGIN } from './constants';
+import { MNEMONIC, ORIGIN, TEMPLATE_PSBT } from './constants';
 import { AccountCapability } from '../src/entities';
 import type { FillPsbtResponse } from '../src/handlers/KeyringRequestHandler';
 
@@ -203,9 +203,6 @@ describe('KeyringRequestHandler', () => {
   });
 
   describe('signPsbt', () => {
-    // PSBTs can be decoded here: https://bitcoincore.tech/apps/bitcoinjs-ui/index.html
-    const TEMPLATE_PSBT =
-      'cHNidP8BAI4CAAAAAAM1gwEAAAAAACJRIORP1Ndiq325lSC/jMG0RlhATHYmuuULfXgEHUM3u5i4AAAAAAAAAAAxai8AAUSx+i9Igg4HWdcpyagCs8mzuRCklgA7nRMkm69rAAAAAAAAAAAAAQACAAAAACp2AAAAAAAAFgAUgpMvYEJ/dp36svRJyRtNnpSo7bQAAAAAAAAAAAA=';
     const SIGNED_PSBT =
       'cHNidP8BAI4CAAAAAAM1gwEAAAAAACJRIORP1Ndiq325lSC/jMG0RlhATHYmuuULfXgEHUM3u5i4AAAAAAAAAAAxai8AAUSx+i9Igg4HWdcpyagCs8mzuRCklgA7nRMkm69rAAAAAAAAAAAAAQACAAAAACp2AAAAAAAAFgAUgpMvYEJ/dp36svRJyRtNnpSo7bQAAAAAAAAAAA==';
 
@@ -366,10 +363,6 @@ describe('KeyringRequestHandler', () => {
   });
 
   describe('fillPsbt', () => {
-    // PSBTs can be decoded here: https://bitcoincore.tech/apps/bitcoinjs-ui/index.html
-    const TEMPLATE_PSBT =
-      'cHNidP8BAI4CAAAAAAM1gwEAAAAAACJRIORP1Ndiq325lSC/jMG0RlhATHYmuuULfXgEHUM3u5i4AAAAAAAAAAAxai8AAUSx+i9Igg4HWdcpyagCs8mzuRCklgA7nRMkm69rAAAAAAAAAAAAAQACAAAAACp2AAAAAAAAFgAUgpMvYEJ/dp36svRJyRtNnpSo7bQAAAAAAAAAAAA=';
-
     it('fills a PSBT successfully', async () => {
       const response = await snap.onKeyringRequest({
         origin: ORIGIN,
@@ -428,10 +421,6 @@ describe('KeyringRequestHandler', () => {
   });
 
   describe('computeFee', () => {
-    // PSBTs can be decoded here: https://bitcoincore.tech/apps/bitcoinjs-ui/index.html
-    const TEMPLATE_PSBT =
-      'cHNidP8BAI4CAAAAAAM1gwEAAAAAACJRIORP1Ndiq325lSC/jMG0RlhATHYmuuULfXgEHUM3u5i4AAAAAAAAAAAxai8AAUSx+i9Igg4HWdcpyagCs8mzuRCklgA7nRMkm69rAAAAAAAAAAAAAQACAAAAACp2AAAAAAAAFgAUgpMvYEJ/dp36svRJyRtNnpSo7bQAAAAAAAAAAAA=';
-
     it('computes the fee for a PSBT successfully', async () => {
       const response = await snap.onKeyringRequest({
         origin: ORIGIN,
@@ -490,10 +479,6 @@ describe('KeyringRequestHandler', () => {
   });
 
   describe('broadcastPsbt', () => {
-    // PSBTs can be decoded here: https://bitcoincore.tech/apps/bitcoinjs-ui/index.html
-    const TEMPLATE_PSBT =
-      'cHNidP8BAI4CAAAAAAM1gwEAAAAAACJRIORP1Ndiq325lSC/jMG0RlhATHYmuuULfXgEHUM3u5i4AAAAAAAAAAAxai8AAUSx+i9Igg4HWdcpyagCs8mzuRCklgA7nRMkm69rAAAAAAAAAAAAAQACAAAAACp2AAAAAAAAFgAUgpMvYEJ/dp36svRJyRtNnpSo7bQAAAAAAAAAAAA=';
-
     it('broadcasts a PSBT successfully', async () => {
       // Prepare the PSBT to broadcast so we have a valid PSBT to broadcast
       let response = await snap.onKeyringRequest({

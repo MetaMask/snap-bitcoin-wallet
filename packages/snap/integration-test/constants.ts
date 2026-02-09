@@ -57,3 +57,7 @@ export const scopeToCoinType: Record<BtcScope, string> = {
   [BtcScope.Signet]: "1'",
   [BtcScope.Regtest]: "1'",
 };
+
+// PSBTs can be decoded here: https://bitcoincore.tech/apps/bitcoinjs-ui/index.html
+export const TEMPLATE_PSBT =
+  'cHNidP8BAI4CAAAAAAM1gwEAAAAAACJRIORP1Ndiq325lSC/jMG0RlhATHYmuuULfXgEHUM3u5i4AAAAAAAAAAAxai8AAUSx+i9Igg4HWdcpyagCs8mzuRCklgA7nRMkm69rAAAAAAAAAAAAAQACAAAAACp2AAAAAAAAFgAUgpMvYEJ/dp36svRJyRtNnpSo7bQAAAAAAAAAAAA=';

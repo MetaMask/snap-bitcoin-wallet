@@ -4,7 +4,7 @@ import type { Snap } from '@metamask/snaps-jest';
 import { assertIsConfirmationDialog, installSnap } from '@metamask/snaps-jest';
 
 import { BlockchainTestUtils } from './blockchain-utils';
-import { MNEMONIC, ORIGIN } from './constants';
+import { MNEMONIC, ORIGIN, TEMPLATE_PSBT } from './constants';
 import { AccountCapability } from '../src/entities';
 import type { FillPsbtResponse } from '../src/handlers/KeyringRequestHandler';
 
@@ -185,9 +185,6 @@ describe('Taproot (P2TR) Integration Tests', () => {
 
   describe('PSBT Signing (Schnorr)', () => {
     it('fills a PSBT for P2TR account', async () => {
-      // Create a simple PSBT template that sends to a P2WPKH address
-      const templatePsbt = getTemplatePsbt();
-
       const response = await snap.onKeyringRequest({
         origin: ORIGIN,
         method: submitRequestMethod,
@@ -199,7 +196,7 @@ describe('Taproot (P2TR) Integration Tests', () => {
           request: {
             method: AccountCapability.FillPsbt,
             params: {
-              psbt: templatePsbt,
+              psbt: TEMPLATE_PSBT,
               feeRate: 3,
             },
           },
@@ -215,8 +212,6 @@ describe('Taproot (P2TR) Integration Tests', () => {
     });
 
     it('signs a PSBT with Schnorr signature (fill and sign)', async () => {
-      const templatePsbt = getTemplatePsbt();
-
       const response = await snap.onKeyringRequest({
         origin: ORIGIN,
         method: submitRequestMethod,
@@ -228,7 +223,7 @@ describe('Taproot (P2TR) Integration Tests', () => {
           request: {
             method: AccountCapability.SignPsbt,
             params: {
-              psbt: templatePsbt,
+              psbt: TEMPLATE_PSBT,
               feeRate: 3,
               options: {
                 fill: true,
@@ -249,8 +244,6 @@ describe('Taproot (P2TR) Integration Tests', () => {
     });
 
     it('signs and broadcasts a PSBT from P2TR account', async () => {
-      const templatePsbt = getTemplatePsbt();
-
       const response = await snap.onKeyringRequest({
         origin: ORIGIN,
         method: submitRequestMethod,
@@ -262,7 +255,7 @@ describe('Taproot (P2TR) Integration Tests', () => {
           request: {
             method: AccountCapability.SignPsbt,
             params: {
-              psbt: templatePsbt,
+              psbt: TEMPLATE_PSBT,
               feeRate: 3,
               options: {
                 fill: true,
@@ -286,8 +279,6 @@ describe('Taproot (P2TR) Integration Tests', () => {
     });
 
     it('computes fee for P2TR transaction', async () => {
-      const templatePsbt = getTemplatePsbt();
-
       const response = await snap.onKeyringRequest({
         origin: ORIGIN,
         method: submitRequestMethod,
@@ -299,7 +290,7 @@ describe('Taproot (P2TR) Integration Tests', () => {
           request: {
             method: AccountCapability.ComputeFee,
             params: {
-              psbt: templatePsbt,
+              psbt: TEMPLATE_PSBT,
               feeRate: 3,
             },
           },
@@ -498,8 +489,6 @@ describe('Taproot (P2TR) Integration Tests', () => {
 
   describe('Broadcast', () => {
     it('broadcasts a signed P2TR transaction', async () => {
-      const templatePsbt = getTemplatePsbt();
-
       // First sign the PSBT without broadcasting
       let response = await snap.onKeyringRequest({
         origin: ORIGIN,
@@ -512,7 +501,7 @@ describe('Taproot (P2TR) Integration Tests', () => {
           request: {
             method: AccountCapability.SignPsbt,
             params: {
-              psbt: templatePsbt,
+              psbt: TEMPLATE_PSBT,
               feeRate: 3,
               options: {
                 fill: true,
@@ -553,21 +542,4 @@ describe('Taproot (P2TR) Integration Tests', () => {
       });
     });
   });
-
-  /**
-   * Returns a valid PSBT template for testing.
-   * This template has outputs defined but inputs will be filled by the snap
-   * when using `fill: true`. The same template works for both P2WPKH and P2TR
-   * accounts since the fill operation adds appropriate inputs.
-   *
-   * @returns A base64-encoded PSBT template string.
-   */
-  function getTemplatePsbt(): string {
-    // This is the same PSBT template used in keyring-request.test.ts
-    // It has outputs to P2WPKH addresses and placeholder inputs that get replaced
-    // when fill: true is used. Decoded structure:
-    // - 3 placeholder inputs (will be replaced by account UTXOs)
-    // - Output: 30250 sats to bcrt1qstku2y3pfh9av50lxj55arm8r5gj8tf2yv5nxz
-    return 'cHNidP8BAI4CAAAAAAM1gwEAAAAAACJRIORP1Ndiq325lSC/jMG0RlhATHYmuuULfXgEHUM3u5i4AAAAAAAAAAAxai8AAUSx+i9Igg4HWdcpyagCs8mzuRCklgA7nRMkm69rAAAAAAAAAAAAAQACAAAAACp2AAAAAAAAFgAUgpMvYEJ/dp36svRJyRtNnpSo7bQAAAAAAAAAAAA=';
-  }
 });
