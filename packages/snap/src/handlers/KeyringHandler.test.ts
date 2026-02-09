@@ -157,6 +157,7 @@ describe('KeyringHandler', () => {
         };
 
         await handler.createAccount(options);
+
         expect(assert).toHaveBeenCalledWith(options, CreateAccountRequest);
         expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
       },
@@ -215,6 +216,7 @@ describe('KeyringHandler', () => {
       };
 
       await handler.createAccount(options);
+
       expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
     });
 
@@ -233,6 +235,7 @@ describe('KeyringHandler', () => {
       };
 
       await handler.createAccount(options);
+
       expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
     });
 
@@ -251,6 +254,7 @@ describe('KeyringHandler', () => {
       };
 
       await handler.createAccount(options);
+
       expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
     });
 
@@ -589,6 +593,7 @@ describe('KeyringHandler', () => {
       await expect(
         handler.discoverAccounts(scopes, entropySource, groupIndex),
       ).rejects.toThrow(error);
+
       expect(mockAccounts.discover).toHaveBeenCalled();
     });
   });
@@ -604,6 +609,7 @@ describe('KeyringHandler', () => {
       };
 
       const result = await handler.getAccountBalances(mockAccount.id);
+
       expect(mockAccounts.get).toHaveBeenCalledWith(mockAccount.id);
       expect(result).toStrictEqual(expectedResponse);
     });
@@ -641,12 +647,14 @@ describe('KeyringHandler', () => {
       };
 
       const result = await handler.getAccount('some-id');
+
       expect(mockAccounts.get).toHaveBeenCalledWith('some-id');
       expect(result).toStrictEqual(expectedKeyringAccount);
     });
 
     it('propagates errors from get', async () => {
       const error = new Error();
+
       mockAccounts.get.mockRejectedValue(error);
 
       await expect(handler.getAccount('some-id')).rejects.toThrow(error);
@@ -678,6 +686,7 @@ describe('KeyringHandler', () => {
       ];
 
       const result = await handler.listAccounts();
+
       expect(mockAccounts.list).toHaveBeenCalled();
       expect(result).toStrictEqual(expectedKeyringAccounts);
     });
@@ -687,6 +696,7 @@ describe('KeyringHandler', () => {
       mockAccounts.list.mockRejectedValue(error);
 
       await expect(handler.listAccounts()).rejects.toThrow(error);
+
       expect(mockAccounts.list).toHaveBeenCalled();
     });
   });
@@ -698,6 +708,7 @@ describe('KeyringHandler', () => {
       const result = await handler.filterAccountChains('some-id', [
         BtcScope.Mainnet,
       ]);
+
       expect(mockAccounts.get).toHaveBeenCalledWith('some-id');
       expect(result).toStrictEqual([BtcScope.Mainnet]);
     });
@@ -708,6 +719,7 @@ describe('KeyringHandler', () => {
       const result = await handler.filterAccountChains('some-id', [
         BtcScope.Testnet,
       ]);
+
       expect(mockAccounts.get).toHaveBeenCalledWith('some-id');
       expect(result).toStrictEqual([]);
     });
@@ -726,6 +738,7 @@ describe('KeyringHandler', () => {
   describe('deleteAccount', () => {
     it('deletes account', async () => {
       await handler.deleteAccount('some-id');
+
       expect(mockAccounts.delete).toHaveBeenCalledWith('some-id');
     });
 
@@ -734,6 +747,7 @@ describe('KeyringHandler', () => {
       mockAccounts.delete.mockRejectedValue(error);
 
       await expect(handler.deleteAccount('some-id')).rejects.toThrow(error);
+
       expect(mockAccounts.delete).toHaveBeenCalled();
     });
   });
@@ -764,6 +778,7 @@ describe('KeyringHandler', () => {
       mockAccounts.get.mockRejectedValue(error);
 
       await expect(handler.listAccountAssets('some-id')).rejects.toThrow(error);
+
       expect(mockAccounts.get).toHaveBeenCalled();
     });
   });

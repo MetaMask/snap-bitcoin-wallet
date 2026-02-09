@@ -262,7 +262,6 @@ export class AccountUseCases {
       const currConfirmed = tx.chain_position.is_confirmed;
 
       const statusChanged =
-        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
         (prevConfirmed && !currConfirmed) || (!prevConfirmed && currConfirmed);
 
       if (statusChanged) {
