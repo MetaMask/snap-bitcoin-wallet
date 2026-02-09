@@ -7,10 +7,7 @@ if [[ $# -eq 0 ]]; then
   exit 1
 fi
 
-package_name="$1"
-shift  # remove package name from arguments
-
-if [[ "${GITHUB_REF:-}" =~ '^release/' ]]; then
+if [[ "${GITHUB_REF:-}" =~ ^release/ ]]; then
   yarn auto-changelog validate --prettier --rc "$@"
 else
   yarn auto-changelog validate --prettier "$@"
