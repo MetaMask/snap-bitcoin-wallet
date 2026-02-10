@@ -346,6 +346,10 @@ describe('Taproot (P2TR) Integration Tests', () => {
     });
 
     it('sends funds from P2TR account to another P2TR address', async () => {
+      // Generate a valid P2TR regtest address from the node
+      const p2trRecipient = await blockchain.getNewAddress('bech32m');
+      expect(p2trRecipient).toMatch(/^bcrt1p/u);
+
       const response = await snap.onKeyringRequest({
         origin: ORIGIN,
         method: submitRequestMethod,
@@ -359,9 +363,7 @@ describe('Taproot (P2TR) Integration Tests', () => {
             params: {
               recipients: [
                 {
-                  // Another P2TR address (bcrt1p...)
-                  address:
-                    'bcrt1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqc8gma6',
+                  address: p2trRecipient,
                   amount: '1000',
                 },
               ],
