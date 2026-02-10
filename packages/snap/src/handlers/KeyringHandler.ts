@@ -185,18 +185,9 @@ export class KeyringHandler implements Keyring {
     assert(options, CreateAccountRequest);
 
     const traceName = 'Create Bitcoin Account';
-    let traceStarted = false;
+    const traceStarted = await this.#safeStartTrace(traceName);
 
     try {
-      await runSnapActionSafely(
-        async () => {
-          await this.#snapClient.startTrace(traceName);
-          traceStarted = true;
-        },
-        this.#logger,
-        'startTrace',
-      );
-
       const {
         metamask,
         scope,
@@ -274,11 +265,7 @@ export class KeyringHandler implements Keyring {
       return mapToKeyringAccount(account);
     } finally {
       if (traceStarted) {
-        await runSnapActionSafely(
-          async () => this.#snapClient.endTrace(traceName),
-          this.#logger,
-          'endTrace',
-        );
+        await this.#safeEndTrace(traceName);
       }
     }
   }
@@ -390,6 +377,27 @@ export class KeyringHandler implements Keyring {
       method: CronMethod.SyncSelectedAccounts,
       params: { accountIds: accounts },
     });
+  }
+
+  async #safeStartTrace(traceName: string): Promise<boolean> {
+    let started = false;
+    await runSnapActionSafely(
+      async () => {
+        await this.#snapClient.startTrace(traceName);
+        started = true;
+      },
+      this.#logger,
+      'startTrace',
+    );
+    return started;
+  }
+
+  async #safeEndTrace(traceName: string): Promise<void> {
+    await runSnapActionSafely(
+      async () => this.#snapClient.endTrace(traceName),
+      this.#logger,
+      'endTrace',
+    );
   }
 
   #extractAddressType(path: string): AddressType {
