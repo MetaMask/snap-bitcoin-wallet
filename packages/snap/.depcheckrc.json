@@ -1,3 +1,3 @@
 {
-  "ignores": ["jest-transform-stub", "ts-jest"]
+  "ignores": ["jest-transform-stub", "ts-jest", "@metamask/auto-changelog"]
 }

@@ -16,6 +16,8 @@ export type Logger = {
    *
    * @param data - The data to log.
    */
+  // TODO: Replace `any` with type
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   error(...data: any[]): void;
 
   /**
@@ -23,6 +25,8 @@ export type Logger = {
    *
    * @param data - The data to log.
    */
+  // TODO: Replace `any` with type
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   warn(...data: any[]): void;
 
   /**
@@ -30,6 +34,8 @@ export type Logger = {
    *
    * @param data - The data to log.
    */
+  // TODO: Replace `any` with type
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   info(...data: any[]): void;
 
   /**
@@ -37,6 +43,8 @@ export type Logger = {
    *
    * @param data - The data to log.
    */
+  // TODO: Replace `any` with type
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   debug(...data: any[]): void;
 
   /**
@@ -44,5 +52,7 @@ export type Logger = {
    *
    * @param data - The data to log.
    */
+  // TODO: Replace `any` with type
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   trace(...data: any[]): void;
 };
