@@ -31,6 +31,7 @@
     "lint:fix": "yarn lint:eslint --fix && yarn lint:misc --write",
     "lint:misc": "prettier '**/*.json' '**/*.md' --check",
     "lint:types": "tsc --noEmit",
+    "publish:preview": "yarn npm publish --tag preview",
     "prepublishOnly": "mm-snap manifest",
     "serve": "mm-snap serve",
     "start": "concurrently \"mm-snap watch\" \"yarn build:locale:watch\"",
