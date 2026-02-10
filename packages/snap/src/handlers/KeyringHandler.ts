@@ -205,16 +205,8 @@ export class KeyringHandler implements Keyring {
 
       let resolvedAddressType: AddressType;
       if (addressType) {
-        // Support P2WPKH (native segwit) and P2TR (taproot) addresses
-        if (
-          addressType !== BtcAccountType.P2wpkh &&
-          addressType !== BtcAccountType.P2tr
-        ) {
-          throw new FormatError(
-            'Only native segwit (P2WPKH) and taproot (P2TR) addresses are supported',
-          );
-        }
         resolvedAddressType = caipToAddressType[addressType];
+        this.#assertSupportedAddressType(resolvedAddressType);
 
         // if both addressType and derivationPath are provided, validate they match
         if (derivationPath) {
@@ -227,15 +219,7 @@ export class KeyringHandler implements Keyring {
         resolvedAddressType = this.#extractAddressType(derivationPath);
       } else {
         resolvedAddressType = this.#defaultAddressType;
-        // validate default address type is P2WPKH or P2TR
-        if (
-          resolvedAddressType !== 'p2wpkh' &&
-          resolvedAddressType !== 'p2tr'
-        ) {
-          throw new FormatError(
-            'Only native segwit (P2WPKH) and taproot (P2TR) addresses are supported',
-          );
-        }
+        this.#assertSupportedAddressType(resolvedAddressType);
       }
 
       // FIXME: This if should be removed ASAP as the index should always be defined or be 0
@@ -377,6 +361,14 @@ export class KeyringHandler implements Keyring {
       method: CronMethod.SyncSelectedAccounts,
       params: { accountIds: accounts },
     });
+  }
+
+  #assertSupportedAddressType(addressType: AddressType): void {
+    if (addressType !== 'p2wpkh' && addressType !== 'p2tr') {
+      throw new FormatError(
+        'Only native segwit (P2WPKH) and taproot (P2TR) addresses are supported',
+      );
+    }
   }
 
   async #safeStartTrace(traceName: string): Promise<boolean> {
