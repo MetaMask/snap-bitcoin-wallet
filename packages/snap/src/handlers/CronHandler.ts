@@ -96,6 +96,8 @@ export class CronHandler {
 
     const successfulResults: SyncResult[] = [];
 
+    // TODO: Replace `any` with type
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const errors: Record<string, any> = {};
 
     results.forEach((result, index) => {

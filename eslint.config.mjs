@@ -15,7 +15,8 @@ export default createConfig([
     files: ['packages/snap/**/*.{ts,tsx}'],
     extends: [base, typescript],
     rules: {
-      'id-length': ['warn', { exceptions: ['t'] }] // Used for the localized translator helper.
+      '@typescript-eslint/no-explicit-any': 'error',
+      'id-length': ['warn', { exceptions: ['t'] }], // Used for the localized translator helper.
     },
   },
   {
@@ -31,7 +32,7 @@ export default createConfig([
     extends: [base, typescript, jest],
     rules: {
       '@typescript-eslint/unbound-method': 'off',
-      '@typescript-eslint/explicit-function-return-type': 'off'
+      '@typescript-eslint/explicit-function-return-type': 'off',
     },
   },
   {
@@ -40,5 +41,5 @@ export default createConfig([
       'import-x/no-nodejs-modules': 'off',
       'no-restricted-globals': 'off',
     },
-  }
+  },
 ]);
