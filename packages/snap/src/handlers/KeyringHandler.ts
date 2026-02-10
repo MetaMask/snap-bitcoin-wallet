@@ -199,7 +199,7 @@ export class KeyringHandler implements Keyring {
         accountNameSuggestion,
       } = options;
 
-      let resolvedIndex = derivationPath
+      const extractedIndex = derivationPath
         ? this.#extractAccountIndex(derivationPath)
         : index;
 
@@ -222,19 +222,12 @@ export class KeyringHandler implements Keyring {
         this.#assertSupportedAddressType(resolvedAddressType);
       }
 
-      // FIXME: This if should be removed ASAP as the index should always be defined or be 0
-      // The Snap automatically increasing the index per request creates significant issues
-      // such as: concurrency, lack of idempotency, dangling state (if MM crashes before saving the account), etc.
-      if (resolvedIndex === undefined || resolvedIndex === null) {
-        const accounts = (await this.#accountsUseCases.list()).filter(
-          (acc) =>
-            acc.entropySource === entropySource &&
-            acc.network === scopeToNetwork[scope] &&
-            acc.addressType === resolvedAddressType,
-        );
-
-        resolvedIndex = this.#getLowestUnusedIndex(accounts);
-      }
+      const resolvedIndex = await this.#resolveAccountIndex(
+        extractedIndex,
+        entropySource,
+        scope,
+        resolvedAddressType,
+      );
 
       const account = await this.#accountsUseCases.create({
         network: scopeToNetwork[scope],
@@ -363,14 +356,6 @@ export class KeyringHandler implements Keyring {
     });
   }
 
-  #assertSupportedAddressType(addressType: AddressType): void {
-    if (addressType !== 'p2wpkh' && addressType !== 'p2tr') {
-      throw new FormatError(
-        'Only native segwit (P2WPKH) and taproot (P2TR) addresses are supported',
-      );
-    }
-  }
-
   async #safeStartTrace(traceName: string): Promise<boolean> {
     let started = false;
     await runSnapActionSafely(
@@ -390,6 +375,37 @@ export class KeyringHandler implements Keyring {
       this.#logger,
       'endTrace',
     );
+  }
+
+  async #resolveAccountIndex(
+    index: number | undefined | null,
+    entropySource: string,
+    scope: BtcScope,
+    addressType: AddressType,
+  ): Promise<number> {
+    // FIXME: This fallback should be removed ASAP as the index should always
+    // be defined or be 0. Auto-incrementing creates concurrency, idempotency,
+    // and dangling state issues.
+    if (index !== undefined && index !== null) {
+      return index;
+    }
+
+    const accounts = (await this.#accountsUseCases.list()).filter(
+      (acc) =>
+        acc.entropySource === entropySource &&
+        acc.network === scopeToNetwork[scope] &&
+        acc.addressType === addressType,
+    );
+
+    return this.#getLowestUnusedIndex(accounts);
+  }
+
+  #assertSupportedAddressType(addressType: AddressType): void {
+    if (addressType !== 'p2wpkh' && addressType !== 'p2tr') {
+      throw new FormatError(
+        'Only native segwit (P2WPKH) and taproot (P2TR) addresses are supported',
+      );
+    }
   }
 
   #extractAddressType(path: string): AddressType {
