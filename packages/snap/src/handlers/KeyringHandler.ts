@@ -203,24 +203,10 @@ export class KeyringHandler implements Keyring {
         ? this.#extractAccountIndex(derivationPath)
         : index;
 
-      let resolvedAddressType: AddressType;
-      if (addressType) {
-        resolvedAddressType = caipToAddressType[addressType];
-        this.#assertSupportedAddressType(resolvedAddressType);
-
-        // if both addressType and derivationPath are provided, validate they match
-        if (derivationPath) {
-          const pathAddressType = this.#extractAddressType(derivationPath);
-          if (pathAddressType !== resolvedAddressType) {
-            throw new FormatError('Address type and derivation path mismatch');
-          }
-        }
-      } else if (derivationPath) {
-        resolvedAddressType = this.#extractAddressType(derivationPath);
-      } else {
-        resolvedAddressType = this.#defaultAddressType;
-        this.#assertSupportedAddressType(resolvedAddressType);
-      }
+      const resolvedAddressType = this.#resolveAddressType(
+        addressType,
+        derivationPath,
+      );
 
       const resolvedIndex = await this.#resolveAccountIndex(
         extractedIndex,
@@ -398,6 +384,35 @@ export class KeyringHandler implements Keyring {
     );
 
     return this.#getLowestUnusedIndex(accounts);
+  }
+
+  #resolveAddressType(
+    addressType: BtcAccountType | undefined,
+    derivationPath: string | undefined,
+  ): AddressType {
+    // Case 1: explicit addressType provided
+    if (addressType) {
+      const resolved = caipToAddressType[addressType];
+      this.#assertSupportedAddressType(resolved);
+
+      if (derivationPath) {
+        const pathAddressType = this.#extractAddressType(derivationPath);
+        if (pathAddressType !== resolved) {
+          throw new FormatError('Address type and derivation path mismatch');
+        }
+      }
+
+      return resolved;
+    }
+
+    // Case 2: infer from derivationPath
+    if (derivationPath) {
+      return this.#extractAddressType(derivationPath);
+    }
+
+    // Case 3: fall back to default
+    this.#assertSupportedAddressType(this.#defaultAddressType);
+    return this.#defaultAddressType;
   }
 
   #assertSupportedAddressType(addressType: AddressType): void {
