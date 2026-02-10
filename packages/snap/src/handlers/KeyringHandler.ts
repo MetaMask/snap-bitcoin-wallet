@@ -185,18 +185,9 @@ export class KeyringHandler implements Keyring {
     assert(options, CreateAccountRequest);
 
     const traceName = 'Create Bitcoin Account';
-    let traceStarted = false;
+    const traceStarted = await this.#safeStartTrace(traceName);
 
     try {
-      await runSnapActionSafely(
-        async () => {
-          await this.#snapClient.startTrace(traceName);
-          traceStarted = true;
-        },
-        this.#logger,
-        'startTrace',
-      );
-
       const {
         metamask,
         scope,
@@ -208,58 +199,21 @@ export class KeyringHandler implements Keyring {
         accountNameSuggestion,
       } = options;
 
-      let resolvedIndex = derivationPath
+      const extractedIndex = derivationPath
         ? this.#extractAccountIndex(derivationPath)
         : index;
 
-      let resolvedAddressType: AddressType;
-      if (addressType) {
-        // Support P2WPKH (native segwit) and P2TR (taproot) addresses
-        if (
-          addressType !== BtcAccountType.P2wpkh &&
-          addressType !== BtcAccountType.P2tr
-        ) {
-          throw new FormatError(
-            'Only native segwit (P2WPKH) and taproot (P2TR) addresses are supported',
-          );
-        }
-        resolvedAddressType = caipToAddressType[addressType];
+      const resolvedAddressType = this.#resolveAddressType(
+        addressType,
+        derivationPath,
+      );
 
-        // if both addressType and derivationPath are provided, validate they match
-        if (derivationPath) {
-          const pathAddressType = this.#extractAddressType(derivationPath);
-          if (pathAddressType !== resolvedAddressType) {
-            throw new FormatError('Address type and derivation path mismatch');
-          }
-        }
-      } else if (derivationPath) {
-        resolvedAddressType = this.#extractAddressType(derivationPath);
-      } else {
-        resolvedAddressType = this.#defaultAddressType;
-        // validate default address type is P2WPKH or P2TR
-        if (
-          resolvedAddressType !== 'p2wpkh' &&
-          resolvedAddressType !== 'p2tr'
-        ) {
-          throw new FormatError(
-            'Only native segwit (P2WPKH) and taproot (P2TR) addresses are supported',
-          );
-        }
-      }
-
-      // FIXME: This if should be removed ASAP as the index should always be defined or be 0
-      // The Snap automatically increasing the index per request creates significant issues
-      // such as: concurrency, lack of idempotency, dangling state (if MM crashes before saving the account), etc.
-      if (resolvedIndex === undefined || resolvedIndex === null) {
-        const accounts = (await this.#accountsUseCases.list()).filter(
-          (acc) =>
-            acc.entropySource === entropySource &&
-            acc.network === scopeToNetwork[scope] &&
-            acc.addressType === resolvedAddressType,
-        );
-
-        resolvedIndex = this.#getLowestUnusedIndex(accounts);
-      }
+      const resolvedIndex = await this.#resolveAccountIndex(
+        extractedIndex,
+        entropySource,
+        scope,
+        resolvedAddressType,
+      );
 
       const account = await this.#accountsUseCases.create({
         network: scopeToNetwork[scope],
@@ -274,11 +228,7 @@ export class KeyringHandler implements Keyring {
       return mapToKeyringAccount(account);
     } finally {
       if (traceStarted) {
-        await runSnapActionSafely(
-          async () => this.#snapClient.endTrace(traceName),
-          this.#logger,
-          'endTrace',
-        );
+        await this.#safeEndTrace(traceName);
       }
     }
   }
@@ -390,6 +340,87 @@ export class KeyringHandler implements Keyring {
       method: CronMethod.SyncSelectedAccounts,
       params: { accountIds: accounts },
     });
+  }
+
+  async #safeStartTrace(traceName: string): Promise<boolean> {
+    let started = false;
+    await runSnapActionSafely(
+      async () => {
+        await this.#snapClient.startTrace(traceName);
+        started = true;
+      },
+      this.#logger,
+      'startTrace',
+    );
+    return started;
+  }
+
+  async #safeEndTrace(traceName: string): Promise<void> {
+    await runSnapActionSafely(
+      async () => this.#snapClient.endTrace(traceName),
+      this.#logger,
+      'endTrace',
+    );
+  }
+
+  async #resolveAccountIndex(
+    index: number | undefined | null,
+    entropySource: string,
+    scope: BtcScope,
+    addressType: AddressType,
+  ): Promise<number> {
+    // FIXME: This fallback should be removed ASAP as the index should always
+    // be defined or be 0. Auto-incrementing creates concurrency, idempotency,
+    // and dangling state issues.
+    if (index !== undefined && index !== null) {
+      return index;
+    }
+
+    const accounts = (await this.#accountsUseCases.list()).filter(
+      (acc) =>
+        acc.entropySource === entropySource &&
+        acc.network === scopeToNetwork[scope] &&
+        acc.addressType === addressType,
+    );
+
+    return this.#getLowestUnusedIndex(accounts);
+  }
+
+  #resolveAddressType(
+    addressType: BtcAccountType | undefined,
+    derivationPath: string | undefined,
+  ): AddressType {
+    // Case 1: explicit addressType provided
+    if (addressType) {
+      const resolved = caipToAddressType[addressType];
+      this.#assertSupportedAddressType(resolved);
+
+      if (derivationPath) {
+        const pathAddressType = this.#extractAddressType(derivationPath);
+        if (pathAddressType !== resolved) {
+          throw new FormatError('Address type and derivation path mismatch');
+        }
+      }
+
+      return resolved;
+    }
+
+    // Case 2: infer from derivationPath
+    if (derivationPath) {
+      return this.#extractAddressType(derivationPath);
+    }
+
+    // Case 3: fall back to default
+    this.#assertSupportedAddressType(this.#defaultAddressType);
+    return this.#defaultAddressType;
+  }
+
+  #assertSupportedAddressType(addressType: AddressType): void {
+    if (addressType !== 'p2wpkh' && addressType !== 'p2tr') {
+      throw new FormatError(
+        'Only native segwit (P2WPKH) and taproot (P2TR) addresses are supported',
+      );
+    }
   }
 
   #extractAddressType(path: string): AddressType {
