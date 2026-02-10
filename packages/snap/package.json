@@ -34,7 +34,7 @@
     "prepublishOnly": "mm-snap manifest",
     "serve": "mm-snap serve",
     "start": "concurrently \"mm-snap watch\" \"yarn build:locale:watch\"",
-    "test": "jest --passWithNoTests",
+    "test": "jest",
     "test:integration": "./integration-test/run-integration.sh"
   },
   "devDependencies": {
