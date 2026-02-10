@@ -174,4 +174,17 @@ export class BlockchainTestUtils {
     const balanceSats = await this.getBalance(address);
     return Number(balanceSats) / 100_000_000;
   }
+
+  /**
+   * Generate a new Bitcoin address from the regtest node wallet.
+   *
+   * @param addressType - The address type to generate. Defaults to 'bech32'.
+   * Valid values: 'legacy', 'p2sh-segwit', 'bech32', 'bech32m'.
+   * @returns A new Bitcoin address.
+   */
+  async getNewAddress(
+    addressType: 'legacy' | 'p2sh-segwit' | 'bech32' | 'bech32m' = 'bech32',
+  ): Promise<string> {
+    return this.#execCli(`-rpcwallet=default getnewaddress "" ${addressType}`);
+  }
 }
