@@ -3086,6 +3086,7 @@ __metadata:
     bip322-js: "npm:^3.0.0"
     concurrently: "npm:^9.2.1"
     dotenv: "npm:^17.2.1"
+    execa: "npm:^5.1.1"
     jest: "npm:^30.0.5"
     jest-mock-extended: "npm:^4.0.0"
     jest-transform-stub: "npm:2.0.0"

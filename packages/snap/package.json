@@ -53,6 +53,7 @@
     "bip322-js": "^3.0.0",
     "concurrently": "^9.2.1",
     "dotenv": "^17.2.1",
+    "execa": "^5.1.1",
     "jest": "^30.0.5",
     "jest-mock-extended": "^4.0.0",
     "jest-transform-stub": "2.0.0",
