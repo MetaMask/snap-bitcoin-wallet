@@ -15,7 +15,7 @@ import {
   SignPsbtRequest,
   type BtcWalletRequest,
 } from './KeyringRequestHandler';
-import type { BitcoinAccount } from '../entities';
+import type { BitcoinAccount, ConfirmationRepository } from '../entities';
 import { AccountCapability } from '../entities';
 import type { Utxo } from './mappings';
 import { mapToUtxo } from './mappings';
@@ -36,6 +36,7 @@ jest.mock('./mappings', () => ({
 
 describe('KeyringRequestHandler', () => {
   const mockAccountsUseCases = mock<AccountUseCases>();
+  const mockConfirmationRepository = mock<ConfirmationRepository>();
   const origin = 'metamask';
 
   const ACCOUNT_ADDRESS = 'test-account-address';
@@ -43,7 +44,10 @@ describe('KeyringRequestHandler', () => {
     account: { address: ACCOUNT_ADDRESS },
   };
 
-  const handler = new KeyringRequestHandler(mockAccountsUseCases);
+  const handler = new KeyringRequestHandler(
+    mockAccountsUseCases,
+    mockConfirmationRepository,
+  );
 
   beforeEach(() => {
     jest.mocked(parsePsbt).mockReturnValue(mockPsbt);
@@ -80,8 +84,14 @@ describe('KeyringRequestHandler', () => {
       },
       account: 'account-id',
     });
+    const mockAccount = mock<BitcoinAccount>();
 
-    it('executes signPsbt', async () => {
+    beforeEach(() => {
+      mockAccountsUseCases.get.mockResolvedValue(mockAccount);
+      mockConfirmationRepository.insertSignPsbt.mockResolvedValue(undefined);
+    });
+
+    it('executes signPsbt with confirmation', async () => {
       mockAccountsUseCases.signPsbt.mockResolvedValue({
         psbt: 'psbtBase64',
         txid: mock<Txid>({
@@ -94,6 +104,14 @@ describe('KeyringRequestHandler', () => {
       expect(assert).toHaveBeenCalledWith(
         mockRequest.request.params,
         SignPsbtRequest,
+      );
+      expect(mockAccountsUseCases.get).toHaveBeenCalledWith('account-id');
+      expect(mockConfirmationRepository.insertSignPsbt).toHaveBeenCalledWith(
+        mockAccount,
+        mockPsbt,
+        'metamask',
+        mockOptions,
+        3,
       );
       expect(mockAccountsUseCases.signPsbt).toHaveBeenCalledWith(
         'account-id',
@@ -123,6 +141,15 @@ describe('KeyringRequestHandler', () => {
           },
         }),
       ).rejects.toThrow(error);
+
+      expect(mockAccountsUseCases.signPsbt).not.toHaveBeenCalled();
+    });
+
+    it('propagates errors from confirmation rejection', async () => {
+      const error = new Error('User canceled');
+      mockConfirmationRepository.insertSignPsbt.mockRejectedValue(error);
+
+      await expect(handler.route(mockRequest)).rejects.toThrow(error);
 
       expect(mockAccountsUseCases.signPsbt).not.toHaveBeenCalled();
     });

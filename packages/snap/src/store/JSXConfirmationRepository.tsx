@@ -6,11 +6,15 @@ import type {
   ConfirmationRepository,
   ConfirmSendFormContext,
   SignMessageConfirmationContext,
+  SignPsbtConfirmationContext,
   SnapClient,
   Translator,
 } from '../entities';
 import { networkToCurrencyUnit, UserActionError } from '../entities';
-import { SignMessageConfirmationView } from '../infra/jsx';
+import {
+  SignMessageConfirmationView,
+  SignPsbtConfirmationView,
+} from '../infra/jsx';
 import { UnifiedSendFormView } from '../infra/jsx/unified-send-flow';
 
 export class JSXConfirmationRepository implements ConfirmationRepository {
@@ -85,6 +89,40 @@ export class JSXConfirmationRepository implements ConfirmationRepository {
     const messages = await this.#translator.load(locale);
     const interfaceId = await this.#snapClient.createInterface(
       <UnifiedSendFormView context={context} messages={messages} />,
+      context,
+    );
+
+    const confirmed =
+      await this.#snapClient.displayConfirmation<boolean>(interfaceId);
+    if (!confirmed) {
+      throw new UserActionError('User canceled the confirmation');
+    }
+  }
+
+  async insertSignPsbt(
+    account: BitcoinAccount,
+    psbt: Psbt,
+    origin: string,
+    options: { fill: boolean; broadcast: boolean },
+    feeRate?: number,
+  ): Promise<void> {
+    const { locale } = await this.#snapClient.getPreferences();
+
+    const context: SignPsbtConfirmationContext = {
+      psbt: psbt.toString(),
+      account: {
+        id: account.id,
+        address: account.publicAddress.toString(),
+      },
+      network: account.network,
+      origin,
+      options,
+      feeRate,
+    };
+
+    const messages = await this.#translator.load(locale);
+    const interfaceId = await this.#snapClient.createInterface(
+      <SignPsbtConfirmationView context={context} messages={messages} />,
       context,
     );
 

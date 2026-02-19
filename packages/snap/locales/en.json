@@ -213,6 +213,18 @@
     },
     "confirmation.requestOrigin": {
       "message": "Request from"
+    },
+    "confirmation.signPsbt.title": {
+      "message": "Sign PSBT"
+    },
+    "confirmation.signPsbt.inputs": {
+      "message": "Inputs"
+    },
+    "confirmation.signPsbt.outputs": {
+      "message": "Outputs"
+    },
+    "confirmation.signPsbt.confirmButton": {
+      "message": "Confirm"
     }
   }
 }

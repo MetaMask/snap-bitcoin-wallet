@@ -12,6 +12,21 @@ export type SignMessageConfirmationContext = {
   origin: string;
 };
 
+export type SignPsbtConfirmationContext = {
+  psbt: string;
+  account: {
+    id: string;
+    address: string;
+  };
+  network: Network;
+  origin: string;
+  options: {
+    fill: boolean;
+    broadcast: boolean;
+  };
+  feeRate?: number;
+};
+
 export enum ConfirmationEvent {
   Confirm = 'confirmation-confirm',
   Cancel = 'confirmation-cancel',
@@ -49,5 +64,24 @@ export type ConfirmationRepository = {
     psbt: Psbt,
     recipient: { address: string; amount: string },
     origin: string,
+  ): Promise<void>;
+
+  /**
+   * Inserts a sign PSBT confirmation interface.
+   *
+   * @param account - The account signing the PSBT.
+   * @param psbt - The PSBT to sign.
+   * @param origin - The origin of the request.
+   * @param options - The options for the signing.
+   * @param options.fill - Whether to fill the PSBT inputs.
+   * @param options.broadcast - Whether to broadcast after signing.
+   * @param feeRate - Optional fee rate.
+   */
+  insertSignPsbt(
+    account: BitcoinAccount,
+    psbt: Psbt,
+    origin: string,
+    options: { fill: boolean; broadcast: boolean },
+    feeRate?: number,
   ): Promise<void>;
 };

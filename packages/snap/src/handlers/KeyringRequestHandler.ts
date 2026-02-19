@@ -20,6 +20,7 @@ import {
 
 import {
   AccountCapability,
+  type ConfirmationRepository,
   InexistentMethodError,
   NotFoundError,
 } from '../entities';
@@ -161,8 +162,14 @@ export type BtcWalletRequest = Infer<typeof BtcWalletRequestStruct>;
 export class KeyringRequestHandler {
   readonly #accountsUseCases: AccountUseCases;
 
-  constructor(accounts: AccountUseCases) {
+  readonly #confirmationRepository: ConfirmationRepository;
+
+  constructor(
+    accounts: AccountUseCases,
+    confirmationRepository: ConfirmationRepository,
+  ) {
     this.#accountsUseCases = accounts;
+    this.#confirmationRepository = confirmationRepository;
   }
 
   async route(request: KeyringRequest): Promise<KeyringResponse> {
@@ -173,7 +180,13 @@ export class KeyringRequestHandler {
       case AccountCapability.SignPsbt: {
         assert(params, SignPsbtRequest);
         const { psbt, feeRate, options } = params;
-        return this.#signPsbt(account, psbt, origin, options, feeRate);
+        return this.#signPsbtWithConfirmation(
+          account,
+          psbt,
+          origin,
+          options,
+          feeRate,
+        );
       }
       case AccountCapability.FillPsbt: {
         assert(params, FillPsbtRequest);
@@ -222,22 +235,34 @@ export class KeyringRequestHandler {
     }
   }
 
-  async #signPsbt(
+  async #signPsbtWithConfirmation(
     id: string,
     psbtBase64: string,
     origin: string,
     options: { fill: boolean; broadcast: boolean },
     feeRate?: number,
   ): Promise<KeyringResponse> {
-    const { psbt, txid } = await this.#accountsUseCases.signPsbt(
+    const psbt = parsePsbt(psbtBase64);
+    const account = await this.#accountsUseCases.get(id);
+
+    // Show confirmation screen before signing
+    await this.#confirmationRepository.insertSignPsbt(
+      account,
+      psbt,
+      origin,
+      options,
+      feeRate,
+    );
+
+    const { psbt: signedPsbt, txid } = await this.#accountsUseCases.signPsbt(
       id,
-      parsePsbt(psbtBase64),
+      psbt,
       origin,
       options,
       feeRate,
     );
     return this.#toKeyringResponse({
-      psbt: psbt.toString(),
+      psbt: signedPsbt.toString(),
       txid: txid?.toString() ?? null,
     } as SignPsbtResponse);
   }

@@ -84,7 +84,10 @@ const assetsUseCases = new AssetsUseCases(
 const confirmationUseCases = new ConfirmationUseCases(logger, snapClient);
 
 // Application layer
-const keyringRequestHandler = new KeyringRequestHandler(accountsUseCases);
+const keyringRequestHandler = new KeyringRequestHandler(
+  accountsUseCases,
+  confirmationRepository,
+);
 const keyringHandler = new KeyringHandler(
   keyringRequestHandler,
   accountsUseCases,

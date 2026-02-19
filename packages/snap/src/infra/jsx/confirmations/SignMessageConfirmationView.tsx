@@ -4,6 +4,7 @@ import {
   Button,
   Container,
   Footer,
+  Heading,
   Icon,
   Section,
   Text as SnapText,
@@ -16,7 +17,6 @@ import type {
   SignMessageConfirmationContext,
 } from '../../../entities';
 import { ConfirmationEvent } from '../../../entities';
-import { HeadingWithReturn } from '../components';
 import { displayCaip10, displayOrigin, translate } from '../format';
 
 type SignMessageConfirmationViewProps = {
@@ -34,10 +34,11 @@ export const SignMessageConfirmationView: SnapComponent<
   return (
     <Container>
       <Box>
-        <HeadingWithReturn
-          heading={t('confirmation.signMessage.title')}
-          returnButtonName={ConfirmationEvent.Cancel}
-        />
+        <Box alignment="center" center>
+          <Box>{null}</Box>
+          <Heading size="lg">{t('confirmation.signMessage.title')}</Heading>
+          <Box>{null}</Box>
+        </Box>
 
         <Section>
           <Box direction="horizontal" center>
