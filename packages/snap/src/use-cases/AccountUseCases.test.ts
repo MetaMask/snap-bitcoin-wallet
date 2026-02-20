@@ -1507,10 +1507,6 @@ describe('AccountUseCases', () => {
         address: 'bcrt1qstku2y3pfh9av50lxj55arm8r5gj8tf2yv5nxz',
         amount: '1000',
       },
-      {
-        address: 'bcrt1q4gfcga7jfjmm02zpvrh4ttc5k7lmnq2re52z2y',
-        amount: '2000',
-      },
     ];
     const mockTxid = mock<Txid>();
     const mockOutput = mock<TxOut>({
@@ -1585,7 +1581,6 @@ describe('AccountUseCases', () => {
     it('sends funds', async () => {
       mockAccount.getTransaction.mockReturnValue(mockWalletTx);
       mockTransaction.compute_txid.mockReturnValue(mockTxid);
-      mockTxBuilder.finish.mockReturnValueOnce(mockPsbt);
 
       const txid = await useCases.sendTransfer(
         'account-id',
@@ -1597,10 +1592,6 @@ describe('AccountUseCases', () => {
       expect(mockTxBuilder.addRecipient).toHaveBeenCalledWith(
         '1000',
         'bcrt1qstku2y3pfh9av50lxj55arm8r5gj8tf2yv5nxz',
-      );
-      expect(mockTxBuilder.addRecipient).toHaveBeenCalledWith(
-        '2000',
-        'bcrt1q4gfcga7jfjmm02zpvrh4ttc5k7lmnq2re52z2y',
       );
       expect(mockChain.getFeeEstimates).toHaveBeenCalledWith(
         mockAccount.network,

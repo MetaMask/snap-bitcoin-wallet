@@ -15,6 +15,10 @@ jest.mock('../infra/jsx', () => ({
   SignMessageConfirmationView: jest.fn(),
 }));
 
+jest.mock('../infra/jsx/unified-send-flow', () => ({
+  UnifiedSendFormView: jest.fn(),
+}));
+
 describe('JSXConfirmationRepository', () => {
   const mockMessages = { foo: { message: 'bar' } };
   const mockSnapClient = mock<SnapClient>();
