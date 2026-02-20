@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.0]
+
+### Changed
+
+- Modify balance/transaction events sending ([#577](https://github.com/MetaMask/snap-bitcoin-wallet/pull/577))
+- Bump `@metamask/keyring-api` from `^21.1.0` to `^21.3.0` ([#574](https://github.com/MetaMask/snap-bitcoin-wallet/pull/574))
+- Bump `@metamask/keyring-snap-sdk` from `^7.1.0` to `^7.1.1` ([#574](https://github.com/MetaMask/snap-bitcoin-wallet/pull/574))
+
+## [1.9.0]
+
+### Changed
+
+- Add change utxo dropped when full swap use case ([#572](https://github.com/MetaMask/snap-bitcoin-wallet/pull/572))
+- Update p2wsh, p2tr and p2sh dust minimum value ([#570](https://github.com/MetaMask/snap-bitcoin-wallet/pull/570))
+
 ## [1.8.0]
 
 ### Changed
@@ -550,7 +565,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add CI for lint and test ([#2](https://github.com/MetaMask/bitcoin/pull/2))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.8.0...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.10.0...HEAD
+[1.10.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.9.0...v1.10.0
+[1.9.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.5.0...v1.6.0

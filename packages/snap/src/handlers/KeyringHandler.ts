@@ -32,7 +32,7 @@ import type {
   KeyringRequest,
   ResolvedAccountAddress,
 } from '@metamask/keyring-api';
-import type { CaipChainId, Json, JsonRpcRequest } from '@metamask/utils';
+import type { CaipChainId, Json, JsonRpcRequest } from '@metamask/snaps-sdk';
 import {
   assert,
   boolean,

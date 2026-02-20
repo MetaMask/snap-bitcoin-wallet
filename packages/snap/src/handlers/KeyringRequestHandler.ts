@@ -4,7 +4,7 @@ import {
   type KeyringRequest,
   type KeyringResponse,
 } from '@metamask/keyring-api';
-import type { CaipAccountId, CaipChainId, Json } from '@metamask/utils';
+import type { CaipAccountId, CaipChainId, Json } from '@metamask/snaps-sdk';
 import type { Infer } from 'superstruct';
 import {
   array,
