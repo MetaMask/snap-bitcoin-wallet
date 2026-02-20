@@ -13,6 +13,7 @@ import {
   ListAccountsRequestStruct,
   ListAccountTransactionsRequestStruct,
   MetaMaskOptionsStruct,
+  ResolveAccountAddressRequestStruct,
   SetSelectedAccountsRequestStruct,
   SubmitRequestRequestStruct,
 } from '@metamask/keyring-api';
@@ -29,8 +30,9 @@ import type {
   MetaMaskOptions,
   DiscoveredAccount,
   KeyringRequest,
+  ResolvedAccountAddress,
 } from '@metamask/keyring-api';
-import type { Json, JsonRpcRequest } from '@metamask/snaps-sdk';
+import type { CaipChainId, Json, JsonRpcRequest } from '@metamask/snaps-sdk';
 import {
   assert,
   boolean,
@@ -54,9 +56,13 @@ import {
   caipToAddressType,
   scopeToNetwork,
   networkToScope,
+  NetworkStruct,
 } from './caip';
 import { CronMethod } from './CronHandler';
-import type { KeyringRequestHandler } from './KeyringRequestHandler';
+import {
+  BtcWalletRequestStruct,
+  type KeyringRequestHandler,
+} from './KeyringRequestHandler';
 import {
   mapToDiscoveredAccount,
   mapToKeyringAccount,
@@ -159,6 +165,13 @@ export class KeyringHandler implements Keyring {
         assert(request, SetSelectedAccountsRequestStruct);
         await this.setSelectedAccounts(request.params.accounts);
         return null;
+      }
+      case `${KeyringRpcMethod.ResolveAccountAddress}`: {
+        assert(request, ResolveAccountAddressRequestStruct);
+        return this.resolveAccountAddress(
+          request.params.scope,
+          request.params.request,
+        );
       }
 
       default: {
@@ -384,6 +397,44 @@ export class KeyringHandler implements Keyring {
       method: CronMethod.SyncSelectedAccounts,
       params: { accountIds: accounts },
     });
+  }
+
+  /**
+   * Resolves the address of an account from a signing request.
+   *
+   * This is required by the routing system of MetaMask to dispatch
+   * incoming non-EVM dapp signing requests.
+   *
+   * @param scope - Request's scope (CAIP-2).
+   * @param request - Signing request object.
+   * @returns A Promise that resolves to the account address that must
+   * be used to process this signing request, or null if none candidates
+   * could be found.
+   */
+  async resolveAccountAddress(
+    scope: CaipChainId,
+    request: JsonRpcRequest,
+  ): Promise<ResolvedAccountAddress | null> {
+    try {
+      assert(scope, NetworkStruct);
+      const { method, params } = request;
+
+      const requestWithoutCommonHeader = { method, params };
+      assert(requestWithoutCommonHeader, BtcWalletRequestStruct);
+
+      const allAccounts = await this.listAccounts();
+
+      const caip10Address = this.#keyringRequest.resolveAccountAddress(
+        allAccounts,
+        scope,
+        requestWithoutCommonHeader,
+      );
+
+      return { address: caip10Address };
+    } catch (error: unknown) {
+      this.#logger.error({ error }, 'Error resolving account address');
+      return null;
+    }
   }
 
   #extractAddressType(path: string): AddressType {
