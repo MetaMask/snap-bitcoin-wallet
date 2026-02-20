@@ -623,7 +623,7 @@ describe('KeyringRequestHandler', () => {
 
   describe('sendTransfer', () => {
     it('sends funds successfully', async () => {
-      const response = await snap.onKeyringRequest({
+      const response = snap.onKeyringRequest({
         origin: ORIGIN,
         method: submitRequestMethod,
         params: {
@@ -640,10 +640,6 @@ describe('KeyringRequestHandler', () => {
                   address: 'bcrt1qstku2y3pfh9av50lxj55arm8r5gj8tf2yv5nxz',
                   amount: '1000',
                 },
-                {
-                  address: 'bcrt1q4gfcga7jfjmm02zpvrh4ttc5k7lmnq2re52z2y',
-                  amount: '1000',
-                },
               ],
               feeRate: 3,
             },
@@ -651,7 +647,13 @@ describe('KeyringRequestHandler', () => {
         } as KeyringRequest,
       });
 
-      expect(response).toRespondWith({
+      const ui = await response.getInterface();
+      assertIsConfirmationDialog(ui);
+      await ui.ok();
+
+      const result = await response;
+
+      expect(result).toRespondWith({
         pending: false,
         result: {
           txid: expect.any(String),

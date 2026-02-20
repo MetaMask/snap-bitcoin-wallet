@@ -103,9 +103,7 @@ describe('JSXConfirmationRepository', () => {
       mockSnapClient.getPreferences.mockResolvedValue({
         locale: 'en',
       } as GetPreferencesResult);
-      mockChainClient.getExplorerUrl.mockReturnValue(
-        'https://mempool.space',
-      );
+      mockChainClient.getExplorerUrl.mockReturnValue('https://mempool.space');
     });
 
     it('creates and displays a send transfer interface', async () => {
