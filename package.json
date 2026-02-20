@@ -27,6 +27,8 @@
     "lint:fix": "yarn workspaces foreach --all --parallel --verbose run lint:fix",
     "lint:misc": "yarn workspaces foreach --all --parallel --verbose run lint:misc",
     "lint:types": "yarn workspaces foreach --all --parallel --verbose run lint:types",
+    "prepare-preview-builds": "./scripts/prepare-preview-builds.sh",
+    "publish-previews": "yarn workspaces foreach --all --no-private --parallel --verbose run publish:preview",
     "start": "yarn workspaces foreach --all --parallel --verbose --interlaced run start",
     "test": "yarn workspace @metamask/bitcoin-wallet-snap run test",
     "test:integration": "yarn workspace @metamask/bitcoin-wallet-snap run test:integration"
@@ -49,9 +51,11 @@
     "eslint-plugin-n": "^17.18.0",
     "eslint-plugin-prettier": "^5.4.0",
     "eslint-plugin-promise": "^7.2.1",
+    "execa": "^5.1.1",
     "prettier": "^3.5.3",
     "prettier-plugin-packagejson": "^2.5.13",
     "rimraf": "^6.0.1",
+    "tsx": "^4.20.5",
     "typescript": "~5.8.3",
     "typescript-eslint": "8.32.1"
   },
@@ -66,7 +70,8 @@
     "allowScripts": {
       "@lavamoat/preinstall-always-fail": false,
       "eslint-plugin-import-x>unrs-resolver": false,
-      "eslint-plugin-jest>jest>@jest/core>jest-resolve>unrs-resolver": false
+      "eslint-plugin-jest>jest>@jest/core>jest-resolve>unrs-resolver": false,
+      "tsx>esbuild": false
     }
   }
 }
