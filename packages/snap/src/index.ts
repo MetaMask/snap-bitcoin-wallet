@@ -52,6 +52,7 @@ const confirmationRepository = new JSXConfirmationRepository(
   snapClient,
   translator,
   chainClient,
+  assetRatesClient,
 );
 
 // Business layer

@@ -3,10 +3,12 @@ import type { GetPreferencesResult } from '@metamask/snaps-sdk';
 import { mock } from 'jest-mock-extended';
 
 import type {
+  AssetRatesClient,
   SnapClient,
   Translator,
   BitcoinAccount,
   BlockchainClient,
+  SpotPrice,
 } from '../entities';
 import { networkToCurrencyUnit } from '../entities';
 import { JSXConfirmationRepository } from './JSXConfirmationRepository';
@@ -26,11 +28,13 @@ describe('JSXConfirmationRepository', () => {
   const mockSnapClient = mock<SnapClient>();
   const mockTranslator = mock<Translator>();
   const mockChainClient = mock<BlockchainClient>();
+  const mockRatesClient = mock<AssetRatesClient>();
 
   const repo = new JSXConfirmationRepository(
     mockSnapClient,
     mockTranslator,
     mockChainClient,
+    mockRatesClient,
   );
 
   describe('insertSignMessage', () => {
@@ -54,9 +58,9 @@ describe('JSXConfirmationRepository', () => {
       mockSnapClient.createInterface.mockResolvedValue('interface-id');
       mockSnapClient.displayConfirmation.mockResolvedValue(true);
       mockTranslator.load.mockResolvedValue(mockMessages);
-      mockSnapClient.getPreferences.mockResolvedValue({
-        locale: 'en',
-      } as GetPreferencesResult);
+      mockSnapClient.getPreferences.mockResolvedValue(
+        mock<GetPreferencesResult>({ locale: 'en' }),
+      );
     });
 
     it('creates and displays a sign message interface', async () => {
@@ -100,10 +104,13 @@ describe('JSXConfirmationRepository', () => {
       mockSnapClient.createInterface.mockResolvedValue('send-interface-id');
       mockSnapClient.displayConfirmation.mockResolvedValue(true);
       mockTranslator.load.mockResolvedValue(mockMessages);
-      mockSnapClient.getPreferences.mockResolvedValue({
-        locale: 'en',
-      } as GetPreferencesResult);
+      mockSnapClient.getPreferences.mockResolvedValue(
+        mock<GetPreferencesResult>({ locale: 'en', currency: 'usd' }),
+      );
       mockChainClient.getExplorerUrl.mockReturnValue('https://mempool.space');
+      mockRatesClient.spotPrices.mockResolvedValue(
+        mock<SpotPrice>({ price: 50000 }),
+      );
     });
 
     it('creates and displays a send transfer interface', async () => {
@@ -114,7 +121,10 @@ describe('JSXConfirmationRepository', () => {
         explorerUrl: 'https://mempool.space',
         network: mockAccount.network,
         currency: networkToCurrencyUnit[mockAccount.network],
-        exchangeRate: undefined,
+        exchangeRate: expect.objectContaining({
+          conversionRate: 50000,
+          currency: 'USD',
+        }),
         recipient: recipient.address,
         amount: recipient.amount,
         locale: 'en',
@@ -144,6 +154,50 @@ describe('JSXConfirmationRepository', () => {
       await expect(
         repo.insertSendTransfer(mockAccount, mockPsbt, recipient, origin),
       ).rejects.toThrow('User canceled the confirmation');
+    });
+
+    it('sets exchangeRate to undefined for non-mainnet networks', async () => {
+      const testnetAccount = mock<BitcoinAccount>({
+        id: 'account-id',
+        network: 'testnet',
+        publicAddress: mock<Address>({ toString: () => 'fromAddress' }),
+      });
+
+      await repo.insertSendTransfer(
+        testnetAccount,
+        mockPsbt,
+        recipient,
+        origin,
+      );
+
+      expect(mockRatesClient.spotPrices).not.toHaveBeenCalled();
+      expect(mockSnapClient.createInterface).toHaveBeenCalledWith(
+        undefined,
+        expect.objectContaining({ exchangeRate: undefined }),
+      );
+    });
+
+    it('sets exchangeRate to undefined when spot price is null', async () => {
+      // @ts-expect-error - testing runtime guard against API returning null
+      mockRatesClient.spotPrices.mockResolvedValue({ price: null });
+
+      await repo.insertSendTransfer(mockAccount, mockPsbt, recipient, origin);
+
+      expect(mockSnapClient.createInterface).toHaveBeenCalledWith(
+        undefined,
+        expect.objectContaining({ exchangeRate: undefined }),
+      );
+    });
+
+    it('sets exchangeRate to undefined when rates client throws', async () => {
+      mockRatesClient.spotPrices.mockRejectedValue(new Error('API error'));
+
+      await repo.insertSendTransfer(mockAccount, mockPsbt, recipient, origin);
+
+      expect(mockSnapClient.createInterface).toHaveBeenCalledWith(
+        undefined,
+        expect.objectContaining({ exchangeRate: undefined }),
+      );
     });
   });
 });

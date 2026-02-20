@@ -1,6 +1,9 @@
 import type { Psbt } from '@metamask/bitcoindevkit';
+import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
+import type { CurrencyRate } from '@metamask/snaps-sdk';
 
 import type {
+  AssetRatesClient,
   BitcoinAccount,
   BlockchainClient,
   ConfirmationRepository,
@@ -20,14 +23,18 @@ export class JSXConfirmationRepository implements ConfirmationRepository {
 
   readonly #chainClient: BlockchainClient;
 
+  readonly #ratesClient: AssetRatesClient;
+
   constructor(
     snapClient: SnapClient,
     translator: Translator,
     chainClient: BlockchainClient,
+    ratesClient: AssetRatesClient,
   ) {
     this.#snapClient = snapClient;
     this.#translator = translator;
     this.#chainClient = chainClient;
+    this.#ratesClient = ratesClient;
   }
 
   async insertSignMessage(
@@ -67,14 +74,15 @@ export class JSXConfirmationRepository implements ConfirmationRepository {
     recipient: { address: string; amount: string },
     origin: string,
   ): Promise<void> {
-    const { locale } = await this.#snapClient.getPreferences();
+    const { locale, currency: fiatCurrency } =
+      await this.#snapClient.getPreferences();
 
     const context: ConfirmSendFormContext = {
       from: account.publicAddress.toString(),
       explorerUrl: this.#chainClient.getExplorerUrl(account.network),
       network: account.network,
       currency: networkToCurrencyUnit[account.network],
-      exchangeRate: undefined,
+      exchangeRate: await this.#getExchangeRate(account.network, fiatCurrency),
       recipient: recipient.address,
       amount: recipient.amount,
       locale,
@@ -92,6 +100,32 @@ export class JSXConfirmationRepository implements ConfirmationRepository {
       await this.#snapClient.displayConfirmation<boolean>(interfaceId);
     if (!confirmed) {
       throw new UserActionError('User canceled the confirmation');
+    }
+  }
+
+  async #getExchangeRate(
+    network: string,
+    currency: string,
+  ): Promise<CurrencyRate | undefined> {
+    if (network !== 'bitcoin') {
+      return undefined;
+    }
+
+    try {
+      const spotPrice = await this.#ratesClient.spotPrices(currency);
+
+      if (spotPrice.price === undefined || spotPrice.price === null) {
+        return undefined;
+      }
+
+      return {
+        conversionRate: spotPrice.price,
+        conversionDate: getCurrentUnixTimestamp(),
+        currency: currency.toUpperCase(),
+      };
+    } catch {
+      // Exchange rates are optional display information - don't fail if unavailable
+      return undefined;
     }
   }
 }
