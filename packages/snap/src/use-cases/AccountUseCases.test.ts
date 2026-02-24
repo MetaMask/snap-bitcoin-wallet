@@ -1665,6 +1665,75 @@ describe('AccountUseCases', () => {
     });
   });
 
+  describe('broadcastPsbt', () => {
+    const mockTxid = mock<Txid>();
+    const mockPsbt = mock<Psbt>();
+    const mockTransaction = mock<Transaction>({
+      compute_txid: jest.fn(),
+      clone: jest.fn(),
+    });
+    const mockWalletTx = mock<WalletTx>();
+    const mockAccount = mock<BitcoinAccount>({
+      network: 'bitcoin',
+      capabilities: [AccountCapability.BroadcastPsbt],
+    });
+
+    beforeEach(() => {
+      mockRepository.get.mockResolvedValue(mockAccount);
+      mockAccount.extractTransaction.mockReturnValue(mockTransaction);
+      mockTransaction.compute_txid.mockReturnValue(mockTxid);
+      mockTransaction.clone.mockReturnThis();
+      mockAccount.getTransaction.mockReturnValue(mockWalletTx);
+    });
+
+    it('throws error if account is not found', async () => {
+      mockRepository.get.mockResolvedValue(null);
+
+      await expect(
+        useCases.broadcastPsbt('non-existent-id', mockPsbt, 'metamask'),
+      ).rejects.toThrow('Account not found');
+    });
+
+    it('throws PermissionError if account lacks BroadcastPsbt capability', async () => {
+      const accountNoCap = mock<BitcoinAccount>({
+        capabilities: [],
+      });
+      mockRepository.get.mockResolvedValue(accountNoCap);
+
+      await expect(
+        useCases.broadcastPsbt('account-id', mockPsbt, 'metamask'),
+      ).rejects.toThrow('Account missing given capability');
+    });
+
+    it('broadcasts a PSBT and returns txid', async () => {
+      const txid = await useCases.broadcastPsbt(
+        'account-id',
+        mockPsbt,
+        'metamask',
+      );
+
+      expect(mockRepository.get).toHaveBeenCalledWith('account-id');
+      expect(mockAccount.extractTransaction).toHaveBeenCalledWith(mockPsbt);
+      expect(mockChain.broadcast).toHaveBeenCalledWith(
+        mockAccount.network,
+        mockTransaction,
+      );
+      expect(mockRepository.update).toHaveBeenCalledWith(mockAccount);
+      expect(txid).toBe(mockTxid);
+    });
+  });
+
+  describe('getFrozenUTXOs', () => {
+    it('delegates to repository', async () => {
+      mockRepository.getFrozenUTXOs.mockResolvedValue(['txid:0', 'txid:1']);
+
+      const result = await useCases.getFrozenUTXOs('account-id');
+
+      expect(mockRepository.getFrozenUTXOs).toHaveBeenCalledWith('account-id');
+      expect(result).toStrictEqual(['txid:0', 'txid:1']);
+    });
+  });
+
   describe('signMessage', () => {
     const mockAccount = mock<BitcoinAccount>({
       publicAddress: mock<Address>({
@@ -1726,6 +1795,16 @@ describe('AccountUseCases', () => {
       await expect(
         useCases.signMessage('account-id', mockMessage, mockOrigin),
       ).rejects.toThrow('Failed to sign message');
+    });
+
+    it('throws AssertionError if entropy has no privateKey', async () => {
+      mockSnapClient.getPrivateEntropy.mockResolvedValue(
+        mock<JsonSLIP10Node>({ privateKey: undefined }),
+      );
+
+      await expect(
+        useCases.signMessage('account-id', mockMessage, mockOrigin),
+      ).rejects.toThrow('Failed to get private entropy');
     });
 
     it('propagates an error if get fails', async () => {

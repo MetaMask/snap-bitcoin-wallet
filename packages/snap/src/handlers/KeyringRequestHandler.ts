@@ -246,9 +246,10 @@ export class KeyringRequestHandler {
       options,
     );
 
+    // Creates a fresh PSBT from the original base64 because the original PSBT is mutated by the confirmation repository
     const { psbt: signedPsbt, txid } = await this.#accountsUseCases.signPsbt(
       id,
-      psbt,
+      parsePsbt(psbtBase64),
       origin,
       options,
       feeRate,

@@ -3,11 +3,13 @@ import { mock } from 'jest-mock-extended';
 import type {
   SnapClient,
   SendFormContext,
+  ConfirmSendFormContext,
   ReviewTransactionContext,
   Translator,
 } from '../entities';
 import { JSXSendFlowRepository } from './JSXSendFlowRepository';
 import { ReviewTransactionView, SendFormView } from '../infra/jsx';
+import { UnifiedSendFormView } from '../infra/jsx/unified-send-flow';
 
 jest.mock('../infra/jsx', () => ({
   SendFormView: jest.fn(),
@@ -101,6 +103,23 @@ describe('JSXSendFlowRepository', () => {
         <ReviewTransactionView context={mockContext} messages={mockMessages} />,
         mockContext,
       );
+    });
+  });
+
+  describe('insertConfirmSendForm', () => {
+    it('creates interface with confirm send form context', async () => {
+      const mockContext = mock<ConfirmSendFormContext>({ locale: 'en' });
+      mockSnapClient.createInterface.mockResolvedValue('confirm-interface-id');
+      mockTranslator.load.mockResolvedValue(mockMessages);
+
+      const result = await repo.insertConfirmSendForm(mockContext);
+
+      expect(mockTranslator.load).toHaveBeenCalledWith('en');
+      expect(mockSnapClient.createInterface).toHaveBeenCalledWith(
+        <UnifiedSendFormView context={mockContext} messages={mockMessages} />,
+        mockContext,
+      );
+      expect(result).toBe('confirm-interface-id');
     });
   });
 });

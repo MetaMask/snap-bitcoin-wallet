@@ -333,6 +333,51 @@ describe('BdkAccountRepository', () => {
     });
   });
 
+  describe('fetchInscriptions', () => {
+    it('returns null if inscriptions are not found', async () => {
+      mockSnapClient.getState.mockResolvedValue(null);
+
+      const result = await repo.fetchInscriptions('non-existent-id');
+
+      expect(mockSnapClient.getState).toHaveBeenCalledWith(
+        'accounts.non-existent-id.inscriptions',
+      );
+      expect(result).toBeNull();
+    });
+
+    it('returns inscriptions when found', async () => {
+      const mockInscriptions: Inscription[] = [
+        {
+          id: 'ins1',
+          number: 1,
+          contentLength: 100,
+          contentType: 'image/png',
+          satNumber: 1000,
+          satRarity: 'common',
+          location: 'txid1:vout:offset',
+        },
+        {
+          id: 'ins2',
+          number: 2,
+          contentLength: 200,
+          contentType: 'text/plain',
+          satNumber: 2000,
+          satRarity: 'uncommon',
+          location: 'txid2:vout:offset',
+        },
+      ];
+
+      mockSnapClient.getState.mockResolvedValue(mockInscriptions);
+
+      const result = await repo.fetchInscriptions('some-id');
+
+      expect(mockSnapClient.getState).toHaveBeenCalledWith(
+        'accounts.some-id.inscriptions',
+      );
+      expect(result).toStrictEqual(mockInscriptions);
+    });
+  });
+
   describe('getFrozenUTXOs', () => {
     it('returns empty array if inscriptions is not found', async () => {
       mockSnapClient.getState.mockResolvedValue(null);

@@ -211,7 +211,7 @@ describe('KeyringRequestHandler', () => {
       'cHNidP8BAI4CAAAAAAM1gwEAAAAAACJRIORP1Ndiq325lSC/jMG0RlhATHYmuuULfXgEHUM3u5i4AAAAAAAAAAAxai8AAUSx+i9Igg4HWdcpyagCs8mzuRCklgA7nRMkm69rAAAAAAAAAAAAAQACAAAAACp2AAAAAAAAFgAUgpMvYEJ/dp36svRJyRtNnpSo7bQAAAAAAAAAAA==';
 
     it('signs a PSBT successfully: sign', async () => {
-      const response = await snap.onKeyringRequest({
+      const response = snap.onKeyringRequest({
         origin: ORIGIN,
         method: submitRequestMethod,
         params: {
@@ -234,7 +234,13 @@ describe('KeyringRequestHandler', () => {
         } as KeyringRequest,
       });
 
-      expect(response).toRespondWith({
+      const ui = await response.getInterface();
+      assertIsConfirmationDialog(ui);
+      await ui.ok();
+
+      const result = await response;
+
+      expect(result).toRespondWith({
         pending: false,
         result: {
           psbt: SIGNED_PSBT,
@@ -244,7 +250,7 @@ describe('KeyringRequestHandler', () => {
     });
 
     it('signs a PSBT successfully: fill and sign', async () => {
-      const response = await snap.onKeyringRequest({
+      const response = snap.onKeyringRequest({
         origin: ORIGIN,
         method: submitRequestMethod,
         params: {
@@ -267,7 +273,13 @@ describe('KeyringRequestHandler', () => {
         } as KeyringRequest,
       });
 
-      expect(response).toRespondWith({
+      const ui = await response.getInterface();
+      assertIsConfirmationDialog(ui);
+      await ui.ok();
+
+      const result = await response;
+
+      expect(result).toRespondWith({
         pending: false,
         result: {
           psbt: expect.any(String), // non deterministic
@@ -277,7 +289,7 @@ describe('KeyringRequestHandler', () => {
     });
 
     it('signs a PSBT successfully: fill, sign and broadcast', async () => {
-      const response = await snap.onKeyringRequest({
+      const response = snap.onKeyringRequest({
         origin: ORIGIN,
         method: submitRequestMethod,
         params: {
@@ -300,7 +312,13 @@ describe('KeyringRequestHandler', () => {
         } as KeyringRequest,
       });
 
-      expect(response).toRespondWith({
+      const ui = await response.getInterface();
+      assertIsConfirmationDialog(ui);
+      await ui.ok();
+
+      const result = await response;
+
+      expect(result).toRespondWith({
         pending: false,
         result: {
           psbt: expect.any(String), // non deterministic
@@ -537,7 +555,7 @@ describe('KeyringRequestHandler', () => {
 
     it('broadcasts a PSBT successfully', async () => {
       // Prepare the PSBT to broadcast so we have a valid PSBT to broadcast
-      let response = await snap.onKeyringRequest({
+      const signResponse = snap.onKeyringRequest({
         origin: ORIGIN,
         method: submitRequestMethod,
         params: {
@@ -560,11 +578,17 @@ describe('KeyringRequestHandler', () => {
         } as KeyringRequest,
       });
 
+      const signUi = await signResponse.getInterface();
+      assertIsConfirmationDialog(signUi);
+      await signUi.ok();
+
+      const signResult = await signResponse;
+
       const { result } = (
-        response.response as { result: { result: FillPsbtResponse } }
+        signResult.response as { result: { result: FillPsbtResponse } }
       ).result;
 
-      response = await snap.onKeyringRequest({
+      const response = await snap.onKeyringRequest({
         origin: ORIGIN,
         method: submitRequestMethod,
         params: {
