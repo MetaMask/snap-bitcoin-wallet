@@ -18,6 +18,7 @@ import {
   union,
 } from 'superstruct';
 
+import type { ConfirmationRepository } from '../entities';
 import {
   AccountCapability,
   InexistentMethodError,
@@ -161,8 +162,14 @@ export type BtcWalletRequest = Infer<typeof BtcWalletRequestStruct>;
 export class KeyringRequestHandler {
   readonly #accountsUseCases: AccountUseCases;
 
-  constructor(accounts: AccountUseCases) {
+  readonly #confirmationRepository: ConfirmationRepository;
+
+  constructor(
+    accounts: AccountUseCases,
+    confirmationRepository: ConfirmationRepository,
+  ) {
     this.#accountsUseCases = accounts;
+    this.#confirmationRepository = confirmationRepository;
   }
 
   async route(request: KeyringRequest): Promise<KeyringResponse> {
@@ -229,15 +236,25 @@ export class KeyringRequestHandler {
     options: { fill: boolean; broadcast: boolean },
     feeRate?: number,
   ): Promise<KeyringResponse> {
-    const { psbt, txid } = await this.#accountsUseCases.signPsbt(
+    const psbt = parsePsbt(psbtBase64);
+    const account = await this.#accountsUseCases.get(id);
+
+    await this.#confirmationRepository.insertSignPsbt(
+      account,
+      psbt,
+      origin,
+      options,
+    );
+
+    const { psbt: signedPsbt, txid } = await this.#accountsUseCases.signPsbt(
       id,
-      parsePsbt(psbtBase64),
+      psbt,
       origin,
       options,
       feeRate,
     );
     return this.#toKeyringResponse({
-      psbt: psbt.toString(),
+      psbt: signedPsbt.toString(),
       txid: txid?.toString() ?? null,
     } as SignPsbtResponse);
   }
