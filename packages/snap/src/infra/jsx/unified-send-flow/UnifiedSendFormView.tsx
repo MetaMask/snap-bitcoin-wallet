@@ -35,8 +35,15 @@ export const UnifiedSendFormView: SnapComponent<UnifiedSendFormViewProps> = ({
   messages,
 }) => {
   const t = translate(messages);
-  const { amount, exchangeRate, network, from, recipient, explorerUrl } =
-    context;
+  const {
+    amount,
+    exchangeRate,
+    network,
+    from,
+    recipient,
+    explorerUrl,
+    origin,
+  } = context;
 
   const psbt = Psbt.from_string(context.psbt);
   const fee = psbt.fee().to_sat();
@@ -83,7 +90,7 @@ export const UnifiedSendFormView: SnapComponent<UnifiedSendFormViewProps> = ({
             <SnapText fontWeight="medium" color="alternative">
               {t('confirmation.requestOrigin')}
             </SnapText>
-            <SnapText>MetaMask</SnapText>
+            <SnapText>{origin ?? 'MetaMask'}</SnapText>
           </Box>
           <Box>{null}</Box>
           <Box alignment="space-between" direction="horizontal">

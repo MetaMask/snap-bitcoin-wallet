@@ -51,6 +51,8 @@ const sendFlowRepository = new JSXSendFlowRepository(snapClient, translator);
 const confirmationRepository = new JSXConfirmationRepository(
   snapClient,
   translator,
+  chainClient,
+  assetRatesClient,
 );
 
 // Business layer
@@ -83,7 +85,10 @@ const assetsUseCases = new AssetsUseCases(
 const confirmationUseCases = new ConfirmationUseCases(logger, snapClient);
 
 // Application layer
-const keyringRequestHandler = new KeyringRequestHandler(accountsUseCases);
+const keyringRequestHandler = new KeyringRequestHandler(
+  accountsUseCases,
+  confirmationRepository,
+);
 const keyringHandler = new KeyringHandler(
   keyringRequestHandler,
   accountsUseCases,

@@ -1,5 +1,6 @@
 import type { Txid, Psbt, Amount, LocalOutput } from '@metamask/bitcoindevkit';
-import type { KeyringRequest } from '@metamask/keyring-api';
+import type { KeyringRequest, KeyringAccount } from '@metamask/keyring-api';
+import { BtcMethod, BtcScope } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
@@ -12,8 +13,9 @@ import {
   KeyringRequestHandler,
   SendTransferRequest,
   SignPsbtRequest,
+  type BtcWalletRequest,
 } from './KeyringRequestHandler';
-import type { BitcoinAccount } from '../entities';
+import type { BitcoinAccount, ConfirmationRepository } from '../entities';
 import { AccountCapability } from '../entities';
 import type { Utxo } from './mappings';
 import { mapToUtxo } from './mappings';
@@ -34,9 +36,18 @@ jest.mock('./mappings', () => ({
 
 describe('KeyringRequestHandler', () => {
   const mockAccountsUseCases = mock<AccountUseCases>();
+  const mockConfirmationRepository = mock<ConfirmationRepository>();
   const origin = 'metamask';
 
-  const handler = new KeyringRequestHandler(mockAccountsUseCases);
+  const ACCOUNT_ADDRESS = 'test-account-address';
+  const accountParam = {
+    account: { address: ACCOUNT_ADDRESS },
+  };
+
+  const handler = new KeyringRequestHandler(
+    mockAccountsUseCases,
+    mockConfirmationRepository,
+  );
 
   beforeEach(() => {
     jest.mocked(parsePsbt).mockReturnValue(mockPsbt);
@@ -60,11 +71,13 @@ describe('KeyringRequestHandler', () => {
 
   describe('signPsbt', () => {
     const mockOptions = { fill: false, broadcast: true };
+    const mockAccount = mock<BitcoinAccount>();
     const mockRequest = mock<KeyringRequest>({
       origin,
       request: {
         method: AccountCapability.SignPsbt,
         params: {
+          ...accountParam,
           psbt: 'psbtBase64',
           feeRate: 3,
           options: mockOptions,
@@ -73,7 +86,12 @@ describe('KeyringRequestHandler', () => {
       account: 'account-id',
     });
 
-    it('executes signPsbt', async () => {
+    beforeEach(() => {
+      mockAccountsUseCases.get.mockResolvedValue(mockAccount);
+      mockConfirmationRepository.insertSignPsbt.mockResolvedValue(undefined);
+    });
+
+    it('executes signPsbt with confirmation', async () => {
       mockAccountsUseCases.signPsbt.mockResolvedValue({
         psbt: 'psbtBase64',
         txid: mock<Txid>({
@@ -86,6 +104,13 @@ describe('KeyringRequestHandler', () => {
       expect(assert).toHaveBeenCalledWith(
         mockRequest.request.params,
         SignPsbtRequest,
+      );
+      expect(mockAccountsUseCases.get).toHaveBeenCalledWith('account-id');
+      expect(mockConfirmationRepository.insertSignPsbt).toHaveBeenCalledWith(
+        mockAccount,
+        mockPsbt,
+        'metamask',
+        mockOptions,
       );
       expect(mockAccountsUseCases.signPsbt).toHaveBeenCalledWith(
         'account-id',
@@ -100,6 +125,18 @@ describe('KeyringRequestHandler', () => {
       });
     });
 
+    it('does not sign if user cancels confirmation', async () => {
+      mockConfirmationRepository.insertSignPsbt.mockRejectedValue(
+        new Error('User canceled the confirmation'),
+      );
+
+      await expect(handler.route(mockRequest)).rejects.toThrow(
+        'User canceled the confirmation',
+      );
+
+      expect(mockAccountsUseCases.signPsbt).not.toHaveBeenCalled();
+    });
+
     it('propagates errors from parsePsbt', async () => {
       const error = new Error('parsePsbt');
       jest.mocked(parsePsbt).mockImplementationOnce(() => {
@@ -109,7 +146,10 @@ describe('KeyringRequestHandler', () => {
       await expect(
         handler.route({
           ...mockRequest,
-          request: { ...mockRequest.request, params: { psbt: 'invalidPsbt' } },
+          request: {
+            ...mockRequest.request,
+            params: { ...accountParam, psbt: 'invalidPsbt' },
+          },
         }),
       ).rejects.toThrow(error);
 
@@ -131,6 +171,7 @@ describe('KeyringRequestHandler', () => {
       request: {
         method: AccountCapability.ComputeFee,
         params: {
+          ...accountParam,
           psbt: 'psbtBase64',
           feeRate: 3,
         },
@@ -172,7 +213,10 @@ describe('KeyringRequestHandler', () => {
       await expect(
         handler.route({
           ...mockRequest,
-          request: { ...mockRequest.request, params: { psbt: 'invalidPsbt' } },
+          request: {
+            ...mockRequest.request,
+            params: { ...accountParam, psbt: 'invalidPsbt' },
+          },
         }),
       ).rejects.toThrow(error);
 
@@ -194,6 +238,7 @@ describe('KeyringRequestHandler', () => {
       request: {
         method: AccountCapability.FillPsbt,
         params: {
+          ...accountParam,
           psbt: 'psbtBase64',
           feeRate: 3,
         },
@@ -233,7 +278,10 @@ describe('KeyringRequestHandler', () => {
       await expect(
         handler.route({
           ...mockRequest,
-          request: { ...mockRequest.request, params: { psbt: 'invalidPsbt' } },
+          request: {
+            ...mockRequest.request,
+            params: { ...accountParam, psbt: 'invalidPsbt' },
+          },
         }),
       ).rejects.toThrow(error);
 
@@ -256,6 +304,7 @@ describe('KeyringRequestHandler', () => {
       request: {
         method: AccountCapability.BroadcastPsbt,
         params: {
+          ...accountParam,
           psbt: 'psbtBase64',
           feeRate: 3,
         },
@@ -295,7 +344,10 @@ describe('KeyringRequestHandler', () => {
       await expect(
         handler.route({
           ...mockRequest,
-          request: { ...mockRequest.request, params: { psbt: 'invalidPsbt' } },
+          request: {
+            ...mockRequest.request,
+            params: { ...accountParam, psbt: 'invalidPsbt' },
+          },
         }),
       ).rejects.toThrow(error);
 
@@ -324,6 +376,7 @@ describe('KeyringRequestHandler', () => {
       request: {
         method: AccountCapability.SendTransfer,
         params: {
+          ...accountParam,
           recipients,
           feeRate: 3,
         },
@@ -376,6 +429,7 @@ describe('KeyringRequestHandler', () => {
       request: {
         method: AccountCapability.GetUtxo,
         params: {
+          ...accountParam,
           outpoint: 'mytxid:0',
         },
       },
@@ -470,6 +524,7 @@ describe('KeyringRequestHandler', () => {
       request: {
         method: AccountCapability.SignMessage,
         params: {
+          ...accountParam,
           message: 'message',
         },
       },
@@ -489,6 +544,132 @@ describe('KeyringRequestHandler', () => {
         pending: false,
         result: { signature: 'signature' },
       });
+    });
+  });
+
+  describe('resolveAccountAddress', () => {
+    const mockAccount1 = mock<KeyringAccount>({
+      id: 'account-1',
+      address: 'test123',
+      scopes: [BtcScope.Regtest],
+    });
+    const mockAccount2 = mock<KeyringAccount>({
+      id: 'account-2',
+      address: 'test456',
+      scopes: [BtcScope.Regtest, BtcScope.Testnet],
+    });
+    const mockAccount3 = mock<KeyringAccount>({
+      id: 'account-3',
+      address: 'test789',
+      scopes: [BtcScope.Testnet],
+    });
+
+    it('resolves account address for SignPsbt', () => {
+      const request = {
+        method: BtcMethod.SignPsbt as const,
+        params: {
+          account: { address: 'test123' },
+          psbt: 'psbt',
+          options: { fill: false, broadcast: false },
+        },
+      };
+
+      const result = handler.resolveAccountAddress(
+        [mockAccount1, mockAccount2, mockAccount3],
+        BtcScope.Regtest,
+        request,
+      );
+
+      expect(result).toBe('bip122:regtest:test123');
+    });
+
+    it('resolves account address for SendTransfer', () => {
+      const request = {
+        method: BtcMethod.SendTransfer as const,
+        params: {
+          account: { address: 'test456' },
+          recipients: [{ address: 'recipient', amount: '1000' }],
+        },
+      };
+
+      const result = handler.resolveAccountAddress(
+        [mockAccount1, mockAccount2, mockAccount3],
+        BtcScope.Regtest,
+        request,
+      );
+
+      expect(result).toBe('bip122:regtest:test456');
+    });
+
+    it('resolves account address for SignMessage', () => {
+      const request = {
+        method: BtcMethod.SignMessage as const,
+        params: {
+          account: { address: 'test123' },
+          message: 'hello',
+        },
+      };
+
+      const result = handler.resolveAccountAddress(
+        [mockAccount1, mockAccount2, mockAccount3],
+        BtcScope.Regtest,
+        request,
+      );
+
+      expect(result).toBe('bip122:regtest:test123');
+    });
+
+    it('throws error if no accounts with scope', () => {
+      const request = {
+        method: BtcMethod.SignPsbt as const,
+        params: {
+          account: { address: 'test123' },
+          psbt: 'psbt',
+          options: { fill: false, broadcast: false },
+        },
+      };
+
+      expect(() =>
+        handler.resolveAccountAddress(
+          [mockAccount3],
+          BtcScope.Regtest,
+          request,
+        ),
+      ).toThrow('No accounts with this scope');
+    });
+
+    it('throws error if account address not found', () => {
+      const request = {
+        method: BtcMethod.SignPsbt as const,
+        params: {
+          account: { address: 'notfound' },
+          psbt: 'psbt',
+          options: { fill: false, broadcast: false },
+        },
+      };
+
+      expect(() =>
+        handler.resolveAccountAddress(
+          [mockAccount1, mockAccount2, mockAccount3],
+          BtcScope.Regtest,
+          request,
+        ),
+      ).toThrow('Account not found');
+    });
+
+    it('throws error for unsupported method', () => {
+      const request = {
+        method: 'unsupported' as BtcMethod,
+        params: {},
+      };
+
+      expect(() =>
+        handler.resolveAccountAddress(
+          [mockAccount1, mockAccount2, mockAccount3],
+          BtcScope.Regtest,
+          request as unknown as BtcWalletRequest,
+        ),
+      ).toThrow('Unsupported method');
     });
   });
 });

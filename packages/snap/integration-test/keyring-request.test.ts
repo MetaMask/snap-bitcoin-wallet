@@ -167,6 +167,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.GetUtxo,
             params: {
+              account: { address: account.address },
               outpoint: utxos[0]?.outpoint,
             },
           },
@@ -210,7 +211,7 @@ describe('KeyringRequestHandler', () => {
       'cHNidP8BAI4CAAAAAAM1gwEAAAAAACJRIORP1Ndiq325lSC/jMG0RlhATHYmuuULfXgEHUM3u5i4AAAAAAAAAAAxai8AAUSx+i9Igg4HWdcpyagCs8mzuRCklgA7nRMkm69rAAAAAAAAAAAAAQACAAAAACp2AAAAAAAAFgAUgpMvYEJ/dp36svRJyRtNnpSo7bQAAAAAAAAAAA==';
 
     it('signs a PSBT successfully: sign', async () => {
-      const response = await snap.onKeyringRequest({
+      const response = snap.onKeyringRequest({
         origin: ORIGIN,
         method: submitRequestMethod,
         params: {
@@ -221,6 +222,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.SignPsbt,
             params: {
+              account: { address: account.address },
               psbt: TEMPLATE_PSBT,
               feeRate: 3,
               options: {
@@ -232,7 +234,13 @@ describe('KeyringRequestHandler', () => {
         } as KeyringRequest,
       });
 
-      expect(response).toRespondWith({
+      const ui = await response.getInterface();
+      assertIsConfirmationDialog(ui);
+      await ui.ok();
+
+      const result = await response;
+
+      expect(result).toRespondWith({
         pending: false,
         result: {
           psbt: SIGNED_PSBT,
@@ -242,7 +250,7 @@ describe('KeyringRequestHandler', () => {
     });
 
     it('signs a PSBT successfully: fill and sign', async () => {
-      const response = await snap.onKeyringRequest({
+      const response = snap.onKeyringRequest({
         origin: ORIGIN,
         method: submitRequestMethod,
         params: {
@@ -253,6 +261,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.SignPsbt,
             params: {
+              account: { address: account.address },
               psbt: TEMPLATE_PSBT,
               feeRate: 3,
               options: {
@@ -264,7 +273,13 @@ describe('KeyringRequestHandler', () => {
         } as KeyringRequest,
       });
 
-      expect(response).toRespondWith({
+      const ui = await response.getInterface();
+      assertIsConfirmationDialog(ui);
+      await ui.ok();
+
+      const result = await response;
+
+      expect(result).toRespondWith({
         pending: false,
         result: {
           psbt: expect.any(String), // non deterministic
@@ -274,7 +289,7 @@ describe('KeyringRequestHandler', () => {
     });
 
     it('signs a PSBT successfully: fill, sign and broadcast', async () => {
-      const response = await snap.onKeyringRequest({
+      const response = snap.onKeyringRequest({
         origin: ORIGIN,
         method: submitRequestMethod,
         params: {
@@ -285,6 +300,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.SignPsbt,
             params: {
+              account: { address: account.address },
               psbt: TEMPLATE_PSBT,
               feeRate: 3,
               options: {
@@ -296,7 +312,13 @@ describe('KeyringRequestHandler', () => {
         } as KeyringRequest,
       });
 
-      expect(response).toRespondWith({
+      const ui = await response.getInterface();
+      assertIsConfirmationDialog(ui);
+      await ui.ok();
+
+      const result = await response;
+
+      expect(result).toRespondWith({
         pending: false,
         result: {
           psbt: expect.any(String), // non deterministic
@@ -317,6 +339,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.SignPsbt,
             params: {
+              account: { address: account.address },
               psbt: 'notAPsbt',
               options: {
                 fill: true,
@@ -350,6 +373,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.SignPsbt,
             params: {
+              account: { address: account.address },
               psbt: TEMPLATE_PSBT,
             },
           },
@@ -360,6 +384,37 @@ describe('KeyringRequestHandler', () => {
         code: -32000,
         message:
           'Invalid format: At path: options -- Expected an object, but received: undefined',
+        stack: expect.anything(),
+      });
+    });
+
+    it('fails if missing account', async () => {
+      const response = await snap.onKeyringRequest({
+        origin: ORIGIN,
+        method: submitRequestMethod,
+        params: {
+          id: account.id,
+          origin,
+          scope: BtcScope.Regtest,
+          account: account.id,
+          request: {
+            method: AccountCapability.SignPsbt,
+            params: {
+              psbt: TEMPLATE_PSBT,
+              feeRate: 3,
+              options: {
+                fill: true,
+                broadcast: true,
+              },
+            },
+          },
+        } as KeyringRequest,
+      });
+
+      expect(response).toRespondWithError({
+        code: -32000,
+        message:
+          'Invalid format: At path: account -- Expected an object, but received: undefined',
         stack: expect.anything(),
       });
     });
@@ -382,6 +437,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.FillPsbt,
             params: {
+              account: { address: account.address },
               psbt: TEMPLATE_PSBT,
               feeRate: 3,
             },
@@ -409,6 +465,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.FillPsbt,
             params: {
+              account: { address: account.address },
               psbt: 'notAPsbt',
             },
           },
@@ -444,6 +501,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.ComputeFee,
             params: {
+              account: { address: account.address },
               psbt: TEMPLATE_PSBT,
               feeRate: 3,
             },
@@ -471,6 +529,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.ComputeFee,
             params: {
+              account: { address: account.address },
               psbt: 'notAPsbt',
             },
           },
@@ -496,7 +555,7 @@ describe('KeyringRequestHandler', () => {
 
     it('broadcasts a PSBT successfully', async () => {
       // Prepare the PSBT to broadcast so we have a valid PSBT to broadcast
-      let response = await snap.onKeyringRequest({
+      const signResponse = snap.onKeyringRequest({
         origin: ORIGIN,
         method: submitRequestMethod,
         params: {
@@ -507,6 +566,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.SignPsbt,
             params: {
+              account: { address: account.address },
               psbt: TEMPLATE_PSBT,
               feeRate: 3,
               options: {
@@ -518,11 +578,17 @@ describe('KeyringRequestHandler', () => {
         } as KeyringRequest,
       });
 
+      const signUi = await signResponse.getInterface();
+      assertIsConfirmationDialog(signUi);
+      await signUi.ok();
+
+      const signResult = await signResponse;
+
       const { result } = (
-        response.response as { result: { result: FillPsbtResponse } }
+        signResult.response as { result: { result: FillPsbtResponse } }
       ).result;
 
-      response = await snap.onKeyringRequest({
+      const response = await snap.onKeyringRequest({
         origin: ORIGIN,
         method: submitRequestMethod,
         params: {
@@ -533,6 +599,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.BroadcastPsbt,
             params: {
+              account: { address: account.address },
               psbt: result.psbt,
             },
           },
@@ -559,6 +626,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.BroadcastPsbt,
             params: {
+              account: { address: account.address },
               psbt: 'notAPsbt',
             },
           },
@@ -579,7 +647,7 @@ describe('KeyringRequestHandler', () => {
 
   describe('sendTransfer', () => {
     it('sends funds successfully', async () => {
-      const response = await snap.onKeyringRequest({
+      const response = snap.onKeyringRequest({
         origin: ORIGIN,
         method: submitRequestMethod,
         params: {
@@ -590,13 +658,10 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.SendTransfer,
             params: {
+              account: { address: account.address },
               recipients: [
                 {
                   address: 'bcrt1qstku2y3pfh9av50lxj55arm8r5gj8tf2yv5nxz',
-                  amount: '1000',
-                },
-                {
-                  address: 'bcrt1q4gfcga7jfjmm02zpvrh4ttc5k7lmnq2re52z2y',
                   amount: '1000',
                 },
               ],
@@ -606,7 +671,13 @@ describe('KeyringRequestHandler', () => {
         } as KeyringRequest,
       });
 
-      expect(response).toRespondWith({
+      const ui = await response.getInterface();
+      assertIsConfirmationDialog(ui);
+      await ui.ok();
+
+      const result = await response;
+
+      expect(result).toRespondWith({
         pending: false,
         result: {
           txid: expect.any(String),
@@ -626,6 +697,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.SendTransfer,
             params: {
+              account: { address: account.address },
               recipients: [{ address: 'notAnAddress', amount: '1000' }],
             },
           },
@@ -654,6 +726,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.SignMessage,
             params: {
+              account: { address: account.address },
               message: 'Hello, world!',
             },
           },
