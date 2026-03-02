@@ -1,0 +1,218 @@
+{
+  "locale": "fr",
+  "messages": {
+    "reviewTransactionWarning": {
+      "message": "Vérifiez la transaction avant de continuer"
+    },
+    "from": {
+      "message": "De"
+    },
+    "toAddress": {
+      "message": "À"
+    },
+    "continue": {
+      "message": "Continuer"
+    },
+    "cancel": {
+      "message": "Annuler"
+    },
+    "clear": {
+      "message": "Effacer"
+    },
+    "amount": {
+      "message": "Montant"
+    },
+    "balance": {
+      "message": "Solde"
+    },
+    "recipient": {
+      "message": "Destinataire"
+    },
+    "network": {
+      "message": "Réseau"
+    },
+    "minutes": {
+      "message": "min"
+    },
+    "transactionSpeed": {
+      "message": "Vitesse de transaction"
+    },
+    "transactionSpeedTooltip": {
+      "message": "Heure estimée de la transaction"
+    },
+    "networkFee": {
+      "message": "Frais de réseau"
+    },
+    "feeRate": {
+      "message": "Taux de frais"
+    },
+    "networkFeeTooltip": {
+      "message": "Les frais de réseau totaux"
+    },
+    "total": {
+      "message": "Total"
+    },
+    "send": {
+      "message": "Envoyer"
+    },
+    "asset": {
+      "message": "Actif"
+    },
+    "sending": {
+      "message": "Envoi"
+    },
+    "max": {
+      "message": "Max."
+    },
+    "recipientPlaceholder": {
+      "message": "Entrez l'adresse de réception"
+    },
+    "review": {
+      "message": "Vérifier"
+    },
+    "error": {
+      "message": "Erreur"
+    },
+    "unknownError": {
+      "message": "Une erreur inconnue s'est produite"
+    },
+    "feeTooLow": {
+      "message": "Frais trop bas"
+    },
+    "feeRateTooLow": {
+      "message": "Taux de frais trop bas"
+    },
+    "noUtxosSelected": {
+      "message": "Échec de la construction de la transaction : UTXOs manquants"
+    },
+    "outputBelowDustLimit": {
+      "message": "Montant en dessous de la limite dust"
+    },
+    "insufficientFunds": {
+      "message": "Fonds insuffisants pour couvrir le montant plus les frais"
+    },
+    "noRecipients": {
+      "message": "Destinataires manquants"
+    },
+    "psbt": {
+      "message": "PSBT invalide"
+    },
+    "unknownUtxo": {
+      "message": "Échec de la construction de la transaction : UTXO inconnu"
+    },
+    "MmssingNonWitnessUtxo": {
+      "message": "Échec de la construction de la transaction : UTXO non-witness manquant"
+    },
+    "base58": {
+      "message": "Adresse Bitcoin invalide"
+    },
+    "bech32": {
+      "message": "Adresse Bitcoin invalide"
+    },
+    "witnessVersion": {
+      "message": "Adresse Bitcoin invalide : version witness"
+    },
+    "witnessProgram": {
+      "message": "Adresse Bitcoin invalide : programme witness"
+    },
+    "legacyAddressTooLong": {
+      "message": "Adresse Bitcoin invalide"
+    },
+    "invalidBase58PayloadLength": {
+      "message": "Adresse Bitcoin invalide : longueur invalide"
+    },
+    "invalidLegacyPrefix": {
+      "message": "Adresse Bitcoin invalide : préfixe legacy invalide"
+    },
+    "networkValidation": {
+      "message": "Adresse Bitcoin invalide : réseau incorrect"
+    },
+    "outOfRange": {
+      "message": "Montant invalide : hors plage"
+    },
+    "tooPrecise": {
+      "message": "Montant invalide : trop précis"
+    },
+    "missingDigits": {
+      "message": "Montant invalide : chiffres manquants"
+    },
+    "inputTooLarge": {
+      "message": "Montant invalide : trop grand"
+    },
+    "invalidCharacter": {
+      "message": "Montant invalide : caractère invalide"
+    },
+    "unexpected": {
+      "message": "Une erreur inattendue s'est produite"
+    },
+    "error.0": {
+      "message": "Format invalide"
+    },
+    "error.1000": {
+      "message": "Validation échouée"
+    },
+    "error.2000": {
+      "message": "Ressource non trouvée"
+    },
+    "error.3000": {
+      "message": "Erreur de connexion"
+    },
+    "error.3100": {
+      "message": "One or more accounts failed to synchronize"
+    },
+    "error.4000": {
+      "message": "État du portefeuille corrompu"
+    },
+    "error.5000": {
+      "message": "Erreur de stockage"
+    },
+    "error.6000": {
+      "message": "Méthode non implémentée ou non supportée"
+    },
+    "error.7000": {
+      "message": "Permission refusée ou autorisation insuffisante"
+    },
+    "error.8000": {
+      "message": "Erreur d'action de l'utilisateur"
+    },
+    "error.9000": {
+      "message": "État corrompu, invariante non respectée ou assertion échouée."
+    },
+    "error.internal": {
+      "message": "Erreur interne. Veuillez réessayer plus tard ou contacter le support"
+    },
+    "confirmation.origin": {
+      "message": "Origine"
+    },
+    "confirmation.origin.tooltip": {
+      "message": "Le dApp demandant la signature"
+    },
+    "confirmation.account": {
+      "message": "Compte"
+    },
+    "confirmation.signMessage.confirmButton": {
+      "message": "Signer"
+    },
+    "confirmation.signMessage.title": {
+      "message": "Signer le message"
+    },
+    "confirmation.signMessage.message": {
+      "message": "Message"
+    },
+    "confirmation.estimatedChanges": {
+      "message": "Changements estimés"
+    },
+    "confirmation.estimatedChanges.send": {
+      "message": "Vous envoyez"
+    },
+    "confirmation.confirmButton": {
+      "message": "Confirmer"
+    },
+    "confirmation.signAndSendTransaction.title": {
+      "message": "Demande de transaction"
+    },
+    "confirmation.requestOrigin": {
+      "message": "Demande de la part de"
+    }
+  }
+}

@@ -1,11 +1,11 @@
 {
-  "locale": "中文",
+  "locale": "tr",
   "messages": {
     "reviewTransactionWarning": {
-      "message": "继续之前，请先审查交易"
+      "message": "Devam etmeden önce işlemi inceleyin"
     },
     "from": {
-      "message": "从"
+      "message": "Gönderen"
     },
     "toAddress": {
       "message": "To Address"
@@ -14,31 +14,31 @@
       "message": "Continue"
     },
     "cancel": {
-      "message": "取消"
+      "message": "İptal"
     },
     "clear": {
       "message": "Clear"
     },
     "amount": {
-      "message": "金额"
+      "message": "Miktar"
     },
     "balance": {
-      "message": "余额"
+      "message": "Bakiye"
     },
     "recipient": {
-      "message": "收款人"
+      "message": "Alıcı"
     },
     "network": {
-      "message": "网络"
+      "message": "Ağ"
     },
     "minutes": {
       "message": "min"
     },
     "transactionSpeed": {
-      "message": "交易速度"
+      "message": "İşlem Hızı"
     },
     "transactionSpeedTooltip": {
-      "message": "交易预计时间"
+      "message": "Tahmini işlem süresi"
     },
     "networkFee": {
       "message": "Network Fee"
@@ -50,28 +50,28 @@
       "message": "The total network fee"
     },
     "total": {
-      "message": "总额"
+      "message": "Toplam"
     },
     "send": {
-      "message": "发送"
+      "message": "Gönder"
     },
     "asset": {
       "message": "Asset"
     },
     "sending": {
-      "message": "发送中"
+      "message": "Gönderiliyor"
     },
     "max": {
-      "message": "最多"
+      "message": "Maksimum"
     },
     "recipientPlaceholder": {
       "message": "Enter receiving address"
     },
     "review": {
-      "message": "审查"
+      "message": "İncele"
     },
     "error": {
-      "message": "错误"
+      "message": "Hata"
     },
     "unknownError": {
       "message": "An unknown error occurred"
@@ -179,40 +179,40 @@
       "message": "Corrupted state, invariant not respected or failed assertion."
     },
     "error.internal": {
-      "message": "内部错误。请稍后重试或联系支持"
+      "message": "İç hata. Lütfen daha sonra tekrar deneyin veya destekle iletişime geçin"
     },
     "confirmation.origin": {
-      "message": "来源"
+      "message": "Kaynak"
     },
     "confirmation.origin.tooltip": {
-      "message": "请求签名的 dApp"
+      "message": "İmzayı isteyen dApp"
     },
     "confirmation.account": {
-      "message": "账户"
+      "message": "Hesap"
     },
     "confirmation.signMessage.confirmButton": {
-      "message": "签名"
+      "message": "İmzala"
     },
     "confirmation.signMessage.title": {
-      "message": "签名消息"
+      "message": "Mesajı İmzala"
     },
     "confirmation.signMessage.message": {
-      "message": "消息"
+      "message": "Mesaj"
     },
     "confirmation.estimatedChanges": {
-      "message": "预计变化"
+      "message": "Tahmini değişiklikler"
     },
     "confirmation.estimatedChanges.send": {
-      "message": "您发送"
+      "message": "Gönderdiğiniz"
     },
     "confirmation.confirmButton": {
-      "message": "确认"
+      "message": "Onayla"
     },
     "confirmation.signAndSendTransaction.title": {
-      "message": "交易请求"
+      "message": "İşlem talebi"
     },
     "confirmation.requestOrigin": {
-      "message": "请求来自"
+      "message": "Talebi gönderen"
     }
   }
 }
