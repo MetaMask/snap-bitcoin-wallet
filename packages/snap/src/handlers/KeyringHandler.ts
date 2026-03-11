@@ -1,6 +1,7 @@
 import type { AddressType } from '@metamask/bitcoindevkit';
 import {
   BtcAccountType,
+  BtcMethod,
   BtcScope,
   CreateAccountRequestStruct,
   DeleteAccountRequestStruct,
@@ -59,16 +60,13 @@ import {
   NetworkStruct,
 } from './caip';
 import { CronMethod } from './CronHandler';
-import {
-  BtcWalletRequestStruct,
-  type KeyringRequestHandler,
-} from './KeyringRequestHandler';
+import type { KeyringRequestHandler } from './KeyringRequestHandler';
 import {
   mapToDiscoveredAccount,
   mapToKeyringAccount,
   mapToTransaction,
 } from './mappings';
-import { validateSelectedAccounts } from './validation';
+import { BtcWalletRequestStruct, validateSelectedAccounts } from './validation';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
 import { runSnapActionSafely } from '../utils/snapHelpers';
 
@@ -424,13 +422,42 @@ export class KeyringHandler implements Keyring {
 
       const allAccounts = await this.listAccounts();
 
-      const caip10Address = this.#keyringRequest.resolveAccountAddress(
-        allAccounts,
-        scope,
-        requestWithoutCommonHeader,
+      const accountsWithThisScope = allAccounts.filter((account) =>
+        account.scopes.includes(scope),
       );
 
-      return { address: caip10Address };
+      if (accountsWithThisScope.length === 0) {
+        throw new Error('No accounts with this scope');
+      }
+
+      let addressToValidate: string;
+
+      switch (requestWithoutCommonHeader.method) {
+        case BtcMethod.BroadcastPsbt:
+        case BtcMethod.FillPsbt:
+        case BtcMethod.ComputeFee:
+        case BtcMethod.GetUtxo:
+        case BtcMethod.SendTransfer:
+        case BtcMethod.SignMessage:
+        case BtcMethod.SignPsbt: {
+          const { account } = requestWithoutCommonHeader.params;
+          addressToValidate = account.address;
+          break;
+        }
+        default: {
+          throw new Error('Unsupported method');
+        }
+      }
+
+      const foundAccount = accountsWithThisScope.find(
+        (account) => account.address === addressToValidate,
+      );
+
+      if (!foundAccount) {
+        throw new Error('Account not found');
+      }
+
+      return { address: `${scope}:${addressToValidate}` };
     } catch (error: unknown) {
       this.#logger.error({ error }, 'Error resolving account address');
       return null;

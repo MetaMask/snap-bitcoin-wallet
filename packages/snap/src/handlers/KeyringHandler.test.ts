@@ -872,18 +872,10 @@ describe('KeyringHandler', () => {
           psbt: 'psbt',
         },
       };
-      const requestWithoutCommonHeader = {
-        method: request.method,
-        params: request.params,
-      };
 
-      // mockAccounts.list.mockResolvedValue([mockAccount]);
       jest
         .spyOn(handler, 'listAccounts')
         .mockResolvedValueOnce([mockKeyringAccount1, mockKeyringAccount2]);
-      mockKeyringRequest.resolveAccountAddress.mockReturnValue(
-        'bip122:000000000019d6689c085ae165831e93:test123',
-      );
 
       const result = await handler.resolveAccountAddress(
         BtcScope.Regtest,
@@ -891,17 +883,12 @@ describe('KeyringHandler', () => {
       );
 
       expect(handler.listAccounts).toHaveBeenCalled();
-      expect(mockKeyringRequest.resolveAccountAddress).toHaveBeenCalledWith(
-        [mockKeyringAccount1, mockKeyringAccount2],
-        BtcScope.Regtest,
-        requestWithoutCommonHeader,
-      );
       expect(result).toStrictEqual({
-        address: 'bip122:000000000019d6689c085ae165831e93:test123',
+        address: `${BtcScope.Regtest}:test123`,
       });
     });
 
-    it('returns null on error', async () => {
+    it('returns null when account address not found', async () => {
       const request = {
         id: '1',
         jsonrpc: '2.0' as const,
@@ -914,11 +901,36 @@ describe('KeyringHandler', () => {
 
       jest
         .spyOn(handler, 'listAccounts')
-        .mockImplementation()
         .mockResolvedValue([mockKeyringAccount1, mockKeyringAccount2]);
-      mockKeyringRequest.resolveAccountAddress.mockImplementation(() => {
-        throw new Error('Account not found');
+
+      const result = await handler.resolveAccountAddress(
+        BtcScope.Regtest,
+        request,
+      );
+
+      expect(result).toBeNull();
+    });
+
+    it('returns null when no accounts match the scope', async () => {
+      const request = {
+        id: '1',
+        jsonrpc: '2.0' as const,
+        method: BtcMethod.SignPsbt,
+        params: {
+          account: { address: 'test123' },
+          psbt: 'psbt',
+        },
+      };
+
+      const accountWithDifferentScope = mock<KeyringAccount>({
+        id: 'account-3',
+        address: 'test123',
+        scopes: [BtcScope.Mainnet],
       });
+
+      jest
+        .spyOn(handler, 'listAccounts')
+        .mockResolvedValue([accountWithDifferentScope]);
 
       const result = await handler.resolveAccountAddress(
         BtcScope.Regtest,
@@ -938,7 +950,6 @@ describe('KeyringHandler', () => {
 
       jest
         .spyOn(handler, 'listAccounts')
-        .mockImplementation()
         .mockResolvedValue([mockKeyringAccount1, mockKeyringAccount2]);
 
       jest.mocked(assert).mockImplementationOnce(() => {
