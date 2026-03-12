@@ -205,6 +205,30 @@ describe('SendFlowUseCases', () => {
       );
     });
 
+    it('clears state on ClearAmount', async () => {
+      const expectedContext = {
+        ...mockContext,
+        amount: undefined,
+        drain: undefined,
+        fee: undefined,
+        errors: {
+          ...mockContext.errors,
+          amount: undefined,
+          tx: undefined,
+        },
+      };
+
+      await useCases.onChangeForm(
+        'interface-id',
+        SendFormEvent.ClearAmount,
+        mockContext,
+      );
+      expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
+        'interface-id',
+        expectedContext,
+      );
+    });
+
     it('clears state on ClearRecipient', async () => {
       const expectedContext = {
         ...mockContext,
@@ -318,6 +342,30 @@ describe('SendFlowUseCases', () => {
       expect(mockSendFlowRepository.updateReview).toHaveBeenCalledWith(
         'interface-id',
         expectedReviewContext,
+      );
+    });
+
+    it('falls back to updateForm with tx error when builder.finish throws on Confirm', async () => {
+      const buildError = new Error('Insufficient funds');
+      mockAccountRepository.get.mockResolvedValue(mockAccount);
+      mockAccountRepository.getFrozenUTXOs.mockResolvedValue([mockOutPoint]);
+      mockTxBuilder.finish.mockImplementation(() => {
+        throw buildError;
+      });
+
+      await useCases.onChangeForm(
+        'interface-id',
+        SendFormEvent.Confirm,
+        mockContext,
+      );
+
+      expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
+        'interface-id',
+        expect.objectContaining({
+          errors: expect.objectContaining({
+            tx: buildError,
+          }),
+        }),
       );
     });
 
@@ -571,6 +619,64 @@ describe('SendFlowUseCases', () => {
       );
     });
 
+    it('returns undefined on SwitchCurrency when no exchangeRate', async () => {
+      const contextNoRate = { ...mockContext, exchangeRate: undefined };
+
+      const result = await useCases.onChangeForm(
+        'interface-id',
+        SendFormEvent.SwitchCurrency,
+        contextNoRate,
+      );
+
+      expect(result).toBeUndefined();
+      expect(mockSendFlowRepository.updateForm).not.toHaveBeenCalled();
+    });
+
+    it('switches currency from Bitcoin to Fiat on SwitchCurrency', async () => {
+      const contextWithRate = {
+        ...mockContext,
+        exchangeRate: {
+          currency: 'USD',
+          conversionRate: 50000,
+          conversionDate: 2025,
+        },
+      };
+
+      await useCases.onChangeForm(
+        'interface-id',
+        SendFormEvent.SwitchCurrency,
+        contextWithRate,
+      );
+
+      expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
+        'interface-id',
+        expect.objectContaining({ currency: CurrencyUnit.Fiat }),
+      );
+    });
+
+    it('switches currency from Fiat to Bitcoin on SwitchCurrency', async () => {
+      const contextFiat = {
+        ...mockContext,
+        currency: CurrencyUnit.Fiat,
+        exchangeRate: {
+          currency: 'USD',
+          conversionRate: 50000,
+          conversionDate: 2025,
+        },
+      };
+
+      await useCases.onChangeForm(
+        'interface-id',
+        SendFormEvent.SwitchCurrency,
+        contextFiat,
+      );
+
+      expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
+        'interface-id',
+        expect.objectContaining({ currency: CurrencyUnit.Bitcoin }),
+      );
+    });
+
     it('sets account from state on Account', async () => {
       const accountId = 'myAccount2';
       mockAccount.publicAddress.toString = () => 'myAddress2';
@@ -794,6 +900,16 @@ describe('SendFlowUseCases', () => {
       mockSnapClient.scheduleBackgroundEvent.mockRejectedValue(error);
 
       await expect(useCases.refresh('interface-id')).rejects.toThrow(error);
+    });
+
+    it('returns undefined when context is not found', async () => {
+      mockSendFlowRepository.getContext.mockRejectedValue(
+        new Error('Missing context'),
+      );
+
+      const result = await useCases.refresh('interface-id');
+
+      expect(result).toBeUndefined();
     });
   });
 
