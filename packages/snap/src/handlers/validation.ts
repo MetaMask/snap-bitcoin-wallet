@@ -199,8 +199,6 @@ export const BtcWalletRequestStruct = union([
   SignMessageKeyringRequestStruct,
 ]);
 
-export type BtcWalletRequest = Infer<typeof BtcWalletRequestStruct>;
-
 /**
  * Validates that an amount is a positive number
  *
