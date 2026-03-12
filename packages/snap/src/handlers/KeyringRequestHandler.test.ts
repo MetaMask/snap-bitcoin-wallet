@@ -4,20 +4,26 @@ import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
 import type { AccountUseCases } from '../use-cases';
+import { KeyringRequestHandler } from './KeyringRequestHandler';
 import {
   BroadcastPsbtRequest,
   ComputeFeeRequest,
   FillPsbtRequest,
   GetUtxoRequest,
-  KeyringRequestHandler,
   SendTransferRequest,
   SignPsbtRequest,
-} from './KeyringRequestHandler';
+} from './validation';
 import type { BitcoinAccount } from '../entities';
 import { AccountCapability } from '../entities';
 import type { Utxo } from './mappings';
 import { mapToUtxo } from './mappings';
 import { parsePsbt } from './parsers';
+
+/* eslint-disable @typescript-eslint/naming-convention */
+jest.mock('@metamask/bitcoindevkit', () => ({
+  Address: { from_string: jest.fn() },
+  Amount: { from_btc: jest.fn() },
+}));
 
 jest.mock('superstruct', () => ({
   ...jest.requireActual('superstruct'),
@@ -35,6 +41,11 @@ jest.mock('./mappings', () => ({
 describe('KeyringRequestHandler', () => {
   const mockAccountsUseCases = mock<AccountUseCases>();
   const origin = 'metamask';
+
+  const ACCOUNT_ADDRESS = 'test-account-address';
+  const accountParam = {
+    account: { address: ACCOUNT_ADDRESS },
+  };
 
   const handler = new KeyringRequestHandler(mockAccountsUseCases);
 
@@ -65,6 +76,7 @@ describe('KeyringRequestHandler', () => {
       request: {
         method: AccountCapability.SignPsbt,
         params: {
+          ...accountParam,
           psbt: 'psbtBase64',
           feeRate: 3,
           options: mockOptions,
@@ -109,7 +121,10 @@ describe('KeyringRequestHandler', () => {
       await expect(
         handler.route({
           ...mockRequest,
-          request: { ...mockRequest.request, params: { psbt: 'invalidPsbt' } },
+          request: {
+            ...mockRequest.request,
+            params: { ...accountParam, psbt: 'invalidPsbt' },
+          },
         }),
       ).rejects.toThrow(error);
 
@@ -131,6 +146,7 @@ describe('KeyringRequestHandler', () => {
       request: {
         method: AccountCapability.ComputeFee,
         params: {
+          ...accountParam,
           psbt: 'psbtBase64',
           feeRate: 3,
         },
@@ -141,7 +157,6 @@ describe('KeyringRequestHandler', () => {
     it('executes computeFee', async () => {
       mockAccountsUseCases.computeFee.mockResolvedValue(
         mock<Amount>({
-          // eslint-disable-next-line @typescript-eslint/naming-convention
           to_sat: () => BigInt(1000),
         }),
       );
@@ -172,7 +187,10 @@ describe('KeyringRequestHandler', () => {
       await expect(
         handler.route({
           ...mockRequest,
-          request: { ...mockRequest.request, params: { psbt: 'invalidPsbt' } },
+          request: {
+            ...mockRequest.request,
+            params: { ...accountParam, psbt: 'invalidPsbt' },
+          },
         }),
       ).rejects.toThrow(error);
 
@@ -194,6 +212,7 @@ describe('KeyringRequestHandler', () => {
       request: {
         method: AccountCapability.FillPsbt,
         params: {
+          ...accountParam,
           psbt: 'psbtBase64',
           feeRate: 3,
         },
@@ -233,7 +252,10 @@ describe('KeyringRequestHandler', () => {
       await expect(
         handler.route({
           ...mockRequest,
-          request: { ...mockRequest.request, params: { psbt: 'invalidPsbt' } },
+          request: {
+            ...mockRequest.request,
+            params: { ...accountParam, psbt: 'invalidPsbt' },
+          },
         }),
       ).rejects.toThrow(error);
 
@@ -256,6 +278,7 @@ describe('KeyringRequestHandler', () => {
       request: {
         method: AccountCapability.BroadcastPsbt,
         params: {
+          ...accountParam,
           psbt: 'psbtBase64',
           feeRate: 3,
         },
@@ -295,7 +318,10 @@ describe('KeyringRequestHandler', () => {
       await expect(
         handler.route({
           ...mockRequest,
-          request: { ...mockRequest.request, params: { psbt: 'invalidPsbt' } },
+          request: {
+            ...mockRequest.request,
+            params: { ...accountParam, psbt: 'invalidPsbt' },
+          },
         }),
       ).rejects.toThrow(error);
 
@@ -324,6 +350,7 @@ describe('KeyringRequestHandler', () => {
       request: {
         method: AccountCapability.SendTransfer,
         params: {
+          ...accountParam,
           recipients,
           feeRate: 3,
         },
@@ -376,6 +403,7 @@ describe('KeyringRequestHandler', () => {
       request: {
         method: AccountCapability.GetUtxo,
         params: {
+          ...accountParam,
           outpoint: 'mytxid:0',
         },
       },
@@ -470,6 +498,7 @@ describe('KeyringRequestHandler', () => {
       request: {
         method: AccountCapability.SignMessage,
         params: {
+          ...accountParam,
           message: 'message',
         },
       },
