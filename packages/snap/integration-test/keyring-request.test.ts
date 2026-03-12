@@ -167,6 +167,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.GetUtxo,
             params: {
+              account: { address: account.address },
               outpoint: utxos[0]?.outpoint,
             },
           },
@@ -221,6 +222,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.SignPsbt,
             params: {
+              account: { address: account.address },
               psbt: TEMPLATE_PSBT,
               feeRate: 3,
               options: {
@@ -253,6 +255,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.SignPsbt,
             params: {
+              account: { address: account.address },
               psbt: TEMPLATE_PSBT,
               feeRate: 3,
               options: {
@@ -285,6 +288,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.SignPsbt,
             params: {
+              account: { address: account.address },
               psbt: TEMPLATE_PSBT,
               feeRate: 3,
               options: {
@@ -317,6 +321,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.SignPsbt,
             params: {
+              account: { address: account.address },
               psbt: 'notAPsbt',
               options: {
                 fill: true,
@@ -350,6 +355,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.SignPsbt,
             params: {
+              account: { address: account.address },
               psbt: TEMPLATE_PSBT,
             },
           },
@@ -382,6 +388,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.FillPsbt,
             params: {
+              account: { address: account.address },
               psbt: TEMPLATE_PSBT,
               feeRate: 3,
             },
@@ -409,6 +416,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.FillPsbt,
             params: {
+              account: { address: account.address },
               psbt: 'notAPsbt',
             },
           },
@@ -444,6 +452,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.ComputeFee,
             params: {
+              account: { address: account.address },
               psbt: TEMPLATE_PSBT,
               feeRate: 3,
             },
@@ -471,6 +480,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.ComputeFee,
             params: {
+              account: { address: account.address },
               psbt: 'notAPsbt',
             },
           },
@@ -507,6 +517,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.SignPsbt,
             params: {
+              account: { address: account.address },
               psbt: TEMPLATE_PSBT,
               feeRate: 3,
               options: {
@@ -533,6 +544,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.BroadcastPsbt,
             params: {
+              account: { address: account.address },
               psbt: result.psbt,
             },
           },
@@ -559,6 +571,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.BroadcastPsbt,
             params: {
+              account: { address: account.address },
               psbt: 'notAPsbt',
             },
           },
@@ -590,6 +603,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.SendTransfer,
             params: {
+              account: { address: account.address },
               recipients: [
                 {
                   address: 'bcrt1qstku2y3pfh9av50lxj55arm8r5gj8tf2yv5nxz',
@@ -626,6 +640,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.SendTransfer,
             params: {
+              account: { address: account.address },
               recipients: [{ address: 'notAnAddress', amount: '1000' }],
             },
           },
@@ -654,6 +669,7 @@ describe('KeyringRequestHandler', () => {
           request: {
             method: AccountCapability.SignMessage,
             params: {
+              account: { address: account.address },
               message: 'Hello, world!',
             },
           },
