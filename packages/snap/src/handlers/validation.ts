@@ -92,7 +92,6 @@ export const NO_ERRORS_RESPONSE: ValidationResponse = {
   errors: [],
 };
 
-
 /**
  * Wallet account struct for Bitcoin requests.
  */
