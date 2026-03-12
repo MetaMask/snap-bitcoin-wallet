@@ -14,8 +14,9 @@ import type {
   KeyringResponse,
   Transaction as KeyringTransaction,
   KeyringRequest,
+  KeyringAccount,
 } from '@metamask/keyring-api';
-import { BtcAccountType, BtcScope } from '@metamask/keyring-api';
+import { BtcAccountType, BtcMethod, BtcScope } from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
@@ -842,6 +843,125 @@ describe('KeyringHandler', () => {
 
       expect(mockKeyringRequest.route).toHaveBeenCalledWith(mockRequest);
       expect(result).toStrictEqual(expectedResponse);
+    });
+  });
+
+  describe('resolveAccountAddress', () => {
+    const mockKeyringAccount1 = mock<KeyringAccount>({
+      id: 'account-1',
+      address: 'test123',
+      scopes: [BtcScope.Regtest],
+    });
+    const mockKeyringAccount2 = mock<KeyringAccount>({
+      id: 'account-2',
+      address: 'test456',
+      scopes: [BtcScope.Regtest],
+    });
+
+    beforeEach(() => {
+      mockAccounts.list.mockResolvedValue([mockAccount]);
+    });
+
+    it('resolves account address successfully', async () => {
+      const request = {
+        id: '1',
+        jsonrpc: '2.0' as const,
+        method: BtcMethod.SignPsbt,
+        params: {
+          account: { address: 'test123' },
+          psbt: 'psbt',
+        },
+      };
+
+      jest
+        .spyOn(handler, 'listAccounts')
+        .mockResolvedValueOnce([mockKeyringAccount1, mockKeyringAccount2]);
+
+      const result = await handler.resolveAccountAddress(
+        BtcScope.Regtest,
+        request,
+      );
+
+      expect(handler.listAccounts).toHaveBeenCalled();
+      expect(result).toStrictEqual({
+        address: `${BtcScope.Regtest}:test123`,
+      });
+    });
+
+    it('returns null when account address not found', async () => {
+      const request = {
+        id: '1',
+        jsonrpc: '2.0' as const,
+        method: BtcMethod.SignPsbt,
+        params: {
+          account: { address: 'notfound' },
+          psbt: 'psbt',
+        },
+      };
+
+      jest
+        .spyOn(handler, 'listAccounts')
+        .mockResolvedValue([mockKeyringAccount1, mockKeyringAccount2]);
+
+      const result = await handler.resolveAccountAddress(
+        BtcScope.Regtest,
+        request,
+      );
+
+      expect(result).toBeNull();
+    });
+
+    it('returns null when no accounts match the scope', async () => {
+      const request = {
+        id: '1',
+        jsonrpc: '2.0' as const,
+        method: BtcMethod.SignPsbt,
+        params: {
+          account: { address: 'test123' },
+          psbt: 'psbt',
+        },
+      };
+
+      const accountWithDifferentScope = mock<KeyringAccount>({
+        id: 'account-3',
+        address: 'test123',
+        scopes: [BtcScope.Mainnet],
+      });
+
+      jest
+        .spyOn(handler, 'listAccounts')
+        .mockResolvedValue([accountWithDifferentScope]);
+
+      const result = await handler.resolveAccountAddress(
+        BtcScope.Regtest,
+        request,
+      );
+
+      expect(result).toBeNull();
+    });
+
+    it('returns null when request validation fails', async () => {
+      const invalidRequest = {
+        id: '1',
+        jsonrpc: '2.0' as const,
+        method: 'invalid',
+        params: {},
+      };
+
+      jest
+        .spyOn(handler, 'listAccounts')
+        .mockResolvedValue([mockKeyringAccount1, mockKeyringAccount2]);
+
+      jest.mocked(assert).mockImplementationOnce(() => {
+        throw new Error('Invalid request');
+      });
+
+      const result = await handler.resolveAccountAddress(
+        BtcScope.Regtest,
+        invalidRequest,
+      );
+
+      expect(result).toBeNull();
     });
   });
 });
