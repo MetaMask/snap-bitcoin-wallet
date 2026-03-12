@@ -940,6 +940,29 @@ describe('KeyringHandler', () => {
       expect(result).toBeNull();
     });
 
+    it('returns null when scope validation fails', async () => {
+      const request = {
+        id: '1',
+        jsonrpc: '2.0' as const,
+        method: BtcMethod.SignPsbt,
+        params: {
+          account: { address: 'test123' },
+          psbt: 'psbt',
+        },
+      };
+
+      jest.mocked(assert).mockImplementationOnce(() => {
+        throw new Error('Invalid scope');
+      });
+
+      const result = await handler.resolveAccountAddress(
+        'invalid-scope' as never,
+        request,
+      );
+
+      expect(result).toBeNull();
+    });
+
     it('returns null when request validation fails', async () => {
       const invalidRequest = {
         id: '1',
@@ -952,9 +975,13 @@ describe('KeyringHandler', () => {
         .spyOn(handler, 'listAccounts')
         .mockResolvedValue([mockKeyringAccount1, mockKeyringAccount2]);
 
-      jest.mocked(assert).mockImplementationOnce(() => {
-        throw new Error('Invalid request');
-      });
+      // First assert (scope) passes, second assert (request struct) throws
+      jest
+        .mocked(assert)
+        .mockImplementationOnce(() => undefined)
+        .mockImplementationOnce(() => {
+          throw new Error('Invalid request');
+        });
 
       const result = await handler.resolveAccountAddress(
         BtcScope.Regtest,
