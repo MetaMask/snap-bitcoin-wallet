@@ -1,7 +1,6 @@
 import type { AddressType } from '@metamask/bitcoindevkit';
 import {
   BtcAccountType,
-  BtcMethod,
   BtcScope,
   CreateAccountRequestStruct,
   DeleteAccountRequestStruct,
@@ -430,24 +429,8 @@ export class KeyringHandler implements Keyring {
         throw new Error('No accounts with this scope');
       }
 
-      let addressToValidate: string;
-
-      switch (requestWithoutCommonHeader.method) {
-        case BtcMethod.BroadcastPsbt:
-        case BtcMethod.FillPsbt:
-        case BtcMethod.ComputeFee:
-        case BtcMethod.GetUtxo:
-        case BtcMethod.SendTransfer:
-        case BtcMethod.SignMessage:
-        case BtcMethod.SignPsbt: {
-          const { account } = requestWithoutCommonHeader.params;
-          addressToValidate = account.address;
-          break;
-        }
-        default: {
-          throw new Error('Unsupported method');
-        }
-      }
+      const { address: addressToValidate } =
+        requestWithoutCommonHeader.params.account;
 
       const foundAccount = accountsWithThisScope.find(
         (account) => account.address === addressToValidate,
