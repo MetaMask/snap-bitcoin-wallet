@@ -1,5 +1,6 @@
 import type { AddressType, Network } from '@metamask/bitcoindevkit';
 import { BtcAccountType, BtcScope } from '@metamask/keyring-api';
+import { enums } from 'superstruct';
 
 const reverseMapping = <
   From extends string | number | symbol,
@@ -36,6 +37,8 @@ export enum Caip19Asset {
   Signet = 'bip122:00000008819873e925422c1ff0f99f7c/slip44:0',
   Regtest = 'bip122:regtest/slip44:0',
 }
+
+export const NetworkStruct = enums(Object.values(BtcScope));
 
 export const networkToCaip19: Record<Network, Caip19Asset> = {
   bitcoin: Caip19Asset.Bitcoin,
