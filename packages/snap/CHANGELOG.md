@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Show a confirmation dialog before signing a PSBT from KeyringHandler and sending a transfer ([#591](https://github.com/MetaMask/snap-bitcoin-wallet/pull/591))
+- Add `resolveAccountAddress` method to KeyringHandler for dApp connectivity ([#590](https://github.com/MetaMask/snap-bitcoin-wallet/pull/590))
+
 ## [1.10.0]
 
 ### Changed
