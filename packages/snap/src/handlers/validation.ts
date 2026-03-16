@@ -1,4 +1,4 @@
-import type { Network, AddressType } from '@metamask/bitcoindevkit';
+import type { Network } from '@metamask/bitcoindevkit';
 import { Address, Amount } from '@metamask/bitcoindevkit';
 import { CaipAssetTypeStruct } from '@metamask/utils';
 import type { Infer } from 'superstruct';
@@ -176,42 +176,22 @@ export function validateSelectedAccounts(
 }
 
 /**
- * Returns the dust limit (in satoshis) for a given address type.
- *
- * @param addressType - The account address type (script type).
- * @returns The minimum spendable amount in satoshis for this script type.
- */
-function getDustLimitSats(addressType: AddressType): bigint {
-  switch (addressType) {
-    case 'p2wpkh':
-      return 294n;
-    case 'p2pkh':
-      return 546n;
-    case 'p2sh':
-      return 540n;
-    case 'p2wsh':
-      return 330n;
-    case 'p2tr':
-      return 330n;
-    default:
-      return 546n;
-  }
-}
-
-/**
  * Validates that the amount is above the dust limit for the account's script type.
  *
+ * Uses BDK's `Amount.is_dust()` which computes the dust threshold from the actual
+ * script, matching Bitcoin Core's relay policy exactly. This replaces the previous
+ * hardcoded per-address-type dust limits.
+ *
  * @param amountInBtc - The amount to send, in BTC units.
- * @param account - The Bitcoin account providing address type and context.
+ * @param account - The Bitcoin account providing the public address and script.
  * @returns ValidationResponse indicating whether the amount meets dust requirements.
  */
 export function validateDustLimit(
   amountInBtc: string,
   account: BitcoinAccount,
 ): ValidationResponse {
-  const sats = Amount.from_btc(Number(amountInBtc)).to_sat();
-  const min = getDustLimitSats(account.addressType);
-  if (sats < min) {
+  const amount = Amount.from_btc(Number(amountInBtc));
+  if (amount.is_dust(account.publicAddress.script_pubkey)) {
     return { valid: false, errors: [{ code: SendErrorCodes.Invalid }] };
   }
   return NO_ERRORS_RESPONSE;
