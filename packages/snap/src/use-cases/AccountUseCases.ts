@@ -616,8 +616,10 @@ export class AccountUseCases {
 
       return builtPsbt;
     } catch (error) {
+      const causeMessage =
+        error instanceof Error ? error.message : String(error);
       throw new ValidationError(
-        'Failed to build PSBT from template',
+        `Failed to build PSBT from template: ${causeMessage}`,
         {
           id: account.id,
           templatePsbt: templatePsbt.toString(),

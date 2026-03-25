@@ -1214,7 +1214,7 @@ describe('AccountUseCases', () => {
         useCases.fillPsbt('account-id', mockTemplatePsbt),
       ).rejects.toThrow(
         new ValidationError(
-          'Failed to build PSBT from template',
+          'Failed to build PSBT from template: builder error',
           {
             id: 'account-id',
             templatePsbt: 'base64Psbt',
