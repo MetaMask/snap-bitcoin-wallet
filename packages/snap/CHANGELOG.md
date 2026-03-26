@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Include BDK cause message in PSBT build error for better diagnostics ([#594](https://github.com/MetaMask/snap-bitcoin-wallet/pull/594))
+
 ## [1.10.0]
 
 ### Changed
