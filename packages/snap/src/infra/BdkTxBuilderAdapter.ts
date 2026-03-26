@@ -103,10 +103,6 @@ export class BdkTxBuilderAdapter implements TransactionBuilder {
   }
 
   finish(): Psbt {
-    try {
-      return this.#builder.finish();
-    } catch (error) {
-      throw new Error((error as CodifiedError).message);
-    }
+    return this.#builder.finish();
   }
 }
