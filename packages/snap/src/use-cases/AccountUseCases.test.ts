@@ -1226,14 +1226,16 @@ describe('AccountUseCases', () => {
     });
 
     it('includes non-Error cause in ValidationError message', async () => {
-      const bdkError = { message: 'InsufficientFunds', code: 11 };
       mockTxBuilder.finish.mockImplementation(() => {
-        throw bdkError;
+        // eslint-disable-next-line @typescript-eslint/only-throw-error
+        throw { message: 'InsufficientFunds', code: 11 };
       });
 
       await expect(
         useCases.fillPsbt('account-id', mockTemplatePsbt),
-      ).rejects.toThrow('Failed to build PSBT from template: InsufficientFunds');
+      ).rejects.toThrow(
+        'Failed to build PSBT from template: InsufficientFunds',
+      );
     });
 
     it('preserves all outputs from bridge PSBT template including change', async () => {
