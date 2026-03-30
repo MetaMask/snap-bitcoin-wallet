@@ -1238,6 +1238,17 @@ describe('AccountUseCases', () => {
       );
     });
 
+    it('uses unknown cause when error has no message', async () => {
+      mockTxBuilder.finish.mockImplementation(() => {
+        // eslint-disable-next-line @typescript-eslint/only-throw-error
+        throw 42;
+      });
+
+      await expect(
+        useCases.fillPsbt('account-id', mockTemplatePsbt),
+      ).rejects.toThrow('Failed to build PSBT from template: unknown cause');
+    });
+
     it('preserves all outputs from bridge PSBT template including change', async () => {
       // Simulate a bridge transaction with 3 outputs:
       // Output 0: Bridge deposit

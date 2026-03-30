@@ -616,10 +616,7 @@ export class AccountUseCases {
 
       return builtPsbt;
     } catch (error) {
-      const causeMessage =
-        error instanceof Error
-          ? error.message
-          : ((error as { message?: string }).message ?? String(error));
+      const causeMessage = (error as Error)?.message ?? 'unknown cause';
       throw new ValidationError(
         `Failed to build PSBT from template: ${causeMessage}`,
         {
