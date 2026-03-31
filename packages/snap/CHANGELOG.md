@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.1]
+
 ### Fixed
 
 - Include BDK cause message in PSBT build error for better diagnostics ([#594](https://github.com/MetaMask/snap-bitcoin-wallet/pull/594))
@@ -569,7 +571,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add CI for lint and test ([#2](https://github.com/MetaMask/bitcoin/pull/2))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.10.0...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.10.1...HEAD
+[1.10.1]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.10.0...v1.10.1
 [1.10.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.7.0...v1.8.0
