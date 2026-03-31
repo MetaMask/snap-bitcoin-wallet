@@ -9,14 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.10.1]
 
-### Uncategorized
-
-- ci: enable preview builds ([#587](https://github.com/MetaMask/snap-bitcoin-wallet/pull/587))
-- test: enable coverage collection and thresholds ([#586](https://github.com/MetaMask/snap-bitcoin-wallet/pull/586))
-- chore: enable `@typescript-eslint/no-explicit-any` as `error` ([#585](https://github.com/MetaMask/snap-bitcoin-wallet/pull/585))
-- ci: enforce package deduplication ([#583](https://github.com/MetaMask/snap-bitcoin-wallet/pull/583))
-- ci: add changelog validation ([#582](https://github.com/MetaMask/snap-bitcoin-wallet/pull/582))
-
 ### Fixed
 
 - Include BDK cause message in PSBT build error for better diagnostics ([#594](https://github.com/MetaMask/snap-bitcoin-wallet/pull/594))
