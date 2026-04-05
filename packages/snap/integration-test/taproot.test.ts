@@ -1,5 +1,5 @@
 import type { KeyringAccount } from '@metamask/keyring-api';
-import { BtcScope } from '@metamask/keyring-api';
+import { BtcAccountType, BtcScope } from '@metamask/keyring-api';
 import type { Snap } from '@metamask/snaps-jest';
 import { assertIsConfirmationDialog, installSnap } from '@metamask/snaps-jest';
 
@@ -9,10 +9,10 @@ import { getRequiredOutpoint } from './test-helpers';
 import { AccountCapability } from '../src/entities';
 import type { FillPsbtResponse } from '../src/handlers/KeyringRequestHandler';
 
-const ACCOUNT_INDEX = 3;
+const ACCOUNT_INDEX = 5; // Use different index to avoid conflicts with other tests
 const submitRequestMethod = 'keyring_submitRequest';
 
-describe('KeyringRequestHandler', () => {
+describe('Taproot (P2TR) Integration Tests', () => {
   let account: KeyringAccount;
   let snap: Snap;
   let blockchain: BlockchainTestUtils;
@@ -44,16 +44,17 @@ describe('KeyringRequestHandler', () => {
         return 'mock-event-id';
       }
 
-      // no mocking for other methods
       return undefined;
     });
 
+    // Create a P2TR (Taproot) account
     const response = await snap.onKeyringRequest({
       origin: ORIGIN,
       method: 'keyring_createAccount',
       params: {
         options: {
           scope: BtcScope.Regtest,
+          addressType: BtcAccountType.P2tr,
           synchronize: false,
           index: ACCOUNT_INDEX,
         },
@@ -65,66 +66,30 @@ describe('KeyringRequestHandler', () => {
       createdAccountId = account.id;
     }
 
+    // Fund the P2TR account
     await blockchain.sendToAddress(account.address, 10);
     await blockchain.mineBlocks(6);
     await snap.onCronjob({ method: 'synchronizeAccounts' });
   });
 
-  it('fails if invalid params', async () => {
-    const response = await snap.onKeyringRequest({
-      origin: ORIGIN,
-      method: submitRequestMethod,
-      params: {
-        id: account.id,
-        origin,
-        scope: BtcScope.Regtest,
-        account: 'notAUUID',
-        request: {
-          method: AccountCapability.SignPsbt,
-        },
-      },
+  describe('Account Creation', () => {
+    it('creates a P2TR account with correct properties', () => {
+      expect(account).toBeDefined();
+      expect(account.type).toBe(BtcAccountType.P2tr);
+      // Regtest Taproot addresses start with bcrt1p
+      expect(account.address).toMatch(/^bcrt1p/u);
     });
 
-    expect(response).toRespondWithError({
-      code: -32000,
-      message:
-        'Invalid format: At path: params.account -- Expected a value of type `UuidV4`, but received: `"notAUUID"`',
-      stack: expect.anything(),
+    it('has correct derivation path for Taproot (BIP-86)', () => {
+      const entropy = account.options.entropy as { derivationPath: string };
+      // BIP-86 uses purpose 86' for Taproot
+      expect(entropy.derivationPath).toMatch(/^m\/86'/u);
     });
   });
 
-  it('fails if unrecognized method', async () => {
-    const response = await snap.onKeyringRequest({
-      origin: ORIGIN,
-      method: submitRequestMethod,
-      params: {
-        id: account.id,
-        origin,
-        scope: BtcScope.Regtest,
-        account: account.id,
-        request: {
-          method: 'invalidMethod',
-        },
-      },
-    });
-
-    expect(response).toRespondWithError({
-      code: -32601,
-      data: {
-        account: account.id,
-        cause: null,
-        method: 'invalidMethod',
-      },
-      message:
-        'Method not implemented or not supported: Unrecognized Bitcoin account capability',
-      stack: expect.anything(),
-    });
-  });
-
-  // Keep order of tests as UTXOs are modified by other tests
-  describe('UTXO management', () => {
-    it('listUtxos', async () => {
-      let response = await snap.onKeyringRequest({
+  describe('UTXO Management', () => {
+    it('lists UTXOs for P2TR account', async () => {
+      const response = await snap.onKeyringRequest({
         origin: ORIGIN,
         method: submitRequestMethod,
         params: {
@@ -140,17 +105,29 @@ describe('KeyringRequestHandler', () => {
 
       expect(response).toRespondWith({
         pending: false,
-        result: [
-          {
-            address: 'bcrt1qs2fj7czz0amfm74j73yujx6dn6223md56gkkuy',
-            derivationIndex: 0,
-            outpoint: expect.any(String),
-            scriptPubkey:
-              'OP_0 OP_PUSHBYTES_20 82932f60427f769dfab2f449c91b4d9e94a8edb4',
-            scriptPubkeyHex: '001482932f60427f769dfab2f449c91b4d9e94a8edb4',
-            value: '1000000000',
+        result: expect.arrayContaining([
+          expect.objectContaining({
+            address: expect.stringMatching(/^bcrt1p/u), // Taproot address
+            value: '1000000000', // 10 BTC in sats
+          }),
+        ]),
+      });
+    });
+
+    it('gets a specific UTXO for P2TR account', async () => {
+      // First get the list of UTXOs
+      let response = await snap.onKeyringRequest({
+        origin: ORIGIN,
+        method: submitRequestMethod,
+        params: {
+          id: account.id,
+          origin,
+          scope: BtcScope.Regtest,
+          account: account.id,
+          request: {
+            method: AccountCapability.ListUtxos,
           },
-        ],
+        },
       });
 
       const utxos = (
@@ -158,6 +135,7 @@ describe('KeyringRequestHandler', () => {
       ).result.result;
       const outpoint = getRequiredOutpoint(utxos);
 
+      // Then get a specific UTXO
       response = await snap.onKeyringRequest({
         origin: ORIGIN,
         method: submitRequestMethod,
@@ -177,11 +155,14 @@ describe('KeyringRequestHandler', () => {
 
       expect(response).toRespondWith({
         pending: false,
-        result: utxos[0],
+        result: expect.objectContaining({
+          outpoint,
+          address: expect.stringMatching(/^bcrt1p/u),
+        }),
       });
     });
 
-    it('publicDescriptor', async () => {
+    it('returns correct Taproot descriptor', async () => {
       const response = await snap.onKeyringRequest({
         origin: ORIGIN,
         method: submitRequestMethod,
@@ -198,17 +179,14 @@ describe('KeyringRequestHandler', () => {
 
       expect(response).toRespondWith({
         pending: false,
-        result:
-          "wpkh([27f9035f/84'/1'/0']tpubDCkv2fHDfPg5ok9EPv6CDozH72rvY2jgEPm79szMeBwCBwUf2T6n5nLrWFfhuuD48SgzrELezoiyDM9KbZaVen4wuuGwrqQANDhzB7E8yDh/0/*)#sx899xk6",
+        // Taproot descriptor starts with 'tr('
+        result: expect.stringMatching(/^tr\(/u),
       });
     });
   });
 
-  describe('signPsbt', () => {
-    const SIGNED_PSBT =
-      'cHNidP8BAI4CAAAAAAM1gwEAAAAAACJRIORP1Ndiq325lSC/jMG0RlhATHYmuuULfXgEHUM3u5i4AAAAAAAAAAAxai8AAUSx+i9Igg4HWdcpyagCs8mzuRCklgA7nRMkm69rAAAAAAAAAAAAAQACAAAAACp2AAAAAAAAFgAUgpMvYEJ/dp36svRJyRtNnpSo7bQAAAAAAAAAAA==';
-
-    it('signs a PSBT successfully: sign', async () => {
+  describe('PSBT Signing (Schnorr)', () => {
+    it('fills a PSBT for P2TR account', async () => {
       const response = await snap.onKeyringRequest({
         origin: ORIGIN,
         method: submitRequestMethod,
@@ -218,14 +196,10 @@ describe('KeyringRequestHandler', () => {
           scope: BtcScope.Regtest,
           account: account.id,
           request: {
-            method: AccountCapability.SignPsbt,
+            method: AccountCapability.FillPsbt,
             params: {
               psbt: TEMPLATE_PSBT,
               feeRate: 3,
-              options: {
-                fill: false,
-                broadcast: false,
-              },
             },
           },
         },
@@ -234,13 +208,12 @@ describe('KeyringRequestHandler', () => {
       expect(response).toRespondWith({
         pending: false,
         result: {
-          psbt: SIGNED_PSBT,
-          txid: null,
+          psbt: expect.any(String),
         },
       });
     });
 
-    it('signs a PSBT successfully: fill and sign', async () => {
+    it('signs a PSBT with Schnorr signature (fill and sign)', async () => {
       const response = await snap.onKeyringRequest({
         origin: ORIGIN,
         method: submitRequestMethod,
@@ -266,13 +239,13 @@ describe('KeyringRequestHandler', () => {
       expect(response).toRespondWith({
         pending: false,
         result: {
-          psbt: expect.any(String), // non deterministic
+          psbt: expect.any(String),
           txid: null,
         },
       });
     });
 
-    it('signs a PSBT successfully: fill, sign and broadcast', async () => {
+    it('signs and broadcasts a PSBT from P2TR account', async () => {
       const response = await snap.onKeyringRequest({
         origin: ORIGIN,
         method: submitRequestMethod,
@@ -298,132 +271,16 @@ describe('KeyringRequestHandler', () => {
       expect(response).toRespondWith({
         pending: false,
         result: {
-          psbt: expect.any(String), // non deterministic
+          psbt: expect.any(String),
           txid: expect.any(String),
         },
       });
+
+      // Mine blocks to confirm the transaction
+      await blockchain.mineBlocks(1);
     });
 
-    it('fails if invalid PSBT', async () => {
-      const response = await snap.onKeyringRequest({
-        origin: ORIGIN,
-        method: submitRequestMethod,
-        params: {
-          id: account.id,
-          origin,
-          scope: BtcScope.Regtest,
-          account: account.id,
-          request: {
-            method: AccountCapability.SignPsbt,
-            params: {
-              psbt: 'notAPsbt',
-              options: {
-                fill: true,
-                broadcast: true,
-              },
-            },
-          },
-        },
-      });
-
-      expect(response).toRespondWithError({
-        code: -32000,
-        message: 'Invalid format: Invalid PSBT',
-        data: {
-          cause: null,
-          transaction: 'notAPsbt',
-        },
-        stack: expect.anything(),
-      });
-    });
-
-    it('fails if missing options', async () => {
-      const response = await snap.onKeyringRequest({
-        origin: ORIGIN,
-        method: submitRequestMethod,
-        params: {
-          id: account.id,
-          origin,
-          scope: BtcScope.Regtest,
-          account: account.id,
-          request: {
-            method: AccountCapability.SignPsbt,
-            params: {
-              psbt: TEMPLATE_PSBT,
-            },
-          },
-        },
-      });
-
-      expect(response).toRespondWithError({
-        code: -32000,
-        message:
-          'Invalid format: At path: options -- Expected an object, but received: undefined',
-        stack: expect.anything(),
-      });
-    });
-  });
-
-  describe('fillPsbt', () => {
-    it('fills a PSBT successfully', async () => {
-      const response = await snap.onKeyringRequest({
-        origin: ORIGIN,
-        method: submitRequestMethod,
-        params: {
-          id: account.id,
-          origin,
-          scope: BtcScope.Regtest,
-          account: account.id,
-          request: {
-            method: AccountCapability.FillPsbt,
-            params: {
-              psbt: TEMPLATE_PSBT,
-              feeRate: 3,
-            },
-          },
-        },
-      });
-
-      expect(response).toRespondWith({
-        pending: false,
-        result: {
-          psbt: expect.any(String), // non deterministic
-        },
-      });
-    });
-
-    it('fails if invalid PSBT', async () => {
-      const response = await snap.onKeyringRequest({
-        origin: ORIGIN,
-        method: submitRequestMethod,
-        params: {
-          id: account.id,
-          origin,
-          scope: BtcScope.Regtest,
-          account: account.id,
-          request: {
-            method: AccountCapability.FillPsbt,
-            params: {
-              psbt: 'notAPsbt',
-            },
-          },
-        },
-      });
-
-      expect(response).toRespondWithError({
-        code: -32000,
-        message: 'Invalid format: Invalid PSBT',
-        data: {
-          cause: null,
-          transaction: 'notAPsbt',
-        },
-        stack: expect.anything(),
-      });
-    });
-  });
-
-  describe('computeFee', () => {
-    it('computes the fee for a PSBT successfully', async () => {
+    it('computes fee for P2TR transaction', async () => {
       const response = await snap.onKeyringRequest({
         origin: ORIGIN,
         method: submitRequestMethod,
@@ -445,12 +302,14 @@ describe('KeyringRequestHandler', () => {
       expect(response).toRespondWith({
         pending: false,
         result: {
-          fee: '632',
+          fee: expect.any(String),
         },
       });
     });
+  });
 
-    it('fails if invalid PSBT', async () => {
+  describe('Send Transfer', () => {
+    it('sends funds from P2TR account to P2WPKH address', async () => {
       const response = await snap.onKeyringRequest({
         origin: ORIGIN,
         method: submitRequestMethod,
@@ -460,29 +319,181 @@ describe('KeyringRequestHandler', () => {
           scope: BtcScope.Regtest,
           account: account.id,
           request: {
-            method: AccountCapability.ComputeFee,
+            method: AccountCapability.SendTransfer,
             params: {
-              psbt: 'notAPsbt',
+              recipients: [
+                {
+                  // P2WPKH address (bcrt1q...)
+                  address: 'bcrt1qstku2y3pfh9av50lxj55arm8r5gj8tf2yv5nxz',
+                  amount: '1000',
+                },
+              ],
+              feeRate: 3,
             },
           },
         },
       });
 
-      expect(response).toRespondWithError({
-        code: -32000,
-        message: 'Invalid format: Invalid PSBT',
-        data: {
-          cause: null,
-          transaction: 'notAPsbt',
+      expect(response).toRespondWith({
+        pending: false,
+        result: {
+          txid: expect.any(String),
         },
-        stack: expect.anything(),
+      });
+
+      // Mine blocks to confirm
+      await blockchain.mineBlocks(1);
+    });
+
+    it('sends funds from P2TR account to another P2TR address', async () => {
+      // Generate a valid P2TR regtest address from the node
+      const p2trRecipient = await blockchain.getNewAddress('bech32m');
+      expect(p2trRecipient).toMatch(/^bcrt1p/u);
+
+      const response = await snap.onKeyringRequest({
+        origin: ORIGIN,
+        method: submitRequestMethod,
+        params: {
+          id: account.id,
+          origin,
+          scope: BtcScope.Regtest,
+          account: account.id,
+          request: {
+            method: AccountCapability.SendTransfer,
+            params: {
+              recipients: [
+                {
+                  address: p2trRecipient,
+                  amount: '1000',
+                },
+              ],
+              feeRate: 3,
+            },
+          },
+        },
+      });
+
+      expect(response).toRespondWith({
+        pending: false,
+        result: {
+          txid: expect.any(String),
+        },
+      });
+
+      // Mine blocks to confirm
+      await blockchain.mineBlocks(1);
+    });
+
+    it('sends to multiple recipients from P2TR account', async () => {
+      const response = await snap.onKeyringRequest({
+        origin: ORIGIN,
+        method: submitRequestMethod,
+        params: {
+          id: account.id,
+          origin,
+          scope: BtcScope.Regtest,
+          account: account.id,
+          request: {
+            method: AccountCapability.SendTransfer,
+            params: {
+              recipients: [
+                {
+                  address: 'bcrt1qstku2y3pfh9av50lxj55arm8r5gj8tf2yv5nxz',
+                  amount: '500',
+                },
+                {
+                  address: 'bcrt1q4gfcga7jfjmm02zpvrh4ttc5k7lmnq2re52z2y',
+                  amount: '500',
+                },
+              ],
+              feeRate: 3,
+            },
+          },
+        },
+      });
+
+      expect(response).toRespondWith({
+        pending: false,
+        result: {
+          txid: expect.any(String),
+        },
+      });
+
+      // Mine blocks to confirm
+      await blockchain.mineBlocks(1);
+    });
+  });
+
+  describe('Message Signing (BIP-322)', () => {
+    it('signs a message with P2TR account using BIP-322', async () => {
+      const response = snap.onKeyringRequest({
+        origin: ORIGIN,
+        method: submitRequestMethod,
+        params: {
+          id: account.id,
+          origin,
+          scope: BtcScope.Regtest,
+          account: account.id,
+          request: {
+            method: AccountCapability.SignMessage,
+            params: {
+              message: 'Hello, Taproot!',
+            },
+          },
+        },
+      });
+
+      const ui = await response.getInterface();
+      assertIsConfirmationDialog(ui);
+      await ui.ok();
+
+      const result = await response;
+
+      expect(result).toRespondWith({
+        pending: false,
+        result: {
+          // BIP-322 signature for Taproot
+          signature: expect.any(String),
+        },
+      });
+    });
+
+    it('signs an empty message with P2TR account', async () => {
+      const response = snap.onKeyringRequest({
+        origin: ORIGIN,
+        method: submitRequestMethod,
+        params: {
+          id: account.id,
+          origin,
+          scope: BtcScope.Regtest,
+          account: account.id,
+          request: {
+            method: AccountCapability.SignMessage,
+            params: {
+              message: '',
+            },
+          },
+        },
+      });
+
+      const ui = await response.getInterface();
+      assertIsConfirmationDialog(ui);
+      await ui.ok();
+
+      const result = await response;
+
+      expect(result).toRespondWith({
+        pending: false,
+        result: {
+          signature: expect.any(String),
+        },
       });
     });
   });
 
-  describe('broadcastPsbt', () => {
-    it('broadcasts a PSBT successfully', async () => {
-      // Prepare the PSBT to broadcast so we have a valid PSBT to broadcast
+  describe('Broadcast', () => {
+    it('broadcasts a signed P2TR transaction', async () => {
+      // First sign the PSBT without broadcasting
       let response = await snap.onKeyringRequest({
         origin: ORIGIN,
         method: submitRequestMethod,
@@ -509,6 +520,7 @@ describe('KeyringRequestHandler', () => {
         response.response as { result: { result: FillPsbtResponse } }
       ).result;
 
+      // Then broadcast separately
       response = await snap.onKeyringRequest({
         origin: ORIGIN,
         method: submitRequestMethod,
@@ -530,134 +542,6 @@ describe('KeyringRequestHandler', () => {
         pending: false,
         result: {
           txid: expect.any(String),
-        },
-      });
-    });
-
-    it('fails if invalid PSBT', async () => {
-      const response = await snap.onKeyringRequest({
-        origin: ORIGIN,
-        method: submitRequestMethod,
-        params: {
-          id: account.id,
-          origin,
-          scope: BtcScope.Regtest,
-          account: account.id,
-          request: {
-            method: AccountCapability.BroadcastPsbt,
-            params: {
-              psbt: 'notAPsbt',
-            },
-          },
-        },
-      });
-
-      expect(response).toRespondWithError({
-        code: -32000,
-        message: 'Invalid format: Invalid PSBT',
-        data: {
-          cause: null,
-          transaction: 'notAPsbt',
-        },
-        stack: expect.anything(),
-      });
-    });
-  });
-
-  describe('sendTransfer', () => {
-    it('sends funds successfully', async () => {
-      const response = await snap.onKeyringRequest({
-        origin: ORIGIN,
-        method: submitRequestMethod,
-        params: {
-          id: account.id,
-          origin,
-          scope: BtcScope.Regtest,
-          account: account.id,
-          request: {
-            method: AccountCapability.SendTransfer,
-            params: {
-              recipients: [
-                {
-                  address: 'bcrt1qstku2y3pfh9av50lxj55arm8r5gj8tf2yv5nxz',
-                  amount: '1000',
-                },
-                {
-                  address: 'bcrt1q4gfcga7jfjmm02zpvrh4ttc5k7lmnq2re52z2y',
-                  amount: '1000',
-                },
-              ],
-              feeRate: 3,
-            },
-          },
-        },
-      });
-
-      expect(response).toRespondWith({
-        pending: false,
-        result: {
-          txid: expect.any(String),
-        },
-      });
-    });
-
-    it('fails if invalid recipients', async () => {
-      const response = await snap.onKeyringRequest({
-        origin: ORIGIN,
-        method: submitRequestMethod,
-        params: {
-          id: account.id,
-          origin,
-          scope: BtcScope.Regtest,
-          account: account.id,
-          request: {
-            method: AccountCapability.SendTransfer,
-            params: {
-              recipients: [{ address: 'notAnAddress', amount: '1000' }],
-            },
-          },
-        },
-      });
-
-      expect(response).toRespondWithError({
-        code: -32602,
-        data: { address: 'notAnAddress', amount: '1000', cause: null },
-        message: 'Validation failed: Invalid recipient',
-        stack: expect.anything(),
-      });
-    });
-  });
-
-  describe('signMessage', () => {
-    it('signs a message successfully', async () => {
-      const response = snap.onKeyringRequest({
-        origin: ORIGIN,
-        method: submitRequestMethod,
-        params: {
-          id: account.id,
-          origin,
-          scope: BtcScope.Regtest,
-          account: account.id,
-          request: {
-            method: AccountCapability.SignMessage,
-            params: {
-              message: 'Hello, world!',
-            },
-          },
-        },
-      });
-
-      const ui = await response.getInterface();
-      assertIsConfirmationDialog(ui);
-      await ui.ok();
-
-      const result = await response;
-
-      expect(result).toRespondWith({
-        pending: false,
-        result: {
-          signature:
-            'AkcwRAIgZxodJQ60t9Rr/hABEHZ1zPUJ4m5hdM5QLpysH8fDSzgCIENOEuZtYf9/Nn/ZW15PcImkknol403dmZrgoOQ+6K+TASECwDKypXm/ElmVTxTLJ7nao6X5mB/iGbU2Q2qtot0QRL4=',
         },
       });
     });
