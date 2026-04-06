@@ -1,5 +1,5 @@
 {
-  "locale": "es_419",
+  "locale": "es",
   "messages": {
     "reviewTransactionWarning": {
       "message": "Revise la transacción antes de continuar"
@@ -62,7 +62,7 @@
       "message": "Enviando"
     },
     "max": {
-      "message": "Máx"
+      "message": "Máx."
     },
     "recipientPlaceholder": {
       "message": "Ingrese la dirección de recepción"
@@ -156,6 +156,9 @@
     },
     "error.3000": {
       "message": "Error de conexión"
+    },
+    "error.3100": {
+      "message": "One or more accounts failed to synchronize"
     },
     "error.4000": {
       "message": "Estado de la billetera corrompido"
