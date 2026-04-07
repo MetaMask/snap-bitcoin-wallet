@@ -439,4 +439,125 @@ describe('OnClientRequestHandler', () => {
       });
     });
   });
+
+  describe('TransactionReceived tracking event behavior', () => {
+    it('does not emit TransactionReceived for sender when syncing own broadcast, but does emit for receiver', async () => {
+      // Step 1: Send a transaction (sender scenario)
+      // This will broadcast a tx and add it to the account
+      const sendResponse = await snap.onClientRequest({
+        method: 'confirmSend',
+        params: {
+          fromAccountId: account.id,
+          toAddress: TEST_ADDRESS_REGTEST,
+          assetId: Caip19Asset.Regtest,
+          amount: '0.001',
+        },
+      });
+
+      expect(sendResponse).toRespondWith(
+        expect.objectContaining({
+          type: 'send',
+          id: expect.any(String),
+        }),
+      );
+
+      const sentTxId = (sendResponse.response as { result: { id: string } })
+        .result.id;
+
+      // Verify TransactionSubmitted was fired for the broadcast
+      /* eslint-disable @typescript-eslint/naming-convention */
+      expect(sendResponse).toTrackEvent({
+        event: TrackingSnapEvent.TransactionSubmitted,
+        properties: {
+          account_type: BtcAccountType.P2wpkh,
+          chain_id_caip: BtcScope.Regtest,
+          message: 'Snap transaction submitted',
+          origin: expect.any(String),
+          tx_id: sentTxId,
+        },
+      });
+      /* eslint-enable @typescript-eslint/naming-convention */
+
+      // Step 2: Sync the account (still as sender)
+      // The transaction is already in the account, so TransactionReceived should NOT fire
+      const syncResponse = await snap.onCronjob({
+        method: 'synchronizeAccounts',
+      });
+
+      expect(syncResponse).toRespondWith(null);
+
+      // TransactionReceived should NOT be emitted for our own sent transaction
+      expect(syncResponse).not.toTrackEvent({
+        event: TrackingSnapEvent.TransactionReceived,
+        properties: expect.objectContaining({
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          tx_id: sentTxId,
+        }),
+      });
+
+      // Step 3: Receive BTC from external source (receiver scenario)
+      await blockchain.sendToAddress(account.address, 1);
+
+      // Step 4: Sync - should get TransactionReceived for the incoming unconfirmed transaction
+      const syncWithIncomingUnconfirmedResponse = await snap.onCronjob({
+        method: 'synchronizeAccounts',
+      });
+
+      expect(syncWithIncomingUnconfirmedResponse).toRespondWith(null);
+
+      // TransactionReceived SHOULD be emitted for the incoming transaction
+      // We verify it exists but don't know the exact tx_id since it came from external blockchain
+      /* eslint-disable @typescript-eslint/naming-convention */
+      expect(syncWithIncomingUnconfirmedResponse).toTrackEvent({
+        event: TrackingSnapEvent.TransactionReceived,
+        properties: {
+          account_type: BtcAccountType.P2wpkh,
+          chain_id_caip: BtcScope.Regtest,
+          message: 'Snap transaction received',
+          origin: 'cron',
+          tx_id: expect.any(String),
+        },
+      });
+      /* eslint-enable @typescript-eslint/naming-convention */
+
+      // Step 5: Mine blocks to confirm both transactions
+      await blockchain.mineBlocks(6);
+
+      // Step 6: Sync - should emit TransactionFinalized for BOTH transactions
+      const syncAfterConfirmed = await snap.onCronjob({
+        method: 'synchronizeAccounts',
+      });
+
+      expect(syncAfterConfirmed).toRespondWith(null);
+
+      // TransactionFinalized SHOULD be emitted for BOTH transactions
+      // We verify both the sent and received transactions are finalized
+      /* eslint-disable @typescript-eslint/naming-convention */
+
+      // Verify the sent transaction is finalized
+      expect(syncAfterConfirmed).toTrackEvent({
+        event: TrackingSnapEvent.TransactionFinalized,
+        properties: {
+          account_type: BtcAccountType.P2wpkh,
+          chain_id_caip: BtcScope.Regtest,
+          message: 'Snap transaction finalized',
+          origin: 'cron',
+          tx_id: sentTxId,
+        },
+      });
+
+      // Verify the received transaction is also finalized (different tx_id)
+      expect(syncAfterConfirmed).toTrackEvent({
+        event: TrackingSnapEvent.TransactionFinalized,
+        properties: {
+          account_type: BtcAccountType.P2wpkh,
+          chain_id_caip: BtcScope.Regtest,
+          message: 'Snap transaction finalized',
+          origin: 'cron',
+          tx_id: expect.not.stringContaining(sentTxId),
+        },
+      });
+      /* eslint-enable @typescript-eslint/naming-convention */
+    });
+  });
 });
