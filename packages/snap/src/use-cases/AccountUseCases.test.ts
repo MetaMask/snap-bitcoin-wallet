@@ -1214,7 +1214,7 @@ describe('AccountUseCases', () => {
         useCases.fillPsbt('account-id', mockTemplatePsbt),
       ).rejects.toThrow(
         new ValidationError(
-          'Failed to build PSBT from template',
+          'Failed to build PSBT from template: builder error',
           {
             id: 'account-id',
             templatePsbt: 'base64Psbt',
@@ -1223,6 +1223,30 @@ describe('AccountUseCases', () => {
           error,
         ),
       );
+    });
+
+    it('includes non-Error cause in ValidationError message', async () => {
+      mockTxBuilder.finish.mockImplementation(() => {
+        // eslint-disable-next-line @typescript-eslint/only-throw-error
+        throw { message: 'InsufficientFunds', code: 11 };
+      });
+
+      await expect(
+        useCases.fillPsbt('account-id', mockTemplatePsbt),
+      ).rejects.toThrow(
+        'Failed to build PSBT from template: InsufficientFunds',
+      );
+    });
+
+    it('uses unknown cause when error has no message', async () => {
+      mockTxBuilder.finish.mockImplementation(() => {
+        // eslint-disable-next-line @typescript-eslint/only-throw-error
+        throw 42;
+      });
+
+      await expect(
+        useCases.fillPsbt('account-id', mockTemplatePsbt),
+      ).rejects.toThrow('Failed to build PSBT from template: unknown cause');
     });
 
     it('preserves all outputs from bridge PSBT template including change', async () => {
