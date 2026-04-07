@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Add `resolveAccountAddress` method to KeyringHandler for dApp connectivity ([#590](https://github.com/MetaMask/snap-bitcoin-wallet/pull/590))
+
 ## [1.10.1]
 
 ### Fixed
