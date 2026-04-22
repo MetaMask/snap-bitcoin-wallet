@@ -197,11 +197,14 @@ describe('KeyringHandler', () => {
       expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
     });
 
-    it.each([{ purpose: Purpose.NativeSegwit, addressType: 'p2wpkh' }] as {
+    it.each([
+      { purpose: Purpose.NativeSegwit, addressType: 'p2wpkh' },
+      { purpose: Purpose.Taproot, addressType: 'p2tr' },
+    ] as {
       purpose: Purpose;
       addressType: AddressType;
     }[])(
-      'extracts P2WPKH address type from derivationPath: %s',
+      'extracts P2WPKH and P2TR address type from derivationPath: %s',
       async ({ purpose, addressType }) => {
         const options = {
           scope: BtcScope.Signet,
@@ -220,11 +223,10 @@ describe('KeyringHandler', () => {
       },
     );
 
-    // skip non-P2WPKH address types as they are not supported on v1
+    // skip non-P2WPKH/P2TR address types as they are not yet supported
     it.skip.each([
       { purpose: Purpose.Legacy, addressType: 'p2pkh' },
       { purpose: Purpose.Segwit, addressType: 'p2sh' },
-      { purpose: Purpose.Taproot, addressType: 'p2tr' },
       { purpose: Purpose.Multisig, addressType: 'p2wsh' },
     ] as { purpose: Purpose; addressType: AddressType }[])(
       'extracts address type from derivationPath: %s',
@@ -279,7 +281,7 @@ describe('KeyringHandler', () => {
       // The error comes from #extractAddressType which validates the derivation path first
       await expect(handler.createAccount(options)).rejects.toThrow(
         new FormatError(
-          'Only native segwit (BIP-84) derivation paths are supported',
+          'Only native segwit (BIP-84) and taproot (BIP-86) derivation paths are supported',
         ),
       );
     });
@@ -294,6 +296,42 @@ describe('KeyringHandler', () => {
         network: 'signet',
         index: 5,
         addressType: 'p2wpkh',
+        entropySource: 'm',
+        synchronize: false,
+      };
+
+      await handler.createAccount(options);
+      expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
+    });
+
+    it('succeeds when addressType and derivationPath both indicate P2TR', async () => {
+      const options = {
+        scope: BtcScope.Mainnet,
+        addressType: BtcAccountType.P2tr,
+        derivationPath: "m/86'/0'/0'", // BIP-86 taproot path
+      };
+      const expectedCreateParams: CreateAccountParams = {
+        network: 'bitcoin',
+        index: 0,
+        addressType: 'p2tr',
+        entropySource: 'm',
+        synchronize: false,
+      };
+
+      await handler.createAccount(options);
+      expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
+    });
+
+    it('succeeds when only P2TR addressType is provided', async () => {
+      const options = {
+        scope: BtcScope.Mainnet,
+        addressType: BtcAccountType.P2tr,
+        index: 3,
+      };
+      const expectedCreateParams: CreateAccountParams = {
+        network: 'bitcoin',
+        index: 3,
+        addressType: 'p2tr',
         entropySource: 'm',
         synchronize: false,
       };
@@ -395,8 +433,8 @@ describe('KeyringHandler', () => {
     const scopes = Object.values(BtcScope);
 
     it('creates, scans and returns accounts for every scope/addressType combination', async () => {
-      // only P2WPKH is now supported for v1
-      const addressTypes = [BtcAccountType.P2wpkh];
+      // P2WPKH and P2TR are supported
+      const addressTypes = [BtcAccountType.P2wpkh, BtcAccountType.P2tr];
       const totalCombinations = scopes.length * addressTypes.length;
 
       const expected: DiscoveredAccount[] = [];
@@ -442,11 +480,19 @@ describe('KeyringHandler', () => {
 
     it('returns mix of accounts with and without history, filtering correctly', async () => {
       // create mock accounts - some with history, some without
+      // Each scope produces two discover calls (P2WPKH + P2TR)
       const accountWithHistory1 = mock<BitcoinAccount>({
         addressType: 'p2wpkh',
         network: 'bitcoin',
         listTransactions: jest.fn().mockReturnValue([{}, {}]), // has 2 transactions
         derivationPath: ['m', "84'", "0'", "0'"],
+      });
+
+      const p2trNoHistory1 = mock<BitcoinAccount>({
+        addressType: 'p2tr',
+        network: 'bitcoin',
+        listTransactions: jest.fn().mockReturnValue([]),
+        derivationPath: ['m', "86'", "0'", "0'"],
       });
 
       const accountWithoutHistory = mock<BitcoinAccount>({
@@ -456,6 +502,13 @@ describe('KeyringHandler', () => {
         derivationPath: ['m', "84'", "1'", "0'"],
       });
 
+      const p2trNoHistory2 = mock<BitcoinAccount>({
+        addressType: 'p2tr',
+        network: 'testnet',
+        listTransactions: jest.fn().mockReturnValue([]),
+        derivationPath: ['m', "86'", "1'", "0'"],
+      });
+
       const accountWithHistory2 = mock<BitcoinAccount>({
         addressType: 'p2wpkh',
         network: 'signet',
@@ -463,10 +516,20 @@ describe('KeyringHandler', () => {
         derivationPath: ['m', "84'", "1'", "0'"],
       });
 
+      const p2trWithHistory = mock<BitcoinAccount>({
+        addressType: 'p2tr',
+        network: 'signet',
+        listTransactions: jest.fn().mockReturnValue([{}]), // has history
+        derivationPath: ['m', "86'", "1'", "0'"],
+      });
+
       mockAccounts.discover
         .mockResolvedValueOnce(accountWithHistory1)
+        .mockResolvedValueOnce(p2trNoHistory1)
         .mockResolvedValueOnce(accountWithoutHistory)
-        .mockResolvedValueOnce(accountWithHistory2);
+        .mockResolvedValueOnce(p2trNoHistory2)
+        .mockResolvedValueOnce(accountWithHistory2)
+        .mockResolvedValueOnce(p2trWithHistory);
 
       const discovered = await handler.discoverAccounts(
         [BtcScope.Mainnet, BtcScope.Testnet, BtcScope.Signet],
@@ -474,11 +537,12 @@ describe('KeyringHandler', () => {
         groupIndex,
       );
 
-      expect(mockAccounts.discover).toHaveBeenCalledTimes(3);
-      expect(discovered).toHaveLength(2);
+      expect(mockAccounts.discover).toHaveBeenCalledTimes(6);
+      expect(discovered).toHaveLength(3);
       expect(discovered).toStrictEqual([
         mapToDiscoveredAccount(accountWithHistory1),
         mapToDiscoveredAccount(accountWithHistory2),
+        mapToDiscoveredAccount(p2trWithHistory),
       ]);
     });
 
