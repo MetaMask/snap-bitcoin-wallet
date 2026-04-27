@@ -7,7 +7,7 @@ import {
   ResourceNotFoundError,
   UnauthorizedError,
   UserRejectedRequestError,
-  SnapError
+  SnapError,
 } from '@metamask/snaps-sdk';
 import { StructError } from 'superstruct';
 
