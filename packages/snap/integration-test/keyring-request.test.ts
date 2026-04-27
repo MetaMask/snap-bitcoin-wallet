@@ -301,6 +301,7 @@ describe('KeyringRequestHandler', () => {
         result: {
           psbt: expect.any(String), // non deterministic
           txid: expect.any(String),
+          canBeMalleable: false,
         },
       });
     });
@@ -543,6 +544,7 @@ describe('KeyringRequestHandler', () => {
         pending: false,
         result: {
           txid: expect.any(String),
+          canBeMalleable: false,
         },
       });
     });
@@ -610,6 +612,7 @@ describe('KeyringRequestHandler', () => {
         pending: false,
         result: {
           txid: expect.any(String),
+          canBeMalleable: false,
         },
       });
     });

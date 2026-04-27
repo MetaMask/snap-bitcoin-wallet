@@ -16,6 +16,7 @@ import type {
   Address,
 } from '@metamask/bitcoindevkit';
 
+import { AssertionError } from './error';
 import type { Inscription } from './meta-protocols';
 import type { TransactionBuilder } from './transaction';
 
@@ -344,3 +345,43 @@ export const networkToCoinType: Record<Network, Slip44> = {
   signet: Slip44.Testnet,
   regtest: Slip44.Testnet,
 };
+
+/**
+ * Whether transactions broadcast from an account of the given address type
+ * can have their txid changed by a third party (transaction malleability)
+ * before confirmation.
+ *
+ * Only legacy P2PKH (BIP44) carries signatures in scriptSig and is therefore
+ * malleable. Every other supported AddressType puts signatures in witness
+ * data, which is excluded from the txid hash. Note that `p2sh` here means
+ * BIP49 wrapped SegWit (sh(wpkh(...))), not generic legacy P2SH; its
+ * scriptSig is a fixed canonical push of the witness program and signatures
+ * live in the witness. If support for arbitrary legacy P2SH descriptors
+ * (bare multisig, custom redeem scripts with signatures in scriptSig) is
+ * added later, this helper must be revisited — do not blindly reuse the
+ * 'p2sh' branch.
+ *
+ * @param addressType - The account's address type.
+ * @returns `true` if a third party can rewrite the txid of a transaction
+ * broadcast from this account before confirmation; `false` otherwise.
+ */
+export function canAccountTxidBeMalleated(addressType: AddressType): boolean {
+  switch (addressType) {
+    case 'p2pkh':
+      return true;
+    case 'p2sh':
+    case 'p2wpkh':
+    case 'p2wsh':
+    case 'p2tr':
+      return false;
+    default: {
+      // Compile-time exhaustiveness guard. Throws at runtime if a new
+      // AddressType variant is ever added without a deliberate decision
+      // here, so consumers never receive a non-boolean value for this flag.
+      const _exhaustive: never = addressType;
+      throw new AssertionError('Unhandled AddressType for malleability check', {
+        addressType: _exhaustive,
+      });
+    }
+  }
+}

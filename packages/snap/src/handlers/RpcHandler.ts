@@ -57,6 +57,9 @@ export const ComputeFeeRequest = object({
 
 export type SendTransactionResponse = {
   transactionId: string;
+  // True if the source account's address type allows third-party txid
+  // malleation before confirmation (currently only legacy P2PKH).
+  canBeMalleable: boolean;
 };
 
 export const VerifyMessageRequest = object({
@@ -148,17 +151,17 @@ export class RpcHandler {
     if (!psbt) {
       return null;
     }
-    const { txid } = await this.#accountUseCases.signPsbt(
+    const { txid, canBeMalleable } = await this.#accountUseCases.signPsbt(
       account,
       psbt,
       origin,
       { fill: false, broadcast: true },
     );
-    if (!txid) {
+    if (!txid || canBeMalleable === undefined) {
       throw new AssertionError('Missing transaction ID ');
     }
 
-    return { transactionId: txid.toString() };
+    return { transactionId: txid.toString(), canBeMalleable };
   }
 
   async #signAndSend(
@@ -168,7 +171,7 @@ export class RpcHandler {
   ): Promise<SendTransactionResponse | null> {
     const psbt = parsePsbt(transaction);
 
-    const { txid } = await this.#accountUseCases.signPsbt(
+    const { txid, canBeMalleable } = await this.#accountUseCases.signPsbt(
       accountId,
       psbt,
       origin,
@@ -177,11 +180,11 @@ export class RpcHandler {
         broadcast: true,
       },
     );
-    if (!txid) {
+    if (!txid || canBeMalleable === undefined) {
       throw new AssertionError('Missing transaction ID ');
     }
 
-    return { transactionId: txid.toString() };
+    return { transactionId: txid.toString(), canBeMalleable };
   }
 
   async #computeFee(

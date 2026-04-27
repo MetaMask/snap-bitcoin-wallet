@@ -73,12 +73,13 @@ describe('KeyringRequestHandler', () => {
       account: 'account-id',
     });
 
-    it('executes signPsbt', async () => {
+    it('executes signPsbt and propagates canBeMalleable when broadcasting', async () => {
       mockAccountsUseCases.signPsbt.mockResolvedValue({
         psbt: 'psbtBase64',
         txid: mock<Txid>({
           toString: jest.fn().mockReturnValue('txid'),
         }),
+        canBeMalleable: false,
       });
 
       const result = await handler.route(mockRequest);
@@ -96,7 +97,71 @@ describe('KeyringRequestHandler', () => {
       );
       expect(result).toStrictEqual({
         pending: false,
-        result: { psbt: 'psbtBase64', txid: 'txid' },
+        result: {
+          psbt: 'psbtBase64',
+          txid: 'txid',
+          canBeMalleable: false,
+        },
+      });
+    });
+
+    it('omits canBeMalleable when broadcast=false (no txid returned)', async () => {
+      const noBroadcastRequest = mock<KeyringRequest>({
+        origin,
+        request: {
+          method: AccountCapability.SignPsbt,
+          params: {
+            psbt: 'psbtBase64',
+            feeRate: 3,
+            options: { fill: false, broadcast: false },
+          },
+        },
+        account: 'account-id',
+      });
+      mockAccountsUseCases.signPsbt.mockResolvedValue({
+        psbt: 'psbtBase64',
+      });
+
+      const result = await handler.route(noBroadcastRequest);
+
+      expect(result).toStrictEqual({
+        pending: false,
+        result: { psbt: 'psbtBase64', txid: null },
+      });
+    });
+
+    it('throws AssertionError if usecase returns txid without canBeMalleable', async () => {
+      mockAccountsUseCases.signPsbt.mockResolvedValue({
+        psbt: 'psbtBase64',
+        txid: mock<Txid>({
+          toString: jest.fn().mockReturnValue('txid'),
+        }),
+        // canBeMalleable intentionally omitted — protocol violation
+      });
+
+      await expect(handler.route(mockRequest)).rejects.toThrow(
+        'signPsbt returned txid without canBeMalleable flag',
+      );
+    });
+
+    it('passes canBeMalleable=true through for legacy P2PKH accounts', async () => {
+      mockAccountsUseCases.signPsbt.mockResolvedValue({
+        psbt: 'psbtBase64',
+        txid: mock<Txid>({
+          toString: jest.fn().mockReturnValue('txid'),
+        }),
+        canBeMalleable: true,
+      });
+
+      const result = await handler.route(mockRequest);
+
+      expect(result).toStrictEqual({
+        pending: false,
+        result: {
+          psbt: 'psbtBase64',
+          txid: 'txid',
+          canBeMalleable: true,
+        },
       });
     });
 
@@ -263,11 +328,14 @@ describe('KeyringRequestHandler', () => {
       account: 'account-id',
     });
 
-    it('executes broadcastPsbt', async () => {
+    it('executes broadcastPsbt and propagates canBeMalleable', async () => {
       const mockTxid = mock<Txid>({
         toString: jest.fn().mockReturnValue('txid'),
       });
-      mockAccountsUseCases.broadcastPsbt.mockResolvedValue(mockTxid);
+      mockAccountsUseCases.broadcastPsbt.mockResolvedValue({
+        txid: mockTxid,
+        canBeMalleable: false,
+      });
 
       const result = await handler.route(mockRequest);
 
@@ -282,7 +350,24 @@ describe('KeyringRequestHandler', () => {
       );
       expect(result).toStrictEqual({
         pending: false,
-        result: { txid: 'txid' },
+        result: { txid: 'txid', canBeMalleable: false },
+      });
+    });
+
+    it('passes canBeMalleable=true through for legacy P2PKH accounts', async () => {
+      const mockTxid = mock<Txid>({
+        toString: jest.fn().mockReturnValue('txid'),
+      });
+      mockAccountsUseCases.broadcastPsbt.mockResolvedValue({
+        txid: mockTxid,
+        canBeMalleable: true,
+      });
+
+      const result = await handler.route(mockRequest);
+
+      expect(result).toStrictEqual({
+        pending: false,
+        result: { txid: 'txid', canBeMalleable: true },
       });
     });
 
@@ -331,11 +416,14 @@ describe('KeyringRequestHandler', () => {
       account: 'account-id',
     });
 
-    it('executes sendTransferq', async () => {
+    it('executes sendTransfer and propagates canBeMalleable', async () => {
       const mockTxid = mock<Txid>({
         toString: jest.fn().mockReturnValue('txid'),
       });
-      mockAccountsUseCases.sendTransfer.mockResolvedValue(mockTxid);
+      mockAccountsUseCases.sendTransfer.mockResolvedValue({
+        txid: mockTxid,
+        canBeMalleable: false,
+      });
 
       const result = await handler.route(mockRequest);
 
@@ -351,7 +439,24 @@ describe('KeyringRequestHandler', () => {
       );
       expect(result).toStrictEqual({
         pending: false,
-        result: { txid: 'txid' },
+        result: { txid: 'txid', canBeMalleable: false },
+      });
+    });
+
+    it('passes canBeMalleable=true through for legacy P2PKH accounts', async () => {
+      const mockTxid = mock<Txid>({
+        toString: jest.fn().mockReturnValue('txid'),
+      });
+      mockAccountsUseCases.sendTransfer.mockResolvedValue({
+        txid: mockTxid,
+        canBeMalleable: true,
+      });
+
+      const result = await handler.route(mockRequest);
+
+      expect(result).toStrictEqual({
+        pending: false,
+        result: { txid: 'txid', canBeMalleable: true },
       });
     });
 
