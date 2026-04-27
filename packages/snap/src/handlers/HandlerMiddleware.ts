@@ -7,6 +7,7 @@ import {
   ResourceNotFoundError,
   UnauthorizedError,
   UserRejectedRequestError,
+  SnapError
 } from '@metamask/snaps-sdk';
 import { StructError } from 'superstruct';
 
@@ -113,10 +114,13 @@ export class HandlerMiddleware {
             error.data,
           );
         }
-        // this should never happen unless a BaseError is not thrown
-        const errMsg = messages.unexpected?.message ?? 'Unexpected error';
+        // Unknown error type — wrap in SnapError to preserve the original
+        // error's message and class info for observability (previously this
+        // branch replaced everything with a generic "Unexpected error"
+        // string, making cross-boundary errors like KeyringControllerError
+        // opaque in Sentry).
         this.#logger.error(error);
-        throw new InternalError(errMsg);
+        throw new SnapError(error instanceof Error ? error : String(error));
       }
     }
   }
