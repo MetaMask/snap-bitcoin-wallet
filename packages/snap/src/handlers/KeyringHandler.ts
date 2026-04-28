@@ -1,8 +1,11 @@
 import type { AddressType } from '@metamask/bitcoindevkit';
 import {
+  AccountCreationType,
+  assertCreateAccountOptionIsSupported,
   BtcAccountType,
   BtcScope,
   CreateAccountRequestStruct,
+  CreateAccountsRequestStruct,
   DeleteAccountRequestStruct,
   DiscoverAccountsRequestStruct,
   FilterAccountChainsStruct,
@@ -17,6 +20,7 @@ import {
   SubmitRequestRequestStruct,
 } from '@metamask/keyring-api';
 import type {
+  CreateAccountOptions,
   Keyring,
   KeyringAccount,
   KeyringResponse,
@@ -115,6 +119,10 @@ export class KeyringHandler implements Keyring {
       case `${KeyringRpcMethod.CreateAccount}`: {
         assert(request, CreateAccountRequestStruct);
         return this.createAccount(request.params.options);
+      }
+      case `${KeyringRpcMethod.CreateAccounts}`: {
+        assert(request, CreateAccountsRequestStruct);
+        return this.createAccounts(request.params.options);
       }
       case `${KeyringRpcMethod.DiscoverAccounts}`: {
         assert(request, DiscoverAccountsRequestStruct);
@@ -266,6 +274,70 @@ export class KeyringHandler implements Keyring {
       });
 
       return mapToKeyringAccount(account);
+    } finally {
+      if (traceStarted) {
+        await runSnapActionSafely(
+          async () => this.#snapClient.endTrace(traceName),
+          this.#logger,
+          'endTrace',
+        );
+      }
+    }
+  }
+
+  async createAccounts(
+    options: CreateAccountOptions,
+  ): Promise<KeyringAccount[]> {
+    assertCreateAccountOptionIsSupported(options, [
+      `${AccountCreationType.Bip44DeriveIndex}`,
+      `${AccountCreationType.Bip44DeriveIndexRange}`,
+    ]);
+
+    const traceName = 'Create Bitcoin Accounts Batch';
+    let traceStarted = false;
+
+    try {
+      await runSnapActionSafely(
+        async () => {
+          await this.#snapClient.startTrace(traceName);
+          traceStarted = true;
+        },
+        this.#logger,
+        'startTrace',
+      );
+
+      const { entropySource } = options;
+
+      // Only P2WPKH (BIP-84) on bitcoin mainnet is supported for v1, mirroring
+      // the defaults used by `createAccount` when no scope is provided.
+      const network = scopeToNetwork[BtcScope.Mainnet];
+      const addressType = this.#defaultAddressType;
+      if (addressType !== 'p2wpkh') {
+        throw new FormatError(
+          'Only native segwit (P2WPKH) addresses are supported',
+        );
+      }
+
+      const range =
+        options.type === AccountCreationType.Bip44DeriveIndex
+          ? { from: options.groupIndex, to: options.groupIndex }
+          : options.range;
+
+      const accounts: KeyringAccount[] = [];
+      for (let index = range.from; index <= range.to; index += 1) {
+        // `AccountUseCases.create` is idempotent: if an account already exists
+        // for the resolved derivation path, it will be returned as-is.
+        const account = await this.#accountsUseCases.create({
+          network,
+          entropySource,
+          index,
+          addressType,
+          synchronize: false,
+        });
+        accounts.push(mapToKeyringAccount(account));
+      }
+
+      return accounts;
     } finally {
       if (traceStarted) {
         await runSnapActionSafely(

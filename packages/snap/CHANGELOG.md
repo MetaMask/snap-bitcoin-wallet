@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Implement `keyring_createAccounts` method for batch account creation supporting `bip44:derive-index` and `bip44:derive-index-range` capabilities ([MUL-1782](https://consensyssoftware.atlassian.net/browse/MUL-1782))
+
+### Changed
+
+- Bump `@metamask/keyring-api` from `^21.3.0` to `^22.0.0`
+- Bump `@metamask/keyring-snap-sdk` from `^7.1.1` to `^8.0.0`
+
 ## [1.10.1]
 
 ### Fixed

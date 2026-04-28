@@ -15,7 +15,11 @@ import type {
   Transaction as KeyringTransaction,
   KeyringRequest,
 } from '@metamask/keyring-api';
-import { BtcAccountType, BtcScope } from '@metamask/keyring-api';
+import {
+  AccountCreationType,
+  BtcAccountType,
+  BtcScope,
+} from '@metamask/keyring-api';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
@@ -384,6 +388,129 @@ describe('KeyringHandler', () => {
         );
         expect(mockSnapClient.endTrace).toHaveBeenCalledWith(
           'Create Bitcoin Account',
+        );
+      });
+    });
+  });
+
+  describe('createAccounts', () => {
+    const entropySource = 'some-source';
+
+    const buildMockAccount = (index: number): BitcoinAccount =>
+      mock<BitcoinAccount>({
+        id: `id-${index}`,
+        addressType: 'p2wpkh',
+        balance: { trusted_spendable: { to_btc: () => 1 } },
+        network: 'bitcoin',
+        derivationPath: ['myEntropy', "84'", "0'", `${index}'`],
+        entropySource: 'myEntropy',
+        accountIndex: index,
+        publicAddress: mockAddress,
+        capabilities: [
+          AccountCapability.SignPsbt,
+          AccountCapability.ComputeFee,
+        ],
+      });
+
+    it('creates a single account for Bip44DeriveIndex', async () => {
+      const account = buildMockAccount(2);
+      mockAccounts.create.mockResolvedValue(account);
+
+      const result = await handler.createAccounts({
+        type: AccountCreationType.Bip44DeriveIndex,
+        groupIndex: 2,
+        entropySource,
+      });
+
+      expect(mockAccounts.create).toHaveBeenCalledTimes(1);
+      expect(mockAccounts.create).toHaveBeenCalledWith({
+        network: 'bitcoin',
+        entropySource,
+        index: 2,
+        addressType: 'p2wpkh',
+        synchronize: false,
+      });
+      expect(result).toHaveLength(1);
+    });
+
+    it('creates an inclusive range of accounts for Bip44DeriveIndexRange', async () => {
+      mockAccounts.create.mockImplementation(async ({ index }) =>
+        buildMockAccount(index),
+      );
+
+      const result = await handler.createAccounts({
+        type: AccountCreationType.Bip44DeriveIndexRange,
+        range: { from: 0, to: 2 },
+        entropySource,
+      });
+
+      expect(mockAccounts.create).toHaveBeenCalledTimes(3);
+      [0, 1, 2].forEach((index, callIdx) => {
+        expect(mockAccounts.create).toHaveBeenNthCalledWith(callIdx + 1, {
+          network: 'bitcoin',
+          entropySource,
+          index,
+          addressType: 'p2wpkh',
+          synchronize: false,
+        });
+      });
+      expect(result).toHaveLength(3);
+    });
+
+    it('rejects unsupported creation types', async () => {
+      await expect(
+        handler.createAccounts({
+          type: AccountCreationType.Bip44DerivePath,
+          derivationPath: "m/84'/0'/0'",
+          entropySource,
+        }),
+      ).rejects.toThrow(/not supported|unsupported/iu);
+      expect(mockAccounts.create).not.toHaveBeenCalled();
+    });
+
+    it('propagates errors from create', async () => {
+      const error = new Error('create error');
+      mockAccounts.create.mockRejectedValue(error);
+
+      await expect(
+        handler.createAccounts({
+          type: AccountCreationType.Bip44DeriveIndex,
+          groupIndex: 0,
+          entropySource,
+        }),
+      ).rejects.toThrow(error);
+    });
+
+    describe('tracing', () => {
+      const options = {
+        type: AccountCreationType.Bip44DeriveIndex as const,
+        groupIndex: 0,
+        entropySource,
+      };
+
+      beforeEach(() => {
+        mockSnapClient.startTrace.mockResolvedValue(undefined);
+        mockSnapClient.endTrace.mockResolvedValue(undefined);
+        mockAccounts.create.mockResolvedValue(buildMockAccount(0));
+      });
+
+      it('calls startTrace and endTrace with correct trace name', async () => {
+        await handler.createAccounts(options);
+
+        expect(mockSnapClient.startTrace).toHaveBeenCalledWith(
+          'Create Bitcoin Accounts Batch',
+        );
+        expect(mockSnapClient.endTrace).toHaveBeenCalledWith(
+          'Create Bitcoin Accounts Batch',
+        );
+      });
+
+      it('calls endTrace even if create fails', async () => {
+        mockAccounts.create.mockRejectedValue(new Error('boom'));
+
+        await expect(handler.createAccounts(options)).rejects.toThrow('boom');
+        expect(mockSnapClient.endTrace).toHaveBeenCalledWith(
+          'Create Bitcoin Accounts Batch',
         );
       });
     });
