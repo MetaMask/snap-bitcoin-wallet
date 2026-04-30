@@ -445,16 +445,41 @@ describe('KeyringHandler', () => {
       });
 
       expect(mockAccounts.create).toHaveBeenCalledTimes(3);
-      [0, 1, 2].forEach((index, callIdx) => {
-        expect(mockAccounts.create).toHaveBeenNthCalledWith(callIdx + 1, {
+      const calledIndices = mockAccounts.create.mock.calls
+        .map((call) => (call[0] as { index: number }).index)
+        .sort((a, b) => a - b);
+      expect(calledIndices).toEqual([0, 1, 2]);
+      mockAccounts.create.mock.calls.forEach((call) => {
+        expect(call[0]).toMatchObject({
           network: 'bitcoin',
           entropySource,
-          index,
           addressType: 'p2wpkh',
           synchronize: false,
         });
       });
       expect(result).toHaveLength(3);
+    });
+
+    it('rejects an invalid index range when from is greater than to', async () => {
+      await expect(
+        handler.createAccounts({
+          type: AccountCreationType.Bip44DeriveIndexRange,
+          range: { from: 2, to: 0 },
+          entropySource,
+        }),
+      ).rejects.toThrow(/invalid.*range|from must be/iu);
+      expect(mockAccounts.create).not.toHaveBeenCalled();
+    });
+
+    it('rejects batches larger than the per-RPC limit', async () => {
+      await expect(
+        handler.createAccounts({
+          type: AccountCreationType.Bip44DeriveIndexRange,
+          range: { from: 0, to: 100 },
+          entropySource,
+        }),
+      ).rejects.toThrow(/more than 100 accounts/iu);
+      expect(mockAccounts.create).not.toHaveBeenCalled();
     });
 
     it('rejects unsupported creation types', async () => {

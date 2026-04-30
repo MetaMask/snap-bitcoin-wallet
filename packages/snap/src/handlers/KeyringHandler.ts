@@ -81,6 +81,48 @@ export const CreateAccountRequest = object({
   ...MetaMaskOptionsStruct.schema,
 });
 
+/** Upper bound on inclusive index range width for a single createAccounts RPC. */
+const MAX_CREATE_ACCOUNTS_PER_BATCH = 100;
+
+/** Max concurrent AccountUseCases.create calls within one batch. */
+const CREATE_ACCOUNTS_CONCURRENCY = 4;
+
+/**
+ * Map items to results with at most `concurrency` in-flight async operations.
+ * Output order matches `items` order.
+ *
+ * @param items - Values to map in pool order.
+ * @param concurrency - Maximum number of concurrent mapper executions.
+ * @param mapper - Async function applied to each item.
+ * @returns Results in the same order as `items`.
+ */
+async function runWithConcurrencyLimit<Item, Result>(
+  items: readonly Item[],
+  concurrency: number,
+  mapper: (item: Item, index: number) => Promise<Result>,
+): Promise<Result[]> {
+  if (items.length === 0) {
+    return [];
+  }
+  const results: Result[] = new Array(items.length);
+  let next = 0;
+
+  const worker = async (): Promise<void> => {
+    while (true) {
+      const idx = next;
+      next += 1;
+      if (idx >= items.length) {
+        return;
+      }
+      results[idx] = await mapper(items[idx] as Item, idx);
+    }
+  };
+
+  const poolSize = Math.min(Math.max(1, concurrency), items.length);
+  await Promise.all(Array.from({ length: poolSize }, async () => worker()));
+  return results;
+}
+
 export class KeyringHandler implements Keyring {
   readonly #accountsUseCases: AccountUseCases;
 
@@ -293,6 +335,41 @@ export class KeyringHandler implements Keyring {
       `${AccountCreationType.Bip44DeriveIndexRange}`,
     ]);
 
+    const { entropySource } = options;
+
+    const range =
+      options.type === AccountCreationType.Bip44DeriveIndex
+        ? { from: options.groupIndex, to: options.groupIndex }
+        : options.range;
+
+    if (range.from > range.to) {
+      throw new FormatError(
+        'Account index range is invalid: from must be less than or equal to to',
+      );
+    }
+
+    const batchSize = range.to - range.from + 1;
+    if (batchSize > MAX_CREATE_ACCOUNTS_PER_BATCH) {
+      throw new FormatError(
+        `Cannot create more than ${MAX_CREATE_ACCOUNTS_PER_BATCH} accounts in one batch`,
+      );
+    }
+
+    // Only P2WPKH (BIP-84) on bitcoin mainnet is supported for v1, mirroring
+    // the defaults used by `createAccount` when no scope is provided.
+    const network = scopeToNetwork[BtcScope.Mainnet];
+    const addressType = this.#defaultAddressType;
+    if (addressType !== 'p2wpkh') {
+      throw new FormatError(
+        'Only native segwit (P2WPKH) addresses are supported',
+      );
+    }
+
+    const indices: number[] = [];
+    for (let index = range.from; index <= range.to; index += 1) {
+      indices.push(index);
+    }
+
     const traceName = 'Create Bitcoin Accounts Batch';
     let traceStarted = false;
 
@@ -306,38 +383,22 @@ export class KeyringHandler implements Keyring {
         'startTrace',
       );
 
-      const { entropySource } = options;
-
-      // Only P2WPKH (BIP-84) on bitcoin mainnet is supported for v1, mirroring
-      // the defaults used by `createAccount` when no scope is provided.
-      const network = scopeToNetwork[BtcScope.Mainnet];
-      const addressType = this.#defaultAddressType;
-      if (addressType !== 'p2wpkh') {
-        throw new FormatError(
-          'Only native segwit (P2WPKH) addresses are supported',
-        );
-      }
-
-      const range =
-        options.type === AccountCreationType.Bip44DeriveIndex
-          ? { from: options.groupIndex, to: options.groupIndex }
-          : options.range;
-
-      const accounts: KeyringAccount[] = [];
-      for (let index = range.from; index <= range.to; index += 1) {
-        // `AccountUseCases.create` is idempotent: if an account already exists
-        // for the resolved derivation path, it will be returned as-is.
-        const account = await this.#accountsUseCases.create({
-          network,
-          entropySource,
-          index,
-          addressType,
-          synchronize: false,
-        });
-        accounts.push(mapToKeyringAccount(account));
-      }
-
-      return accounts;
+      // `AccountUseCases.create` is idempotent: if an account already exists
+      // for the resolved derivation path, it will be returned as-is.
+      return await runWithConcurrencyLimit(
+        indices,
+        CREATE_ACCOUNTS_CONCURRENCY,
+        async (index) => {
+          const account = await this.#accountsUseCases.create({
+            network,
+            entropySource,
+            index,
+            addressType,
+            synchronize: false,
+          });
+          return mapToKeyringAccount(account);
+        },
+      );
     } finally {
       if (traceStarted) {
         await runSnapActionSafely(
