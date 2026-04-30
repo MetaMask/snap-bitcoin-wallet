@@ -96,6 +96,7 @@ describe('KeyringHandler', () => {
     const correlationId = 'correlation-id';
 
     // non-P2WPKH address types as we are not supporting them for v1
+    // eslint-disable-next-line jest/no-disabled-tests
     it.skip('respects provided params', async () => {
       const options = {
         scope: BtcScope.Signet,
@@ -126,6 +127,7 @@ describe('KeyringHandler', () => {
     });
 
     // only P2WPKH (BIP-84) derivation paths are now supported for v1
+    // eslint-disable-next-line jest/no-disabled-tests
     it.skip('extracts index from derivationPath', async () => {
       const options = {
         scope: BtcScope.Signet,
@@ -225,6 +227,7 @@ describe('KeyringHandler', () => {
     );
 
     // skip non-P2WPKH address types as they are not supported on v1
+    // eslint-disable-next-line jest/no-disabled-tests
     it.skip.each([
       { purpose: Purpose.Legacy, addressType: 'p2pkh' },
       { purpose: Purpose.Segwit, addressType: 'p2sh' },
@@ -448,7 +451,7 @@ describe('KeyringHandler', () => {
       const calledIndices = mockAccounts.create.mock.calls
         .map((call) => (call[0] as { index: number }).index)
         .sort((a, b) => a - b);
-      expect(calledIndices).toEqual([0, 1, 2]);
+      expect(calledIndices).toStrictEqual([0, 1, 2]);
       mockAccounts.create.mock.calls.forEach((call) => {
         expect(call[0]).toMatchObject({
           network: 'bitcoin',
