@@ -330,6 +330,11 @@ export class KeyringHandler implements Keyring {
   async createAccounts(
     options: CreateAccountOptions,
   ): Promise<KeyringAccount[]> {
+    console.log(
+      '[PERFORMANCE LOGS][BITCOIN SNAP] execute createAccounts method',
+      options,
+    );
+
     assertCreateAccountOptionIsSupported(options, [
       `${AccountCreationType.Bip44DeriveIndex}`,
       `${AccountCreationType.Bip44DeriveIndexRange}`,
