@@ -157,8 +157,13 @@ export class RpcHandler {
       origin,
       { fill: false, broadcast: true },
     );
-    if (!txid || canBeMalleable === undefined) {
-      throw new AssertionError('Missing transaction ID ');
+    if (!txid) {
+      throw new AssertionError('Missing transaction ID');
+    }
+    if (canBeMalleable === undefined) {
+      throw new AssertionError(
+        'signPsbt returned txid without canBeMalleable flag',
+      );
     }
 
     return { transactionId: txid.toString(), canBeMalleable };
@@ -180,8 +185,13 @@ export class RpcHandler {
         broadcast: true,
       },
     );
-    if (!txid || canBeMalleable === undefined) {
-      throw new AssertionError('Missing transaction ID ');
+    if (!txid) {
+      throw new AssertionError('Missing transaction ID');
+    }
+    if (canBeMalleable === undefined) {
+      throw new AssertionError(
+        'signPsbt returned txid without canBeMalleable flag',
+      );
     }
 
     return { transactionId: txid.toString(), canBeMalleable };

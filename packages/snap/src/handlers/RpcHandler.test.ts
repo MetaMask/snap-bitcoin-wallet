@@ -374,7 +374,7 @@ describe('RpcHandler', () => {
       });
 
       await expect(handler.route(origin, request)).rejects.toThrow(
-        'Missing transaction ID',
+        'signPsbt returned txid without canBeMalleable flag',
       );
     });
 
