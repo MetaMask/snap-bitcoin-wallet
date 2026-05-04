@@ -53,6 +53,7 @@ const confirmationRepository = new JSXConfirmationRepository(
   translator,
   chainClient,
   assetRatesClient,
+  logger,
 );
 
 // Business layer

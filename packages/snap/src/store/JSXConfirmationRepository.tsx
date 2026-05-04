@@ -9,6 +9,7 @@ import type {
   BlockchainClient,
   ConfirmationRepository,
   ConfirmSendFormContext,
+  Logger,
   SignMessageConfirmationContext,
   SignPsbtConfirmationContext,
   SignPsbtOutput,
@@ -31,16 +32,20 @@ export class JSXConfirmationRepository implements ConfirmationRepository {
 
   readonly #ratesClient: AssetRatesClient;
 
+  readonly #logger: Logger;
+
   constructor(
     snapClient: SnapClient,
     translator: Translator,
     chainClient: BlockchainClient,
     ratesClient: AssetRatesClient,
+    logger: Logger,
   ) {
     this.#snapClient = snapClient;
     this.#translator = translator;
     this.#chainClient = chainClient;
     this.#ratesClient = ratesClient;
+    this.#logger = logger;
   }
 
   async insertSignMessage(
@@ -202,8 +207,12 @@ export class JSXConfirmationRepository implements ConfirmationRepository {
         conversionDate: getCurrentUnixTimestamp(),
         currency: currency.toUpperCase(),
       };
-    } catch {
+    } catch (error) {
       // Exchange rates are optional display information - don't fail if unavailable
+      this.#logger.warn(
+        `Failed to fetch spot price for currency ${currency}`,
+        error,
+      );
       return undefined;
     }
   }

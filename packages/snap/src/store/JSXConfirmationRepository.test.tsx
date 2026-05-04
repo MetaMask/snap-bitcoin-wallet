@@ -16,6 +16,7 @@ import type {
   Translator,
   BitcoinAccount,
   BlockchainClient,
+  Logger,
   SpotPrice,
 } from '../entities';
 import { networkToCurrencyUnit } from '../entities';
@@ -47,12 +48,14 @@ describe('JSXConfirmationRepository', () => {
   const mockTranslator = mock<Translator>();
   const mockChainClient = mock<BlockchainClient>();
   const mockRatesClient = mock<AssetRatesClient>();
+  const mockLogger = mock<Logger>();
 
   const repo = new JSXConfirmationRepository(
     mockSnapClient,
     mockTranslator,
     mockChainClient,
     mockRatesClient,
+    mockLogger,
   );
 
   describe('insertSignMessage', () => {
