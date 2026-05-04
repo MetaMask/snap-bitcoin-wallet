@@ -1,14 +1,6 @@
 import type { KeyringRequest, KeyringResponse } from '@metamask/keyring-api';
 import type { Json } from '@metamask/snaps-sdk';
-import {
-  array,
-  assert,
-  boolean,
-  number,
-  object,
-  optional,
-  string,
-} from 'superstruct';
+import { assert } from 'superstruct';
 
 import {
   AccountCapability,
@@ -17,66 +9,34 @@ import {
 } from '../entities';
 import { mapToUtxo } from './mappings';
 import { parsePsbt } from './parsers';
+import {
+  BroadcastPsbtRequest,
+  ComputeFeeRequest,
+  FillPsbtRequest,
+  GetUtxoRequest,
+  SendTransferRequest,
+  SignMessageRequest,
+  SignPsbtRequest,
+} from './validation';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
-
-export const SignPsbtRequest = object({
-  psbt: string(),
-  feeRate: optional(number()),
-  options: object({
-    fill: boolean(),
-    broadcast: boolean(),
-  }),
-});
 
 export type SignPsbtResponse = {
   psbt: string;
   txid: string | null;
 };
 
-export const ComputeFeeRequest = object({
-  psbt: string(),
-  feeRate: optional(number()),
-});
-
 export type ComputeFeeResponse = {
   // Fee in satoshis
   fee: string;
 };
 
-export const BroadcastPsbtRequest = object({
-  psbt: string(),
-});
-
 export type BroadcastPsbtResponse = {
   txid: string;
 };
 
-export const FillPsbtRequest = object({
-  psbt: string(),
-  feeRate: optional(number()),
-});
-
 export type FillPsbtResponse = {
   psbt: string;
 };
-
-export const SendTransferRequest = object({
-  recipients: array(
-    object({
-      address: string(),
-      amount: string(),
-    }),
-  ),
-  feeRate: optional(number()),
-});
-
-export const GetUtxoRequest = object({
-  outpoint: string(),
-});
-
-export const SignMessageRequest = object({
-  message: string(),
-});
 
 export type SignMessageResponse = {
   signature: string;
