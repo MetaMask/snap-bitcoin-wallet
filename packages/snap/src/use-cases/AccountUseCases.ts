@@ -461,21 +461,37 @@ export class AccountUseCases {
       recipients,
     );
 
+    if (!recipients[0] || recipients.length > 1) {
+      throw new ValidationError('There should be exactly one recipient', {
+        recipients,
+      });
+    }
+    const recipient = recipients[0];
+
     const account = await this.#repository.getWithSigner(id);
     if (!account) {
       throw new NotFoundError('Account not found', { id });
     }
     this.#checkCapability(account, AccountCapability.SendTransfer);
 
-    // Create a template PSBT with the recipients as outputs
-    let builder = account.buildTx();
-    for (const { address, amount } of recipients) {
-      builder = builder.addRecipient(amount, address);
-    }
-    const templatePsbt = builder.finish();
+    const frozenUTXOs = await this.#repository.getFrozenUTXOs(account.id);
+    const feeRateToUse = feeRate ?? (await this.getFallbackFeeRate(account));
 
-    // Complete the PSBT with the necessary inputs, fee rate, etc.
-    const psbt = await this.#fillPsbt(account, templatePsbt, feeRate);
+    // Build PSBT with the recipient as output
+    const psbt = account
+      .buildTx()
+      .feeRate(feeRateToUse)
+      .unspendable(frozenUTXOs)
+      .addRecipient(recipient.amount, recipient.address)
+      .finish();
+
+    await this.#confirmationRepository.insertSendTransfer(
+      account,
+      psbt,
+      recipient,
+      origin,
+    );
+
     const signedPsbt = account.sign(psbt);
     const tx = account.extractTransaction(signedPsbt);
     const txid = await this.#broadcast(account, tx, origin);
