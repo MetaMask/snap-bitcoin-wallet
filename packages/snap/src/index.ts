@@ -46,7 +46,7 @@ const translator = new LocalTranslatorAdapter();
 const middleware = new HandlerMiddleware(logger, snapClient, translator);
 
 // Data layer
-const accountRepository = new BdkAccountRepository(snapClient);
+const accountRepository = new BdkAccountRepository(snapClient, logger);
 const sendFlowRepository = new JSXSendFlowRepository(snapClient, translator);
 const confirmationRepository = new JSXConfirmationRepository(
   snapClient,

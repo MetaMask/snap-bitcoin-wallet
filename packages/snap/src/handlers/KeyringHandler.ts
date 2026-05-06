@@ -68,6 +68,7 @@ import {
 } from './mappings';
 import { validateSelectedAccounts } from './validation';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
+import { getElapsedTimeMs, logPerformanceDebug } from '../utils/performance';
 import { runSnapActionSafely } from '../utils/snapHelpers';
 
 export const CreateAccountRequest = object({
@@ -291,6 +292,10 @@ export class KeyringHandler implements Keyring {
   async createAccounts(
     options: CreateAccountOptions,
   ): Promise<KeyringAccount[]> {
+    const methodStartedAt = Date.now();
+    let resultCount = 0;
+    let succeeded = false;
+
     assertCreateAccountOptionIsSupported(options, [
       `${AccountCreationType.Bip44DeriveIndex}`,
       `${AccountCreationType.Bip44DeriveIndexRange}`,
@@ -327,6 +332,13 @@ export class KeyringHandler implements Keyring {
       );
     }
 
+    logPerformanceDebug(this.#logger, 'KeyringHandler.createAccounts started', {
+      batchSize,
+      rangeFrom: range.from,
+      rangeTo: range.to,
+      type: options.type,
+    });
+
     // Only P2WPKH (BIP-84) on bitcoin mainnet is supported for v1, mirroring
     // the defaults used by `createAccount` when no scope is provided.
     const network = scopeToNetwork[BtcScope.Mainnet];
@@ -357,6 +369,7 @@ export class KeyringHandler implements Keyring {
 
       // `AccountUseCases.createMany` is idempotent: if an account already exists
       // for the resolved derivation path, it will be returned as-is.
+      const createManyStartedAt = Date.now();
       const accounts = await this.#accountsUseCases.createMany(
         indices.map((index) => ({
           network,
@@ -366,6 +379,17 @@ export class KeyringHandler implements Keyring {
           synchronize: false,
         })),
       );
+      resultCount = accounts.length;
+      logPerformanceDebug(
+        this.#logger,
+        'KeyringHandler.createAccounts createMany completed',
+        {
+          batchSize,
+          durationMs: getElapsedTimeMs(createManyStartedAt),
+          resultCount,
+        },
+      );
+      succeeded = true;
       return accounts.map(mapToKeyringAccount);
     } finally {
       if (traceStarted) {
@@ -375,6 +399,16 @@ export class KeyringHandler implements Keyring {
           'endTrace',
         );
       }
+      logPerformanceDebug(
+        this.#logger,
+        'KeyringHandler.createAccounts finished',
+        {
+          batchSize,
+          durationMs: getElapsedTimeMs(methodStartedAt),
+          resultCount,
+          succeeded,
+        },
+      );
     }
   }
 

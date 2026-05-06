@@ -17,9 +17,11 @@ import {
   type Inscription,
   type AccountState,
   type SnapState,
+  type Logger,
   StorageError,
 } from '../entities';
 import { BdkAccountAdapter } from '../infra';
+import { getElapsedTimeMs, logPerformanceDebug } from '../utils/performance';
 
 /**
  * Encode a fingerprint to a 4-bytes hex-string (required by the BDK).
@@ -45,8 +47,11 @@ function getDerivationPathKey(derivationPath: string[]): string {
 export class BdkAccountRepository implements BitcoinAccountRepository {
   readonly #snapClient: SnapClient;
 
-  constructor(snapClient: SnapClient) {
+  readonly #logger: Logger | undefined;
+
+  constructor(snapClient: SnapClient, logger?: Logger) {
     this.#snapClient = snapClient;
+    this.#logger = logger;
   }
 
   async get(id: string): Promise<BitcoinAccount | null> {
@@ -89,60 +94,124 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
   async getByDerivationPaths(
     derivationPaths: string[][],
   ): Promise<(BitcoinAccount | null)[]> {
+    const methodStartedAt = Date.now();
+    let repairedIndexCount = 0;
+    let resultCount = 0;
+    let succeeded = false;
+
+    logPerformanceDebug(
+      this.#logger,
+      'BdkAccountRepository.getByDerivationPaths started',
+      {
+        requestedPathCount: derivationPaths.length,
+      },
+    );
+
     if (derivationPaths.length === 0) {
+      succeeded = true;
+      logPerformanceDebug(
+        this.#logger,
+        'BdkAccountRepository.getByDerivationPaths finished',
+        {
+          durationMs: getElapsedTimeMs(methodStartedAt),
+          repairedIndexCount,
+          requestedPathCount: derivationPaths.length,
+          resultCount,
+          succeeded,
+        },
+      );
       return [];
     }
 
-    const [derivationPathIndex, accounts] = await Promise.all([
-      this.#snapClient.getState('derivationPaths') as Promise<
-        SnapState['derivationPaths'] | null
-      >,
-      this.#snapClient.getState('accounts') as Promise<
-        SnapState['accounts'] | null
-      >,
-    ]);
+    try {
+      const stateReadStartedAt = Date.now();
+      const [derivationPathIndex, accounts] = await Promise.all([
+        this.#snapClient.getState('derivationPaths') as Promise<
+          SnapState['derivationPaths'] | null
+        >,
+        this.#snapClient.getState('accounts') as Promise<
+          SnapState['accounts'] | null
+        >,
+      ]);
 
-    const accountsById = accounts ?? {};
-    const existingDerivationPathIndex = derivationPathIndex ?? {};
-    const accountsByDerivationPath = new Map<string, [string, AccountState]>();
+      const accountsById = accounts ?? {};
+      const existingDerivationPathIndex = derivationPathIndex ?? {};
+      logPerformanceDebug(
+        this.#logger,
+        'BdkAccountRepository.getByDerivationPaths state read completed',
+        {
+          accountCount: Object.keys(accountsById).length,
+          durationMs: getElapsedTimeMs(stateReadStartedAt),
+          indexedPathCount: Object.keys(existingDerivationPathIndex).length,
+        },
+      );
+      const accountsByDerivationPath = new Map<
+        string,
+        [string, AccountState]
+      >();
 
-    for (const [id, account] of Object.entries(accountsById)) {
-      if (account) {
-        accountsByDerivationPath.set(
-          getDerivationPathKey(account.derivationPath),
-          [id, account],
+      for (const [id, account] of Object.entries(accountsById)) {
+        if (account) {
+          accountsByDerivationPath.set(
+            getDerivationPathKey(account.derivationPath),
+            [id, account],
+          );
+        }
+      }
+
+      const repairs: Record<string, string> = {};
+      const results = derivationPaths.map((derivationPath) => {
+        const pathKey = getDerivationPathKey(derivationPath);
+        const indexedId = existingDerivationPathIndex[pathKey];
+        const indexedAccount = indexedId ? accountsById[indexedId] : null;
+
+        if (indexedId && indexedAccount) {
+          return this.#loadAccount(indexedId, indexedAccount);
+        }
+
+        const fallback = accountsByDerivationPath.get(pathKey);
+        if (!fallback) {
+          return null;
+        }
+
+        const [id, account] = fallback;
+        repairs[pathKey] = id;
+        return this.#loadAccount(id, account);
+      });
+
+      if (Object.keys(repairs).length > 0) {
+        const repairStartedAt = Date.now();
+        await this.#snapClient.setState('derivationPaths', {
+          ...existingDerivationPathIndex,
+          ...repairs,
+        });
+        repairedIndexCount = Object.keys(repairs).length;
+        logPerformanceDebug(
+          this.#logger,
+          'BdkAccountRepository.getByDerivationPaths index repair completed',
+          {
+            durationMs: getElapsedTimeMs(repairStartedAt),
+            repairedIndexCount,
+          },
         );
       }
+
+      resultCount = results.filter(Boolean).length;
+      succeeded = true;
+      return results;
+    } finally {
+      logPerformanceDebug(
+        this.#logger,
+        'BdkAccountRepository.getByDerivationPaths finished',
+        {
+          durationMs: getElapsedTimeMs(methodStartedAt),
+          repairedIndexCount,
+          requestedPathCount: derivationPaths.length,
+          resultCount,
+          succeeded,
+        },
+      );
     }
-
-    const repairs: Record<string, string> = {};
-    const results = derivationPaths.map((derivationPath) => {
-      const pathKey = getDerivationPathKey(derivationPath);
-      const indexedId = existingDerivationPathIndex[pathKey];
-      const indexedAccount = indexedId ? accountsById[indexedId] : null;
-
-      if (indexedId && indexedAccount) {
-        return this.#loadAccount(indexedId, indexedAccount);
-      }
-
-      const fallback = accountsByDerivationPath.get(pathKey);
-      if (!fallback) {
-        return null;
-      }
-
-      const [id, account] = fallback;
-      repairs[pathKey] = id;
-      return this.#loadAccount(id, account);
-    });
-
-    if (Object.keys(repairs).length > 0) {
-      await this.#snapClient.setState('derivationPaths', {
-        ...existingDerivationPathIndex,
-        ...repairs,
-      });
-    }
-
-    return results;
   }
 
   async getWithSigner(id: string): Promise<BitcoinAccount | null> {
@@ -186,101 +255,224 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     network: Network,
     addressType: AddressType,
   ): Promise<BitcoinAccount> {
-    const slip10 = await this.#snapClient.getPublicEntropy(derivationPath);
-    const id = v4();
-    const fingerprint = toBdkFingerprint(
-      slip10.masterFingerprint ?? slip10.parentFingerprint,
-    );
+    const methodStartedAt = Date.now();
+    let succeeded = false;
 
-    const xpub = slip10_to_extended(slip10, network);
-    const descriptors = xpub_to_descriptor(
-      xpub,
-      fingerprint,
-      network,
-      addressType,
-    );
+    try {
+      const slip10 = await this.#snapClient.getPublicEntropy(derivationPath);
+      const id = v4();
+      const fingerprint = toBdkFingerprint(
+        slip10.masterFingerprint ?? slip10.parentFingerprint,
+      );
 
-    return BdkAccountAdapter.create(id, derivationPath, descriptors, network);
+      const xpub = slip10_to_extended(slip10, network);
+      const descriptors = xpub_to_descriptor(
+        xpub,
+        fingerprint,
+        network,
+        addressType,
+      );
+
+      const account = BdkAccountAdapter.create(
+        id,
+        derivationPath,
+        descriptors,
+        network,
+      );
+      succeeded = true;
+      return account;
+    } finally {
+      logPerformanceDebug(
+        this.#logger,
+        'BdkAccountRepository.create finished',
+        {
+          addressType,
+          durationMs: getElapsedTimeMs(methodStartedAt),
+          network,
+          succeeded,
+        },
+      );
+    }
   }
 
   async insert(account: BitcoinAccount): Promise<BitcoinAccount> {
+    const methodStartedAt = Date.now();
+    let succeeded = false;
     const { id, derivationPath } = account;
 
-    const walletData = account.takeStaged();
-    if (!walletData) {
-      throw new StorageError(
-        `Missing changeset data for account "${id}" for insertion.`,
-      );
-    }
-
-    await Promise.all([
-      this.#snapClient.setState(
-        `derivationPaths.${getDerivationPathKey(derivationPath)}`,
-        id,
-      ),
-      this.#snapClient.setState(`accounts.${id}`, {
-        wallet: walletData.to_json(),
-        inscriptions: [],
-        derivationPath,
-      }),
-    ]);
-
-    return account;
-  }
-
-  async insertMany(accounts: BitcoinAccount[]): Promise<BitcoinAccount[]> {
-    if (accounts.length === 0) {
-      return [];
-    }
-
-    if (accounts.length === 1) {
-      return [await this.insert(accounts[0] as BitcoinAccount)];
-    }
-
-    const accountStateEntries: [string, AccountState][] = [];
-    const derivationPathEntries: [string, string][] = [];
-
-    for (const account of accounts) {
-      const { id, derivationPath } = account;
+    try {
       const walletData = account.takeStaged();
-
       if (!walletData) {
         throw new StorageError(
           `Missing changeset data for account "${id}" for insertion.`,
         );
       }
 
-      accountStateEntries.push([
-        id,
-        {
+      await Promise.all([
+        this.#snapClient.setState(
+          `derivationPaths.${getDerivationPathKey(derivationPath)}`,
+          id,
+        ),
+        this.#snapClient.setState(`accounts.${id}`, {
           wallet: walletData.to_json(),
           inscriptions: [],
           derivationPath,
-        },
+        }),
       ]);
-      derivationPathEntries.push([getDerivationPathKey(derivationPath), id]);
+
+      succeeded = true;
+      return account;
+    } finally {
+      logPerformanceDebug(
+        this.#logger,
+        'BdkAccountRepository.insert finished',
+        {
+          accountId: id,
+          durationMs: getElapsedTimeMs(methodStartedAt),
+          succeeded,
+        },
+      );
+    }
+  }
+
+  async insertMany(accounts: BitcoinAccount[]): Promise<BitcoinAccount[]> {
+    const methodStartedAt = Date.now();
+    let succeeded = false;
+
+    logPerformanceDebug(
+      this.#logger,
+      'BdkAccountRepository.insertMany started',
+      {
+        accountCount: accounts.length,
+      },
+    );
+
+    if (accounts.length === 0) {
+      succeeded = true;
+      logPerformanceDebug(
+        this.#logger,
+        'BdkAccountRepository.insertMany finished',
+        {
+          accountCount: accounts.length,
+          durationMs: getElapsedTimeMs(methodStartedAt),
+          succeeded,
+        },
+      );
+      return [];
     }
 
-    const [existingAccounts, existingDerivationPaths] = await Promise.all([
-      this.#snapClient.getState('accounts') as Promise<
-        SnapState['accounts'] | null
-      >,
-      this.#snapClient.getState('derivationPaths') as Promise<
-        SnapState['derivationPaths'] | null
-      >,
-    ]);
+    if (accounts.length === 1) {
+      try {
+        const result = [await this.insert(accounts[0] as BitcoinAccount)];
+        succeeded = true;
+        return result;
+      } finally {
+        logPerformanceDebug(
+          this.#logger,
+          'BdkAccountRepository.insertMany finished',
+          {
+            accountCount: accounts.length,
+            durationMs: getElapsedTimeMs(methodStartedAt),
+            succeeded,
+          },
+        );
+      }
+    }
 
-    await this.#snapClient.setState('accounts', {
-      ...(existingAccounts ?? {}),
-      ...Object.fromEntries(accountStateEntries),
-    });
+    try {
+      const prepareStartedAt = Date.now();
+      const accountStateEntries: [string, AccountState][] = [];
+      const derivationPathEntries: [string, string][] = [];
 
-    await this.#snapClient.setState('derivationPaths', {
-      ...(existingDerivationPaths ?? {}),
-      ...Object.fromEntries(derivationPathEntries),
-    });
+      for (const account of accounts) {
+        const { id, derivationPath } = account;
+        const walletData = account.takeStaged();
 
-    return accounts;
+        if (!walletData) {
+          throw new StorageError(
+            `Missing changeset data for account "${id}" for insertion.`,
+          );
+        }
+
+        accountStateEntries.push([
+          id,
+          {
+            wallet: walletData.to_json(),
+            inscriptions: [],
+            derivationPath,
+          },
+        ]);
+        derivationPathEntries.push([getDerivationPathKey(derivationPath), id]);
+      }
+      logPerformanceDebug(
+        this.#logger,
+        'BdkAccountRepository.insertMany account state prepared',
+        {
+          accountCount: accounts.length,
+          durationMs: getElapsedTimeMs(prepareStartedAt),
+        },
+      );
+
+      const stateReadStartedAt = Date.now();
+      const [existingAccounts, existingDerivationPaths] = await Promise.all([
+        this.#snapClient.getState('accounts') as Promise<
+          SnapState['accounts'] | null
+        >,
+        this.#snapClient.getState('derivationPaths') as Promise<
+          SnapState['derivationPaths'] | null
+        >,
+      ]);
+      logPerformanceDebug(
+        this.#logger,
+        'BdkAccountRepository.insertMany existing state read completed',
+        {
+          durationMs: getElapsedTimeMs(stateReadStartedAt),
+          existingAccountCount: Object.keys(existingAccounts ?? {}).length,
+          existingPathCount: Object.keys(existingDerivationPaths ?? {}).length,
+        },
+      );
+
+      const accountsWriteStartedAt = Date.now();
+      await this.#snapClient.setState('accounts', {
+        ...(existingAccounts ?? {}),
+        ...Object.fromEntries(accountStateEntries),
+      });
+      logPerformanceDebug(
+        this.#logger,
+        'BdkAccountRepository.insertMany accounts state write completed',
+        {
+          accountCount: accountStateEntries.length,
+          durationMs: getElapsedTimeMs(accountsWriteStartedAt),
+        },
+      );
+
+      const derivationPathsWriteStartedAt = Date.now();
+      await this.#snapClient.setState('derivationPaths', {
+        ...(existingDerivationPaths ?? {}),
+        ...Object.fromEntries(derivationPathEntries),
+      });
+      logPerformanceDebug(
+        this.#logger,
+        'BdkAccountRepository.insertMany derivation path state write completed',
+        {
+          durationMs: getElapsedTimeMs(derivationPathsWriteStartedAt),
+          pathCount: derivationPathEntries.length,
+        },
+      );
+
+      succeeded = true;
+      return accounts;
+    } finally {
+      logPerformanceDebug(
+        this.#logger,
+        'BdkAccountRepository.insertMany finished',
+        {
+          accountCount: accounts.length,
+          durationMs: getElapsedTimeMs(methodStartedAt),
+          succeeded,
+        },
+      );
+    }
   }
 
   async update(
