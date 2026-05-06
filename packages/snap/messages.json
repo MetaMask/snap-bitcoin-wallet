@@ -211,5 +211,47 @@
   },
   "confirmation.requestOrigin": {
     "message": "Request from"
+  },
+  "confirmation.signPsbt.title": {
+    "message": "Sign Transaction"
+  },
+  "confirmation.signPsbt.confirmButton": {
+    "message": "Sign"
+  },
+  "confirmation.signPsbt.psbt": {
+    "message": "Transaction (PSBT)"
+  },
+  "confirmation.signPsbt.options": {
+    "message": "Options"
+  },
+  "confirmation.signPsbt.options.fill": {
+    "message": "Auto-fill inputs"
+  },
+  "confirmation.signPsbt.options.broadcast": {
+    "message": "Broadcast after signing"
+  },
+  "confirmation.signPsbt.outputs": {
+    "message": "Transaction outputs"
+  },
+  "confirmation.signPsbt.output.change": {
+    "message": "Change"
+  },
+  "confirmation.signPsbt.output.opReturn": {
+    "message": "OP_RETURN (data)"
+  },
+  "confirmation.signPsbt.output.unknown": {
+    "message": "Unknown script"
+  },
+  "confirmation.signPsbt.inputs": {
+    "message": "Inputs"
+  },
+  "confirmation.signPsbt.rawPsbt": {
+    "message": "Raw PSBT"
+  },
+  "yes": {
+    "message": "Yes"
+  },
+  "no": {
+    "message": "No"
   }
 }

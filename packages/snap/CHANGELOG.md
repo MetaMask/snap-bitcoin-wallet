@@ -13,8 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Show a confirmation dialog before signing a PSBT from KeyringHandler and sending a transfer ([#591](https://github.com/MetaMask/snap-bitcoin-wallet/pull/591))
+- Add `resolveAccountAddress` method to KeyringHandler for dApp connectivity ([#590](https://github.com/MetaMask/snap-bitcoin-wallet/pull/590))
 - Bump `@metamask/keyring-api` from `^21.3.0` to `^22.0.0` ([#601](https://github.com/MetaMask/snap-bitcoin-wallet/pull/601))
 - Bump `@metamask/keyring-snap-sdk` from `^7.1.1` to `^8.0.0` ([#601](https://github.com/MetaMask/snap-bitcoin-wallet/pull/601))
+
+### Fixed
+
+- Preserve original error message and class when wrapping unknown errors at the handler boundary ([#600](https://github.com/MetaMask/snap-bitcoin-wallet/pull/600))
 
 ## [1.10.1]
 
