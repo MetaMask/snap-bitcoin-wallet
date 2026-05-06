@@ -301,6 +301,7 @@ export class KeyringHandler implements Keyring {
   async createAccounts(
     options: CreateAccountOptions,
   ): Promise<KeyringAccount[]> {
+    const start = Date.now();
     assertCreateAccountOptionIsSupported(options, [
       `${AccountCreationType.Bip44DeriveIndex}`,
       `${AccountCreationType.Bip44DeriveIndexRange}`,
@@ -367,7 +368,6 @@ export class KeyringHandler implements Keyring {
 
       // `AccountUseCases.createMany` is idempotent: if an account already exists
       // for the resolved derivation path, it will be returned as-is.
-      const start = Date.now();
       const accounts = await this.#accountsUseCases.createMany(
         indices.map((index) => ({
           network,
@@ -380,7 +380,7 @@ export class KeyringHandler implements Keyring {
       const result = accounts.map(mapToKeyringAccount);
       const end = Date.now();
       console.log(
-        `[PERFORMANCE DEBUG - BITCOIN SNAP] createAccounts took ${end - start} ms`,
+        `[PERFORMANCE DEBUG - BITCOIN SNAP] createAccounts took ${end - start} ms to create ${accounts.length} accounts`,
       );
       return result;
     } finally {
