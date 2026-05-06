@@ -986,6 +986,37 @@ describe('SendFlowUseCases', () => {
       expect(result).toBe(mockTransaction);
     });
 
+    it('marks the recipient as isMine when the address belongs to the account', async () => {
+      const recipientScript = {} as any;
+      (Address.from_string as jest.Mock).mockReturnValue({
+        script_pubkey: recipientScript,
+      });
+      mockAccount.isMine.mockReturnValue(true);
+
+      await useCases.confirmSendFlow(mockAccount, amount, toAddress);
+
+      expect(Address.from_string).toHaveBeenCalledWith(
+        toAddress,
+        mockAccount.network,
+      );
+      expect(mockAccount.isMine).toHaveBeenCalledWith(recipientScript);
+      expect(mockSendFlowRepository.insertConfirmSendForm).toHaveBeenCalledWith(
+        expect.objectContaining({ isMine: true }),
+      );
+    });
+
+    it('defaults isMine to false when the recipient address fails to parse', async () => {
+      (Address.from_string as jest.Mock).mockImplementation(() => {
+        throw new Error('Invalid address');
+      });
+
+      await useCases.confirmSendFlow(mockAccount, amount, toAddress);
+
+      expect(mockSendFlowRepository.insertConfirmSendForm).toHaveBeenCalledWith(
+        expect.objectContaining({ isMine: false }),
+      );
+    });
+
     it('builds a drain transaction when amount equals balance', async () => {
       const balanceAmount = mock<Amount>();
       balanceAmount.to_sat.mockReturnValue(BigInt(10000));

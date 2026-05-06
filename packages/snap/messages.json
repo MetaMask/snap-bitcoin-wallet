@@ -213,7 +213,7 @@
     "message": "Sending to your own address"
   },
   "confirmation.signAndSendTransaction.selfSend.description": {
-    "message": "The recipient address belongs to this wallet. The funds will stay in your account."
+    "message": "The recipient address belongs to this wallet. The amount will stay in your account, but network fees still apply."
   },
   "confirmation.requestOrigin": {
     "message": "Request from"

@@ -111,6 +111,17 @@ export class SendFlowUseCases {
     const psbt = templatePsbt.finish();
     const currency = networkToCurrencyUnit[account.network];
 
+    let isMine = false;
+    try {
+      const recipientScript = Address.from_string(
+        toAddress,
+        account.network,
+      ).script_pubkey;
+      isMine = account.isMine(recipientScript);
+    } catch {
+      isMine = false;
+    }
+
     // TODO: add all the necessary properties we need here
     const context: ConfirmSendFormContext = {
       from: account.publicAddress.toString(),
@@ -122,6 +133,7 @@ export class SendFlowUseCases {
       exchangeRate: await this.#getExchangeRate(account.network, fiatCurrency),
       network: account.network,
       locale,
+      isMine,
     };
 
     const interfaceId =
