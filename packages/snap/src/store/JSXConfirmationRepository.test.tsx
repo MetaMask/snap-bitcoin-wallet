@@ -28,6 +28,7 @@ import { UnifiedSendFormView } from '../infra/jsx/unified-send-flow';
 jest.mock('@metamask/bitcoindevkit', () => ({
   Address: {
     from_script: jest.fn(),
+    from_string: jest.fn(),
   },
 }));
 
@@ -110,10 +111,12 @@ describe('JSXConfirmationRepository', () => {
   });
 
   describe('insertSendTransfer', () => {
+    const mockRecipientScript = mock<ScriptBuf>();
     const mockAccount = mock<BitcoinAccount>({
       id: 'account-id',
       network: 'bitcoin',
       publicAddress: mock<Address>({ toString: () => 'fromAddress' }),
+      isMine: () => false,
     });
     const mockPsbt = mock<Psbt>({
       toString: () => 'serialized-psbt',
@@ -131,6 +134,9 @@ describe('JSXConfirmationRepository', () => {
       mockChainClient.getExplorerUrl.mockReturnValue('https://mempool.space');
       mockRatesClient.spotPrices.mockResolvedValue(
         mock<SpotPrice>({ price: 50000 }),
+      );
+      MockedBdkAddress.from_string.mockReturnValue(
+        mock<Address>({ script_pubkey: mockRecipientScript }),
       );
     });
 
@@ -151,6 +157,7 @@ describe('JSXConfirmationRepository', () => {
         locale: 'en',
         psbt: 'serialized-psbt',
         origin,
+        isMine: false,
       };
 
       expect(mockSnapClient.getPreferences).toHaveBeenCalled();
@@ -170,6 +177,44 @@ describe('JSXConfirmationRepository', () => {
       );
     });
 
+    it('marks the recipient as isMine when it belongs to the account', async () => {
+      const selfSendAccount = mock<BitcoinAccount>({
+        id: 'account-id',
+        network: 'bitcoin',
+        publicAddress: mock<Address>({ toString: () => 'fromAddress' }),
+        isMine: () => true,
+      });
+
+      await repo.insertSendTransfer(
+        selfSendAccount,
+        mockPsbt,
+        recipient,
+        origin,
+      );
+
+      expect(MockedBdkAddress.from_string).toHaveBeenCalledWith(
+        recipient.address,
+        selfSendAccount.network,
+      );
+      expect(mockSnapClient.createInterface).toHaveBeenCalledWith(
+        undefined,
+        expect.objectContaining({ isMine: true }),
+      );
+    });
+
+    it('defaults isMine to false when the recipient address fails to parse', async () => {
+      MockedBdkAddress.from_string.mockImplementation(() => {
+        throw new Error('Invalid address');
+      });
+
+      await repo.insertSendTransfer(mockAccount, mockPsbt, recipient, origin);
+
+      expect(mockSnapClient.createInterface).toHaveBeenCalledWith(
+        undefined,
+        expect.objectContaining({ isMine: false }),
+      );
+    });
+
     it('throws UserActionError if the user cancels', async () => {
       mockSnapClient.displayConfirmation.mockResolvedValue(false);
       await expect(
@@ -182,6 +227,7 @@ describe('JSXConfirmationRepository', () => {
         id: 'account-id',
         network: 'testnet',
         publicAddress: mock<Address>({ toString: () => 'fromAddress' }),
+        isMine: () => false,
       });
 
       await repo.insertSendTransfer(

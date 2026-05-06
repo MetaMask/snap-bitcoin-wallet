@@ -18,6 +18,7 @@ export type ConfirmSendFormContext = {
   locale: string;
   psbt: string;
   origin?: string;
+  isMine?: boolean;
 };
 
 export type SendFormContext = {
