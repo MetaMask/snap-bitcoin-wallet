@@ -367,6 +367,7 @@ export class KeyringHandler implements Keyring {
 
       // `AccountUseCases.createMany` is idempotent: if an account already exists
       // for the resolved derivation path, it will be returned as-is.
+      const start = performance.now();
       const accounts = await this.#accountsUseCases.createMany(
         indices.map((index) => ({
           network,
@@ -376,7 +377,12 @@ export class KeyringHandler implements Keyring {
           synchronize: false,
         })),
       );
-      return accounts.map(mapToKeyringAccount);
+      const result = accounts.map(mapToKeyringAccount);
+      const end = performance.now();
+      console.log(
+        `[PERFORMANCE DEBUG - BITCOIN SNAP] createAccounts took ${end - start}ms`,
+      );
+      return result;
     } finally {
       if (traceStarted) {
         await runSnapActionSafely(
