@@ -1,4 +1,5 @@
 import type { WalletTx } from '@metamask/bitcoindevkit';
+import { Amount } from '@metamask/bitcoindevkit';
 import type { JsonSLIP10Node } from '@metamask/key-tree';
 import { SLIP10Node } from '@metamask/key-tree';
 import { KeyringEvent } from '@metamask/keyring-api';
@@ -15,6 +16,7 @@ import { DialogType } from '@metamask/snaps-sdk';
 
 import type { BaseError, BitcoinAccount, SnapClient } from '../entities';
 import {
+  computeDisplayBalanceSats,
   TrackingSnapEvent,
   networkToCurrencyUnit,
   AssertionError,
@@ -111,7 +113,9 @@ export class SnapClientAdapter implements SnapClient {
         ...acc,
         [account.id]: {
           [networkToCaip19[account.network]]: {
-            amount: account.balance.trusted_spendable.to_btc().toString(),
+            amount: Amount.from_sat(computeDisplayBalanceSats(account))
+              .to_btc()
+              .toString(),
             unit: networkToCurrencyUnit[account.network],
           },
         },

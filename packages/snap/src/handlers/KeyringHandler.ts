@@ -1,4 +1,5 @@
 import type { AddressType } from '@metamask/bitcoindevkit';
+import { Amount } from '@metamask/bitcoindevkit';
 import {
   BtcAccountType,
   BtcScope,
@@ -45,6 +46,7 @@ import {
 
 import type { BitcoinAccount, Logger, SnapClient } from '../entities';
 import {
+  computeDisplayBalanceSats,
   FormatError,
   InexistentMethodError,
   networkToCurrencyUnit,
@@ -316,7 +318,9 @@ export class KeyringHandler implements Keyring {
     id: string,
   ): Promise<Record<CaipAssetType, Balance>> {
     const account = await this.#accountsUseCases.get(id);
-    const balance = account.balance.trusted_spendable.to_btc().toString();
+    const balance = Amount.from_sat(computeDisplayBalanceSats(account))
+      .to_btc()
+      .toString();
 
     return {
       [networkToCaip19[account.network]]: {
