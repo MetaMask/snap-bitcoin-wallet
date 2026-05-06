@@ -33,7 +33,6 @@ import {
   WalletError,
 } from '../entities';
 import { CronMethod } from '../handlers/CronHandler';
-import { getElapsedTimeMs, logPerformanceDebug } from '../utils/performance';
 import { runSnapActionSafely } from '../utils/snapHelpers';
 
 export type DiscoverAccountParams = {
@@ -273,213 +272,120 @@ export class AccountUseCases {
   }
 
   async createMany(reqs: CreateAccountParams[]): Promise<BitcoinAccount[]> {
-    const methodStartedAt = Date.now();
-    let createdCount = 0;
-    let resultCount = 0;
-    let succeeded = false;
-
-    logPerformanceDebug(this.#logger, 'AccountUseCases.createMany started', {
-      requestCount: reqs.length,
-    });
-
     if (reqs.length === 0) {
-      succeeded = true;
-      logPerformanceDebug(this.#logger, 'AccountUseCases.createMany finished', {
-        createdCount,
-        durationMs: getElapsedTimeMs(methodStartedAt),
-        requestCount: reqs.length,
-        resultCount,
-        succeeded,
-      });
       return [];
     }
 
-    try {
-      const { accounts, createdAccountKeys } = await this.#runAccountMutation(
-        async () => {
-          const mutationStartedAt = Date.now();
-          const entries = reqs.map((req, index) => {
-            const derivationPath = getAccountDerivationPath(req);
-            return {
-              req,
-              index,
-              derivationPath,
-              pathKey: getDerivationPathKey(derivationPath),
-            };
-          });
-
-          const uniqueEntriesByPath = new Map<
-            string,
-            (typeof entries)[number]
-          >();
-          for (const entry of entries) {
-            if (!uniqueEntriesByPath.has(entry.pathKey)) {
-              uniqueEntriesByPath.set(entry.pathKey, entry);
-            }
-          }
-          const uniqueEntries = [...uniqueEntriesByPath.values()];
-
-          logPerformanceDebug(
-            this.#logger,
-            'AccountUseCases.createMany dedupe completed',
-            {
-              duplicateCount: entries.length - uniqueEntries.length,
-              durationMs: getElapsedTimeMs(mutationStartedAt),
-              requestCount: entries.length,
-              uniqueCount: uniqueEntries.length,
-            },
-          );
-
-          const lookupStartedAt = Date.now();
-          const existingAccounts = await this.#repository.getByDerivationPaths(
-            uniqueEntries.map(({ derivationPath }) => derivationPath),
-          );
-          logPerformanceDebug(
-            this.#logger,
-            'AccountUseCases.createMany repository lookup completed',
-            {
-              durationMs: getElapsedTimeMs(lookupStartedAt),
-              requestedPathCount: uniqueEntries.length,
-            },
-          );
-          const existingAccountsByPath = new Map<string, BitcoinAccount>();
-
-          uniqueEntries.forEach((entry, index) => {
-            const account = existingAccounts[index];
-            if (account && account.network === entry.req.network) {
-              existingAccountsByPath.set(entry.pathKey, account);
-            }
-          });
-
-          const entriesToCreate = uniqueEntries.filter(
-            ({ pathKey }) => !existingAccountsByPath.has(pathKey),
-          );
-          const createStartedAt = Date.now();
-          const newAccounts = await runWithConcurrencyLimit(
-            entriesToCreate,
-            CREATE_ACCOUNTS_CONCURRENCY,
-            async ({ derivationPath, req }) => {
-              const newAccount = await this.#repository.create(
-                derivationPath,
-                req.network,
-                req.addressType,
-              );
-              newAccount.revealNextAddress();
-              return newAccount;
-            },
-          );
-          logPerformanceDebug(
-            this.#logger,
-            'AccountUseCases.createMany missing accounts created',
-            {
-              createdCount: newAccounts.length,
-              durationMs: getElapsedTimeMs(createStartedAt),
-              existingCount: existingAccountsByPath.size,
-              requestedPathCount: uniqueEntries.length,
-            },
-          );
-
-          if (newAccounts.length > 0) {
-            const insertStartedAt = Date.now();
-            await this.#repository.insertMany(newAccounts);
-            logPerformanceDebug(
-              this.#logger,
-              'AccountUseCases.createMany insertMany completed',
-              {
-                durationMs: getElapsedTimeMs(insertStartedAt),
-                insertedCount: newAccounts.length,
-              },
-            );
-          }
-
-          const newAccountsByPath = new Map(
-            entriesToCreate.map((entry, index) => [
-              entry.pathKey,
-              newAccounts[index] as BitcoinAccount,
-            ]),
-          );
-
-          const accountsInOrder = entries.map((entry) => {
-            const account =
-              existingAccountsByPath.get(entry.pathKey) ??
-              newAccountsByPath.get(entry.pathKey);
-
-            if (!account) {
-              throw new AssertionError('Failed to create account', {
-                index: entry.index,
-                derivationPath: entry.derivationPath,
-              });
-            }
-
-            return account;
-          });
-
+    const { accounts, createdAccountKeys } = await this.#runAccountMutation(
+      async () => {
+        const entries = reqs.map((req, index) => {
+          const derivationPath = getAccountDerivationPath(req);
           return {
-            accounts: accountsInOrder,
-            createdAccountKeys: new Set(newAccountsByPath.keys()),
+            req,
+            index,
+            derivationPath,
+            pathKey: getDerivationPathKey(derivationPath),
           };
-        },
-      );
+        });
 
-      createdCount = createdAccountKeys.size;
-      resultCount = accounts.length;
-
-      const eventsStartedAt = Date.now();
-      for (const [index, account] of accounts.entries()) {
-        const req = reqs[index] as CreateAccountParams;
-        await this.#snapClient.emitAccountCreatedEvent(
-          account,
-          req.correlationId,
-          req.accountName,
-        );
-      }
-      logPerformanceDebug(
-        this.#logger,
-        'AccountUseCases.createMany account-created events completed',
-        {
-          durationMs: getElapsedTimeMs(eventsStartedAt),
-          eventCount: accounts.length,
-        },
-      );
-
-      const scheduleStartedAt = Date.now();
-      const scheduledAccountIds = new Set<string>();
-      for (const [index, account] of accounts.entries()) {
-        const req = reqs[index] as CreateAccountParams;
-        const pathKey = getDerivationPathKey(getAccountDerivationPath(req));
-        if (
-          req.synchronize &&
-          createdAccountKeys.has(pathKey) &&
-          !scheduledAccountIds.has(account.id)
-        ) {
-          scheduledAccountIds.add(account.id);
-          await this.#snapClient.scheduleBackgroundEvent({
-            duration: 'PT1S',
-            method: CronMethod.FullScanAccount,
-            params: { accountId: account.id },
-          });
+        const uniqueEntriesByPath = new Map<string, (typeof entries)[number]>();
+        for (const entry of entries) {
+          if (!uniqueEntriesByPath.has(entry.pathKey)) {
+            uniqueEntriesByPath.set(entry.pathKey, entry);
+          }
         }
-      }
-      logPerformanceDebug(
-        this.#logger,
-        'AccountUseCases.createMany background scheduling completed',
-        {
-          durationMs: getElapsedTimeMs(scheduleStartedAt),
-          scheduledCount: scheduledAccountIds.size,
-        },
-      );
+        const uniqueEntries = [...uniqueEntriesByPath.values()];
 
-      succeeded = true;
-      return accounts;
-    } finally {
-      logPerformanceDebug(this.#logger, 'AccountUseCases.createMany finished', {
-        createdCount,
-        durationMs: getElapsedTimeMs(methodStartedAt),
-        requestCount: reqs.length,
-        resultCount,
-        succeeded,
-      });
+        const existingAccounts = await this.#repository.getByDerivationPaths(
+          uniqueEntries.map(({ derivationPath }) => derivationPath),
+        );
+        const existingAccountsByPath = new Map<string, BitcoinAccount>();
+
+        uniqueEntries.forEach((entry, index) => {
+          const account = existingAccounts[index];
+          if (account && account.network === entry.req.network) {
+            existingAccountsByPath.set(entry.pathKey, account);
+          }
+        });
+
+        const entriesToCreate = uniqueEntries.filter(
+          ({ pathKey }) => !existingAccountsByPath.has(pathKey),
+        );
+        const newAccounts = await runWithConcurrencyLimit(
+          entriesToCreate,
+          CREATE_ACCOUNTS_CONCURRENCY,
+          async ({ derivationPath, req }) => {
+            const newAccount = await this.#repository.create(
+              derivationPath,
+              req.network,
+              req.addressType,
+            );
+            newAccount.revealNextAddress();
+            return newAccount;
+          },
+        );
+
+        if (newAccounts.length > 0) {
+          await this.#repository.insertMany(newAccounts);
+        }
+
+        const newAccountsByPath = new Map(
+          entriesToCreate.map((entry, index) => [
+            entry.pathKey,
+            newAccounts[index] as BitcoinAccount,
+          ]),
+        );
+
+        const accountsInOrder = entries.map((entry) => {
+          const account =
+            existingAccountsByPath.get(entry.pathKey) ??
+            newAccountsByPath.get(entry.pathKey);
+
+          if (!account) {
+            throw new AssertionError('Failed to create account', {
+              index: entry.index,
+              derivationPath: entry.derivationPath,
+            });
+          }
+
+          return account;
+        });
+
+        return {
+          accounts: accountsInOrder,
+          createdAccountKeys: new Set(newAccountsByPath.keys()),
+        };
+      },
+    );
+
+    for (const [index, account] of accounts.entries()) {
+      const req = reqs[index] as CreateAccountParams;
+      await this.#snapClient.emitAccountCreatedEvent(
+        account,
+        req.correlationId,
+        req.accountName,
+      );
     }
+
+    const scheduledAccountIds = new Set<string>();
+    for (const [index, account] of accounts.entries()) {
+      const req = reqs[index] as CreateAccountParams;
+      const pathKey = getDerivationPathKey(getAccountDerivationPath(req));
+      if (
+        req.synchronize &&
+        createdAccountKeys.has(pathKey) &&
+        !scheduledAccountIds.has(account.id)
+      ) {
+        scheduledAccountIds.add(account.id);
+        await this.#snapClient.scheduleBackgroundEvent({
+          duration: 'PT1S',
+          method: CronMethod.FullScanAccount,
+          params: { accountId: account.id },
+        });
+      }
+    }
+
+    return accounts;
   }
 
   async synchronize(
