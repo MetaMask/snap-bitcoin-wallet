@@ -48,6 +48,82 @@ export type CreateAccountParams = DiscoverAccountParams & {
   accountName?: string;
 };
 
+const CREATE_ACCOUNTS_CONCURRENCY = 4;
+
+/**
+ * @param req - Account creation or discovery request.
+ * @returns The BIP-44 account derivation path.
+ */
+function getAccountDerivationPath(req: DiscoverAccountParams): string[] {
+  return [
+    req.entropySource,
+    `${addressTypeToPurpose[req.addressType]}'`,
+    `${networkToCoinType[req.network]}'`,
+    `${req.index}'`,
+  ];
+}
+
+/**
+ * @param derivationPath - Split derivation path.
+ * @returns Storage key for a derivation path.
+ */
+function getDerivationPathKey(derivationPath: string[]): string {
+  return derivationPath.join('/');
+}
+
+/**
+ * Map items to results with at most `concurrency` in-flight async operations.
+ * Output order matches `items` order.
+ *
+ * @param items - Values to map in pool order.
+ * @param concurrency - Maximum number of concurrent mapper executions.
+ * @param mapper - Async function applied to each item.
+ * @returns Results in the same order as `items`.
+ */
+async function runWithConcurrencyLimit<Item, Result>(
+  items: readonly Item[],
+  concurrency: number,
+  mapper: (item: Item, index: number) => Promise<Result>,
+): Promise<Result[]> {
+  if (items.length === 0) {
+    return [];
+  }
+
+  const results: Result[] = new Array(items.length);
+  let next = 0;
+  let firstError: unknown;
+  let hasError = false;
+
+  const worker = async (): Promise<void> => {
+    while (!hasError) {
+      const idx = next;
+      next += 1;
+      if (idx >= items.length) {
+        return;
+      }
+
+      try {
+        results[idx] = await mapper(items[idx] as Item, idx);
+      } catch (error) {
+        if (!hasError) {
+          firstError = error;
+          hasError = true;
+        }
+        return;
+      }
+    }
+  };
+
+  const poolSize = Math.min(Math.max(1, concurrency), items.length);
+  await Promise.all(Array.from({ length: poolSize }, async () => worker()));
+
+  if (hasError) {
+    throw firstError;
+  }
+
+  return results;
+}
+
 export class AccountUseCases {
   readonly #logger: Logger;
 
@@ -64,6 +140,8 @@ export class AccountUseCases {
   readonly #fallbackFeeRate: number;
 
   readonly #targetBlocksConfirmation: number;
+
+  #accountMutationQueue: Promise<void> = Promise.resolve();
 
   constructor(
     logger: Logger,
@@ -109,14 +187,8 @@ export class AccountUseCases {
   async discover(req: DiscoverAccountParams): Promise<BitcoinAccount> {
     this.#logger.debug('Discovering Bitcoin account. Request: %o', req);
 
-    const { addressType, index, network, entropySource } = req;
-
-    const derivationPath = [
-      entropySource,
-      `${addressTypeToPurpose[addressType]}'`,
-      `${networkToCoinType[network]}'`,
-      `${index}'`,
-    ];
+    const { addressType, network } = req;
+    const derivationPath = getAccountDerivationPath(req);
 
     // Idempotent account creation + ensures only one account per derivation path
     const account = await this.#repository.getByDerivationPath(derivationPath);
@@ -146,67 +218,174 @@ export class AccountUseCases {
   async create(req: CreateAccountParams): Promise<BitcoinAccount> {
     this.#logger.debug('Creating new Bitcoin account. Request: %o', req);
 
-    const {
-      addressType,
-      index,
-      network,
-      entropySource,
-      correlationId,
-      accountName,
-      synchronize,
-    } = req;
+    return this.#runAccountMutation(async () => {
+      const { addressType, network, correlationId, accountName, synchronize } =
+        req;
+      const derivationPath = getAccountDerivationPath(req);
 
-    const derivationPath = [
-      entropySource,
-      `${addressTypeToPurpose[addressType]}'`,
-      `${networkToCoinType[network]}'`,
-      `${index}'`,
-    ];
+      // Idempotent account creation + ensures only one account per derivation path
+      const account =
+        await this.#repository.getByDerivationPath(derivationPath);
+      if (account && account.network === network) {
+        this.#logger.debug('Account already exists: %s,', account.id);
+        await this.#snapClient.emitAccountCreatedEvent(
+          account,
+          correlationId,
+          accountName,
+        );
+        return account;
+      }
 
-    // Idempotent account creation + ensures only one account per derivation path
-    const account = await this.#repository.getByDerivationPath(derivationPath);
-    if (account && account.network === network) {
-      this.#logger.debug('Account already exists: %s,', account.id);
+      const newAccount = await this.#repository.create(
+        derivationPath,
+        network,
+        addressType,
+      );
+
+      newAccount.revealNextAddress();
+
+      await this.#repository.insert(newAccount);
+
+      // First notify the event has been created, then schedule full scan.
       await this.#snapClient.emitAccountCreatedEvent(
-        account,
+        newAccount,
         correlationId,
         accountName,
       );
-      return account;
+
+      if (synchronize) {
+        await this.#snapClient.scheduleBackgroundEvent({
+          duration: 'PT1S',
+          method: CronMethod.FullScanAccount,
+          params: { accountId: newAccount.id },
+        });
+      }
+
+      this.#logger.info(
+        'Bitcoin account created successfully: %s. Public address: %s, Request: %o',
+        newAccount.id,
+        newAccount.publicAddress,
+        req,
+      );
+      return newAccount;
+    });
+  }
+
+  async createMany(reqs: CreateAccountParams[]): Promise<BitcoinAccount[]> {
+    if (reqs.length === 0) {
+      return [];
     }
 
-    const newAccount = await this.#repository.create(
-      derivationPath,
-      network,
-      addressType,
+    const { accounts, createdAccountKeys } = await this.#runAccountMutation(
+      async () => {
+        const entries = reqs.map((req, index) => {
+          const derivationPath = getAccountDerivationPath(req);
+          return {
+            req,
+            index,
+            derivationPath,
+            pathKey: getDerivationPathKey(derivationPath),
+          };
+        });
+
+        const uniqueEntriesByPath = new Map<string, (typeof entries)[number]>();
+        for (const entry of entries) {
+          if (!uniqueEntriesByPath.has(entry.pathKey)) {
+            uniqueEntriesByPath.set(entry.pathKey, entry);
+          }
+        }
+        const uniqueEntries = [...uniqueEntriesByPath.values()];
+
+        const existingAccounts = await this.#repository.getByDerivationPaths(
+          uniqueEntries.map(({ derivationPath }) => derivationPath),
+        );
+        const existingAccountsByPath = new Map<string, BitcoinAccount>();
+
+        uniqueEntries.forEach((entry, index) => {
+          const account = existingAccounts[index];
+          if (account && account.network === entry.req.network) {
+            existingAccountsByPath.set(entry.pathKey, account);
+          }
+        });
+
+        const entriesToCreate = uniqueEntries.filter(
+          ({ pathKey }) => !existingAccountsByPath.has(pathKey),
+        );
+        const newAccounts = await runWithConcurrencyLimit(
+          entriesToCreate,
+          CREATE_ACCOUNTS_CONCURRENCY,
+          async ({ derivationPath, req }) => {
+            const newAccount = await this.#repository.create(
+              derivationPath,
+              req.network,
+              req.addressType,
+            );
+            newAccount.revealNextAddress();
+            return newAccount;
+          },
+        );
+
+        if (newAccounts.length > 0) {
+          await this.#repository.insertMany(newAccounts);
+        }
+
+        const newAccountsByPath = new Map(
+          entriesToCreate.map((entry, index) => [
+            entry.pathKey,
+            newAccounts[index] as BitcoinAccount,
+          ]),
+        );
+
+        const accountsInOrder = entries.map((entry) => {
+          const account =
+            existingAccountsByPath.get(entry.pathKey) ??
+            newAccountsByPath.get(entry.pathKey);
+
+          if (!account) {
+            throw new AssertionError('Failed to create account', {
+              index: entry.index,
+              derivationPath: entry.derivationPath,
+            });
+          }
+
+          return account;
+        });
+
+        return {
+          accounts: accountsInOrder,
+          createdAccountKeys: new Set(newAccountsByPath.keys()),
+        };
+      },
     );
 
-    newAccount.revealNextAddress();
-
-    await this.#repository.insert(newAccount);
-
-    // First notify the event has been created, then schedule full scan.
-    await this.#snapClient.emitAccountCreatedEvent(
-      newAccount,
-      correlationId,
-      accountName,
-    );
-
-    if (synchronize) {
-      await this.#snapClient.scheduleBackgroundEvent({
-        duration: 'PT1S',
-        method: CronMethod.FullScanAccount,
-        params: { accountId: newAccount.id },
-      });
+    for (const [index, account] of accounts.entries()) {
+      const req = reqs[index] as CreateAccountParams;
+      await this.#snapClient.emitAccountCreatedEvent(
+        account,
+        req.correlationId,
+        req.accountName,
+      );
     }
 
-    this.#logger.info(
-      'Bitcoin account created successfully: %s. Public address: %s, Request: %o',
-      newAccount.id,
-      newAccount.publicAddress,
-      req,
-    );
-    return newAccount;
+    const scheduledAccountIds = new Set<string>();
+    for (const [index, account] of accounts.entries()) {
+      const req = reqs[index] as CreateAccountParams;
+      const pathKey = getDerivationPathKey(getAccountDerivationPath(req));
+      if (
+        req.synchronize &&
+        createdAccountKeys.has(pathKey) &&
+        !scheduledAccountIds.has(account.id)
+      ) {
+        scheduledAccountIds.add(account.id);
+        await this.#snapClient.scheduleBackgroundEvent({
+          duration: 'PT1S',
+          method: CronMethod.FullScanAccount,
+          params: { accountId: account.id },
+        });
+      }
+    }
+
+    return accounts;
   }
 
   async synchronize(
@@ -331,15 +510,17 @@ export class AccountUseCases {
   async delete(id: string): Promise<void> {
     this.#logger.debug('Deleting account: %s', id);
 
-    const account = await this.#repository.get(id);
-    if (!account) {
-      throw new NotFoundError('Account not found', { id });
-    }
+    await this.#runAccountMutation(async () => {
+      const account = await this.#repository.get(id);
+      if (!account) {
+        throw new NotFoundError('Account not found', { id });
+      }
 
-    await this.#snapClient.emitAccountDeletedEvent(id);
-    await this.#repository.delete(id);
+      await this.#snapClient.emitAccountDeletedEvent(id);
+      await this.#repository.delete(id);
 
-    this.#logger.info('Account deleted successfully: %s', account.id);
+      this.#logger.info('Account deleted successfully: %s', account.id);
+    });
   }
 
   async fillPsbt(
@@ -662,6 +843,24 @@ export class AccountUseCases {
     }
 
     return txid;
+  }
+
+  async #runAccountMutation<Result>(
+    fn: () => Promise<Result>,
+  ): Promise<Result> {
+    const previousMutation = this.#accountMutationQueue;
+    let releaseMutation: () => void = () => undefined;
+    this.#accountMutationQueue = new Promise<void>((resolve) => {
+      releaseMutation = resolve;
+    });
+
+    await previousMutation;
+
+    try {
+      return await fn();
+    } finally {
+      releaseMutation();
+    }
   }
 
   #checkCapability(

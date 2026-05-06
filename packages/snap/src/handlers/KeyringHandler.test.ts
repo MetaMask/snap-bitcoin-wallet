@@ -11,6 +11,7 @@ import type {
 import { Address } from '@metamask/bitcoindevkit';
 import type {
   DiscoveredAccount,
+  KeyringAccount,
   KeyringResponse,
   Transaction as KeyringTransaction,
   KeyringRequest,
@@ -53,6 +54,17 @@ jest.mock('@metamask/bitcoindevkit', () => {
     },
   };
 });
+
+/**
+ * Narrows `T | undefined` after `expect(value).toBeDefined()` for use in tests.
+ *
+ * @param value - Possibly undefined value.
+ * @returns The same value narrowed to `T`.
+ */
+function expectDefined<T>(value: T | undefined): T {
+  expect(value).toBeDefined();
+  return value as T;
+}
 
 describe('KeyringHandler', () => {
   const mockKeyringRequest = mock<KeyringRequestHandler>();
@@ -399,6 +411,14 @@ describe('KeyringHandler', () => {
   describe('createAccounts', () => {
     const entropySource = 'some-source';
 
+    const mnemonicGroupIndex = (account: KeyringAccount): number => {
+      const { entropy } = account.options;
+      if (entropy?.type !== 'mnemonic') {
+        throw new Error('expected mnemonic entropy');
+      }
+      return entropy.groupIndex;
+    };
+
     const buildMockAccount = (index: number): BitcoinAccount =>
       mock<BitcoinAccount>({
         id: `id-${index}`,
@@ -416,8 +436,8 @@ describe('KeyringHandler', () => {
       });
 
     it('creates a single account for Bip44DeriveIndex', async () => {
-      const account = buildMockAccount(2);
-      mockAccounts.create.mockResolvedValue(account);
+      const bitcoinAccount = buildMockAccount(2);
+      mockAccounts.createMany.mockResolvedValue([bitcoinAccount]);
 
       const result = await handler.createAccounts({
         type: AccountCreationType.Bip44DeriveIndex,
@@ -425,20 +445,25 @@ describe('KeyringHandler', () => {
         entropySource,
       });
 
-      expect(mockAccounts.create).toHaveBeenCalledTimes(1);
-      expect(mockAccounts.create).toHaveBeenCalledWith({
-        network: 'bitcoin',
-        entropySource,
-        index: 2,
-        addressType: 'p2wpkh',
-        synchronize: false,
-      });
+      expect(mockAccounts.createMany).toHaveBeenCalledTimes(1);
+      expect(mockAccounts.createMany).toHaveBeenCalledWith([
+        {
+          network: 'bitcoin',
+          entropySource,
+          index: 2,
+          addressType: 'p2wpkh',
+          synchronize: false,
+        },
+      ]);
       expect(result).toHaveLength(1);
+      const keyringAccount = expectDefined(result[0]);
+      expect(keyringAccount.id).toBe('id-2');
+      expect(mnemonicGroupIndex(keyringAccount)).toBe(2);
     });
 
     it('creates an inclusive range of accounts for Bip44DeriveIndexRange', async () => {
-      mockAccounts.create.mockImplementation(async ({ index }) =>
-        buildMockAccount(index),
+      mockAccounts.createMany.mockResolvedValue(
+        [0, 1, 2].map(buildMockAccount),
       );
 
       const result = await handler.createAccounts({
@@ -447,20 +472,107 @@ describe('KeyringHandler', () => {
         entropySource,
       });
 
-      expect(mockAccounts.create).toHaveBeenCalledTimes(3);
-      const calledIndices = mockAccounts.create.mock.calls
-        .map((call) => (call[0] as { index: number }).index)
-        .sort((a, b) => a - b);
-      expect(calledIndices).toStrictEqual([0, 1, 2]);
-      mockAccounts.create.mock.calls.forEach((call) => {
-        expect(call[0]).toMatchObject({
+      expect(mockAccounts.createMany).toHaveBeenCalledTimes(1);
+      expect(mockAccounts.createMany).toHaveBeenCalledWith(
+        [0, 1, 2].map((index) => ({
           network: 'bitcoin',
           entropySource,
+          index,
           addressType: 'p2wpkh',
           synchronize: false,
-        });
-      });
+        })),
+      );
       expect(result).toHaveLength(3);
+      expect(result.map((a) => mnemonicGroupIndex(a))).toStrictEqual([0, 1, 2]);
+    });
+
+    it('creates one account when range from and to are equal', async () => {
+      mockAccounts.createMany.mockResolvedValue([buildMockAccount(9)]);
+
+      const result = await handler.createAccounts({
+        type: AccountCreationType.Bip44DeriveIndexRange,
+        range: { from: 9, to: 9 },
+        entropySource,
+      });
+
+      expect(mockAccounts.createMany).toHaveBeenCalledTimes(1);
+      expect(mockAccounts.createMany).toHaveBeenCalledWith([
+        expect.objectContaining({ index: 9 }),
+      ]);
+      expect(result).toHaveLength(1);
+      expect(mnemonicGroupIndex(expectDefined(result[0]))).toBe(9);
+    });
+
+    it('creates accounts for a non-zero index range', async () => {
+      mockAccounts.createMany.mockResolvedValue(
+        [10, 11, 12].map(buildMockAccount),
+      );
+
+      await handler.createAccounts({
+        type: AccountCreationType.Bip44DeriveIndexRange,
+        range: { from: 10, to: 12 },
+        entropySource,
+      });
+
+      expect(mockAccounts.createMany).toHaveBeenCalledWith(
+        [10, 11, 12].map((index) => expect.objectContaining({ index })),
+      );
+    });
+
+    it('allows the maximum batch size of 100 accounts in one RPC', async () => {
+      const indices = Array.from({ length: 100 }, (_, index) => index);
+      mockAccounts.createMany.mockResolvedValue(indices.map(buildMockAccount));
+
+      const result = await handler.createAccounts({
+        type: AccountCreationType.Bip44DeriveIndexRange,
+        range: { from: 0, to: 99 },
+        entropySource,
+      });
+
+      expect(mockAccounts.createMany).toHaveBeenCalledTimes(1);
+      expect(mockAccounts.createMany).toHaveBeenCalledWith(
+        indices.map((index) => expect.objectContaining({ index })),
+      );
+      expect(result).toHaveLength(100);
+      expect(mnemonicGroupIndex(expectDefined(result[0]))).toBe(0);
+      expect(mnemonicGroupIndex(expectDefined(result[99]))).toBe(99);
+    });
+
+    it('returns accounts in the order returned by createMany', async () => {
+      mockAccounts.createMany.mockResolvedValue(
+        [0, 1, 2, 3, 4].map(buildMockAccount),
+      );
+
+      const result = await handler.createAccounts({
+        type: AccountCreationType.Bip44DeriveIndexRange,
+        range: { from: 0, to: 4 },
+        entropySource,
+      });
+
+      expect(result.map((a) => mnemonicGroupIndex(a))).toStrictEqual([
+        0, 1, 2, 3, 4,
+      ]);
+    });
+
+    it('rejects when the handler default address type is not P2WPKH', async () => {
+      const handlerNonSegwit = new KeyringHandler(
+        mockKeyringRequest,
+        mockAccounts,
+        'p2tr' as AddressType,
+        mockSnapClient,
+        mockLogger,
+      );
+
+      await expect(
+        handlerNonSegwit.createAccounts({
+          type: AccountCreationType.Bip44DeriveIndex,
+          groupIndex: 0,
+          entropySource,
+        }),
+      ).rejects.toThrow(
+        /Only native segwit \(P2WPKH\) addresses are supported/iu,
+      );
+      expect(mockAccounts.createMany).not.toHaveBeenCalled();
     });
 
     it('rejects an invalid index range when from is greater than to', async () => {
@@ -471,7 +583,22 @@ describe('KeyringHandler', () => {
           entropySource,
         }),
       ).rejects.toThrow(/invalid.*range|from must be/iu);
-      expect(mockAccounts.create).not.toHaveBeenCalled();
+      expect(mockAccounts.createMany).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      { from: -1, to: 0 },
+      { from: 0.5, to: 1 },
+      { from: 0, to: Number.MAX_SAFE_INTEGER + 1 },
+    ])('rejects invalid account index bounds %#', async (range) => {
+      await expect(
+        handler.createAccounts({
+          type: AccountCreationType.Bip44DeriveIndexRange,
+          range,
+          entropySource,
+        }),
+      ).rejects.toThrow(/non-negative integers/iu);
+      expect(mockAccounts.createMany).not.toHaveBeenCalled();
     });
 
     it('rejects batches larger than the per-RPC limit', async () => {
@@ -482,7 +609,7 @@ describe('KeyringHandler', () => {
           entropySource,
         }),
       ).rejects.toThrow(/more than 100 accounts/iu);
-      expect(mockAccounts.create).not.toHaveBeenCalled();
+      expect(mockAccounts.createMany).not.toHaveBeenCalled();
     });
 
     it('rejects unsupported creation types', async () => {
@@ -493,12 +620,12 @@ describe('KeyringHandler', () => {
           entropySource,
         }),
       ).rejects.toThrow(/not supported|unsupported/iu);
-      expect(mockAccounts.create).not.toHaveBeenCalled();
+      expect(mockAccounts.createMany).not.toHaveBeenCalled();
     });
 
-    it('propagates errors from create', async () => {
+    it('propagates errors from createMany', async () => {
       const error = new Error('create error');
-      mockAccounts.create.mockRejectedValue(error);
+      mockAccounts.createMany.mockRejectedValue(error);
 
       await expect(
         handler.createAccounts({
@@ -519,7 +646,7 @@ describe('KeyringHandler', () => {
       beforeEach(() => {
         mockSnapClient.startTrace.mockResolvedValue(undefined);
         mockSnapClient.endTrace.mockResolvedValue(undefined);
-        mockAccounts.create.mockResolvedValue(buildMockAccount(0));
+        mockAccounts.createMany.mockResolvedValue([buildMockAccount(0)]);
       });
 
       it('calls startTrace and endTrace with correct trace name', async () => {
@@ -534,7 +661,7 @@ describe('KeyringHandler', () => {
       });
 
       it('calls endTrace even if create fails', async () => {
-        mockAccounts.create.mockRejectedValue(new Error('boom'));
+        mockAccounts.createMany.mockRejectedValue(new Error('boom'));
 
         await expect(handler.createAccounts(options)).rejects.toThrow('boom');
         expect(mockSnapClient.endTrace).toHaveBeenCalledWith(

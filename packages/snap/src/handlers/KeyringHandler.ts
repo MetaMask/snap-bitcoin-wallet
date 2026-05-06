@@ -84,45 +84,6 @@ export const CreateAccountRequest = object({
 /** Upper bound on inclusive index range width for a single createAccounts RPC. */
 const MAX_CREATE_ACCOUNTS_PER_BATCH = 100;
 
-/** Max concurrent AccountUseCases.create calls within one batch. */
-const CREATE_ACCOUNTS_CONCURRENCY = 4;
-
-/**
- * Map items to results with at most `concurrency` in-flight async operations.
- * Output order matches `items` order.
- *
- * @param items - Values to map in pool order.
- * @param concurrency - Maximum number of concurrent mapper executions.
- * @param mapper - Async function applied to each item.
- * @returns Results in the same order as `items`.
- */
-async function runWithConcurrencyLimit<Item, Result>(
-  items: readonly Item[],
-  concurrency: number,
-  mapper: (item: Item, index: number) => Promise<Result>,
-): Promise<Result[]> {
-  if (items.length === 0) {
-    return [];
-  }
-  const results: Result[] = new Array(items.length);
-  let next = 0;
-
-  const worker = async (): Promise<void> => {
-    while (true) {
-      const idx = next;
-      next += 1;
-      if (idx >= items.length) {
-        return;
-      }
-      results[idx] = await mapper(items[idx] as Item, idx);
-    }
-  };
-
-  const poolSize = Math.min(Math.max(1, concurrency), items.length);
-  await Promise.all(Array.from({ length: poolSize }, async () => worker()));
-  return results;
-}
-
 export class KeyringHandler implements Keyring {
   readonly #accountsUseCases: AccountUseCases;
 
@@ -330,11 +291,6 @@ export class KeyringHandler implements Keyring {
   async createAccounts(
     options: CreateAccountOptions,
   ): Promise<KeyringAccount[]> {
-    console.log(
-      '[PERFORMANCE LOGS][BITCOIN SNAP] execute createAccounts method',
-      options,
-    );
-
     assertCreateAccountOptionIsSupported(options, [
       `${AccountCreationType.Bip44DeriveIndex}`,
       `${AccountCreationType.Bip44DeriveIndexRange}`,
@@ -346,6 +302,17 @@ export class KeyringHandler implements Keyring {
       options.type === AccountCreationType.Bip44DeriveIndex
         ? { from: options.groupIndex, to: options.groupIndex }
         : options.range;
+
+    if (
+      !Number.isSafeInteger(range.from) ||
+      !Number.isSafeInteger(range.to) ||
+      range.from < 0 ||
+      range.to < 0
+    ) {
+      throw new FormatError(
+        'Account index range is invalid: from and to must be non-negative integers',
+      );
+    }
 
     if (range.from > range.to) {
       throw new FormatError(
@@ -388,22 +355,18 @@ export class KeyringHandler implements Keyring {
         'startTrace',
       );
 
-      // `AccountUseCases.create` is idempotent: if an account already exists
+      // `AccountUseCases.createMany` is idempotent: if an account already exists
       // for the resolved derivation path, it will be returned as-is.
-      return await runWithConcurrencyLimit(
-        indices,
-        CREATE_ACCOUNTS_CONCURRENCY,
-        async (index) => {
-          const account = await this.#accountsUseCases.create({
-            network,
-            entropySource,
-            index,
-            addressType,
-            synchronize: false,
-          });
-          return mapToKeyringAccount(account);
-        },
+      const accounts = await this.#accountsUseCases.createMany(
+        indices.map((index) => ({
+          network,
+          entropySource,
+          index,
+          addressType,
+          synchronize: false,
+        })),
       );
+      return accounts.map(mapToKeyringAccount);
     } finally {
       if (traceStarted) {
         await runSnapActionSafely(
