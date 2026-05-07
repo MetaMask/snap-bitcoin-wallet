@@ -1,4 +1,12 @@
-import { parseRewardsMessage } from './validation';
+import type { AddressType } from '@metamask/bitcoindevkit';
+import { mock } from 'jest-mock-extended';
+
+import type { BitcoinAccount } from '../entities';
+import {
+  parseRewardsMessage,
+  validateDustLimit,
+  validateSelectedAccounts,
+} from './validation';
 
 /* eslint-disable @typescript-eslint/naming-convention */
 jest.mock('@metamask/bitcoindevkit', () => ({
@@ -11,6 +19,53 @@ jest.mock('@metamask/bitcoindevkit', () => ({
 }));
 
 describe('validation', () => {
+  describe('validateDustLimit', () => {
+    const makeAccount = (addressType: AddressType) =>
+      mock<BitcoinAccount>({ addressType });
+
+    it.each<{ type: AddressType; dust: bigint }>([
+      { type: 'p2pkh', dust: 546n },
+      { type: 'p2sh', dust: 540n },
+      { type: 'p2wsh', dust: 330n },
+      { type: 'p2tr', dust: 330n },
+      { type: 'p2wpkh', dust: 294n },
+    ])(
+      'returns valid for amount above dust limit for $type',
+      ({ type, dust }) => {
+        const amountBtc = (Number(dust) / 1e8 + 0.00000001).toFixed(8);
+        const mockFromBtc = { to_sat: () => dust + 1n };
+        const { Amount } = jest.requireMock('@metamask/bitcoindevkit');
+        Amount.from_btc.mockReturnValue(mockFromBtc);
+
+        const result = validateDustLimit(amountBtc, makeAccount(type));
+        expect(result.valid).toBe(true);
+      },
+    );
+
+    it('returns invalid for amount below dust limit', () => {
+      const mockFromBtc = { to_sat: () => 100n };
+      const { Amount } = jest.requireMock('@metamask/bitcoindevkit');
+      Amount.from_btc.mockReturnValue(mockFromBtc);
+
+      const result = validateDustLimit('0.000001', makeAccount('p2pkh'));
+      expect(result.valid).toBe(false);
+    });
+  });
+
+  describe('validateSelectedAccounts', () => {
+    it('does not throw when all account IDs exist', () => {
+      expect(() =>
+        validateSelectedAccounts(new Set(['a', 'b']), ['a', 'b', 'c']),
+      ).not.toThrow();
+    });
+
+    it('throws when an account ID does not exist', () => {
+      expect(() =>
+        validateSelectedAccounts(new Set(['a', 'x']), ['a', 'b']),
+      ).toThrow('Account IDs were not part of existing accounts.');
+    });
+  });
+
   describe('parseRewardsMessage', () => {
     const validBitcoinMainnetAddress =
       'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq';

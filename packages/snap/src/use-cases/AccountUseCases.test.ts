@@ -1554,72 +1554,11 @@ describe('AccountUseCases', () => {
     });
   });
 
-  describe('broadcastPsbt', () => {
-    const mockTxid = mock<Txid>();
-    const mockPsbt = mock<Psbt>();
-    const mockTransaction = mock<Transaction>({
-      compute_txid: jest.fn(),
-      clone: jest.fn(),
-    });
-    const mockWalletTx = mock<WalletTx>();
-    const mockAccount = mock<BitcoinAccount>({
-      network: 'bitcoin',
-      addressType: 'p2wpkh',
-      capabilities: [AccountCapability.BroadcastPsbt],
-    });
-
-    beforeEach(() => {
-      mockRepository.get.mockResolvedValue(mockAccount);
-      mockTransaction.compute_txid.mockReturnValue(mockTxid);
-      mockTransaction.clone.mockReturnThis();
-      mockAccount.extractTransaction.mockReturnValue(mockTransaction);
-      mockAccount.getTransaction.mockReturnValue(mockWalletTx);
-    });
-
-    it('throws if account is not found', async () => {
-      mockRepository.get.mockResolvedValue(null);
-
-      await expect(
-        useCases.broadcastPsbt('non-existent-id', mockPsbt, 'metamask'),
-      ).rejects.toThrow('Account not found');
-    });
-
-    it('returns canBeMalleable=false for a P2WPKH account', async () => {
-      const result = await useCases.broadcastPsbt(
-        'account-id',
-        mockPsbt,
-        'metamask',
-      );
-
-      expect(mockChain.broadcast).toHaveBeenCalled();
-      expect(result.txid).toBe(mockTxid);
-      expect(result.canBeMalleable).toBe(false);
-    });
-
-    it('returns canBeMalleable=true for a legacy P2PKH account', async () => {
-      const legacyAccount = { ...mockAccount, addressType: 'p2pkh' as const };
-      mockRepository.get.mockResolvedValueOnce(legacyAccount);
-
-      const result = await useCases.broadcastPsbt(
-        'account-id',
-        mockPsbt,
-        'metamask',
-      );
-
-      expect(result.txid).toBe(mockTxid);
-      expect(result.canBeMalleable).toBe(true);
-    });
-  });
-
   describe('sendTransfer', () => {
     const recipients = [
       {
         address: 'bcrt1qstku2y3pfh9av50lxj55arm8r5gj8tf2yv5nxz',
         amount: '1000',
-      },
-      {
-        address: 'bcrt1q4gfcga7jfjmm02zpvrh4ttc5k7lmnq2re52z2y',
-        amount: '2000',
       },
     ];
     const mockTxid = mock<Txid>();
@@ -1683,6 +1622,24 @@ describe('AccountUseCases', () => {
       mockTxBuilder.finish.mockReturnValue(mockFilledPsbt);
       mockTxBuilder.unspendable.mockReturnThis();
       mockChain.getFeeEstimates.mockResolvedValue(mockFeeEstimates);
+      mockRepository.getFrozenUTXOs.mockResolvedValue([]);
+    });
+
+    it('throws error if there are multiple recipients', async () => {
+      const multipleRecipients = [
+        { address: 'addr1', amount: '1000' },
+        { address: 'addr2', amount: '2000' },
+      ];
+
+      await expect(
+        useCases.sendTransfer('account-id', multipleRecipients, 'metamask'),
+      ).rejects.toThrow('There should be exactly one recipient');
+    });
+
+    it('throws error if there are no recipients', async () => {
+      await expect(
+        useCases.sendTransfer('account-id', [], 'metamask'),
+      ).rejects.toThrow('There should be exactly one recipient');
     });
 
     it('throws error if account is not found', async () => {
@@ -1696,7 +1653,6 @@ describe('AccountUseCases', () => {
     it('sends funds', async () => {
       mockAccount.getTransaction.mockReturnValue(mockWalletTx);
       mockTransaction.compute_txid.mockReturnValue(mockTxid);
-      mockTxBuilder.finish.mockReturnValueOnce(mockPsbt);
 
       const result = await useCases.sendTransfer(
         'account-id',
@@ -1708,10 +1664,6 @@ describe('AccountUseCases', () => {
       expect(mockTxBuilder.addRecipient).toHaveBeenCalledWith(
         '1000',
         'bcrt1qstku2y3pfh9av50lxj55arm8r5gj8tf2yv5nxz',
-      );
-      expect(mockTxBuilder.addRecipient).toHaveBeenCalledWith(
-        '2000',
-        'bcrt1q4gfcga7jfjmm02zpvrh4ttc5k7lmnq2re52z2y',
       );
       expect(mockChain.getFeeEstimates).toHaveBeenCalledWith(
         mockAccount.network,
@@ -1786,6 +1738,91 @@ describe('AccountUseCases', () => {
     });
   });
 
+  describe('broadcastPsbt', () => {
+    const mockTxid = mock<Txid>();
+    const mockPsbt = mock<Psbt>();
+    const mockTransaction = mock<Transaction>({
+      compute_txid: jest.fn(),
+      clone: jest.fn(),
+    });
+    const mockWalletTx = mock<WalletTx>();
+    const mockAccount = mock<BitcoinAccount>({
+      network: 'bitcoin',
+      addressType: 'p2wpkh',
+      capabilities: [AccountCapability.BroadcastPsbt],
+    });
+
+    beforeEach(() => {
+      mockRepository.get.mockResolvedValue(mockAccount);
+      mockAccount.extractTransaction.mockReturnValue(mockTransaction);
+      mockTransaction.compute_txid.mockReturnValue(mockTxid);
+      mockTransaction.clone.mockReturnThis();
+      mockAccount.getTransaction.mockReturnValue(mockWalletTx);
+    });
+
+    it('throws error if account is not found', async () => {
+      mockRepository.get.mockResolvedValue(null);
+
+      await expect(
+        useCases.broadcastPsbt('non-existent-id', mockPsbt, 'metamask'),
+      ).rejects.toThrow('Account not found');
+    });
+
+    it('throws PermissionError if account lacks BroadcastPsbt capability', async () => {
+      const accountNoCap = mock<BitcoinAccount>({
+        capabilities: [],
+      });
+      mockRepository.get.mockResolvedValue(accountNoCap);
+
+      await expect(
+        useCases.broadcastPsbt('account-id', mockPsbt, 'metamask'),
+      ).rejects.toThrow('Account missing given capability');
+    });
+
+    it('broadcasts a PSBT and returns txid with canBeMalleable=false for P2WPKH', async () => {
+      const result = await useCases.broadcastPsbt(
+        'account-id',
+        mockPsbt,
+        'metamask',
+      );
+
+      expect(mockRepository.get).toHaveBeenCalledWith('account-id');
+      expect(mockAccount.extractTransaction).toHaveBeenCalledWith(mockPsbt);
+      expect(mockChain.broadcast).toHaveBeenCalledWith(
+        mockAccount.network,
+        mockTransaction,
+      );
+      expect(mockRepository.update).toHaveBeenCalledWith(mockAccount);
+      expect(result.txid).toBe(mockTxid);
+      expect(result.canBeMalleable).toBe(false);
+    });
+
+    it('returns canBeMalleable=true when broadcasting from a legacy P2PKH account', async () => {
+      const legacyAccount = { ...mockAccount, addressType: 'p2pkh' as const };
+      mockRepository.get.mockResolvedValueOnce(legacyAccount);
+
+      const result = await useCases.broadcastPsbt(
+        'account-id',
+        mockPsbt,
+        'metamask',
+      );
+
+      expect(result.txid).toBe(mockTxid);
+      expect(result.canBeMalleable).toBe(true);
+    });
+  });
+
+  describe('getFrozenUTXOs', () => {
+    it('delegates to repository', async () => {
+      mockRepository.getFrozenUTXOs.mockResolvedValue(['txid:0', 'txid:1']);
+
+      const result = await useCases.getFrozenUTXOs('account-id');
+
+      expect(mockRepository.getFrozenUTXOs).toHaveBeenCalledWith('account-id');
+      expect(result).toStrictEqual(['txid:0', 'txid:1']);
+    });
+  });
+
   describe('signMessage', () => {
     const mockAccount = mock<BitcoinAccount>({
       publicAddress: mock<Address>({
@@ -1847,6 +1884,16 @@ describe('AccountUseCases', () => {
       await expect(
         useCases.signMessage('account-id', mockMessage, mockOrigin),
       ).rejects.toThrow('Failed to sign message');
+    });
+
+    it('throws AssertionError if entropy has no privateKey', async () => {
+      mockSnapClient.getPrivateEntropy.mockResolvedValue(
+        mock<JsonSLIP10Node>({ privateKey: undefined }),
+      );
+
+      await expect(
+        useCases.signMessage('account-id', mockMessage, mockOrigin),
+      ).rejects.toThrow('Failed to get private entropy');
     });
 
     it('propagates an error if get fails', async () => {

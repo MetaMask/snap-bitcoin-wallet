@@ -1,15 +1,8 @@
 import type { KeyringRequest, KeyringResponse } from '@metamask/keyring-api';
 import type { Json } from '@metamask/snaps-sdk';
-import {
-  array,
-  assert,
-  boolean,
-  number,
-  object,
-  optional,
-  string,
-} from 'superstruct';
+import { assert } from 'superstruct';
 
+import type { ConfirmationRepository } from '../entities';
 import {
   AccountCapability,
   AssertionError,
@@ -18,16 +11,16 @@ import {
 } from '../entities';
 import { mapToUtxo } from './mappings';
 import { parsePsbt } from './parsers';
+import {
+  BroadcastPsbtRequest,
+  ComputeFeeRequest,
+  FillPsbtRequest,
+  GetUtxoRequest,
+  SendTransferRequest,
+  SignMessageRequest,
+  SignPsbtRequest,
+} from './validation';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
-
-export const SignPsbtRequest = object({
-  psbt: string(),
-  feeRate: optional(number()),
-  options: object({
-    fill: boolean(),
-    broadcast: boolean(),
-  }),
-});
 
 export type SignPsbtResponse = {
   psbt: string;
@@ -38,19 +31,10 @@ export type SignPsbtResponse = {
   canBeMalleable?: boolean;
 };
 
-export const ComputeFeeRequest = object({
-  psbt: string(),
-  feeRate: optional(number()),
-});
-
 export type ComputeFeeResponse = {
   // Fee in satoshis
   fee: string;
 };
-
-export const BroadcastPsbtRequest = object({
-  psbt: string(),
-});
 
 export type BroadcastPsbtResponse = {
   txid: string;
@@ -59,32 +43,9 @@ export type BroadcastPsbtResponse = {
   canBeMalleable: boolean;
 };
 
-export const FillPsbtRequest = object({
-  psbt: string(),
-  feeRate: optional(number()),
-});
-
 export type FillPsbtResponse = {
   psbt: string;
 };
-
-export const SendTransferRequest = object({
-  recipients: array(
-    object({
-      address: string(),
-      amount: string(),
-    }),
-  ),
-  feeRate: optional(number()),
-});
-
-export const GetUtxoRequest = object({
-  outpoint: string(),
-});
-
-export const SignMessageRequest = object({
-  message: string(),
-});
 
 export type SignMessageResponse = {
   signature: string;
@@ -93,8 +54,14 @@ export type SignMessageResponse = {
 export class KeyringRequestHandler {
   readonly #accountsUseCases: AccountUseCases;
 
-  constructor(accounts: AccountUseCases) {
+  readonly #confirmationRepository: ConfirmationRepository;
+
+  constructor(
+    accounts: AccountUseCases,
+    confirmationRepository: ConfirmationRepository,
+  ) {
     this.#accountsUseCases = accounts;
+    this.#confirmationRepository = confirmationRepository;
   }
 
   async route(request: KeyringRequest): Promise<KeyringResponse> {
@@ -161,14 +128,28 @@ export class KeyringRequestHandler {
     options: { fill: boolean; broadcast: boolean },
     feeRate?: number,
   ): Promise<KeyringResponse> {
-    const { psbt, txid, canBeMalleable } =
-      await this.#accountsUseCases.signPsbt(
-        id,
-        parsePsbt(psbtBase64),
-        origin,
-        options,
-        feeRate,
-      );
+    const psbt = parsePsbt(psbtBase64);
+    const account = await this.#accountsUseCases.get(id);
+
+    await this.#confirmationRepository.insertSignPsbt(
+      account,
+      psbt,
+      origin,
+      options,
+    );
+
+    // Creates a fresh PSBT from the original base64 because the original PSBT is mutated by the confirmation repository
+    const {
+      psbt: signedPsbt,
+      txid,
+      canBeMalleable,
+    } = await this.#accountsUseCases.signPsbt(
+      id,
+      parsePsbt(psbtBase64),
+      origin,
+      options,
+      feeRate,
+    );
     // Invariant: signPsbt sets txid and canBeMalleable together (when broadcast
     // happened) or neither (when it didn't). A txid without the flag would
     // leak a possibly-malleable txid to the consumer.
@@ -178,7 +159,7 @@ export class KeyringRequestHandler {
       );
     }
     const response: SignPsbtResponse = {
-      psbt: psbt.toString(),
+      psbt: signedPsbt.toString(),
       txid: txid?.toString() ?? null,
     };
     if (canBeMalleable !== undefined) {
