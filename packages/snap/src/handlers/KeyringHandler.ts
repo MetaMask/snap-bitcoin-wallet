@@ -71,6 +71,7 @@ import {
 } from './mappings';
 import { BtcWalletRequestStruct, validateSelectedAccounts } from './validation';
 import type { AccountUseCases } from '../use-cases/AccountUseCases';
+import { logExecutionTime } from '../utils/performance';
 import { runSnapActionSafely } from '../utils/snapHelpers';
 
 export const CreateAccountRequest = object({
@@ -368,6 +369,7 @@ export class KeyringHandler implements Keyring {
 
       // `AccountUseCases.createMany` is idempotent: if an account already exists
       // for the resolved derivation path, it will be returned as-is.
+      const createManyStart = Date.now();
       const accounts = await this.#accountsUseCases.createMany(
         indices.map((index) => ({
           network,
@@ -377,10 +379,13 @@ export class KeyringHandler implements Keyring {
           synchronize: false,
         })),
       );
+      logExecutionTime('keyring_createAccounts createMany', createManyStart);
+
+      const responseMappingStart = Date.now();
       const result = accounts.map(mapToKeyringAccount);
-      const end = Date.now();
-      console.log(
-        `[PERFORMANCE DEBUG - BITCOIN SNAP] createAccounts took ${end - start} ms to create ${accounts.length} accounts`,
+      logExecutionTime(
+        'keyring_createAccounts response mapping',
+        responseMappingStart,
       );
       return result;
     } finally {
@@ -391,6 +396,7 @@ export class KeyringHandler implements Keyring {
           'endTrace',
         );
       }
+      logExecutionTime('keyring_createAccounts', start);
     }
   }
 

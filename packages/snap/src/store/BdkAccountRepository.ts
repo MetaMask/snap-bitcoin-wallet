@@ -20,6 +20,7 @@ import {
   StorageError,
 } from '../entities';
 import { BdkAccountAdapter } from '../infra';
+import { logExecutionTime } from '../utils/performance';
 
 /**
  * Encode a fingerprint to a 4-bytes hex-string (required by the BDK).
@@ -89,60 +90,80 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
   async getByDerivationPaths(
     derivationPaths: string[][],
   ): Promise<(BitcoinAccount | null)[]> {
+    const start = Date.now();
+
     if (derivationPaths.length === 0) {
+      logExecutionTime('BdkAccountRepository.getByDerivationPaths', start);
       return [];
     }
 
-    const [derivationPathIndex, accounts] = await Promise.all([
-      this.#snapClient.getState('derivationPaths') as Promise<
-        SnapState['derivationPaths'] | null
-      >,
-      this.#snapClient.getState('accounts') as Promise<
-        SnapState['accounts'] | null
-      >,
-    ]);
+    try {
+      const loadStateStart = Date.now();
+      const [derivationPathIndex, accounts] = await Promise.all([
+        this.#snapClient.getState('derivationPaths') as Promise<
+          SnapState['derivationPaths'] | null
+        >,
+        this.#snapClient.getState('accounts') as Promise<
+          SnapState['accounts'] | null
+        >,
+      ]);
+      logExecutionTime(
+        'BdkAccountRepository.getByDerivationPaths load state',
+        loadStateStart,
+      );
 
-    const accountsById = accounts ?? {};
-    const existingDerivationPathIndex = derivationPathIndex ?? {};
-    const accountsByDerivationPath = new Map<string, [string, AccountState]>();
+      const accountsById = accounts ?? {};
+      const existingDerivationPathIndex = derivationPathIndex ?? {};
+      const accountsByDerivationPath = new Map<
+        string,
+        [string, AccountState]
+      >();
 
-    for (const [id, account] of Object.entries(accountsById)) {
-      if (account) {
-        accountsByDerivationPath.set(
-          getDerivationPathKey(account.derivationPath),
-          [id, account],
+      for (const [id, account] of Object.entries(accountsById)) {
+        if (account) {
+          accountsByDerivationPath.set(
+            getDerivationPathKey(account.derivationPath),
+            [id, account],
+          );
+        }
+      }
+
+      const repairs: Record<string, string> = {};
+      const results = derivationPaths.map((derivationPath) => {
+        const pathKey = getDerivationPathKey(derivationPath);
+        const indexedId = existingDerivationPathIndex[pathKey];
+        const indexedAccount = indexedId ? accountsById[indexedId] : null;
+
+        if (indexedId && indexedAccount) {
+          return this.#loadAccount(indexedId, indexedAccount);
+        }
+
+        const fallback = accountsByDerivationPath.get(pathKey);
+        if (!fallback) {
+          return null;
+        }
+
+        const [id, account] = fallback;
+        repairs[pathKey] = id;
+        return this.#loadAccount(id, account);
+      });
+
+      if (Object.keys(repairs).length > 0) {
+        const repairIndexStart = Date.now();
+        await this.#snapClient.setState('derivationPaths', {
+          ...existingDerivationPathIndex,
+          ...repairs,
+        });
+        logExecutionTime(
+          'BdkAccountRepository.getByDerivationPaths repair index',
+          repairIndexStart,
         );
       }
+
+      return results;
+    } finally {
+      logExecutionTime('BdkAccountRepository.getByDerivationPaths', start);
     }
-
-    const repairs: Record<string, string> = {};
-    const results = derivationPaths.map((derivationPath) => {
-      const pathKey = getDerivationPathKey(derivationPath);
-      const indexedId = existingDerivationPathIndex[pathKey];
-      const indexedAccount = indexedId ? accountsById[indexedId] : null;
-
-      if (indexedId && indexedAccount) {
-        return this.#loadAccount(indexedId, indexedAccount);
-      }
-
-      const fallback = accountsByDerivationPath.get(pathKey);
-      if (!fallback) {
-        return null;
-      }
-
-      const [id, account] = fallback;
-      repairs[pathKey] = id;
-      return this.#loadAccount(id, account);
-    });
-
-    if (Object.keys(repairs).length > 0) {
-      await this.#snapClient.setState('derivationPaths', {
-        ...existingDerivationPathIndex,
-        ...repairs,
-      });
-    }
-
-    return results;
   }
 
   async getWithSigner(id: string): Promise<BitcoinAccount | null> {
@@ -186,101 +207,166 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     network: Network,
     addressType: AddressType,
   ): Promise<BitcoinAccount> {
-    const slip10 = await this.#snapClient.getPublicEntropy(derivationPath);
-    const id = v4();
-    const fingerprint = toBdkFingerprint(
-      slip10.masterFingerprint ?? slip10.parentFingerprint,
-    );
+    const start = Date.now();
 
-    const xpub = slip10_to_extended(slip10, network);
-    const descriptors = xpub_to_descriptor(
-      xpub,
-      fingerprint,
-      network,
-      addressType,
-    );
+    try {
+      const entropyStart = Date.now();
+      const slip10 = await this.#snapClient.getPublicEntropy(derivationPath);
+      logExecutionTime(
+        'BdkAccountRepository.create get public entropy',
+        entropyStart,
+      );
 
-    return BdkAccountAdapter.create(id, derivationPath, descriptors, network);
+      const buildWalletStart = Date.now();
+      const id = v4();
+      const fingerprint = toBdkFingerprint(
+        slip10.masterFingerprint ?? slip10.parentFingerprint,
+      );
+
+      const xpub = slip10_to_extended(slip10, network);
+      const descriptors = xpub_to_descriptor(
+        xpub,
+        fingerprint,
+        network,
+        addressType,
+      );
+
+      const account = BdkAccountAdapter.create(
+        id,
+        derivationPath,
+        descriptors,
+        network,
+      );
+      logExecutionTime(
+        'BdkAccountRepository.create build wallet',
+        buildWalletStart,
+      );
+      return account;
+    } finally {
+      logExecutionTime('BdkAccountRepository.create', start);
+    }
   }
 
   async insert(account: BitcoinAccount): Promise<BitcoinAccount> {
-    const { id, derivationPath } = account;
+    const start = Date.now();
 
-    const walletData = account.takeStaged();
-    if (!walletData) {
-      throw new StorageError(
-        `Missing changeset data for account "${id}" for insertion.`,
-      );
-    }
-
-    await Promise.all([
-      this.#snapClient.setState(
-        `derivationPaths.${getDerivationPathKey(derivationPath)}`,
-        id,
-      ),
-      this.#snapClient.setState(`accounts.${id}`, {
-        wallet: walletData.to_json(),
-        inscriptions: [],
-        derivationPath,
-      }),
-    ]);
-
-    return account;
-  }
-
-  async insertMany(accounts: BitcoinAccount[]): Promise<BitcoinAccount[]> {
-    if (accounts.length === 0) {
-      return [];
-    }
-
-    if (accounts.length === 1) {
-      return [await this.insert(accounts[0] as BitcoinAccount)];
-    }
-
-    const accountStateEntries: [string, AccountState][] = [];
-    const derivationPathEntries: [string, string][] = [];
-
-    for (const account of accounts) {
+    try {
       const { id, derivationPath } = account;
-      const walletData = account.takeStaged();
 
+      const serializeStart = Date.now();
+      const walletData = account.takeStaged();
       if (!walletData) {
         throw new StorageError(
           `Missing changeset data for account "${id}" for insertion.`,
         );
       }
+      logExecutionTime(
+        'BdkAccountRepository.insert serialize account',
+        serializeStart,
+      );
 
-      accountStateEntries.push([
-        id,
-        {
+      const writeStateStart = Date.now();
+      await Promise.all([
+        this.#snapClient.setState(
+          `derivationPaths.${getDerivationPathKey(derivationPath)}`,
+          id,
+        ),
+        this.#snapClient.setState(`accounts.${id}`, {
           wallet: walletData.to_json(),
           inscriptions: [],
           derivationPath,
-        },
+        }),
       ]);
-      derivationPathEntries.push([getDerivationPathKey(derivationPath), id]);
+      logExecutionTime(
+        'BdkAccountRepository.insert write state',
+        writeStateStart,
+      );
+
+      return account;
+    } finally {
+      logExecutionTime('BdkAccountRepository.insert', start);
     }
+  }
 
-    const [existingAccounts, existingDerivationPaths] = await Promise.all([
-      this.#snapClient.getState('accounts') as Promise<
-        SnapState['accounts'] | null
-      >,
-      this.#snapClient.getState('derivationPaths') as Promise<
-        SnapState['derivationPaths'] | null
-      >,
-    ]);
+  async insertMany(accounts: BitcoinAccount[]): Promise<BitcoinAccount[]> {
+    const start = Date.now();
 
-    await this.#snapClient.setState('accounts', {
-      ...(existingAccounts ?? {}),
-      ...Object.fromEntries(accountStateEntries),
-    });
+    try {
+      if (accounts.length === 0) {
+        return [];
+      }
 
-    await this.#snapClient.setState('derivationPaths', {
-      ...(existingDerivationPaths ?? {}),
-      ...Object.fromEntries(derivationPathEntries),
-    });
+      if (accounts.length === 1) {
+        return [await this.insert(accounts[0] as BitcoinAccount)];
+      }
 
-    return accounts;
+      const accountStateEntries: [string, AccountState][] = [];
+      const derivationPathEntries: [string, string][] = [];
+
+      const serializeStart = Date.now();
+      for (const account of accounts) {
+        const { id, derivationPath } = account;
+        const walletData = account.takeStaged();
+
+        if (!walletData) {
+          throw new StorageError(
+            `Missing changeset data for account "${id}" for insertion.`,
+          );
+        }
+
+        accountStateEntries.push([
+          id,
+          {
+            wallet: walletData.to_json(),
+            inscriptions: [],
+            derivationPath,
+          },
+        ]);
+        derivationPathEntries.push([getDerivationPathKey(derivationPath), id]);
+      }
+      logExecutionTime(
+        'BdkAccountRepository.insertMany serialize accounts',
+        serializeStart,
+      );
+
+      const loadStateStart = Date.now();
+      const [existingAccounts, existingDerivationPaths] = await Promise.all([
+        this.#snapClient.getState('accounts') as Promise<
+          SnapState['accounts'] | null
+        >,
+        this.#snapClient.getState('derivationPaths') as Promise<
+          SnapState['derivationPaths'] | null
+        >,
+      ]);
+      logExecutionTime(
+        'BdkAccountRepository.insertMany load state',
+        loadStateStart,
+      );
+
+      const writeAccountsStart = Date.now();
+      await this.#snapClient.setState('accounts', {
+        ...(existingAccounts ?? {}),
+        ...Object.fromEntries(accountStateEntries),
+      });
+      logExecutionTime(
+        'BdkAccountRepository.insertMany write accounts',
+        writeAccountsStart,
+      );
+
+      const writeDerivationPathsStart = Date.now();
+      await this.#snapClient.setState('derivationPaths', {
+        ...(existingDerivationPaths ?? {}),
+        ...Object.fromEntries(derivationPathEntries),
+      });
+      logExecutionTime(
+        'BdkAccountRepository.insertMany write derivation paths',
+        writeDerivationPathsStart,
+      );
+
+      return accounts;
+    } finally {
+      logExecutionTime('BdkAccountRepository.insertMany', start);
+    }
   }
 
   async update(
