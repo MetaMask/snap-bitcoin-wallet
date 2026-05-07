@@ -335,18 +335,7 @@ describe('AccountUseCases', () => {
       );
       expect(newAccount.revealNextAddress).toHaveBeenCalled();
       expect(mockRepository.insertMany).toHaveBeenCalledWith([newAccount]);
-      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenNthCalledWith(
-        1,
-        existingAccount,
-        createParams.correlationId,
-        createParams.accountName,
-      );
-      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenNthCalledWith(
-        2,
-        newAccount,
-        createParams.correlationId,
-        createParams.accountName,
-      );
+      expect(mockSnapClient.emitAccountCreatedEvent).not.toHaveBeenCalled();
       expect(mockSnapClient.scheduleBackgroundEvent).toHaveBeenCalledWith({
         duration: 'PT1S',
         method: CronMethod.FullScanAccount,
@@ -366,7 +355,7 @@ describe('AccountUseCases', () => {
       ]);
       expect(mockRepository.create).toHaveBeenCalledTimes(1);
       expect(mockRepository.insertMany).toHaveBeenCalledWith([newAccount]);
-      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalledTimes(2);
+      expect(mockSnapClient.emitAccountCreatedEvent).not.toHaveBeenCalled();
       expect(result).toStrictEqual([newAccount, newAccount]);
     });
 
@@ -377,15 +366,11 @@ describe('AccountUseCases', () => {
 
       expect(mockRepository.create).not.toHaveBeenCalled();
       expect(mockRepository.insertMany).not.toHaveBeenCalled();
-      expect(mockSnapClient.emitAccountCreatedEvent).toHaveBeenCalledWith(
-        existingAccount,
-        createParams.correlationId,
-        createParams.accountName,
-      );
+      expect(mockSnapClient.emitAccountCreatedEvent).not.toHaveBeenCalled();
       expect(result).toStrictEqual([existingAccount]);
     });
 
-    it('propagates insertMany errors before emitting events', async () => {
+    it('propagates insertMany errors without emitting account-created events', async () => {
       const error = new Error('insertMany failed');
       mockRepository.getByDerivationPaths.mockResolvedValue([null]);
       mockRepository.create.mockResolvedValue(newAccount);

@@ -391,20 +391,6 @@ export class AccountUseCases {
         },
       );
 
-      const emitEventsStart = Date.now();
-      for (const [index, account] of accounts.entries()) {
-        const req = reqs[index] as CreateAccountParams;
-        await this.#snapClient.emitAccountCreatedEvent(
-          account,
-          req.correlationId,
-          req.accountName,
-        );
-      }
-      logExecutionTime(
-        'AccountUseCases.createMany emit account-created events',
-        emitEventsStart,
-      );
-
       const scheduleFullScansStart = Date.now();
       const scheduledAccountIds = new Set<string>();
       for (const [index, account] of accounts.entries()) {
