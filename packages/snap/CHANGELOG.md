@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add `canBeMalleable` flag to broadcast/send response shapes so consumers can detect when a transaction id may be rewritten by a third party before confirmation (relevant only for legacy P2PKH accounts, currently always `false`) ([#599](https://github.com/MetaMask/snap-bitcoin-wallet/pull/599))
+
 ### Changed
 
 - Show a confirmation dialog before signing a PSBT from KeyringHandler and sending a transfer ([#591](https://github.com/MetaMask/snap-bitcoin-wallet/pull/591))
