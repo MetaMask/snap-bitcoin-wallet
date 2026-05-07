@@ -73,6 +73,41 @@ function getDerivationPathKey(derivationPath: string[]): string {
 }
 
 /**
+ * @param reqs - Account creation requests.
+ * @returns Account creation context for performance logs.
+ */
+function formatAccountCreationBatchDetails(
+  reqs: readonly CreateAccountParams[],
+): string {
+  const entropyIds = [
+    ...new Set(reqs.map(({ entropySource }) => entropySource)),
+  ]
+    .sort()
+    .join(',');
+  const indices = reqs
+    .map(({ index }) => index)
+    .sort((left, right) => left - right);
+  const firstIndex = indices[0];
+  const lastIndex = indices[indices.length - 1];
+  const indexLabel =
+    firstIndex === lastIndex ? `${firstIndex}` : `${firstIndex}-${lastIndex}`;
+
+  return `entropyId=${entropyIds} indexes=${indexLabel} count=${reqs.length}`;
+}
+
+/**
+ * @param operation - Base operation name.
+ * @param details - Account creation context to append.
+ * @returns Operation name with account creation context.
+ */
+function formatAccountCreationOperation(
+  operation: string,
+  details: string,
+): string {
+  return `${operation} (${details})`;
+}
+
+/**
  * Map items to results with at most `concurrency` in-flight async operations.
  * Output order matches `items` order.
  *
@@ -280,6 +315,8 @@ export class AccountUseCases {
       return [];
     }
 
+    const batchDetails = formatAccountCreationBatchDetails(reqs);
+
     try {
       const { accounts, createdAccountKeys } = await this.#runAccountMutation(
         async () => {
@@ -305,7 +342,10 @@ export class AccountUseCases {
           }
           const uniqueEntries = [...uniqueEntriesByPath.values()];
           logExecutionTime(
-            'AccountUseCases.createMany build entries',
+            formatAccountCreationOperation(
+              'AccountUseCases.createMany build entries',
+              batchDetails,
+            ),
             buildEntriesStart,
           );
 
@@ -314,7 +354,10 @@ export class AccountUseCases {
             uniqueEntries.map(({ derivationPath }) => derivationPath),
           );
           logExecutionTime(
-            'AccountUseCases.createMany get existing accounts',
+            formatAccountCreationOperation(
+              'AccountUseCases.createMany get existing accounts',
+              batchDetails,
+            ),
             lookupStart,
           );
           const existingAccountsByPath = new Map<string, BitcoinAccount>();
@@ -344,7 +387,10 @@ export class AccountUseCases {
             },
           );
           logExecutionTime(
-            'AccountUseCases.createMany create new accounts',
+            formatAccountCreationOperation(
+              'AccountUseCases.createMany create new accounts',
+              batchDetails,
+            ),
             createNewAccountsStart,
           );
 
@@ -353,7 +399,10 @@ export class AccountUseCases {
             await this.#repository.insertMany(newAccounts);
           }
           logExecutionTime(
-            'AccountUseCases.createMany insert new accounts',
+            formatAccountCreationOperation(
+              'AccountUseCases.createMany insert new accounts',
+              batchDetails,
+            ),
             insertNewAccountsStart,
           );
 
@@ -380,7 +429,10 @@ export class AccountUseCases {
             return account;
           });
           logExecutionTime(
-            'AccountUseCases.createMany order accounts',
+            formatAccountCreationOperation(
+              'AccountUseCases.createMany order accounts',
+              batchDetails,
+            ),
             orderAccountsStart,
           );
 
@@ -410,13 +462,22 @@ export class AccountUseCases {
         }
       }
       logExecutionTime(
-        'AccountUseCases.createMany schedule full scans',
+        formatAccountCreationOperation(
+          'AccountUseCases.createMany schedule full scans',
+          batchDetails,
+        ),
         scheduleFullScansStart,
       );
 
       return accounts;
     } finally {
-      logExecutionTime('AccountUseCases.createMany', start);
+      logExecutionTime(
+        formatAccountCreationOperation(
+          'AccountUseCases.createMany',
+          batchDetails,
+        ),
+        start,
+      );
     }
   }
 

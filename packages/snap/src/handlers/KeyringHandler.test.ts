@@ -602,15 +602,31 @@ describe('KeyringHandler', () => {
       expect(mockAccounts.createMany).not.toHaveBeenCalled();
     });
 
-    it('rejects batches larger than the per-RPC limit', async () => {
-      await expect(
-        handler.createAccounts({
-          type: AccountCreationType.Bip44DeriveIndexRange,
-          range: { from: 0, to: 100 },
-          entropySource,
-        }),
-      ).rejects.toThrow(/more than 100 accounts/iu);
-      expect(mockAccounts.createMany).not.toHaveBeenCalled();
+    it('splits requests larger than 100 accounts into internal batches', async () => {
+      mockAccounts.createMany.mockImplementation(async (requests) =>
+        requests.map(({ index }) => buildMockAccount(index)),
+      );
+
+      const result = await handler.createAccounts({
+        type: AccountCreationType.Bip44DeriveIndexRange,
+        range: { from: 0, to: 100 },
+        entropySource,
+      });
+
+      expect(mockAccounts.createMany).toHaveBeenCalledTimes(2);
+      expect(mockAccounts.createMany).toHaveBeenNthCalledWith(
+        1,
+        Array.from({ length: 100 }, (_, index) =>
+          expect.objectContaining({ index }),
+        ),
+      );
+      expect(mockAccounts.createMany).toHaveBeenNthCalledWith(2, [
+        expect.objectContaining({ index: 100 }),
+      ]);
+      expect(result).toHaveLength(101);
+      expect(
+        result.map((account) => mnemonicGroupIndex(account)),
+      ).toStrictEqual(Array.from({ length: 101 }, (_, index) => index));
     });
 
     it('rejects unsupported creation types', async () => {

@@ -43,6 +43,62 @@ function getDerivationPathKey(derivationPath: string[]): string {
   return derivationPath.join('/');
 }
 
+/**
+ * @param derivationPath - Account derivation path.
+ * @returns Account creation context for performance logs.
+ */
+function formatAccountCreationDetails(derivationPath: string[]): string {
+  const entropyId = derivationPath[0] ?? 'unknown';
+  const accountIndexSegment = derivationPath[3] ?? 'unknown';
+  const accountIndex = accountIndexSegment.endsWith("'")
+    ? accountIndexSegment.slice(0, -1)
+    : accountIndexSegment;
+
+  return `entropyId=${entropyId} index=${accountIndex} derivationPath=${getDerivationPathKey(
+    derivationPath,
+  )}`;
+}
+
+/**
+ * @param derivationPaths - Account derivation paths.
+ * @returns Batch account creation context for performance logs.
+ */
+function formatAccountCreationBatchDetails(
+  derivationPaths: readonly string[][],
+): string {
+  const entropyIds = [
+    ...new Set(
+      derivationPaths.map((derivationPath) => derivationPath[0] ?? 'unknown'),
+    ),
+  ]
+    .sort()
+    .join(',');
+  const indices = derivationPaths
+    .map((derivationPath) => {
+      const segment = derivationPath[3] ?? 'unknown';
+      return segment.endsWith("'") ? segment.slice(0, -1) : segment;
+    })
+    .sort((left, right) => Number(left) - Number(right));
+  const firstIndex = indices[0] ?? 'unknown';
+  const lastIndex = indices[indices.length - 1] ?? 'unknown';
+  const indexLabel =
+    firstIndex === lastIndex ? `${firstIndex}` : `${firstIndex}-${lastIndex}`;
+
+  return `entropyId=${entropyIds} indexes=${indexLabel} count=${derivationPaths.length}`;
+}
+
+/**
+ * @param operation - Base operation name.
+ * @param details - Account creation context to append.
+ * @returns Operation name with account creation context.
+ */
+function formatAccountCreationOperation(
+  operation: string,
+  details: string,
+): string {
+  return `${operation} (${details})`;
+}
+
 export class BdkAccountRepository implements BitcoinAccountRepository {
   readonly #snapClient: SnapClient;
 
@@ -91,6 +147,7 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     derivationPaths: string[][],
   ): Promise<(BitcoinAccount | null)[]> {
     const start = Date.now();
+    const batchDetails = formatAccountCreationBatchDetails(derivationPaths);
 
     if (derivationPaths.length === 0) {
       logExecutionTime('BdkAccountRepository.getByDerivationPaths', start);
@@ -108,7 +165,10 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
         >,
       ]);
       logExecutionTime(
-        'BdkAccountRepository.getByDerivationPaths load state',
+        formatAccountCreationOperation(
+          'BdkAccountRepository.getByDerivationPaths load state',
+          batchDetails,
+        ),
         loadStateStart,
       );
 
@@ -155,14 +215,23 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
           ...repairs,
         });
         logExecutionTime(
-          'BdkAccountRepository.getByDerivationPaths repair index',
+          formatAccountCreationOperation(
+            'BdkAccountRepository.getByDerivationPaths repair index',
+            batchDetails,
+          ),
           repairIndexStart,
         );
       }
 
       return results;
     } finally {
-      logExecutionTime('BdkAccountRepository.getByDerivationPaths', start);
+      logExecutionTime(
+        formatAccountCreationOperation(
+          'BdkAccountRepository.getByDerivationPaths',
+          batchDetails,
+        ),
+        start,
+      );
     }
   }
 
@@ -208,12 +277,16 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     addressType: AddressType,
   ): Promise<BitcoinAccount> {
     const start = Date.now();
+    const accountDetails = formatAccountCreationDetails(derivationPath);
 
     try {
       const entropyStart = Date.now();
       const slip10 = await this.#snapClient.getPublicEntropy(derivationPath);
       logExecutionTime(
-        'BdkAccountRepository.create get public entropy',
+        formatAccountCreationOperation(
+          'BdkAccountRepository.create get public entropy',
+          accountDetails,
+        ),
         entropyStart,
       );
 
@@ -238,17 +311,27 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
         network,
       );
       logExecutionTime(
-        'BdkAccountRepository.create build wallet',
+        formatAccountCreationOperation(
+          'BdkAccountRepository.create build wallet',
+          accountDetails,
+        ),
         buildWalletStart,
       );
       return account;
     } finally {
-      logExecutionTime('BdkAccountRepository.create', start);
+      logExecutionTime(
+        formatAccountCreationOperation(
+          'BdkAccountRepository.create',
+          accountDetails,
+        ),
+        start,
+      );
     }
   }
 
   async insert(account: BitcoinAccount): Promise<BitcoinAccount> {
     const start = Date.now();
+    const accountDetails = formatAccountCreationDetails(account.derivationPath);
 
     try {
       const { id, derivationPath } = account;
@@ -261,7 +344,10 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
         );
       }
       logExecutionTime(
-        'BdkAccountRepository.insert serialize account',
+        formatAccountCreationOperation(
+          'BdkAccountRepository.insert serialize account',
+          accountDetails,
+        ),
         serializeStart,
       );
 
@@ -278,18 +364,33 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
         }),
       ]);
       logExecutionTime(
-        'BdkAccountRepository.insert write state',
+        formatAccountCreationOperation(
+          'BdkAccountRepository.insert write state',
+          accountDetails,
+        ),
         writeStateStart,
       );
 
       return account;
     } finally {
-      logExecutionTime('BdkAccountRepository.insert', start);
+      logExecutionTime(
+        formatAccountCreationOperation(
+          'BdkAccountRepository.insert',
+          accountDetails,
+        ),
+        start,
+      );
     }
   }
 
   async insertMany(accounts: BitcoinAccount[]): Promise<BitcoinAccount[]> {
     const start = Date.now();
+    const batchDetails =
+      accounts.length > 0
+        ? formatAccountCreationBatchDetails(
+            accounts.map(({ derivationPath }) => derivationPath),
+          )
+        : 'count=0';
 
     try {
       if (accounts.length === 0) {
@@ -325,7 +426,10 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
         derivationPathEntries.push([getDerivationPathKey(derivationPath), id]);
       }
       logExecutionTime(
-        'BdkAccountRepository.insertMany serialize accounts',
+        formatAccountCreationOperation(
+          'BdkAccountRepository.insertMany serialize accounts',
+          batchDetails,
+        ),
         serializeStart,
       );
 
@@ -339,7 +443,10 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
         >,
       ]);
       logExecutionTime(
-        'BdkAccountRepository.insertMany load state',
+        formatAccountCreationOperation(
+          'BdkAccountRepository.insertMany load state',
+          batchDetails,
+        ),
         loadStateStart,
       );
 
@@ -349,7 +456,10 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
         ...Object.fromEntries(accountStateEntries),
       });
       logExecutionTime(
-        'BdkAccountRepository.insertMany write accounts',
+        formatAccountCreationOperation(
+          'BdkAccountRepository.insertMany write accounts',
+          batchDetails,
+        ),
         writeAccountsStart,
       );
 
@@ -359,13 +469,22 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
         ...Object.fromEntries(derivationPathEntries),
       });
       logExecutionTime(
-        'BdkAccountRepository.insertMany write derivation paths',
+        formatAccountCreationOperation(
+          'BdkAccountRepository.insertMany write derivation paths',
+          batchDetails,
+        ),
         writeDerivationPathsStart,
       );
 
       return accounts;
     } finally {
-      logExecutionTime('BdkAccountRepository.insertMany', start);
+      logExecutionTime(
+        formatAccountCreationOperation(
+          'BdkAccountRepository.insertMany',
+          batchDetails,
+        ),
+        start,
+      );
     }
   }
 

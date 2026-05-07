@@ -70,7 +70,10 @@ import {
   mapToTransaction,
 } from './mappings';
 import { BtcWalletRequestStruct, validateSelectedAccounts } from './validation';
-import type { AccountUseCases } from '../use-cases/AccountUseCases';
+import type {
+  AccountUseCases,
+  CreateAccountParams,
+} from '../use-cases/AccountUseCases';
 import { logExecutionTime } from '../utils/performance';
 import { runSnapActionSafely } from '../utils/snapHelpers';
 
@@ -85,8 +88,41 @@ export const CreateAccountRequest = object({
   ...MetaMaskOptionsStruct.schema,
 });
 
-/** Upper bound on inclusive index range width for a single createAccounts RPC. */
+/** Maximum number of accounts to create in one internal createMany call. */
 const MAX_CREATE_ACCOUNTS_PER_BATCH = 100;
+
+/**
+ * @param operation - Base operation name.
+ * @param details - Account creation context to append.
+ * @returns Operation name with account creation context.
+ */
+function formatAccountCreationOperation(
+  operation: string,
+  details: string,
+): string {
+  return `${operation} (${details})`;
+}
+
+/**
+ * @param details - Account creation context to append.
+ * @param state - Snap state snapshot.
+ * @param state.root - Root Snap state.
+ * @param state.accounts - Account state namespace.
+ * @param state.derivationPaths - Derivation-path index namespace.
+ * @returns Snapshot log line.
+ */
+function formatCreateAccountsStateLog(
+  details: string,
+  state: {
+    root: Json | null;
+    accounts: Json | null;
+    derivationPaths: Json | null;
+  },
+): string {
+  return `[SNAP STATE DEBUG - BITCOIN SNAP] keyring_createAccounts final state (${details}) ${JSON.stringify(
+    state,
+  )}`;
+}
 
 export class KeyringHandler implements Keyring {
   readonly #accountsUseCases: AccountUseCases;
@@ -333,11 +369,9 @@ export class KeyringHandler implements Keyring {
     }
 
     const batchSize = range.to - range.from + 1;
-    if (batchSize > MAX_CREATE_ACCOUNTS_PER_BATCH) {
-      throw new FormatError(
-        `Cannot create more than ${MAX_CREATE_ACCOUNTS_PER_BATCH} accounts in one batch`,
-      );
-    }
+    const indexLabel =
+      range.from === range.to ? `${range.from}` : `${range.from}-${range.to}`;
+    const accountCreationDetails = `entropyId=${entropySource} indexes=${indexLabel} count=${batchSize}`;
 
     // Only P2WPKH (BIP-84) on bitcoin mainnet is supported for v1, mirroring
     // the defaults used by `createAccount` when no scope is provided.
@@ -347,11 +381,6 @@ export class KeyringHandler implements Keyring {
       throw new FormatError(
         'Only native segwit (P2WPKH) addresses are supported',
       );
-    }
-
-    const indices: number[] = [];
-    for (let index = range.from; index <= range.to; index += 1) {
-      indices.push(index);
     }
 
     const traceName = 'Create Bitcoin Accounts Batch';
@@ -370,21 +399,63 @@ export class KeyringHandler implements Keyring {
       // `AccountUseCases.createMany` is idempotent: if an account already exists
       // for the resolved derivation path, it will be returned as-is.
       const createManyStart = Date.now();
-      const accounts = await this.#accountsUseCases.createMany(
-        indices.map((index) => ({
-          network,
-          entropySource,
-          index,
-          addressType,
-          synchronize: false,
-        })),
+      const accounts: BitcoinAccount[] = [];
+      let chunkFrom = range.from;
+
+      while (chunkFrom <= range.to) {
+        const chunkTo = Math.min(
+          chunkFrom + MAX_CREATE_ACCOUNTS_PER_BATCH - 1,
+          range.to,
+        );
+        const chunkSize = chunkTo - chunkFrom + 1;
+        const chunkIndexLabel =
+          chunkFrom === chunkTo ? `${chunkFrom}` : `${chunkFrom}-${chunkTo}`;
+        const chunkDetails = `entropyId=${entropySource} indexes=${chunkIndexLabel} count=${chunkSize}`;
+        const chunkRequests: CreateAccountParams[] = [];
+
+        for (let index = chunkFrom; index <= chunkTo; index += 1) {
+          chunkRequests.push({
+            network,
+            entropySource,
+            index,
+            addressType,
+            synchronize: false,
+          });
+        }
+
+        const createManyChunkStart = Date.now();
+        accounts.push(
+          ...(await this.#accountsUseCases.createMany(chunkRequests)),
+        );
+        logExecutionTime(
+          formatAccountCreationOperation(
+            'keyring_createAccounts createMany batch',
+            chunkDetails,
+          ),
+          createManyChunkStart,
+        );
+
+        if (chunkTo === range.to) {
+          break;
+        }
+        chunkFrom = chunkTo + 1;
+      }
+
+      logExecutionTime(
+        formatAccountCreationOperation(
+          'keyring_createAccounts createMany',
+          accountCreationDetails,
+        ),
+        createManyStart,
       );
-      logExecutionTime('keyring_createAccounts createMany', createManyStart);
 
       const responseMappingStart = Date.now();
       const result = accounts.map(mapToKeyringAccount);
       logExecutionTime(
-        'keyring_createAccounts response mapping',
+        formatAccountCreationOperation(
+          'keyring_createAccounts response mapping',
+          accountCreationDetails,
+        ),
         responseMappingStart,
       );
       return result;
@@ -396,8 +467,37 @@ export class KeyringHandler implements Keyring {
           'endTrace',
         );
       }
-      logExecutionTime('keyring_createAccounts', start);
+      logExecutionTime(
+        formatAccountCreationOperation(
+          'keyring_createAccounts',
+          accountCreationDetails,
+        ),
+        start,
+      );
+      await this.#logCreateAccountsState(accountCreationDetails);
     }
+  }
+
+  async #logCreateAccountsState(accountCreationDetails: string): Promise<void> {
+    await runSnapActionSafely(
+      async () => {
+        const [root, accounts, derivationPaths] = await Promise.all([
+          this.#snapClient.getState(),
+          this.#snapClient.getState('accounts'),
+          this.#snapClient.getState('derivationPaths'),
+        ]);
+
+        console.log(
+          formatCreateAccountsStateLog(accountCreationDetails, {
+            root,
+            accounts,
+            derivationPaths,
+          }),
+        );
+      },
+      this.#logger,
+      'logCreateAccountsState',
+    );
   }
 
   async discoverAccounts(
