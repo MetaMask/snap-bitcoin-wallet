@@ -17,6 +17,7 @@ export type ConfirmSendFormContext = {
   backgroundEventId?: string;
   locale: string;
   psbt: string;
+  origin?: string;
 };
 
 export type SendFormContext = {

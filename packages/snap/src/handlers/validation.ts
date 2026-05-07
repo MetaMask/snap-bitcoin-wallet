@@ -1,5 +1,6 @@
 import type { Network, AddressType } from '@metamask/bitcoindevkit';
 import { Address, Amount } from '@metamask/bitcoindevkit';
+import { BtcMethod } from '@metamask/keyring-api';
 import { CaipAssetTypeStruct } from '@metamask/utils';
 import type { Infer } from 'superstruct';
 import {
@@ -7,10 +8,14 @@ import {
   array,
   boolean,
   enums,
+  literal,
+  number,
   object,
+  optional,
   string,
   nonempty,
   refine,
+  union,
   is,
 } from 'superstruct';
 
@@ -86,6 +91,113 @@ export const NO_ERRORS_RESPONSE: ValidationResponse = {
   valid: true,
   errors: [],
 };
+
+/**
+ * Wallet account struct for Bitcoin requests.
+ */
+const WalletAccountStruct = object({
+  address: string(),
+});
+
+export const SignPsbtRequest = object({
+  account: WalletAccountStruct,
+  psbt: string(),
+  feeRate: optional(number()),
+  options: object({
+    fill: boolean(),
+    broadcast: boolean(),
+  }),
+});
+
+export const ComputeFeeRequest = object({
+  account: WalletAccountStruct,
+  psbt: string(),
+  feeRate: optional(number()),
+});
+
+export const BroadcastPsbtRequest = object({
+  account: WalletAccountStruct,
+  psbt: string(),
+});
+
+export const FillPsbtRequest = object({
+  account: WalletAccountStruct,
+  psbt: string(),
+  feeRate: optional(number()),
+});
+
+export const SendTransferRequest = object({
+  account: WalletAccountStruct,
+  recipients: array(
+    object({
+      address: string(),
+      amount: string(),
+    }),
+  ),
+  feeRate: optional(number()),
+});
+
+export const GetUtxoRequest = object({
+  account: WalletAccountStruct,
+  outpoint: string(),
+});
+
+export const SignMessageRequest = object({
+  account: WalletAccountStruct,
+  message: string(),
+});
+
+/**
+ * Validates that a JsonRpcRequest is a valid Bitcoin request.
+ *
+ * TODO: update btc-methods.md to include all the new methods
+ *
+ * @see https://github.com/MetaMask/accounts/blob/main/packages/keyring-api/docs/btc-methods.md
+ */
+export const SignPsbtKeyringRequestStruct = object({
+  method: literal(BtcMethod.SignPsbt),
+  params: SignPsbtRequest,
+});
+
+export const FillPsbtKeyringRequestStruct = object({
+  method: literal(BtcMethod.FillPsbt),
+  params: FillPsbtRequest,
+});
+
+export const ComputeFeeKeyringRequestStruct = object({
+  method: literal(BtcMethod.ComputeFee),
+  params: ComputeFeeRequest,
+});
+
+export const BroadcastPsbtKeyringRequestStruct = object({
+  method: literal(BtcMethod.BroadcastPsbt),
+  params: BroadcastPsbtRequest,
+});
+
+export const SendTransferKeyringRequestStruct = object({
+  method: literal(BtcMethod.SendTransfer),
+  params: SendTransferRequest,
+});
+
+export const GetUtxoKeyringRequestStruct = object({
+  method: literal(BtcMethod.GetUtxo),
+  params: GetUtxoRequest,
+});
+
+export const SignMessageKeyringRequestStruct = object({
+  method: literal(BtcMethod.SignMessage),
+  params: SignMessageRequest,
+});
+
+export const BtcWalletRequestStruct = union([
+  SignPsbtKeyringRequestStruct,
+  FillPsbtKeyringRequestStruct,
+  ComputeFeeKeyringRequestStruct,
+  BroadcastPsbtKeyringRequestStruct,
+  SendTransferKeyringRequestStruct,
+  GetUtxoKeyringRequestStruct,
+  SignMessageKeyringRequestStruct,
+]);
 
 /**
  * Validates that an amount is a positive number

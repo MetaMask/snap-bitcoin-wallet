@@ -40,14 +40,31 @@ describe('HandlerMiddleware', () => {
       expect(result).toBe('success');
     });
 
-    it('throws internal error if error is unexpected', async () => {
-      const mockFn = jest.fn().mockRejectedValue(new Error());
+    it('wraps an unexpected Error and preserves its message', async () => {
+      const error = new Error('boom');
+      const mockFn = jest.fn().mockRejectedValue(error);
 
-      await expect(middleware.handle(mockFn)).rejects.toThrow(
-        'Unexpected error',
-      );
+      await expect(middleware.handle(mockFn)).rejects.toThrow('boom');
       expect(mockSnapClient.getPreferences).toHaveBeenCalled();
       expect(mockTranslator.load).toHaveBeenCalledWith('en');
+      expect(mockLogger.error).toHaveBeenCalledWith(error);
+    });
+
+    it('wraps a non-Error thrown value by stringifying it', async () => {
+      const mockFn = jest.fn().mockRejectedValue('string failure');
+
+      await expect(middleware.handle(mockFn)).rejects.toThrow('string failure');
+      expect(mockLogger.error).toHaveBeenCalledWith('string failure');
+    });
+
+    it('wraps a thrown plain object by stringifying it', async () => {
+      const thrown = { foo: 'bar' };
+      const mockFn = jest.fn().mockRejectedValue(thrown);
+
+      await expect(middleware.handle(mockFn)).rejects.toThrow(
+        '[object Object]',
+      );
+      expect(mockLogger.error).toHaveBeenCalledWith(thrown);
     });
 
     it('handles error successfully if instance of BaseError', async () => {
