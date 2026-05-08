@@ -22,6 +22,7 @@ import {
   BtcMethod,
   BtcScope,
 } from '@metamask/keyring-api';
+import type { Json } from '@metamask/snaps-sdk';
 import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
@@ -627,6 +628,81 @@ describe('KeyringHandler', () => {
       expect(
         result.map((account) => mnemonicGroupIndex(account)),
       ).toStrictEqual(Array.from({ length: 101 }, (_, index) => index));
+    });
+
+    it('logs a final snap state verification summary', async () => {
+      const consoleLog = jest.spyOn(console, 'log').mockImplementation();
+      const rootState = { accounts: true, derivationPaths: true } as Json;
+      const accountsState = {
+        'id-0': {
+          wallet: '{}',
+          inscriptions: [],
+          derivationPath: [entropySource, "84'", "0'", "0'"],
+        },
+        'id-1': {
+          wallet: '{}',
+          inscriptions: [],
+          derivationPath: [entropySource, "84'", "0'", "1'"],
+        },
+      } as Json;
+      const derivationPathsState = {
+        [`${entropySource}/84'/0'/0'`]: 'id-0',
+        [`${entropySource}/84'/0'/1'`]: 'id-1',
+        [`${entropySource}/84'/0'/99'`]: 'missing-id',
+      } as Json;
+      mockAccounts.createMany.mockResolvedValue(
+        [0, 1, 2].map(buildMockAccount),
+      );
+      mockSnapClient.getState
+        .mockResolvedValueOnce(rootState)
+        .mockResolvedValueOnce(accountsState)
+        .mockResolvedValueOnce(derivationPathsState);
+
+      try {
+        await handler.createAccounts({
+          type: AccountCreationType.Bip44DeriveIndexRange,
+          range: { from: 0, to: 2 },
+          entropySource,
+        });
+
+        const stateLog = consoleLog.mock.calls.at(-1)?.[0] as
+          | string
+          | undefined;
+
+        expect(stateLog).toBeDefined();
+        expect(expectDefined(stateLog)).toContain(
+          '[SNAP STATE DEBUG - BITCOIN SNAP]',
+        );
+        const summary = JSON.parse(
+          expectDefined(stateLog).slice(expectDefined(stateLog).indexOf('{')),
+        );
+        expect(summary).toStrictEqual(
+          expect.objectContaining({
+            accountsCount: 2,
+            derivationPathsCount: 3,
+            entropyId: entropySource,
+            entropyAccountsCount: 2,
+            entropyDerivationPathsCount: 3,
+            entropyMinIndex: 0,
+            entropyMaxIndex: 1,
+            requestedRange: {
+              from: 0,
+              to: 2,
+              count: 3,
+              persistedCount: 2,
+              missingCount: 1,
+              missingSample: [2],
+              missingSampleLimit: 25,
+            },
+            consistency: {
+              orphanedDerivationPathCount: 1,
+              missingDerivationPathIndexCount: 0,
+            },
+          }),
+        );
+      } finally {
+        consoleLog.mockRestore();
+      }
     });
 
     it('rejects unsupported creation types', async () => {

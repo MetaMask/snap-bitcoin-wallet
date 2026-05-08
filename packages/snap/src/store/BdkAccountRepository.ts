@@ -16,10 +16,11 @@ import {
   type SnapClient,
   type Inscription,
   type AccountState,
+  type AccountMetadata,
   type SnapState,
   StorageError,
 } from '../entities';
-import { BdkAccountAdapter } from '../infra';
+import { BdkAccountAdapter, StoredAccountAdapter } from '../infra';
 import { logExecutionTime } from '../utils/performance';
 
 /**
@@ -97,6 +98,36 @@ function formatAccountCreationOperation(
   details: string,
 ): string {
   return `${operation} (${details})`;
+}
+
+/**
+ * @param account - Account to persist.
+ * @returns Metadata needed for keyring account responses.
+ */
+function getAccountMetadata(account: BitcoinAccount): AccountMetadata {
+  return {
+    address: account.publicAddress.toString(),
+    addressType: account.addressType,
+    network: account.network,
+    publicDescriptor: account.publicDescriptor,
+  };
+}
+
+/**
+ * @param account - Account to persist.
+ * @param walletData - Serialized wallet data.
+ * @returns Account state with cached response metadata.
+ */
+function getAccountState(
+  account: BitcoinAccount,
+  walletData: ChangeSet,
+): AccountState {
+  return {
+    wallet: walletData.to_json(),
+    inscriptions: [],
+    derivationPath: account.derivationPath,
+    metadata: getAccountMetadata(account),
+  };
 }
 
 export class BdkAccountRepository implements BitcoinAccountRepository {
@@ -195,7 +226,7 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
         const indexedAccount = indexedId ? accountsById[indexedId] : null;
 
         if (indexedId && indexedAccount) {
-          return this.#loadAccount(indexedId, indexedAccount);
+          return this.#loadPersistedAccount(indexedId, indexedAccount);
         }
 
         const fallback = accountsByDerivationPath.get(pathKey);
@@ -205,7 +236,7 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
 
         const [id, account] = fallback;
         repairs[pathKey] = id;
-        return this.#loadAccount(id, account);
+        return this.#loadPersistedAccount(id, account);
       });
 
       if (Object.keys(repairs).length > 0) {
@@ -357,11 +388,10 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
           `derivationPaths.${getDerivationPathKey(derivationPath)}`,
           id,
         ),
-        this.#snapClient.setState(`accounts.${id}`, {
-          wallet: walletData.to_json(),
-          inscriptions: [],
-          derivationPath,
-        }),
+        this.#snapClient.setState(
+          `accounts.${id}`,
+          getAccountState(account, walletData),
+        ),
       ]);
       logExecutionTime(
         formatAccountCreationOperation(
@@ -415,14 +445,7 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
           );
         }
 
-        accountStateEntries.push([
-          id,
-          {
-            wallet: walletData.to_json(),
-            inscriptions: [],
-            derivationPath,
-          },
-        ]);
+        accountStateEntries.push([id, getAccountState(account, walletData)]);
         derivationPathEntries.push([getDerivationPathKey(derivationPath), id]);
       }
       logExecutionTime(
@@ -570,5 +593,13 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
       account.derivationPath,
       ChangeSet.from_json(account.wallet),
     );
+  }
+
+  #loadPersistedAccount(id: string, account: AccountState): BitcoinAccount {
+    if (StoredAccountAdapter.canLoad(account)) {
+      return StoredAccountAdapter.load(id, account);
+    }
+
+    return this.#loadAccount(id, account);
   }
 }

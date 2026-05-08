@@ -49,7 +49,8 @@ export type CreateAccountParams = DiscoverAccountParams & {
   accountName?: string;
 };
 
-const CREATE_ACCOUNTS_CONCURRENCY = 4;
+// Snap entropy derivation can become very spiky under wider parallelism.
+const CREATE_ACCOUNTS_CONCURRENCY = 2;
 
 /**
  * @param req - Account creation or discovery request.
