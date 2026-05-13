@@ -7,10 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add support for `keyring_createAccounts` method to enable batch account creation ([#601](https://github.com/MetaMask/snap-bitcoin-wallet/pull/601))
+
 ### Changed
 
 - Show a confirmation dialog before signing a PSBT from KeyringHandler and sending a transfer ([#591](https://github.com/MetaMask/snap-bitcoin-wallet/pull/591))
 - Add `resolveAccountAddress` method to KeyringHandler for dApp connectivity ([#590](https://github.com/MetaMask/snap-bitcoin-wallet/pull/590))
+- Bump `@metamask/keyring-api` from `^21.3.0` to `^22.0.0` ([#601](https://github.com/MetaMask/snap-bitcoin-wallet/pull/601))
+- Bump `@metamask/keyring-snap-sdk` from `^7.1.1` to `^8.0.0` ([#601](https://github.com/MetaMask/snap-bitcoin-wallet/pull/601))
 
 ### Fixed
 

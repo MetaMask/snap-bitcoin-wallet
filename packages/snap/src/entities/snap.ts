@@ -1,4 +1,4 @@
-import type { WalletTx } from '@metamask/bitcoindevkit';
+import type { AddressType, Network, WalletTx } from '@metamask/bitcoindevkit';
 import type { JsonSLIP10Node, SLIP10Node } from '@metamask/key-tree';
 import type {
   ComponentOrElement,
@@ -13,7 +13,7 @@ import type { Inscription } from './meta-protocols';
 
 export type SnapState = {
   // accountId -> account state. This is the main state of the snap.
-  accounts: Record<string, AccountState>;
+  accounts: Record<string, AccountState | null>;
   // derivationPath -> accountId. Only needed for fast lookup.
   derivationPaths: Record<string, string>;
 };
@@ -25,6 +25,19 @@ export type AccountState = {
   wallet: string;
   // Wallet inscriptions for meta protocols (ordinals, etc.)
   inscriptions: Inscription[];
+  // Metadata used by keyring account responses without loading the BDK wallet.
+  metadata?: AccountMetadata;
+};
+
+export type AccountMetadata = {
+  // Public receive address at account address index 0.
+  address: string;
+  // Account address type.
+  addressType: AddressType;
+  // Bitcoin network.
+  network: Network;
+  // Public descriptor for read-only descriptor requests.
+  publicDescriptor: string;
 };
 
 export type SyncResult = {
