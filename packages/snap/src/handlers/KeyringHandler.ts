@@ -1,4 +1,4 @@
-import type { AddressType, Network } from '@metamask/bitcoindevkit';
+import type { AddressType } from '@metamask/bitcoindevkit';
 import {
   AccountCreationType,
   assertCreateAccountOptionIsSupported,
@@ -48,13 +48,10 @@ import {
 } from 'superstruct';
 
 import {
-  addressTypeToPurpose,
-  type AccountState,
   type BitcoinAccount,
   FormatError,
   InexistentMethodError,
   type Logger,
-  networkToCoinType,
   networkToCurrencyUnit,
   Purpose,
   purposeToAddressType,
@@ -79,7 +76,6 @@ import type {
   AccountUseCases,
   CreateAccountParams,
 } from '../use-cases/AccountUseCases';
-import { logExecutionTime } from '../utils/performance';
 import { runSnapActionSafely } from '../utils/snapHelpers';
 
 export const CreateAccountRequest = object({
@@ -95,204 +91,6 @@ export const CreateAccountRequest = object({
 
 /** Maximum number of accounts to create in one internal createMany call. */
 const MAX_CREATE_ACCOUNTS_PER_BATCH = 100;
-
-const MAX_MISSING_INDEXES_TO_LOG = 25;
-
-/**
- * @param operation - Base operation name.
- * @param details - Account creation context to append.
- * @returns Operation name with account creation context.
- */
-function formatAccountCreationOperation(
-  operation: string,
-  details: string,
-): string {
-  return `${operation} (${details})`;
-}
-
-type CreateAccountsStateLogDetails = {
-  entropySource: string;
-  from: number;
-  to: number;
-  network: Network;
-  addressType: AddressType;
-  label: string;
-};
-
-/**
- * @param value - JSON value to coerce into an object record.
- * @returns Object record or an empty object.
- */
-function getJsonRecord(value: Json | null): Record<string, Json> {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    return {};
-  }
-
-  return value as Record<string, Json>;
-}
-
-/**
- * @param accounts - Account state namespace.
- * @returns Non-null account state entries.
- */
-function getAccountStateEntries(
-  accounts: Json | null,
-): [string, AccountState][] {
-  return Object.entries(getJsonRecord(accounts)).flatMap(([id, account]) => {
-    if (!account || typeof account !== 'object' || Array.isArray(account)) {
-      return [];
-    }
-
-    return [[id, account as unknown as AccountState]];
-  });
-}
-
-/**
- * @param derivationPaths - Derivation path state namespace.
- * @returns Derivation path entries whose account IDs are strings.
- */
-function getDerivationPathEntries(
-  derivationPaths: Json | null,
-): [string, string][] {
-  return Object.entries(getJsonRecord(derivationPaths)).flatMap(([path, id]) =>
-    typeof id === 'string' ? [[path, id]] : [],
-  );
-}
-
-/**
- * @param derivationPath - Split derivation path.
- * @returns Storage key for a derivation path.
- */
-function getDerivationPathKey(derivationPath: string[]): string {
-  return derivationPath.join('/');
-}
-
-/**
- * @param entropySource - Account entropy source.
- * @param addressType - Account address type.
- * @param network - Bitcoin network.
- * @param index - Account index.
- * @returns Expected derivation path storage key.
- */
-function getAccountDerivationPathKey(
-  entropySource: string,
-  addressType: AddressType,
-  network: Network,
-  index: number,
-): string {
-  return [
-    entropySource,
-    `${addressTypeToPurpose[addressType]}'`,
-    `${networkToCoinType[network]}'`,
-    `${index}'`,
-  ].join('/');
-}
-
-/**
- * @param derivationPath - Split derivation path.
- * @returns Account index or null when it cannot be parsed.
- */
-function getAccountIndex(derivationPath: string[]): number | null {
-  const segment = derivationPath[3];
-  if (!segment) {
-    return null;
-  }
-
-  const numericPart = segment.endsWith("'") ? segment.slice(0, -1) : segment;
-  const index = Number(numericPart);
-  return Number.isSafeInteger(index) ? index : null;
-}
-
-/**
- * @param details - Account creation context.
- * @param state - Snap state snapshot.
- * @param state.root - Root Snap state.
- * @param state.accounts - Account state namespace.
- * @param state.derivationPaths - Derivation-path index namespace.
- * @returns Snapshot verification log line.
- */
-function formatCreateAccountsStateLog(
-  details: CreateAccountsStateLogDetails,
-  state: {
-    root: Json | null;
-    accounts: Json | null;
-    derivationPaths: Json | null;
-  },
-): string {
-  const accountEntries = getAccountStateEntries(state.accounts);
-  const accountsById = new Map(accountEntries);
-  const derivationPathEntries = getDerivationPathEntries(state.derivationPaths);
-  const derivationPathsByPath = new Map(derivationPathEntries);
-  const requestedCount = details.to - details.from + 1;
-  const missingIndexes: number[] = [];
-  let persistedRequestedCount = 0;
-
-  for (let index = details.from; index <= details.to; index += 1) {
-    const pathKey = getAccountDerivationPathKey(
-      details.entropySource,
-      details.addressType,
-      details.network,
-      index,
-    );
-    const accountId = derivationPathsByPath.get(pathKey);
-
-    if (accountId && accountsById.has(accountId)) {
-      persistedRequestedCount += 1;
-    } else if (missingIndexes.length < MAX_MISSING_INDEXES_TO_LOG) {
-      missingIndexes.push(index);
-    }
-  }
-
-  const entropyAccountIndexes = accountEntries
-    .flatMap(([, account]) => {
-      if (account.derivationPath[0] !== details.entropySource) {
-        return [];
-      }
-
-      const index = getAccountIndex(account.derivationPath);
-      return index === null ? [] : [index];
-    })
-    .sort((left, right) => left - right);
-  const entropyDerivationPathsCount = derivationPathEntries.filter(([path]) =>
-    path.startsWith(`${details.entropySource}/`),
-  ).length;
-  const orphanedDerivationPathCount = derivationPathEntries.filter(
-    ([, id]) => !accountsById.has(id),
-  ).length;
-  const missingDerivationPathIndexCount = accountEntries.filter(
-    ([id, account]) =>
-      derivationPathsByPath.get(
-        getDerivationPathKey(account.derivationPath),
-      ) !== id,
-  ).length;
-
-  return `[SNAP STATE DEBUG - BITCOIN SNAP] keyring_createAccounts final state (${
-    details.label
-  }) ${JSON.stringify({
-    rootKeys: Object.keys(getJsonRecord(state.root)).sort(),
-    accountsCount: accountEntries.length,
-    derivationPathsCount: derivationPathEntries.length,
-    entropyId: details.entropySource,
-    entropyAccountsCount: entropyAccountIndexes.length,
-    entropyDerivationPathsCount,
-    entropyMinIndex: entropyAccountIndexes[0] ?? null,
-    entropyMaxIndex:
-      entropyAccountIndexes[entropyAccountIndexes.length - 1] ?? null,
-    requestedRange: {
-      from: details.from,
-      to: details.to,
-      count: requestedCount,
-      persistedCount: persistedRequestedCount,
-      missingCount: requestedCount - persistedRequestedCount,
-      missingSample: missingIndexes,
-      missingSampleLimit: MAX_MISSING_INDEXES_TO_LOG,
-    },
-    consistency: {
-      orphanedDerivationPathCount,
-      missingDerivationPathIndexCount,
-    },
-  })}`;
-}
 
 export class KeyringHandler implements Keyring {
   readonly #accountsUseCases: AccountUseCases;
@@ -508,7 +306,6 @@ export class KeyringHandler implements Keyring {
   async createAccounts(
     options: CreateAccountOptions,
   ): Promise<KeyringAccount[]> {
-    const start = Date.now();
     assertCreateAccountOptionIsSupported(options, [
       `${AccountCreationType.Bip44DeriveIndex}`,
       `${AccountCreationType.Bip44DeriveIndexRange}`,
@@ -538,23 +335,10 @@ export class KeyringHandler implements Keyring {
       );
     }
 
-    const batchSize = range.to - range.from + 1;
-    const indexLabel =
-      range.from === range.to ? `${range.from}` : `${range.from}-${range.to}`;
-    const accountCreationDetails = `entropyId=${entropySource} indexes=${indexLabel} count=${batchSize}`;
-
     // Only P2WPKH (BIP-84) on bitcoin mainnet is supported for v1, mirroring
     // the defaults used by `createAccount` when no scope is provided.
     const network = scopeToNetwork[BtcScope.Mainnet];
     const addressType = this.#defaultAddressType;
-    const stateLogDetails: CreateAccountsStateLogDetails = {
-      entropySource,
-      from: range.from,
-      to: range.to,
-      network,
-      addressType,
-      label: accountCreationDetails,
-    };
     if (addressType !== 'p2wpkh') {
       throw new FormatError(
         'Only native segwit (P2WPKH) addresses are supported',
@@ -576,7 +360,6 @@ export class KeyringHandler implements Keyring {
 
       // `AccountUseCases.createMany` is idempotent: if an account already exists
       // for the resolved derivation path, it will be returned as-is.
-      const createManyStart = Date.now();
       const accounts: BitcoinAccount[] = [];
       let chunkFrom = range.from;
 
@@ -585,10 +368,6 @@ export class KeyringHandler implements Keyring {
           chunkFrom + MAX_CREATE_ACCOUNTS_PER_BATCH - 1,
           range.to,
         );
-        const chunkSize = chunkTo - chunkFrom + 1;
-        const chunkIndexLabel =
-          chunkFrom === chunkTo ? `${chunkFrom}` : `${chunkFrom}-${chunkTo}`;
-        const chunkDetails = `entropyId=${entropySource} indexes=${chunkIndexLabel} count=${chunkSize}`;
         const chunkRequests: CreateAccountParams[] = [];
 
         for (let index = chunkFrom; index <= chunkTo; index += 1) {
@@ -601,16 +380,8 @@ export class KeyringHandler implements Keyring {
           });
         }
 
-        const createManyChunkStart = Date.now();
         accounts.push(
           ...(await this.#accountsUseCases.createMany(chunkRequests)),
-        );
-        logExecutionTime(
-          formatAccountCreationOperation(
-            'keyring_createAccounts createMany batch',
-            chunkDetails,
-          ),
-          createManyChunkStart,
         );
 
         if (chunkTo === range.to) {
@@ -619,24 +390,7 @@ export class KeyringHandler implements Keyring {
         chunkFrom = chunkTo + 1;
       }
 
-      logExecutionTime(
-        formatAccountCreationOperation(
-          'keyring_createAccounts createMany',
-          accountCreationDetails,
-        ),
-        createManyStart,
-      );
-
-      const responseMappingStart = Date.now();
-      const result = accounts.map(mapToKeyringAccount);
-      logExecutionTime(
-        formatAccountCreationOperation(
-          'keyring_createAccounts response mapping',
-          accountCreationDetails,
-        ),
-        responseMappingStart,
-      );
-      return result;
+      return accounts.map(mapToKeyringAccount);
     } finally {
       if (traceStarted) {
         await runSnapActionSafely(
@@ -645,39 +399,7 @@ export class KeyringHandler implements Keyring {
           'endTrace',
         );
       }
-      logExecutionTime(
-        formatAccountCreationOperation(
-          'keyring_createAccounts',
-          accountCreationDetails,
-        ),
-        start,
-      );
-      await this.#logCreateAccountsState(stateLogDetails);
     }
-  }
-
-  async #logCreateAccountsState(
-    details: CreateAccountsStateLogDetails,
-  ): Promise<void> {
-    await runSnapActionSafely(
-      async () => {
-        const [root, accounts, derivationPaths] = await Promise.all([
-          this.#snapClient.getState(),
-          this.#snapClient.getState('accounts'),
-          this.#snapClient.getState('derivationPaths'),
-        ]);
-
-        console.log(
-          formatCreateAccountsStateLog(details, {
-            root,
-            accounts,
-            derivationPaths,
-          }),
-        );
-      },
-      this.#logger,
-      'logCreateAccountsState',
-    );
   }
 
   async discoverAccounts(
