@@ -124,6 +124,13 @@ export type BitcoinAccount = {
   takeStaged(): ChangeSet | undefined;
 
   /**
+   * Check whether a change set exists without making it unavailable for extraction.
+   *
+   * @returns true if there is a change set
+   */
+  hasStaged(): boolean;
+
+  /**
    * Returns a Transaction Builder.
    *
    * @returns the TxBuilder
