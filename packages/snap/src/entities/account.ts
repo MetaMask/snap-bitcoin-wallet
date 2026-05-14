@@ -263,6 +263,16 @@ export type BitcoinAccountRepository = {
   getByDerivationPath(derivationPath: string[]): Promise<BitcoinAccount | null>;
 
   /**
+   * Get accounts by derivation path.
+   *
+   * @param derivationPaths - derivation paths.
+   * @returns the accounts or null if they do not exist, in input order
+   */
+  getByDerivationPaths(
+    derivationPaths: string[][],
+  ): Promise<(BitcoinAccount | null)[]>;
+
+  /**
    * Create a new account, without persisting it.
    *
    * @param derivationPath - derivation path.
@@ -282,6 +292,13 @@ export type BitcoinAccountRepository = {
    * @param account - Bitcoin account.
    */
   insert(account: BitcoinAccount): Promise<BitcoinAccount>;
+
+  /**
+   * Insert accounts.
+   *
+   * @param accounts - Bitcoin accounts.
+   */
+  insertMany(accounts: BitcoinAccount[]): Promise<BitcoinAccount[]>;
 
   /**
    * Update an account.
