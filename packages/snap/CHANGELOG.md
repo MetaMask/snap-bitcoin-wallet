@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Add
+### Added
 
 - Add `insertMany` to repository API ([#609](https://github.com/MetaMask/snap-bitcoin-wallet/pull/609))
 
