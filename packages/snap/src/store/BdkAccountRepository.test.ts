@@ -3,6 +3,7 @@
 
 import type { DescriptorPair } from '@metamask/bitcoindevkit';
 import {
+  Address,
   ChangeSet,
   xpriv_to_descriptor,
   xpub_to_descriptor,
@@ -25,6 +26,9 @@ jest.mock('@metamask/bitcoindevkit', () => {
   return {
     ChangeSet: {
       from_json: jest.fn(),
+    },
+    Address: {
+      from_string: jest.fn(),
     },
     slip10_to_extended: jest.fn().mockReturnValue('mock-extended'),
     xpub_to_descriptor: jest.fn(),
@@ -57,11 +61,16 @@ describe('BdkAccountRepository', () => {
     derivationPath: mockDerivationPath,
   });
   const mockChangeSet = mock<ChangeSet>();
+  const mockAddress = mock<Address>({
+    toString: () => 'bc1qaddress...',
+  });
   const mockAccount = mock<BitcoinAccount>({
     id: 'some-id',
     derivationPath: mockDerivationPath,
     network: 'bitcoin',
     addressType: 'p2wpkh',
+    publicAddress: mockAddress,
+    publicDescriptor: 'mock-public-descriptor',
   });
 
   const repo = new BdkAccountRepository(mockSnapClient);
@@ -74,6 +83,7 @@ describe('BdkAccountRepository', () => {
     mockSnapClient.getPublicEntropy.mockResolvedValue(mockSlip10Node);
     (xpriv_to_descriptor as jest.Mock).mockReturnValue(mockDescriptors);
     (xpub_to_descriptor as jest.Mock).mockReturnValue(mockDescriptors);
+    jest.mocked(Address.from_string).mockReturnValue(mockAddress);
     (mockAccount.takeStaged as jest.Mock) = jest
       .fn()
       .mockReturnValue(mockChangeSet);
@@ -233,6 +243,40 @@ describe('BdkAccountRepository', () => {
       expect(mockSnapClient.setState).not.toHaveBeenCalled();
     });
 
+    it('uses cached account metadata without loading BDK wallets', async () => {
+      const accountStateWithMetadata: AccountState = {
+        ...accountState1,
+        metadata: {
+          address: 'bc1qcached...',
+          addressType: 'p2wpkh',
+          network: 'bitcoin',
+          publicDescriptor: 'cached-public-descriptor',
+        },
+      };
+      mockSnapClient.getState
+        .mockResolvedValueOnce({
+          "m/84'/0'/1'": 'some-id-1',
+        })
+        .mockResolvedValueOnce({
+          'some-id-1': accountStateWithMetadata,
+        });
+      (BdkAccountAdapter.load as jest.Mock).mockClear();
+      (ChangeSet.from_json as jest.Mock).mockClear();
+
+      const result = await repo.getByDerivationPaths([derivationPath1]);
+      const account = result[0];
+
+      expect(account?.id).toBe('some-id-1');
+      expect(account?.publicAddress.toString()).toBe('bc1qaddress...');
+      expect(account?.publicDescriptor).toBe('cached-public-descriptor');
+      expect(jest.mocked(Address.from_string)).toHaveBeenCalledWith(
+        'bc1qcached...',
+        'bitcoin',
+      );
+      expect(ChangeSet.from_json).not.toHaveBeenCalled();
+      expect(BdkAccountAdapter.load).not.toHaveBeenCalled();
+    });
+
     it('repairs missing derivation path indexes from account state', async () => {
       mockSnapClient.getState
         .mockResolvedValueOnce({
@@ -341,6 +385,12 @@ describe('BdkAccountRepository', () => {
           wallet: mockWalletData,
           inscriptions: [],
           derivationPath: mockDerivationPath,
+          metadata: {
+            address: 'bc1qaddress...',
+            addressType: 'p2wpkh',
+            network: 'bitcoin',
+            publicDescriptor: 'mock-public-descriptor',
+          },
         },
       );
     });
@@ -380,9 +430,17 @@ describe('BdkAccountRepository', () => {
       const account1 = mock<BitcoinAccount>();
       account1.id = 'some-id-1';
       account1.derivationPath = ['m', "84'", "0'", "1'"];
+      account1.network = 'bitcoin';
+      account1.addressType = 'p2wpkh';
+      account1.publicAddress = mockAddress;
+      account1.publicDescriptor = 'mock-public-descriptor-1';
       const account2 = mock<BitcoinAccount>();
       account2.id = 'some-id-2';
       account2.derivationPath = ['m', "84'", "0'", "2'"];
+      account2.network = 'bitcoin';
+      account2.addressType = 'p2wpkh';
+      account2.publicAddress = mockAddress;
+      account2.publicDescriptor = 'mock-public-descriptor-2';
       (account1.takeStaged as jest.Mock) = jest
         .fn()
         .mockReturnValue(mockChangeSet);
@@ -406,11 +464,23 @@ describe('BdkAccountRepository', () => {
           wallet: mockWalletData,
           inscriptions: [],
           derivationPath: ['m', "84'", "0'", "1'"],
+          metadata: {
+            address: 'bc1qaddress...',
+            addressType: 'p2wpkh',
+            network: 'bitcoin',
+            publicDescriptor: 'mock-public-descriptor-1',
+          },
         },
         'some-id-2': {
           wallet: mockWalletData,
           inscriptions: [],
           derivationPath: ['m', "84'", "0'", "2'"],
+          metadata: {
+            address: 'bc1qaddress...',
+            addressType: 'p2wpkh',
+            network: 'bitcoin',
+            publicDescriptor: 'mock-public-descriptor-2',
+          },
         },
       });
       expect(mockSnapClient.setState).toHaveBeenNthCalledWith(

@@ -16,10 +16,11 @@ import {
   type SnapClient,
   type Inscription,
   type AccountState,
+  type AccountMetadata,
   type SnapState,
   StorageError,
 } from '../entities';
-import { BdkAccountAdapter } from '../infra';
+import { BdkAccountAdapter, StoredAccountAdapter } from '../infra';
 
 /**
  * Encode a fingerprint to a 4-bytes hex-string (required by the BDK).
@@ -44,8 +45,21 @@ function getDerivationPathKey(derivationPath: string[]): string {
 
 /**
  * @param account - Account to persist.
+ * @returns Metadata needed for keyring account responses.
+ */
+function getAccountMetadata(account: BitcoinAccount): AccountMetadata {
+  return {
+    address: account.publicAddress.toString(),
+    addressType: account.addressType,
+    network: account.network,
+    publicDescriptor: account.publicDescriptor,
+  };
+}
+
+/**
+ * @param account - Account to persist.
  * @param walletData - Serialized wallet data.
- * @returns Account state.
+ * @returns Account state with cached response metadata.
  */
 function getAccountState(
   account: BitcoinAccount,
@@ -55,6 +69,7 @@ function getAccountState(
     wallet: walletData.to_json(),
     inscriptions: [],
     derivationPath: account.derivationPath,
+    metadata: getAccountMetadata(account),
   };
 }
 
@@ -138,7 +153,7 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
       const indexedAccount = indexedId ? accountsById[indexedId] : null;
 
       if (indexedId && indexedAccount) {
-        return this.#loadAccount(indexedId, indexedAccount);
+        return this.#loadPersistedAccount(indexedId, indexedAccount);
       }
 
       const fallback = accountsByDerivationPath.get(pathKey);
@@ -148,7 +163,7 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
 
       const [id, account] = fallback;
       repairs[pathKey] = id;
-      return this.#loadAccount(id, account);
+      return this.#loadPersistedAccount(id, account);
     });
 
     if (Object.keys(repairs).length > 0) {
@@ -372,5 +387,13 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
       account.derivationPath,
       ChangeSet.from_json(account.wallet),
     );
+  }
+
+  #loadPersistedAccount(id: string, account: AccountState): BitcoinAccount {
+    if (StoredAccountAdapter.canLoad(account)) {
+      return StoredAccountAdapter.load(id, account);
+    }
+
+    return this.#loadAccount(id, account);
   }
 }
