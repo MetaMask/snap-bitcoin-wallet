@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Preserve original error message and class when wrapping unknown errors at the handler boundary ([#600](https://github.com/MetaMask/snap-bitcoin-wallet/pull/600))
+- Display unconfirmed change to the external keychain (e.g. bridge/swap refunds) in the account balance so it no longer drops to zero while a partial-spend tx is pending ([#605](https://github.com/MetaMask/snap-bitcoin-wallet/pull/605))
 
 ## [1.10.1]
 

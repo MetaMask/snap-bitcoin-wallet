@@ -6,6 +6,7 @@ import { assertIsConfirmationDialog, installSnap } from '@metamask/snaps-jest';
 import { BlockchainTestUtils } from './blockchain-utils';
 import { MNEMONIC, ORIGIN } from './constants';
 import { AccountCapability } from '../src/entities';
+import { Caip19Asset } from '../src/handlers/caip';
 import type { FillPsbtResponse } from '../src/handlers/KeyringRequestHandler';
 
 const ACCOUNT_INDEX = 3;
@@ -325,6 +326,34 @@ describe('KeyringRequestHandler', () => {
           txid: expect.any(String),
         },
       });
+
+      // Regression for issue #597: after broadcasting a partial-spend tx
+      // whose change lands on the external (public) keychain — as bridges
+      // and swaps do — the displayed balance must include that unconfirmed
+      // change. The wallet was funded with a single 10 BTC UTXO in
+      // `beforeAll`; the broadcast spends a small amount plus fee, so the
+      // change should be ~9.99 BTC, never 0.
+      const balanceResp = await snap.onKeyringRequest({
+        origin: ORIGIN,
+        method: 'keyring_getAccountBalances',
+        params: {
+          id: account.id,
+          assets: [Caip19Asset.Regtest],
+        },
+      });
+
+      const balanceResult = (
+        balanceResp.response as {
+          result: Record<string, { amount: string; unit: string }>;
+        }
+      ).result;
+      const amount = balanceResult[Caip19Asset.Regtest]?.amount;
+      expect(amount).toBeDefined();
+      // Bound from above as well: a stale fix where applyUnconfirmedTx
+      // no-ops would still report the original 10 BTC and pass a `> 9`
+      // check on its own, hiding the regression.
+      expect(parseFloat(amount as string)).toBeGreaterThan(9);
+      expect(parseFloat(amount as string)).toBeLessThan(10);
     });
 
     it('fails if invalid PSBT', async () => {
