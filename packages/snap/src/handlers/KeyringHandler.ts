@@ -226,10 +226,13 @@ export class KeyringHandler implements Keyring {
 
       let resolvedAddressType: AddressType;
       if (addressType) {
-        // only support P2WPKH addresses for v1
-        if (addressType !== BtcAccountType.P2wpkh) {
+        // Support P2WPKH and P2TR address types
+        if (
+          addressType !== BtcAccountType.P2wpkh &&
+          addressType !== BtcAccountType.P2tr
+        ) {
           throw new FormatError(
-            'Only native segwit (P2WPKH) addresses are supported',
+            'Only native segwit (P2WPKH) and taproot (P2TR) addresses are supported',
           );
         }
         resolvedAddressType = caipToAddressType[addressType];
@@ -245,10 +248,13 @@ export class KeyringHandler implements Keyring {
         resolvedAddressType = this.#extractAddressType(derivationPath);
       } else {
         resolvedAddressType = this.#defaultAddressType;
-        // validate default address type is P2WPKH just to be sure
-        if (resolvedAddressType !== 'p2wpkh') {
+        // validate default address type is a supported type
+        if (
+          resolvedAddressType !== 'p2wpkh' &&
+          resolvedAddressType !== 'p2tr'
+        ) {
           throw new FormatError(
-            'Only native segwit (P2WPKH) addresses are supported',
+            'Only native segwit (P2WPKH) and taproot (P2TR) addresses are supported',
           );
         }
       }
@@ -296,8 +302,8 @@ export class KeyringHandler implements Keyring {
   ): Promise<DiscoveredAccount[]> {
     const accounts = await Promise.all(
       scopes.flatMap((scope) =>
-        // only discover P2WPKH addresses
-        [BtcAccountType.P2wpkh].map(async (addressType) =>
+        // discover P2WPKH and P2TR addresses
+        [BtcAccountType.P2wpkh, BtcAccountType.P2tr].map(async (addressType) =>
           this.#accountsUseCases.discover({
             network: scopeToNetwork[scope],
             entropySource,
@@ -469,10 +475,13 @@ export class KeyringHandler implements Keyring {
       throw new FormatError(`Invalid BIP-purpose: ${purpose}`);
     }
 
-    // only support native segwit (BIP-84) derivation paths for now
-    if ((purpose as Purpose) !== Purpose.NativeSegwit) {
+    // support native segwit (BIP-84) and taproot (BIP-86) derivation paths
+    if (
+      (purpose as Purpose) !== Purpose.NativeSegwit &&
+      (purpose as Purpose) !== Purpose.Taproot
+    ) {
       throw new FormatError(
-        `Only native segwit (BIP-84) derivation paths are supported`,
+        `Only native segwit (BIP-84) and taproot (BIP-86) derivation paths are supported`,
       );
     }
 

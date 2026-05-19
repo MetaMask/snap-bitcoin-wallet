@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Enable P2TR (taproot) account creation alongside P2WPKH
+- Accept BIP-86 (purpose 86) derivation paths for taproot accounts
+- Include P2TR in account discovery
 ### Changed
 
 - Show a confirmation dialog before signing a PSBT from KeyringHandler and sending a transfer ([#591](https://github.com/MetaMask/snap-bitcoin-wallet/pull/591))
