@@ -19,7 +19,11 @@ import {
   TransactionStatus,
 } from '@metamask/keyring-api';
 
-import { type BitcoinAccount, networkToCurrencyUnit } from '../entities';
+import {
+  type BitcoinAccount,
+  canAccountTxidBeMalleated,
+  networkToCurrencyUnit,
+} from '../entities';
 import type { Caip19Asset } from './caip';
 import { addressTypeToCaip, networkToCaip19, networkToScope } from './caip';
 
@@ -216,7 +220,18 @@ export function mapToTransaction(
 }
 
 /**
- * Maps a PSBT to a Keyring Transaction.
+ * KeyringTransaction augmented with a malleability flag. The base
+ * `KeyringTransaction` shape from `@metamask/keyring-api` does not include
+ * `canBeMalleable`; consumers (extension, dApp) that ignore unknown fields
+ * will see the standard shape, while consumers that opt in can read the flag
+ * to decide whether to trust the txid before block confirmation.
+ */
+export type KeyringTransactionWithMalleability = KeyringTransaction & {
+  canBeMalleable: boolean;
+};
+
+/**
+ * Maps a PSBT to a Keyring Transaction with a malleability flag.
  *
  * @param account - The Bitcoin account.
  * @param tx - The extracted transaction from the PSBT.
@@ -225,7 +240,7 @@ export function mapToTransaction(
 export function mapPsbtToTransaction(
   account: BitcoinAccount,
   tx: Transaction,
-): KeyringTransaction {
+): KeyringTransactionWithMalleability {
   const txid = tx.compute_txid();
   const currentTime = Date.now();
 
@@ -255,6 +270,7 @@ export function mapPsbtToTransaction(
     to: getRecipients(tx.output),
     from: [],
     fees: [mapToTransactionFees(account.calculateFee(tx), account.network)],
+    canBeMalleable: canAccountTxidBeMalleated(account.addressType),
   };
 }
 

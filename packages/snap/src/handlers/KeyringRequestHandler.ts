@@ -5,6 +5,7 @@ import { assert } from 'superstruct';
 import type { ConfirmationRepository } from '../entities';
 import {
   AccountCapability,
+  AssertionError,
   InexistentMethodError,
   NotFoundError,
 } from '../entities';
@@ -24,6 +25,10 @@ import type { AccountUseCases } from '../use-cases/AccountUseCases';
 export type SignPsbtResponse = {
   psbt: string;
   txid: string | null;
+  // Present only when broadcast happened. True if the source account's
+  // address type allows third-party txid malleation before confirmation
+  // (currently only legacy P2PKH).
+  canBeMalleable?: boolean;
 };
 
 export type ComputeFeeResponse = {
@@ -33,6 +38,9 @@ export type ComputeFeeResponse = {
 
 export type BroadcastPsbtResponse = {
   txid: string;
+  // True if the source account's address type allows third-party txid
+  // malleation before confirmation (currently only legacy P2PKH).
+  canBeMalleable: boolean;
 };
 
 export type FillPsbtResponse = {
@@ -131,17 +139,33 @@ export class KeyringRequestHandler {
     );
 
     // Creates a fresh PSBT from the original base64 because the original PSBT is mutated by the confirmation repository
-    const { psbt: signedPsbt, txid } = await this.#accountsUseCases.signPsbt(
+    const {
+      psbt: signedPsbt,
+      txid,
+      canBeMalleable,
+    } = await this.#accountsUseCases.signPsbt(
       id,
       parsePsbt(psbtBase64),
       origin,
       options,
       feeRate,
     );
-    return this.#toKeyringResponse({
+    // Invariant: signPsbt sets txid and canBeMalleable together (when broadcast
+    // happened) or neither (when it didn't). A txid without the flag would
+    // leak a possibly-malleable txid to the consumer.
+    if (txid !== undefined && canBeMalleable === undefined) {
+      throw new AssertionError(
+        'signPsbt returned txid without canBeMalleable flag',
+      );
+    }
+    const response: SignPsbtResponse = {
       psbt: signedPsbt.toString(),
       txid: txid?.toString() ?? null,
-    } as SignPsbtResponse);
+    };
+    if (canBeMalleable !== undefined) {
+      response.canBeMalleable = canBeMalleable;
+    }
+    return this.#toKeyringResponse(response);
   }
 
   async #fillPsbt(
@@ -179,13 +203,14 @@ export class KeyringRequestHandler {
     psbtBase64: string,
     origin: string,
   ): Promise<KeyringResponse> {
-    const txid = await this.#accountsUseCases.broadcastPsbt(
+    const { txid, canBeMalleable } = await this.#accountsUseCases.broadcastPsbt(
       id,
       parsePsbt(psbtBase64),
       origin,
     );
     return this.#toKeyringResponse({
       txid: txid.toString(),
+      canBeMalleable,
     } as BroadcastPsbtResponse);
   }
 
@@ -195,7 +220,7 @@ export class KeyringRequestHandler {
     origin: string,
     feeRate?: number,
   ): Promise<KeyringResponse> {
-    const txid = await this.#accountsUseCases.sendTransfer(
+    const { txid, canBeMalleable } = await this.#accountsUseCases.sendTransfer(
       id,
       recipients,
       origin,
@@ -203,6 +228,7 @@ export class KeyringRequestHandler {
     );
     return this.#toKeyringResponse({
       txid: txid.toString(),
+      canBeMalleable,
     } as BroadcastPsbtResponse);
   }
 
