@@ -865,6 +865,7 @@ describe('AccountUseCases', () => {
     });
     const mockAccount = mock<BitcoinAccount>({
       network: 'bitcoin',
+      addressType: 'p2wpkh',
       sign: jest.fn(),
       capabilities: [AccountCapability.SignPsbt],
     });
@@ -938,7 +939,7 @@ describe('AccountUseCases', () => {
       mockAccount.getTransaction.mockReturnValue(mockWalletTx);
       mockTransaction.compute_txid.mockReturnValue(mockTxid);
 
-      const { txid, psbt } = await useCases.signPsbt(
+      const { txid, psbt, canBeMalleable } = await useCases.signPsbt(
         'account-id',
         mockPsbt,
         'metamask',
@@ -970,6 +971,34 @@ describe('AccountUseCases', () => {
       );
       expect(txid).toBe(mockTxid);
       expect(psbt).toBe('mockSignedPsbt');
+      expect(canBeMalleable).toBe(false);
+    });
+
+    it('omits canBeMalleable when broadcast is false', async () => {
+      const { canBeMalleable } = await useCases.signPsbt(
+        'account-id',
+        mockPsbt,
+        'metamask',
+        { fill: false, broadcast: false },
+      );
+
+      expect(canBeMalleable).toBeUndefined();
+    });
+
+    it('sets canBeMalleable=true when broadcasting from a legacy P2PKH account', async () => {
+      mockAccount.getTransaction.mockReturnValue(mockWalletTx);
+      mockTransaction.compute_txid.mockReturnValue(mockTxid);
+      const legacyAccount = { ...mockAccount, addressType: 'p2pkh' as const };
+      mockRepository.getWithSigner.mockResolvedValueOnce(legacyAccount);
+
+      const { canBeMalleable } = await useCases.signPsbt(
+        'account-id',
+        mockPsbt,
+        'metamask',
+        { fill: false, broadcast: true },
+      );
+
+      expect(canBeMalleable).toBe(true);
     });
 
     it('fills, signs and broadcasts a PSBT', async () => {
@@ -1554,6 +1583,7 @@ describe('AccountUseCases', () => {
     });
     const mockAccount = mock<BitcoinAccount>({
       network: 'bitcoin',
+      addressType: 'p2wpkh',
       sign: jest.fn(),
       capabilities: [AccountCapability.SendTransfer],
     });
@@ -1624,7 +1654,7 @@ describe('AccountUseCases', () => {
       mockAccount.getTransaction.mockReturnValue(mockWalletTx);
       mockTransaction.compute_txid.mockReturnValue(mockTxid);
 
-      const txid = await useCases.sendTransfer(
+      const result = await useCases.sendTransfer(
         'account-id',
         recipients,
         'metamask',
@@ -1657,7 +1687,25 @@ describe('AccountUseCases', () => {
         mockWalletTx,
         'metamask',
       );
-      expect(txid).toBe(mockTxid);
+      expect(result.txid).toBe(mockTxid);
+      expect(result.canBeMalleable).toBe(false);
+    });
+
+    it('sets canBeMalleable=true on legacy P2PKH accounts', async () => {
+      mockAccount.getTransaction.mockReturnValue(mockWalletTx);
+      mockTransaction.compute_txid.mockReturnValue(mockTxid);
+      mockTxBuilder.finish.mockReturnValueOnce(mockPsbt);
+
+      const legacyAccount = { ...mockAccount, addressType: 'p2pkh' as const };
+      mockRepository.getWithSigner.mockResolvedValueOnce(legacyAccount);
+
+      const result = await useCases.sendTransfer(
+        'account-id',
+        recipients,
+        'metamask',
+      );
+
+      expect(result.canBeMalleable).toBe(true);
     });
 
     it('propagates an error if getWithSigner fails', async () => {
@@ -1700,6 +1748,7 @@ describe('AccountUseCases', () => {
     const mockWalletTx = mock<WalletTx>();
     const mockAccount = mock<BitcoinAccount>({
       network: 'bitcoin',
+      addressType: 'p2wpkh',
       capabilities: [AccountCapability.BroadcastPsbt],
     });
 
@@ -1730,8 +1779,8 @@ describe('AccountUseCases', () => {
       ).rejects.toThrow('Account missing given capability');
     });
 
-    it('broadcasts a PSBT and returns txid', async () => {
-      const txid = await useCases.broadcastPsbt(
+    it('broadcasts a PSBT and returns txid with canBeMalleable=false for P2WPKH', async () => {
+      const result = await useCases.broadcastPsbt(
         'account-id',
         mockPsbt,
         'metamask',
@@ -1744,7 +1793,22 @@ describe('AccountUseCases', () => {
         mockTransaction,
       );
       expect(mockRepository.update).toHaveBeenCalledWith(mockAccount);
-      expect(txid).toBe(mockTxid);
+      expect(result.txid).toBe(mockTxid);
+      expect(result.canBeMalleable).toBe(false);
+    });
+
+    it('returns canBeMalleable=true when broadcasting from a legacy P2PKH account', async () => {
+      const legacyAccount = { ...mockAccount, addressType: 'p2pkh' as const };
+      mockRepository.get.mockResolvedValueOnce(legacyAccount);
+
+      const result = await useCases.broadcastPsbt(
+        'account-id',
+        mockPsbt,
+        'metamask',
+      );
+
+      expect(result.txid).toBe(mockTxid);
+      expect(result.canBeMalleable).toBe(true);
     });
   });
 
