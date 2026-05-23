@@ -58,7 +58,7 @@
     "jest-transform-stub": "2.0.0",
     "superstruct": "^2.0.2",
     "ts-jest": "^29.4.1",
-    "uuid": "^11.1.0",
+    "uuid": "^14.0.0",
     "wif": "^5.0.0"
   },
   "publishConfig": {
