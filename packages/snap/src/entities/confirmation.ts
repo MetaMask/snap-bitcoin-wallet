@@ -1,8 +1,7 @@
 import type { Network, Psbt } from '@metamask/bitcoindevkit';
-import type { CurrencyRate } from '@metamask/snaps-sdk';
 
 import type { BitcoinAccount } from './account';
-import type { CurrencyUnit } from './currency';
+import type { CurrencyRate, CurrencyUnit } from './currency';
 
 export type SignMessageConfirmationContext = {
   message: string;
