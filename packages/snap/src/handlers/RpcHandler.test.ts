@@ -327,6 +327,7 @@ describe('RpcHandler', () => {
         txid: mock<Txid>({
           toString: jest.fn().mockReturnValue('txId'),
         }),
+        canBeMalleable: false,
       });
 
       const result = await handler.route(origin, request);
@@ -338,7 +339,43 @@ describe('RpcHandler', () => {
         'metamask',
         { broadcast: true, fill: false },
       );
-      expect(result).toStrictEqual({ transactionId: 'txId' });
+      expect(result).toStrictEqual({
+        transactionId: 'txId',
+        canBeMalleable: false,
+      });
+    });
+
+    it('propagates canBeMalleable=true from legacy P2PKH accounts', async () => {
+      mockSendFlowUseCases.display.mockResolvedValue(mockPsbt);
+      mockAccountsUseCases.signPsbt.mockResolvedValue({
+        psbt: 'psbtBase64',
+        txid: mock<Txid>({
+          toString: jest.fn().mockReturnValue('txId'),
+        }),
+        canBeMalleable: true,
+      });
+
+      const result = await handler.route(origin, request);
+
+      expect(result).toStrictEqual({
+        transactionId: 'txId',
+        canBeMalleable: true,
+      });
+    });
+
+    it('throws when canBeMalleable is missing (signPsbt did not broadcast)', async () => {
+      mockSendFlowUseCases.display.mockResolvedValue(mockPsbt);
+      mockAccountsUseCases.signPsbt.mockResolvedValue({
+        psbt: 'psbtBase64',
+        txid: mock<Txid>({
+          toString: jest.fn().mockReturnValue('txId'),
+        }),
+        // canBeMalleable intentionally omitted
+      });
+
+      await expect(handler.route(origin, request)).rejects.toThrow(
+        'signPsbt returned txid without canBeMalleable flag',
+      );
     });
 
     it('propagates errors from display', async () => {
@@ -382,6 +419,7 @@ describe('RpcHandler', () => {
         txid: mock<Txid>({
           toString: jest.fn().mockReturnValue('txId'),
         }),
+        canBeMalleable: false,
       });
 
       const result = await handler.route(origin, request);
@@ -392,7 +430,10 @@ describe('RpcHandler', () => {
         'metamask',
         { broadcast: true, fill: true },
       );
-      expect(result).toStrictEqual({ transactionId: 'txId' });
+      expect(result).toStrictEqual({
+        transactionId: 'txId',
+        canBeMalleable: false,
+      });
     });
 
     it('propagates errors from signAndSendTransaction', async () => {
@@ -718,9 +759,11 @@ describe('RpcHandler', () => {
 
       // we mock the mapping function since we don't care about the result structure here
       // it is tested in mappings.test.ts
-      jest
-        .mocked(mapPsbtToTransaction)
-        .mockReturnValue({} as KeyringTransaction);
+      jest.mocked(mapPsbtToTransaction).mockReturnValue({
+        canBeMalleable: false,
+      } as KeyringTransaction & {
+        canBeMalleable: boolean;
+      });
     });
 
     it('creates and signs a transaction successfully', async () => {
@@ -738,6 +781,17 @@ describe('RpcHandler', () => {
       );
 
       expect(result).toBeDefined();
+    });
+
+    it('passes the canBeMalleable flag through from mapPsbtToTransaction', async () => {
+      jest.mocked(mapPsbtToTransaction).mockReturnValueOnce({
+        id: 'tx-id',
+        canBeMalleable: true,
+      } as unknown as KeyringTransaction & { canBeMalleable: boolean });
+
+      const result = await handler.route(origin, validRequest);
+
+      expect((result as any).canBeMalleable).toBe(true);
     });
 
     it('handles different amounts and addresses', async () => {

@@ -25,6 +25,7 @@ import {
   AccountCapability,
   addressTypeToPurpose,
   AssertionError,
+  canAccountTxidBeMalleated,
   networkToCoinType,
   NotFoundError,
   PermissionError,
@@ -46,6 +47,29 @@ export type CreateAccountParams = DiscoverAccountParams & {
   synchronize: boolean;
   correlationId?: string;
   accountName?: string;
+};
+
+/**
+ * Result of broadcasting a Bitcoin transaction.
+ *
+ * `canBeMalleable` is `true` when the source account's address type allows a
+ * third party to rewrite the txid before confirmation (currently only legacy
+ * P2PKH). Consumers that persist or surface the txid to the dApp should treat
+ * a `true` flag as a signal that the txid may change, and avoid trusting it
+ * for finality decisions before block confirmation.
+ *
+ * Limitation: the flag is computed from the snap account's address type, which
+ * is correct for transactions the snap builds itself (`sendTransfer`,
+ * `executeSendFlow`, `confirmSend`). For externally-provided PSBTs broadcast
+ * via `broadcastPsbt` or `signPsbt({ broadcast: true, fill: false })`, the
+ * transaction may include foreign inputs of any address type; if any foreign
+ * input is legacy non-witness, the txid is malleable even when the snap's
+ * account is P2WPKH. Callers building collaborative transactions must compute
+ * malleability per-input.
+ */
+export type BroadcastResult = {
+  txid: Txid;
+  canBeMalleable: boolean;
 };
 
 export class AccountUseCases {
@@ -372,7 +396,7 @@ export class AccountUseCases {
     origin: string,
     options: { fill: boolean; broadcast: boolean },
     feeRate?: number,
-  ): Promise<{ psbt: string; txid?: Txid }> {
+  ): Promise<{ psbt: string; txid?: Txid; canBeMalleable?: boolean }> {
     this.#logger.debug('Signing PSBT: %s', id, options);
 
     const account = await this.#repository.getWithSigner(id);
@@ -389,7 +413,11 @@ export class AccountUseCases {
     if (options.broadcast) {
       const psbtString = signedPsbt.toString();
       const tx = account.extractTransaction(signedPsbt);
-      const txid = await this.#broadcast(account, tx, origin);
+      const { txid, canBeMalleable } = await this.#broadcast(
+        account,
+        tx,
+        origin,
+      );
 
       this.#logger.info(
         'Transaction sent successfully: %s. Account: %s, Network: %s, Options: %o',
@@ -398,7 +426,7 @@ export class AccountUseCases {
         account.network,
         options,
       );
-      return { psbt: psbtString, txid };
+      return { psbt: psbtString, txid, canBeMalleable };
     }
 
     this.#logger.info(
@@ -427,7 +455,11 @@ export class AccountUseCases {
     return psbt.fee();
   }
 
-  async broadcastPsbt(id: string, psbt: Psbt, origin: string): Promise<Txid> {
+  async broadcastPsbt(
+    id: string,
+    psbt: Psbt,
+    origin: string,
+  ): Promise<BroadcastResult> {
     this.#logger.debug('Sending transaction: %s', id);
 
     const account = await this.#repository.get(id);
@@ -437,16 +469,16 @@ export class AccountUseCases {
     this.#checkCapability(account, AccountCapability.BroadcastPsbt);
 
     const tx = account.extractTransaction(psbt);
-    const txid = await this.#broadcast(account, tx, origin);
+    const result = await this.#broadcast(account, tx, origin);
 
     this.#logger.info(
       'Transaction sent successfully: %s. Account: %s, Network: %s',
-      txid,
+      result.txid,
       account.id,
       account.network,
     );
 
-    return txid;
+    return result;
   }
 
   async sendTransfer(
@@ -454,7 +486,7 @@ export class AccountUseCases {
     recipients: { address: string; amount: string }[],
     origin: string,
     feeRate?: number,
-  ): Promise<Txid> {
+  ): Promise<BroadcastResult> {
     this.#logger.debug(
       'Transferring funds: %s. Recipients: %o',
       id,
@@ -494,15 +526,15 @@ export class AccountUseCases {
 
     const signedPsbt = account.sign(psbt);
     const tx = account.extractTransaction(signedPsbt);
-    const txid = await this.#broadcast(account, tx, origin);
+    const result = await this.#broadcast(account, tx, origin);
 
     this.#logger.info(
       'Funds transferred successfully: %s. Account: %s, Network: %s',
-      txid.toString(),
+      result.txid.toString(),
       account.id,
       account.network,
     );
-    return txid;
+    return result;
   }
 
   async signMessage(
@@ -649,7 +681,7 @@ export class AccountUseCases {
     account: BitcoinAccount,
     tx: Transaction,
     origin: string,
-  ): Promise<Txid> {
+  ): Promise<BroadcastResult> {
     const txid = tx.compute_txid();
     await this.#chain.broadcast(account.network, tx.clone());
     account.applyUnconfirmedTx(tx, getCurrentUnixTimestamp());
@@ -677,7 +709,10 @@ export class AccountUseCases {
       );
     }
 
-    return txid;
+    return {
+      txid,
+      canBeMalleable: canAccountTxidBeMalleated(account.addressType),
+    };
   }
 
   #checkCapability(
