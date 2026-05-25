@@ -84,6 +84,7 @@ describe('OnClientRequestHandler', () => {
 
     expect(response).toRespondWith({
       transactionId: expect.any(String),
+      canBeMalleable: false,
     });
     const { transactionId } = (
       response.response as { result: { transactionId: string } }
@@ -331,6 +332,7 @@ describe('OnClientRequestHandler', () => {
             },
           },
         ],
+        canBeMalleable: false,
       });
     });
 
