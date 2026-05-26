@@ -105,7 +105,7 @@ describe('validation', () => {
         ['Infinity', Infinity],
         ['-Infinity', -Infinity],
       ])('rejects %s feeRate', (_description, feeRate) => {
-        expect(() => assertParams(feeRate)).toThrow();
+        expect(() => assertParams(feeRate)).toThrow('At path: feeRate');
       });
     });
   });
