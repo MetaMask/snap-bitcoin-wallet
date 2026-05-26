@@ -21,7 +21,7 @@
           "name": "feeRate",
           "description": "Optional fee rate in sat/vB.",
           "required": false,
-          "schema": { "type": "number" }
+          "schema": { "type": "number", "minimum": 1 }
         },
         {
           "name": "options",
@@ -65,7 +65,7 @@
           "name": "feeRate",
           "description": "Optional fee rate in sat/vB.",
           "required": false,
-          "schema": { "type": "number" }
+          "schema": { "type": "number", "minimum": 1 }
         }
       ],
       "result": {
@@ -95,7 +95,7 @@
           "name": "feeRate",
           "description": "Optional fee rate in sat/vB.",
           "required": false,
-          "schema": { "type": "number" }
+          "schema": { "type": "number", "minimum": 1 }
         }
       ],
       "result": {
@@ -159,7 +159,7 @@
           "name": "feeRate",
           "description": "Optional fee rate in sat/vB.",
           "required": false,
-          "schema": { "type": "number" }
+          "schema": { "type": "number", "minimum": 1 }
         }
       ],
       "result": {
