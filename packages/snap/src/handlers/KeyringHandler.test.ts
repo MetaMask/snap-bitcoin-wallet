@@ -48,6 +48,12 @@ jest.mock('@metamask/bitcoindevkit', () => {
     Address: {
       from_script: jest.fn(),
     },
+    Amount: {
+      from_sat: (sats: bigint) => ({
+        to_btc: () => Number(sats) / 100_000_000,
+        to_sat: () => sats,
+      }),
+    },
   };
 });
 
@@ -65,13 +71,16 @@ describe('KeyringHandler', () => {
   const mockAccount = mock<BitcoinAccount>({
     id: 'some-id',
     addressType: 'p2wpkh',
-    balance: { trusted_spendable: { to_btc: () => 1 } },
+    balance: {
+      trusted_spendable: { to_btc: () => 1, to_sat: () => 100_000_000n },
+    },
     network: 'bitcoin',
     derivationPath: ['myEntropy', "84'", "0'", "0'"],
     entropySource: 'myEntropy',
     accountIndex: 0,
     publicAddress: mockAddress,
     capabilities: [AccountCapability.SignPsbt, AccountCapability.ComputeFee],
+    listUnspent: () => [],
   });
   const defaultAddressType: AddressType = 'p2wpkh';
 

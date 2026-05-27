@@ -255,6 +255,14 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
     const derivationPathEntries: [string, string][] = [];
 
     for (const account of accounts) {
+      if (!account.hasStaged()) {
+        throw new StorageError(
+          `Missing changeset data for account "${account.id}" for insertion.`,
+        );
+      }
+    }
+
+    for (const account of accounts) {
       const { id, derivationPath } = account;
       const walletData = account.takeStaged();
 
@@ -263,7 +271,6 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
           `Missing changeset data for account "${id}" for insertion.`,
         );
       }
-
       accountStateEntries.push([id, getAccountState(account, walletData)]);
       derivationPathEntries.push([getDerivationPathKey(derivationPath), id]);
     }

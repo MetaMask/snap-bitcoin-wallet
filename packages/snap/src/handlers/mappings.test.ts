@@ -75,11 +75,13 @@ describe('mapPsbtToTransaction', () => {
    *
    * @param network - The network type ('bitcoin' or 'testnet').
    * @param feeSatoshis - The fee amount in satoshis.
+   * @param addressType - The account's address type (script type).
    * @returns A mocked BitcoinAccount object.
    */
   function createMockAccount(
     network: 'bitcoin' | 'testnet' = 'bitcoin',
     feeSatoshis = 500,
+    addressType: 'p2pkh' | 'p2sh' | 'p2wpkh' | 'p2wsh' | 'p2tr' = 'p2wpkh',
   ) {
     const mockFeeAmount = mock<Amount>();
     jest
@@ -89,6 +91,7 @@ describe('mapPsbtToTransaction', () => {
     const account = mock<BitcoinAccount>();
     account.id = ACCOUNT_ID;
     account.network = network;
+    account.addressType = addressType;
     jest.spyOn(account, 'calculateFee').mockReturnValue(mockFeeAmount);
     jest.spyOn(account, 'isMine').mockReturnValue(false);
 
@@ -146,7 +149,43 @@ describe('mapPsbtToTransaction', () => {
           },
         },
       ],
+      canBeMalleable: false,
     });
+  });
+
+  it('sets canBeMalleable=true for legacy P2PKH accounts', () => {
+    const account = createMockAccount('bitcoin', 500, 'p2pkh');
+    const output = createMockOutput(10000);
+    const transaction = createMockTransaction('p2pkhtx', [output]);
+
+    jest.mocked(Address.from_script).mockImplementationOnce(
+      () =>
+        ({
+          toString: () => '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
+        }) as any,
+    );
+
+    const result = mapPsbtToTransaction(account, transaction);
+
+    expect(result.canBeMalleable).toBe(true);
+  });
+
+  it('sets canBeMalleable=false for BIP49 wrapped-segwit (p2sh) accounts', () => {
+    // BIP49 sh(wpkh(...)) keeps signatures in witness, not scriptSig.
+    const account = createMockAccount('bitcoin', 500, 'p2sh');
+    const output = createMockOutput(10000);
+    const transaction = createMockTransaction('p2shtx', [output]);
+
+    jest.mocked(Address.from_script).mockImplementationOnce(
+      () =>
+        ({
+          toString: () => '3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy',
+        }) as any,
+    );
+
+    const result = mapPsbtToTransaction(account, transaction);
+
+    expect(result.canBeMalleable).toBe(false);
   });
 
   it('filters out change outputs owned by the account', () => {

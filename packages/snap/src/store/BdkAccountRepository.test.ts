@@ -77,6 +77,7 @@ describe('BdkAccountRepository', () => {
     (mockAccount.takeStaged as jest.Mock) = jest
       .fn()
       .mockReturnValue(mockChangeSet);
+    (mockAccount.hasStaged as jest.Mock) = jest.fn().mockReturnValue(true);
     (mockChangeSet.to_json as jest.Mock) = jest
       .fn()
       .mockReturnValue(mockWalletData);
@@ -370,6 +371,40 @@ describe('BdkAccountRepository', () => {
       );
       expect(mockSnapClient.setState).not.toHaveBeenCalled();
     });
+ 
+    it('throws an error without consuming staged data if any account has no wallet data', async () => {
+      const accountWithWalletData = mock<BitcoinAccount>({
+        id: 'some-id-1',
+        derivationPath: ['m', "84'", "0'", "1'"],
+      });
+      (accountWithWalletData.hasStaged as jest.Mock) = jest
+        .fn()
+        .mockReturnValue(true);
+      (accountWithWalletData.takeStaged as jest.Mock) = jest
+        .fn()
+        .mockReturnValue(mockChangeSet);
+      const missingWalletAccount = mock<BitcoinAccount>({
+        id: 'missing-wallet',
+        derivationPath: ['m', "84'", "0'", "2'"],
+      });
+      (missingWalletAccount.hasStaged as jest.Mock) = jest
+        .fn()
+        .mockReturnValue(false);
+      (missingWalletAccount.takeStaged as jest.Mock) = jest.fn();
+
+      await expect(
+        repo.insertMany([accountWithWalletData, missingWalletAccount]),
+      ).rejects.toThrow(
+        'Missing changeset data for account "missing-wallet" for insertion.',
+      );
+
+      expect(accountWithWalletData.hasStaged).toHaveBeenCalled();
+      expect(missingWalletAccount.hasStaged).toHaveBeenCalled();
+      expect(accountWithWalletData.takeStaged).not.toHaveBeenCalled();
+      expect(missingWalletAccount.takeStaged).not.toHaveBeenCalled();
+      expect(mockSnapClient.getState).not.toHaveBeenCalled();
+      expect(mockSnapClient.setState).not.toHaveBeenCalled();
+    });
 
     it('inserts multiple accounts with one accounts write and one derivation path write', async () => {
       const existingAccountState: AccountState = {
@@ -386,9 +421,11 @@ describe('BdkAccountRepository', () => {
       (account1.takeStaged as jest.Mock) = jest
         .fn()
         .mockReturnValue(mockChangeSet);
+      (account1.hasStaged as jest.Mock) = jest.fn().mockReturnValue(true);
       (account2.takeStaged as jest.Mock) = jest
         .fn()
         .mockReturnValue(mockChangeSet);
+      (account2.hasStaged as jest.Mock) = jest.fn().mockReturnValue(true);
       mockSnapClient.getState
         .mockResolvedValueOnce({
           'existing-id': existingAccountState,
