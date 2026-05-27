@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.11.0]
+
 ### Added
 
 - Add `canBeMalleable` flag to broadcast/send response shapes so consumers can detect when a transaction id may be rewritten by a third party before confirmation (relevant only for legacy P2PKH accounts, currently always `false`) ([#599](https://github.com/MetaMask/snap-bitcoin-wallet/pull/599))
@@ -589,7 +591,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add CI for lint and test ([#2](https://github.com/MetaMask/bitcoin/pull/2))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.10.1...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.11.0...HEAD
+[1.11.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.10.1...v1.11.0
 [1.10.1]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.10.0...v1.10.1
 [1.10.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.8.0...v1.9.0
