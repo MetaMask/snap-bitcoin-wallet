@@ -1,9 +1,14 @@
 import type { AddressType } from '@metamask/bitcoindevkit';
 import { mock } from 'jest-mock-extended';
+import { assert } from 'superstruct';
 
 import type { BitcoinAccount } from '../entities';
 import {
+  ComputeFeeRequest,
+  FillPsbtRequest,
   parseRewardsMessage,
+  SendTransferRequest,
+  SignPsbtRequest,
   validateDustLimit,
   validateSelectedAccounts,
 } from './validation';
@@ -19,6 +24,92 @@ jest.mock('@metamask/bitcoindevkit', () => ({
 }));
 
 describe('validation', () => {
+  describe('feeRate request validation', () => {
+    const account = { account: { address: 'test-account-address' } };
+    const optionalFeeRate = (feeRate?: number) =>
+      feeRate === undefined ? {} : { feeRate };
+    const requestCases: {
+      name: string;
+      assertParams: (feeRate?: number) => void;
+    }[] = [
+      {
+        name: 'SignPsbtRequest',
+        assertParams: (feeRate?: number) =>
+          assert(
+            {
+              ...account,
+              psbt: 'psbtBase64',
+              ...optionalFeeRate(feeRate),
+              options: { fill: false, broadcast: true },
+            },
+            SignPsbtRequest,
+          ),
+      },
+      {
+        name: 'FillPsbtRequest',
+        assertParams: (feeRate?: number) =>
+          assert(
+            {
+              ...account,
+              psbt: 'psbtBase64',
+              ...optionalFeeRate(feeRate),
+            },
+            FillPsbtRequest,
+          ),
+      },
+      {
+        name: 'ComputeFeeRequest',
+        assertParams: (feeRate?: number) =>
+          assert(
+            {
+              ...account,
+              psbt: 'psbtBase64',
+              ...optionalFeeRate(feeRate),
+            },
+            ComputeFeeRequest,
+          ),
+      },
+      {
+        name: 'SendTransferRequest',
+        assertParams: (feeRate?: number) =>
+          assert(
+            {
+              ...account,
+              recipients: [
+                {
+                  address: 'bcrt1qstku2y3pfh9av50lxj55arm8r5gj8tf2yv5nxz',
+                  amount: '1000',
+                },
+              ],
+              ...optionalFeeRate(feeRate),
+            },
+            SendTransferRequest,
+          ),
+      },
+    ];
+
+    describe.each(requestCases)('$name', ({ assertParams }) => {
+      it('accepts an omitted feeRate', () => {
+        expect(() => assertParams()).not.toThrow();
+      });
+
+      it.each([1, 2.4, 3])('accepts feeRate %p', (feeRate) => {
+        expect(() => assertParams(feeRate)).not.toThrow();
+      });
+
+      it.each([
+        ['zero', 0],
+        ['below minimum', 0.5],
+        ['negative', -5],
+        ['NaN', NaN],
+        ['Infinity', Infinity],
+        ['-Infinity', -Infinity],
+      ])('rejects %s feeRate', (_description, feeRate) => {
+        expect(() => assertParams(feeRate)).toThrow('At path: feeRate');
+      });
+    });
+  });
+
   describe('validateDustLimit', () => {
     const makeAccount = (addressType: AddressType) =>
       mock<BitcoinAccount>({ addressType });
