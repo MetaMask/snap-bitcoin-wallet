@@ -371,7 +371,7 @@ describe('BdkAccountRepository', () => {
       );
       expect(mockSnapClient.setState).not.toHaveBeenCalled();
     });
- 
+
     it('throws an error without consuming staged data if any account has no wallet data', async () => {
       const accountWithWalletData = mock<BitcoinAccount>({
         id: 'some-id-1',
