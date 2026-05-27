@@ -3076,12 +3076,12 @@ __metadata:
     "@metamask/auto-changelog": "npm:^3.4.4"
     "@metamask/bitcoindevkit": "npm:^0.1.13"
     "@metamask/key-tree": "npm:^10.1.1"
-    "@metamask/keyring-api": "npm:^21.3.0"
-    "@metamask/keyring-snap-sdk": "npm:^7.1.1"
+    "@metamask/keyring-api": "npm:^22.0.0"
+    "@metamask/keyring-snap-sdk": "npm:^8.0.0"
     "@metamask/slip44": "npm:^4.2.0"
     "@metamask/snaps-cli": "npm:^8.3.0"
     "@metamask/snaps-jest": "npm:^9.8.0"
-    "@metamask/snaps-sdk": "npm:^10.3.0"
+    "@metamask/snaps-sdk": "npm:^11.0.0"
     "@metamask/utils": "npm:^11.9.0"
     bip322-js: "npm:^3.0.0"
     concurrently: "npm:^9.2.1"
@@ -3100,7 +3100,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@metamask/bitcoin-wallet-test-dapp@workspace:packages/site"
   dependencies:
-    "@metamask/keyring-api": "npm:^21.3.0"
+    "@metamask/keyring-api": "npm:^22.0.0"
     "@metamask/providers": "npm:^22.1.0"
     "@svgr/webpack": "npm:^8.1.0"
     "@testing-library/dom": "npm:^8.17.1"
@@ -3286,43 +3286,43 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/keyring-api@npm:^21.3.0":
-  version: 21.3.0
-  resolution: "@metamask/keyring-api@npm:21.3.0"
+"@metamask/keyring-api@npm:^22.0.0":
+  version: 22.0.0
+  resolution: "@metamask/keyring-api@npm:22.0.0"
   dependencies:
-    "@metamask/keyring-utils": "npm:^3.1.0"
+    "@metamask/keyring-utils": "npm:^3.2.0"
     "@metamask/superstruct": "npm:^3.1.0"
     "@metamask/utils": "npm:^11.1.0"
     bitcoin-address-validation: "npm:^2.2.3"
-  checksum: 10/5d1f2705d76d8cfc70378f740e054fca163735b7b77b86b092cfd311d1befb27fac16f81b210ef2c719ce32010e1db55916b7b78d1f7a84239e47b771e5d84cc
+  checksum: 10/ff1e9537c7219fb906b61d6755de28890239ec44f634732bd8571801c662e8b801671e98961a1c5047e079cef314353297499a52f7091a2b5391325d575ec4f9
   languageName: node
   linkType: hard
 
-"@metamask/keyring-snap-sdk@npm:^7.1.1":
-  version: 7.1.1
-  resolution: "@metamask/keyring-snap-sdk@npm:7.1.1"
+"@metamask/keyring-snap-sdk@npm:^8.0.0":
+  version: 8.0.0
+  resolution: "@metamask/keyring-snap-sdk@npm:8.0.0"
   dependencies:
-    "@metamask/keyring-utils": "npm:^3.1.0"
-    "@metamask/snaps-sdk": "npm:^9.0.0"
+    "@metamask/keyring-utils": "npm:^3.2.0"
+    "@metamask/snaps-sdk": "npm:^11.0.0"
     "@metamask/superstruct": "npm:^3.1.0"
     "@metamask/utils": "npm:^11.1.0"
     webextension-polyfill: "npm:^0.12.0"
   peerDependencies:
-    "@metamask/keyring-api": ^21.2.0
+    "@metamask/keyring-api": ^22.0.0
     "@metamask/providers": ^19.0.0
-  checksum: 10/ac4ce050f4647096ef66ebd04d99d1423c002ca0fb05bd83e11caec59754b56d73bb8a95ac3a76f64472713256205e889d6785003dfe2c35f5f1d67c2f2efd12
+  checksum: 10/271b4f84d214813c0312ffbbe3fb6201b66172210da4d06a155c3ddb359403ed1fa4c7afa424cd34fa9db04e3c876f30f69afb676bb7a905d392552d871ebd57
   languageName: node
   linkType: hard
 
-"@metamask/keyring-utils@npm:^3.1.0":
-  version: 3.1.0
-  resolution: "@metamask/keyring-utils@npm:3.1.0"
+"@metamask/keyring-utils@npm:^3.2.0":
+  version: 3.2.0
+  resolution: "@metamask/keyring-utils@npm:3.2.0"
   dependencies:
     "@ethereumjs/tx": "npm:^5.4.0"
     "@metamask/superstruct": "npm:^3.1.0"
     "@metamask/utils": "npm:^11.1.0"
     bitcoin-address-validation: "npm:^2.2.3"
-  checksum: 10/d7325bb72e47bd3d81b1bce55203d8343408c0d37dd2862203c21bb68c6a1e32a1cfa7ca46a4f6fe1f14e757084bbc45db8db3eedbefc90ce81805ce22d335e8
+  checksum: 10/e71aa1b9ec9a24c72ea6d4864a10f11e68e5b77789728067230ec40cee2e85ad69073404d2fa62c760f014fd910fb68b3305a08f906f2534b9119e2a26d06a2b
   languageName: node
   linkType: hard
 
@@ -3667,17 +3667,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/snaps-sdk@npm:^10.3.0":
-  version: 10.3.0
-  resolution: "@metamask/snaps-sdk@npm:10.3.0"
+"@metamask/snaps-sdk@npm:^11.0.0":
+  version: 11.1.1
+  resolution: "@metamask/snaps-sdk@npm:11.1.1"
   dependencies:
     "@metamask/key-tree": "npm:^10.1.1"
     "@metamask/providers": "npm:^22.1.1"
     "@metamask/rpc-errors": "npm:^7.0.3"
     "@metamask/superstruct": "npm:^3.2.1"
-    "@metamask/utils": "npm:^11.8.1"
+    "@metamask/utils": "npm:^11.11.0"
     luxon: "npm:^3.5.0"
-  checksum: 10/24efa7af91557d2365cd2199e0572566675efadbcc51a350938cb57e4b5c0861188c30d26a9ec3a42cb9059b37bba0f44a5486ec3ed32ac2e956cf48213d6485
+  checksum: 10/8419625775b83045d98c4ed920002ad884471e2303f6650104c97457c238f095ff35030663ddf111ebb6ce8f4cd915f57b7b9a5597d00288093701dbb79e787c
   languageName: node
   linkType: hard
 
@@ -3762,9 +3762,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/utils@npm:^11.0.1, @metamask/utils@npm:^11.1.0, @metamask/utils@npm:^11.4.0, @metamask/utils@npm:^11.4.2, @metamask/utils@npm:^11.8.1, @metamask/utils@npm:^11.9.0":
-  version: 11.9.0
-  resolution: "@metamask/utils@npm:11.9.0"
+"@metamask/utils@npm:^11.0.1, @metamask/utils@npm:^11.1.0, @metamask/utils@npm:^11.11.0, @metamask/utils@npm:^11.4.0, @metamask/utils@npm:^11.4.2, @metamask/utils@npm:^11.8.1, @metamask/utils@npm:^11.9.0":
+  version: 11.11.0
+  resolution: "@metamask/utils@npm:11.11.0"
   dependencies:
     "@ethereumjs/tx": "npm:^4.2.0"
     "@metamask/superstruct": "npm:^3.1.0"
@@ -3777,7 +3777,7 @@ __metadata:
     pony-cause: "npm:^2.1.10"
     semver: "npm:^7.5.4"
     uuid: "npm:^9.0.1"
-  checksum: 10/f8f5e99ba6c6de0395ed4e0acc82ee9c0dca26991ea6a8f10b3896e72745790966a8eded8c42be905d9f01fa99c1fd29a7f68541e2ef9854fc14984a0b514ad3
+  checksum: 10/c4381b9e451a9616bde84ac659bc0d1848ef06b6e605f877bfa065b78c8ed5015706683ea88a3387de5eaeb3a50d1af9af0994f04f9e06258d992598fe2be3bf
   languageName: node
   linkType: hard
 

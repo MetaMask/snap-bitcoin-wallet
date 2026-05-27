@@ -96,7 +96,10 @@ export class HandlerMiddleware {
 
           // Internal errors that we should not expose to the user: Equivalent to 5xx errors
         } else if (error instanceof ExternalServiceError) {
-          throw new DisconnectedError(errMsg, error.data);
+          throw new DisconnectedError(
+            `${errMsg}: ${error.message}`,
+            error.data,
+          );
         } else if (
           error instanceof WalletError ||
           error instanceof StorageError ||
