@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add `createMany` use case ([#610](https://github.com/MetaMask/snap-bitcoin-wallet/pull/610))
 
+### Fixed
+
+- Show the filled PSBT in the `signPsbt` confirmation dialog so the displayed transaction matches the one being signed ([#606](https://github.com/MetaMask/snap-bitcoin-wallet/pull/606))
+
 ## [1.11.0]
 
 ### Added
