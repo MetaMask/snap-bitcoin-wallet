@@ -356,6 +356,22 @@ describe('BdkAccountRepository', () => {
       expect(mockSnapClient.setState).not.toHaveBeenCalled();
     });
 
+    it('throws an error if any account has no wallet data', async () => {
+      await expect(
+        repo.insertMany([
+          {
+            ...mockAccount,
+            id: 'missing-wallet',
+            takeStaged: jest.fn().mockReturnValue(undefined),
+          },
+          mockAccount,
+        ]),
+      ).rejects.toThrow(
+        'Missing changeset data for account "missing-wallet" for insertion.',
+      );
+      expect(mockSnapClient.setState).not.toHaveBeenCalled();
+    });
+
     it('throws an error without consuming staged data if any account has no wallet data', async () => {
       const accountWithWalletData = mock<BitcoinAccount>({
         id: 'some-id-1',

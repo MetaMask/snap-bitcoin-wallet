@@ -7,12 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add `createMany` use case ([#610](https://github.com/MetaMask/snap-bitcoin-wallet/pull/610))
+
 ## [1.11.0]
 
 ### Added
 
 - Add `canBeMalleable` flag to broadcast/send response shapes so consumers can detect when a transaction id may be rewritten by a third party before confirmation (relevant only for legacy P2PKH accounts, currently always `false`) ([#599](https://github.com/MetaMask/snap-bitcoin-wallet/pull/599))
 - Add `insertMany` to repository API ([#609](https://github.com/MetaMask/snap-bitcoin-wallet/pull/609))
+- Add `createMany` use case ([#610](https://github.com/MetaMask/snap-bitcoin-wallet/pull/610))
 
 ### Changed
 
