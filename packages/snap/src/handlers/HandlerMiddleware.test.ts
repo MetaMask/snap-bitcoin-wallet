@@ -6,6 +6,7 @@ import {
   type SnapClient,
   type Translator,
   BaseError,
+  ExternalServiceError,
 } from '../entities';
 import { HandlerMiddleware } from './HandlerMiddleware';
 
@@ -25,6 +26,7 @@ describe('HandlerMiddleware', () => {
   );
 
   beforeEach(() => {
+    jest.clearAllMocks();
     mockSnapClient.getPreferences.mockResolvedValue({
       locale: 'en',
     } as GetPreferencesResult);
@@ -78,6 +80,21 @@ describe('HandlerMiddleware', () => {
       expect(mockSnapClient.getPreferences).toHaveBeenCalled();
       expect(mockTranslator.load).toHaveBeenCalledWith('en');
       expect(mockLogger.error).toHaveBeenCalledWith(error, error.data);
+      expect(mockSnapClient.emitTrackingError).toHaveBeenCalledWith(error);
+    });
+
+    it('includes the concrete external service failure in the returned error message', async () => {
+      const error = new ExternalServiceError('Failed to synchronize account', {
+        account: 'account-1',
+      });
+      const mockFn = jest.fn().mockRejectedValue(error);
+      mockTranslator.load.mockResolvedValue({
+        'error.3000': { message: 'Connection error' },
+      });
+
+      await expect(middleware.handle(mockFn)).rejects.toThrow(
+        'Connection error: Failed to synchronize account',
+      );
       expect(mockSnapClient.emitTrackingError).toHaveBeenCalledWith(error);
     });
   });

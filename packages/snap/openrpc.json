@@ -51,11 +51,15 @@
             { "type": "null" },
             {
               "type": "object",
-              "required": ["transactionId"],
+              "required": ["transactionId", "canBeMalleable"],
               "properties": {
                 "transactionId": {
                   "type": "string",
                   "description": "The transaction ID."
+                },
+                "canBeMalleable": {
+                  "type": "boolean",
+                  "description": "Whether the transaction ID can be changed by a third party (transaction malleability) before confirmation. True only for legacy P2PKH accounts; false for all currently supported address types."
                 }
               }
             }
@@ -108,11 +112,15 @@
             { "type": "null" },
             {
               "type": "object",
-              "required": ["transactionId"],
+              "required": ["transactionId", "canBeMalleable"],
               "properties": {
                 "transactionId": {
                   "type": "string",
                   "description": "The transaction ID."
+                },
+                "canBeMalleable": {
+                  "type": "boolean",
+                  "description": "Whether the transaction ID can be changed by a third party (transaction malleability) before confirmation. True only for legacy P2PKH accounts; false for all currently supported address types."
                 }
               }
             }
@@ -368,12 +376,17 @@
             "events",
             "to",
             "from",
-            "fees"
+            "fees",
+            "canBeMalleable"
           ],
           "properties": {
             "id": {
               "type": "string",
               "description": "The transaction ID."
+            },
+            "canBeMalleable": {
+              "type": "boolean",
+              "description": "Whether the transaction ID can be changed by a third party (transaction malleability) before confirmation. True only for legacy P2PKH accounts; false for all currently supported address types."
             },
             "account": {
               "type": "string",

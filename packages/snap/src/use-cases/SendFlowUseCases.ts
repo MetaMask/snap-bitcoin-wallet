@@ -6,7 +6,7 @@ import {
   type Transaction,
 } from '@metamask/bitcoindevkit';
 import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
-import type { CurrencyRate, InputChangeEvent } from '@metamask/snaps-sdk';
+import type { InputChangeEvent } from '@metamask/snaps-sdk';
 
 import type {
   AssetRatesClient,
@@ -14,6 +14,7 @@ import type {
   BitcoinAccountRepository,
   BlockchainClient,
   CodifiedError,
+  CurrencyRate,
   Logger,
   ConfirmSendFormContext,
   ReviewTransactionContext,
