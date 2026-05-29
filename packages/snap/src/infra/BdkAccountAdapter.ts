@@ -41,6 +41,8 @@ export class BdkAccountAdapter implements BitcoinAccount {
 
   readonly #wallet: Wallet;
 
+  #staged?: ChangeSet;
+
   readonly #capabilities: AccountCapability[];
 
   constructor(id: string, derivationPath: string[], wallet: Wallet) {
@@ -157,7 +159,13 @@ export class BdkAccountAdapter implements BitcoinAccount {
   }
 
   takeStaged(): ChangeSet | undefined {
-    return this.#wallet.take_staged();
+    const staged = this.#collectStaged();
+    this.#staged = undefined;
+    return staged;
+  }
+
+  hasStaged(): boolean {
+    return Boolean(this.#collectStaged());
   }
 
   buildTx(): TransactionBuilder {
@@ -242,5 +250,19 @@ export class BdkAccountAdapter implements BitcoinAccount {
     this.#wallet.apply_unconfirmed_txs([
       new UnconfirmedTx(tx, BigInt(lastSeen)),
     ]);
+  }
+
+  #collectStaged(): ChangeSet | undefined {
+    const staged = this.#wallet.take_staged();
+    if (!staged) {
+      return this.#staged;
+    }
+
+    if (this.#staged) {
+      staged.merge(this.#staged);
+    }
+
+    this.#staged = staged;
+    return this.#staged;
   }
 }

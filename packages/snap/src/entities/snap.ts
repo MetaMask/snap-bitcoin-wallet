@@ -13,7 +13,7 @@ import type { Inscription } from './meta-protocols';
 
 export type SnapState = {
   // accountId -> account state. This is the main state of the snap.
-  accounts: Record<string, AccountState>;
+  accounts: Record<string, AccountState | null>;
   // derivationPath -> accountId. Only needed for fast lookup.
   derivationPaths: Record<string, string>;
 };

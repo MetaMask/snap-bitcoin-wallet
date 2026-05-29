@@ -1,7 +1,6 @@
 import type { Network } from '@metamask/bitcoindevkit';
-import type { CurrencyRate } from '@metamask/snaps-sdk';
 
-import type { CurrencyUnit } from './currency';
+import type { CurrencyRate, CurrencyUnit } from './currency';
 import type { CodifiedError } from './error';
 
 // TODO: This context will be adjusted to the needs

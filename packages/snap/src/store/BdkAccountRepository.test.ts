@@ -77,6 +77,7 @@ describe('BdkAccountRepository', () => {
     (mockAccount.takeStaged as jest.Mock) = jest
       .fn()
       .mockReturnValue(mockChangeSet);
+    (mockAccount.hasStaged as jest.Mock) = jest.fn().mockReturnValue(true);
     (mockChangeSet.to_json as jest.Mock) = jest
       .fn()
       .mockReturnValue(mockWalletData);
@@ -185,6 +186,94 @@ describe('BdkAccountRepository', () => {
     });
   });
 
+  describe('getByDerivationPaths', () => {
+    const derivationPath1 = ['m', "84'", "0'", "1'"];
+    const derivationPath2 = ['m', "84'", "0'", "2'"];
+    const accountState1 = {
+      ...mockAccountState,
+      derivationPath: derivationPath1,
+    };
+    const accountState2 = {
+      ...mockAccountState,
+      derivationPath: derivationPath2,
+    };
+    const mockAccount1 = mock<BitcoinAccount>({
+      ...mockAccount,
+      id: 'some-id-1',
+      derivationPath: derivationPath1,
+    });
+    const mockAccount2 = mock<BitcoinAccount>({
+      ...mockAccount,
+      id: 'some-id-2',
+      derivationPath: derivationPath2,
+    });
+
+    it('returns accounts in derivation path order with one state read per namespace', async () => {
+      mockSnapClient.getState
+        .mockResolvedValueOnce({
+          "m/84'/0'/1'": 'some-id-1',
+          "m/84'/0'/2'": 'some-id-2',
+        })
+        .mockResolvedValueOnce({
+          'some-id-1': accountState1,
+          'some-id-2': accountState2,
+        });
+      (BdkAccountAdapter.load as jest.Mock)
+        .mockReturnValueOnce(mockAccount2)
+        .mockReturnValueOnce(mockAccount1);
+
+      const result = await repo.getByDerivationPaths([
+        derivationPath2,
+        derivationPath1,
+      ]);
+
+      expect(mockSnapClient.getState).toHaveBeenCalledWith('derivationPaths');
+      expect(mockSnapClient.getState).toHaveBeenCalledWith('accounts');
+      expect(mockSnapClient.getState).toHaveBeenCalledTimes(2);
+      expect(result).toStrictEqual([mockAccount2, mockAccount1]);
+      expect(mockSnapClient.setState).not.toHaveBeenCalled();
+    });
+
+    it('repairs missing derivation path indexes from account state', async () => {
+      mockSnapClient.getState
+        .mockResolvedValueOnce({
+          "m/84'/0'/1'": 'some-id-1',
+        })
+        .mockResolvedValueOnce({
+          'some-id-1': accountState1,
+          'some-id-2': accountState2,
+        });
+      (BdkAccountAdapter.load as jest.Mock)
+        .mockReturnValueOnce(mockAccount1)
+        .mockReturnValueOnce(mockAccount2);
+
+      const result = await repo.getByDerivationPaths([
+        derivationPath1,
+        derivationPath2,
+      ]);
+
+      expect(result).toStrictEqual([mockAccount1, mockAccount2]);
+      expect(mockSnapClient.setState).toHaveBeenCalledWith('derivationPaths', {
+        "m/84'/0'/1'": 'some-id-1',
+        "m/84'/0'/2'": 'some-id-2',
+      });
+    });
+
+    it('repairs a missing derivation path index for a single lookup', async () => {
+      mockSnapClient.getState.mockResolvedValueOnce({}).mockResolvedValueOnce({
+        'some-id-1': accountState1,
+      });
+      (BdkAccountAdapter.load as jest.Mock).mockReturnValueOnce(mockAccount1);
+
+      const result = await repo.getByDerivationPaths([derivationPath1]);
+
+      expect(result).toStrictEqual([mockAccount1]);
+      expect(mockSnapClient.setState).toHaveBeenCalledWith('derivationPaths', {
+        "m/84'/0'/1'": 'some-id-1',
+      });
+    });
+  });
+
   describe('getWithSigner', () => {
     it('returns null if account not found', async () => {
       mockSnapClient.getState.mockResolvedValue(null);
@@ -253,6 +342,121 @@ describe('BdkAccountRepository', () => {
           wallet: mockWalletData,
           inscriptions: [],
           derivationPath: mockDerivationPath,
+        },
+      );
+    });
+  });
+
+  describe('insertMany', () => {
+    it('returns an empty array when there are no accounts to insert', async () => {
+      const result = await repo.insertMany([]);
+
+      expect(result).toStrictEqual([]);
+      expect(mockSnapClient.getState).not.toHaveBeenCalled();
+      expect(mockSnapClient.setState).not.toHaveBeenCalled();
+    });
+
+    it('throws an error if any account has no wallet data', async () => {
+      await expect(
+        repo.insertMany([
+          {
+            ...mockAccount,
+            id: 'missing-wallet',
+            takeStaged: jest.fn().mockReturnValue(undefined),
+          },
+          mockAccount,
+        ]),
+      ).rejects.toThrow(
+        'Missing changeset data for account "missing-wallet" for insertion.',
+      );
+      expect(mockSnapClient.setState).not.toHaveBeenCalled();
+    });
+
+    it('throws an error without consuming staged data if any account has no wallet data', async () => {
+      const accountWithWalletData = mock<BitcoinAccount>({
+        id: 'some-id-1',
+        derivationPath: ['m', "84'", "0'", "1'"],
+      });
+      (accountWithWalletData.hasStaged as jest.Mock) = jest
+        .fn()
+        .mockReturnValue(true);
+      (accountWithWalletData.takeStaged as jest.Mock) = jest
+        .fn()
+        .mockReturnValue(mockChangeSet);
+      const missingWalletAccount = mock<BitcoinAccount>({
+        id: 'missing-wallet',
+        derivationPath: ['m', "84'", "0'", "2'"],
+      });
+      (missingWalletAccount.hasStaged as jest.Mock) = jest
+        .fn()
+        .mockReturnValue(false);
+      (missingWalletAccount.takeStaged as jest.Mock) = jest.fn();
+
+      await expect(
+        repo.insertMany([accountWithWalletData, missingWalletAccount]),
+      ).rejects.toThrow(
+        'Missing changeset data for account "missing-wallet" for insertion.',
+      );
+
+      expect(accountWithWalletData.hasStaged).toHaveBeenCalled();
+      expect(missingWalletAccount.hasStaged).toHaveBeenCalled();
+      expect(accountWithWalletData.takeStaged).not.toHaveBeenCalled();
+      expect(missingWalletAccount.takeStaged).not.toHaveBeenCalled();
+      expect(mockSnapClient.getState).not.toHaveBeenCalled();
+      expect(mockSnapClient.setState).not.toHaveBeenCalled();
+    });
+
+    it('inserts multiple accounts with one accounts write and one derivation path write', async () => {
+      const existingAccountState: AccountState = {
+        wallet: mockWalletData,
+        inscriptions: [],
+        derivationPath: mockDerivationPath,
+      };
+      const account1 = mock<BitcoinAccount>();
+      account1.id = 'some-id-1';
+      account1.derivationPath = ['m', "84'", "0'", "1'"];
+      const account2 = mock<BitcoinAccount>();
+      account2.id = 'some-id-2';
+      account2.derivationPath = ['m', "84'", "0'", "2'"];
+      (account1.takeStaged as jest.Mock) = jest
+        .fn()
+        .mockReturnValue(mockChangeSet);
+      (account1.hasStaged as jest.Mock) = jest.fn().mockReturnValue(true);
+      (account2.takeStaged as jest.Mock) = jest
+        .fn()
+        .mockReturnValue(mockChangeSet);
+      (account2.hasStaged as jest.Mock) = jest.fn().mockReturnValue(true);
+      mockSnapClient.getState
+        .mockResolvedValueOnce({
+          'existing-id': existingAccountState,
+        })
+        .mockResolvedValueOnce({
+          "m/84'/0'/0'": 'existing-id',
+        });
+
+      const result = await repo.insertMany([account1, account2]);
+
+      expect(result).toStrictEqual([account1, account2]);
+      expect(mockSnapClient.setState).toHaveBeenNthCalledWith(1, 'accounts', {
+        'existing-id': existingAccountState,
+        'some-id-1': {
+          wallet: mockWalletData,
+          inscriptions: [],
+          derivationPath: ['m', "84'", "0'", "1'"],
+        },
+        'some-id-2': {
+          wallet: mockWalletData,
+          inscriptions: [],
+          derivationPath: ['m', "84'", "0'", "2'"],
+        },
+      });
+      expect(mockSnapClient.setState).toHaveBeenNthCalledWith(
+        2,
+        'derivationPaths',
+        {
+          "m/84'/0'/0'": 'existing-id',
+          "m/84'/0'/1'": 'some-id-1',
+          "m/84'/0'/2'": 'some-id-2',
         },
       );
     });

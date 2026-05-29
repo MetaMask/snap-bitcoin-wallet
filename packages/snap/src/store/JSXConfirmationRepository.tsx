@@ -1,7 +1,6 @@
 import type { Psbt } from '@metamask/bitcoindevkit';
 import { Address as BdkAddress } from '@metamask/bitcoindevkit';
 import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
-import type { CurrencyRate } from '@metamask/snaps-sdk';
 
 import type {
   AssetRatesClient,
@@ -9,6 +8,7 @@ import type {
   BlockchainClient,
   ConfirmationRepository,
   ConfirmSendFormContext,
+  CurrencyRate,
   Logger,
   SignMessageConfirmationContext,
   SignPsbtConfirmationContext,
