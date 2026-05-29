@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add `createMany` use case ([#610](https://github.com/MetaMask/snap-bitcoin-wallet/pull/610))
 
+### Changed
+
+- Enable `keyring_createAccounts` ([#611](https://github.com/MetaMask/snap-bitcoin-wallet/pull/611))
+
 ## [1.11.0]
 
 ### Added
