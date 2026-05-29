@@ -1,9 +1,12 @@
 import type { AddressType } from '@metamask/bitcoindevkit';
 import { Amount } from '@metamask/bitcoindevkit';
 import {
+  AccountCreationType,
+  assertCreateAccountOptionIsSupported,
   BtcAccountType,
   BtcScope,
   CreateAccountRequestStruct,
+  CreateAccountsRequestStruct,
   DeleteAccountRequestStruct,
   DiscoverAccountsRequestStruct,
   FilterAccountChainsStruct,
@@ -19,6 +22,7 @@ import {
   SubmitRequestRequestStruct,
 } from '@metamask/keyring-api';
 import type {
+  CreateAccountOptions,
   Keyring,
   KeyringAccount,
   KeyringResponse,
@@ -44,14 +48,16 @@ import {
   string,
 } from 'superstruct';
 
-import type { BitcoinAccount, Logger, SnapClient } from '../entities';
 import {
+  type BitcoinAccount,
   computeDisplayBalanceSats,
   FormatError,
   InexistentMethodError,
+  type Logger,
   networkToCurrencyUnit,
   Purpose,
   purposeToAddressType,
+  type SnapClient,
 } from '../entities';
 import {
   networkToCaip19,
@@ -68,7 +74,10 @@ import {
   mapToTransaction,
 } from './mappings';
 import { BtcWalletRequestStruct, validateSelectedAccounts } from './validation';
-import type { AccountUseCases } from '../use-cases/AccountUseCases';
+import type {
+  AccountUseCases,
+  CreateAccountParams,
+} from '../use-cases/AccountUseCases';
 import { runSnapActionSafely } from '../utils/snapHelpers';
 
 export const CreateAccountRequest = object({
@@ -81,6 +90,9 @@ export const CreateAccountRequest = object({
   derivationPath: optional(string()),
   ...MetaMaskOptionsStruct.schema,
 });
+
+/** Maximum number of accounts to create in one internal createMany call. */
+const MAX_CREATE_ACCOUNTS_PER_BATCH = 100;
 
 export class KeyringHandler implements Keyring {
   readonly #accountsUseCases: AccountUseCases;
@@ -120,6 +132,10 @@ export class KeyringHandler implements Keyring {
       case `${KeyringRpcMethod.CreateAccount}`: {
         assert(request, CreateAccountRequestStruct);
         return this.createAccount(request.params.options);
+      }
+      case `${KeyringRpcMethod.CreateAccounts}`: {
+        assert(request, CreateAccountsRequestStruct);
+        return this.createAccounts(request.params.options);
       }
       case `${KeyringRpcMethod.DiscoverAccounts}`: {
         assert(request, DiscoverAccountsRequestStruct);
@@ -278,6 +294,105 @@ export class KeyringHandler implements Keyring {
       });
 
       return mapToKeyringAccount(account);
+    } finally {
+      if (traceStarted) {
+        await runSnapActionSafely(
+          async () => this.#snapClient.endTrace(traceName),
+          this.#logger,
+          'endTrace',
+        );
+      }
+    }
+  }
+
+  async createAccounts(
+    options: CreateAccountOptions,
+  ): Promise<KeyringAccount[]> {
+    assertCreateAccountOptionIsSupported(options, [
+      `${AccountCreationType.Bip44DeriveIndex}`,
+      `${AccountCreationType.Bip44DeriveIndexRange}`,
+    ]);
+
+    const { entropySource } = options;
+
+    const range =
+      options.type === AccountCreationType.Bip44DeriveIndex
+        ? { from: options.groupIndex, to: options.groupIndex }
+        : options.range;
+
+    if (
+      !Number.isSafeInteger(range.from) ||
+      !Number.isSafeInteger(range.to) ||
+      range.from < 0 ||
+      range.to < 0
+    ) {
+      throw new FormatError(
+        'Account index range is invalid: from and to must be non-negative integers',
+      );
+    }
+
+    if (range.from > range.to) {
+      throw new FormatError(
+        'Account index range is invalid: from must be less than or equal to to',
+      );
+    }
+
+    // Only P2WPKH (BIP-84) on bitcoin mainnet is supported for v1, mirroring
+    // the defaults used by `createAccount` when no scope is provided.
+    const network = scopeToNetwork[BtcScope.Mainnet];
+    const addressType = this.#defaultAddressType;
+    if (addressType !== 'p2wpkh') {
+      throw new FormatError(
+        'Only native segwit (P2WPKH) addresses are supported',
+      );
+    }
+
+    const traceName = 'Create Bitcoin Accounts Batch';
+    let traceStarted = false;
+
+    try {
+      await runSnapActionSafely(
+        async () => {
+          await this.#snapClient.startTrace(traceName);
+          traceStarted = true;
+        },
+        this.#logger,
+        'startTrace',
+      );
+
+      // `AccountUseCases.createMany` is idempotent: if an account already exists
+      // for the resolved derivation path, it will be returned as-is.
+      const accounts: BitcoinAccount[] = [];
+      let chunkFrom = range.from;
+
+      while (chunkFrom <= range.to) {
+        const chunkTo = Math.min(
+          chunkFrom + MAX_CREATE_ACCOUNTS_PER_BATCH - 1,
+          range.to,
+        );
+        const chunkRequests: CreateAccountParams[] = [];
+
+        for (let index = chunkFrom; index <= chunkTo; index += 1) {
+          chunkRequests.push({
+            network,
+            entropySource,
+            index,
+            addressType,
+            synchronize: false,
+          });
+        }
+
+        accounts.push(
+          ...(await this.#accountsUseCases.createMany(chunkRequests)),
+        );
+
+        if (chunkTo === range.to) {
+          break;
+        }
+        chunkFrom = chunkTo + 1;
+      }
+
+      return accounts.map(mapToKeyringAccount);
     } finally {
       if (traceStarted) {
         await runSnapActionSafely(
