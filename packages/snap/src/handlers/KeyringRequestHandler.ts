@@ -128,26 +128,34 @@ export class KeyringRequestHandler {
     options: { fill: boolean; broadcast: boolean },
     feeRate?: number,
   ): Promise<KeyringResponse> {
-    const psbt = parsePsbt(psbtBase64);
     const account = await this.#accountsUseCases.get(id);
+
+    const psbtBase64ToSign = options.fill
+      ? (
+          await this.#accountsUseCases.fillPsbt(
+            id,
+            parsePsbt(psbtBase64),
+            feeRate,
+          )
+        ).toString()
+      : psbtBase64;
 
     await this.#confirmationRepository.insertSignPsbt(
       account,
-      psbt,
+      parsePsbt(psbtBase64ToSign),
       origin,
       options,
     );
 
-    // Creates a fresh PSBT from the original base64 because the original PSBT is mutated by the confirmation repository
     const {
       psbt: signedPsbt,
       txid,
       canBeMalleable,
     } = await this.#accountsUseCases.signPsbt(
       id,
-      parsePsbt(psbtBase64),
+      parsePsbt(psbtBase64ToSign),
       origin,
-      options,
+      { ...options, fill: false },
       feeRate,
     );
     // Invariant: signPsbt sets txid and canBeMalleable together (when broadcast
