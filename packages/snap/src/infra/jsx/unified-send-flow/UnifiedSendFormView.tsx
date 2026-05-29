@@ -2,6 +2,7 @@ import { Psbt } from '@metamask/bitcoindevkit';
 import type { SnapComponent } from '@metamask/snaps-sdk/jsx';
 import {
   Address,
+  Banner,
   Heading,
   Link,
   Section,
@@ -43,6 +44,7 @@ export const UnifiedSendFormView: SnapComponent<UnifiedSendFormViewProps> = ({
     recipient,
     explorerUrl,
     origin,
+    isMine,
   } = context;
 
   const psbt = Psbt.from_string(context.psbt);
@@ -59,6 +61,17 @@ export const UnifiedSendFormView: SnapComponent<UnifiedSendFormViewProps> = ({
           </Heading>
           <Box>{null}</Box>
         </Box>
+
+        {isMine ? (
+          <Banner
+            title={t('confirmation.signAndSendTransaction.selfSend.title')}
+            severity="warning"
+          >
+            <SnapText>
+              {t('confirmation.signAndSendTransaction.selfSend.description')}
+            </SnapText>
+          </Banner>
+        ) : null}
 
         <Section>
           <Box>

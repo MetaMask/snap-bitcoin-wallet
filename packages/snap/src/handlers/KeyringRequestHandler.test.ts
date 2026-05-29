@@ -111,6 +111,7 @@ describe('KeyringRequestHandler', () => {
         SignPsbtRequest,
       );
       expect(mockAccountsUseCases.get).toHaveBeenCalledWith('account-id');
+      expect(mockAccountsUseCases.fillPsbt).not.toHaveBeenCalled();
       expect(mockConfirmationRepository.insertSignPsbt).toHaveBeenCalledWith(
         mockAccount,
         mockPsbt,
@@ -121,7 +122,7 @@ describe('KeyringRequestHandler', () => {
         'account-id',
         mockPsbt,
         'metamask',
-        mockOptions,
+        { fill: false, broadcast: true },
         3,
       );
       expect(result).toStrictEqual({
@@ -194,6 +195,77 @@ describe('KeyringRequestHandler', () => {
       });
     });
 
+    it('fills the PSBT before showing the confirmation when options.fill is true', async () => {
+      const fillOptions = { fill: true, broadcast: true };
+      const fillRequest = mock<KeyringRequest>({
+        origin,
+        request: {
+          method: AccountCapability.SignPsbt,
+          params: {
+            ...accountParam,
+            psbt: 'psbtBase64',
+            feeRate: 3,
+            options: fillOptions,
+          },
+        },
+        account: 'account-id',
+      });
+
+      const filledPsbt = mock<Psbt>({
+        toString: jest.fn().mockReturnValue('filledPsbtBase64'),
+      });
+      const psbtForConfirmation = mock<Psbt>();
+      const psbtForSigning = mock<Psbt>();
+      mockAccountsUseCases.fillPsbt.mockResolvedValue(filledPsbt);
+      mockAccountsUseCases.signPsbt.mockResolvedValue({
+        psbt: 'signedPsbtBase64',
+        txid: mock<Txid>({
+          toString: jest.fn().mockReturnValue('txid'),
+        }),
+        canBeMalleable: false,
+      });
+      jest
+        .mocked(parsePsbt)
+        .mockReturnValueOnce(mockPsbt)
+        .mockReturnValueOnce(psbtForConfirmation)
+        .mockReturnValueOnce(psbtForSigning);
+
+      await handler.route(fillRequest);
+
+      const fillOrder =
+        mockAccountsUseCases.fillPsbt.mock.invocationCallOrder[0];
+      const insertOrder =
+        mockConfirmationRepository.insertSignPsbt.mock.invocationCallOrder[0];
+      const signOrder =
+        mockAccountsUseCases.signPsbt.mock.invocationCallOrder[0];
+
+      expect(fillOrder).toBeLessThan(insertOrder as number);
+      expect(insertOrder).toBeLessThan(signOrder as number);
+
+      expect(mockAccountsUseCases.fillPsbt).toHaveBeenCalledWith(
+        'account-id',
+        mockPsbt,
+        3,
+      );
+      expect(parsePsbt).toHaveBeenNthCalledWith(1, 'psbtBase64');
+      expect(parsePsbt).toHaveBeenNthCalledWith(2, 'filledPsbtBase64');
+      expect(parsePsbt).toHaveBeenNthCalledWith(3, 'filledPsbtBase64');
+      expect(mockConfirmationRepository.insertSignPsbt).toHaveBeenCalledWith(
+        mockAccount,
+        psbtForConfirmation,
+        'metamask',
+        fillOptions,
+      );
+      expect(mockAccountsUseCases.signPsbt).toHaveBeenCalledWith(
+        'account-id',
+        psbtForSigning,
+        'metamask',
+        { fill: false, broadcast: true },
+        3,
+      );
+      expect(psbtForSigning).not.toBe(psbtForConfirmation);
+    });
+
     it('returns null txid when signPsbt result has no txid', async () => {
       mockAccountsUseCases.signPsbt.mockResolvedValue({
         psbt: 'psbtBase64',
@@ -220,6 +292,30 @@ describe('KeyringRequestHandler', () => {
       expect(mockAccountsUseCases.signPsbt).not.toHaveBeenCalled();
     });
 
+    it('does not show confirmation or sign if fillPsbt fails', async () => {
+      const fillOptions = { fill: true, broadcast: true };
+      const fillRequest = mock<KeyringRequest>({
+        origin,
+        request: {
+          method: AccountCapability.SignPsbt,
+          params: {
+            ...accountParam,
+            psbt: 'psbtBase64',
+            feeRate: 3,
+            options: fillOptions,
+          },
+        },
+        account: 'account-id',
+      });
+      const error = new Error('fee rate too high');
+      mockAccountsUseCases.fillPsbt.mockRejectedValue(error);
+
+      await expect(handler.route(fillRequest)).rejects.toThrow(error);
+
+      expect(mockConfirmationRepository.insertSignPsbt).not.toHaveBeenCalled();
+      expect(mockAccountsUseCases.signPsbt).not.toHaveBeenCalled();
+    });
+
     it('propagates errors from parsePsbt', async () => {
       const error = new Error('parsePsbt');
       jest.mocked(parsePsbt).mockImplementationOnce(() => {
@@ -231,7 +327,11 @@ describe('KeyringRequestHandler', () => {
           ...mockRequest,
           request: {
             ...mockRequest.request,
-            params: { ...accountParam, psbt: 'invalidPsbt' },
+            params: {
+              ...accountParam,
+              psbt: 'invalidPsbt',
+              options: mockOptions,
+            },
           },
         }),
       ).rejects.toThrow(error);
