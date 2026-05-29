@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Show a self-send warning in the send confirmation when the recipient address belongs to the sending account ([#607](https://github.com/MetaMask/snap-bitcoin-wallet/pull/607))
 - Show a confirmation dialog before signing a PSBT from KeyringHandler and sending a transfer ([#591](https://github.com/MetaMask/snap-bitcoin-wallet/pull/591))
 - Add `resolveAccountAddress` method to KeyringHandler for dApp connectivity ([#590](https://github.com/MetaMask/snap-bitcoin-wallet/pull/590))
 - Bump `@metamask/keyring-api` from `^21.3.0` to `^22.0.0` ([#608](https://github.com/MetaMask/snap-bitcoin-wallet/pull/608))
