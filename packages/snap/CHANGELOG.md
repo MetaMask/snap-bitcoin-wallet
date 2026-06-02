@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Cache account response metadata to avoid loading full BDK wallets for faster checks ([#612](https://github.com/MetaMask/snap-bitcoin-wallet/pull/612/changes))
+
 ## [1.12.0]
 
 ### Added
