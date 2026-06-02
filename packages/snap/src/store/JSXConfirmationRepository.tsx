@@ -1,7 +1,6 @@
 import type { Psbt } from '@metamask/bitcoindevkit';
 import { Address as BdkAddress } from '@metamask/bitcoindevkit';
 import { getCurrentUnixTimestamp } from '@metamask/keyring-snap-sdk';
-import type { CurrencyRate } from '@metamask/snaps-sdk';
 
 import type {
   AssetRatesClient,
@@ -9,6 +8,7 @@ import type {
   BlockchainClient,
   ConfirmationRepository,
   ConfirmSendFormContext,
+  CurrencyRate,
   Logger,
   SignMessageConfirmationContext,
   SignPsbtConfirmationContext,
@@ -88,6 +88,17 @@ export class JSXConfirmationRepository implements ConfirmationRepository {
     const { locale, currency: fiatCurrency } =
       await this.#snapClient.getPreferences();
 
+    let isMine = false;
+    try {
+      const recipientScript = BdkAddress.from_string(
+        recipient.address,
+        account.network,
+      ).script_pubkey;
+      isMine = account.isMine(recipientScript);
+    } catch {
+      isMine = false;
+    }
+
     const context: ConfirmSendFormContext = {
       from: account.publicAddress.toString(),
       explorerUrl: this.#chainClient.getExplorerUrl(account.network),
@@ -99,6 +110,7 @@ export class JSXConfirmationRepository implements ConfirmationRepository {
       locale,
       psbt: psbt.toString(),
       origin,
+      isMine,
     };
 
     const messages = await this.#translator.load(locale);

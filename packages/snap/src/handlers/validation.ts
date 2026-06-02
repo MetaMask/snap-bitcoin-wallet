@@ -99,10 +99,16 @@ const WalletAccountStruct = object({
   address: string(),
 });
 
+export const FeeRateStruct = refine(
+  number(),
+  'fee rate greater than or equal to 1',
+  (value) => Number.isFinite(value) && value >= 1,
+);
+
 export const SignPsbtRequest = object({
   account: WalletAccountStruct,
   psbt: string(),
-  feeRate: optional(number()),
+  feeRate: optional(FeeRateStruct),
   options: object({
     fill: boolean(),
     broadcast: boolean(),
@@ -112,7 +118,7 @@ export const SignPsbtRequest = object({
 export const ComputeFeeRequest = object({
   account: WalletAccountStruct,
   psbt: string(),
-  feeRate: optional(number()),
+  feeRate: optional(FeeRateStruct),
 });
 
 export const BroadcastPsbtRequest = object({
@@ -123,7 +129,7 @@ export const BroadcastPsbtRequest = object({
 export const FillPsbtRequest = object({
   account: WalletAccountStruct,
   psbt: string(),
-  feeRate: optional(number()),
+  feeRate: optional(FeeRateStruct),
 });
 
 export const SendTransferRequest = object({
@@ -134,7 +140,7 @@ export const SendTransferRequest = object({
       amount: string(),
     }),
   ),
-  feeRate: optional(number()),
+  feeRate: optional(FeeRateStruct),
 });
 
 export const GetUtxoRequest = object({

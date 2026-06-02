@@ -95,12 +95,13 @@ describe('KeyringRequestHandler', () => {
       mockConfirmationRepository.insertSignPsbt.mockResolvedValue(undefined);
     });
 
-    it('executes signPsbt with confirmation', async () => {
+    it('executes signPsbt with confirmation and propagates canBeMalleable when broadcasting', async () => {
       mockAccountsUseCases.signPsbt.mockResolvedValue({
         psbt: 'psbtBase64',
         txid: mock<Txid>({
           toString: jest.fn().mockReturnValue('txid'),
         }),
+        canBeMalleable: false,
       });
 
       const result = await handler.route(mockRequest);
@@ -110,6 +111,7 @@ describe('KeyringRequestHandler', () => {
         SignPsbtRequest,
       );
       expect(mockAccountsUseCases.get).toHaveBeenCalledWith('account-id');
+      expect(mockAccountsUseCases.fillPsbt).not.toHaveBeenCalled();
       expect(mockConfirmationRepository.insertSignPsbt).toHaveBeenCalledWith(
         mockAccount,
         mockPsbt,
@@ -120,13 +122,148 @@ describe('KeyringRequestHandler', () => {
         'account-id',
         mockPsbt,
         'metamask',
-        mockOptions,
+        { fill: false, broadcast: true },
         3,
       );
       expect(result).toStrictEqual({
         pending: false,
-        result: { psbt: 'psbtBase64', txid: 'txid' },
+        result: {
+          psbt: 'psbtBase64',
+          txid: 'txid',
+          canBeMalleable: false,
+        },
       });
+    });
+
+    it('omits canBeMalleable when broadcast=false (no txid returned)', async () => {
+      const noBroadcastRequest = mock<KeyringRequest>({
+        origin,
+        request: {
+          method: AccountCapability.SignPsbt,
+          params: {
+            psbt: 'psbtBase64',
+            feeRate: 3,
+            options: { fill: false, broadcast: false },
+          },
+        },
+        account: 'account-id',
+      });
+      mockAccountsUseCases.signPsbt.mockResolvedValue({
+        psbt: 'psbtBase64',
+      });
+
+      const result = await handler.route(noBroadcastRequest);
+
+      expect(result).toStrictEqual({
+        pending: false,
+        result: { psbt: 'psbtBase64', txid: null },
+      });
+    });
+
+    it('throws AssertionError if usecase returns txid without canBeMalleable', async () => {
+      mockAccountsUseCases.signPsbt.mockResolvedValue({
+        psbt: 'psbtBase64',
+        txid: mock<Txid>({
+          toString: jest.fn().mockReturnValue('txid'),
+        }),
+        // canBeMalleable intentionally omitted — protocol violation
+      });
+
+      await expect(handler.route(mockRequest)).rejects.toThrow(
+        'signPsbt returned txid without canBeMalleable flag',
+      );
+    });
+
+    it('passes canBeMalleable=true through for legacy P2PKH accounts', async () => {
+      mockAccountsUseCases.signPsbt.mockResolvedValue({
+        psbt: 'psbtBase64',
+        txid: mock<Txid>({
+          toString: jest.fn().mockReturnValue('txid'),
+        }),
+        canBeMalleable: true,
+      });
+
+      const result = await handler.route(mockRequest);
+
+      expect(result).toStrictEqual({
+        pending: false,
+        result: {
+          psbt: 'psbtBase64',
+          txid: 'txid',
+          canBeMalleable: true,
+        },
+      });
+    });
+
+    it('fills the PSBT before showing the confirmation when options.fill is true', async () => {
+      const fillOptions = { fill: true, broadcast: true };
+      const fillRequest = mock<KeyringRequest>({
+        origin,
+        request: {
+          method: AccountCapability.SignPsbt,
+          params: {
+            ...accountParam,
+            psbt: 'psbtBase64',
+            feeRate: 3,
+            options: fillOptions,
+          },
+        },
+        account: 'account-id',
+      });
+
+      const filledPsbt = mock<Psbt>({
+        toString: jest.fn().mockReturnValue('filledPsbtBase64'),
+      });
+      const psbtForConfirmation = mock<Psbt>();
+      const psbtForSigning = mock<Psbt>();
+      mockAccountsUseCases.fillPsbt.mockResolvedValue(filledPsbt);
+      mockAccountsUseCases.signPsbt.mockResolvedValue({
+        psbt: 'signedPsbtBase64',
+        txid: mock<Txid>({
+          toString: jest.fn().mockReturnValue('txid'),
+        }),
+        canBeMalleable: false,
+      });
+      jest
+        .mocked(parsePsbt)
+        .mockReturnValueOnce(mockPsbt)
+        .mockReturnValueOnce(psbtForConfirmation)
+        .mockReturnValueOnce(psbtForSigning);
+
+      await handler.route(fillRequest);
+
+      const fillOrder =
+        mockAccountsUseCases.fillPsbt.mock.invocationCallOrder[0];
+      const insertOrder =
+        mockConfirmationRepository.insertSignPsbt.mock.invocationCallOrder[0];
+      const signOrder =
+        mockAccountsUseCases.signPsbt.mock.invocationCallOrder[0];
+
+      expect(fillOrder).toBeLessThan(insertOrder as number);
+      expect(insertOrder).toBeLessThan(signOrder as number);
+
+      expect(mockAccountsUseCases.fillPsbt).toHaveBeenCalledWith(
+        'account-id',
+        mockPsbt,
+        3,
+      );
+      expect(parsePsbt).toHaveBeenNthCalledWith(1, 'psbtBase64');
+      expect(parsePsbt).toHaveBeenNthCalledWith(2, 'filledPsbtBase64');
+      expect(parsePsbt).toHaveBeenNthCalledWith(3, 'filledPsbtBase64');
+      expect(mockConfirmationRepository.insertSignPsbt).toHaveBeenCalledWith(
+        mockAccount,
+        psbtForConfirmation,
+        'metamask',
+        fillOptions,
+      );
+      expect(mockAccountsUseCases.signPsbt).toHaveBeenCalledWith(
+        'account-id',
+        psbtForSigning,
+        'metamask',
+        { fill: false, broadcast: true },
+        3,
+      );
+      expect(psbtForSigning).not.toBe(psbtForConfirmation);
     });
 
     it('returns null txid when signPsbt result has no txid', async () => {
@@ -155,6 +292,30 @@ describe('KeyringRequestHandler', () => {
       expect(mockAccountsUseCases.signPsbt).not.toHaveBeenCalled();
     });
 
+    it('does not show confirmation or sign if fillPsbt fails', async () => {
+      const fillOptions = { fill: true, broadcast: true };
+      const fillRequest = mock<KeyringRequest>({
+        origin,
+        request: {
+          method: AccountCapability.SignPsbt,
+          params: {
+            ...accountParam,
+            psbt: 'psbtBase64',
+            feeRate: 3,
+            options: fillOptions,
+          },
+        },
+        account: 'account-id',
+      });
+      const error = new Error('fee rate too high');
+      mockAccountsUseCases.fillPsbt.mockRejectedValue(error);
+
+      await expect(handler.route(fillRequest)).rejects.toThrow(error);
+
+      expect(mockConfirmationRepository.insertSignPsbt).not.toHaveBeenCalled();
+      expect(mockAccountsUseCases.signPsbt).not.toHaveBeenCalled();
+    });
+
     it('propagates errors from parsePsbt', async () => {
       const error = new Error('parsePsbt');
       jest.mocked(parsePsbt).mockImplementationOnce(() => {
@@ -166,7 +327,11 @@ describe('KeyringRequestHandler', () => {
           ...mockRequest,
           request: {
             ...mockRequest.request,
-            params: { ...accountParam, psbt: 'invalidPsbt' },
+            params: {
+              ...accountParam,
+              psbt: 'invalidPsbt',
+              options: mockOptions,
+            },
           },
         }),
       ).rejects.toThrow(error);
@@ -329,11 +494,14 @@ describe('KeyringRequestHandler', () => {
       account: 'account-id',
     });
 
-    it('executes broadcastPsbt', async () => {
+    it('executes broadcastPsbt and propagates canBeMalleable', async () => {
       const mockTxid = mock<Txid>({
         toString: jest.fn().mockReturnValue('txid'),
       });
-      mockAccountsUseCases.broadcastPsbt.mockResolvedValue(mockTxid);
+      mockAccountsUseCases.broadcastPsbt.mockResolvedValue({
+        txid: mockTxid,
+        canBeMalleable: false,
+      });
 
       const result = await handler.route(mockRequest);
 
@@ -348,7 +516,24 @@ describe('KeyringRequestHandler', () => {
       );
       expect(result).toStrictEqual({
         pending: false,
-        result: { txid: 'txid' },
+        result: { txid: 'txid', canBeMalleable: false },
+      });
+    });
+
+    it('passes canBeMalleable=true through for legacy P2PKH accounts', async () => {
+      const mockTxid = mock<Txid>({
+        toString: jest.fn().mockReturnValue('txid'),
+      });
+      mockAccountsUseCases.broadcastPsbt.mockResolvedValue({
+        txid: mockTxid,
+        canBeMalleable: true,
+      });
+
+      const result = await handler.route(mockRequest);
+
+      expect(result).toStrictEqual({
+        pending: false,
+        result: { txid: 'txid', canBeMalleable: true },
       });
     });
 
@@ -401,11 +586,14 @@ describe('KeyringRequestHandler', () => {
       account: 'account-id',
     });
 
-    it('executes sendTransferq', async () => {
+    it('executes sendTransfer and propagates canBeMalleable', async () => {
       const mockTxid = mock<Txid>({
         toString: jest.fn().mockReturnValue('txid'),
       });
-      mockAccountsUseCases.sendTransfer.mockResolvedValue(mockTxid);
+      mockAccountsUseCases.sendTransfer.mockResolvedValue({
+        txid: mockTxid,
+        canBeMalleable: false,
+      });
 
       const result = await handler.route(mockRequest);
 
@@ -421,7 +609,24 @@ describe('KeyringRequestHandler', () => {
       );
       expect(result).toStrictEqual({
         pending: false,
-        result: { txid: 'txid' },
+        result: { txid: 'txid', canBeMalleable: false },
+      });
+    });
+
+    it('passes canBeMalleable=true through for legacy P2PKH accounts', async () => {
+      const mockTxid = mock<Txid>({
+        toString: jest.fn().mockReturnValue('txid'),
+      });
+      mockAccountsUseCases.sendTransfer.mockResolvedValue({
+        txid: mockTxid,
+        canBeMalleable: true,
+      });
+
+      const result = await handler.route(mockRequest);
+
+      expect(result).toStrictEqual({
+        pending: false,
+        result: { txid: 'txid', canBeMalleable: true },
       });
     });
 

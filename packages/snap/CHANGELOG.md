@@ -7,14 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.12.0]
+
+### Added
+
+- Add `createMany` use case ([#610](https://github.com/MetaMask/snap-bitcoin-wallet/pull/610))
+
 ### Changed
 
+- Enable `keyring_createAccounts` ([#611](https://github.com/MetaMask/snap-bitcoin-wallet/pull/611))
+
+### Fixed
+
+- Show the filled PSBT in the `signPsbt` confirmation dialog so the displayed transaction matches the one being signed ([#606](https://github.com/MetaMask/snap-bitcoin-wallet/pull/606))
+
+## [1.11.0]
+
+### Added
+
+- Add `canBeMalleable` flag to broadcast/send response shapes so consumers can detect when a transaction id may be rewritten by a third party before confirmation (relevant only for legacy P2PKH accounts, currently always `false`) ([#599](https://github.com/MetaMask/snap-bitcoin-wallet/pull/599))
+- Add `insertMany` to repository API ([#609](https://github.com/MetaMask/snap-bitcoin-wallet/pull/609))
+- Add `createMany` use case ([#610](https://github.com/MetaMask/snap-bitcoin-wallet/pull/610))
+
+### Changed
+
+- Show a self-send warning in the send confirmation when the recipient address belongs to the sending account ([#607](https://github.com/MetaMask/snap-bitcoin-wallet/pull/607))
 - Show a confirmation dialog before signing a PSBT from KeyringHandler and sending a transfer ([#591](https://github.com/MetaMask/snap-bitcoin-wallet/pull/591))
 - Add `resolveAccountAddress` method to KeyringHandler for dApp connectivity ([#590](https://github.com/MetaMask/snap-bitcoin-wallet/pull/590))
+- Bump `@metamask/keyring-api` from `^21.3.0` to `^22.0.0` ([#608](https://github.com/MetaMask/snap-bitcoin-wallet/pull/608))
+- Bump `@metamask/keyring-snap-sdk` from `^7.1.1` to `^8.0.0` ([#608](https://github.com/MetaMask/snap-bitcoin-wallet/pull/608))
+- Bump `@metamask/snaps-sdk` from `^10.3.0` to `^11.0.0` ([#608](https://github.com/MetaMask/snap-bitcoin-wallet/pull/608))
 
 ### Fixed
 
 - Preserve original error message and class when wrapping unknown errors at the handler boundary ([#600](https://github.com/MetaMask/snap-bitcoin-wallet/pull/600))
+- Display unconfirmed change to the external keychain (e.g. bridge/swap refunds) in the account balance so it no longer drops to zero while a partial-spend tx is pending ([#605](https://github.com/MetaMask/snap-bitcoin-wallet/pull/605))
 
 ## [1.10.1]
 
@@ -580,7 +607,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add CI for lint and test ([#2](https://github.com/MetaMask/bitcoin/pull/2))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.10.1...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.12.0...HEAD
+[1.12.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.11.0...v1.12.0
+[1.11.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.10.1...v1.11.0
 [1.10.1]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.10.0...v1.10.1
 [1.10.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.8.0...v1.9.0

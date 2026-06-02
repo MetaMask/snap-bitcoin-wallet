@@ -1,4 +1,5 @@
 export * from './account';
+export * from './balance';
 export type * from './config';
 export * from './chain';
 export * from './currency';

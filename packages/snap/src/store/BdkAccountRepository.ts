@@ -278,7 +278,6 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
           `Missing changeset data for account "${id}" for insertion.`,
         );
       }
-
       accountStateEntries.push([id, getAccountState(account, walletData)]);
       derivationPathEntries.push([getDerivationPathKey(derivationPath), id]);
     }

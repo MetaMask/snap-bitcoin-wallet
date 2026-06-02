@@ -208,6 +208,12 @@
     "confirmation.signAndSendTransaction.title": {
       "message": "ट्रांसेक्शन रिक्वेस्ट"
     },
+    "confirmation.signAndSendTransaction.selfSend.title": {
+      "message": "Sending to your own address"
+    },
+    "confirmation.signAndSendTransaction.selfSend.description": {
+      "message": "The recipient address belongs to this wallet. The amount will stay in your account, but network fees still apply."
+    },
     "confirmation.requestOrigin": {
       "message": "इनसे मिला अनुरोध"
     }
