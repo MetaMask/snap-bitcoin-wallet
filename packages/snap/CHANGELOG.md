@@ -9,11 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.12.0]
 
-### Uncategorized
-
-- Revert "1.12.0 (#619)" ([#619](https://github.com/MetaMask/snap-bitcoin-wallet/pull/619))
-- 1.12.0 ([#619](https://github.com/MetaMask/snap-bitcoin-wallet/pull/619))
-
 ### Added
 
 - Add `createMany` use case ([#610](https://github.com/MetaMask/snap-bitcoin-wallet/pull/610))

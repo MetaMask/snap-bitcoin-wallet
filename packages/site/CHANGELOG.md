@@ -9,11 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.12.0]
 
-### Uncategorized
-
-- Revert "1.12.0 (#619)" ([#619](https://github.com/MetaMask/snap-bitcoin-wallet/pull/619))
-- 1.12.0 ([#619](https://github.com/MetaMask/snap-bitcoin-wallet/pull/619))
-
 ### Changed
 
 - Bump `@metamask/keyring-api` from `^21.3.0` to `^22.0.0` ([#608](https://github.com/MetaMask/snap-bitcoin-wallet/pull/608))
