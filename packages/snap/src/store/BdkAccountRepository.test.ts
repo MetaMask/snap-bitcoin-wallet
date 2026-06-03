@@ -422,105 +422,6 @@ describe('BdkAccountRepository', () => {
       expect(mockSnapClient.setState).not.toHaveBeenCalled();
     });
 
-    it('inserts multiple accounts with one accounts write and one derivation path write', async () => {
-      const existingAccountState: AccountState = {
-        wallet: mockWalletData,
-        inscriptions: [],
-        derivationPath: mockDerivationPath,
-      };
-      const account1 = mock<BitcoinAccount>();
-      account1.id = 'some-id-1';
-      account1.derivationPath = ['m', "84'", "0'", "1'"];
-      account1.network = 'bitcoin';
-      account1.addressType = 'p2wpkh';
-      account1.publicAddress = mockAddress;
-      account1.publicDescriptor = 'mock-public-descriptor-1';
-      const account2 = mock<BitcoinAccount>();
-      account2.id = 'some-id-2';
-      account2.derivationPath = ['m', "84'", "0'", "2'"];
-      account2.network = 'bitcoin';
-      account2.addressType = 'p2wpkh';
-      account2.publicAddress = mockAddress;
-      account2.publicDescriptor = 'mock-public-descriptor-2';
-      (account1.takeStaged as jest.Mock) = jest
-        .fn()
-        .mockReturnValue(mockChangeSet);
-      (account2.takeStaged as jest.Mock) = jest
-        .fn()
-        .mockReturnValue(mockChangeSet);
-      mockSnapClient.getState
-        .mockResolvedValueOnce({
-          'existing-id': existingAccountState,
-        })
-        .mockResolvedValueOnce({
-          "m/84'/0'/0'": 'existing-id',
-        });
-
-      const result = await repo.insertMany([account1, account2]);
-
-      expect(result).toStrictEqual([account1, account2]);
-      expect(mockSnapClient.setState).toHaveBeenNthCalledWith(1, 'accounts', {
-        'existing-id': existingAccountState,
-        'some-id-1': {
-          wallet: mockWalletData,
-          inscriptions: [],
-          derivationPath: ['m', "84'", "0'", "1'"],
-          metadata: {
-            address: 'bc1qaddress...',
-            addressType: 'p2wpkh',
-            network: 'bitcoin',
-            publicDescriptor: 'mock-public-descriptor-1',
-          },
-        },
-        'some-id-2': {
-          wallet: mockWalletData,
-          inscriptions: [],
-          derivationPath: ['m', "84'", "0'", "2'"],
-          metadata: {
-            address: 'bc1qaddress...',
-            addressType: 'p2wpkh',
-            network: 'bitcoin',
-            publicDescriptor: 'mock-public-descriptor-2',
-          },
-        },
-      });
-      expect(mockSnapClient.setState).toHaveBeenNthCalledWith(
-        2,
-        'derivationPaths',
-        {
-          "m/84'/0'/0'": 'existing-id',
-          "m/84'/0'/1'": 'some-id-1',
-          "m/84'/0'/2'": 'some-id-2',
-        },
-      );
-    });
-  });
-
-  describe('insertMany', () => {
-    it('returns an empty array when there are no accounts to insert', async () => {
-      const result = await repo.insertMany([]);
-
-      expect(result).toStrictEqual([]);
-      expect(mockSnapClient.getState).not.toHaveBeenCalled();
-      expect(mockSnapClient.setState).not.toHaveBeenCalled();
-    });
-
-    it('throws an error if any account has no wallet data', async () => {
-      await expect(
-        repo.insertMany([
-          {
-            ...mockAccount,
-            id: 'missing-wallet',
-            takeStaged: jest.fn().mockReturnValue(undefined),
-          },
-          mockAccount,
-        ]),
-      ).rejects.toThrow(
-        'Missing changeset data for account "missing-wallet" for insertion.',
-      );
-      expect(mockSnapClient.setState).not.toHaveBeenCalled();
-    });
-
     it('throws an error without consuming staged data if any account has no wallet data', async () => {
       const accountWithWalletData = mock<BitcoinAccount>({
         id: 'some-id-1',
@@ -564,9 +465,17 @@ describe('BdkAccountRepository', () => {
       const account1 = mock<BitcoinAccount>();
       account1.id = 'some-id-1';
       account1.derivationPath = ['m', "84'", "0'", "1'"];
+      account1.network = 'bitcoin';
+      account1.addressType = 'p2wpkh';
+      account1.publicAddress = mockAddress;
+      account1.publicDescriptor = 'mock-public-descriptor-1';
       const account2 = mock<BitcoinAccount>();
       account2.id = 'some-id-2';
       account2.derivationPath = ['m', "84'", "0'", "2'"];
+      account2.network = 'bitcoin';
+      account2.addressType = 'p2wpkh';
+      account2.publicAddress = mockAddress;
+      account2.publicDescriptor = 'mock-public-descriptor-2';
       (account1.takeStaged as jest.Mock) = jest
         .fn()
         .mockReturnValue(mockChangeSet);
@@ -592,11 +501,23 @@ describe('BdkAccountRepository', () => {
           wallet: mockWalletData,
           inscriptions: [],
           derivationPath: ['m', "84'", "0'", "1'"],
+          metadata: {
+            address: 'bc1qaddress...',
+            addressType: 'p2wpkh',
+            network: 'bitcoin',
+            publicDescriptor: 'mock-public-descriptor-1',
+          },
         },
         'some-id-2': {
           wallet: mockWalletData,
           inscriptions: [],
           derivationPath: ['m', "84'", "0'", "2'"],
+          metadata: {
+            address: 'bc1qaddress...',
+            addressType: 'p2wpkh',
+            network: 'bitcoin',
+            publicDescriptor: 'mock-public-descriptor-2',
+          },
         },
       });
       expect(mockSnapClient.setState).toHaveBeenNthCalledWith(
