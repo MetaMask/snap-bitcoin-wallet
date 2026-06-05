@@ -128,6 +128,10 @@ export class StoredAccountAdapter implements BitcoinAccount {
     return this.#unsupported();
   }
 
+  hasStaged(): boolean {
+    return false;
+  }
+
   buildTx(): TransactionBuilder {
     return this.#unsupported();
   }
