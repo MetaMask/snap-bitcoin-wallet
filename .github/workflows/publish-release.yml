@@ -27,6 +27,9 @@ on:
         required: false
         type: string
 
+permissions:
+  contents: read
+
 jobs:
   publish-release:
     permissions:
