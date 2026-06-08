@@ -62,7 +62,7 @@
   "resolutions": {
     "@metamask/snaps-sdk": "^11.0.0"
   },
-  "packageManager": "yarn@4.9.1",
+  "packageManager": "yarn@4.16.0",
   "engines": {
     "node": ">= 20"
   },
