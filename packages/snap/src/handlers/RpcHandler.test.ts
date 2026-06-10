@@ -1178,9 +1178,8 @@ describe('RpcHandler', () => {
       const uppercased = accountAddress.toUpperCase();
       const message = `metamask:proof-of-ownership:${nonce}:${uppercased}`;
 
-      await expect(
-        handler.route(origin, buildRequest(message)),
-      ).resolves.toStrictEqual({ signature: 'mock-bip322-signature' });
+      const result = await handler.route(origin, buildRequest(message));
+      expect(result).toStrictEqual({ signature: 'mock-bip322-signature' });
     });
 
     it('throws when the message does not start with the proof prefix', async () => {
@@ -1214,7 +1213,9 @@ describe('RpcHandler', () => {
       const message = `metamask:proof-of-ownership:${nonce}:${accountAddress}`;
       await expect(
         handler.route(origin, buildRequest(message)),
-      ).rejects.toThrow('Invalid Bitcoin address in proof-of-ownership message');
+      ).rejects.toThrow(
+        'Invalid Bitcoin address in proof-of-ownership message',
+      );
     });
 
     it('throws when the embedded address does not match the signing account', async () => {

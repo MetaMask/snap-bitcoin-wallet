@@ -331,6 +331,14 @@ describe('validation', () => {
       expect(result).toStrictEqual({ nonce, address });
     });
 
+    it('preserves embedded colons in the nonce (split on last ":")', () => {
+      const colonNonce = 'ns:abc:123';
+      const result = parseProofOfOwnershipMessage(
+        `metamask:proof-of-ownership:${colonNonce}:${address}`,
+      );
+      expect(result).toStrictEqual({ nonce: colonNonce, address });
+    });
+
     it.each([
       `rewards,${address},123`,
       `metamask:proof:${nonce}:${address}`,
@@ -345,25 +353,19 @@ describe('validation', () => {
 
     it('rejects messages missing the address separator', () => {
       expect(() =>
-        parseProofOfOwnershipMessage(
-          `metamask:proof-of-ownership:${nonce}`,
-        ),
+        parseProofOfOwnershipMessage(`metamask:proof-of-ownership:${nonce}`),
       ).toThrow('Message must follow the format');
     });
 
     it('rejects messages with an empty nonce', () => {
       expect(() =>
-        parseProofOfOwnershipMessage(
-          `metamask:proof-of-ownership::${address}`,
-        ),
+        parseProofOfOwnershipMessage(`metamask:proof-of-ownership::${address}`),
       ).toThrow('non-empty nonce');
     });
 
     it('rejects messages with an empty address', () => {
       expect(() =>
-        parseProofOfOwnershipMessage(
-          `metamask:proof-of-ownership:${nonce}:`,
-        ),
+        parseProofOfOwnershipMessage(`metamask:proof-of-ownership:${nonce}:`),
       ).toThrow('non-empty address');
     });
   });
@@ -382,9 +384,7 @@ describe('validation', () => {
         canonicalizeBitcoinAddress(
           'BC1PMFR3P9J00PFXJH0ZMGP99Y8ZFTMD3S5PMEDQHYPTWY6LYLEX2GYS2WAMVS',
         ),
-      ).toBe(
-        'bc1pmfr3p9j00pfxjh0zmgp99y8zftmd3s5pmedqhyptwy6lylex2gys2wamvs',
-      );
+      ).toBe('bc1pmfr3p9j00pfxjh0zmgp99y8zftmd3s5pmedqhyptwy6lylex2gys2wamvs');
     });
 
     it.each(['tb1q...', 'TB1Q...', 'bcrt1q...', 'BCRT1Q...'])(

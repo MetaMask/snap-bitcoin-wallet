@@ -444,7 +444,7 @@ export function parseProofOfOwnershipMessage(message: string): {
   }
 
   const remainder = message.slice(PROOF_OF_OWNERSHIP_MESSAGE_PREFIX.length);
-  const separatorIdx = remainder.indexOf(':');
+  const separatorIdx = remainder.lastIndexOf(':');
   if (separatorIdx === -1) {
     throw new Error(
       'Message must follow the format "metamask:proof-of-ownership:{nonce}:{address}"',
