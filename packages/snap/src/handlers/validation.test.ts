@@ -4,8 +4,10 @@ import { assert } from 'superstruct';
 
 import type { BitcoinAccount } from '../entities';
 import {
+  canonicalizeBitcoinAddress,
   ComputeFeeRequest,
   FillPsbtRequest,
+  parseProofOfOwnershipMessage,
   parseRewardsMessage,
   SendTransferRequest,
   SignPsbtRequest,
@@ -315,6 +317,93 @@ describe('validation', () => {
           );
         },
       );
+    });
+  });
+
+  describe('parseProofOfOwnershipMessage', () => {
+    const address = 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq';
+    const nonce = 'a1b2c3d4e5f6789012345678';
+
+    it('extracts the nonce and address from a valid message', () => {
+      const result = parseProofOfOwnershipMessage(
+        `metamask:proof-of-ownership:${nonce}:${address}`,
+      );
+      expect(result).toStrictEqual({ nonce, address });
+    });
+
+    it.each([
+      `rewards,${address},123`,
+      `metamask:proof:${nonce}:${address}`,
+      `Metamask:proof-of-ownership:${nonce}:${address}`,
+      `${nonce}:${address}`,
+      '',
+    ])('rejects messages without the expected prefix: "%s"', (message) => {
+      expect(() => parseProofOfOwnershipMessage(message)).toThrow(
+        'Message must start with "metamask:proof-of-ownership:"',
+      );
+    });
+
+    it('rejects messages missing the address separator', () => {
+      expect(() =>
+        parseProofOfOwnershipMessage(
+          `metamask:proof-of-ownership:${nonce}`,
+        ),
+      ).toThrow('Message must follow the format');
+    });
+
+    it('rejects messages with an empty nonce', () => {
+      expect(() =>
+        parseProofOfOwnershipMessage(
+          `metamask:proof-of-ownership::${address}`,
+        ),
+      ).toThrow('non-empty nonce');
+    });
+
+    it('rejects messages with an empty address', () => {
+      expect(() =>
+        parseProofOfOwnershipMessage(
+          `metamask:proof-of-ownership:${nonce}:`,
+        ),
+      ).toThrow('non-empty address');
+    });
+  });
+
+  describe('canonicalizeBitcoinAddress', () => {
+    it('lowercases bech32 P2WPKH addresses', () => {
+      expect(
+        canonicalizeBitcoinAddress(
+          'BC1QAR0SRRR7XFKVY5L643LYDNW9RE59GTZZWF5MDQ',
+        ),
+      ).toBe('bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq');
+    });
+
+    it('lowercases bech32m P2TR addresses', () => {
+      expect(
+        canonicalizeBitcoinAddress(
+          'BC1PMFR3P9J00PFXJH0ZMGP99Y8ZFTMD3S5PMEDQHYPTWY6LYLEX2GYS2WAMVS',
+        ),
+      ).toBe(
+        'bc1pmfr3p9j00pfxjh0zmgp99y8zftmd3s5pmedqhyptwy6lylex2gys2wamvs',
+      );
+    });
+
+    it.each(['tb1q...', 'TB1Q...', 'bcrt1q...', 'BCRT1Q...'])(
+      'lowercases bech32 testnet and regtest addresses: "%s"',
+      (input) => {
+        expect(canonicalizeBitcoinAddress(input)).toBe(input.toLowerCase());
+      },
+    );
+
+    it('leaves legacy base58check P2PKH addresses unchanged', () => {
+      expect(
+        canonicalizeBitcoinAddress('1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa'),
+      ).toBe('1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa');
+    });
+
+    it('leaves legacy base58check P2SH addresses unchanged', () => {
+      expect(
+        canonicalizeBitcoinAddress('3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy'),
+      ).toBe('3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy');
     });
   });
 });

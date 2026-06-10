@@ -35,6 +35,8 @@ import {
   validateAccountBalance,
   validateDustLimit,
   parseRewardsMessage,
+  parseProofOfOwnershipMessage,
+  canonicalizeBitcoinAddress,
 } from './validation';
 
 export const CreateSendFormRequest = object({
@@ -69,6 +71,11 @@ export const VerifyMessageRequest = object({
 });
 
 export const SignRewardsMessageRequest = object({
+  accountId: string(),
+  message: string(),
+});
+
+export const SignProofOfOwnershipRequest = object({
   accountId: string(),
   message: string(),
 });
@@ -136,6 +143,10 @@ export class RpcHandler {
       case RpcMethod.SignRewardsMessage: {
         assert(params, SignRewardsMessageRequest);
         return this.#signRewardsMessage(params.accountId, params.message);
+      }
+      case RpcMethod.SignProofOfOwnership: {
+        assert(params, SignProofOfOwnershipRequest);
+        return this.#signProofOfOwnership(params.accountId, params.message);
       }
 
       default:
@@ -364,6 +375,58 @@ export class RpcHandler {
     const signature = await this.#accountUseCases.signMessage(
       accountId,
       decodedMessage,
+      'metamask',
+      { skipConfirmation: true },
+    );
+
+    return { signature };
+  }
+
+  /**
+   * Handles the signing of a proof-of-ownership message, of format 'metamask:proof-of-ownership:{nonce}:{address}'.
+   *
+   * @param accountId - The ID of the account to sign with
+   * @param message - The plaintext proof-of-ownership message
+   * @returns The signature
+   * @throws {ValidationError} If the account is not found or if the address in the message doesn't match the signing account
+   */
+  async #signProofOfOwnership(
+    accountId: string,
+    message: string,
+  ): Promise<{ signature: string }> {
+    const { address: messageAddress } = parseProofOfOwnershipMessage(message);
+
+    const account = await this.#accountUseCases.get(accountId);
+    if (!account) {
+      throw new ValidationError('Account not found', { accountId });
+    }
+
+    const addressValidation = validateAddress(
+      messageAddress,
+      account.network,
+      this.#logger,
+    );
+    if (!addressValidation.valid) {
+      throw new ValidationError(
+        `Invalid Bitcoin address in proof-of-ownership message for network ${account.network}`,
+        { messageAddress, network: account.network },
+      );
+    }
+
+    const accountAddress = account.publicAddress.toString();
+    if (
+      canonicalizeBitcoinAddress(messageAddress) !==
+      canonicalizeBitcoinAddress(accountAddress)
+    ) {
+      throw new ValidationError(
+        `Address in proof-of-ownership message (${messageAddress}) does not match signing account address (${accountAddress})`,
+        { messageAddress, accountAddress },
+      );
+    }
+
+    const signature = await this.#accountUseCases.signMessage(
+      accountId,
+      message,
       'metamask',
       { skipConfirmation: true },
     );

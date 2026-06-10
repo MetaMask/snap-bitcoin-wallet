@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add `signProofOfOwnership` client request method for silently signing `metamask:proof-of-ownership:<nonce>:<address>` messages with the account's BIP-322 signer
+
 ## [1.12.0]
 
 ### Added
