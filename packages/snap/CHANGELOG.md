@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add `signProofOfOwnership` client request method for silently signing `metamask:proof-of-ownership:<nonce>:<address>` messages with the account's BIP-322 signer
 
+## [1.13.0]
+
+### Changed
+
+- Cache account response metadata to avoid loading full BDK wallets for faster checks ([#612](https://github.com/MetaMask/snap-bitcoin-wallet/pull/612/changes))
+
 ## [1.12.0]
 
 ### Added
@@ -611,7 +617,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add CI for lint and test ([#2](https://github.com/MetaMask/bitcoin/pull/2))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.12.0...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.13.0...HEAD
+[1.13.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.12.0...v1.13.0
 [1.12.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.10.1...v1.11.0
 [1.10.1]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.10.0...v1.10.1

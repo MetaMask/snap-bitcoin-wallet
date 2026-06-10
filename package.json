@@ -1,6 +1,6 @@
 {
   "name": "bitcoin-wallet-snap-monorepo",
-  "version": "1.12.0",
+  "version": "1.13.0",
   "private": true,
   "description": "",
   "homepage": "https://github.com/MetaMask/snap-bitcoin-wallet#readme",
@@ -62,7 +62,7 @@
   "resolutions": {
     "@metamask/snaps-sdk": "^11.0.0"
   },
-  "packageManager": "yarn@4.9.1",
+  "packageManager": "yarn@4.16.0",
   "engines": {
     "node": ">= 20"
   },
