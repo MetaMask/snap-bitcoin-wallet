@@ -1,4 +1,3 @@
-// TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
 /* eslint-disable @typescript-eslint/naming-convention */
 import type {
   ChangeSet,
