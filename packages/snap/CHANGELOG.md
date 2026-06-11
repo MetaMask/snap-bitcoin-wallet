@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Throw a clear `WalletError` when WebAssembly is unavailable (e.g. iOS Lockdown Mode) instead of crashing with an obscure `"undefined is not an object (evaluating 'WebAssembly.instantiate')"` error ([#626](https://github.com/MetaMask/snap-bitcoin-wallet/pull/626))
+- Throw a clear `WalletError` when WebAssembly is unavailable (e.g. iOS Lockdown Mode) instead of crashing with an obscure `"undefined is not an object (evaluating 'WebAssembly.instantiate')"` error ([#628](https://github.com/MetaMask/snap-bitcoin-wallet/pull/628))
 
 ## [1.13.0]
 
