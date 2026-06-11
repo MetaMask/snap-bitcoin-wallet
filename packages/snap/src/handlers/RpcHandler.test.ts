@@ -1169,7 +1169,7 @@ describe('RpcHandler', () => {
       expect(result).toStrictEqual({ signature: 'mock-bip322-signature' });
     });
 
-    it('treats mixed-case bech32 addresses as canonical for comparison', async () => {
+    it('canonicalizes mixed-case bech32 addresses before validating and comparing', async () => {
       mockAccountsUseCases.get.mockResolvedValue(mockBitcoinAccount);
       jest
         .spyOn(mockAccountsUseCases, 'signMessage' as keyof AccountUseCases)
@@ -1179,6 +1179,19 @@ describe('RpcHandler', () => {
       const message = `metamask:proof-of-ownership:${nonce}:${uppercased}`;
 
       const result = await handler.route(origin, buildRequest(message));
+
+      // BDK's `Address.from_string` rejects mixed-case bech32 per BIP-173.
+      // Asserting it was called with the lowercase form (and never the
+      // uppercase input) is what guards against the canonicalization step
+      // being moved back after `validateAddress`.
+      expect(Address.from_string).toHaveBeenCalledWith(
+        accountAddress,
+        'bitcoin',
+      );
+      expect(Address.from_string).not.toHaveBeenCalledWith(
+        uppercased,
+        'bitcoin',
+      );
       expect(result).toStrictEqual({ signature: 'mock-bip322-signature' });
     });
 

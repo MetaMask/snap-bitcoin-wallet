@@ -401,8 +401,18 @@ export class RpcHandler {
       throw new ValidationError('Account not found', { accountId });
     }
 
+    // Canonicalize before validating: BDK's `Address.from_string` rejects
+    // mixed-case bech32 per BIP-173, but bech32 addresses are
+    // case-insensitive on the wire and the canonical form is lowercase.
+    // Validating the raw message address would reject perfectly valid
+    // mixed-case input before we ever got a chance to normalize it.
+    const canonicalMessageAddress = canonicalizeBitcoinAddress(messageAddress);
+    const canonicalAccountAddress = canonicalizeBitcoinAddress(
+      account.publicAddress.toString(),
+    );
+
     const addressValidation = validateAddress(
-      messageAddress,
+      canonicalMessageAddress,
       account.network,
       this.#logger,
     );
@@ -413,14 +423,13 @@ export class RpcHandler {
       );
     }
 
-    const accountAddress = account.publicAddress.toString();
-    if (
-      canonicalizeBitcoinAddress(messageAddress) !==
-      canonicalizeBitcoinAddress(accountAddress)
-    ) {
+    if (canonicalMessageAddress !== canonicalAccountAddress) {
       throw new ValidationError(
-        `Address in proof-of-ownership message (${messageAddress}) does not match signing account address (${accountAddress})`,
-        { messageAddress, accountAddress },
+        `Address in proof-of-ownership message (${messageAddress}) does not match signing account address (${canonicalAccountAddress})`,
+        {
+          messageAddress,
+          accountAddress: canonicalAccountAddress,
+        },
       );
     }
 
