@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add `signProofOfOwnership` client request method ([#626](https://github.com/MetaMask/snap-bitcoin-wallet/pull/626))
+  - This method silently signs `metamask:proof-of-ownership:<nonce>:<address>` messages with the account's BIP-322 signer
+
 ## [1.13.0]
 
 ### Changed

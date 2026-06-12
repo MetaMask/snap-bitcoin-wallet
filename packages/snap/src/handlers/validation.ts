@@ -31,6 +31,7 @@ export enum RpcMethod {
   OnAmountInput = 'onAmountInput',
   ConfirmSend = 'confirmSend',
   SignRewardsMessage = 'signRewardsMessage',
+  SignProofOfOwnership = 'signProofOfOwnership',
 }
 
 export enum SendErrorCodes {
@@ -398,4 +399,72 @@ export function parseRewardsMessage(base64Message: string): {
     address: addressPart as string,
     timestamp,
   };
+}
+
+export const PROOF_OF_OWNERSHIP_MESSAGE_PREFIX = 'metamask:proof-of-ownership:';
+
+// bech32/bech32m HRPs for Bitcoin mainnet, testnet, and regtest. Addresses
+// starting with one of these are case-insensitive but only canonical in
+// lowercase.
+const BECH32_BITCOIN_ADDRESS_PREFIXES = ['bc1', 'tb1', 'bcrt1'];
+
+/**
+ * Canonicalizes a Bitcoin address for equality comparison: bech32/bech32m
+ * (P2WPKH, P2WSH, P2TR) are lowercased, legacy base58check (P2PKH, P2SH)
+ * are passed through unchanged.
+ *
+ * @param address - The Bitcoin address to canonicalize
+ * @returns The canonical form of the address
+ */
+export function canonicalizeBitcoinAddress(address: string): string {
+  const lowercased = address.toLowerCase();
+  if (
+    BECH32_BITCOIN_ADDRESS_PREFIXES.some((hrp) => lowercased.startsWith(hrp))
+  ) {
+    return lowercased;
+  }
+  return address;
+}
+
+/**
+ * Parses a plaintext proof-of-ownership message in the format 'metamask:proof-of-ownership:{nonce}:{address}'
+ *
+ * @param message - The plaintext message to parse
+ * @returns Object containing the parsed nonce and address
+ * @throws Error if the message format is invalid
+ */
+export function parseProofOfOwnershipMessage(message: string): {
+  nonce: string;
+  address: string;
+} {
+  if (!message.startsWith(PROOF_OF_OWNERSHIP_MESSAGE_PREFIX)) {
+    throw new Error(
+      `Message must start with "${PROOF_OF_OWNERSHIP_MESSAGE_PREFIX}"`,
+    );
+  }
+
+  const remainder = message.slice(PROOF_OF_OWNERSHIP_MESSAGE_PREFIX.length);
+  const separatorIdx = remainder.lastIndexOf(':');
+  if (separatorIdx === -1) {
+    throw new Error(
+      'Message must follow the format "metamask:proof-of-ownership:{nonce}:{address}"',
+    );
+  }
+
+  const nonce = remainder.slice(0, separatorIdx);
+  const address = remainder.slice(separatorIdx + 1);
+
+  if (nonce === '') {
+    throw new Error(
+      'Proof-of-ownership message must contain a non-empty nonce',
+    );
+  }
+
+  if (address === '') {
+    throw new Error(
+      'Proof-of-ownership message must contain a non-empty address',
+    );
+  }
+
+  return { nonce, address };
 }

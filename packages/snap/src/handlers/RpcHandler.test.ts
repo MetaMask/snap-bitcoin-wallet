@@ -1117,4 +1117,140 @@ describe('RpcHandler', () => {
       );
     });
   });
+
+  describe('signProofOfOwnership', () => {
+    const accountAddress = 'bc1qwl8399fz829uqvqly9tcatgrgtwp3udnhxfq4k';
+    const nonce = 'a1b2c3d4e5f6789012345678';
+
+    const mockBitcoinAccount = mock<BitcoinAccount>({
+      id: validAccountId,
+      publicAddress: {
+        toString: () => accountAddress,
+      },
+      network: 'bitcoin',
+    });
+
+    const buildRequest = (
+      message: string,
+      accountId: string = validAccountId,
+    ): JsonRpcRequest => ({
+      jsonrpc: '2.0',
+      id: '1',
+      method: RpcMethod.SignProofOfOwnership,
+      params: { accountId, message },
+    });
+
+    beforeEach(() => {
+      jest
+        .mocked(Address.from_string)
+        .mockReturnValue(mockBitcoinAccount.publicAddress);
+    });
+
+    it('signs the proof message and returns the BIP-322 signature', async () => {
+      mockAccountsUseCases.get.mockResolvedValue(mockBitcoinAccount);
+      const signMessageSpy = jest
+        .spyOn(mockAccountsUseCases, 'signMessage' as keyof AccountUseCases)
+        .mockResolvedValue('mock-bip322-signature' as never);
+
+      const message = `metamask:proof-of-ownership:${nonce}:${accountAddress}`;
+      const result = await handler.route(origin, buildRequest(message));
+
+      expect(mockAccountsUseCases.get).toHaveBeenCalledWith(validAccountId);
+      expect(Address.from_string).toHaveBeenCalledWith(
+        accountAddress,
+        'bitcoin',
+      );
+      expect(signMessageSpy).toHaveBeenCalledWith(
+        validAccountId,
+        message,
+        'metamask',
+        { skipConfirmation: true },
+      );
+      expect(result).toStrictEqual({ signature: 'mock-bip322-signature' });
+    });
+
+    it('canonicalizes mixed-case bech32 addresses before validating and comparing', async () => {
+      mockAccountsUseCases.get.mockResolvedValue(mockBitcoinAccount);
+      jest
+        .spyOn(mockAccountsUseCases, 'signMessage' as keyof AccountUseCases)
+        .mockResolvedValue('mock-bip322-signature' as never);
+
+      const uppercased = accountAddress.toUpperCase();
+      const message = `metamask:proof-of-ownership:${nonce}:${uppercased}`;
+
+      const result = await handler.route(origin, buildRequest(message));
+
+      // BDK's `Address.from_string` rejects mixed-case bech32 per BIP-173.
+      // Asserting it was called with the lowercase form (and never the
+      // uppercase input) is what guards against the canonicalization step
+      // being moved back after `validateAddress`.
+      expect(Address.from_string).toHaveBeenCalledWith(
+        accountAddress,
+        'bitcoin',
+      );
+      expect(Address.from_string).not.toHaveBeenCalledWith(
+        uppercased,
+        'bitcoin',
+      );
+      expect(result).toStrictEqual({ signature: 'mock-bip322-signature' });
+    });
+
+    it('throws when the message does not start with the proof prefix', async () => {
+      mockAccountsUseCases.get.mockResolvedValue(mockBitcoinAccount);
+
+      await expect(
+        handler.route(
+          origin,
+          buildRequest(`rewards,${accountAddress},1736660000`),
+        ),
+      ).rejects.toThrow('Message must start with');
+    });
+
+    it('throws when the account is not found', async () => {
+      mockAccountsUseCases.get.mockResolvedValue(
+        null as unknown as BitcoinAccount,
+      );
+
+      const message = `metamask:proof-of-ownership:${nonce}:${accountAddress}`;
+      await expect(
+        handler.route(origin, buildRequest(message, 'missing')),
+      ).rejects.toThrow('Account not found');
+    });
+
+    it('throws when the embedded address is invalid for the account network', async () => {
+      mockAccountsUseCases.get.mockResolvedValue(mockBitcoinAccount);
+      jest.mocked(Address.from_string).mockImplementationOnce(() => {
+        throw new Error('invalid address');
+      });
+
+      const message = `metamask:proof-of-ownership:${nonce}:${accountAddress}`;
+      await expect(
+        handler.route(origin, buildRequest(message)),
+      ).rejects.toThrow(
+        'Invalid Bitcoin address in proof-of-ownership message',
+      );
+    });
+
+    it('throws when the embedded address does not match the signing account', async () => {
+      mockAccountsUseCases.get.mockResolvedValue(mockBitcoinAccount);
+      const otherAddress = 'bc1qdifferentaddress123456789abcdefgh';
+      const message = `metamask:proof-of-ownership:${nonce}:${otherAddress}`;
+
+      await expect(
+        handler.route(origin, buildRequest(message)),
+      ).rejects.toThrow('does not match signing account address');
+    });
+
+    it('propagates errors from the signer', async () => {
+      mockAccountsUseCases.get.mockResolvedValue(mockBitcoinAccount);
+      jest
+        .spyOn(mockAccountsUseCases, 'signMessage' as keyof AccountUseCases)
+        .mockRejectedValue(new Error('signer unavailable') as never);
+
+      const message = `metamask:proof-of-ownership:${nonce}:${accountAddress}`;
+      await expect(
+        handler.route(origin, buildRequest(message)),
+      ).rejects.toThrow('signer unavailable');
+    });
+  });
 });

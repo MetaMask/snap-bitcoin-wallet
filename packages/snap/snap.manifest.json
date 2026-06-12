@@ -1,5 +1,5 @@
 {
-  "version": "1.10.1",
+  "version": "1.13.0",
   "description": "Manage Bitcoin using MetaMask",
   "proposedName": "Bitcoin",
   "repository": {
@@ -7,7 +7,7 @@
     "url": "https://github.com/MetaMask/snap-bitcoin-wallet.git"
   },
   "source": {
-    "shasum": "ULNv7Bt/BuxJkLiIo7x79kO0vVLtnZj8CxGoa2bEQ+M=",
+    "shasum": "7GSBhdWnQOP8h+FoCeEtq9XioCJMVPWT+r0cIylafrg=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
@@ -92,6 +92,6 @@
       ]
     }
   },
-  "platformVersion": "10.3.0",
+  "platformVersion": "11.1.1",
   "manifestVersion": "0.1"
 }
