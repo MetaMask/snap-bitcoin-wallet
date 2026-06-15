@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.14.0]
+
+### Uncategorized
+
+- chore(deps): bump the npm_and_yarn group across 2 directories with 1 update ([#620](https://github.com/MetaMask/snap-bitcoin-wallet/pull/620))
+
 ## [1.12.0]
 
 ### Changed
@@ -184,7 +190,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - build(deps): bump @metamask/keyring-api from 5.1.0 to 6.0.0 ([#6](https://github.com/MetaMask/bitcoin/pull/6))
 - feat: init commit
 
-[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.12.0...HEAD
+[Unreleased]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.14.0...HEAD
+[1.14.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.12.0...v1.14.0
 [1.12.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.10.1...v1.12.0
 [1.10.1]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v1.0.0...v1.10.1
 [1.0.0]: https://github.com/MetaMask/snap-bitcoin-wallet/compare/v0.19.3...v1.0.0
