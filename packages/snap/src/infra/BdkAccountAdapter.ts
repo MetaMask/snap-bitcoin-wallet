@@ -34,6 +34,19 @@ import {
 } from '../entities';
 import { BdkTxBuilderAdapter } from './BdkTxBuilderAdapter';
 
+/**
+ * Throws a {@link WalletError} if WebAssembly is not available in the current environment.
+ */
+function assertWebAssemblyAvailable(): void {
+  // eslint-disable-next-line no-restricted-globals -- WebAssembly is a valid endowment in the snap execution environment (endowment:webassembly)
+  if (typeof WebAssembly === 'undefined') {
+    throw new WalletError(
+      'WebAssembly is not available in this environment. ' +
+        'If iOS Lockdown Mode is enabled, Bitcoin wallet functionality is not supported.',
+    );
+  }
+}
+
 export class BdkAccountAdapter implements BitcoinAccount {
   readonly #id: string;
 
@@ -52,23 +65,13 @@ export class BdkAccountAdapter implements BitcoinAccount {
     this.#capabilities = Object.values(AccountCapability);
   }
 
-  static #assertWebAssemblyAvailable(): void {
-    // eslint-disable-next-line no-restricted-globals -- WebAssembly is a valid endowment in the snap execution environment (endowment:webassembly)
-    if (typeof WebAssembly === 'undefined') {
-      throw new WalletError(
-        'WebAssembly is not available in this environment. ' +
-          'If iOS Lockdown Mode is enabled, Bitcoin wallet functionality is not supported.',
-      );
-    }
-  }
-
   static create(
     id: string,
     derivationPath: string[],
     descriptors: DescriptorPair,
     network: Network,
   ): BdkAccountAdapter {
-    BdkAccountAdapter.#assertWebAssemblyAvailable();
+    assertWebAssemblyAvailable();
     return new BdkAccountAdapter(
       id,
       derivationPath,
@@ -82,7 +85,7 @@ export class BdkAccountAdapter implements BitcoinAccount {
     walletData: ChangeSet,
     descriptors?: DescriptorPair,
   ): BdkAccountAdapter {
-    BdkAccountAdapter.#assertWebAssemblyAvailable();
+    assertWebAssemblyAvailable();
     // Load with signer
     if (descriptors) {
       return new BdkAccountAdapter(
