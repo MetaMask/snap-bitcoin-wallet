@@ -7,17 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Throw a `WalletError` when `WebAssembly` is unavailable (e.g. iOS Lockdown Mode) ([#628](https://github.com/MetaMask/snap-bitcoin-wallet/pull/628))
+  - The snap was previously crashing with a confusing `"undefined is not an object (evaluating 'WebAssembly.instantiate')"` error.
+
 ## [1.14.0]
 
 ### Added
 
 - Add `signProofOfOwnership` client request method ([#626](https://github.com/MetaMask/snap-bitcoin-wallet/pull/626))
   - This method silently signs `metamask:proof-of-ownership:<nonce>:<address>` messages with the account's BIP-322 signer
-
-### Fixed
-
-- Throw a `WalletError` when `WebAssembly` is unavailable (e.g. iOS Lockdown Mode) ([#628](https://github.com/MetaMask/snap-bitcoin-wallet/pull/628))
-  - The snap was previously crashing with a confusing `"undefined is not an object (evaluating 'WebAssembly.instantiate')"` error.
 
 ## [1.13.0]
 
