@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.14.1]
+
 ### Fixed
 
 - Throw a `WalletError` when `WebAssembly` is unavailable (e.g. iOS Lockdown Mode) ([#628](https://github.com/MetaMask/snap-bitcoin-wallet/pull/628))
