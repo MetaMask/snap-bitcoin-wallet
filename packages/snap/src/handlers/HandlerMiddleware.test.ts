@@ -52,6 +52,24 @@ describe('HandlerMiddleware', () => {
       expect(mockLogger.error).toHaveBeenCalledWith(error);
     });
 
+    it('tracks an unexpected Error before rethrowing it as a SnapError', async () => {
+      const error = new Error('tracked boom');
+      const mockFn = jest.fn().mockRejectedValue(error);
+
+      await expect(middleware.handle(mockFn)).rejects.toThrow('tracked boom');
+      expect(mockSnapClient.emitTrackingError).toHaveBeenCalledWith(error);
+    });
+
+    it('continues to throw a SnapError when emitTrackingError fails', async () => {
+      const error = new Error('boom after tracking failure');
+      const mockFn = jest.fn().mockRejectedValue(error);
+
+      await expect(middleware.handle(mockFn)).rejects.toThrow(error);
+
+      expect(mockSnapClient.emitTrackingError).toHaveBeenCalledWith(error);
+      expect(mockSnapClient.getPreferences).toHaveBeenCalled();
+    });
+
     it('wraps a non-Error thrown value by stringifying it', async () => {
       const mockFn = jest.fn().mockRejectedValue('string failure');
 
