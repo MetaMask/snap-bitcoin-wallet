@@ -12,9 +12,14 @@ import type {
   GetPreferencesResult,
   Json,
 } from '@metamask/snaps-sdk';
-import { DialogType } from '@metamask/snaps-sdk';
+import { DialogType, getJsonError } from '@metamask/snaps-sdk';
 
-import type { BaseError, BitcoinAccount, SnapClient } from '../entities';
+import type {
+  BaseError,
+  BitcoinAccount,
+  Logger,
+  SnapClient,
+} from '../entities';
 import {
   computeDisplayBalanceSats,
   TrackingSnapEvent,
@@ -30,9 +35,11 @@ import { mapToKeyringAccount, mapToTransaction } from '../handlers/mappings';
 
 export class SnapClientAdapter implements SnapClient {
   readonly #encrypt: boolean;
+  readonly #logger: Logger;
 
-  constructor(encrypt = false) {
+  constructor(encrypt = false, logger: Logger) {
     this.#encrypt = encrypt;
+    this.#logger = logger;
   }
 
   decideToEncrypt(key?: string): boolean {
@@ -300,26 +307,15 @@ export class SnapClientAdapter implements SnapClient {
     /* eslint-enable @typescript-eslint/naming-convention */
   }
 
-  async emitTrackingError(error: BaseError): Promise<void> {
-    await snap.request({
-      method: 'snap_trackError',
-      params: {
-        error: {
-          name: error.name,
-          message: error.message,
-          stack: error.stack ?? null,
-          cause:
-            error.cause && error.cause instanceof Error
-              ? {
-                  cause: null,
-                  message: error.cause.message,
-                  name: error.cause.name,
-                  stack: error.cause.stack ?? null,
-                }
-              : null,
-        },
-      },
-    });
+  async emitTrackingError(error: Error): Promise<void> {
+    try {
+      await snap.request({
+        method: 'snap_trackError',
+        params: { error: getJsonError(error) },
+      });
+    } catch (trackingError) {
+      this.#logger.error('Failed to track error', trackingError);
+    }
   }
 
   async startTrace(name: string): Promise<void> {

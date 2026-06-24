@@ -260,7 +260,7 @@ export type SnapClient = {
    *
    * @param error The error to track
    */
-  emitTrackingError(error: BaseError): Promise<void>;
+  emitTrackingError(error: Error): Promise<void>;
 
   /**
    * Start a performance trace.

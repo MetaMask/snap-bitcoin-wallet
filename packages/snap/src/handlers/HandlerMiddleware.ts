@@ -43,18 +43,13 @@ export class HandlerMiddleware {
     try {
       return await fn();
     } catch (error) {
+      await this.#snapClient.emitTrackingError(error as Error);
+
       const { locale } = await this.#snapClient.getPreferences();
       const messages = await this.#translator.load(locale);
 
       if (error instanceof BaseError) {
         this.#logger.error(error, error.data);
-
-        try {
-          await this.#snapClient.emitTrackingError(error);
-        } catch (trackingError) {
-          // The tracking pipeline is non‑critical; log and proceed so we don’t mask the original failure.
-          this.#logger.error('Failed to track error', trackingError);
-        }
 
         const errMsg =
           messages[`error.${error.code}`]?.message ??
