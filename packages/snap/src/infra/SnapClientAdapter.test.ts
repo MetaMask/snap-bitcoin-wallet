@@ -6,6 +6,7 @@ import type { BitcoinAccount, Logger } from '../entities';
 import { TrackingSnapEvent } from '../entities';
 import { SnapClientAdapter } from './SnapClientAdapter';
 
+/* eslint-disable @typescript-eslint/naming-convention */
 jest.mock('@metamask/bitcoindevkit', () => ({
   Amount: {
     from_sat: jest.fn(() => ({
@@ -15,11 +16,12 @@ jest.mock('@metamask/bitcoindevkit', () => ({
     })),
   },
 }));
+/* eslint-enable @typescript-eslint/naming-convention */
 
 const setupTest = () => {
   const mockLogger = mock<Logger>();
   const mockRequest = jest.fn();
-  const snapClient = new SnapClientAdapter(false, mockLogger);
+  const snapClient = new SnapClientAdapter(mockLogger);
 
   Object.defineProperty(globalThis, 'snap', {
     configurable: true,
@@ -45,15 +47,16 @@ describe('SnapClientAdapter', () => {
       });
       mockRequest.mockRejectedValue(trackingError);
 
-      await expect(
-        snapClient.emitTrackingEvent(
+      expect(
+        await snapClient.emitTrackingEvent(
           TrackingSnapEvent.TransactionReceived,
           account,
           tx,
           'metamask',
         ),
-      ).resolves.toBeUndefined();
+      ).toBeUndefined();
 
+      /* eslint-disable @typescript-eslint/naming-convention */
       expect(mockRequest).toHaveBeenCalledWith({
         method: 'snap_trackEvent',
         params: {
@@ -69,6 +72,7 @@ describe('SnapClientAdapter', () => {
           },
         },
       });
+      /* eslint-enable @typescript-eslint/naming-convention */
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Failed to track event: Transaction Received',
         trackingError,
@@ -83,9 +87,7 @@ describe('SnapClientAdapter', () => {
       const error = new Error('boom');
       mockRequest.mockResolvedValue(undefined);
 
-      await expect(
-        snapClient.emitTrackingError(error),
-      ).resolves.toBeUndefined();
+      expect(await snapClient.emitTrackingError(error)).toBeUndefined();
 
       expect(mockRequest).toHaveBeenCalledWith({
         method: 'snap_trackError',
@@ -100,27 +102,12 @@ describe('SnapClientAdapter', () => {
       const trackingError = new Error('track failed');
       mockRequest.mockRejectedValue(trackingError);
 
-      await expect(
-        snapClient.emitTrackingError(error),
-      ).resolves.toBeUndefined();
+      expect(await snapClient.emitTrackingError(error)).toBeUndefined();
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Failed to track error',
         trackingError,
       );
     });
-    //   const { adapter, mockLogger, mockRequest } = setupTest();
-
-    //   const error = new Error('boom');
-    //   const trackingError = new Error('track failed');
-    //   mockRequest.mockRejectedValue(trackingError);
-
-    //   await adapter.emitTrackingError(error);
-
-    //   expect(mockLogger.error).toHaveBeenCalledWith(
-    //     'Failed to track error',
-    //     trackingError,
-    //   );
-    // });
   });
 
   describe('startTrace', () => {
@@ -130,9 +117,7 @@ describe('SnapClientAdapter', () => {
       const traceError = new Error('trace failed');
       mockRequest.mockRejectedValue(traceError);
 
-      await expect(
-        snapClient.startTrace('Create Bitcoin Account'),
-      ).resolves.toBe(false);
+      expect(await snapClient.startTrace('Create Bitcoin Account')).toBe(false);
 
       expect(mockRequest).toHaveBeenCalledWith({
         method: 'snap_startTrace',
@@ -154,9 +139,9 @@ describe('SnapClientAdapter', () => {
       const traceError = new Error('trace end failed');
       mockRequest.mockRejectedValue(traceError);
 
-      await expect(
-        snapClient.endTrace('Create Bitcoin Account'),
-      ).resolves.toBeUndefined();
+      expect(
+        await snapClient.endTrace('Create Bitcoin Account'),
+      ).toBeUndefined();
 
       expect(mockRequest).toHaveBeenCalledWith({
         method: 'snap_endTrace',

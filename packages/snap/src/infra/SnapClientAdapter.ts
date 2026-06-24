@@ -30,11 +30,12 @@ import { mapToKeyringAccount, mapToTransaction } from '../handlers/mappings';
 
 export class SnapClientAdapter implements SnapClient {
   readonly #encrypt: boolean;
+
   readonly #logger: Logger;
 
-  constructor(encrypt = false, logger: Logger) {
-    this.#encrypt = encrypt;
+  constructor(logger: Logger, encrypt = false) {
     this.#logger = logger;
+    this.#encrypt = encrypt;
   }
 
   decideToEncrypt(key?: string): boolean {
@@ -284,6 +285,7 @@ export class SnapClientAdapter implements SnapClient {
         }
       };
 
+      /* eslint-disable @typescript-eslint/naming-convention */
       await snap.request({
         method: 'snap_trackEvent',
         params: {
@@ -299,6 +301,7 @@ export class SnapClientAdapter implements SnapClient {
           },
         },
       });
+      /* eslint-enable @typescript-eslint/naming-convention */
     } catch (error) {
       this.#logger.error(`Failed to track event: ${eventType}`, error);
     }
