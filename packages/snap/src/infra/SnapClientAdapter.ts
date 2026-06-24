@@ -14,12 +14,7 @@ import type {
 } from '@metamask/snaps-sdk';
 import { DialogType, getJsonError } from '@metamask/snaps-sdk';
 
-import type {
-  BaseError,
-  BitcoinAccount,
-  Logger,
-  SnapClient,
-} from '../entities';
+import type { BitcoinAccount, Logger, SnapClient } from '../entities';
 import {
   computeDisplayBalanceSats,
   TrackingSnapEvent,
@@ -270,41 +265,43 @@ export class SnapClientAdapter implements SnapClient {
     tx: WalletTx,
     origin: string,
   ): Promise<void> {
-    const createMessage = (): string => {
-      switch (eventType) {
-        case TrackingSnapEvent.TransactionFinalized:
-          return 'Snap transaction finalized';
-        case TrackingSnapEvent.TransactionSubmitted:
-          return 'Snap transaction submitted';
-        case TrackingSnapEvent.TransactionReorged:
-          return 'Snap transaction reorged';
-        case TrackingSnapEvent.TransactionReceived:
-          return 'Snap transaction received';
-        default:
-          throw new AssertionError(`Unhandled tracking event type`, {
-            eventType,
-            origin,
-          });
-      }
-    };
+    try {
+      const createMessage = (): string => {
+        switch (eventType) {
+          case TrackingSnapEvent.TransactionFinalized:
+            return 'Snap transaction finalized';
+          case TrackingSnapEvent.TransactionSubmitted:
+            return 'Snap transaction submitted';
+          case TrackingSnapEvent.TransactionReorged:
+            return 'Snap transaction reorged';
+          case TrackingSnapEvent.TransactionReceived:
+            return 'Snap transaction received';
+          default:
+            throw new AssertionError(`Unhandled tracking event type`, {
+              eventType,
+              origin,
+            });
+        }
+      };
 
-    /* eslint-disable @typescript-eslint/naming-convention */
-    await snap.request({
-      method: 'snap_trackEvent',
-      params: {
-        event: {
-          event: eventType,
-          properties: {
-            origin,
-            message: createMessage(),
-            chain_id_caip: networkToScope[account.network],
-            account_type: addressTypeToCaip[account.addressType],
-            tx_id: tx.txid.toString(),
+      await snap.request({
+        method: 'snap_trackEvent',
+        params: {
+          event: {
+            event: eventType,
+            properties: {
+              origin,
+              message: createMessage(),
+              chain_id_caip: networkToScope[account.network],
+              account_type: addressTypeToCaip[account.addressType],
+              tx_id: tx.txid.toString(),
+            },
           },
         },
-      },
-    });
-    /* eslint-enable @typescript-eslint/naming-convention */
+      });
+    } catch (error) {
+      this.#logger.error(`Failed to track event: ${eventType}`, error);
+    }
   }
 
   async emitTrackingError(error: Error): Promise<void> {
@@ -318,21 +315,31 @@ export class SnapClientAdapter implements SnapClient {
     }
   }
 
-  async startTrace(name: string): Promise<void> {
-    await snap.request({
-      method: 'snap_startTrace',
-      params: {
-        name,
-      },
-    });
+  async startTrace(name: string): Promise<boolean> {
+    try {
+      await snap.request({
+        method: 'snap_startTrace',
+        params: {
+          name,
+        },
+      });
+      return true;
+    } catch (error) {
+      this.#logger.error(`Failed to start trace`, error);
+      return false;
+    }
   }
 
   async endTrace(name: string): Promise<void> {
-    await snap.request({
-      method: 'snap_endTrace',
-      params: {
-        name,
-      },
-    });
+    try {
+      await snap.request({
+        method: 'snap_endTrace',
+        params: {
+          name,
+        },
+      });
+    } catch (error) {
+      this.#logger.error(`Failed to end trace`, error);
+    }
   }
 }

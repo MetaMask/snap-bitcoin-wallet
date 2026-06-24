@@ -266,9 +266,9 @@ export type SnapClient = {
    * Start a performance trace.
    *
    * @param name - The name of the trace.
-   * @returns A promise that resolves.
+   * @returns boolean whether the trace was started successfully.
    */
-  startTrace(name: string): Promise<void>;
+  startTrace(name: string): Promise<boolean>;
 
   /**
    * End a performance trace.
