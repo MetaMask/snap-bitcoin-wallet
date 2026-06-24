@@ -39,7 +39,7 @@ import {
 
 // Infra layer
 const logger = new ConsoleLoggerAdapter(Config.logLevel);
-const snapClient = new SnapClientAdapter(Config.encrypt, logger);
+const snapClient = new SnapClientAdapter(logger, Config.encrypt);
 const chainClient = new EsploraClientAdapter(Config.chain);
 const assetRatesClient = new PriceApiClientAdapter(Config.priceApi);
 const translator = new LocalTranslatorAdapter();

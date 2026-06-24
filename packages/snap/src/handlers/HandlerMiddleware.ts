@@ -30,6 +30,7 @@ import {
  * Determines whether an error should be reported through `snap_trackError`.
  *
  * @param error - The error to evaluate.
+ * @param logger - logger for error
  * @returns `true` when the error should be tracked.
  */
 export function shouldTrackError(error: unknown, logger: Logger): boolean {

@@ -8,7 +8,6 @@ import type {
 import type { Json } from '@metamask/utils';
 
 import type { BitcoinAccount } from './account';
-import type { BaseError } from './error';
 import type { Inscription } from './meta-protocols';
 
 export type SnapState = {

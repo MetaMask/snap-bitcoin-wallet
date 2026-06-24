@@ -212,7 +212,7 @@ export class KeyringHandler implements Keyring {
     assert(options, CreateAccountRequest);
 
     const traceName = 'Create Bitcoin Account';
-    let traceStarted = await this.#snapClient.startTrace(traceName);
+    const traceStarted = await this.#snapClient.startTrace(traceName);
 
     try {
       const {
@@ -334,7 +334,7 @@ export class KeyringHandler implements Keyring {
     }
 
     const traceName = 'Create Bitcoin Accounts Batch';
-    let traceStarted = await this.#snapClient.startTrace(traceName);
+    const traceStarted = await this.#snapClient.startTrace(traceName);
 
     try {
       // `AccountUseCases.createMany` is idempotent: if an account already exists
