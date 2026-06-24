@@ -7,8 +7,9 @@ import {
   type Translator,
   BaseError,
   ExternalServiceError,
+  UserActionError,
 } from '../entities';
-import { HandlerMiddleware } from './HandlerMiddleware';
+import { HandlerMiddleware, shouldTrackError } from './HandlerMiddleware';
 
 describe('HandlerMiddleware', () => {
   const mockLogger = mock<Logger>();
@@ -31,6 +32,27 @@ describe('HandlerMiddleware', () => {
       locale: 'en',
     } as GetPreferencesResult);
     mockTranslator.load.mockResolvedValue({});
+  });
+
+  describe('shouldTrackError', () => {
+    it('returns false for canceled confirmation errors', () => {
+      expect(
+        shouldTrackError(
+          new UserActionError('User canceled the confirmation'),
+          mockLogger,
+        ),
+      ).toBe(false);
+    });
+
+    it('returns true for other errors', () => {
+      expect(shouldTrackError(new Error('boom'), mockLogger)).toBe(true);
+      expect(
+        shouldTrackError(
+          new UserActionError('Another user action'),
+          mockLogger,
+        ),
+      ).toBe(true);
+    });
   });
 
   describe('handle', () => {

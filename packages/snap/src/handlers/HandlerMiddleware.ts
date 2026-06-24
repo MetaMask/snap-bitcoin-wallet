@@ -26,6 +26,23 @@ import {
   AssertionError,
 } from '../entities';
 
+/**
+ * Determines whether an error should be reported through `snap_trackError`.
+ *
+ * @param error - The error to evaluate.
+ * @returns `true` when the error should be tracked.
+ */
+export function shouldTrackError(error: unknown, logger: Logger): boolean {
+  try {
+    return !(
+      (error as UserActionError)?.message === 'User canceled the confirmation'
+    );
+  } catch {
+    logger.error(error, 'Failed to determine if error should be tracked');
+    return false;
+  }
+}
+
 export class HandlerMiddleware {
   readonly #logger: Logger;
 
@@ -43,7 +60,9 @@ export class HandlerMiddleware {
     try {
       return await fn();
     } catch (error) {
-      await this.#snapClient.emitTrackingError(error as Error);
+      if (shouldTrackError(error, this.#logger)) {
+        await this.#snapClient.emitTrackingError(error as Error);
+      }
 
       const { locale } = await this.#snapClient.getPreferences();
       const messages = await this.#translator.load(locale);
