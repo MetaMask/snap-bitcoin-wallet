@@ -1,7 +1,12 @@
 import type { HistoricalPriceValue } from '@metamask/snaps-sdk';
 import { mock } from 'jest-mock-extended';
 
-import type { AssetRatesClient, Logger, SpotPrice } from '../entities';
+import type {
+  AssetRatesClient,
+  Logger,
+  SnapClient,
+  SpotPrice,
+} from '../entities';
 import { AssetsUseCases } from './AssetsUseCases';
 import { Caip19Asset } from '../handlers/caip';
 import type { ICache, Serializable } from '../store/ICache';
@@ -10,8 +15,14 @@ describe('AssetsUseCases', () => {
   const mockLogger = mock<Logger>();
   const mockAssetRates = mock<AssetRatesClient>();
   const mockCache = mock<ICache<Serializable>>();
+  const mockSnapClient = mock<SnapClient>();
 
-  const useCases = new AssetsUseCases(mockLogger, mockAssetRates, mockCache);
+  const useCases = new AssetsUseCases(
+    mockLogger,
+    mockAssetRates,
+    mockCache,
+    mockSnapClient,
+  );
 
   describe('getBtcRates', () => {
     it('returns rate for the known assets and null for unknown', async () => {
@@ -65,6 +76,8 @@ describe('AssetsUseCases', () => {
 
       const result = await useCases.getRates([Caip19Asset.Testnet]);
 
+      expect(mockSnapClient.emitTrackingError).toHaveBeenCalledTimes(1);
+      expect(mockSnapClient.emitTrackingError).toHaveBeenCalledWith(error);
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'Failed to fetch spot price for ticker btc',
         error,
@@ -168,6 +181,8 @@ describe('AssetsUseCases', () => {
 
       const result = await useCases.getPriceIntervals('swift:0/iso4217:USD');
 
+      expect(mockSnapClient.emitTrackingError).toHaveBeenCalledTimes(6);
+      expect(mockSnapClient.emitTrackingError).toHaveBeenCalledWith(error);
       expect(mockLogger.warn).toHaveBeenCalledTimes(6);
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'Failed to fetch historical prices for period P1D',

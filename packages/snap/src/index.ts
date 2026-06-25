@@ -82,6 +82,7 @@ const assetsUseCases = new AssetsUseCases(
   logger,
   assetRatesClient,
   new InMemoryCache(),
+  snapClient,
 );
 const confirmationUseCases = new ConfirmationUseCases(logger, snapClient);
 

@@ -7,6 +7,7 @@ import type {
   AssetRate,
   AssetRatesClient,
   Logger,
+  SnapClient,
   SpotPrice,
   TimePeriod,
 } from '../entities';
@@ -19,14 +20,18 @@ export class AssetsUseCases {
 
   readonly #cache: ICache<Serializable>;
 
+  readonly #snapClient: SnapClient;
+
   constructor(
     logger: Logger,
     assetRates: AssetRatesClient,
     cache: ICache<Serializable>,
+    snapClient: SnapClient,
   ) {
     this.#logger = logger;
     this.#assetRates = assetRates;
     this.#cache = cache;
+    this.#snapClient = snapClient;
   }
 
   async getRates(assets: CaipAssetType[]): Promise<AssetRate[]> {
@@ -74,7 +79,9 @@ export class AssetsUseCases {
               (asset) => [asset, spotPrices] as AssetRate,
             );
           })
-          .catch((error) => {
+          .catch(async (error) => {
+            await this.#snapClient.emitTrackingError(error as Error);
+
             this.#logger.warn(
               `Failed to fetch spot price for ticker ${ticker}`,
               error,
@@ -123,7 +130,9 @@ export class AssetsUseCases {
       this.#assetRates
         .historicalPrices(timePeriod, vsCurrency)
         .then((prices) => ({ timePeriod, prices }))
-        .catch((error) => {
+        .catch(async (error) => {
+          await this.#snapClient.emitTrackingError(error as Error);
+
           this.#logger.warn(
             `Failed to fetch historical prices for period ${timePeriod}`,
             error,
