@@ -1270,7 +1270,7 @@ describe('KeyringHandler', () => {
       expect(result).toBeNull();
     });
 
-    it('returns null when scope validation fails', async () => {
+    it('returns null and tracks the error when scope validation fails', async () => {
       const request = {
         id: '1',
         jsonrpc: '2.0' as const,
@@ -1280,9 +1280,10 @@ describe('KeyringHandler', () => {
           psbt: 'psbt',
         },
       };
+      const error = new Error('Invalid scope');
 
       jest.mocked(assert).mockImplementationOnce(() => {
-        throw new Error('Invalid scope');
+        throw error;
       });
 
       const result = await handler.resolveAccountAddress(
@@ -1290,6 +1291,7 @@ describe('KeyringHandler', () => {
         request,
       );
 
+      expect(mockSnapClient.emitTrackingError).toHaveBeenCalledWith(error);
       expect(result).toBeNull();
     });
 

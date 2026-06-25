@@ -113,6 +113,7 @@ const assetsHandler = new AssetsHandler(
   assetsUseCases,
   Config.conversionsExpirationInterval,
   logger,
+  snapClient,
 );
 
 export const onCronjob: OnCronjobHandler = async ({ request }) =>

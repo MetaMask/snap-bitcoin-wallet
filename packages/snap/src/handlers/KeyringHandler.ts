@@ -534,6 +534,8 @@ export class KeyringHandler implements Keyring {
 
       return { address: `${scope}:${addressToValidate}` };
     } catch (error: unknown) {
+      await this.#snapClient.emitTrackingError(error as Error);
+
       this.#logger.error({ error }, 'Error resolving account address');
       return null;
     }
