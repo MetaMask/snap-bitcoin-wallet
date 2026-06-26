@@ -3,7 +3,11 @@ import { getSelectedAccounts } from '@metamask/keyring-snap-sdk';
 import type { SnapsProvider, JsonRpcRequest } from '@metamask/snaps-sdk';
 import { mock } from 'jest-mock-extended';
 
-import type { BitcoinAccount, SnapClient, SyncResult } from '../entities';
+import {
+  type BitcoinAccount,
+  type SnapClient,
+  type SyncResult,
+} from '../entities';
 import type { SendFlowUseCases, AccountUseCases } from '../use-cases';
 import { CronHandler, CronMethod } from './CronHandler';
 
@@ -263,15 +267,24 @@ describe('CronHandler', () => {
         account: mockAccount1,
         transactionsToNotify: [],
       };
+      const syncError = new Error('scan failed');
       mockAccountUseCases.list.mockResolvedValue(mockAccounts);
       mockAccountUseCases.synchronize
         .mockResolvedValueOnce(mockResult)
-        .mockRejectedValueOnce(new Error('scan failed'));
+        .mockRejectedValueOnce(syncError);
 
       const result = await handler.route(request);
 
       expect(result).toBeUndefined();
       expect(mockAccountUseCases.synchronize).toHaveBeenCalledTimes(2);
+      expect(mockSnapClient.emitTrackingError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'SynchronizationError',
+          message: 'Failed to synchronize 1 selected accounts',
+          cause: syncError,
+        }),
+      );
+
       // Should emit for successful account only
       expect(
         mockSnapClient.emitAccountBalancesUpdatedEvent,

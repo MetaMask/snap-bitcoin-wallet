@@ -7,12 +7,13 @@ import { mock } from 'jest-mock-extended';
 import type { AssetsUseCases } from '../use-cases';
 import { AssetsHandler } from './AssetsHandler';
 import { Caip19Asset } from './caip';
-import type { Logger, SpotPrice } from '../entities';
+import type { Logger, SnapClient, SpotPrice } from '../entities';
 
 describe('AssetsHandler', () => {
   const mockAssetsUseCases = mock<AssetsUseCases>();
   const mockLogger = mock<Logger>();
   const expirationInterval = 60;
+  const mockSnapClient = mock<SnapClient>();
 
   let handler: AssetsHandler;
 
@@ -21,6 +22,7 @@ describe('AssetsHandler', () => {
       mockAssetsUseCases,
       expirationInterval,
       mockLogger,
+      mockSnapClient,
     );
   });
 
@@ -146,7 +148,7 @@ describe('AssetsHandler', () => {
       expect(result?.historicalPrice.intervals).toStrictEqual(mockIntervals);
     });
 
-    it('returns null and logs warning when getPriceIntervals fails', async () => {
+    it('returns null, tracks the error, and logs warning when getPriceIntervals fails', async () => {
       const error = new Error('getPriceIntervals failed');
       mockAssetsUseCases.getPriceIntervals.mockRejectedValue(error);
 
@@ -155,6 +157,7 @@ describe('AssetsHandler', () => {
         Caip19Asset.Testnet,
       );
 
+      expect(mockSnapClient.emitTrackingError).toHaveBeenCalledWith(error);
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'Failed to fetch historical prices from %s to %s. Error: %s',
         Caip19Asset.Bitcoin,

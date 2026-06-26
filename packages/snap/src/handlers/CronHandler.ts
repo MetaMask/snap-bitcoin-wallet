@@ -142,6 +142,20 @@ export class CronHandler {
       )
       .map((result) => result.value);
 
+    const rejectedResults = results.filter(
+      (result): result is PromiseRejectedResult => result.status === 'rejected',
+    );
+
+    if (rejectedResults.length > 0) {
+      await this.#snapClient.emitTrackingError(
+        new SynchronizationError(
+          `Failed to synchronize ${rejectedResults.length} selected accounts`,
+          undefined,
+          rejectedResults[0]?.reason,
+        ),
+      );
+    }
+
     await this.#emitSyncEvents(successfulResults);
   }
 

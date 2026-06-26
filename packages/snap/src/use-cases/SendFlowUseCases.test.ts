@@ -359,6 +359,7 @@ describe('SendFlowUseCases', () => {
         mockContext,
       );
 
+      expect(mockSnapClient.emitTrackingError).toHaveBeenCalledWith(buildError);
       expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
         'interface-id',
         expect.objectContaining({
@@ -810,12 +811,12 @@ describe('SendFlowUseCases', () => {
     });
 
     it('schedules next event if fetching rates fail', async () => {
-      mockChain.getFeeEstimates.mockRejectedValueOnce(
-        new Error('getFeeEstimates'),
-      );
+      const error = new Error('getFeeEstimates');
+      mockChain.getFeeEstimates.mockRejectedValueOnce(error);
 
       await useCases.refresh('interface-id');
 
+      expect(mockSnapClient.emitTrackingError).toHaveBeenCalledWith(error);
       expect(mockSnapClient.scheduleBackgroundEvent).toHaveBeenCalled();
       expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
         'interface-id',
@@ -884,6 +885,7 @@ describe('SendFlowUseCases', () => {
 
       await useCases.refresh('interface-id');
 
+      expect(mockSnapClient.emitTrackingError).toHaveBeenCalledWith(error);
       expect(mockSnapClient.scheduleBackgroundEvent).toHaveBeenCalled();
       expect(mockSendFlowRepository.updateForm).toHaveBeenCalledWith(
         'interface-id',
@@ -903,12 +905,12 @@ describe('SendFlowUseCases', () => {
     });
 
     it('returns undefined when context is not found', async () => {
-      mockSendFlowRepository.getContext.mockRejectedValue(
-        new Error('Missing context'),
-      );
+      const error = new Error('Missing context');
+      mockSendFlowRepository.getContext.mockRejectedValue(error);
 
       const result = await useCases.refresh('interface-id');
 
+      expect(mockSnapClient.emitTrackingError).toHaveBeenCalledWith(error);
       expect(result).toBeUndefined();
     });
   });
@@ -1006,12 +1008,14 @@ describe('SendFlowUseCases', () => {
     });
 
     it('defaults isMine to false when the recipient address fails to parse', async () => {
+      const error = new Error('Invalid address');
       (Address.from_string as jest.Mock).mockImplementation(() => {
-        throw new Error('Invalid address');
+        throw error;
       });
 
       await useCases.confirmSendFlow(mockAccount, amount, toAddress);
 
+      expect(mockSnapClient.emitTrackingError).toHaveBeenCalledWith(error);
       expect(mockSendFlowRepository.insertConfirmSendForm).toHaveBeenCalledWith(
         expect.objectContaining({ isMine: false }),
       );

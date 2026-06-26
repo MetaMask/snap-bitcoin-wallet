@@ -231,6 +231,8 @@ export class RpcHandler {
 
       return validateAddress(value, bitcoinAccount.network, this.#logger);
     } catch (error) {
+      // We do not track this error as it is a user input.
+
       this.#logger.error(
         `Invalid account. Error: %s`,
         (error as CodifiedError).message,
@@ -260,6 +262,8 @@ export class RpcHandler {
 
       return balanceValidation.valid ? NO_ERRORS_RESPONSE : balanceValidation;
     } catch (error) {
+      // We do not track this error as it is a user input.
+
       this.#logger.error(
         'An error occurred: %s',
         (error as CodifiedError).message,
