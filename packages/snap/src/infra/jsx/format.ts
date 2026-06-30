@@ -68,8 +68,30 @@ export const errorCodeToLabel = (code: number): string => {
   return raw.charAt(0).toLowerCase() + raw.slice(1);
 };
 
+/**
+ * Known origins mapped to their human-readable labels. Keys are lowercased so
+ * lookups can be performed case-insensitively against the raw origin.
+ */
+const KNOWN_ORIGIN_LABELS: Record<string, string> = {
+  metamask: 'MetaMask',
+  'wallet-connect': 'WalletConnect',
+};
+
 export const displayOrigin = (origin: string): string => {
-  return new URL(origin).hostname;
+  const knownLabel = KNOWN_ORIGIN_LABELS[origin.toLowerCase()];
+  if (knownLabel) {
+    return knownLabel;
+  }
+
+  try {
+    const url = new URL(origin);
+    return url.protocol === 'http:' || url.protocol === 'https:'
+      ? url.hostname
+      : '';
+  } catch {
+    console.log('[format] - displayOrigin - failed to parse origin', origin);
+    return '';
+  }
 };
 
 export const displayCaip10 = (
