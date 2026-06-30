@@ -89,6 +89,7 @@ export const displayOrigin = (origin: string): string => {
       ? url.hostname
       : '';
   } catch {
+    console.log('[format] - displayOrigin - failed to parse origin', origin);
     return '';
   }
 };
