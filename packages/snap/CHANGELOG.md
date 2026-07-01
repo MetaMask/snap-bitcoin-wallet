@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Display known non-URL origins in confirmations without throwing on invalid origin values ([#640](https://github.com/MetaMask/snap-bitcoin-wallet/pull/640))
+
 ## [1.14.2]
 
 ### Fixed
