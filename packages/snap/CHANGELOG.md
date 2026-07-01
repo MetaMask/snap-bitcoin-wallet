@@ -9,11 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.14.2]
 
-### Uncategorized
+### Changed
 
-- Revert "fix: handle non-url origins (#634)" ([#634](https://github.com/MetaMask/snap-bitcoin-wallet/pull/634))
 - chore: track all errors in handle middleware WPN-1451 ([#632](https://github.com/MetaMask/snap-bitcoin-wallet/pull/632))
-- fix: handle non-url origins ([#634](https://github.com/MetaMask/snap-bitcoin-wallet/pull/634))
 
 ### Fixed
 
