@@ -8,7 +8,6 @@ import type {
 import type { Json } from '@metamask/utils';
 
 import type { BitcoinAccount } from './account';
-import type { BaseError } from './error';
 import type { Inscription } from './meta-protocols';
 
 export type SnapState = {
@@ -260,15 +259,15 @@ export type SnapClient = {
    *
    * @param error The error to track
    */
-  emitTrackingError(error: BaseError): Promise<void>;
+  emitTrackingError(error: Error): Promise<void>;
 
   /**
    * Start a performance trace.
    *
    * @param name - The name of the trace.
-   * @returns A promise that resolves.
+   * @returns boolean whether the trace was started successfully.
    */
-  startTrace(name: string): Promise<void>;
+  startTrace(name: string): Promise<boolean>;
 
   /**
    * End a performance trace.

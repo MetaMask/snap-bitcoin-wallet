@@ -34,7 +34,6 @@ import {
   WalletError,
 } from '../entities';
 import { CronMethod } from '../handlers/CronHandler';
-import { runSnapActionSafely } from '../utils/snapHelpers';
 
 export type DiscoverAccountParams = {
   network: Network;
@@ -438,16 +437,11 @@ export class AccountUseCases {
       if (!prevTx) {
         txsToNotify.push(tx);
 
-        await runSnapActionSafely(
-          async () =>
-            this.#snapClient.emitTrackingEvent(
-              TrackingSnapEvent.TransactionReceived,
-              account,
-              tx,
-              origin,
-            ),
-          this.#logger,
-          'emitTrackingEvent:TransactionReceived',
+        await this.#snapClient.emitTrackingEvent(
+          TrackingSnapEvent.TransactionReceived,
+          account,
+          tx,
+          origin,
         );
 
         continue;
@@ -463,32 +457,22 @@ export class AccountUseCases {
         if (tx.chain_position.is_confirmed) {
           txsToNotify.push(tx);
 
-          await runSnapActionSafely(
-            async () =>
-              this.#snapClient.emitTrackingEvent(
-                TrackingSnapEvent.TransactionFinalized,
-                account,
-                tx,
-                origin,
-              ),
-            this.#logger,
-            'emitTrackingEvent:TransactionFinalized',
+          await this.#snapClient.emitTrackingEvent(
+            TrackingSnapEvent.TransactionFinalized,
+            account,
+            tx,
+            origin,
           );
         } else {
           // if the status was changed, and now it's NOT confirmed
           // it means the tx was reorged.
           txsToNotify.push(tx);
 
-          await runSnapActionSafely(
-            async () =>
-              this.#snapClient.emitTrackingEvent(
-                TrackingSnapEvent.TransactionReorged,
-                account,
-                tx,
-                origin,
-              ),
-            this.#logger,
-            'emitTrackingEvent:TransactionReorged',
+          await this.#snapClient.emitTrackingEvent(
+            TrackingSnapEvent.TransactionReorged,
+            account,
+            tx,
+            origin,
           );
         }
       }
@@ -869,16 +853,11 @@ export class AccountUseCases {
         walletTx,
       ]);
 
-      await runSnapActionSafely(
-        async () =>
-          this.#snapClient.emitTrackingEvent(
-            TrackingSnapEvent.TransactionSubmitted,
-            account,
-            walletTx,
-            origin,
-          ),
-        this.#logger,
-        'emitTrackingEvent:TransactionSubmitted',
+      await this.#snapClient.emitTrackingEvent(
+        TrackingSnapEvent.TransactionSubmitted,
+        account,
+        walletTx,
+        origin,
       );
     }
 

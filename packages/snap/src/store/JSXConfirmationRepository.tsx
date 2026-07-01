@@ -95,7 +95,8 @@ export class JSXConfirmationRepository implements ConfirmationRepository {
         account.network,
       ).script_pubkey;
       isMine = account.isMine(recipientScript);
-    } catch {
+    } catch (error) {
+      await this.#snapClient.emitTrackingError(error as Error);
       isMine = false;
     }
 
@@ -141,7 +142,8 @@ export class JSXConfirmationRepository implements ConfirmationRepository {
       if (feeAmount) {
         fee = feeAmount.to_sat().toString();
       }
-    } catch {
+    } catch (error) {
+      await this.#snapClient.emitTrackingError(error as Error);
       fee = undefined;
     }
 
@@ -157,7 +159,8 @@ export class JSXConfirmationRepository implements ConfirmationRepository {
             txout.script_pubkey,
             account.network,
           ).toString();
-        } catch {
+        } catch (error) {
+          await this.#snapClient.emitTrackingError(error as Error);
           address = undefined;
         }
       }
@@ -220,6 +223,8 @@ export class JSXConfirmationRepository implements ConfirmationRepository {
         currency: currency.toUpperCase(),
       };
     } catch (error) {
+      await this.#snapClient.emitTrackingError(error as Error);
+
       // Exchange rates are optional display information - don't fail if unavailable
       this.#logger.warn(
         `Failed to fetch spot price for currency ${currency}`,

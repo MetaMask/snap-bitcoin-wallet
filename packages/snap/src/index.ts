@@ -39,7 +39,7 @@ import {
 
 // Infra layer
 const logger = new ConsoleLoggerAdapter(Config.logLevel);
-const snapClient = new SnapClientAdapter(Config.encrypt);
+const snapClient = new SnapClientAdapter(logger, Config.encrypt);
 const chainClient = new EsploraClientAdapter(Config.chain);
 const assetRatesClient = new PriceApiClientAdapter(Config.priceApi);
 const translator = new LocalTranslatorAdapter();
@@ -82,6 +82,7 @@ const assetsUseCases = new AssetsUseCases(
   logger,
   assetRatesClient,
   new InMemoryCache(),
+  snapClient,
 );
 const confirmationUseCases = new ConfirmationUseCases(logger, snapClient);
 
@@ -112,6 +113,7 @@ const assetsHandler = new AssetsHandler(
   assetsUseCases,
   Config.conversionsExpirationInterval,
   logger,
+  snapClient,
 );
 
 export const onCronjob: OnCronjobHandler = async ({ request }) =>

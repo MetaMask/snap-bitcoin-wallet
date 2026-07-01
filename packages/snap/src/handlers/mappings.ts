@@ -111,6 +111,7 @@ const mapToAssetMovement = (
       asset: mapToAmount(output.value, network),
     };
   } catch {
+    // We do not track this error as non-address scripts are expected here
     return null;
   }
 };
@@ -302,6 +303,7 @@ export function mapToUtxo(utxo: LocalOutput, network: Network): Utxo {
   try {
     address = Address.from_script(utxo.txout.script_pubkey, network);
   } catch {
+    // We do not track this error as the address field is explicitly optional in Utxo
     address = undefined;
   }
 

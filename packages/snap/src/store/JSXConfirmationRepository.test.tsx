@@ -203,12 +203,16 @@ describe('JSXConfirmationRepository', () => {
     });
 
     it('defaults isMine to false when the recipient address fails to parse', async () => {
+      const addressError = new Error('Invalid address');
       MockedBdkAddress.from_string.mockImplementation(() => {
-        throw new Error('Invalid address');
+        throw addressError;
       });
 
       await repo.insertSendTransfer(mockAccount, mockPsbt, recipient, origin);
 
+      expect(mockSnapClient.emitTrackingError).toHaveBeenCalledWith(
+        addressError,
+      );
       expect(mockSnapClient.createInterface).toHaveBeenCalledWith(
         undefined,
         expect.objectContaining({ isMine: false }),
@@ -257,10 +261,12 @@ describe('JSXConfirmationRepository', () => {
     });
 
     it('sets exchangeRate to undefined when rates client throws', async () => {
-      mockRatesClient.spotPrices.mockRejectedValue(new Error('API error'));
+      const ratesError = new Error('API error');
+      mockRatesClient.spotPrices.mockRejectedValue(ratesError);
 
       await repo.insertSendTransfer(mockAccount, mockPsbt, recipient, origin);
 
+      expect(mockSnapClient.emitTrackingError).toHaveBeenCalledWith(ratesError);
       expect(mockSnapClient.createInterface).toHaveBeenCalledWith(
         undefined,
         expect.objectContaining({ exchangeRate: undefined }),
@@ -428,10 +434,11 @@ describe('JSXConfirmationRepository', () => {
     });
 
     it('handles PSBT fee_amount throwing an error gracefully', async () => {
+      const feeError = new Error('Missing TxOut data');
       const psbtFeeError = mock<Psbt>({
         toString: () => 'psbt-fee-error',
         fee_amount: () => {
-          throw new Error('Missing TxOut data');
+          throw feeError;
         },
         unsigned_tx: mock<Transaction>({
           output: [],
@@ -440,6 +447,7 @@ describe('JSXConfirmationRepository', () => {
       });
       await repo.insertSignPsbt(mockAccount, psbtFeeError, origin, options);
 
+      expect(mockSnapClient.emitTrackingError).toHaveBeenCalledWith(feeError);
       expect(mockSnapClient.createInterface).toHaveBeenCalledWith(
         undefined,
         expect.objectContaining({ fee: undefined }),
@@ -476,10 +484,12 @@ describe('JSXConfirmationRepository', () => {
     });
 
     it('sets exchangeRate to undefined when rates client throws', async () => {
-      mockRatesClient.spotPrices.mockRejectedValue(new Error('API error'));
+      const ratesError = new Error('API error');
+      mockRatesClient.spotPrices.mockRejectedValue(ratesError);
 
       await repo.insertSignPsbt(mockAccount, mockSignPsbt, origin, options);
 
+      expect(mockSnapClient.emitTrackingError).toHaveBeenCalledWith(ratesError);
       expect(mockSnapClient.createInterface).toHaveBeenCalledWith(
         undefined,
         expect.objectContaining({ exchangeRate: undefined }),
@@ -487,12 +497,16 @@ describe('JSXConfirmationRepository', () => {
     });
 
     it('sets address to undefined when BdkAddress.from_script throws', async () => {
+      const scriptError = new Error('Unrecognized script');
       MockedBdkAddress.from_script.mockImplementation(() => {
-        throw new Error('Unrecognized script');
+        throw scriptError;
       });
 
       await repo.insertSignPsbt(mockAccount, mockSignPsbt, origin, options);
 
+      expect(mockSnapClient.emitTrackingError).toHaveBeenCalledWith(
+        scriptError,
+      );
       expect(mockSnapClient.createInterface).toHaveBeenCalledWith(
         undefined,
         expect.objectContaining({

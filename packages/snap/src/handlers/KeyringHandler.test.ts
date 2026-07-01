@@ -348,7 +348,7 @@ describe('KeyringHandler', () => {
       };
 
       beforeEach(() => {
-        mockSnapClient.startTrace.mockResolvedValue(undefined);
+        mockSnapClient.startTrace.mockResolvedValue(true);
         mockSnapClient.endTrace.mockResolvedValue(undefined);
       });
 
@@ -367,6 +367,7 @@ describe('KeyringHandler', () => {
         const callOrder: string[] = [];
         mockSnapClient.startTrace.mockImplementation(async () => {
           callOrder.push('startTrace');
+          return true;
         });
         mockAccounts.create.mockImplementation(async () => {
           callOrder.push('createAccount');
@@ -394,7 +395,7 @@ describe('KeyringHandler', () => {
       });
 
       it('creates account even if startTrace fails', async () => {
-        mockSnapClient.startTrace.mockResolvedValue(undefined);
+        mockSnapClient.startTrace.mockResolvedValue(false);
 
         const result = await handler.createAccount(options);
 
@@ -403,8 +404,8 @@ describe('KeyringHandler', () => {
         expect(mockSnapClient.startTrace).toHaveBeenCalled();
       });
 
-      it('calls both startTrace and endTrace even if startTrace returns null', async () => {
-        mockSnapClient.startTrace.mockResolvedValue(undefined);
+      it('calls endTrace when startTrace returns true', async () => {
+        mockSnapClient.startTrace.mockResolvedValue(true);
 
         await handler.createAccount(options);
 
@@ -414,6 +415,17 @@ describe('KeyringHandler', () => {
         expect(mockSnapClient.endTrace).toHaveBeenCalledWith(
           'Create Bitcoin Account',
         );
+      });
+
+      it('does not call endTrace when startTrace returns false', async () => {
+        mockSnapClient.startTrace.mockResolvedValue(false);
+
+        await handler.createAccount(options);
+
+        expect(mockSnapClient.startTrace).toHaveBeenCalledWith(
+          'Create Bitcoin Account',
+        );
+        expect(mockSnapClient.endTrace).not.toHaveBeenCalled();
       });
     });
   });
@@ -670,7 +682,7 @@ describe('KeyringHandler', () => {
       };
 
       beforeEach(() => {
-        mockSnapClient.startTrace.mockResolvedValue(undefined);
+        mockSnapClient.startTrace.mockResolvedValue(true);
         mockSnapClient.endTrace.mockResolvedValue(undefined);
         mockAccounts.createMany.mockResolvedValue([buildMockAccount(0)]);
       });
@@ -693,6 +705,17 @@ describe('KeyringHandler', () => {
         expect(mockSnapClient.endTrace).toHaveBeenCalledWith(
           'Create Bitcoin Accounts Batch',
         );
+      });
+
+      it('does not call endTrace when startTrace returns false', async () => {
+        mockSnapClient.startTrace.mockResolvedValue(false);
+
+        await handler.createAccounts(options);
+
+        expect(mockSnapClient.startTrace).toHaveBeenCalledWith(
+          'Create Bitcoin Accounts Batch',
+        );
+        expect(mockSnapClient.endTrace).not.toHaveBeenCalled();
       });
     });
   });
@@ -1247,7 +1270,7 @@ describe('KeyringHandler', () => {
       expect(result).toBeNull();
     });
 
-    it('returns null when scope validation fails', async () => {
+    it('returns null and tracks the error when scope validation fails', async () => {
       const request = {
         id: '1',
         jsonrpc: '2.0' as const,
@@ -1257,9 +1280,10 @@ describe('KeyringHandler', () => {
           psbt: 'psbt',
         },
       };
+      const error = new Error('Invalid scope');
 
       jest.mocked(assert).mockImplementationOnce(() => {
-        throw new Error('Invalid scope');
+        throw error;
       });
 
       const result = await handler.resolveAccountAddress(
@@ -1267,6 +1291,7 @@ describe('KeyringHandler', () => {
         request,
       );
 
+      expect(mockSnapClient.emitTrackingError).toHaveBeenCalledWith(error);
       expect(result).toBeNull();
     });
 
