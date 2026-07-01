@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.14.2]
 
+### Fixed
+
 - Accept the optional `options` object in `signAndSendTransaction` request params to fix broken BTC bridging ([#636](https://github.com/MetaMask/snap-bitcoin-wallet/pull/636))
 
 ## [1.14.1]
