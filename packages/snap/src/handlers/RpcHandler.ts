@@ -1,7 +1,15 @@
 import { BtcScope } from '@metamask/keyring-api';
 import type { Json, JsonRpcRequest } from '@metamask/snaps-sdk';
 import { Verifier } from 'bip322-js';
-import { assert, enums, object, optional, string } from 'superstruct';
+import {
+  assert,
+  enums,
+  object,
+  optional,
+  record,
+  string,
+  unknown,
+} from 'superstruct';
 
 import {
   AssertionError,
@@ -49,6 +57,7 @@ export const SendPsbtRequest = object({
   accountId: string(),
   transaction: string(),
   scope: optional(enums(Object.values(BtcScope))), // We don't use the scope but need to define it for validation
+  options: optional(record(string(), unknown())), // We don't use the options but need to define it for validation
 });
 
 export const ComputeFeeRequest = object({
