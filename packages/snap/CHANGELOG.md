@@ -9,10 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.14.2]
 
-### Changed
-
-- chore: track all errors in handle middleware WPN-1451 ([#632](https://github.com/MetaMask/snap-bitcoin-wallet/pull/632))
-
 ### Fixed
 
 - Accept the optional `options` object in `signAndSendTransaction` request params to fix broken BTC bridging ([#636](https://github.com/MetaMask/snap-bitcoin-wallet/pull/636))
