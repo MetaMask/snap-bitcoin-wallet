@@ -78,7 +78,6 @@ import type {
   AccountUseCases,
   CreateAccountParams,
 } from '../use-cases/AccountUseCases';
-import { runSnapActionSafely } from '../utils/snapHelpers';
 
 export const CreateAccountRequest = object({
   scope: enums(Object.values(BtcScope)),
@@ -213,18 +212,9 @@ export class KeyringHandler implements Keyring {
     assert(options, CreateAccountRequest);
 
     const traceName = 'Create Bitcoin Account';
-    let traceStarted = false;
+    const traceStarted = await this.#snapClient.startTrace(traceName);
 
     try {
-      await runSnapActionSafely(
-        async () => {
-          await this.#snapClient.startTrace(traceName);
-          traceStarted = true;
-        },
-        this.#logger,
-        'startTrace',
-      );
-
       const {
         metamask,
         scope,
@@ -296,11 +286,7 @@ export class KeyringHandler implements Keyring {
       return mapToKeyringAccount(account);
     } finally {
       if (traceStarted) {
-        await runSnapActionSafely(
-          async () => this.#snapClient.endTrace(traceName),
-          this.#logger,
-          'endTrace',
-        );
+        await this.#snapClient.endTrace(traceName);
       }
     }
   }
@@ -348,18 +334,9 @@ export class KeyringHandler implements Keyring {
     }
 
     const traceName = 'Create Bitcoin Accounts Batch';
-    let traceStarted = false;
+    const traceStarted = await this.#snapClient.startTrace(traceName);
 
     try {
-      await runSnapActionSafely(
-        async () => {
-          await this.#snapClient.startTrace(traceName);
-          traceStarted = true;
-        },
-        this.#logger,
-        'startTrace',
-      );
-
       // `AccountUseCases.createMany` is idempotent: if an account already exists
       // for the resolved derivation path, it will be returned as-is.
       const accounts: BitcoinAccount[] = [];
@@ -395,11 +372,7 @@ export class KeyringHandler implements Keyring {
       return accounts.map(mapToKeyringAccount);
     } finally {
       if (traceStarted) {
-        await runSnapActionSafely(
-          async () => this.#snapClient.endTrace(traceName),
-          this.#logger,
-          'endTrace',
-        );
+        await this.#snapClient.endTrace(traceName);
       }
     }
   }
@@ -561,6 +534,8 @@ export class KeyringHandler implements Keyring {
 
       return { address: `${scope}:${addressToValidate}` };
     } catch (error: unknown) {
+      await this.#snapClient.emitTrackingError(error as Error);
+
       this.#logger.error({ error }, 'Error resolving account address');
       return null;
     }

@@ -809,7 +809,12 @@ describe('AccountUseCases', () => {
         .mockReturnValueOnce([])
         .mockReturnValueOnce([mockTransaction]);
       mockMetaProtocols.fetchInscriptions.mockResolvedValue(mockInscriptions);
-      mockSnapClient.emitTrackingEvent.mockRejectedValue(trackingError);
+      mockSnapClient.emitTrackingEvent.mockImplementation(async () => {
+        mockLogger.error(
+          `Failed to track event: ${TrackingSnapEvent.TransactionReceived}`,
+          trackingError,
+        );
+      });
 
       const result = await useCases.synchronize(mockAccount, 'test');
 
@@ -834,7 +839,7 @@ describe('AccountUseCases', () => {
 
       // error should be logged
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'Failed to execute snap action: emitTrackingEvent:TransactionReceived',
+        'Failed to track event: Transaction Received',
         trackingError,
       );
 
@@ -1222,7 +1227,12 @@ describe('AccountUseCases', () => {
       const trackingError = new Error('Tracking service unavailable');
       mockAccount.getTransaction.mockReturnValue(mockWalletTx);
       mockTransaction.compute_txid.mockReturnValue(mockTxid);
-      mockSnapClient.emitTrackingEvent.mockRejectedValue(trackingError);
+      mockSnapClient.emitTrackingEvent.mockImplementation(async () => {
+        mockLogger.error(
+          `Failed to track event: ${TrackingSnapEvent.TransactionSubmitted}`,
+          trackingError,
+        );
+      });
 
       // Should complete successfully despite tracking failure
       const { txid, psbt } = await useCases.signPsbt(
@@ -1260,7 +1270,7 @@ describe('AccountUseCases', () => {
 
       // Error should be logged
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'Failed to execute snap action: emitTrackingEvent:TransactionSubmitted',
+        'Failed to track event: Transaction Submitted',
         trackingError,
       );
 

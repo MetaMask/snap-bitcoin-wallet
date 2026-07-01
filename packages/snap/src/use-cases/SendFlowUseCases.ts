@@ -119,7 +119,8 @@ export class SendFlowUseCases {
         account.network,
       ).script_pubkey;
       isMine = account.isMine(recipientScript);
-    } catch {
+    } catch (error) {
+      await this.#snapClient.emitTrackingError(error as Error);
       isMine = false;
     }
 
@@ -350,6 +351,8 @@ export class SendFlowUseCases {
           currency: currency.toUpperCase(),
         };
       } catch (error) {
+        await this.#snapClient.emitTrackingError(error as Error);
+
         // exchange rates are optional display information - don't fail if unavailable
         this.#logger.warn(
           `Failed to fetch exchange rate for ${currency}. Error: %s`,
@@ -378,6 +381,8 @@ export class SendFlowUseCases {
       ).toString();
       updatedContext = await this.#computeFee(updatedContext);
     } catch (error) {
+      // We do not track this error as it is a user input.
+
       this.#logger.error(
         `Invalid recipient. Error: %s`,
         (error as CodifiedError).message,
@@ -419,6 +424,8 @@ export class SendFlowUseCases {
       updatedContext.amount = amount.to_sat().toString();
       updatedContext = await this.#computeFee(updatedContext);
     } catch (error) {
+      // We do not track this error as it is a user input.
+
       this.#logger.error(
         `Invalid amount. Error: %s`,
         (error as CodifiedError).message,
@@ -475,6 +482,8 @@ export class SendFlowUseCases {
 
         return this.#sendFlowRepository.updateReview(id, reviewContext);
       } catch (error) {
+        await this.#snapClient.emitTrackingError(error as Error);
+
         this.#logger.error(
           `Failed to build PSBT on Confirm. Error: %s`,
           (error as CodifiedError).message,
@@ -528,6 +537,8 @@ export class SendFlowUseCases {
       const context = await this.#sendFlowRepository.getContext(id);
       return this.#refreshRates(id, context);
     } catch (error) {
+      await this.#snapClient.emitTrackingError(error as Error);
+
       // We do not throw as this is probably due to a scheduled event executing after the interface has been removed.
       this.#logger.debug('Context not found in send flow:', id, error);
       return undefined;
@@ -553,6 +564,8 @@ export class SendFlowUseCases {
       );
       updatedContext = await this.#computeFee(updatedContext);
     } catch (error) {
+      await this.#snapClient.emitTrackingError(error as Error);
+
       // We do not throw so we can reschedule. Previous fetched values or fallbacks will be used.
       this.#logger.warn(
         `Failed to fetch rates in send form: %s. Error: %s`,
@@ -603,6 +616,8 @@ export class SendFlowUseCases {
         const psbt = builder.addRecipient(amount, recipient).finish();
         return { ...context, fee: psbt.fee().to_sat().toString(), balance };
       } catch (error) {
+        // We do not track this error as it is a form validation feedback.
+
         this.#logger.error(
           `Failed to build PSBT. Error: %s`,
           (error as CodifiedError).message,

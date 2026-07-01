@@ -13,7 +13,7 @@ import type {
 import { CaipAssetTypeStruct } from '@metamask/utils';
 import { assert } from 'superstruct';
 
-import type { Logger } from '../entities';
+import type { Logger, SnapClient } from '../entities';
 import type { AssetsUseCases } from '../use-cases';
 import { Caip19Asset } from './caip';
 import { networkToIcon } from './icons';
@@ -25,14 +25,18 @@ export class AssetsHandler {
 
   readonly #logger: Logger;
 
+  readonly #snapClient: SnapClient;
+
   constructor(
     assets: AssetsUseCases,
     expirationInterval: number,
     logger: Logger,
+    snapClient: SnapClient,
   ) {
     this.#assetsUseCases = assets;
     this.#expirationInterval = expirationInterval;
     this.#logger = logger;
+    this.#snapClient = snapClient;
   }
 
   async lookup(): Promise<OnAssetsLookupResponse> {
@@ -163,6 +167,8 @@ export class AssetsHandler {
         },
       };
     } catch (error) {
+      await this.#snapClient.emitTrackingError(error as Error);
+
       this.#logger.warn(
         'Failed to fetch historical prices from %s to %s. Error: %s',
         from,

@@ -7,8 +7,9 @@ import {
   type Translator,
   BaseError,
   ExternalServiceError,
+  UserActionError,
 } from '../entities';
-import { HandlerMiddleware } from './HandlerMiddleware';
+import { HandlerMiddleware, shouldTrackError } from './HandlerMiddleware';
 
 describe('HandlerMiddleware', () => {
   const mockLogger = mock<Logger>();
@@ -33,6 +34,27 @@ describe('HandlerMiddleware', () => {
     mockTranslator.load.mockResolvedValue({});
   });
 
+  describe('shouldTrackError', () => {
+    it('returns false for canceled confirmation errors', () => {
+      expect(
+        shouldTrackError(
+          new UserActionError('User canceled the confirmation'),
+          mockLogger,
+        ),
+      ).toBe(false);
+    });
+
+    it('returns true for other errors', () => {
+      expect(shouldTrackError(new Error('boom'), mockLogger)).toBe(true);
+      expect(
+        shouldTrackError(
+          new UserActionError('Another user action'),
+          mockLogger,
+        ),
+      ).toBe(true);
+    });
+  });
+
   describe('handle', () => {
     it('executes the function successfully', async () => {
       const mockFn = jest.fn().mockResolvedValue('success');
@@ -50,6 +72,24 @@ describe('HandlerMiddleware', () => {
       expect(mockSnapClient.getPreferences).toHaveBeenCalled();
       expect(mockTranslator.load).toHaveBeenCalledWith('en');
       expect(mockLogger.error).toHaveBeenCalledWith(error);
+    });
+
+    it('tracks an unexpected Error before rethrowing it as a SnapError', async () => {
+      const error = new Error('tracked boom');
+      const mockFn = jest.fn().mockRejectedValue(error);
+
+      await expect(middleware.handle(mockFn)).rejects.toThrow('tracked boom');
+      expect(mockSnapClient.emitTrackingError).toHaveBeenCalledWith(error);
+    });
+
+    it('continues to throw a SnapError when emitTrackingError fails', async () => {
+      const error = new Error('boom after tracking failure');
+      const mockFn = jest.fn().mockRejectedValue(error);
+
+      await expect(middleware.handle(mockFn)).rejects.toThrow(error);
+
+      expect(mockSnapClient.emitTrackingError).toHaveBeenCalledWith(error);
+      expect(mockSnapClient.getPreferences).toHaveBeenCalled();
     });
 
     it('wraps a non-Error thrown value by stringifying it', async () => {
