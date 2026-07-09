@@ -9,12 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.15.0]
 
-### Uncategorized
-
-- Reapply "fix: handle non-url origins (#634)" (#637) ([#634](https://github.com/MetaMask/snap-bitcoin-wallet/pull/634))
-
 ### Fixed
 
+- Handle non-url origins ([#634](https://github.com/MetaMask/snap-bitcoin-wallet/pull/634))
 - Display known non-URL origins in confirmations without throwing on invalid origin values ([#640](https://github.com/MetaMask/snap-bitcoin-wallet/pull/640))
 
 ## [1.14.2]
