@@ -11,6 +11,8 @@ import type {
 } from '@metamask/snaps-sdk';
 
 import { Config } from './config';
+import { handleKeyringRequest } from '@metamask/keyring-snap-sdk/v2';
+
 import {
   KeyringHandler,
   CronHandler,
@@ -123,7 +125,9 @@ export const onClientRequest: OnClientRequestHandler = async ({ request }) =>
   middleware.handle(async () => rpcHandler.route('metamask', request));
 
 export const onKeyringRequest: OnKeyringRequestHandler = async ({ request }) =>
-  middleware.handle(async () => keyringHandler.route(request));
+  middleware.handle(
+    async () => (await handleKeyringRequest(keyringHandler, request)) ?? null,
+  );
 
 export const onUserInput: OnUserInputHandler = async ({ id, event, context }) =>
   middleware.handle(async () => userInputHandler.route(id, event, context));

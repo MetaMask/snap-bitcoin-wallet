@@ -76,7 +76,7 @@ export function mapToKeyringAccount(account: BitcoinAccount): KeyringAccount {
     address: account.publicAddress.toString(),
     options: {
       entropySource: account.entropySource, // TODO: Legacy field. To be removed once multichain accounts are out.
-      exportable: false,
+      exportable: true,
       entropy: {
         type: 'mnemonic',
         id: account.entropySource,
