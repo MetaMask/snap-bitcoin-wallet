@@ -95,6 +95,7 @@ export class KeyringHandler implements KeyringSnapRpc {
     options: CreateAccountOptions,
   ): Promise<KeyringAccount[]> {
     assertCreateAccountOptionIsSupported(options, [
+      `${AccountCreationType.Bip44DerivePath}`,
       `${AccountCreationType.Bip44DeriveIndex}`,
       `${AccountCreationType.Bip44DeriveIndexRange}`,
       `${AccountCreationType.Bip44Discover}`,
@@ -113,6 +114,34 @@ export class KeyringHandler implements KeyringSnapRpc {
     const traceStarted = await this.#snapClient.startTrace(traceName);
 
     try {
+      if (options.type === AccountCreationType.Bip44DerivePath) {
+        const parts = (options.derivationPath as string).split('/');
+        const purpose = parts[1]?.replace("'", '');
+        const coinType = parts[2]?.replace("'", '');
+        const accountIndex = parts[3]?.replace("'", '');
+
+        if (purpose !== '84') {
+          throw new FormatError(
+            'Only native segwit (BIP-84) derivation paths are supported',
+          );
+        }
+
+        const network = coinType === '0' ? 'bitcoin' : 'regtest';
+        const index = parseInt(accountIndex ?? '0', 10);
+
+        const created = await this.#accountsUseCases.createMany([
+          {
+            network: network as CreateAccountParams['network'],
+            entropySource,
+            index,
+            addressType,
+            synchronize: false,
+          },
+        ]);
+
+        return created.map(mapToKeyringAccount);
+      }
+
       if (options.type === AccountCreationType.Bip44Discover) {
         // Discover: create the account and do a full Esplora scan to check for
         // on-chain activity. Only mainnet is supported for discovery.

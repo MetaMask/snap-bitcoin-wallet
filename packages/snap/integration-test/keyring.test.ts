@@ -53,62 +53,42 @@ describe('Keyring', () => {
     });
   });
 
-  it('discover accounts successfully', async () => {
+  it('creates account at explicit derivation path', async () => {
     const response = await snap.onKeyringRequest({
       origin: ORIGIN,
-      method: 'keyring_discoverAccounts',
+      method: 'keyring_createAccounts',
       params: {
-        scopes: [BtcScope.Regtest], // avoid using other networks than Regtest as real external calls will be performed
-        entropySource: 'm', // we don't know the real entropy source so "m" acts as the default
-        groupIndex: 0,
-      },
-    });
-
-    // We should get 1 account, the p2wpkh one of Regtest
-    expect(response).toRespondWith([
-      {
-        type: 'bip44',
-        scopes: [BtcScope.Regtest],
+        type: 'bip44:derive-path',
+        entropySource: 'm',
         derivationPath: `m/84'/1'/${ACCOUNT_INDEX}'`,
       },
-    ]);
-  });
+    });
 
-  it('creates discovered account', async () => {
-    const response = await snap.onKeyringRequest({
-      origin: ORIGIN,
-      method: 'keyring_createAccount',
-      params: {
+    expect(response).toRespondWith([
+      {
+        type: BtcAccountType.P2wpkh,
+        id: expect.anything(),
+        address: TEST_ADDRESS_REGTEST,
         options: {
-          derivationPath: `m/84'/1'/${ACCOUNT_INDEX}'`,
-          scope: BtcScope.Regtest,
-          synchronize: true,
+          entropySource: 'm',
+          entropy: {
+            type: 'mnemonic',
+            id: 'm',
+            groupIndex: ACCOUNT_INDEX,
+            derivationPath: `m/84'/1'/${ACCOUNT_INDEX}'`,
+          },
+          exportable: false,
         },
+        scopes: [BtcScope.Regtest],
+        methods: Object.values(AccountCapability),
       },
-    });
-
-    expect(response).toRespondWith({
-      type: BtcAccountType.P2wpkh,
-      id: expect.anything(),
-      address: TEST_ADDRESS_REGTEST,
-      options: {
-        entropySource: 'm',
-        entropy: {
-          type: 'mnemonic',
-          id: 'm',
-          groupIndex: ACCOUNT_INDEX,
-          derivationPath: `m/84'/1'/${ACCOUNT_INDEX}'`,
-        },
-        exportable: false,
-      },
-      scopes: [BtcScope.Regtest],
-      methods: Object.values(AccountCapability),
-    });
+    ]);
 
     // eslint-disable-next-line jest/no-conditional-in-test
     if ('result' in response.response) {
-      accounts[TEST_ADDRESS_REGTEST] = response.response
-        .result as KeyringAccount;
+      accounts[TEST_ADDRESS_REGTEST] = (
+        response.response.result as KeyringAccount[]
+      )[0]!;
 
       await snap.onCronjob({
         method: 'fullScanAccount',
@@ -134,33 +114,42 @@ describe('Keyring', () => {
   ])(
     'creates a P2WPKH account: %s',
     async ({ expectedAddress, ...requestOpts }) => {
+      const derivationPath = `m/${accountTypeToPurpose[requestOpts.addressType]}/${scopeToCoinType[requestOpts.scope]}/${requestOpts.index}'`;
       const response = await snap.onKeyringRequest({
         origin: ORIGIN,
-        method: 'keyring_createAccount',
-        params: { options: { ...requestOpts, synchronize: false } },
+        method: 'keyring_createAccounts',
+        params: {
+          type: 'bip44:derive-path',
+          entropySource: 'm',
+          derivationPath,
+        },
       });
 
-      expect(response).toRespondWith({
-        type: requestOpts.addressType,
-        id: expect.anything(),
-        address: expectedAddress,
-        options: {
-          entropySource: 'm',
-          entropy: {
-            type: 'mnemonic',
-            id: 'm',
-            groupIndex: requestOpts.index,
-            derivationPath: `m/${accountTypeToPurpose[requestOpts.addressType]}/${scopeToCoinType[requestOpts.scope]}/${requestOpts.index}'`,
+      expect(response).toRespondWith([
+        {
+          type: requestOpts.addressType,
+          id: expect.anything(),
+          address: expectedAddress,
+          options: {
+            entropySource: 'm',
+            entropy: {
+              type: 'mnemonic',
+              id: 'm',
+              groupIndex: requestOpts.index,
+              derivationPath,
+            },
+            exportable: false,
           },
-          exportable: false,
+          scopes: [requestOpts.scope],
+          methods: Object.values(AccountCapability),
         },
-        scopes: [requestOpts.scope],
-        methods: Object.values(AccountCapability),
-      });
+      ]);
 
       // eslint-disable-next-line jest/no-conditional-in-test
       if ('result' in response.response) {
-        accounts[expectedAddress] = response.response.result as KeyringAccount;
+        accounts[expectedAddress] = (
+          response.response.result as KeyringAccount[]
+        )[0]!;
       }
     },
   );
@@ -240,75 +229,31 @@ describe('Keyring', () => {
     // Account already exists so we should get the same account
     const response = await snap.onKeyringRequest({
       origin: ORIGIN,
-      method: 'keyring_createAccount',
+      method: 'keyring_createAccounts',
       params: {
-        options: {
-          scope: BtcScope.Regtest,
-          addressType: BtcAccountType.P2wpkh,
-          derivationPath: "m/84'/1'/0'",
-        },
+        type: 'bip44:derive-path',
+        entropySource: 'm',
+        derivationPath: "m/84'/1'/0'",
       },
     });
 
-    expect(response).toRespondWith(accounts[TEST_ADDRESS_REGTEST]);
+    expect(response).toRespondWith([accounts[TEST_ADDRESS_REGTEST]]);
   });
 
-  it('returns the same account if already exists', async () => {
+  it('returns the same account if already exists by index', async () => {
+    // Create at same path again — idempotent
     const response = await snap.onKeyringRequest({
       origin: ORIGIN,
-      method: 'keyring_createAccount',
+      method: 'keyring_createAccounts',
       params: {
-        options: {
-          scope: BtcScope.Regtest,
-          addressType: BtcAccountType.P2wpkh,
-          index: ACCOUNT_INDEX,
-        },
+        type: 'bip44:derive-path',
+        entropySource: 'm',
+        derivationPath: `m/84'/1'/${ACCOUNT_INDEX}'`,
       },
     });
 
-    expect(response).toRespondWith(accounts[TEST_ADDRESS_REGTEST]);
+    expect(response).toRespondWith([accounts[TEST_ADDRESS_REGTEST]]);
   });
-
-  it.each([
-    {
-      addressType: BtcAccountType.P2pkh,
-      scope: BtcScope.Mainnet,
-      expectedError: 'Only native segwit (P2WPKH) addresses are supported',
-    },
-    {
-      addressType: BtcAccountType.P2sh,
-      scope: BtcScope.Testnet,
-      expectedError: 'Only native segwit (P2WPKH) addresses are supported',
-    },
-    {
-      addressType: BtcAccountType.P2tr,
-      scope: BtcScope.Mainnet,
-      expectedError: 'Only native segwit (P2WPKH) addresses are supported',
-    },
-  ])(
-    'rejects creation of non-P2WPKH account: $addressType',
-    async ({ addressType, scope, expectedError }) => {
-      const response = await snap.onKeyringRequest({
-        origin: ORIGIN,
-        method: 'keyring_createAccount',
-        params: {
-          options: {
-            scope,
-            addressType,
-            index: 0,
-            synchronize: false,
-          },
-        },
-      });
-
-      expect(response.response).toMatchObject({
-        error: {
-          code: -32000,
-          message: `Invalid format: ${expectedError}`,
-        },
-      });
-    },
-  );
 
   it.each([
     {
@@ -331,13 +276,11 @@ describe('Keyring', () => {
     async ({ derivationPath, expectedError }) => {
       const response = await snap.onKeyringRequest({
         origin: ORIGIN,
-        method: 'keyring_createAccount',
+        method: 'keyring_createAccounts',
         params: {
-          options: {
-            scope: BtcScope.Regtest,
-            derivationPath,
-            synchronize: false,
-          },
+          type: 'bip44:derive-path',
+          entropySource: 'm',
+          derivationPath,
         },
       });
 
@@ -350,48 +293,21 @@ describe('Keyring', () => {
     },
   );
 
-  it('rejects creation when addressType and derivationPath mismatch', async () => {
+  it('accepts creation with BIP-84 derivation path', async () => {
     const response = await snap.onKeyringRequest({
       origin: ORIGIN,
-      method: 'keyring_createAccount',
+      method: 'keyring_createAccounts',
       params: {
-        options: {
-          scope: BtcScope.Regtest,
-          addressType: BtcAccountType.P2wpkh, // Native segwit
-          derivationPath: "m/44'/0'/0'", // Legacy path (P2PKH)
-          synchronize: false,
-        },
-      },
-    });
-
-    expect(response.response).toMatchObject({
-      error: {
-        code: -32000,
-        message:
-          'Invalid format: Only native segwit (BIP-84) derivation paths are supported',
-      },
-    });
-  });
-
-  it('accepts creation when addressType and derivationPath both indicate P2WPKH', async () => {
-    const response = await snap.onKeyringRequest({
-      origin: ORIGIN,
-      method: 'keyring_createAccount',
-      params: {
-        options: {
-          scope: BtcScope.Regtest,
-          addressType: BtcAccountType.P2wpkh,
-          derivationPath: "m/84'/1'/10'", // Native segwit path matching P2WPKH
-          synchronize: false,
-        },
+        type: 'bip44:derive-path',
+        entropySource: 'm',
+        derivationPath: "m/84'/1'/10'",
       },
     });
 
     expect(response.response).toHaveProperty('result');
 
-    const account: KeyringAccount = (
-      response.response as { result: KeyringAccount }
-    ).result;
+    const { result } = response.response as { result: KeyringAccount[] };
+    const account = result[0]!;
     expect(account.address).toMatch(/^bcrt1/u); // Native segwit address
     expect((account.options.entropy as { groupIndex: number }).groupIndex).toBe(
       10,
@@ -422,7 +338,7 @@ describe('Keyring', () => {
   it('lists all accounts', async () => {
     const response = await snap.onKeyringRequest({
       origin: ORIGIN,
-      method: 'keyring_listAccounts',
+      method: 'keyring_getAccounts',
     });
 
     expect(response).toRespondWith(Object.values(accounts));
