@@ -31,7 +31,6 @@ import { encode } from 'wif';
 import {
   computeDisplayBalanceSats,
   FormatError,
-  type BitcoinAccount,
   type Logger,
   networkToCurrencyUnit,
   type SnapClient,
@@ -49,9 +48,18 @@ import type {
   AccountUseCases,
   CreateAccountParams,
 } from '../use-cases/AccountUseCases';
+import snapManifest from '../../snap.manifest.json';
 
 /** Maximum number of accounts to create in one internal createMany call. */
 const MAX_CREATE_ACCOUNTS_PER_BATCH = 100;
+
+/**
+ * Scopes declared in the snap manifest's keyring capabilities block.
+ * Used to determine which networks are supported for account discovery.
+ */
+const SUPPORTED_SCOPES =
+  snapManifest.initialPermissions['endowment:keyring'].capabilities
+    .scopes as readonly BtcScope[];
 
 export class KeyringHandler implements KeyringSnapRpc {
   readonly #accountsUseCases: AccountUseCases;
@@ -99,9 +107,6 @@ export class KeyringHandler implements KeyringSnapRpc {
 
     const { entropySource } = options;
 
-    // Only P2WPKH (BIP-84) on bitcoin mainnet is supported, mirroring the
-    // defaults used by the legacy `createAccount` when no scope was provided.
-    const network = scopeToNetwork[BtcScope.Mainnet];
     const addressType = this.#defaultAddressType;
     if (addressType !== 'p2wpkh') {
       throw new FormatError(
@@ -109,10 +114,37 @@ export class KeyringHandler implements KeyringSnapRpc {
       );
     }
 
-    // Validate range before starting the trace so FormatErrors surface cleanly.
-    let range: { from: number; to: number } | undefined;
-    if (options.type !== AccountCreationType.Bip44Discover) {
-      range =
+    const traceName = 'Create Bitcoin Accounts Batch';
+    const traceStarted = await this.#snapClient.startTrace(traceName);
+
+    try {
+      if (options.type === AccountCreationType.Bip44Discover) {
+        // Discover: create the account and do a full Esplora scan to check for
+        // on-chain activity. Only mainnet is supported for discovery.
+        const network = scopeToNetwork[SUPPORTED_SCOPES[0] ?? BtcScope.Mainnet];
+        const discovered = await this.#accountsUseCases.discover({
+          network,
+          entropySource,
+          index: options.groupIndex,
+          addressType,
+        });
+
+        if (discovered.listTransactions().length === 0) {
+          // No activity: remove the account from state (it was created by
+          // discover()) and signal end-of-discovery to the client.
+          await this.#accountsUseCases.delete(discovered.id);
+          return [];
+        }
+
+        // Activity found: the account was already created by discover().
+        return [mapToKeyringAccount(discovered)];
+      }
+
+      // Build the index range. For Bip44DeriveIndex the range is a single
+      // element; for Bip44DeriveIndexRange it comes from the options directly.
+      // At this point the discover branch has already returned, so this
+      // discriminant is exhaustive.
+      const range =
         options.type === AccountCreationType.Bip44DeriveIndex
           ? { from: options.groupIndex, to: options.groupIndex }
           : options.range;
@@ -133,40 +165,19 @@ export class KeyringHandler implements KeyringSnapRpc {
           'Account index range is invalid: from must be less than or equal to to',
         );
       }
-    }
 
-    const traceName = 'Create Bitcoin Accounts Batch';
-    const traceStarted = await this.#snapClient.startTrace(traceName);
-
-    try {
-      if (options.type === AccountCreationType.Bip44Discover) {
-        // For discovery, only return the account if it has on-chain activity.
-        // No activity means we've reached the end of the discoverable accounts,
-        // so we return nothing and the client stops discovering.
-        const account = await this.#accountsUseCases.discover({
-          network,
-          entropySource,
-          index: options.groupIndex,
-          addressType,
-        });
-
-        if (account.listTransactions().length === 0) {
-          return [];
-        }
-
-        return [mapToKeyringAccount(account)];
-      }
+      // Only mainnet is supported for v2 account creation.
+      const network = scopeToNetwork[SUPPORTED_SCOPES[0] ?? BtcScope.Mainnet];
 
       // `AccountUseCases.createMany` is idempotent: if an account already
       // exists for the resolved derivation path, it will be returned as-is.
-      const accounts: BitcoinAccount[] = [];
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      let chunkFrom = range!.from;
+      const created: KeyringAccount[] = [];
+      let chunkFrom = range.from;
 
-      while (chunkFrom <= range!.to) {
+      while (chunkFrom <= range.to) {
         const chunkTo = Math.min(
           chunkFrom + MAX_CREATE_ACCOUNTS_PER_BATCH - 1,
-          range!.to,
+          range.to,
         );
         const chunkRequests: CreateAccountParams[] = [];
 
@@ -180,17 +191,13 @@ export class KeyringHandler implements KeyringSnapRpc {
           });
         }
 
-        accounts.push(
-          ...(await this.#accountsUseCases.createMany(chunkRequests)),
-        );
+        const chunk = await this.#accountsUseCases.createMany(chunkRequests);
+        created.push(...chunk.map(mapToKeyringAccount));
 
-        if (chunkTo === range!.to) {
-          break;
-        }
         chunkFrom = chunkTo + 1;
       }
 
-      return accounts.map(mapToKeyringAccount);
+      return created;
     } catch (error: any) {
       this.#logger.error({ error }, 'Error creating accounts batch');
       throw new SnapError(error);
@@ -205,9 +212,9 @@ export class KeyringHandler implements KeyringSnapRpc {
     accountId: string,
     options?: ExportAccountOptions,
   ): Promise<ExportedAccount> {
-    // The SDK wire type only carries "hexadecimal" | "base58"; Bitcoin private
-    // keys are exported as WIF which is a base58check format, so we treat any
-    // "base58" request as a WIF export and default to "base58" when omitted.
+    // TODO: update to `"wif"` once the accounts repo adds WIF as a named
+    // encoding. WIF is Base58Check (not plain base58), so we treat the current
+    // `"base58"` wire value as a WIF request in the meantime.
     const encoding = options?.encoding ?? 'base58';
     if (encoding !== 'base58') {
       throw new Error(
@@ -218,7 +225,7 @@ export class KeyringHandler implements KeyringSnapRpc {
     const account = await this.#accountsUseCases.get(accountId);
 
     const entropy = await this.#snapClient.getPrivateEntropy(
-      // We export the private key for address index 0 (the primary address).
+      // Export the private key for address index 0 (the primary address).
       account.derivationPath.concat(['0', '0']),
     );
 
@@ -227,7 +234,7 @@ export class KeyringHandler implements KeyringSnapRpc {
     }
 
     try {
-      // Private key is returned in "0x..." format; transform to WIF (base58check).
+      // Private key is returned in "0x..." format; transform to WIF (Base58Check).
       const wifPrivateKey = encode({
         version: account.network === 'bitcoin' ? 128 : 239, // 128 mainnet, 239 testnets
         // eslint-disable-next-line no-restricted-globals
@@ -237,6 +244,8 @@ export class KeyringHandler implements KeyringSnapRpc {
 
       // SECURITY: use is() not assert() to avoid embedding the private key in a
       // StructError message if encoding validation fails.
+      // TODO: replace string() with a WIF-specific struct once the accounts
+      // repo exports one.
       if (!is(wifPrivateKey, string())) {
         throw new Error('Derived private key failed encoding validation');
       }
@@ -285,7 +294,6 @@ export class KeyringHandler implements KeyringSnapRpc {
     const account = await this.#accountsUseCases.get(id);
     const transactions = account.listTransactions();
 
-    // Find starting index based on provided cursor
     let startIndex = 0;
     if (next) {
       const cursorIndex = transactions.findIndex(
@@ -298,8 +306,7 @@ export class KeyringHandler implements KeyringSnapRpc {
     const hasMore = startIndex + limit < transactions.length;
     const nextCursor =
       hasMore && paginatedTxs.length > 0
-        ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          paginatedTxs[paginatedTxs.length - 1]!.txid.toString()
+        ? paginatedTxs[paginatedTxs.length - 1]?.txid.toString() ?? null
         : null;
 
     return {
@@ -321,7 +328,6 @@ export class KeyringHandler implements KeyringSnapRpc {
       allAccounts.map((acc) => acc.id),
     );
 
-    // Schedule immediate background job to perform full scan
     await this.#snapClient.scheduleBackgroundEvent({
       duration: 'PT1S',
       method: CronMethod.SyncSelectedAccounts,

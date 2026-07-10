@@ -370,7 +370,7 @@ describe('KeyringHandler', () => {
           listTransactions: jest.fn().mockReturnValue(hasTxs ? [{}] : []),
         });
 
-      it('returns the account when it has on-chain history', async () => {
+      it('discovers then returns the account when it has on-chain history', async () => {
         mockAccounts.discover.mockResolvedValue(buildDiscoveredAccount(true));
 
         const result = await handler.createAccounts({
@@ -385,12 +385,14 @@ describe('KeyringHandler', () => {
           index: 0,
           addressType: 'p2wpkh',
         });
+        expect(mockAccounts.delete).not.toHaveBeenCalled();
         expect(result).toHaveLength(1);
         expect(result[0]?.id).toBe('discovered-id');
       });
 
-      it('returns empty array when discovered account has no on-chain history', async () => {
-        mockAccounts.discover.mockResolvedValue(buildDiscoveredAccount(false));
+      it('deletes the account and returns empty array when no on-chain history', async () => {
+        const inactiveAccount = buildDiscoveredAccount(false);
+        mockAccounts.discover.mockResolvedValue(inactiveAccount);
 
         const result = await handler.createAccounts({
           type: AccountCreationType.Bip44Discover,
@@ -399,6 +401,7 @@ describe('KeyringHandler', () => {
         });
 
         expect(mockAccounts.discover).toHaveBeenCalled();
+        expect(mockAccounts.delete).toHaveBeenCalledWith(inactiveAccount.id);
         expect(result).toHaveLength(0);
       });
 
