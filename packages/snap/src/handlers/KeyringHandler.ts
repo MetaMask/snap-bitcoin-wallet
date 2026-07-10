@@ -35,20 +35,16 @@ import {
   networkToCurrencyUnit,
   type SnapClient,
 } from '../entities';
-import {
-  NetworkStruct,
-  networkToCaip19,
-  scopeToNetwork,
-} from './caip';
+import { NetworkStruct, networkToCaip19, scopeToNetwork } from './caip';
 import { CronMethod } from './CronHandler';
 import type { KeyringRequestHandler } from './KeyringRequestHandler';
 import { mapToKeyringAccount, mapToTransaction } from './mappings';
 import { BtcWalletRequestStruct, validateSelectedAccounts } from './validation';
+import snapManifest from '../../snap.manifest.json';
 import type {
   AccountUseCases,
   CreateAccountParams,
 } from '../use-cases/AccountUseCases';
-import snapManifest from '../../snap.manifest.json';
 
 /** Maximum number of accounts to create in one internal createMany call. */
 const MAX_CREATE_ACCOUNTS_PER_BATCH = 100;
@@ -57,9 +53,8 @@ const MAX_CREATE_ACCOUNTS_PER_BATCH = 100;
  * Scopes declared in the snap manifest's keyring capabilities block.
  * Used to determine which networks are supported for account discovery.
  */
-const SUPPORTED_SCOPES =
-  snapManifest.initialPermissions['endowment:keyring'].capabilities
-    .scopes as readonly BtcScope[];
+const SUPPORTED_SCOPES = snapManifest.initialPermissions['endowment:keyring']
+  .capabilities.scopes as readonly BtcScope[];
 
 export class KeyringHandler implements KeyringSnapRpc {
   readonly #accountsUseCases: AccountUseCases;
@@ -198,9 +193,9 @@ export class KeyringHandler implements KeyringSnapRpc {
       }
 
       return created;
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.#logger.error({ error }, 'Error creating accounts batch');
-      throw new SnapError(error);
+      throw new SnapError(error as Error);
     } finally {
       if (traceStarted) {
         await this.#snapClient.endTrace(traceName);
@@ -306,7 +301,7 @@ export class KeyringHandler implements KeyringSnapRpc {
     const hasMore = startIndex + limit < transactions.length;
     const nextCursor =
       hasMore && paginatedTxs.length > 0
-        ? paginatedTxs[paginatedTxs.length - 1]?.txid.toString() ?? null
+        ? (paginatedTxs[paginatedTxs.length - 1]?.txid.toString() ?? null)
         : null;
 
     return {
