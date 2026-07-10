@@ -329,11 +329,53 @@ describe('KeyringHandler', () => {
     it('rejects unsupported creation types', async () => {
       await expect(
         handler.createAccounts({
+          type: 'bip44:unknown' as AccountCreationType,
+          entropySource,
+        } as Parameters<typeof handler.createAccounts>[0]),
+      ).rejects.toThrow(/not supported|unsupported/iu);
+      expect(mockAccounts.createMany).not.toHaveBeenCalled();
+    });
+
+    it('creates an account for Bip44DerivePath on mainnet', async () => {
+      const bitcoinAccount = buildMockAccount(0);
+      mockAccounts.createMany.mockResolvedValue([bitcoinAccount]);
+
+      const result = await handler.createAccounts({
+        type: AccountCreationType.Bip44DerivePath,
+        derivationPath: "m/84'/0'/0'",
+        entropySource,
+      });
+
+      expect(mockAccounts.createMany).toHaveBeenCalledWith([
+        expect.objectContaining({ network: 'bitcoin', index: 0 }),
+      ]);
+      expect(result).toHaveLength(1);
+    });
+
+    it('creates an account for Bip44DerivePath on regtest', async () => {
+      const bitcoinAccount = buildMockAccount(3);
+      mockAccounts.createMany.mockResolvedValue([bitcoinAccount]);
+
+      const result = await handler.createAccounts({
+        type: AccountCreationType.Bip44DerivePath,
+        derivationPath: "m/84'/1'/3'",
+        entropySource,
+      });
+
+      expect(mockAccounts.createMany).toHaveBeenCalledWith([
+        expect.objectContaining({ network: 'regtest', index: 3 }),
+      ]);
+      expect(result).toHaveLength(1);
+    });
+
+    it('rejects Bip44DerivePath with non-BIP84 purpose', async () => {
+      await expect(
+        handler.createAccounts({
           type: AccountCreationType.Bip44DerivePath,
-          derivationPath: "m/84'/0'/0'",
+          derivationPath: "m/44'/0'/0'",
           entropySource,
         }),
-      ).rejects.toThrow(/not supported|unsupported/iu);
+      ).rejects.toThrow(/Only native segwit \(BIP-84\)/iu);
       expect(mockAccounts.createMany).not.toHaveBeenCalled();
     });
 
