@@ -86,9 +86,9 @@ describe('KeyringRequestHandler', () => {
     });
 
     expect(response).toRespondWithError({
-      code: -32000,
+      code: -32603,
       message:
-        'Invalid format: At path: params.account -- Expected a value of type `UuidV4`, but received: `"notAUUID"`',
+        'At path: params.account -- Expected a value of type `UuidV4`, but received: `"notAUUID"`',
       stack: expect.anything(),
     });
   });
@@ -109,14 +109,8 @@ describe('KeyringRequestHandler', () => {
     });
 
     expect(response).toRespondWithError({
-      code: -32601,
-      data: {
-        account: account.id,
-        cause: null,
-        method: 'invalidMethod',
-      },
-      message:
-        'Method not implemented or not supported: Unrecognized Bitcoin account capability',
+      code: -32603,
+      message: 'Unrecognized Bitcoin account capability',
       stack: expect.anything(),
     });
   });
@@ -381,12 +375,8 @@ describe('KeyringRequestHandler', () => {
       });
 
       expect(response).toRespondWithError({
-        code: -32000,
-        message: 'Invalid format: Invalid PSBT',
-        data: {
-          cause: null,
-          transaction: 'notAPsbt',
-        },
+        code: -32603,
+        message: 'Invalid PSBT',
         stack: expect.anything(),
       });
     });
@@ -415,9 +405,8 @@ describe('KeyringRequestHandler', () => {
       });
 
       expect(response).toRespondWithError({
-        code: -32000,
-        message:
-          'Invalid format: At path: account -- Expected an object, but received: undefined',
+        code: -32603,
+        message: 'At path: account -- Expected an object, but received: undefined',
         stack: expect.anything(),
       });
     });
@@ -442,9 +431,8 @@ describe('KeyringRequestHandler', () => {
       });
 
       expect(response).toRespondWithError({
-        code: -32000,
-        message:
-          'Invalid format: At path: options -- Expected an object, but received: undefined',
+        code: -32603,
+        message: 'At path: options -- Expected an object, but received: undefined',
         stack: expect.anything(),
       });
     });
@@ -503,12 +491,8 @@ describe('KeyringRequestHandler', () => {
       });
 
       expect(response).toRespondWithError({
-        code: -32000,
-        message: 'Invalid format: Invalid PSBT',
-        data: {
-          cause: null,
-          transaction: 'notAPsbt',
-        },
+        code: -32603,
+        message: 'Invalid PSBT',
         stack: expect.anything(),
       });
     });
@@ -567,12 +551,8 @@ describe('KeyringRequestHandler', () => {
       });
 
       expect(response).toRespondWithError({
-        code: -32000,
-        message: 'Invalid format: Invalid PSBT',
-        data: {
-          cause: null,
-          transaction: 'notAPsbt',
-        },
+        code: -32603,
+        message: 'Invalid PSBT',
         stack: expect.anything(),
       });
     });
@@ -665,12 +645,8 @@ describe('KeyringRequestHandler', () => {
       });
 
       expect(response).toRespondWithError({
-        code: -32000,
-        message: 'Invalid format: Invalid PSBT',
-        data: {
-          cause: null,
-          transaction: 'notAPsbt',
-        },
+        code: -32603,
+        message: 'Invalid PSBT',
         stack: expect.anything(),
       });
     });
@@ -737,9 +713,8 @@ describe('KeyringRequestHandler', () => {
       });
 
       expect(response).toRespondWithError({
-        code: -32602,
-        data: { address: 'notAnAddress', amount: '1000', cause: null },
-        message: 'Validation failed: Invalid recipient',
+        code: -32603,
+        message: 'Invalid recipient',
         stack: expect.anything(),
       });
     });

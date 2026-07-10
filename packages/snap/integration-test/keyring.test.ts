@@ -77,7 +77,7 @@ describe('Keyring', () => {
             groupIndex: ACCOUNT_INDEX,
             derivationPath: `m/84'/1'/${ACCOUNT_INDEX}'`,
           },
-          exportable: false,
+          exportable: true,
         },
         scopes: [BtcScope.Regtest],
         methods: Object.values(AccountCapability),
@@ -138,7 +138,7 @@ describe('Keyring', () => {
               groupIndex: requestOpts.index,
               derivationPath,
             },
-            exportable: false,
+            exportable: true,
           },
           scopes: [requestOpts.scope],
           methods: Object.values(AccountCapability),
@@ -213,7 +213,7 @@ describe('Keyring', () => {
           groupIndex: requestOpts.index,
           derivationPath: `m/${accountTypeToPurpose[requestOpts.addressType]}/${scopeToCoinType[requestOpts.scope]}/${requestOpts.index}'`,
         },
-        exportable: false,
+        exportable: true,
       },
       scopes: [requestOpts.scope],
       methods: Object.values(AccountCapability),
@@ -286,8 +286,8 @@ describe('Keyring', () => {
 
       expect(response.response).toMatchObject({
         error: {
-          code: -32000,
-          message: `Invalid format: ${expectedError}`,
+          code: -32603,
+          message: expectedError,
         },
       });
     },
