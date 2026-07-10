@@ -1,3 +1,4 @@
+import { handleKeyringRequest } from '@metamask/keyring-snap-sdk/v2';
 import type {
   OnAssetsConversionHandler,
   OnAssetsLookupHandler,
@@ -11,7 +12,6 @@ import type {
 } from '@metamask/snaps-sdk';
 
 import { Config } from './config';
-import { handleKeyringRequest } from '@metamask/keyring-snap-sdk/v2';
 
 import {
   KeyringHandler,

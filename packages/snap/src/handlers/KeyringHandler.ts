@@ -250,7 +250,7 @@ export class KeyringHandler implements KeyringSnapRpc {
         encoding,
         privateKey: wifPrivateKey,
       };
-    } catch (error: any) {
+    } catch {
       const errorMsg = 'Error exporting account';
       this.#logger.error(errorMsg);
       throw new SnapError(errorMsg);

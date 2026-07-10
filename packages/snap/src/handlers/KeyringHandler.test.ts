@@ -25,14 +25,11 @@ import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
 import type { BitcoinAccount, Logger, SnapClient } from '../entities';
-import { AccountCapability, CurrencyUnit, FormatError } from '../entities';
+import { AccountCapability, CurrencyUnit } from '../entities';
 import { Caip19Asset } from './caip';
 import { KeyringHandler } from './KeyringHandler';
 import type { KeyringRequestHandler } from './KeyringRequestHandler';
-import type {
-  AccountUseCases,
-  CreateAccountParams,
-} from '../use-cases/AccountUseCases';
+import type { AccountUseCases } from '../use-cases/AccountUseCases';
 
 jest.mock('superstruct', () => ({
   ...jest.requireActual('superstruct'),
@@ -415,7 +412,7 @@ describe('KeyringHandler', () => {
             groupIndex: 0,
             entropySource,
           }),
-        ).rejects.toThrow();
+        ).rejects.toThrow('discover error');
       });
     });
 
@@ -468,7 +465,8 @@ describe('KeyringHandler', () => {
   describe('exportAccount', () => {
     const accountId = 'some-id';
     const fakeWif = 'K1WIFprivateKeyMockValue';
-    const fakePrivateKey = '0xdeadbeefcafe0000000000000000000000000000000000000000000000000001';
+    const fakePrivateKey =
+      '0xdeadbeefcafe0000000000000000000000000000000000000000000000000001';
 
     beforeEach(() => {
       mockAccounts.get.mockResolvedValue(mockAccount);
@@ -517,7 +515,9 @@ describe('KeyringHandler', () => {
         privateKey: undefined,
       } as never);
 
-      await expect(handler.exportAccount(accountId)).rejects.toThrow();
+      await expect(handler.exportAccount(accountId)).rejects.toThrow(
+        'Failed to get private entropy',
+      );
     });
 
     it('wraps wif encoding errors in SnapError without leaking private key', async () => {
@@ -526,7 +526,7 @@ describe('KeyringHandler', () => {
         throw new Error('encoding failed: privatekey=SENSITIVE');
       });
 
-      const error = await handler.exportAccount(accountId).catch((e) => e);
+      const error = await handler.exportAccount(accountId).catch((err) => err);
       // The SnapError message must not contain the sensitive encoding error
       expect(error.message).not.toContain('SENSITIVE');
       expect(error.message).toContain('exporting account');
