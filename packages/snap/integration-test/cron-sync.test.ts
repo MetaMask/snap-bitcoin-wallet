@@ -71,9 +71,8 @@ describe('CronHandler', () => {
     expect(createResponse.response).toBeDefined();
     expect('result' in createResponse.response).toBe(true);
 
-    const account = (
-      createResponse.response as { result: KeyringAccount[] }
-    ).result[0] as KeyringAccount;
+    const account = (createResponse.response as { result: KeyringAccount[] })
+      .result[0] as KeyringAccount;
 
     accountsToSync.push(account.id);
 

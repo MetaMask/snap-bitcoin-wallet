@@ -422,9 +422,8 @@ describe('Keyring', () => {
     });
 
     expect(response).toRespondWithError({
-      code: -32001,
-      message: `Resource not found: Account not found`,
-      data: { id, cause: null },
+      code: -32603,
+      message: 'Account not found',
       stack: expect.anything(),
     });
   });

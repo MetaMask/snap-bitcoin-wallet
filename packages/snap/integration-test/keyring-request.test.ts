@@ -406,7 +406,8 @@ describe('KeyringRequestHandler', () => {
 
       expect(response).toRespondWithError({
         code: -32603,
-        message: 'At path: account -- Expected an object, but received: undefined',
+        message:
+          'At path: account -- Expected an object, but received: undefined',
         stack: expect.anything(),
       });
     });
@@ -432,7 +433,8 @@ describe('KeyringRequestHandler', () => {
 
       expect(response).toRespondWithError({
         code: -32603,
-        message: 'At path: options -- Expected an object, but received: undefined',
+        message:
+          'At path: options -- Expected an object, but received: undefined',
         stack: expect.anything(),
       });
     });
