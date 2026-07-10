@@ -12,7 +12,6 @@ import type {
 } from '@metamask/snaps-sdk';
 
 import { Config } from './config';
-
 import {
   KeyringHandler,
   CronHandler,

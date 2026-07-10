@@ -17,7 +17,7 @@ const englishLocale = {
 try {
   writeFileSync(
     join(__dirname, '../locales/en.json'),
-    JSON.stringify(englishLocale, null, 2),
+    `${JSON.stringify(englishLocale, null, 2)}\n`,
   );
   console.log('[populate-en-locale] - en locale populated');
 } catch (error) {

@@ -526,7 +526,9 @@ describe('KeyringHandler', () => {
         throw new Error('encoding failed: privatekey=SENSITIVE');
       });
 
-      const error = await handler.exportAccount(accountId).catch((err) => err);
+      const error = await handler
+        .exportAccount(accountId)
+        .catch((caughtError) => caughtError);
       // The SnapError message must not contain the sensitive encoding error
       expect(error.message).not.toContain('SENSITIVE');
       expect(error.message).toContain('exporting account');
