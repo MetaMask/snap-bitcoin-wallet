@@ -391,9 +391,9 @@ describe('KeyringHandler', () => {
     });
 
     it.each([
-      { label: 'missing account segment', derivationPath: "m/84'/0'" },
-      { label: 'non-integer index', derivationPath: "m/84'/0'/abc'" },
-      { label: 'negative index', derivationPath: "m/84'/0'/-1'" },
+      { label: 'missing account segment', derivationPath: "m/84'/0'" as `m/${string}` },
+      { label: 'non-integer index', derivationPath: "m/84'/0'/abc'" as `m/${string}` },
+      { label: 'negative index', derivationPath: "m/84'/0'/-1'" as `m/${string}` },
     ])(
       'rejects Bip44DerivePath with invalid account index ($label)',
       async ({ derivationPath }) => {
