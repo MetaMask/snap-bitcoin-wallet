@@ -126,8 +126,20 @@ export class KeyringHandler implements KeyringSnapRpc {
           );
         }
 
+        if (coinType !== '0' && coinType !== '1') {
+          throw new FormatError(
+            'Unsupported coin type: only coin type 0 (mainnet) and 1 (regtest) are supported',
+          );
+        }
+
+        const index = parseInt(accountIndex ?? '', 10);
+        if (!Number.isInteger(index) || index < 0) {
+          throw new FormatError(
+            'Invalid derivation path: account index must be a non-negative integer',
+          );
+        }
+
         const network = coinType === '0' ? 'bitcoin' : 'regtest';
-        const index = parseInt(accountIndex ?? '0', 10);
 
         const created = await this.#accountsUseCases.createMany([
           {

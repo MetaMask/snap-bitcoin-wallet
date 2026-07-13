@@ -379,6 +379,35 @@ describe('KeyringHandler', () => {
       expect(mockAccounts.createMany).not.toHaveBeenCalled();
     });
 
+    it('rejects Bip44DerivePath with unsupported coin type', async () => {
+      await expect(
+        handler.createAccounts({
+          type: AccountCreationType.Bip44DerivePath,
+          derivationPath: "m/84'/2'/0'",
+          entropySource,
+        }),
+      ).rejects.toThrow(/Unsupported coin type/iu);
+      expect(mockAccounts.createMany).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      { label: 'missing account segment', derivationPath: "m/84'/0'" },
+      { label: 'non-integer index', derivationPath: "m/84'/0'/abc'" },
+      { label: 'negative index', derivationPath: "m/84'/0'/-1'" },
+    ])(
+      'rejects Bip44DerivePath with invalid account index ($label)',
+      async ({ derivationPath }) => {
+        await expect(
+          handler.createAccounts({
+            type: AccountCreationType.Bip44DerivePath,
+            derivationPath,
+            entropySource,
+          }),
+        ).rejects.toThrow(/Invalid derivation path/iu);
+        expect(mockAccounts.createMany).not.toHaveBeenCalled();
+      },
+    );
+
     it('propagates errors from createMany', async () => {
       const error = new Error('create error');
       mockAccounts.createMany.mockRejectedValue(error);
