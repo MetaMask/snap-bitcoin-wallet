@@ -1,12 +1,9 @@
 import type { AddressType } from '@metamask/bitcoindevkit';
 import { Amount } from '@metamask/bitcoindevkit';
-import {
-  AccountCreationType,
-  assertCreateAccountOptionIsSupported,
-  BtcScope,
-} from '@metamask/keyring-api';
+import { AccountCreationType, assertCreateAccountOptionIsSupported } from '@metamask/keyring-api';
 import type {
   Balance,
+  BtcScope,
   CaipAssetType,
   CaipAssetTypeOrId,
   CreateAccountOptions,

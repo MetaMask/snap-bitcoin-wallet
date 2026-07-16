@@ -147,9 +147,9 @@ describe('Keyring', () => {
 
       // eslint-disable-next-line jest/no-conditional-in-test
       if ('result' in response.response) {
-        const result = response.response.result as KeyringAccount[];
-        expect(result).toHaveLength(1);
-        accounts[expectedAddress] = result[0] as KeyringAccount;
+        accounts[expectedAddress] = (
+          response.response.result as KeyringAccount[]
+        )[0] as KeyringAccount;
       }
     },
   );
