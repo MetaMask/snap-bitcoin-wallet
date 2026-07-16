@@ -49,6 +49,8 @@ import type {
 /** Maximum number of accounts to create in one internal createMany call. */
 const MAX_CREATE_ACCOUNTS_PER_BATCH = 100;
 
+const SUPPORTED_COIN_TYPES = ['0', '1'];
+
 /**
  * Scopes declared in the snap manifest's keyring capabilities block.
  * Used to determine which networks are supported for account discovery.
@@ -116,6 +118,12 @@ export class KeyringHandler implements KeyringSnapRpc {
     try {
       if (options.type === AccountCreationType.Bip44DerivePath) {
         const parts = (options.derivationPath as string).split('/');
+        if (parts.length < 4) {
+          throw new FormatError(
+            'Invalid derivation path: expected at least 4 segments (m/purpose/coinType/accountIndex)',
+          );
+        }
+
         const purpose = parts[1]?.replace("'", '');
         const coinType = parts[2]?.replace("'", '');
         const accountIndex = parts[3]?.replace("'", '');
@@ -126,7 +134,7 @@ export class KeyringHandler implements KeyringSnapRpc {
           );
         }
 
-        if (coinType !== '0' && coinType !== '1') {
+        if (!SUPPORTED_COIN_TYPES.includes(coinType ?? '')) {
           throw new FormatError(
             'Unsupported coin type: only coin type 0 (mainnet) and 1 (regtest) are supported',
           );
@@ -155,25 +163,28 @@ export class KeyringHandler implements KeyringSnapRpc {
       }
 
       if (options.type === AccountCreationType.Bip44Discover) {
-        // Discover: create the account and do a full Esplora scan to check for
-        // on-chain activity. Only mainnet is supported for discovery.
-        const network = scopeToNetwork[SUPPORTED_SCOPES[0] ?? BtcScope.Mainnet];
-        const discovered = await this.#accountsUseCases.discover({
-          network,
-          entropySource,
-          index: options.groupIndex,
-          addressType,
-        });
+        // For each supported scope, discover at this index. Accounts with
+        // on-chain activity are kept; those without are deleted. Returning []
+        // signals end-of-discovery to the client.
+        const discovered: KeyringAccount[] = [];
 
-        if (discovered.listTransactions().length === 0) {
-          // No activity: remove the account from state (it was created by
-          // discover()) and signal end-of-discovery to the client.
-          await this.#accountsUseCases.delete(discovered.id);
-          return [];
+        for (const scope of SUPPORTED_SCOPES) {
+          const network = scopeToNetwork[scope];
+          const account = await this.#accountsUseCases.discover({
+            network,
+            entropySource,
+            index: options.groupIndex,
+            addressType,
+          });
+
+          if (account.listTransactions().length === 0) {
+            await this.#accountsUseCases.delete(account.id);
+          } else {
+            discovered.push(mapToKeyringAccount(account));
+          }
         }
 
-        // Activity found: the account was already created by discover().
-        return [mapToKeyringAccount(discovered)];
+        return discovered;
       }
 
       // Build the index range. For Bip44DeriveIndex the range is a single
@@ -202,35 +213,36 @@ export class KeyringHandler implements KeyringSnapRpc {
         );
       }
 
-      // Only mainnet is supported for v2 account creation.
-      const network = scopeToNetwork[SUPPORTED_SCOPES[0] ?? BtcScope.Mainnet];
-
       // `AccountUseCases.createMany` is idempotent: if an account already
       // exists for the resolved derivation path, it will be returned as-is.
       const created: KeyringAccount[] = [];
-      let chunkFrom = range.from;
 
-      while (chunkFrom <= range.to) {
-        const chunkTo = Math.min(
-          chunkFrom + MAX_CREATE_ACCOUNTS_PER_BATCH - 1,
-          range.to,
-        );
-        const chunkRequests: CreateAccountParams[] = [];
+      for (const scope of SUPPORTED_SCOPES) {
+        const network = scopeToNetwork[scope];
+        let chunkFrom = range.from;
 
-        for (let index = chunkFrom; index <= chunkTo; index += 1) {
-          chunkRequests.push({
-            network,
-            entropySource,
-            index,
-            addressType,
-            synchronize: false,
-          });
+        while (chunkFrom <= range.to) {
+          const chunkTo = Math.min(
+            chunkFrom + MAX_CREATE_ACCOUNTS_PER_BATCH - 1,
+            range.to,
+          );
+          const chunkRequests: CreateAccountParams[] = [];
+
+          for (let index = chunkFrom; index <= chunkTo; index += 1) {
+            chunkRequests.push({
+              network,
+              entropySource,
+              index,
+              addressType,
+              synchronize: false,
+            });
+          }
+
+          const chunk = await this.#accountsUseCases.createMany(chunkRequests);
+          created.push(...chunk.map(mapToKeyringAccount));
+
+          chunkFrom = chunkTo + 1;
         }
-
-        const chunk = await this.#accountsUseCases.createMany(chunkRequests);
-        created.push(...chunk.map(mapToKeyringAccount));
-
-        chunkFrom = chunkTo + 1;
       }
 
       return created;
