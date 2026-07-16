@@ -39,6 +39,7 @@ import { NetworkStruct, networkToCaip19, scopeToNetwork } from './caip';
 import { CronMethod } from './CronHandler';
 import type { KeyringRequestHandler } from './KeyringRequestHandler';
 import { mapToKeyringAccount, mapToTransaction } from './mappings';
+import { parseDerivationPath } from './parsers';
 import { BtcWalletRequestStruct, validateSelectedAccounts } from './validation';
 import snapManifest from '../../snap.manifest.json';
 import type {
@@ -48,8 +49,6 @@ import type {
 
 /** Maximum number of accounts to create in one internal createMany call. */
 const MAX_CREATE_ACCOUNTS_PER_BATCH = 100;
-
-const SUPPORTED_COIN_TYPES = ['0', '1'];
 
 /**
  * Scopes declared in the snap manifest's keyring capabilities block.
@@ -117,41 +116,13 @@ export class KeyringHandler implements KeyringSnapRpc {
 
     try {
       if (options.type === AccountCreationType.Bip44DerivePath) {
-        const parts = (options.derivationPath as string).split('/');
-        if (parts.length < 4) {
-          throw new FormatError(
-            'Invalid derivation path: expected at least 4 segments (m/purpose/coinType/accountIndex)',
-          );
-        }
-
-        const purpose = parts[1]?.replace("'", '');
-        const coinType = parts[2]?.replace("'", '');
-        const accountIndex = parts[3]?.replace("'", '');
-
-        if (purpose !== '84') {
-          throw new FormatError(
-            'Only native segwit (BIP-84) derivation paths are supported',
-          );
-        }
-
-        if (!SUPPORTED_COIN_TYPES.includes(coinType ?? '')) {
-          throw new FormatError(
-            'Unsupported coin type: only coin type 0 (mainnet) and 1 (regtest) are supported',
-          );
-        }
-
-        const index = parseInt(accountIndex ?? '', 10);
-        if (!Number.isInteger(index) || index < 0) {
-          throw new FormatError(
-            'Invalid derivation path: account index must be a non-negative integer',
-          );
-        }
-
-        const network = coinType === '0' ? 'bitcoin' : 'regtest';
+        const { index, network } = parseDerivationPath(
+          options.derivationPath as string,
+        );
 
         const created = await this.#accountsUseCases.createMany([
           {
-            network: network as CreateAccountParams['network'],
+            network,
             entropySource,
             index,
             addressType,
