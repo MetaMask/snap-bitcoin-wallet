@@ -147,9 +147,9 @@ describe('Keyring', () => {
 
       // eslint-disable-next-line jest/no-conditional-in-test
       if ('result' in response.response) {
-        accounts[expectedAddress] = (
-          response.response.result as KeyringAccount[]
-        )[0]!;
+        const result = response.response.result as KeyringAccount[];
+        expect(result).toHaveLength(1);
+        accounts[expectedAddress] = result[0] as KeyringAccount;
       }
     },
   );
@@ -307,7 +307,8 @@ describe('Keyring', () => {
     expect(response.response).toHaveProperty('result');
 
     const { result } = response.response as { result: KeyringAccount[] };
-    const account = result[0]!;
+    expect(result).toHaveLength(1);
+    const account = result[0] as KeyringAccount;
     expect(account.address).toMatch(/^bcrt1/u); // Native segwit address
     expect((account.options.entropy as { groupIndex: number }).groupIndex).toBe(
       10,
