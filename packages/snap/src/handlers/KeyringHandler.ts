@@ -116,9 +116,7 @@ export class KeyringHandler implements KeyringSnapRpc {
 
     try {
       if (options.type === AccountCreationType.Bip44DerivePath) {
-        const { index, network } = parseDerivationPath(
-          options.derivationPath as string,
-        );
+        const { index, network } = parseDerivationPath(options.derivationPath);
 
         const created = await this.#accountsUseCases.createMany([
           {
