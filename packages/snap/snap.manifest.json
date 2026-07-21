@@ -45,6 +45,7 @@
         "bip44": {
           "deriveIndex": true,
           "deriveIndexRange": true,
+          "derivePath": true,
           "discover": true
         }
       }
