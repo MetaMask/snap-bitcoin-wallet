@@ -25,6 +25,7 @@ import type {
 } from '@metamask/keyring-api/v2';
 import { SnapError } from '@metamask/snaps-sdk';
 import type { CaipChainId, JsonRpcRequest } from '@metamask/snaps-sdk';
+import { sensitive } from '@metamask/superstruct';
 import { assert, is, string } from 'superstruct';
 import { encode } from 'wif';
 
@@ -263,7 +264,7 @@ export class KeyringHandler implements KeyringSnapRpc {
       // StructError message if encoding validation fails.
       // TODO: replace string() with a WIF-specific struct once the accounts
       // repo exports one.
-      if (!is(wifPrivateKey, string())) {
+      if (!is(wifPrivateKey, sensitive(string()))) {
         throw new Error('Derived private key failed encoding validation');
       }
 
