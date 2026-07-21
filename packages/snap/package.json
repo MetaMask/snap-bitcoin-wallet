@@ -49,7 +49,7 @@
     "@metamask/snaps-cli": "^8.4.1",
     "@metamask/snaps-jest": "^10.2.0",
     "@metamask/snaps-sdk": "^11.2.0",
-    "@metamask/superstruct": "^3.4.0",
+    "@metamask/superstruct": "^3.4.1",
     "@metamask/utils": "^11.9.0",
     "bip322-js": "^3.0.0",
     "concurrently": "^9.2.1",
