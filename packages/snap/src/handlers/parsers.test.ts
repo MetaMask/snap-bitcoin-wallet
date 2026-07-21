@@ -2,6 +2,7 @@ import { FormatError } from '../entities';
 import { parseDerivationPath } from './parsers';
 
 jest.mock('@metamask/bitcoindevkit', () => ({
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   Psbt: { from_string: jest.fn() },
 }));
 
