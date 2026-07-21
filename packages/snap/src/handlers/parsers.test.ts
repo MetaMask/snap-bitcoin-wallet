@@ -1,6 +1,8 @@
 import { FormatError } from '../entities';
 import { parseDerivationPath } from './parsers';
 
+jest.mock('@metamask/bitcoindevkit');
+
 describe('parseDerivationPath', () => {
   describe('valid paths', () => {
     it.each([
