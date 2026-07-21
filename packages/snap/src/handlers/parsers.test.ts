@@ -1,7 +1,9 @@
 import { FormatError } from '../entities';
 import { parseDerivationPath } from './parsers';
 
-jest.mock('@metamask/bitcoindevkit');
+jest.mock('@metamask/bitcoindevkit', () => ({
+  Psbt: { from_string: jest.fn() },
+}));
 
 describe('parseDerivationPath', () => {
   describe('valid paths', () => {
