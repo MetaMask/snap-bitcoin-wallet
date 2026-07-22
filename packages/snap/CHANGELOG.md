@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING** Migrate to Keyring API v2 ([#645](https://github.com/MetaMask/snap-bitcoin-wallet/pull/645))
+  - The snap now uses `handleKeyringRequest` from `@metamask/keyring-snap-sdk/v2`, switching to v2 RPC method names (`keyring_createAccounts`, `keyring_getAccounts`, etc.)
+  - Adds support for the `endowment:keyring` `capabilities` field in the snap manifest
+  - Adds `keyring_exportAccount` support with WIF-encoded private key export
+
 ## [1.15.0]
 
 ### Fixed

@@ -93,8 +93,7 @@ export class BdkAccountRepository implements BitcoinAccountRepository {
 
   async getAll(): Promise<BitcoinAccount[]> {
     const accounts = (await this.#snapClient.getState('accounts')) as
-      | SnapState['accounts']
-      | null;
+      SnapState['accounts'] | null;
     if (!accounts) {
       return [];
     }

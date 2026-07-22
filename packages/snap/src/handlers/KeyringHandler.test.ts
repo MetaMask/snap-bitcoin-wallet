@@ -10,7 +10,6 @@ import type {
 } from '@metamask/bitcoindevkit';
 import { Address } from '@metamask/bitcoindevkit';
 import type {
-  DiscoveredAccount,
   KeyringAccount,
   KeyringResponse,
   Transaction as KeyringTransaction,
@@ -26,24 +25,19 @@ import { mock } from 'jest-mock-extended';
 import { assert } from 'superstruct';
 
 import type { BitcoinAccount, Logger, SnapClient } from '../entities';
-import {
-  AccountCapability,
-  CurrencyUnit,
-  Purpose,
-  FormatError,
-} from '../entities';
-import { scopeToNetwork, caipToAddressType, Caip19Asset } from './caip';
-import { KeyringHandler, CreateAccountRequest } from './KeyringHandler';
+import { AccountCapability, CurrencyUnit } from '../entities';
+import { Caip19Asset } from './caip';
+import { KeyringHandler } from './KeyringHandler';
 import type { KeyringRequestHandler } from './KeyringRequestHandler';
-import { mapToDiscoveredAccount } from './mappings';
-import type {
-  AccountUseCases,
-  CreateAccountParams,
-} from '../use-cases/AccountUseCases';
+import type { AccountUseCases } from '../use-cases/AccountUseCases';
 
 jest.mock('superstruct', () => ({
   ...jest.requireActual('superstruct'),
   assert: jest.fn(),
+}));
+
+jest.mock('wif', () => ({
+  encode: jest.fn(() => 'K1WIFprivateKeyMockValue'),
 }));
 
 // TODO: enable when this is merged: https://github.com/rustwasm/wasm-bindgen/issues/1818
@@ -109,325 +103,7 @@ describe('KeyringHandler', () => {
   );
 
   beforeEach(() => {
-    mockAccounts.create.mockResolvedValue(mockAccount);
-  });
-
-  describe('createAccount', () => {
-    const entropySource = 'some-source';
-    const index = 1;
-    const correlationId = 'correlation-id';
-
-    // non-P2WPKH address types as we are not supporting them for v1
-    // eslint-disable-next-line jest/no-disabled-tests
-    it.skip('respects provided params', async () => {
-      const options = {
-        scope: BtcScope.Signet,
-        entropySource,
-        index,
-        addressType: BtcAccountType.P2pkh,
-        metamask: {
-          correlationId,
-        },
-        accountNameSuggestion: 'My account',
-        synchronize: false,
-      };
-      const expectedCreateParams: CreateAccountParams = {
-        network: scopeToNetwork[BtcScope.Signet],
-        entropySource,
-        index,
-        addressType: 'p2pkh',
-        synchronize: false,
-        correlationId,
-        accountName: 'My account',
-      };
-
-      await handler.createAccount(options);
-
-      expect(assert).toHaveBeenCalledWith(options, CreateAccountRequest);
-      expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
-      expect(mockAccounts.fullScan).not.toHaveBeenCalled();
-    });
-
-    // only P2WPKH (BIP-84) derivation paths are now supported for v1
-    // eslint-disable-next-line jest/no-disabled-tests
-    it.skip('extracts index from derivationPath', async () => {
-      const options = {
-        scope: BtcScope.Signet,
-        derivationPath: "m/44'/0'/5'/*/*", // change and address indexes can be anything
-      };
-      const expectedCreateParams: CreateAccountParams = {
-        network: 'signet',
-        index: 5,
-        addressType: 'p2pkh',
-        entropySource: 'm',
-        synchronize: true,
-      };
-
-      await handler.createAccount(options);
-      expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
-
-      // Test with a valid derivationPath without change and address index
-      await handler.createAccount({
-        ...options,
-        derivationPath: "m/44'/0'/3'",
-      });
-      expect(mockAccounts.create).toHaveBeenCalledWith({
-        ...expectedCreateParams,
-        index: 3,
-      });
-    });
-
-    it('auto increment index', async () => {
-      // We should get index 1
-      mockAccounts.list.mockResolvedValue([
-        mock<BitcoinAccount>({
-          entropySource: 'entropy1',
-          accountIndex: 1,
-          addressType: 'p2wpkh',
-          network: 'signet',
-        }),
-        mock<BitcoinAccount>({
-          entropySource: 'entropy2',
-          accountIndex: 2,
-          addressType: 'p2wpkh',
-          network: 'signet',
-        }),
-        mock<BitcoinAccount>({
-          entropySource: 'entropy2',
-          accountIndex: 0,
-          addressType: 'p2wpkh',
-          network: 'signet',
-        }),
-        mock<BitcoinAccount>({
-          entropySource: 'entropy2',
-          accountIndex: 3,
-          addressType: 'p2tr',
-          network: 'bitcoin',
-        }),
-      ]);
-
-      const options = {
-        scope: BtcScope.Signet,
-        index: null,
-        entropySource: 'entropy2',
-      };
-      const expectedCreateParams: CreateAccountParams = {
-        network: 'signet',
-        index: 1,
-        addressType: 'p2wpkh',
-        entropySource: 'entropy2',
-        synchronize: false,
-      };
-
-      await handler.createAccount(options);
-
-      expect(mockAccounts.list).toHaveBeenCalled();
-      expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
-    });
-
-    it.each([{ purpose: Purpose.NativeSegwit, addressType: 'p2wpkh' }] as {
-      purpose: Purpose;
-      addressType: AddressType;
-    }[])(
-      'extracts P2WPKH address type from derivationPath: %s',
-      async ({ purpose, addressType }) => {
-        const options = {
-          scope: BtcScope.Signet,
-          derivationPath: `m/${purpose}'/0'/0'`,
-        };
-        const expectedCreateParams: CreateAccountParams = {
-          network: 'signet',
-          index: 0,
-          addressType,
-          entropySource: 'm',
-          synchronize: false,
-        };
-
-        await handler.createAccount(options);
-        expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
-      },
-    );
-
-    // skip non-P2WPKH address types as they are not supported on v1
-    // eslint-disable-next-line jest/no-disabled-tests
-    it.skip.each([
-      { purpose: Purpose.Legacy, addressType: 'p2pkh' },
-      { purpose: Purpose.Segwit, addressType: 'p2sh' },
-      { purpose: Purpose.Taproot, addressType: 'p2tr' },
-      { purpose: Purpose.Multisig, addressType: 'p2wsh' },
-    ] as { purpose: Purpose; addressType: AddressType }[])(
-      'extracts address type from derivationPath: %s',
-      async ({ purpose, addressType }) => {
-        const options = {
-          scope: BtcScope.Signet,
-          derivationPath: `m/${purpose}'/0'/0'`,
-        };
-        const expectedCreateParams: CreateAccountParams = {
-          network: 'signet',
-          index: 0,
-          addressType,
-          entropySource: 'm',
-          synchronize: true,
-        };
-
-        await handler.createAccount(options);
-        expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
-      },
-    );
-
-    it('fails if derivationPath is invalid', async () => {
-      const options = {
-        scope: BtcScope.Signet,
-        derivationPath: "m/44'/0'/NaN'",
-      };
-
-      await expect(handler.createAccount(options)).rejects.toThrow(
-        'Invalid account index: NaN',
-      );
-
-      await expect(
-        handler.createAccount({ ...options, derivationPath: "m/60'/0'/0'" }), // unknown purpose
-      ).rejects.toThrow('Invalid BIP-purpose: 60');
-
-      await expect(
-        handler.createAccount({ ...options, derivationPath: "m/44'/0'/-1'" }), // negative index
-      ).rejects.toThrow("Invalid account index: -1'");
-
-      await expect(
-        handler.createAccount({ ...options, derivationPath: "m/44'" }), // missing segments
-      ).rejects.toThrow("Invalid derivation path: m/44'");
-    });
-
-    it('fails when addressType and derivationPath mismatch', async () => {
-      const options = {
-        scope: BtcScope.Signet,
-        addressType: BtcAccountType.P2wpkh,
-        derivationPath: "m/44'/0'/0'", // Legacy path (P2PKH)
-      };
-
-      // The error comes from #extractAddressType which validates the derivation path first
-      await expect(handler.createAccount(options)).rejects.toThrow(
-        new FormatError(
-          'Only native segwit (BIP-84) derivation paths are supported',
-        ),
-      );
-    });
-
-    it('succeeds when addressType and derivationPath both indicate P2WPKH', async () => {
-      const options = {
-        scope: BtcScope.Signet,
-        addressType: BtcAccountType.P2wpkh,
-        derivationPath: "m/84'/0'/5'", // Native segwit path
-      };
-      const expectedCreateParams: CreateAccountParams = {
-        network: 'signet',
-        index: 5,
-        addressType: 'p2wpkh',
-        entropySource: 'm',
-        synchronize: false,
-      };
-
-      await handler.createAccount(options);
-      expect(mockAccounts.create).toHaveBeenCalledWith(expectedCreateParams);
-    });
-
-    it('propagates errors from createAccount', async () => {
-      const error = new Error('createAccount error');
-      mockAccounts.create.mockRejectedValue(error);
-
-      await expect(
-        handler.createAccount({ scopes: [BtcScope.Mainnet], index: 0 }),
-      ).rejects.toThrow(error);
-      expect(mockAccounts.create).toHaveBeenCalled();
-    });
-
-    describe('tracing', () => {
-      const options = {
-        scope: BtcScope.Mainnet,
-        index: 0,
-      };
-
-      beforeEach(() => {
-        mockSnapClient.startTrace.mockResolvedValue(true);
-        mockSnapClient.endTrace.mockResolvedValue(undefined);
-      });
-
-      it('calls startTrace and endTrace with correct trace name', async () => {
-        await handler.createAccount(options);
-
-        expect(mockSnapClient.startTrace).toHaveBeenCalledWith(
-          'Create Bitcoin Account',
-        );
-        expect(mockSnapClient.endTrace).toHaveBeenCalledWith(
-          'Create Bitcoin Account',
-        );
-      });
-
-      it('calls startTrace before creating account', async () => {
-        const callOrder: string[] = [];
-        mockSnapClient.startTrace.mockImplementation(async () => {
-          callOrder.push('startTrace');
-          return true;
-        });
-        mockAccounts.create.mockImplementation(async () => {
-          callOrder.push('createAccount');
-          return mockAccount;
-        });
-
-        await handler.createAccount(options);
-
-        expect(callOrder).toStrictEqual(['startTrace', 'createAccount']);
-      });
-
-      it('calls endTrace after creating account', async () => {
-        const callOrder: string[] = [];
-        mockAccounts.create.mockImplementation(async () => {
-          callOrder.push('createAccount');
-          return mockAccount;
-        });
-        mockSnapClient.endTrace.mockImplementation(async () => {
-          callOrder.push('endTrace');
-        });
-
-        await handler.createAccount(options);
-
-        expect(callOrder).toStrictEqual(['createAccount', 'endTrace']);
-      });
-
-      it('creates account even if startTrace fails', async () => {
-        mockSnapClient.startTrace.mockResolvedValue(false);
-
-        const result = await handler.createAccount(options);
-
-        expect(result).toBeDefined();
-        expect(mockAccounts.create).toHaveBeenCalled();
-        expect(mockSnapClient.startTrace).toHaveBeenCalled();
-      });
-
-      it('calls endTrace when startTrace returns true', async () => {
-        mockSnapClient.startTrace.mockResolvedValue(true);
-
-        await handler.createAccount(options);
-
-        expect(mockSnapClient.startTrace).toHaveBeenCalledWith(
-          'Create Bitcoin Account',
-        );
-        expect(mockSnapClient.endTrace).toHaveBeenCalledWith(
-          'Create Bitcoin Account',
-        );
-      });
-
-      it('does not call endTrace when startTrace returns false', async () => {
-        mockSnapClient.startTrace.mockResolvedValue(false);
-
-        await handler.createAccount(options);
-
-        expect(mockSnapClient.startTrace).toHaveBeenCalledWith(
-          'Create Bitcoin Account',
-        );
-        expect(mockSnapClient.endTrace).not.toHaveBeenCalled();
-      });
-    });
+    jest.resetAllMocks();
   });
 
   describe('createAccounts', () => {
@@ -653,13 +329,93 @@ describe('KeyringHandler', () => {
     it('rejects unsupported creation types', async () => {
       await expect(
         handler.createAccounts({
-          type: AccountCreationType.Bip44DerivePath,
-          derivationPath: "m/84'/0'/0'",
+          type: 'bip44:unknown' as AccountCreationType,
           entropySource,
-        }),
+        } as Parameters<typeof handler.createAccounts>[0]),
       ).rejects.toThrow(/not supported|unsupported/iu);
       expect(mockAccounts.createMany).not.toHaveBeenCalled();
     });
+
+    it('creates an account for Bip44DerivePath on mainnet', async () => {
+      const bitcoinAccount = buildMockAccount(0);
+      mockAccounts.createMany.mockResolvedValue([bitcoinAccount]);
+
+      const result = await handler.createAccounts({
+        type: AccountCreationType.Bip44DerivePath,
+        derivationPath: "m/84'/0'/0'",
+        entropySource,
+      });
+
+      expect(mockAccounts.createMany).toHaveBeenCalledWith([
+        expect.objectContaining({ network: 'bitcoin', index: 0 }),
+      ]);
+      expect(result).toHaveLength(1);
+    });
+
+    it('creates an account for Bip44DerivePath on regtest', async () => {
+      const bitcoinAccount = buildMockAccount(3);
+      mockAccounts.createMany.mockResolvedValue([bitcoinAccount]);
+
+      const result = await handler.createAccounts({
+        type: AccountCreationType.Bip44DerivePath,
+        derivationPath: "m/84'/1'/3'",
+        entropySource,
+      });
+
+      expect(mockAccounts.createMany).toHaveBeenCalledWith([
+        expect.objectContaining({ network: 'regtest', index: 3 }),
+      ]);
+      expect(result).toHaveLength(1);
+    });
+
+    it('rejects Bip44DerivePath with non-BIP84 purpose', async () => {
+      await expect(
+        handler.createAccounts({
+          type: AccountCreationType.Bip44DerivePath,
+          derivationPath: "m/44'/0'/0'",
+          entropySource,
+        }),
+      ).rejects.toThrow(/Only native segwit \(BIP-84\)/iu);
+      expect(mockAccounts.createMany).not.toHaveBeenCalled();
+    });
+
+    it('rejects Bip44DerivePath with unsupported coin type', async () => {
+      await expect(
+        handler.createAccounts({
+          type: AccountCreationType.Bip44DerivePath,
+          derivationPath: "m/84'/2'/0'",
+          entropySource,
+        }),
+      ).rejects.toThrow(/Unsupported coin type/iu);
+      expect(mockAccounts.createMany).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      {
+        label: 'missing account segment',
+        derivationPath: "m/84'/0'" as `m/${string}`,
+      },
+      {
+        label: 'non-integer index',
+        derivationPath: "m/84'/0'/abc'" as `m/${string}`,
+      },
+      {
+        label: 'negative index',
+        derivationPath: "m/84'/0'/-1'" as `m/${string}`,
+      },
+    ])(
+      'rejects Bip44DerivePath with invalid account index ($label)',
+      async ({ derivationPath }) => {
+        await expect(
+          handler.createAccounts({
+            type: AccountCreationType.Bip44DerivePath,
+            derivationPath,
+            entropySource,
+          }),
+        ).rejects.toThrow(/Invalid derivation path/iu);
+        expect(mockAccounts.createMany).not.toHaveBeenCalled();
+      },
+    );
 
     it('propagates errors from createMany', async () => {
       const error = new Error('create error');
@@ -672,6 +428,72 @@ describe('KeyringHandler', () => {
           entropySource,
         }),
       ).rejects.toThrow(error);
+    });
+
+    describe('bip44:discover', () => {
+      const buildDiscoveredAccount = (hasTxs: boolean): BitcoinAccount =>
+        mock<BitcoinAccount>({
+          id: 'discovered-id',
+          addressType: 'p2wpkh',
+          network: 'bitcoin',
+          derivationPath: ['myEntropy', "84'", "0'", "0'"],
+          entropySource: 'myEntropy',
+          accountIndex: 0,
+          publicAddress: mockAddress,
+          capabilities: [
+            AccountCapability.SignPsbt,
+            AccountCapability.ComputeFee,
+          ],
+          listTransactions: jest.fn().mockReturnValue(hasTxs ? [{}] : []),
+        });
+
+      it('discovers then returns the account when it has on-chain history', async () => {
+        mockAccounts.discover.mockResolvedValue(buildDiscoveredAccount(true));
+
+        const result = await handler.createAccounts({
+          type: AccountCreationType.Bip44Discover,
+          groupIndex: 0,
+          entropySource,
+        });
+
+        expect(mockAccounts.discover).toHaveBeenCalledWith({
+          network: 'bitcoin',
+          entropySource,
+          index: 0,
+          addressType: 'p2wpkh',
+        });
+        expect(mockAccounts.delete).not.toHaveBeenCalled();
+        expect(result).toHaveLength(1);
+        expect(result[0]?.id).toBe('discovered-id');
+      });
+
+      it('deletes the account and returns empty array when no on-chain history', async () => {
+        const inactiveAccount = buildDiscoveredAccount(false);
+        mockAccounts.discover.mockResolvedValue(inactiveAccount);
+
+        const result = await handler.createAccounts({
+          type: AccountCreationType.Bip44Discover,
+          groupIndex: 0,
+          entropySource,
+        });
+
+        expect(mockAccounts.discover).toHaveBeenCalled();
+        expect(mockAccounts.delete).toHaveBeenCalledWith(inactiveAccount.id);
+        expect(result).toHaveLength(0);
+      });
+
+      it('propagates errors from discover as SnapError', async () => {
+        const error = new Error('discover error');
+        mockAccounts.discover.mockRejectedValue(error);
+
+        await expect(
+          handler.createAccounts({
+            type: AccountCreationType.Bip44Discover,
+            groupIndex: 0,
+            entropySource,
+          }),
+        ).rejects.toThrow('discover error');
+      });
     });
 
     describe('tracing', () => {
@@ -720,107 +542,76 @@ describe('KeyringHandler', () => {
     });
   });
 
-  describe('discoverAccounts', () => {
-    const entropySource = 'some-source';
-    const groupIndex = 0;
-    const scopes = Object.values(BtcScope);
+  describe('exportAccount', () => {
+    const accountId = 'some-id';
+    const fakeWif = 'K1WIFprivateKeyMockValue';
+    const fakePrivateKey =
+      '0xdeadbeefcafe0000000000000000000000000000000000000000000000000001';
 
-    it('creates, scans and returns accounts for every scope/addressType combination', async () => {
-      // only P2WPKH is now supported for v1
-      const addressTypes = [BtcAccountType.P2wpkh];
-      const totalCombinations = scopes.length * addressTypes.length;
-
-      const expected: DiscoveredAccount[] = [];
-      scopes.forEach((scope) => {
-        addressTypes.forEach((addrType) => {
-          const acc = mock<BitcoinAccount>({
-            addressType: caipToAddressType[addrType],
-            network: scopeToNetwork[scope],
-            listTransactions: jest.fn().mockReturnValue([{}]), // has history
-            derivationPath: ['m', "84'", "0'", "0'"],
-          });
-
-          expected.push(mapToDiscoveredAccount(acc));
-          mockAccounts.discover.mockResolvedValueOnce(acc);
-        });
-      });
-
-      const discovered = await handler.discoverAccounts(
-        scopes,
-        entropySource,
-        groupIndex,
-      );
-
-      expect(mockAccounts.discover).toHaveBeenCalledTimes(totalCombinations);
-
-      // validate each individual create() call arguments
-      scopes.forEach((scope, sIdx) => {
-        addressTypes.forEach((addrType, aIdx) => {
-          const callIdx = sIdx * addressTypes.length + aIdx;
-          expect(mockAccounts.discover).toHaveBeenNthCalledWith(callIdx + 1, {
-            network: scopeToNetwork[scope],
-            entropySource,
-            index: groupIndex,
-            addressType: caipToAddressType[addrType],
-          });
-        });
-      });
-
-      // Order is not guaranteed, so compare as sets
-      expect(discovered).toHaveLength(expected.length);
-      expect(discovered).toStrictEqual(expect.arrayContaining(expected));
+    beforeEach(() => {
+      mockAccounts.get.mockResolvedValue(mockAccount);
+      mockSnapClient.getPrivateEntropy.mockResolvedValue({
+        privateKey: fakePrivateKey,
+      } as never);
+      const { encode } = jest.requireMock<{ encode: jest.Mock }>('wif');
+      encode.mockReturnValue(fakeWif);
     });
 
-    it('returns mix of accounts with and without history, filtering correctly', async () => {
-      // create mock accounts - some with history, some without
-      const accountWithHistory1 = mock<BitcoinAccount>({
-        addressType: 'p2wpkh',
-        network: 'bitcoin',
-        listTransactions: jest.fn().mockReturnValue([{}, {}]), // has 2 transactions
-        derivationPath: ['m', "84'", "0'", "0'"],
-      });
+    it('exports account as WIF (base58) private key by default', async () => {
+      const result = await handler.exportAccount(accountId);
 
-      const accountWithoutHistory = mock<BitcoinAccount>({
-        addressType: 'p2wpkh',
-        network: 'testnet',
-        listTransactions: jest.fn().mockReturnValue([]), // no history
-        derivationPath: ['m', "84'", "1'", "0'"],
-      });
-
-      const accountWithHistory2 = mock<BitcoinAccount>({
-        addressType: 'p2wpkh',
-        network: 'signet',
-        listTransactions: jest.fn().mockReturnValue([{}]), // has 1 transaction
-        derivationPath: ['m', "84'", "1'", "0'"],
-      });
-
-      mockAccounts.discover
-        .mockResolvedValueOnce(accountWithHistory1)
-        .mockResolvedValueOnce(accountWithoutHistory)
-        .mockResolvedValueOnce(accountWithHistory2);
-
-      const discovered = await handler.discoverAccounts(
-        [BtcScope.Mainnet, BtcScope.Testnet, BtcScope.Signet],
-        entropySource,
-        groupIndex,
+      expect(mockAccounts.get).toHaveBeenCalledWith(accountId);
+      expect(mockSnapClient.getPrivateEntropy).toHaveBeenCalledWith(
+        mockAccount.derivationPath.concat(['0', '0']),
       );
-
-      expect(mockAccounts.discover).toHaveBeenCalledTimes(3);
-      expect(discovered).toHaveLength(2);
-      expect(discovered).toStrictEqual([
-        mapToDiscoveredAccount(accountWithHistory1),
-        mapToDiscoveredAccount(accountWithHistory2),
-      ]);
+      expect(result).toStrictEqual({
+        type: 'private-key',
+        encoding: 'base58',
+        privateKey: fakeWif,
+      });
     });
 
-    it('propagates errors from discover', async () => {
-      const error = new Error('discover error');
-      mockAccounts.discover.mockRejectedValue(error);
+    it('exports account with explicit base58 encoding option', async () => {
+      const result = await handler.exportAccount(accountId, {
+        type: 'private-key',
+        encoding: 'base58',
+      });
 
+      expect(result.encoding).toBe('base58');
+      expect(result.privateKey).toBe(fakeWif);
+    });
+
+    it('throws for unsupported encoding', async () => {
       await expect(
-        handler.discoverAccounts(scopes, entropySource, groupIndex),
-      ).rejects.toThrow(error);
-      expect(mockAccounts.discover).toHaveBeenCalled();
+        handler.exportAccount(accountId, {
+          type: 'private-key',
+          encoding: 'hexadecimal',
+        }),
+      ).rejects.toThrow('Only base58 (WIF) private key export is supported');
+    });
+
+    it('throws when private entropy is not available', async () => {
+      mockSnapClient.getPrivateEntropy.mockResolvedValue({
+        privateKey: undefined,
+      } as never);
+
+      await expect(handler.exportAccount(accountId)).rejects.toThrow(
+        'Failed to get private entropy',
+      );
+    });
+
+    it('wraps wif encoding errors in SnapError without leaking private key', async () => {
+      const { encode } = jest.requireMock<{ encode: jest.Mock }>('wif');
+      encode.mockImplementation(() => {
+        throw new Error('encoding failed: privatekey=SENSITIVE');
+      });
+
+      const error = await handler
+        .exportAccount(accountId)
+        .catch((caughtError) => caughtError);
+      // The SnapError message must not contain the sensitive encoding error
+      expect(error.message).not.toContain('SENSITIVE');
+      expect(error.message).toContain('exporting account');
     });
   });
 
@@ -866,7 +657,7 @@ describe('KeyringHandler', () => {
             id: 'myEntropy',
             type: 'mnemonic',
           },
-          exportable: false,
+          exportable: true,
         },
         methods: mockAccount.capabilities,
       };
@@ -885,7 +676,7 @@ describe('KeyringHandler', () => {
     });
   });
 
-  describe('listAccounts', () => {
+  describe('getAccounts', () => {
     it('lists accounts', async () => {
       mockAccounts.list.mockResolvedValue([mockAccount]);
       const expectedKeyringAccounts = [
@@ -902,13 +693,13 @@ describe('KeyringHandler', () => {
               id: 'myEntropy',
               type: 'mnemonic',
             },
-            exportable: false,
+            exportable: true,
           },
           methods: mockAccount.capabilities,
         },
       ];
 
-      const result = await handler.listAccounts();
+      const result = await handler.getAccounts();
       expect(mockAccounts.list).toHaveBeenCalled();
       expect(result).toStrictEqual(expectedKeyringAccounts);
     });
@@ -917,40 +708,8 @@ describe('KeyringHandler', () => {
       const error = new Error();
       mockAccounts.list.mockRejectedValue(error);
 
-      await expect(handler.listAccounts()).rejects.toThrow(error);
+      await expect(handler.getAccounts()).rejects.toThrow(error);
       expect(mockAccounts.list).toHaveBeenCalled();
-    });
-  });
-
-  describe('filterAccountChains', () => {
-    it('includes chain if account network corresponds', async () => {
-      mockAccounts.get.mockResolvedValue(mockAccount);
-
-      const result = await handler.filterAccountChains('some-id', [
-        BtcScope.Mainnet,
-      ]);
-      expect(mockAccounts.get).toHaveBeenCalledWith('some-id');
-      expect(result).toStrictEqual([BtcScope.Mainnet]);
-    });
-
-    it('does not include chain if account network does not correspond', async () => {
-      mockAccounts.get.mockResolvedValue(mockAccount);
-
-      const result = await handler.filterAccountChains('some-id', [
-        BtcScope.Testnet,
-      ]);
-      expect(mockAccounts.get).toHaveBeenCalledWith('some-id');
-      expect(result).toStrictEqual([]);
-    });
-
-    it('propagates errors from get', async () => {
-      const error = new Error();
-      mockAccounts.get.mockRejectedValue(error);
-
-      await expect(
-        handler.filterAccountChains('some-id', [BtcScope.Mainnet]),
-      ).rejects.toThrow(error);
-      expect(mockAccounts.get).toHaveBeenCalled();
     });
   });
 
@@ -969,7 +728,7 @@ describe('KeyringHandler', () => {
     });
   });
 
-  describe('listAccountAssets', () => {
+  describe('getAccountAssets', () => {
     it.each([
       { tNetwork: 'bitcoin', caip19: Caip19Asset.Bitcoin },
       { tNetwork: 'testnet', caip19: Caip19Asset.Testnet },
@@ -983,7 +742,7 @@ describe('KeyringHandler', () => {
           network: tNetwork,
         } as unknown as BitcoinAccount);
 
-        const result = await handler.listAccountAssets('some-id');
+        const result = await handler.getAccountAssets('some-id');
 
         expect(mockAccounts.get).toHaveBeenCalledWith('some-id');
         expect(result).toStrictEqual([caip19]);
@@ -994,12 +753,12 @@ describe('KeyringHandler', () => {
       const error = new Error();
       mockAccounts.get.mockRejectedValue(error);
 
-      await expect(handler.listAccountAssets('some-id')).rejects.toThrow(error);
+      await expect(handler.getAccountAssets('some-id')).rejects.toThrow(error);
       expect(mockAccounts.get).toHaveBeenCalled();
     });
   });
 
-  describe('listAccountTransactions', () => {
+  describe('getAccountTransactions', () => {
     const pagination = { limit: 10, next: null };
 
     const mockAmount = mock<Amount>({
@@ -1082,7 +841,7 @@ describe('KeyringHandler', () => {
     it('lists transactions successfully: send', async () => {
       const id = 'some-id';
 
-      const result = await handler.listAccountTransactions(id, pagination);
+      const result = await handler.getAccountTransactions(id, pagination);
 
       expect(mockAccounts.get).toHaveBeenCalledWith(id);
       expect(result.data).toStrictEqual([expectedResult]);
@@ -1092,7 +851,7 @@ describe('KeyringHandler', () => {
       const id = 'some-id';
       mockAccount.isMine.mockReturnValueOnce(true);
 
-      const result = await handler.listAccountTransactions(id, pagination);
+      const result = await handler.getAccountTransactions(id, pagination);
 
       expect(mockAccounts.get).toHaveBeenCalledWith(id);
       expect(result.data).toStrictEqual([{ ...expectedResult, to: [] }]);
@@ -1107,7 +866,7 @@ describe('KeyringHandler', () => {
       ]);
       mockAccount.isMine.mockReturnValueOnce(true);
 
-      const result = await handler.listAccountTransactions(id, pagination);
+      const result = await handler.getAccountTransactions(id, pagination);
 
       expect(mockAccounts.get).toHaveBeenCalledWith(id);
       expect(result.data).toStrictEqual([
@@ -1126,7 +885,7 @@ describe('KeyringHandler', () => {
 
       mockAccount.listTransactions.mockReturnValue(mockTransactions);
 
-      const result = await handler.listAccountTransactions(id, pagination);
+      const result = await handler.getAccountTransactions(id, pagination);
 
       expect(result.data).toHaveLength(pagination.limit);
       expect(result.next).toBe('txid-9');
@@ -1143,7 +902,7 @@ describe('KeyringHandler', () => {
 
       mockAccount.listTransactions.mockReturnValue(mockTransactions);
 
-      const result = await handler.listAccountTransactions(id, {
+      const result = await handler.getAccountTransactions(id, {
         ...pagination,
         next: 'txid-9',
       });
@@ -1152,14 +911,6 @@ describe('KeyringHandler', () => {
         mockTransactions.length - pagination.limit,
       );
       expect(result.next).toBeNull();
-    });
-  });
-
-  describe('updateAccount', () => {
-    it('throws not supported', async () => {
-      await expect(handler.updateAccount()).rejects.toThrow(
-        'Method not supported.',
-      );
     });
   });
 
@@ -1204,7 +955,7 @@ describe('KeyringHandler', () => {
       };
 
       jest
-        .spyOn(handler, 'listAccounts')
+        .spyOn(handler, 'getAccounts')
         .mockResolvedValueOnce([mockKeyringAccount1, mockKeyringAccount2]);
 
       const result = await handler.resolveAccountAddress(
@@ -1212,7 +963,7 @@ describe('KeyringHandler', () => {
         request,
       );
 
-      expect(handler.listAccounts).toHaveBeenCalled();
+      expect(handler.getAccounts).toHaveBeenCalled();
       expect(result).toStrictEqual({
         address: `${BtcScope.Regtest}:test123`,
       });
@@ -1230,7 +981,7 @@ describe('KeyringHandler', () => {
       };
 
       jest
-        .spyOn(handler, 'listAccounts')
+        .spyOn(handler, 'getAccounts')
         .mockResolvedValue([mockKeyringAccount1, mockKeyringAccount2]);
 
       const result = await handler.resolveAccountAddress(
@@ -1259,7 +1010,7 @@ describe('KeyringHandler', () => {
       });
 
       jest
-        .spyOn(handler, 'listAccounts')
+        .spyOn(handler, 'getAccounts')
         .mockResolvedValue([accountWithDifferentScope]);
 
       const result = await handler.resolveAccountAddress(
@@ -1304,7 +1055,7 @@ describe('KeyringHandler', () => {
       };
 
       jest
-        .spyOn(handler, 'listAccounts')
+        .spyOn(handler, 'getAccounts')
         .mockResolvedValue([mockKeyringAccount1, mockKeyringAccount2]);
 
       // First assert (scope) passes, second assert (request struct) throws

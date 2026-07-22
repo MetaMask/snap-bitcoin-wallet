@@ -3,97 +3,62 @@ import { Amount } from '@metamask/bitcoindevkit';
 import {
   AccountCreationType,
   assertCreateAccountOptionIsSupported,
-  BtcAccountType,
-  BtcScope,
-  CreateAccountRequestStruct,
-  CreateAccountsRequestStruct,
-  DeleteAccountRequestStruct,
-  DiscoverAccountsRequestStruct,
-  FilterAccountChainsStruct,
-  GetAccountBalancesRequestStruct,
-  GetAccountRequestStruct,
-  KeyringRpcMethod,
-  ListAccountAssetsRequestStruct,
-  ListAccountsRequestStruct,
-  ListAccountTransactionsRequestStruct,
-  MetaMaskOptionsStruct,
-  ResolveAccountAddressRequestStruct,
-  SetSelectedAccountsRequestStruct,
-  SubmitRequestRequestStruct,
 } from '@metamask/keyring-api';
 import type {
-  CreateAccountOptions,
-  Keyring,
-  KeyringAccount,
-  KeyringResponse,
   Balance,
+  BtcScope,
   CaipAssetType,
   CaipAssetTypeOrId,
-  Paginated,
-  Transaction,
-  Pagination,
-  MetaMaskOptions,
-  DiscoveredAccount,
+  CreateAccountOptions,
+  KeyringAccount,
   KeyringRequest,
+  KeyringResponse,
+  Paginated,
+  Pagination,
   ResolvedAccountAddress,
+  Transaction,
 } from '@metamask/keyring-api';
-import type { CaipChainId, Json, JsonRpcRequest } from '@metamask/snaps-sdk';
-import {
-  assert,
-  boolean,
-  enums,
-  number,
-  object,
-  optional,
-  string,
-} from 'superstruct';
+import type {
+  ExportAccountOptions,
+  ExportedAccount,
+  KeyringSnapRpc,
+} from '@metamask/keyring-api/v2';
+import { SnapError } from '@metamask/snaps-sdk';
+import type { CaipChainId, JsonRpcRequest } from '@metamask/snaps-sdk';
+import { sensitive } from '@metamask/superstruct';
+import { assert, is, string } from 'superstruct';
+import { encode } from 'wif';
 
 import {
-  type BitcoinAccount,
   computeDisplayBalanceSats,
   FormatError,
-  InexistentMethodError,
   type Logger,
   networkToCurrencyUnit,
-  Purpose,
-  purposeToAddressType,
   type SnapClient,
 } from '../entities';
-import {
-  networkToCaip19,
-  caipToAddressType,
-  scopeToNetwork,
-  networkToScope,
-  NetworkStruct,
-} from './caip';
+import { NetworkStruct, networkToCaip19, scopeToNetwork } from './caip';
 import { CronMethod } from './CronHandler';
 import type { KeyringRequestHandler } from './KeyringRequestHandler';
-import {
-  mapToDiscoveredAccount,
-  mapToKeyringAccount,
-  mapToTransaction,
-} from './mappings';
+import { mapToKeyringAccount, mapToTransaction } from './mappings';
+import { parseDerivationPath } from './parsers';
 import { BtcWalletRequestStruct, validateSelectedAccounts } from './validation';
+import snapManifest from '../../snap.manifest.json';
 import type {
   AccountUseCases,
   CreateAccountParams,
 } from '../use-cases/AccountUseCases';
 
-export const CreateAccountRequest = object({
-  scope: enums(Object.values(BtcScope)),
-  addressType: optional(enums(Object.values(BtcAccountType))),
-  entropySource: optional(string()),
-  accountNameSuggestion: optional(string()),
-  synchronize: optional(boolean()),
-  index: optional(number()),
-  derivationPath: optional(string()),
-  ...MetaMaskOptionsStruct.schema,
-});
-
 /** Maximum number of accounts to create in one internal createMany call. */
 const MAX_CREATE_ACCOUNTS_PER_BATCH = 100;
 
-export class KeyringHandler implements Keyring {
+/**
+ * Scopes declared in the snap manifest's keyring capabilities block.
+ * Used to determine which networks are supported for account discovery.
+ */
+const SUPPORTED_SCOPES = snapManifest.initialPermissions['endowment:keyring']
+  .capabilities.scopes as readonly BtcScope[];
+
+export class KeyringHandler implements KeyringSnapRpc {
   readonly #accountsUseCases: AccountUseCases;
 
   readonly #keyringRequest: KeyringRequestHandler;
@@ -118,85 +83,7 @@ export class KeyringHandler implements Keyring {
     this.#logger = logger;
   }
 
-  async route(request: JsonRpcRequest): Promise<Json> {
-    switch (request.method) {
-      case `${KeyringRpcMethod.ListAccounts}`: {
-        assert(request, ListAccountsRequestStruct);
-        return this.listAccounts();
-      }
-      case `${KeyringRpcMethod.GetAccount}`: {
-        assert(request, GetAccountRequestStruct);
-        return this.getAccount(request.params.id);
-      }
-      case `${KeyringRpcMethod.CreateAccount}`: {
-        assert(request, CreateAccountRequestStruct);
-        return this.createAccount(request.params.options);
-      }
-      case `${KeyringRpcMethod.CreateAccounts}`: {
-        assert(request, CreateAccountsRequestStruct);
-        return this.createAccounts(request.params.options);
-      }
-      case `${KeyringRpcMethod.DiscoverAccounts}`: {
-        assert(request, DiscoverAccountsRequestStruct);
-        return this.discoverAccounts(
-          request.params.scopes as BtcScope[],
-          request.params.entropySource,
-          request.params.groupIndex,
-        );
-      }
-      case `${KeyringRpcMethod.ListAccountTransactions}`: {
-        assert(request, ListAccountTransactionsRequestStruct);
-        return this.listAccountTransactions(
-          request.params.id,
-          request.params.pagination,
-        );
-      }
-      case `${KeyringRpcMethod.ListAccountAssets}`: {
-        assert(request, ListAccountAssetsRequestStruct);
-        return this.listAccountAssets(request.params.id);
-      }
-      case `${KeyringRpcMethod.GetAccountBalances}`: {
-        assert(request, GetAccountBalancesRequestStruct);
-        return this.getAccountBalances(request.params.id);
-      }
-      case `${KeyringRpcMethod.FilterAccountChains}`: {
-        assert(request, FilterAccountChainsStruct);
-        return this.filterAccountChains(
-          request.params.id,
-          request.params.chains,
-        );
-      }
-      case `${KeyringRpcMethod.DeleteAccount}`: {
-        assert(request, DeleteAccountRequestStruct);
-        await this.deleteAccount(request.params.id);
-        return null;
-      }
-      case `${KeyringRpcMethod.SubmitRequest}`: {
-        assert(request, SubmitRequestRequestStruct);
-        return this.submitRequest(request.params);
-      }
-      case `${KeyringRpcMethod.SetSelectedAccounts}`: {
-        assert(request, SetSelectedAccountsRequestStruct);
-        await this.setSelectedAccounts(request.params.accounts);
-        return null;
-      }
-      case `${KeyringRpcMethod.ResolveAccountAddress}`: {
-        assert(request, ResolveAccountAddressRequestStruct);
-        return this.resolveAccountAddress(
-          request.params.scope,
-          request.params.request,
-        );
-      }
-
-      default: {
-        throw new InexistentMethodError('Keyring method not supported', {
-          method: request.method,
-        });
-      }
-    }
-  }
-
-  async listAccounts(): Promise<KeyringAccount[]> {
+  async getAccounts(): Promise<KeyringAccount[]> {
     const accounts = await this.#accountsUseCases.list();
     return accounts.map(mapToKeyringAccount);
   }
@@ -206,126 +93,18 @@ export class KeyringHandler implements Keyring {
     return mapToKeyringAccount(account);
   }
 
-  async createAccount(
-    options: Record<string, Json> & MetaMaskOptions,
-  ): Promise<KeyringAccount> {
-    assert(options, CreateAccountRequest);
-
-    const traceName = 'Create Bitcoin Account';
-    const traceStarted = await this.#snapClient.startTrace(traceName);
-
-    try {
-      const {
-        metamask,
-        scope,
-        entropySource = 'm',
-        index,
-        derivationPath,
-        addressType,
-        synchronize = false,
-        accountNameSuggestion,
-      } = options;
-
-      let resolvedIndex = derivationPath
-        ? this.#extractAccountIndex(derivationPath)
-        : index;
-
-      let resolvedAddressType: AddressType;
-      if (addressType) {
-        // only support P2WPKH addresses for v1
-        if (addressType !== BtcAccountType.P2wpkh) {
-          throw new FormatError(
-            'Only native segwit (P2WPKH) addresses are supported',
-          );
-        }
-        resolvedAddressType = caipToAddressType[addressType];
-
-        // if both addressType and derivationPath are provided, validate they match
-        if (derivationPath) {
-          const pathAddressType = this.#extractAddressType(derivationPath);
-          if (pathAddressType !== resolvedAddressType) {
-            throw new FormatError('Address type and derivation path mismatch');
-          }
-        }
-      } else if (derivationPath) {
-        resolvedAddressType = this.#extractAddressType(derivationPath);
-      } else {
-        resolvedAddressType = this.#defaultAddressType;
-        // validate default address type is P2WPKH just to be sure
-        if (resolvedAddressType !== 'p2wpkh') {
-          throw new FormatError(
-            'Only native segwit (P2WPKH) addresses are supported',
-          );
-        }
-      }
-
-      // FIXME: This if should be removed ASAP as the index should always be defined or be 0
-      // The Snap automatically increasing the index per request creates significant issues
-      // such as: concurrency, lack of idempotency, dangling state (if MM crashes before saving the account), etc.
-      if (resolvedIndex === undefined || resolvedIndex === null) {
-        const accounts = (await this.#accountsUseCases.list()).filter(
-          (acc) =>
-            acc.entropySource === entropySource &&
-            acc.network === scopeToNetwork[scope] &&
-            acc.addressType === resolvedAddressType,
-        );
-
-        resolvedIndex = this.#getLowestUnusedIndex(accounts);
-      }
-
-      const account = await this.#accountsUseCases.create({
-        network: scopeToNetwork[scope],
-        entropySource,
-        index: resolvedIndex,
-        addressType: resolvedAddressType,
-        correlationId: metamask?.correlationId,
-        synchronize,
-        accountName: accountNameSuggestion,
-      });
-
-      return mapToKeyringAccount(account);
-    } finally {
-      if (traceStarted) {
-        await this.#snapClient.endTrace(traceName);
-      }
-    }
-  }
-
   async createAccounts(
     options: CreateAccountOptions,
   ): Promise<KeyringAccount[]> {
     assertCreateAccountOptionIsSupported(options, [
+      `${AccountCreationType.Bip44DerivePath}`,
       `${AccountCreationType.Bip44DeriveIndex}`,
       `${AccountCreationType.Bip44DeriveIndexRange}`,
+      `${AccountCreationType.Bip44Discover}`,
     ]);
 
     const { entropySource } = options;
 
-    const range =
-      options.type === AccountCreationType.Bip44DeriveIndex
-        ? { from: options.groupIndex, to: options.groupIndex }
-        : options.range;
-
-    if (
-      !Number.isSafeInteger(range.from) ||
-      !Number.isSafeInteger(range.to) ||
-      range.from < 0 ||
-      range.to < 0
-    ) {
-      throw new FormatError(
-        'Account index range is invalid: from and to must be non-negative integers',
-      );
-    }
-
-    if (range.from > range.to) {
-      throw new FormatError(
-        'Account index range is invalid: from must be less than or equal to to',
-      );
-    }
-
-    // Only P2WPKH (BIP-84) on bitcoin mainnet is supported for v1, mirroring
-    // the defaults used by `createAccount` when no scope is provided.
-    const network = scopeToNetwork[BtcScope.Mainnet];
     const addressType = this.#defaultAddressType;
     if (addressType !== 'p2wpkh') {
       throw new FormatError(
@@ -337,39 +116,109 @@ export class KeyringHandler implements Keyring {
     const traceStarted = await this.#snapClient.startTrace(traceName);
 
     try {
-      // `AccountUseCases.createMany` is idempotent: if an account already exists
-      // for the resolved derivation path, it will be returned as-is.
-      const accounts: BitcoinAccount[] = [];
-      let chunkFrom = range.from;
+      if (options.type === AccountCreationType.Bip44DerivePath) {
+        const { index, network } = parseDerivationPath(options.derivationPath);
 
-      while (chunkFrom <= range.to) {
-        const chunkTo = Math.min(
-          chunkFrom + MAX_CREATE_ACCOUNTS_PER_BATCH - 1,
-          range.to,
-        );
-        const chunkRequests: CreateAccountParams[] = [];
-
-        for (let index = chunkFrom; index <= chunkTo; index += 1) {
-          chunkRequests.push({
+        const created = await this.#accountsUseCases.createMany([
+          {
             network,
             entropySource,
             index,
             addressType,
             synchronize: false,
-          });
-        }
+          },
+        ]);
 
-        accounts.push(
-          ...(await this.#accountsUseCases.createMany(chunkRequests)),
-        );
-
-        if (chunkTo === range.to) {
-          break;
-        }
-        chunkFrom = chunkTo + 1;
+        return created.map(mapToKeyringAccount);
       }
 
-      return accounts.map(mapToKeyringAccount);
+      if (options.type === AccountCreationType.Bip44Discover) {
+        // For each supported scope, discover at this index. Accounts with
+        // on-chain activity are kept; those without are deleted. Returning []
+        // signals end-of-discovery to the client.
+        const discovered: KeyringAccount[] = [];
+
+        for (const scope of SUPPORTED_SCOPES) {
+          const network = scopeToNetwork[scope];
+          const account = await this.#accountsUseCases.discover({
+            network,
+            entropySource,
+            index: options.groupIndex,
+            addressType,
+          });
+
+          if (account.listTransactions().length === 0) {
+            await this.#accountsUseCases.delete(account.id);
+          } else {
+            discovered.push(mapToKeyringAccount(account));
+          }
+        }
+
+        return discovered;
+      }
+
+      // Build the index range. For Bip44DeriveIndex the range is a single
+      // element; for Bip44DeriveIndexRange it comes from the options directly.
+      // At this point the discover branch has already returned, so this
+      // discriminant is exhaustive.
+      const range =
+        options.type === AccountCreationType.Bip44DeriveIndex
+          ? { from: options.groupIndex, to: options.groupIndex }
+          : options.range;
+
+      if (
+        !Number.isSafeInteger(range.from) ||
+        !Number.isSafeInteger(range.to) ||
+        range.from < 0 ||
+        range.to < 0
+      ) {
+        throw new FormatError(
+          'Account index range is invalid: from and to must be non-negative integers',
+        );
+      }
+
+      if (range.from > range.to) {
+        throw new FormatError(
+          'Account index range is invalid: from must be less than or equal to to',
+        );
+      }
+
+      // `AccountUseCases.createMany` is idempotent: if an account already
+      // exists for the resolved derivation path, it will be returned as-is.
+      const created: KeyringAccount[] = [];
+
+      for (const scope of SUPPORTED_SCOPES) {
+        const network = scopeToNetwork[scope];
+        let chunkFrom = range.from;
+
+        while (chunkFrom <= range.to) {
+          const chunkTo = Math.min(
+            chunkFrom + MAX_CREATE_ACCOUNTS_PER_BATCH - 1,
+            range.to,
+          );
+          const chunkRequests: CreateAccountParams[] = [];
+
+          for (let index = chunkFrom; index <= chunkTo; index += 1) {
+            chunkRequests.push({
+              network,
+              entropySource,
+              index,
+              addressType,
+              synchronize: false,
+            });
+          }
+
+          const chunk = await this.#accountsUseCases.createMany(chunkRequests);
+          created.push(...chunk.map(mapToKeyringAccount));
+
+          chunkFrom = chunkTo + 1;
+        }
+      }
+
+      return created;
+    } catch (error: unknown) {
+      this.#logger.error({ error }, 'Error creating accounts batch');
+      throw new SnapError(error as Error);
     } finally {
       if (traceStarted) {
         await this.#snapClient.endTrace(traceName);
@@ -377,29 +226,58 @@ export class KeyringHandler implements Keyring {
     }
   }
 
-  async discoverAccounts(
-    scopes: BtcScope[],
-    entropySource: string,
-    groupIndex: number,
-  ): Promise<DiscoveredAccount[]> {
-    const accounts = await Promise.all(
-      scopes.flatMap((scope) =>
-        // only discover P2WPKH addresses
-        [BtcAccountType.P2wpkh].map(async (addressType) =>
-          this.#accountsUseCases.discover({
-            network: scopeToNetwork[scope],
-            entropySource,
-            index: groupIndex,
-            addressType: caipToAddressType[addressType],
-          }),
-        ),
-      ),
+  async exportAccount(
+    accountId: string,
+    options?: ExportAccountOptions,
+  ): Promise<ExportedAccount> {
+    // TODO: update to `"wif"` once the accounts repo adds WIF as a named
+    // encoding. WIF is Base58Check (not plain base58), so we treat the current
+    // `"base58"` wire value as a WIF request in the meantime.
+    const encoding = options?.encoding ?? 'base58';
+    if (encoding !== 'base58') {
+      throw new Error(
+        `Only base58 (WIF) private key export is supported, got: ${encoding}`,
+      );
+    }
+
+    const account = await this.#accountsUseCases.get(accountId);
+
+    const entropy = await this.#snapClient.getPrivateEntropy(
+      // Export the private key for address index 0 (the primary address).
+      account.derivationPath.concat(['0', '0']),
     );
 
-    // Return only accounts with history.
-    return accounts
-      .filter((account) => account.listTransactions().length > 0)
-      .map(mapToDiscoveredAccount);
+    if (!entropy.privateKey) {
+      throw new Error('Failed to get private entropy');
+    }
+
+    try {
+      // Private key is returned in "0x..." format; transform to WIF (Base58Check).
+      const wifPrivateKey = encode({
+        version: account.network === 'bitcoin' ? 128 : 239, // 128 mainnet, 239 testnets
+        // eslint-disable-next-line no-restricted-globals
+        privateKey: Buffer.from(entropy.privateKey.slice(2), 'hex'),
+        compressed: true,
+      });
+
+      // SECURITY: use is() not assert() to avoid embedding the private key in a
+      // StructError message if encoding validation fails.
+      // TODO: replace string() with a WIF-specific struct once the accounts
+      // repo exports one.
+      if (!is(wifPrivateKey, sensitive(string()))) {
+        throw new Error('Derived private key failed encoding validation');
+      }
+
+      return {
+        type: 'private-key',
+        encoding,
+        privateKey: wifPrivateKey,
+      };
+    } catch {
+      const errorMsg = 'Error exporting account';
+      this.#logger.error(errorMsg);
+      throw new SnapError(errorMsg);
+    }
   }
 
   async getAccountBalances(
@@ -418,33 +296,22 @@ export class KeyringHandler implements Keyring {
     };
   }
 
-  async filterAccountChains(id: string, chains: string[]): Promise<string[]> {
-    const account = await this.#accountsUseCases.get(id);
-    const accountChain = networkToScope[account.network];
-    return chains.includes(accountChain) ? [accountChain] : [];
-  }
-
-  async updateAccount(): Promise<void> {
-    throw new InexistentMethodError('Method not supported.');
-  }
-
   async deleteAccount(id: string): Promise<void> {
     await this.#accountsUseCases.delete(id);
   }
 
-  async listAccountAssets(id: string): Promise<CaipAssetTypeOrId[]> {
+  async getAccountAssets(id: string): Promise<CaipAssetTypeOrId[]> {
     const account = await this.#accountsUseCases.get(id);
     return [networkToCaip19[account.network]];
   }
 
-  async listAccountTransactions(
+  async getAccountTransactions(
     id: string,
     { limit, next }: Pagination,
   ): Promise<Paginated<Transaction>> {
     const account = await this.#accountsUseCases.get(id);
     const transactions = account.listTransactions();
 
-    // Find starting index based on provided cursor
     let startIndex = 0;
     if (next) {
       const cursorIndex = transactions.findIndex(
@@ -457,8 +324,7 @@ export class KeyringHandler implements Keyring {
     const hasMore = startIndex + limit < transactions.length;
     const nextCursor =
       hasMore && paginatedTxs.length > 0
-        ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          paginatedTxs[paginatedTxs.length - 1]!.txid.toString()
+        ? (paginatedTxs[paginatedTxs.length - 1]?.txid.toString() ?? null)
         : null;
 
     return {
@@ -480,7 +346,6 @@ export class KeyringHandler implements Keyring {
       allAccounts.map((acc) => acc.id),
     );
 
-    // Schedule immediate background job to perform full scan
     await this.#snapClient.scheduleBackgroundEvent({
       duration: 'PT1S',
       method: CronMethod.SyncSelectedAccounts,
@@ -497,7 +362,7 @@ export class KeyringHandler implements Keyring {
    * @param scope - Request's scope (CAIP-2).
    * @param request - Signing request object.
    * @returns A Promise that resolves to the account address that must
-   * be used to process this signing request, or null if none candidates
+   * be used to process this signing request, or null if no candidates
    * could be found.
    */
   async resolveAccountAddress(
@@ -511,7 +376,7 @@ export class KeyringHandler implements Keyring {
       const requestWithoutCommonHeader = { method, params };
       assert(requestWithoutCommonHeader, BtcWalletRequestStruct);
 
-      const allAccounts = await this.listAccounts();
+      const allAccounts = await this.getAccounts();
 
       const accountsWithThisScope = allAccounts.filter((account) =>
         account.scopes.includes(scope),
@@ -539,86 +404,5 @@ export class KeyringHandler implements Keyring {
       this.#logger.error({ error }, 'Error resolving account address');
       return null;
     }
-  }
-
-  #extractAddressType(path: string): AddressType {
-    const segments = path.split('/');
-    if (segments.length < 4) {
-      throw new FormatError(`Invalid derivation path: ${path}`);
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const purposePart = segments[1]!;
-    const match = purposePart.match(/^(\d+)/u);
-    if (!match) {
-      throw new FormatError(`Invalid purpose segment: ${purposePart}`);
-    }
-
-    const purpose = Number(match[1]);
-    if (!Object.values(Purpose).includes(purpose)) {
-      throw new FormatError(`Invalid BIP-purpose: ${purpose}`);
-    }
-
-    // only support native segwit (BIP-84) derivation paths for now
-    if ((purpose as Purpose) !== Purpose.NativeSegwit) {
-      throw new FormatError(
-        `Only native segwit (BIP-84) derivation paths are supported`,
-      );
-    }
-
-    const addressType = purposeToAddressType[purpose as Purpose];
-    if (!addressType) {
-      throw new FormatError(`No address-type mapping for purpose: ${purpose}`);
-    }
-
-    return addressType;
-  }
-
-  #extractAccountIndex(path: string): number {
-    const segments = path.split('/');
-    if (segments.length < 4) {
-      throw new FormatError(`Invalid derivation path: ${path}`);
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const accountPart = segments[3]!;
-    const match = accountPart.match(/^(\d+)/u);
-    if (!match) {
-      throw new FormatError(`Invalid account index: ${accountPart}`);
-    }
-
-    const index = Number(match[1]);
-    if (!Number.isInteger(index) || index < 0) {
-      throw new FormatError(
-        `Account index must be a non-negative integer, got: ${index}`,
-      );
-    }
-
-    return index;
-  }
-
-  #getLowestUnusedIndex(accounts: BitcoinAccount[]): number {
-    if (accounts.length === 0) {
-      return 0;
-    }
-
-    const usedIndices = accounts
-      .map((acc) => acc.accountIndex)
-      .sort((idxA, idxB) => idxA - idxB);
-
-    let lowestUnusedIndex = 0;
-
-    for (const usedIndex of usedIndices) {
-      /**
-       * From lower to higher, the moment we find a gap, we can use it
-       */
-      if (usedIndex !== lowestUnusedIndex) {
-        break;
-      }
-
-      lowestUnusedIndex += 1;
-    }
-
-    return lowestUnusedIndex;
   }
 }

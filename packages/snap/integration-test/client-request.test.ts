@@ -52,18 +52,18 @@ describe('OnClientRequestHandler', () => {
 
     const response = await snap.onKeyringRequest({
       origin: ORIGIN,
-      method: 'keyring_createAccount',
+      method: 'keyring_createAccounts',
       params: {
-        options: {
-          scope: BtcScope.Regtest,
-          synchronize: false,
-          index: ACCOUNT_INDEX,
-        },
+        type: 'bip44:derive-path',
+        entropySource: 'm',
+        derivationPath: `m/84'/1'/${ACCOUNT_INDEX}'`,
       },
     });
 
     if ('result' in response.response) {
-      account = response.response.result as KeyringAccount;
+      account = (
+        response.response.result as KeyringAccount[]
+      )[0] as KeyringAccount;
       createdAccountId = account.id;
     }
 

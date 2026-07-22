@@ -60,22 +60,19 @@ describe('CronHandler', () => {
     // create account without initial sync
     const createResponse = await snap.onKeyringRequest({
       origin: ORIGIN,
-      method: 'keyring_createAccount',
+      method: 'keyring_createAccounts',
       params: {
-        options: {
-          scope: BtcScope.Regtest,
-          addressType: BtcAccountType.P2wpkh,
-          synchronize: false,
-          index: ACCOUNT_INDEX,
-        },
+        type: 'bip44:derive-path',
+        entropySource: 'm',
+        derivationPath: `m/84'/1'/${ACCOUNT_INDEX}'`,
       },
     });
 
     expect(createResponse.response).toBeDefined();
     expect('result' in createResponse.response).toBe(true);
 
-    const account = (createResponse.response as { result: KeyringAccount })
-      .result;
+    const account = (createResponse.response as { result: KeyringAccount[] })
+      .result[0] as KeyringAccount;
 
     accountsToSync.push(account.id);
 
