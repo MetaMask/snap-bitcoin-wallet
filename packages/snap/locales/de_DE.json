@@ -1,215 +1,215 @@
 {
-  "locale": "中文",
+  "locale": "de",
   "messages": {
     "reviewTransactionWarning": {
-      "message": "继续之前，请先审查交易"
+      "message": "Überprüfen Sie die Transaktion, bevor Sie fortfahren"
     },
     "from": {
-      "message": "从"
+      "message": "Von"
     },
     "toAddress": {
-      "message": "To Address"
+      "message": "An"
     },
     "continue": {
-      "message": "Continue"
+      "message": "Fortfahren"
     },
     "cancel": {
-      "message": "取消"
+      "message": "Abbrechen"
     },
     "clear": {
-      "message": "Clear"
+      "message": "Löschen"
     },
     "amount": {
-      "message": "金额"
+      "message": "Betrag"
     },
     "balance": {
-      "message": "余额"
+      "message": "Guthaben"
     },
     "recipient": {
-      "message": "收款人"
+      "message": "Empfänger"
     },
     "network": {
-      "message": "网络"
+      "message": "Netzwerk"
     },
     "minutes": {
       "message": "min"
     },
     "transactionSpeed": {
-      "message": "交易速度"
+      "message": "Transaktionsgeschwindigkeit"
     },
     "transactionSpeedTooltip": {
-      "message": "交易预计时间"
+      "message": "Die geschätzte Transaktionsdauer"
     },
     "networkFee": {
-      "message": "Network Fee"
+      "message": "Netzwerkgebühr"
     },
     "feeRate": {
-      "message": "Fee rate"
+      "message": "Gebührenrate"
     },
     "networkFeeTooltip": {
-      "message": "The total network fee"
+      "message": "Die gesamte Netzwerkgebühr"
     },
     "total": {
-      "message": "总额"
+      "message": "Insgesamt"
     },
     "send": {
-      "message": "发送"
+      "message": "Senden"
     },
     "asset": {
       "message": "Asset"
     },
     "sending": {
-      "message": "发送中"
+      "message": "Wird gesendet"
     },
     "max": {
-      "message": "最多"
+      "message": "Max."
     },
     "recipientPlaceholder": {
-      "message": "Enter receiving address"
+      "message": "Empfängeradresse eingeben"
     },
     "review": {
-      "message": "审查"
+      "message": "Überprüfung"
     },
     "error": {
-      "message": "错误"
+      "message": "Fehler"
     },
     "unknownError": {
-      "message": "An unknown error occurred"
+      "message": "Ein unbekannter Fehler ist aufgetreten"
     },
     "feeTooLow": {
-      "message": "Fee too low"
+      "message": "Gebühr zu niedrig"
     },
     "feeRateTooLow": {
-      "message": "Fee rate too low"
+      "message": "Gebührenrate zu niedrig"
     },
     "noUtxosSelected": {
-      "message": "Failed to build transaction: missing UTXOs"
+      "message": "Transaktion konnte nicht erstellt werden: fehlende UTXOs"
     },
     "outputBelowDustLimit": {
-      "message": "Amount below dust limit"
+      "message": "Betrag unter Dust-Limit"
     },
     "insufficientFunds": {
-      "message": "Funds are insufficient to cover amount plus fee"
+      "message": "Unzureichende Mittel, um Betrag plus Gebühr zu decken"
     },
     "noRecipients": {
-      "message": "Missing recipients"
+      "message": "Fehlende Empfänger"
     },
     "psbt": {
-      "message": "Invalid PSBT"
+      "message": "Ungültiges PSBT"
     },
     "unknownUtxo": {
-      "message": "Failed to build transaction: unknown UTXO"
+      "message": "Transaktion konnte nicht erstellt werden: unbekannter UTXO"
     },
     "MmssingNonWitnessUtxo": {
-      "message": "Failed to build transaction: missing non-witness UTXO"
+      "message": "Transaktion konnte nicht erstellt werden: fehlender Non-Witness UTXO"
     },
     "base58": {
-      "message": "Invalid Bitcoin address"
+      "message": "Ungültige Bitcoin-Adresse"
     },
     "bech32": {
-      "message": "Invalid Bitcoin address"
+      "message": "Ungültige Bitcoin-Adresse"
     },
     "witnessVersion": {
-      "message": "Invalid Bitcoin address: witness version"
+      "message": "Ungültige Bitcoin-Adresse: Witness-Version"
     },
     "witnessProgram": {
-      "message": "Invalid Bitcoin address: witness program"
+      "message": "Ungültige Bitcoin-Adresse: Witness-Programm"
     },
     "legacyAddressTooLong": {
-      "message": "Invalid Bitcoin address"
+      "message": "Ungültige Bitcoin-Adresse"
     },
     "invalidBase58PayloadLength": {
-      "message": "Invalid Bitcoin address: invalid length"
+      "message": "Ungültige Bitcoin-Adresse: ungültige Länge"
     },
     "invalidLegacyPrefix": {
-      "message": "Invalid Bitcoin address: invalid legacy prefix"
+      "message": "Ungültige Bitcoin-Adresse: ungültiges Legacy-Prefix"
     },
     "networkValidation": {
-      "message": "Invalid Bitcoin address: wrong network"
+      "message": "Ungültige Bitcoin-Adresse: falsches Netzwerk"
     },
     "outOfRange": {
-      "message": "Invalid amount: out of range"
+      "message": "Ungültiger Betrag: außerhalb des Bereichs"
     },
     "tooPrecise": {
-      "message": "Invalid amount: too precise"
+      "message": "Ungültiger Betrag: zu präzise"
     },
     "missingDigits": {
-      "message": "Invalid amount: missing digits"
+      "message": "Ungültiger Betrag: fehlende Ziffern"
     },
     "inputTooLarge": {
-      "message": "Invalid amount: too large"
+      "message": "Ungültiger Betrag: zu groß"
     },
     "invalidCharacter": {
-      "message": "Invalid amount: invalid character"
+      "message": "Ungültiger Betrag: ungültiges Zeichen"
     },
     "unexpected": {
-      "message": "An unexpected error occurred"
+      "message": "Ein unerwarteter Fehler ist aufgetreten"
     },
     "error.0": {
-      "message": "Invalid format"
+      "message": "Ungültiges Format"
     },
     "error.1000": {
-      "message": "Validation failed"
+      "message": "Validierung fehlgeschlagen"
     },
     "error.2000": {
-      "message": "Resource not found"
+      "message": "Ressource nicht gefunden"
     },
     "error.3000": {
-      "message": "Connection error"
+      "message": "Verbindungsfehler"
     },
     "error.3100": {
       "message": "One or more accounts failed to synchronize"
     },
     "error.4000": {
-      "message": "Wallet state corrupted"
+      "message": "Wallet-Zustand beschädigt"
     },
     "error.5000": {
-      "message": "Storage error"
+      "message": "Speicherfehler"
     },
     "error.6000": {
-      "message": "Method not implemented or not supported"
+      "message": "Methode nicht implementiert oder nicht unterstützt"
     },
     "error.7000": {
-      "message": "Permission denied or insufficient authorization"
+      "message": "Zugriff verweigert oder unzureichende Berechtigung"
     },
     "error.8000": {
-      "message": "User action error"
+      "message": "Benutzeraktionsfehler"
     },
     "error.9000": {
-      "message": "Corrupted state, invariant not respected or failed assertion."
+      "message": "Beschädigter Zustand, Invariante nicht eingehalten oder fehlgeschlagene Assertion"
     },
     "error.internal": {
-      "message": "内部错误。请稍后重试或联系支持"
+      "message": "Interner Fehler. Bitte versuchen Sie es später erneut oder kontaktieren Sie den Support"
     },
     "confirmation.origin": {
-      "message": "来源"
+      "message": "Ursprung"
     },
     "confirmation.origin.tooltip": {
-      "message": "请求签名的 dApp"
+      "message": "Die dApp, die die Signatur anfordert"
     },
     "confirmation.account": {
-      "message": "账户"
+      "message": "Konto"
     },
     "confirmation.signMessage.confirmButton": {
-      "message": "签名"
+      "message": "Signieren"
     },
     "confirmation.signMessage.title": {
-      "message": "签名消息"
+      "message": "Nachricht signieren"
     },
     "confirmation.signMessage.message": {
-      "message": "消息"
+      "message": "Nachricht"
     },
     "confirmation.estimatedChanges": {
-      "message": "预计变化"
+      "message": "Geschätzte Änderungen"
     },
     "confirmation.estimatedChanges.send": {
-      "message": "您发送"
+      "message": "Sie senden"
     },
     "confirmation.confirmButton": {
-      "message": "确认"
+      "message": "Bestätigen"
     },
     "confirmation.signAndSendTransaction.title": {
-      "message": "交易请求"
+      "message": "Transaktionsanfrage"
     },
     "confirmation.signAndSendTransaction.selfSend.title": {
       "message": "Sending to your own address"
@@ -218,7 +218,7 @@
       "message": "The recipient address belongs to this wallet. The amount will stay in your account, but network fees still apply."
     },
     "confirmation.requestOrigin": {
-      "message": "请求来自"
+      "message": "Anfrage von"
     },
     "confirmation.signPsbt.title": {
       "message": "Sign Transaction"
